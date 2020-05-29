@@ -31,7 +31,55 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
+        <configuration>
+          <cleanupDaemonThreads>false</cleanupDaemonThreads>
+        </configuration>
         <executions>
+          <execution>
+            <id>AdvancedServiceExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>AdvancedServiceExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>ConfigModuleExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>ConfigModuleExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>EventloopServiceExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>EventloopServiceExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>HelloWorldExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>HelloWorldExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>MultithreadedWorkerCollab</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>MultithreadedWorkerCollab</mainClass>
+            </configuration>
+          </execution>
           <execution>
             <id>ServiceGraphModuleExample</id>
             <goals>
@@ -39,6 +87,15 @@
             </goals>
             <configuration>
               <mainClass>ServiceGraphModuleExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>SimpleServiceExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>SimpleServiceExample</mainClass>
             </configuration>
           </execution>
           <execution>

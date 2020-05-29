@@ -26,6 +26,7 @@ import org.objectweb.asm.tree.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
@@ -789,7 +790,11 @@ public final class Specializer {
 		ClassNode classNode = new ClassNode();
 		ClassReader cr;
 		try {
-			cr = new ClassReader(clazz.getName());
+			ClassLoader classLoader = clazz.getClassLoader();
+			String pathToClass = clazz.getName().replace('.', '/') + ".class";
+			InputStream classInputStream = classLoader.getResourceAsStream(pathToClass);
+			//noinspection ConstantConditions - null is allowed
+			cr = new ClassReader(classInputStream);
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
 		}

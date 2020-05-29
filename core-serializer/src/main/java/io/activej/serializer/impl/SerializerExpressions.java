@@ -27,16 +27,15 @@ import static io.activej.codegen.Expressions.*;
  * Provides methods for writing primitives
  * and Strings to byte arrays
  */
-@SuppressWarnings({"unchecked"})
 public final class SerializerExpressions {
-	private static final Class JDK_UNSAFE;
+	private static final Class<?> JDK_UNSAFE;
 	private static final int BYTE_ARRAY_BASE_OFFSET;
 	private static final boolean BIG_ENDIAN;
 
 	static {
-		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-		Class jdkUnsafe;
+		Class<?> jdkUnsafe;
 		int byteArrayBaseOffset = 0;
 		boolean bigEndian = false;
 		try {

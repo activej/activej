@@ -1,5 +1,3 @@
-package io.activej.example.codegen;
-
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.ExpressionToString;

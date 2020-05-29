@@ -1,4 +1,4 @@
-package io.activej.example.codegen;
+package calculator;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;

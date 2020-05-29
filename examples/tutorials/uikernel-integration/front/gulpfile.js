@@ -16,7 +16,7 @@ gulp.task('java:clean', gulp.series(shell.task(['mvn -f ../pom.xml clean'])));
 gulp.task('java:test', gulp.series(shell.task(['mvn -f ../pom.xml test'])));
 gulp.task('java:compile', gulp.series(shell.task(['mvn -f ../pom.xml compile'])));
 gulp.task('java:package', gulp.series(shell.task(['mvn -f ../pom.xml package'])));
-gulp.task('java:run', gulp.series(shell.task(['java -jar ../target/uikernel-integration.jar'])));
+gulp.task('java:run', gulp.series(shell.task(['mvn -f ../pom.xml exec:java@WebappLauncher'])));
 
 
 // General tasks

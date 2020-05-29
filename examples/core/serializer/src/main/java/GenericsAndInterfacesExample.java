@@ -6,8 +6,6 @@ import io.activej.serializer.annotations.Serialize;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
-
 public final class GenericsAndInterfacesExample {
 	public static void main(String[] args) {
 		//[START REGION_4]
@@ -17,7 +15,7 @@ public final class GenericsAndInterfacesExample {
 				new Skill<>(2, "ActiveJ")));
 
 		byte[] buffer = new byte[200];
-		BinarySerializer<Developer> serializer = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<Developer> serializer = SerializerBuilder.create()
 				.build(Developer.class);
 		//[END REGION_4]
 

@@ -1,8 +1,8 @@
 package io.activej;
 
-import io.activej.example.codegen.CodegenCalculatorExample;
-import io.activej.example.specializer.SpecializerCalculatorExample;
-import io.activej.example.specializer.SpecializerCalculatorExample.CalculatorExpression;
+import calculator.CodegenCalculatorExample;
+import calculator.SpecializerCalculatorExample;
+import calculator.SpecializerCalculatorExample.CalculatorExpression;
 import io.activej.specializer.Specializer;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;

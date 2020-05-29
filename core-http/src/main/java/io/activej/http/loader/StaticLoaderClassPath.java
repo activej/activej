@@ -31,8 +31,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
-
 class StaticLoaderClassPath implements StaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
@@ -48,7 +46,7 @@ class StaticLoaderClassPath implements StaticLoader {
 	}
 
 	public static StaticLoaderClassPath create(@NotNull Executor executor, String root) {
-		return create(executor, getSystemClassLoader(), root);
+		return create(executor, Thread.currentThread().getContextClassLoader(), root);
 	}
 
 	public static StaticLoaderClassPath create(@NotNull Executor executor, @NotNull ClassLoader classLoader, @NotNull String root) {

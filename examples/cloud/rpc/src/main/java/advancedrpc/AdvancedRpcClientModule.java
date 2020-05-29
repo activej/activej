@@ -28,7 +28,7 @@ public class AdvancedRpcClientModule extends AbstractModule {
 	RpcClient rpcClient(Eventloop eventloop, RpcStrategy strategy) {
 		return RpcClient.create(eventloop)
 				.withConnectTimeout(Duration.ofSeconds(1))
-				.withSerializerBuilder(SerializerBuilder.create(Thread.currentThread().getContextClassLoader()))
+				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(Integer.class)
 				.withStrategy(strategy);
 	}

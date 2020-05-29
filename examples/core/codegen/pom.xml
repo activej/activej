@@ -32,21 +32,30 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>io.activej.example.codegen.DynamicClassCreationExample</id>
+            <id>CodegenCalculatorExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>io.activej.example.codegen.DynamicClassCreationExample</mainClass>
+              <mainClass>calculator.CodegenCalculatorExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>io.activej.example.codegen.CodegenExpressionsExample</id>
+            <id>CodegenExpressionsExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>io.activej.example.codegen.CodegenExpressionsExample</mainClass>
+              <mainClass>CodegenExpressionsExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>DynamicClassCreationExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>DynamicClassCreationExample</mainClass>
             </configuration>
           </execution>
         </executions>

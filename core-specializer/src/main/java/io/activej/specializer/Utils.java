@@ -97,7 +97,7 @@ class Utils {
 		public InjectorSpecializer() {
 			try {
 				Class<?> compiledBindingClass = Class.forName("io.activej.di.impl.CompiledBinding");
-				this.specializer = Specializer.create()
+				this.specializer = Specializer.create(Thread.currentThread().getContextClassLoader())
 						.withPredicate(cls -> compiledBindingClass.isAssignableFrom(cls) &&
 								!cls.getName().startsWith("io.activej.di.binding.Multibinder$"));
 			} catch (ClassNotFoundException e) {

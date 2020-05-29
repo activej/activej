@@ -27,12 +27,30 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>AsyncFileExample</id>
+            <id>AsyncFileServiceExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
               <mainClass>AsyncFileServiceExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>PromiseAdvancedExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>PromiseAdvancedExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>PromiseChainExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>PromiseChainExample</mainClass>
             </configuration>
           </execution>
           <execution>

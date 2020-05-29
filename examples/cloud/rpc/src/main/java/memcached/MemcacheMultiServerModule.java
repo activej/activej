@@ -58,7 +58,7 @@ public class MemcacheMultiServerModule extends AbstractModule {
 							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
 							return Promise.of(PutResponse.INSTANCE);
 						})
-				.withSerializerBuilder(SerializerBuilder.create(ClassLoader.getSystemClassLoader())
+				.withSerializerBuilder(SerializerBuilder.create()
 						.withSerializer(Slice.class, new SerializerDefSlice()))
 				.withMessageTypes(MESSAGE_TYPES)
 				.withListenAddresses(address);

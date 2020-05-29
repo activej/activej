@@ -1,5 +1,5 @@
-import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufPool;
+package io.activej.bytebuf;
+
 import io.activej.config.Config;
 import io.activej.di.annotation.Inject;
 import io.activej.di.annotation.Provides;
@@ -9,7 +9,7 @@ import static io.activej.config.ConfigConverters.ofInteger;
 
 public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 
-	final class ByteBufPoolAbuser implements Runnable {
+	static final class ByteBufPoolAbuser implements Runnable {
 		int number;
 		int allocationSize;
 		int iterations;
@@ -65,10 +65,6 @@ public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 
 	@Override
 	protected void run() throws Exception {
-		benchmark("ByteBuf Benchmark");
-	}
-
-	private void benchmark(String nameBenchmark) throws InterruptedException {
 		long timeAllRounds = 0;
 		long bestTime = -1;
 		long worstTime = -1;
@@ -83,7 +79,7 @@ public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 			System.out.println();
 		}
 
-		System.out.println("Start benchmarking " + nameBenchmark);
+		System.out.println("Start benchmarking ByteBuf Benchmark");
 		for (int i = 0; i < measureRounds; i++) {
 			double roundTime = round();
 

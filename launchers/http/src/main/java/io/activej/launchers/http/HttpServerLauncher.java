@@ -48,7 +48,6 @@ import static io.activej.launchers.initializers.Initializers.ofHttpServer;
  */
 public abstract class HttpServerLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "http-server.properties";
-	public static final String BUSINESS_MODULE_PROP = "businessLogicModule";
 
 	@Inject
 	AsyncHttpServer httpServer;
@@ -99,22 +98,17 @@ public abstract class HttpServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String businessLogicModuleName = System.getProperty(BUSINESS_MODULE_PROP);
-
-		Module businessLogicModule = businessLogicModuleName != null ?
-				(Module) Class.forName(businessLogicModuleName).newInstance() :
-				new AbstractModule() {
-					@Provides
-					public AsyncServlet servlet(Config config) {
-						String message = config.get("message", "Hello, world!");
-						return request -> HttpResponse.ok200().withPlainText(message);
-					}
-				};
 
 		Launcher launcher = new HttpServerLauncher() {
 			@Override
 			protected Module getBusinessLogicModule() {
-				return businessLogicModule;
+				return new AbstractModule() {
+							@Provides
+							public AsyncServlet servlet(Config config) {
+								String message = config.get("message", "Hello, world!");
+								return request -> HttpResponse.ok200().withPlainText(message);
+							}
+						};
 			}
 		};
 

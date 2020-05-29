@@ -42,30 +42,30 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>FsFileDownloadExample</id>
+            <id>FileDownloadExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>FsFileDownloadExample</mainClass>
+              <mainClass>FileDownloadExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>FsFileUploadExample</id>
+            <id>FileUploadExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>FsFileUploadExample</mainClass>
+              <mainClass>FileUploadExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>FsServerSetupExample</id>
+            <id>ServerSetupExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>FsServerSetupExample</mainClass>
+              <mainClass>ServerSetupExample</mainClass>
             </configuration>
           </execution>
         </executions>

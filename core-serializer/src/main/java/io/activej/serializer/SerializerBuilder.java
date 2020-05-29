@@ -79,6 +79,15 @@ public final class SerializerBuilder {
 		this.classLoader = classLoader;
 	}
 
+	public static SerializerBuilder create() {
+		ClassLoader threadClassLoader = Thread.currentThread().getContextClassLoader();
+		return create(DefiningClassLoader.create(threadClassLoader));
+	}
+
+	public static SerializerBuilder create(String profile) {
+		return create().withProfile(profile);
+	}
+
 	public static SerializerBuilder create(ClassLoader classLoader) {
 		return create(DefiningClassLoader.create(classLoader));
 	}

@@ -47,30 +47,48 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>CspByteBufsParserExample</id>
+            <id>ByteBufsDecoderExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>CspByteBufsParserExample</mainClass>
+              <mainClass>ByteBufsDecoderExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>CspChannelExample</id>
+            <id>ChannelBufferStream</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>CspChannelExample</mainClass>
+              <mainClass>ChannelBufferExample$ChannelBufferStream</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>CspChannelFileExample</id>
+            <id>ChannelBufferZeroExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>CspChannelFileExample</mainClass>
+              <mainClass>ChannelBufferExample$ChannelBufferZeroExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>ChannelExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>ChannelExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>ChannelFileExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>ChannelFileExample</mainClass>
             </configuration>
           </execution>
           <execution>
@@ -80,6 +98,15 @@
             </goals>
             <configuration>
               <mainClass>CspExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>SplitterExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>SplitterExample</mainClass>
             </configuration>
           </execution>
         </executions>

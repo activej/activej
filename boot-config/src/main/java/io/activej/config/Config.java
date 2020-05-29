@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.Utils.nullToDefault;
 import static io.activej.common.Utils.nullToException;
-import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.util.Collections.*;
 
 /**
@@ -296,7 +295,7 @@ public interface Config {
 	}
 
 	static Config ofClassPathProperties(String fileName) {
-		return ofClassPathProperties(fileName, getSystemClassLoader(), false);
+		return ofClassPathProperties(fileName, Thread.currentThread().getContextClassLoader(), false);
 	}
 
 	static Config ofClassPathProperties(String fileName, ClassLoader classLoader) {
@@ -304,7 +303,7 @@ public interface Config {
 	}
 
 	static Config ofClassPathProperties(String fileName, boolean optional) {
-		return ofClassPathProperties(fileName, getSystemClassLoader(), optional);
+		return ofClassPathProperties(fileName, Thread.currentThread().getContextClassLoader(), optional);
 	}
 
 	static Config ofClassPathProperties(String fileName, ClassLoader classLoader, boolean optional) {

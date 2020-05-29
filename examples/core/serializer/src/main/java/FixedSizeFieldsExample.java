@@ -6,8 +6,6 @@ import io.activej.serializer.annotations.SerializeNullable;
 
 import java.util.Arrays;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
-
 /**
  * Example of serialization and deserialization of an object with fixed size and nullable fields.
  */
@@ -33,7 +31,7 @@ public final class FixedSizeFieldsExample {
 		storage.bytes = new byte[]{1, 2, 3, 4};
 
 		byte[] buffer = new byte[200];
-		BinarySerializer<Storage> serializer = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<Storage> serializer = SerializerBuilder.create()
 				.build(Storage.class);
 		//[END REGION_2]
 

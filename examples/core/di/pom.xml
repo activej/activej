@@ -32,57 +32,39 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>DiHelloWorldExample</id>
+            <id>CoreExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DiHelloWorldExample</mainClass>
+              <mainClass>CoreExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>DiCoreExample</id>
+            <id>ReflectionExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DiCoreExample</mainClass>
+              <mainClass>ReflectionExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>DiConfigModuleExample</id>
+            <id>ScopeExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DiConfigModuleExample</mainClass>
+              <mainClass>ScopeExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>DiNamingExample</id>
+            <id>TypeTokenExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>io.activej.examples.DiNamingExample</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>DiScopeExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>DiScopeExample</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>DiTypeTokenExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>DiTypeTokenExample</mainClass>
+              <mainClass>TypeTokenExample</mainClass>
             </configuration>
           </execution>
         </executions>

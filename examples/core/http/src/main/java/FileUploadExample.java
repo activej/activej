@@ -37,7 +37,7 @@ public final class FileUploadExample extends HttpServerLauncher {
 				.map(GET, "/*", StaticServlet.ofClassPath(executor, "static/multipart/")
 						.withIndexHtml())
 				.map(POST, "/test", request ->
-						request.handleMultipart(MultipartDataHandler.file((fileName) -> ChannelFileWriter.open(executor, path.resolve(fileName))))
+						request.handleMultipart(MultipartDataHandler.file(fileName -> ChannelFileWriter.open(executor, path.resolve(fileName))))
 								.map($ -> HttpResponse.ok200().withPlainText("Upload successful")));
 	}
 	//[END EXAMPLE]

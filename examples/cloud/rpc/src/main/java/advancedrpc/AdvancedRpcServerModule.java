@@ -40,7 +40,7 @@ public class AdvancedRpcServerModule extends AbstractModule {
 	@Worker
 	RpcServer rpcServer(Eventloop eventloop, Integer port) {
 		return RpcServer.create(eventloop)
-				.withSerializerBuilder(SerializerBuilder.create(Thread.currentThread().getContextClassLoader()))
+				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(Integer.class)
 				.withHandler(Integer.class, Integer.class, in -> {
 					System.out.println("Incoming message: on port #" + port + " : " + in);

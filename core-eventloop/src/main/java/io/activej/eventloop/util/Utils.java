@@ -34,7 +34,7 @@ public final class Utils {
 
 	static {
 		try {
-			Class<?> cls = Class.forName("sun.nio.ch.SelectorImpl", false, ClassLoader.getSystemClassLoader());
+			Class<?> cls = Class.forName("sun.nio.ch.SelectorImpl", false, Thread.currentThread().getContextClassLoader());
 			SELECTED_KEYS_FIELD = cls.getDeclaredField("selectedKeys");
 			PUBLIC_SELECTED_KEYS_FIELD = cls.getDeclaredField("publicSelectedKeys");
 			SELECTED_KEYS_FIELD.setAccessible(true);

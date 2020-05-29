@@ -50,21 +50,12 @@
         </configuration>
         <executions>
           <execution>
-            <id>CalculatorExample</id>
+            <id>SpecializerCalculatorExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>CalculatorExample</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>calc.CalculatorBenchmark</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>calc.CalculatorBenchmark</mainClass>
+              <mainClass>calculator.SpecializerCalculatorExample</mainClass>
             </configuration>
           </execution>
         </executions>

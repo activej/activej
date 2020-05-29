@@ -47,39 +47,39 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>DatastreamBuiltinNodesExample</id>
+            <id>BuiltinNodesExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DatastreamBuiltinNodesExample</mainClass>
+              <mainClass>BuiltinNodesExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>DatastreamConsumerExample</id>
+            <id>ConsumerExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DatastreamConsumerExample</mainClass>
+              <mainClass>ConsumerExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>DatastreamSupplierExample</id>
+            <id>SupplierExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DatastreamSupplierExample</mainClass>
+              <mainClass>SupplierExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>DatastreamTransformerExample</id>
+            <id>TransformerExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DatastreamTransformerExample</mainClass>
+              <mainClass>TransformerExample</mainClass>
             </configuration>
           </execution>
         </executions>

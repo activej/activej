@@ -1,4 +1,4 @@
-package io.activej.example.specializer;
+package calculator;
 
 import io.activej.specializer.Specializer;
 import org.jparsec.OperatorTable;

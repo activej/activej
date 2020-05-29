@@ -39,7 +39,7 @@ public class MyRpcClient extends Launcher {
     @Provides
     RpcClient rpcClient(Eventloop eventloop, Config config) {
         return RpcClient.create(eventloop)
-                .withSerializerBuilder(SerializerBuilder.create(ClassLoader.getSystemClassLoader()))
+                .withSerializerBuilder(SerializerBuilder.create())
                 .withMessageTypes(String.class)
                 .withStrategy(RpcStrategies.server(
                         new InetSocketAddress(config.get(ofInteger(), "port", RPC_LISTENER_PORT))));

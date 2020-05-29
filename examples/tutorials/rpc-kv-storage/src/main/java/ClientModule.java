@@ -25,7 +25,7 @@ public class ClientModule extends AbstractModule {
 	RpcClient rpcClient(Eventloop eventloop) {
 		return RpcClient.create(eventloop)
 				.withConnectTimeout(Duration.ofSeconds(1))
-				.withSerializerBuilder(SerializerBuilder.create(Thread.currentThread().getContextClassLoader()))
+				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)
 				.withStrategy(RpcStrategies.server(new InetSocketAddress("localhost", RPC_SERVER_PORT)));
 	}

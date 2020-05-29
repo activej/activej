@@ -32,12 +32,12 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>EventloopBasicExample</id>
+            <id>BasicExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>EventloopBasicExample</mainClass>
+              <mainClass>BasicExample</mainClass>
             </configuration>
           </execution>
           <execution>

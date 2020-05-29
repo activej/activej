@@ -3,8 +3,6 @@ import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
-
 
 /**
  * Example of serialization and deserialization of a simple object with no {@code null}
@@ -16,7 +14,7 @@ public final class SimpleObjectExample {
 		Person john = new Person(34, "Jim");
 		john.setSurname("Smith");
 		byte[] buffer = new byte[200];
-		BinarySerializer<Person> serializer = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<Person> serializer = SerializerBuilder.create()
 				.build(Person.class);
 		//[END REGION_2]
 

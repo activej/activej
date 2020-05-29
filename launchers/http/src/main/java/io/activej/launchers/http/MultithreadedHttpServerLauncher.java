@@ -51,7 +51,6 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	public static final int WORKERS = 4;
 
 	public static final String PROPERTIES_FILE = "http-server.properties";
-	public static final String BUSINESS_MODULE_PROP = "businessLogicModule";
 
 	@Inject
 	PrimaryServer primaryServer;
@@ -124,22 +123,17 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String businessLogicModuleName = System.getProperty(BUSINESS_MODULE_PROP);
-
-		Module businessLogicModule = businessLogicModuleName != null ?
-				(Module) Class.forName(businessLogicModuleName).newInstance() :
-				new AbstractModule() {
-					@Provides
-					@Worker
-					AsyncServlet servlet(@WorkerId int workerId) {
-						return request -> HttpResponse.ok200().withPlainText("Hello, world! #" + workerId);
-					}
-				};
 
 		Launcher launcher = new MultithreadedHttpServerLauncher() {
 			@Override
 			protected Module getBusinessLogicModule() {
-				return businessLogicModule;
+				return new AbstractModule() {
+							@Provides
+							@Worker
+							AsyncServlet servlet(@WorkerId int workerId) {
+								return request -> HttpResponse.ok200().withPlainText("Hello, world! #" + workerId);
+							}
+						};
 			}
 		};
 

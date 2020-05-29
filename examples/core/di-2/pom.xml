@@ -42,21 +42,75 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>DiHelloWorldExample</id>
+            <id>BindingGeneratorExample</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DiHelloWorldExample</mainClass>
+              <mainClass>BindingGeneratorExample</mainClass>
             </configuration>
           </execution>
           <execution>
-            <id>DiCoreExample</id>
+            <id>DiDependencyGraphExplore</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>DiCoreExample</mainClass>
+              <mainClass>DiDependencyGraphExplore</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>InstanceInjectorExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>InstanceInjectorExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>InstanceProviderExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>InstanceProviderExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>MultibinderExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>MultibinderExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>MultithreadedScopeServletExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>MultithreadedScopeServletExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>OptionalGeneratorModuleExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>OptionalGeneratorModuleExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>TransientBindingExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>TransientBindingExample</mainClass>
             </configuration>
           </execution>
         </executions>

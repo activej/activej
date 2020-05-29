@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
-
 public final class BinarySerializerModule extends AbstractModule {
 	private static final Logger logger = LoggerFactory.getLogger(BinarySerializerModule.class);
 
@@ -78,7 +76,7 @@ public final class BinarySerializerModule extends AbstractModule {
 			return (BinarySerializer<T>) serializers.computeIfAbsent(cls, type -> {
 				logger.info("Creating serializer for {}", type);
 				if (builder == null) {
-					builder = SerializerBuilder.create(DefiningClassLoader.create(getSystemClassLoader()));
+					builder = SerializerBuilder.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader()));
 				}
 				return builder.build(type);
 			});

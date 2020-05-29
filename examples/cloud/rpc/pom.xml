@@ -45,6 +45,42 @@
               <mainClass>RpcExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>AdvancedRpcClientApp</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>advancedrpc.AdvancedRpcClientApp</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>AdvancedRpcServerApp</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>advancedrpc.AdvancedRpcServerApp</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>MemcacheLikeClient</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>memcached.MemcacheLikeClient</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>MemcacheLikeServer</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>memcached.MemcacheLikeServer</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
