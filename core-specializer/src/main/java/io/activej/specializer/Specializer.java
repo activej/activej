@@ -16,7 +16,6 @@
 
 package io.activej.specializer;
 
-import io.activej.specializer.Utils.*;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AnalyzerAdapter;

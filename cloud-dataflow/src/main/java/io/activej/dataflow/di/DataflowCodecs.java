@@ -38,6 +38,7 @@ import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOut
 import io.activej.di.Key;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
+import io.activej.di.module.Module;
 import io.activej.di.util.Types;
 
 import java.net.InetAddress;
@@ -60,7 +61,7 @@ public final class DataflowCodecs extends AbstractModule {
 	private DataflowCodecs() {
 	}
 
-	public static DataflowCodecs create() {
+	public static Module create() {
 		return new DataflowCodecs();
 	}
 
