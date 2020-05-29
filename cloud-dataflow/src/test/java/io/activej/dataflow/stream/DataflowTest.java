@@ -5,10 +5,11 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
-import io.activej.dataflow.dataset.impl.DatasetListConsumer;
+import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.di.BinarySerializerModule;
 import io.activej.dataflow.di.CodecsModule.Subtypes;
 import io.activej.dataflow.di.DataflowModule;
+import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.Node;
@@ -122,9 +123,9 @@ public final class DataflowTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> items = datasetOfList("items", TestItem.class);
-		DatasetListConsumer<?> consumerNode = listConsumer(items, "result");
-		consumerNode.compileInto(graph);
+		Dataset<TestItem> items = datasetOfId("items", TestItem.class);
+		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
+		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
 				.whenComplete(assertComplete($ -> {
@@ -174,10 +175,10 @@ public final class DataflowTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfList("items",
+		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
 				TestItem.class, Long.class, new TestKeyFunction(), new TestComparator()));
-		DatasetListConsumer<?> consumerNode = listConsumer(items, "result");
-		consumerNode.compileInto(graph);
+		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
+		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
 				.whenComplete(assertComplete($ -> {
@@ -265,7 +266,7 @@ public final class DataflowTest {
 
 		Dataset<TestItem> items = localSort(
 				repartition(
-						datasetOfList("items", TestItem.class),
+						datasetOfId("items", TestItem.class),
 						new TestKeyFunction(),
 						asList(partition2, partition3)
 				),
@@ -273,8 +274,8 @@ public final class DataflowTest {
 				new TestKeyFunction(),
 				new TestComparator()
 		);
-		DatasetListConsumer<?> consumerNode = listConsumer(items, "result");
-		consumerNode.compileInto(graph);
+		Dataset<TestItem> consumerNode = consumerOfId(items, "result");
+		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
 				.whenComplete(assertComplete($ -> {
@@ -338,10 +339,10 @@ public final class DataflowTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> filterDataset = filter(datasetOfList("items", TestItem.class), new TestPredicate());
+		Dataset<TestItem> filterDataset = filter(datasetOfId("items", TestItem.class), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
-		DatasetListConsumer<?> consumerNode = listConsumer(sortedDataset, "result");
-		consumerNode.compileInto(graph);
+		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(sortedDataset, "result");
+		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
 				.whenComplete(assertComplete($ -> {
@@ -394,7 +395,7 @@ public final class DataflowTest {
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> filterDataset = filter(datasetOfList("items", TestItem.class), new TestPredicate());
+		Dataset<TestItem> filterDataset = filter(datasetOfId("items", TestItem.class), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 
 		Collector<TestItem> collector = new Collector<>(sortedDataset, client);

@@ -182,16 +182,16 @@ public final class Datasets {
 		);
 	}
 
-	public static <T> Dataset<T> datasetOfList(String dataId, Class<T> resultType) {
-		return new DatasetListSupplier<>(dataId, resultType);
+	public static <T> Dataset<T> datasetOfId(String dataId, Class<T> resultType) {
+		return new DatasetSupplierOfId<>(dataId, resultType);
 	}
 
-	public static <K, T> SortedDataset<K, T> sortedDatasetOfList(String dataId, Class<T> resultType, Class<K> keyType,
+	public static <K, T> SortedDataset<K, T> sortedDatasetOfId(String dataId, Class<T> resultType, Class<K> keyType,
 			Function<T, K> keyFunction, Comparator<K> keyComparator) {
-		return castToSorted(datasetOfList(dataId, resultType), keyType, keyFunction, keyComparator);
+		return castToSorted(datasetOfId(dataId, resultType), keyType, keyFunction, keyComparator);
 	}
 
-	public static <T> DatasetListConsumer<T> listConsumer(Dataset<T> input, String listId) {
-		return new DatasetListConsumer<>(input, listId);
+	public static <T> DatasetConsumerOfId<T> consumerOfId(Dataset<T> input, String listId) {
+		return new DatasetConsumerOfId<>(input, listId);
 	}
 }

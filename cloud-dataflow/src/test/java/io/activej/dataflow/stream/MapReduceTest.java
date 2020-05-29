@@ -137,7 +137,7 @@ public class MapReduceTest {
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
-		Dataset<String> items = datasetOfList("items", String.class);
+		Dataset<String> items = datasetOfId("items", String.class);
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), StringCount.class);
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), new StringComparator());

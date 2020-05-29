@@ -4,10 +4,11 @@ import io.activej.codec.StructuredCodec;
 import io.activej.config.Config;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.dataset.impl.DatasetListConsumer;
+import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.di.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.di.CodecsModule.Subtypes;
 import io.activej.dataflow.di.DataflowModule;
+import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.Node;
@@ -185,7 +186,7 @@ public class DataflowServerTest {
 		DataflowClient client = injector.getInstance(DataflowClient.class);
 		DataflowGraph graph = injector.getInstance(DataflowGraph.class);
 
-		Dataset<String> items = datasetOfList("items", String.class);
+		Dataset<String> items = datasetOfId("items", String.class);
 		Dataset<StringCount> mappedItems = map(items, new TestMapFunction(), StringCount.class);
 		Dataset<StringCount> reducedItems = splitSortReduceRepartitionReduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
 		Collector<StringCount> collector = new Collector<>(reducedItems, client);
@@ -207,10 +208,10 @@ public class DataflowServerTest {
 
 		DataflowGraph graph = injector.getInstance(DataflowGraph.class);
 
-		Dataset<String> items = datasetOfList("items", String.class);
+		Dataset<String> items = datasetOfId("items", String.class);
 		Dataset<String> sorted = repartitionSort(localSort(items, String.class, new StringFunction(), new TestComparator()));
-		DatasetListConsumer<?> consumerNode = listConsumer(sorted, "result");
-		consumerNode.compileInto(graph);
+		DatasetConsumerOfId<String> consumerNode = consumerOfId(sorted, "result");
+		consumerNode.channels(DataflowContext.of(graph));
 
 		System.out.println(graph);
 		return graph.execute();

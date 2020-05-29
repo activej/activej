@@ -16,12 +16,14 @@
 
 package io.activej.dataflow.node;
 
+import io.activej.csp.ChannelSupplier;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskContext;
 import io.activej.datastream.StreamSupplier;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
 
@@ -30,16 +32,20 @@ import static java.util.Collections.singletonList;
  *
  * @param <T> data items type
  */
-public final class NodeSupplierOfIterable<T> implements Node {
-	private final String iterableId;
+public final class NodeSupplierOfId<T> implements Node {
+	private final String id;
+	private final int partitionIndex;
+	private final int maxPartitions;
 	private final StreamId output;
 
-	public NodeSupplierOfIterable(String iterableId) {
-		this(iterableId, new StreamId());
+	public NodeSupplierOfId(String id, int partitionIndex, int maxPartitions) {
+		this(id, partitionIndex, maxPartitions, new StreamId());
 	}
 
-	public NodeSupplierOfIterable(String iterableId, StreamId output) {
-		this.iterableId = iterableId;
+	public NodeSupplierOfId(String id, int partitionIndex, int maxPartitions,  StreamId output) {
+		this.id = id;
+		this.partitionIndex = partitionIndex;
+		this.maxPartitions = maxPartitions;
 		this.output = output;
 	}
 
@@ -52,19 +58,35 @@ public final class NodeSupplierOfIterable<T> implements Node {
 	@Override
 	public void createAndBind(TaskContext taskContext) {
 		StreamSupplier<T> supplier;
-		Object object = taskContext.get(iterableId);
+		Object object = taskContext.get(id);
 		if (object instanceof Iterator) {
 			supplier = StreamSupplier.ofIterator((Iterator<T>) object);
 		} else if (object instanceof Iterable) {
 			supplier = StreamSupplier.ofIterable((Iterable<T>) object);
+		} else if (object instanceof Stream) {
+			supplier = StreamSupplier.ofStream((Stream<T>) object);
+		} else if (object instanceof StreamSupplier) {
+			supplier = (StreamSupplier<T>) object;
+		} else if (object instanceof ChannelSupplier) {
+			supplier = StreamSupplier.ofChannelSupplier((ChannelSupplier<T>) object);
+		} else if (object instanceof PartitionedStreamSupplierFactory) {
+			supplier = ((PartitionedStreamSupplierFactory<T>) object).get(partitionIndex, maxPartitions);
 		} else {
-			throw new IllegalArgumentException("Object with id '" + iterableId + "' is not an iterator or iterable, it is " + object);
+			throw new IllegalArgumentException("Object with id '" + id + "' is not a valid supplier of data: " + object);
 		}
 		taskContext.export(output, supplier);
 	}
 
-	public Object getIterableId() {
-		return iterableId;
+	public String getId() {
+		return id;
+	}
+
+	public int getPartitionIndex() {
+		return partitionIndex;
+	}
+
+	public int getMaxPartitions() {
+		return maxPartitions;
 	}
 
 	public StreamId getOutput() {
@@ -73,6 +95,10 @@ public final class NodeSupplierOfIterable<T> implements Node {
 
 	@Override
 	public String toString() {
-		return "NodeSupplierOfIterable{iterableId=" + iterableId + ", output=" + output + '}';
+		return "NodeSupplierOfId{id='" + id +
+				"', partitionIndex=" + partitionIndex +
+				", maxPartitions=" + maxPartitions +
+				", output=" + output +
+				'}';
 	}
 }

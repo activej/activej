@@ -241,17 +241,21 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<NodeSupplierOfIterable> nodeSupplierOfIterable(StructuredCodec<String> string, StructuredCodec<StreamId> streamId) {
-		return object(NodeSupplierOfIterable::new,
-				"iterableId", node -> (String) node.getIterableId(), string,
-				"output", NodeSupplierOfIterable::getOutput, streamId);
+	StructuredCodec<NodeSupplierOfId> nodeSupplierOfId(StructuredCodec<String> string, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId) {
+		return object(NodeSupplierOfId::new,
+				"id", NodeSupplierOfId::getId, string,
+				"partitionIndex", NodeSupplierOfId::getPartitionIndex, integer,
+				"maxPartitions", NodeSupplierOfId::getMaxPartitions, integer,
+				"output", NodeSupplierOfId::getOutput, streamId);
 	}
 
 	@Provides
-	StructuredCodec<NodeConsumerToList> nodeConsumerToList(StructuredCodec<String> string, StructuredCodec<StreamId> streamId) {
-		return object(NodeConsumerToList::new,
-				"input", NodeConsumerToList::getInput, streamId,
-				"listId", node -> (String) node.getListId(), string);
+	StructuredCodec<NodeConsumerOfId> nodeConsumerToList(StructuredCodec<String> string, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId) {
+		return object(NodeConsumerOfId::new,
+				"id", NodeConsumerOfId::getId, string,
+				"partitionIndex", NodeConsumerOfId::getPartitionIndex, integer,
+				"maxPartitions", NodeConsumerOfId::getMaxPartitions, integer,
+				"input", NodeConsumerOfId::getInput, streamId);
 	}
 
 	@Provides

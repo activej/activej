@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.server;
 
+import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelConsumer;
@@ -38,12 +39,15 @@ import io.activej.di.ResourceLocator;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
 import io.activej.net.AsyncTcpSocket;
+import io.activej.promise.SettablePromise;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -206,5 +210,13 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		} else {
 			handler.onCommand(messaging, command);
 		}
+	}
+
+	@Override
+	protected void onClose(SettablePromise<Void> cb) {
+		List<ChannelQueue<ByteBuf>> pending = new ArrayList<>(pendingStreams.values());
+		pendingStreams.clear();
+		pending.forEach(AsyncCloseable::close);
+		cb.set(null);
 	}
 }

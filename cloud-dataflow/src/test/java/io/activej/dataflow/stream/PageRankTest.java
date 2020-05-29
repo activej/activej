@@ -3,7 +3,8 @@ package io.activej.dataflow.stream;
 import io.activej.codec.StructuredCodec;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.SortedDataset;
-import io.activej.dataflow.dataset.impl.DatasetListConsumer;
+import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
+import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
@@ -270,14 +271,14 @@ public class PageRankTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		SortedDataset<Long, Page> pages = repartitionSort(sortedDatasetOfList("items",
+		SortedDataset<Long, Page> pages = repartitionSort(sortedDatasetOfId("items",
 				Page.class, Long.class, new PageKeyFunction(), new LongComparator()));
 
 		SortedDataset<Long, Rank> pageRanks = pageRank(pages);
 
-		DatasetListConsumer<?> consumerNode = listConsumer(pageRanks, "result");
+		DatasetConsumerOfId<Rank> consumerNode = consumerOfId(pageRanks, "result");
 
-		consumerNode.compileInto(graph);
+		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
 				.whenComplete(assertComplete($ -> {

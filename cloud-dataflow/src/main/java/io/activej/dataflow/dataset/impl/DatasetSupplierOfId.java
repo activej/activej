@@ -21,17 +21,17 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.NodeSupplierOfIterable;
+import io.activej.dataflow.node.NodeSupplierOfId;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class DatasetListSupplier<T> extends Dataset<T> {
-	private final String listId;
+public final class DatasetSupplierOfId<T> extends Dataset<T> {
+	private final String id;
 
-	public DatasetListSupplier(String listId, Class<T> resultType) {
+	public DatasetSupplierOfId(String id, Class<T> resultType) {
 		super(resultType);
-		this.listId = listId;
+		this.id = id;
 	}
 
 	@Override
@@ -39,8 +39,9 @@ public final class DatasetListSupplier<T> extends Dataset<T> {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 		List<Partition> availablePartitions = graph.getAvailablePartitions();
-		for (Partition partition : availablePartitions) {
-			NodeSupplierOfIterable<T> node = new NodeSupplierOfIterable<>(listId);
+		for (int i = 0, size = availablePartitions.size(); i < size; i++) {
+			Partition partition = availablePartitions.get(i);
+			NodeSupplierOfId<T> node = new NodeSupplierOfId<>(id, i, size);
 			graph.addNode(partition, node);
 			outputStreamIds.add(node.getOutput());
 		}
