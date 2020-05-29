@@ -16,10 +16,15 @@
 
 package io.activej.dataflow.dataset;
 
+import io.activej.common.ref.RefInt;
+import io.activej.common.tuple.Tuple2;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.StreamId;
 
-import java.util.List;
+import javax.xml.crypto.Data;
+import java.util.*;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Represents distributed dataset which can span multiple partitions.
@@ -45,4 +50,41 @@ public abstract class Dataset<T> {
 	}
 
 	public abstract List<StreamId> channels(DataflowContext context);
+
+	/**
+	 * Returns a list of datasets that this dataset is based on.
+	 * Can return empty list if this dataset is not based on any other dataset.
+	 */
+	public Collection<Dataset<?>> getBases() {
+		return emptyList();
+	}
+
+	@Override
+	public String toString() {
+		String name = getClass().getSimpleName();
+		return (name.startsWith("Dataset") ? name.substring(7) : name) + "<" + valueType.getSimpleName() + ">";
+	}
+
+	private static void writeDatasets(StringBuilder sb, Map<Dataset<?>, String> ids, Set<Tuple2<Dataset<?>, Dataset<?>>> visited, RefInt lastId, Dataset<?> dataset) {
+		for (Dataset<?> base : dataset.getBases()) {
+			if (!visited.add(new Tuple2<>(base, dataset))) {
+				continue;
+			}
+			sb.append("  ")
+					.append(ids.computeIfAbsent(base, $ -> "d" + lastId.value++))
+					.append(" -> ")
+					.append(ids.computeIfAbsent(dataset, $ -> "d" + lastId.value++))
+					.append('\n');
+			writeDatasets(sb, ids, visited, lastId, base);
+		}
+	}
+
+	public final String toGraphViz() {
+		StringBuilder sb = new StringBuilder("digraph {\n  node[shape=rect]\n\n");
+		HashMap<Dataset<?>, String> ids = new HashMap<>();
+		writeDatasets(sb, ids, new HashSet<>(), new RefInt(0), this);
+		sb.append('\n');
+		ids.forEach((dataset, id) -> sb.append("  ").append(id).append(" [label=\"").append(dataset).append("\"]\n"));
+		return sb.append('}').toString();
+	}
 }

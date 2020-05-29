@@ -41,10 +41,11 @@ public final class DatasetConsumerOfId<T> extends Dataset<T> {
 	public List<StreamId> channels(DataflowContext context) {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> streamIds = input.channels(context);
+		int index = context.generateNodeIndex();
 		for (int i = 0, streamIdsSize = streamIds.size(); i < streamIdsSize; i++) {
 			StreamId streamId = streamIds.get(i);
 			Partition partition = graph.getPartition(streamId);
-			NodeConsumerOfId<T> node = new NodeConsumerOfId<>(id, i, streamIdsSize, streamId);
+			NodeConsumerOfId<T> node = new NodeConsumerOfId<>(index, id, i, streamIdsSize, streamId);
 			graph.addNode(partition, node);
 		}
 		return Collections.emptyList();

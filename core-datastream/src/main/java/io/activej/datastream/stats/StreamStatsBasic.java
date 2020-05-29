@@ -100,5 +100,4 @@ public class StreamStatsBasic<T> implements StreamStats<T> {
 	public int getActive() {
 		return (int) (started.getTotalCount() - (endOfStream.getTotalCount() + error.getTotal()));
 	}
-
 }

@@ -42,21 +42,23 @@ public class DatasetUtils {
 		Function<I, K> keyFunction = input.keyFunction();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 		List<NodeShard<K, I>> sharders = new ArrayList<>();
+		int sharderIndex = context.generateNodeIndex();
 		for (StreamId inputStreamId : input.channels(context.withoutFixedNonce())) {
 			Partition partition = graph.getPartition(inputStreamId);
-			NodeShard<K, I> sharder = new NodeShard<>(keyFunction, inputStreamId, nonce);
+			NodeShard<K, I> sharder = new NodeShard<>(sharderIndex, keyFunction, inputStreamId, nonce);
 			graph.addNode(partition, sharder);
 			sharders.add(sharder);
 		}
 
+		int reducerIndex = context.generateNodeIndex();
 		for (Partition partition : partitions) {
-			NodeReduce<K, O, A> nodeReduce = new NodeReduce<>(input.keyComparator());
+			NodeReduce<K, O, A> nodeReduce = new NodeReduce<>(reducerIndex, input.keyComparator());
 			graph.addNode(partition, nodeReduce);
 
 			for (NodeShard<K, I> sharder : sharders) {
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
-				StreamId reducerInput = forwardChannel(graph, input.valueType(), sharderOutput, partition);
+				StreamId reducerInput = forwardChannel(context, input.valueType(), sharderOutput, partition);
 				nodeReduce.addInput(reducerInput, keyFunction, reducer);
 			}
 
@@ -71,20 +73,21 @@ public class DatasetUtils {
 		return repartitionAndReduce(context, input, StreamReducers.mergeSortReducer(), partitions);
 	}
 
-	public static <T> StreamId forwardChannel(DataflowGraph graph, Class<T> type,
+	public static <T> StreamId forwardChannel(DataflowContext context, Class<T> type,
 	                                          StreamId sourceStreamId, Partition targetPartition) {
-		Partition sourcePartition = graph.getPartition(sourceStreamId);
-		return forwardChannel(graph, type, sourcePartition, targetPartition, sourceStreamId);
+		Partition sourcePartition = context.getGraph().getPartition(sourceStreamId);
+		return forwardChannel(context, type, sourcePartition, targetPartition, sourceStreamId);
 	}
 
-	private static <T> StreamId forwardChannel(DataflowGraph graph, Class<T> type,
+	private static <T> StreamId forwardChannel(DataflowContext context, Class<T> type,
 	                                           Partition sourcePartition, Partition targetPartition,
 	                                           StreamId sourceStreamId) {
 //		if (sourcePartition == targetPartition) {
 //			return sourceStreamId;
 //		}
-		NodeUpload<T> nodeUpload = new NodeUpload<>(type, sourceStreamId);
-		NodeDownload<T> nodeDownload = new NodeDownload<>(type, sourcePartition.getAddress(), sourceStreamId);
+		DataflowGraph graph = context.getGraph();
+		NodeUpload<T> nodeUpload = new NodeUpload<>(context.generateNodeIndex(), type, sourceStreamId);
+		NodeDownload<T> nodeDownload = new NodeDownload<>(context.generateNodeIndex(), type, sourcePartition.getAddress(), sourceStreamId);
 		graph.addNode(sourcePartition, nodeUpload);
 		graph.addNode(targetPartition, nodeDownload);
 		return nodeDownload.getOutput();

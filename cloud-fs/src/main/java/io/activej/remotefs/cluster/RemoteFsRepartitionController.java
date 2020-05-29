@@ -139,7 +139,8 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 
 	@NotNull
 	private Promise<Void> doRepartition() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Should be called from eventloop thread");
+		if (CHECK)
+			checkState(eventloop.inEventloopThread(), "Should be called from eventloop thread");
 
 		isRepartitioning = true;
 		return localStorage.list(glob)

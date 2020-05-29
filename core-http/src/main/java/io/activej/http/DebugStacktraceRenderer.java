@@ -88,7 +88,7 @@ public final class DebugStacktraceRenderer {
 			matcher.appendReplacement(stacktrace, "$1<a data-target=\"api/file/" + quotedFile + "$4$5\">$3</a>)");
 		}
 		matcher.appendTail(stacktrace);
-		return HttpResponse.ofCode(500)
+		return HttpResponse.ofCode(code)
 				.withHtml(DEBUG_SERVER_ERROR_HTML
 						.replace("{title}", HttpUtils.getHttpErrorTitle(code))
 						.replace("{stacktrace}", stacktrace));

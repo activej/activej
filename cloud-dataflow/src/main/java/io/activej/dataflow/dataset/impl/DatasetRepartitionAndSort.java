@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
@@ -23,9 +24,11 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 
 import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
+import static java.util.Collections.singletonList;
 
 public final class DatasetRepartitionAndSort<K, T> extends SortedDataset<K, T> {
 	private final LocallySortedDataset<K, T> input;
@@ -48,5 +51,10 @@ public final class DatasetRepartitionAndSort<K, T> extends SortedDataset<K, T> {
 				partitions :
 				context.getGraph().getAvailablePartitions();
 		return repartitionAndSort(context, input, ps);
+	}
+
+	@Override
+	public Collection<Dataset<?>> getBases() {
+		return singletonList(input);
 	}
 }

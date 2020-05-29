@@ -78,18 +78,18 @@ public class DataflowSerializationTest {
 				.bind(new Key<StructuredCodec<TestReducer>>() {}).toInstance(ofObject(TestReducer::new))
 				.build();
 
-		NodeReduce<Integer, Integer, Integer> reducer = new NodeReduce<>(new TestComparator());
+		NodeReduce<Integer, Integer, Integer> reducer = new NodeReduce<>(0, new TestComparator());
 		reducer.addInput(new StreamId(), new TestIdentityFunction<>(), new TestReducer());
 		List<Node> nodes = Arrays.asList(
 				reducer,
-				new NodeMap<>(new TestFunction(), new StreamId(1)),
-				new NodeUpload<>(Integer.class, new StreamId(Long.MAX_VALUE)),
-				new NodeDownload<>(Integer.class, new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 1571), new StreamId(Long.MAX_VALUE))
+				new NodeMap<>(1, new TestFunction(), new StreamId(1)),
+				new NodeUpload<>(2, Integer.class, new StreamId(Long.MAX_VALUE)),
+				new NodeDownload<>(3, Integer.class, new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 1571), new StreamId(Long.MAX_VALUE))
 		);
 
 		StructuredCodec<DataflowCommand> commandCodec = Injector.of(serialization).getInstance(new Key<StructuredCodec<DataflowCommand>>() {}.qualified(Subtypes.class));
 
-		String str = toJson(commandCodec, new DataflowCommandExecute(nodes));
+		String str = toJson(commandCodec, new DataflowCommandExecute(123, nodes));
 		System.out.println(str);
 
 		System.out.println(fromJson(commandCodec, str));

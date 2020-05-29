@@ -162,5 +162,4 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 			}
 		};
 	}
-
 }

@@ -18,7 +18,10 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.stats.BinaryNodeStat;
+import io.activej.dataflow.stats.NodeStat;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
@@ -29,14 +32,14 @@ import static java.util.Collections.singletonList;
  *
  * @param <T> data items type
  */
-public final class NodeUpload<T> implements Node {
-	private Class<T> type;
-	private StreamId streamId;
+public final class NodeUpload<T> extends AbstractNode {
+	private final Class<T> type;
+	private final StreamId streamId;
 
-	public NodeUpload() {
-	}
+	private BinaryNodeStat stats;
 
-	public NodeUpload(Class<T> type, StreamId streamId) {
+	public NodeUpload(int index, Class<T> type, StreamId streamId) {
+		super(index);
 		this.type = type;
 		this.streamId = streamId;
 	}
@@ -47,25 +50,22 @@ public final class NodeUpload<T> implements Node {
 	}
 
 	@Override
-	public void createAndBind(TaskContext taskContext) {
-		DataflowServer server = taskContext.get(DataflowServer.class);
-		taskContext.bindChannel(streamId, server.upload(streamId, type));
+	public void createAndBind(Task task) {
+		task.bindChannel(streamId, task.get(DataflowServer.class).upload(streamId, type, stats = new BinaryNodeStat()));
 	}
 
 	public Class<T> getType() {
 		return type;
 	}
 
-	public void setType(Class<T> type) {
-		this.type = type;
-	}
-
 	public StreamId getStreamId() {
 		return streamId;
 	}
 
-	public void setStreamId(StreamId streamId) {
-		this.streamId = streamId;
+	@Override
+	@Nullable
+	public NodeStat getStats() {
+		return stats;
 	}
 
 	@Override

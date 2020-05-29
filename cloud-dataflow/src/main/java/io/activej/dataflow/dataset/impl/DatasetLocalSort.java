@@ -24,15 +24,22 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeSort;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
+
+import static java.util.Collections.singletonList;
 
 public final class DatasetLocalSort<K, T> extends LocallySortedDataset<K, T> {
 	private final Dataset<T> input;
+	private final int sortBufferSize;
 
-	public DatasetLocalSort(Dataset<T> input, Class<K> keyType, Function<T, K> keyFunction, Comparator<K> keyComparator) {
+	public DatasetLocalSort(Dataset<T> input, Class<K> keyType, Function<T, K> keyFunction, Comparator<K> keyComparator, int sortBufferSize) {
 		super(input.valueType(), keyComparator, keyType, keyFunction);
+		this.sortBufferSize = sortBufferSize;
 		this.input = input;
 	}
 
@@ -41,11 +48,17 @@ public final class DatasetLocalSort<K, T> extends LocallySortedDataset<K, T> {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 		List<StreamId> streamIds = input.channels(context);
+		int index = context.generateNodeIndex();
 		for (StreamId streamId : streamIds) {
-			NodeSort<K, T> node = new NodeSort<>(input.valueType(), keyFunction(), keyComparator(), false, 1_000_000, streamId);
+			NodeSort<K, T> node = new NodeSort<>(index, input.valueType(), keyFunction(), keyComparator(), false, sortBufferSize, streamId);
 			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.add(node.getOutput());
 		}
 		return outputStreamIds;
+	}
+
+	@Override
+	public Collection<Dataset<?>> getBases() {
+		return singletonList(input);
 	}
 }

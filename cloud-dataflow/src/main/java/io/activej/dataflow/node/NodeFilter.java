@@ -17,7 +17,7 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamFilter;
 
 import java.util.Collection;
@@ -30,16 +30,17 @@ import static java.util.Collections.singletonList;
  *
  * @param <T> data items type
  */
-public final class NodeFilter<T> implements Node {
+public final class NodeFilter<T> extends AbstractNode {
 	private final Predicate<T> predicate;
 	private final StreamId input;
 	private final StreamId output;
 
-	public NodeFilter(Predicate<T> predicate, StreamId input) {
-		this(predicate, input, new StreamId());
+	public NodeFilter(int index, Predicate<T> predicate, StreamId input) {
+		this(index, predicate, input, new StreamId());
 	}
 
-	public NodeFilter(Predicate<T> predicate, StreamId input, StreamId output) {
+	public NodeFilter(int index, Predicate<T> predicate, StreamId input, StreamId output) {
+		super(index);
 		this.predicate = predicate;
 		this.input = input;
 		this.output = output;
@@ -56,10 +57,10 @@ public final class NodeFilter<T> implements Node {
 	}
 
 	@Override
-	public void createAndBind(TaskContext taskContext) {
+	public void createAndBind(Task task) {
 		StreamFilter<T> streamFilter = StreamFilter.create(predicate);
-		taskContext.bindChannel(input, streamFilter.getInput());
-		taskContext.export(output, streamFilter.getOutput());
+		task.bindChannel(input, streamFilter.getInput());
+		task.export(output, streamFilter.getOutput());
 	}
 
 	public Predicate<T> getPredicate() {

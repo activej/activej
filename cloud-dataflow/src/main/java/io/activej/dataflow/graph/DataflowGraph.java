@@ -30,13 +30,14 @@ import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.codec.StructuredCodecs.ofList;
 import static io.activej.codec.json.JsonUtils.toJson;
 import static java.util.stream.Collectors.*;
 
 /**
- * Represents a graph of partitions, nodes and streams in datagraph system.
+ * Represents a graph of partitions, nodeStats and streams in datagraph system.
  */
 public final class DataflowGraph {
 	private final Map<Node, Partition> nodePartitions = new LinkedHashMap<>();
@@ -78,8 +79,8 @@ public final class DataflowGraph {
 			this.session = session;
 		}
 
-		public Promise<Void> execute(List<Node> nodes) {
-			return session.execute(nodes);
+		public Promise<Void> execute(long taskId, List<Node> nodes) {
+			return session.execute(taskId, nodes);
 		}
 
 		@Override
@@ -93,13 +94,13 @@ public final class DataflowGraph {
 	 */
 	public Promise<Void> execute() {
 		Map<Partition, List<Node>> nodesByPartition = getNodesByPartition();
+		long taskId = ThreadLocalRandom.current().nextInt() & (Integer.MAX_VALUE >>> 1);
 		return connect(nodesByPartition.keySet())
 				.then(sessions ->
 						Promises.all(
 								sessions.stream()
-										.map(session -> session.execute(nodesByPartition.get(session.partition))))
-								.whenException(() -> sessions.forEach(PartitionSession::close))
-				);
+										.map(session -> session.execute(taskId, nodesByPartition.get(session.partition))))
+								.whenException(() -> sessions.forEach(PartitionSession::close)));
 	}
 
 	private Promise<List<PartitionSession>> connect(Set<Partition> partitions) {
@@ -173,7 +174,7 @@ public final class DataflowGraph {
 				node.getInputs().forEach(input -> nodesByInput.put(input, node));
 			}
 		}
-		// check for upload nodes not connected to download ones, add them
+		// check for upload nodeStats not connected to download ones, add them
 		for (NodeUpload<?> upload : uploads) {
 			StreamId streamId = upload.getStreamId();
 			if (!network.containsKey(streamId)) {
@@ -183,7 +184,7 @@ public final class DataflowGraph {
 
 		Map<Node, String> nodeIds = new HashMap<>();
 
-		// define nodes and group them by partitions using graphviz clusters
+		// define nodeStats and group them by partitions using graphviz clusters
 		getNodesByPartition()
 				.entrySet()
 				.stream()
@@ -196,16 +197,17 @@ public final class DataflowGraph {
 							.append(e.getKey().getAddress())
 							.append("\";\n    style=rounded;\n\n");
 					for (Node node : e.getValue()) {
-						// upload and download nodes have no common connections
-						// download nodes are never drawn, and upload only has an input
+						// upload and download nodeStats have no common connections
+						// download nodeStats are never drawn, and upload only has an input
 						if ((node instanceof NodeDownload || (node instanceof NodeUpload && network.containsKey(((NodeUpload<?>) node).getStreamId())))) {
 							continue;
 						}
 						String nodeId = "n" + ++nodeCounter.value;
+						String name = node.getClass().getSimpleName();
 						sb.append("    ")
 								.append(nodeId)
 								.append(" [label=\"")
-								.append(node.getClass().getSimpleName())
+								.append(name.startsWith("Node") ? name.substring(4) : name)
 								.append("\"];\n");
 						nodeIds.put(node, nodeId);
 					}
@@ -241,7 +243,7 @@ public final class DataflowGraph {
 					notFound.add(nodeId);
 					forceLabel = true;
 				}
-				if (nodeId != null) { // nodeId might be null only for net nodes here, see previous 'if'
+				if (nodeId != null) { // nodeId might be null only for net nodeStats here, see previous 'if'
 					sb.append("  ")
 							.append(id)
 							.append(" -> ")
@@ -271,7 +273,7 @@ public final class DataflowGraph {
 			}
 		});
 
-		// draw the nodes that were never defined as points that still have connections
+		// draw the nodeStats that were never defined as points that still have connections
 		if (!notFound.isEmpty()) {
 			sb.append('\n');
 			notFound.forEach(id -> sb.append("  ").append(id).append(" [shape=point];\n"));

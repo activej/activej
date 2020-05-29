@@ -18,69 +18,76 @@ package io.activej.dataflow;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.dataflow.command.DataflowCommand;
-import io.activej.dataflow.command.DataflowCommandDownload;
-import io.activej.dataflow.command.DataflowCommandExecute;
-import io.activej.dataflow.command.DataflowResponse;
+import io.activej.dataflow.command.*;
+import io.activej.dataflow.command.DataflowResponsePartitionData.TaskDesc;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.node.Node;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.ResourceLocator;
+import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.SettablePromise;
-import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiConsumer;
+
+import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Server for processing JSON commands.
  */
 @SuppressWarnings("rawtypes")
 public final class DataflowServer extends AbstractServer<DataflowServer> {
+	private static final int MAX_LAST_RAN_TASKS = ApplicationSettings.getInt(DataflowServer.class, "maxLastRanTasks", 1000);
+
 	private final Map<StreamId, ChannelQueue<ByteBuf>> pendingStreams = new HashMap<>();
-	private final Map<Class, CommandHandler> handlers = new HashMap<>();
+	private final Map<Class, BiConsumer<Messaging<DataflowCommand, DataflowResponse>, ?>> handlers = new HashMap<>();
 
 	private final ByteBufsCodec<DataflowCommand, DataflowResponse> codec;
 	private final BinarySerializerLocator serializers;
-	private final ResourceLocator environment;
 
-	{
-		handlers.put(DataflowCommandDownload.class, new DownloadCommandHandler());
-		handlers.put(DataflowCommandExecute.class, new ExecuteCommandHandler());
-	}
+	private final Map<Long, Task> runningTasks = new HashMap<>();
+	private final Map<Long, Task> lastTasks = new LinkedHashMap<Long, Task>() {
+		@Override
+		protected boolean removeEldestEntry(Map.Entry eldest) {
+			return size() > MAX_LAST_RAN_TASKS;
+		}
+	};
 
-	protected interface CommandHandler<I, O> {
-		void onCommand(Messaging<I, O> messaging, I command);
+	private int succeededTasks = 0, canceledTasks = 0, failedTasks = 0;
+
+	private <T> void handleCommand(Class<T> cls, BiConsumer<Messaging<DataflowCommand, DataflowResponse>, T> handler) {
+		handlers.put(cls, handler);
 	}
 
 	public DataflowServer(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
 		super(eventloop);
 		this.codec = codec;
 		this.serializers = serializers;
-		this.environment = environment;
-	}
 
-	private class DownloadCommandHandler implements CommandHandler<DataflowCommandDownload, DataflowResponse> {
-		@Override
-		public void onCommand(Messaging<DataflowCommandDownload, DataflowResponse> messaging, DataflowCommandDownload command) {
+		handleCommand(DataflowCommandDownload.class, (messaging, command) -> {
 			if (logger.isTraceEnabled()) {
 				logger.trace("Processing onDownload: {}, {}", command, messaging);
 			}
@@ -105,32 +112,34 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 			consumer.withAcknowledgement(ack ->
 					ack.whenComplete(($, e) -> {
 						if (e != null) {
-							logger.warn("Exception occurred while trying to send data");
+							logger.warn("Exception occurred while trying to send data", e);
 						}
 						messaging.close();
 					}));
-		}
-	}
-
-	private class ExecuteCommandHandler implements CommandHandler<DataflowCommandExecute, DataflowResponse> {
-		@Override
-		public void onCommand(Messaging<DataflowCommandExecute, DataflowResponse> messaging, DataflowCommandExecute command) {
-			TaskContext task = new TaskContext(environment);
+		});
+		handleCommand(DataflowCommandExecute.class, (messaging, command) -> {
+			long taskId = command.getTaskId();
+			Task task = new Task(taskId, environment, command.getNodes());
 			try {
-				for (Node node : command.getNodes()) {
-					node.createAndBind(task);
-				}
+				task.bind();
 			} catch (Exception e) {
-				logger.error("Failed to createAndBind task: {}", command, e);
+				logger.error("Failed to construct task: {}", command, e);
 				sendResponse(messaging, e);
 				return;
 			}
-
+			lastTasks.put(taskId, task);
+			runningTasks.put(taskId, task);
 			task.execute()
 					.whenComplete(($, throwable) -> {
+						runningTasks.remove(taskId);
 						if (throwable == null) {
+							succeededTasks++;
 							logger.info("Task executed successfully: {}", command);
+						} else if (throwable == CLOSE_EXCEPTION) {
+							canceledTasks++;
+							logger.error("Canceled task: {}", command, throwable);
 						} else {
+							failedTasks++;
 							logger.error("Failed to execute task: {}", command, throwable);
 						}
 						sendResponse(messaging, throwable);
@@ -143,22 +152,54 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 							task.cancel();
 						}
 					});
-		}
-
-		private void sendResponse(Messaging<DataflowCommandExecute, DataflowResponse> messaging, @Nullable Throwable throwable) {
-			String error = null;
-			if (throwable != null) {
-				error = throwable.getClass().getSimpleName() + ": " + throwable.getMessage();
+		});
+		handleCommand(DataflowCommandGetTasks.class, (messaging, command) -> {
+			Long taskId = command.getTaskId();
+			if (taskId == null) {
+				messaging.send(new DataflowResponsePartitionData(
+						runningTasks.size(), succeededTasks, failedTasks, canceledTasks,
+						lastTasks.entrySet().stream()
+								.map(e -> new TaskDesc(e.getKey(), e.getValue().getStatus()))
+								.collect(toList())
+				)).whenException(e -> logger.error("Failed to send answer for the partition data request", e));
+				return;
 			}
-			messaging.send(new DataflowResponse(error))
-					.whenComplete(messaging::close);
-		}
+			Task task = lastTasks.get(taskId);
+			if (task == null) {
+				messaging.send(new DataflowResponseResult("No task found with id " + taskId));
+				return;
+			}
+			String err;
+			if (task.getError() != null) {
+				StringWriter writer = new StringWriter();
+				task.getError().printStackTrace(new PrintWriter(writer));
+				err = writer.toString();
+			} else {
+				err = null;
+			}
+			messaging.send(new DataflowResponseTaskData(
+					task.getStatus(),
+					task.getStartTime(),
+					task.getFinishTime(),
+					err,
+					task.getNodes().stream()
+							.filter(n -> n.getStats() != null)
+							.collect(toMap(Node::getIndex, Node::getStats)), task.getGraphViz()))
+					.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
+		});
 	}
 
-	public <T> StreamConsumer<T> upload(StreamId streamId, Class<T> type) {
-		BinarySerializer<T> serializer = serializers.get(type);
+	private void sendResponse(Messaging<DataflowCommand, DataflowResponse> messaging, @Nullable Throwable throwable) {
+		String error = null;
+		if (throwable != null) {
+			error = throwable.getClass().getSimpleName() + ": " + throwable.getMessage();
+		}
+		messaging.send(new DataflowResponseResult(error))
+				.whenComplete(messaging::close);
+	}
 
-		ChannelSerializer<T> streamSerializer = ChannelSerializer.create(serializer)
+	public <T> StreamConsumer<T> upload(StreamId streamId, Class<T> type, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
+		ChannelSerializer<T> streamSerializer = ChannelSerializer.create(serializers.get(type))
 				.withInitialBufferSize(MemSize.kilobytes(256))
 				.withAutoFlushInterval(Duration.ZERO)
 				.withExplicitEndOfStream();
@@ -171,7 +212,8 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		} else {
 			logger.info("onUpload: transferring {}, pending downloads: {}", streamId, pendingStreams.size());
 		}
-		streamSerializer.getOutput().set(forwarder.getConsumer());
+
+		streamSerializer.getOutput().set(forwarder.getConsumer().transformWith(transformer));
 		streamSerializer.getAcknowledgement()
 				.whenException(() -> {
 					ChannelQueue<ByteBuf> removed = pendingStreams.remove(streamId);
@@ -181,6 +223,10 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 					}
 				});
 		return streamSerializer;
+	}
+
+	public <T> StreamConsumer<T> upload(StreamId streamId, Class<T> type) {
+		return upload(streamId, type, ChannelTransformer.identity());
 	}
 
 	@Override
@@ -203,13 +249,14 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 
 	@SuppressWarnings("unchecked")
 	private void doRead(Messaging<DataflowCommand, DataflowResponse> messaging, DataflowCommand command) {
-		CommandHandler handler = handlers.get(command.getClass());
-		if (handler == null) {
-			messaging.close();
-			logger.error("missing handler for {}", command);
-		} else {
-			handler.onCommand(messaging, command);
+		BiConsumer<Messaging<DataflowCommand, DataflowResponse>, DataflowCommand> handler =
+				(BiConsumer<Messaging<DataflowCommand, DataflowResponse>, DataflowCommand>) handlers.get(command.getClass());
+		if (handler != null) {
+			handler.accept(messaging, command);
+			return;
 		}
+		logger.error("missing handler for {}", command);
+		messaging.close();
 	}
 
 	@Override
@@ -218,5 +265,52 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		pendingStreams.clear();
 		pending.forEach(AsyncCloseable::close);
 		cb.set(null);
+	}
+
+	public Map<Long, Task> getLastTasks() {
+		return lastTasks;
+	}
+
+	@JmxAttribute
+	public int getRunningTasks() {
+		return runningTasks.size();
+	}
+
+	@JmxAttribute
+	public int getSucceededTasks() {
+		return succeededTasks;
+	}
+
+	@JmxAttribute
+	public int getFailedTasks() {
+		return failedTasks;
+	}
+
+	@JmxAttribute
+	public int getCanceledTasks() {
+		return canceledTasks;
+	}
+
+	@JmxOperation
+	public void cancelAll() {
+		runningTasks.values().forEach(Task::cancel);
+	}
+
+	@JmxOperation
+	public boolean cancel(long taskID) {
+		Task task = runningTasks.get(taskID);
+		if (task != null) {
+			task.cancel();
+			return true;
+		}
+		return false;
+	}
+
+	@JmxOperation
+	public void cancelTask(long id) {
+		Task task = runningTasks.get(id);
+		if (task != null) {
+			task.cancel();
+		}
 	}
 }

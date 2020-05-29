@@ -39,9 +39,10 @@ public final class DatasetSupplierOfId<T> extends Dataset<T> {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 		List<Partition> availablePartitions = graph.getAvailablePartitions();
+		int index = context.generateNodeIndex();
 		for (int i = 0, size = availablePartitions.size(); i < size; i++) {
 			Partition partition = availablePartitions.get(i);
-			NodeSupplierOfId<T> node = new NodeSupplierOfId<>(id, i, size);
+			NodeSupplierOfId<T> node = new NodeSupplierOfId<>(index, id, i, size);
 			graph.addNode(partition, node);
 			outputStreamIds.add(node.getOutput());
 		}

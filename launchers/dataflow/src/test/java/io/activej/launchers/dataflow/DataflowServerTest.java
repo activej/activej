@@ -7,6 +7,7 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowResponse;
+import io.activej.dataflow.command.DataflowResponseResult;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;

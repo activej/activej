@@ -20,9 +20,11 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.codec.StructuredCodec;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.dataflow.command.DataflowCommand;
-import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.inject.CodecsModule.Subtypes;
+import io.activej.dataflow.stats.BinaryNodeStat;
+import io.activej.dataflow.stats.NodeStat;
+import io.activej.dataflow.stats.StatReducer;
+import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
@@ -45,19 +47,12 @@ public final class DataflowModule extends AbstractModule {
 		install(DataflowCodecs.create());
 		install(DatasetIdModule.create());
 		install(BinarySerializerModule.create());
+
+		bind(new Key<StatReducer<BinaryNodeStat>>() {}).toInstance(BinaryNodeStat.REDUCER);
 	}
 
 	@Provides
-	ByteBufsCodec<DataflowCommand, DataflowResponse> commandToResponse(@Subtypes StructuredCodec<DataflowCommand> command, StructuredCodec<DataflowResponse> response) {
-		return nullTerminated(command, response);
-	}
-
-	@Provides
-	ByteBufsCodec<DataflowResponse, DataflowCommand> responseToCommand(@Subtypes StructuredCodec<DataflowCommand> command, StructuredCodec<DataflowResponse> response) {
-		return nullTerminated(response, command);
-	}
-
-	private static <I, O> ByteBufsCodec<I, O> nullTerminated(StructuredCodec<I> inputCodec, StructuredCodec<O> outputCodec) {
+	<I, O> ByteBufsCodec<I, O> byteBufsCodec(@Subtypes StructuredCodec<I> inputCodec, @Subtypes StructuredCodec<O> outputCodec) {
 		return ByteBufsCodec.ofDelimiter(ofNullTerminatedBytes(), buf -> {
 			ByteBuf buf1 = ByteBufPool.ensureWriteRemaining(buf, 1);
 			buf1.put((byte) 0);

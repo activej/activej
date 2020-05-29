@@ -19,13 +19,11 @@ package io.activej.dataflow;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.csp.queue.*;
-import io.activej.dataflow.command.DataflowCommand;
-import io.activej.dataflow.command.DataflowCommandDownload;
-import io.activej.dataflow.command.DataflowCommandExecute;
-import io.activej.dataflow.command.DataflowResponse;
+import io.activej.dataflow.command.*;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.node.Node;
@@ -83,13 +81,11 @@ public final class DataflowClient {
 		return this;
 	}
 
-	public <T> Promise<StreamSupplier<T>> download(InetSocketAddress address, StreamId streamId, Class<T> type) {
-		return AsyncTcpSocketNio.connect(address, 0, socketSettings)
+	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, Class<T> type, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
+		return StreamSupplier.ofPromise(AsyncTcpSocketNio.connect(address, 0, socketSettings)
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
-					DataflowCommandDownload commandDownload = new DataflowCommandDownload(streamId);
-
-					return messaging.send(commandDownload)
+					return messaging.send(new DataflowCommandDownload(streamId))
 							.map($ -> {
 								ChannelQueue<ByteBuf> primaryBuffer =
 										bufferMinSize == 0 && bufferMaxSize == 0 ?
@@ -101,6 +97,7 @@ public final class DataflowClient {
 										() -> ChannelFileBuffer.create(executor, secondaryPath.resolve(secondaryId.getAndIncrement() + ".bin")));
 
 								return messaging.receiveBinaryStream()
+										.transformWith(transformer)
 										.transformWith(buffer)
 										.transformWith(ChannelDeserializer.create(serializers.get(type))
 												.withExplicitEndOfStream())
@@ -108,7 +105,11 @@ public final class DataflowClient {
 										.withEndOfStream(eos -> eos
 												.whenComplete(messaging::close));
 							});
-				});
+				}));
+	}
+
+	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, Class<T> type) {
+		return download(address, streamId, type, ChannelTransformer.identity());
 	}
 
 	private static class StreamTraceCounter<T> implements StreamSupplierTransformer<T, StreamSupplier<T>> {
@@ -155,8 +156,7 @@ public final class DataflowClient {
 				StreamDataAcceptor<T> dataAcceptor = getDataAcceptor();
 				assert dataAcceptor != null;
 				input.resume(item -> {
-					count++;
-					if (count == 1 || count % 1_000 == 0) {
+					if (count++ == 1 || count % 1_000 == 0) {
 						logger.info("Received {} items from stream {}({}): {}", count, streamId, address, item);
 					}
 					dataAcceptor.accept(item);
@@ -179,12 +179,15 @@ public final class DataflowClient {
 			this.messaging = MessagingWithBinaryStreaming.create(socket, codec);
 		}
 
-		public Promise<Void> execute(Collection<Node> nodes) {
-			return messaging.send(new DataflowCommandExecute(new ArrayList<>(nodes)))
+		public Promise<Void> execute(long taskId, Collection<Node> nodes) {
+			return messaging.send(new DataflowCommandExecute(taskId, new ArrayList<>(nodes)))
 					.then(messaging::receive)
 					.then(response -> {
 						messaging.close();
-						String error = response.getError();
+						if (!(response instanceof DataflowResponseResult)) {
+							return Promise.ofException(new Exception("Bad response from server"));
+						}
+						String error = ((DataflowResponseResult) response).getError();
 						if (error != null) {
 							return Promise.ofException(new Exception("Error on remote server " + address + ": " + error));
 						}

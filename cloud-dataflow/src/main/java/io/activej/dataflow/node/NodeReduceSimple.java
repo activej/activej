@@ -17,7 +17,7 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamReducerSimple;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
@@ -37,19 +37,20 @@ import static java.util.Collections.singletonList;
  * @param <O> output data type
  * @param <A> accumulator type
  */
-public final class NodeReduceSimple<K, I, O, A> implements Node {
+public final class NodeReduceSimple<K, I, O, A> extends AbstractNode {
 	private final Function<I, K> keyFunction;
 	private final Comparator<K> keyComparator;
 	private final Reducer<K, I, O, A> reducer;
 	private final List<StreamId> inputs;
 	private final StreamId output;
 
-	public NodeReduceSimple(Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer) {
-		this(keyFunction, keyComparator, reducer, new ArrayList<>(), new StreamId());
+	public NodeReduceSimple(int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer) {
+		this(index, keyFunction, keyComparator, reducer, new ArrayList<>(), new StreamId());
 	}
 
-	public NodeReduceSimple(Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer,
+	public NodeReduceSimple(int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer,
 			List<StreamId> inputs, StreamId output) {
+		super(index);
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
 		this.reducer = reducer;
@@ -72,13 +73,13 @@ public final class NodeReduceSimple<K, I, O, A> implements Node {
 	}
 
 	@Override
-	public void createAndBind(TaskContext taskContext) {
+	public void createAndBind(Task task) {
 		StreamReducerSimple<K, I, O, A> streamReducerSimple =
 				StreamReducerSimple.create(keyFunction, keyComparator, reducer);
 		for (StreamId input : inputs) {
-			taskContext.bindChannel(input, streamReducerSimple.newInput());
+			task.bindChannel(input, streamReducerSimple.newInput());
 		}
-		taskContext.export(output, streamReducerSimple.getOutput());
+		task.export(output, streamReducerSimple.getOutput());
 	}
 
 	public Function<I, K> getKeyFunction() {

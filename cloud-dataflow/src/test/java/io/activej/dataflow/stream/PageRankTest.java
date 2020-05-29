@@ -8,6 +8,7 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.node.NodeSort;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
@@ -17,23 +18,20 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
+import io.activej.http.AsyncHttpServer;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.activej.codec.StructuredCodecs.object;
@@ -41,7 +39,6 @@ import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
-import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
 import static java.util.Arrays.asList;
@@ -62,7 +59,7 @@ public class PageRankTest {
 
 	@Before
 	public void setUp() {
-		executor = Executors.newSingleThreadExecutor();
+		NodeSort.setSortingExecutor(executor = Executors.newCachedThreadPool());
 	}
 
 	@After
@@ -227,12 +224,8 @@ public class PageRankTest {
 		return ranks;
 	}
 
-	@Test
-	public void test() throws Exception {
-		InetSocketAddress address1 = getFreeListenAddress();
-		InetSocketAddress address2 = getFreeListenAddress();
-
-		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+	private Module createModule(Partition... partitions) throws Exception {
+		return createCommon(executor, temporaryFolder.newFolder().toPath(), asList(partitions))
 				.bind(new Key<StructuredCodec<PageKeyFunction>>() {}).toInstance(object(PageKeyFunction::new))
 				.bind(new Key<StructuredCodec<RankKeyFunction>>() {}).toInstance(object(RankKeyFunction::new))
 				.bind(new Key<StructuredCodec<RankAccumulatorKeyFunction>>() {}).toInstance(object(RankAccumulatorKeyFunction::new))
@@ -242,32 +235,83 @@ public class PageRankTest {
 				.bind(new Key<StructuredCodec<PageRankJoiner>>() {}).toInstance(object(PageRankJoiner::new))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
+	}
+
+	private static final InetSocketAddress address1 = new InetSocketAddress(3535);
+	private static final InetSocketAddress address2 = new InetSocketAddress(3540);
+
+	public DataflowServer launchServer(InetSocketAddress address, Object items, Object result) throws Exception {
+		Injector env = Injector.of(ModuleBuilder.create()
+				.install(createModule())
+				.bind(datasetId("items")).toInstance(items)
+				.bind(datasetId("result")).toInstance(result)
+				.build());
+		DataflowServer server = env.getInstance(DataflowServer.class).withListenAddress(address);
+		server.listen();
+		return server;
+	}
+
+	private static Iterable<Page> generatePages(int number) {
+		return () -> new Iterator<Page>() {
+			int i = 0;
+
+			@Override
+			public boolean hasNext() {
+				return i < number;
+			}
+
+			@Override
+			public Page next() {
+				long[] links = new long[ThreadLocalRandom.current().nextInt(Math.min(100, number / 3))];
+				for (int j = 0; j < links.length; j++) {
+					links[j] = ThreadLocalRandom.current().nextInt(number);
+				}
+				return new Page(i++, links);
+			}
+		};
+	}
+
+	@Test
+	@Ignore
+	public void launchServers() throws Exception {
+		launchServer(address1, generatePages(100000), (Consumer<Rank>) $ -> {});
+		launchServer(address2, generatePages( 90000), (Consumer<Rank>) $ -> {});
+		await();
+	}
+
+	@Test
+	@Ignore
+	public void postPageRankTask() throws Exception {
+		SortedDataset<Long, Page> sorted = sortedDatasetOfId("items", Page.class, Long.class, new PageKeyFunction(), new LongComparator());
+		SortedDataset<Long, Page> repartitioned = repartitionSort(sorted);
+		SortedDataset<Long, Rank> pageRanks = pageRank(repartitioned);
+
+		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
+		DataflowGraph graph = env.getInstance(DataflowGraph.class);
+		consumerOfId(pageRanks, "result").channels(DataflowContext.of(graph));
+
+		await(graph.execute());
+	}
+
+	@Test
+	@Ignore
+	public void runDebugServer() throws Exception {
+		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
+		env.getInstance(AsyncHttpServer.class).withListenPort(8080).listen();
+		await();
+	}
+
+	@Test
+	public void test() throws Exception {
+		Module common = createModule(new Partition(address1), new Partition(address2));
 
 		StreamConsumerToList<Rank> result1 = StreamConsumerToList.create();
-
-		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
-						new Page(1, new long[]{1, 2, 3}),
-						new Page(3, new long[]{1})))
-				.bind(datasetId("result")).toInstance(result1)
-
-				.build();
+		DataflowServer server1 = launchServer(address1, asList(
+				new Page(1, new long[]{1, 2, 3}),
+				new Page(3, new long[]{1})), result1);
 
 		StreamConsumerToList<Rank> result2 = StreamConsumerToList.create();
-		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
-				.bind(datasetId("items")).toInstance(singletonList(
-						new Page(2, new long[]{1})))
-				.bind(datasetId("result")).toInstance(result2)
-
-				.build();
-
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
-
-		server1.listen();
-		server2.listen();
+		DataflowServer server2 = launchServer(address2, singletonList(new Page(2, new long[]{1})), result2);
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 

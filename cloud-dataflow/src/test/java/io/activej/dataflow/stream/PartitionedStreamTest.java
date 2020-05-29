@@ -14,6 +14,7 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowResponse;
+import io.activej.dataflow.command.DataflowResponseResult;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
@@ -375,9 +376,7 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					DataflowClient client(Executor executor,
-							ByteBufsCodec<DataflowResponse, DataflowCommand> codec,
-							BinarySerializerLocator locator) throws IOException {
+					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator locator) throws IOException {
 						return new DataflowClient(executor, Files.createTempDirectory("").toAbsolutePath(), codec, locator);
 					}
 

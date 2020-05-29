@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
@@ -24,8 +25,11 @@ import io.activej.dataflow.node.NodeReduceSimple;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+
+import static java.util.Collections.singletonList;
 
 public final class DatasetLocalSortReduce<K, I, O> extends LocallySortedDataset<K, O> {
 	private final LocallySortedDataset<K, I> input;
@@ -43,13 +47,19 @@ public final class DatasetLocalSortReduce<K, I, O> extends LocallySortedDataset<
 	public List<StreamId> channels(DataflowContext context) {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
+		int index = context.generateNodeIndex();
 		for (StreamId streamId : input.channels(context)) {
-			NodeReduceSimple<K, I, O, Object> node = new NodeReduceSimple<>(input.keyFunction(),
+			NodeReduceSimple<K, I, O, Object> node = new NodeReduceSimple<>(index, input.keyFunction(),
 					input.keyComparator(), (Reducer<K, I, O, Object>) reducer);
 			node.addInput(streamId);
 			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.add(node.getOutput());
 		}
 		return outputStreamIds;
+	}
+
+	@Override
+	public Collection<Dataset<?>> getBases() {
+		return singletonList(input);
 	}
 }

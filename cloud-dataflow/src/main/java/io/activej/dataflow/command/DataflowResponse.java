@@ -16,17 +16,5 @@
 
 package io.activej.dataflow.command;
 
-import org.jetbrains.annotations.Nullable;
-
-public class DataflowResponse {
-	private final String error;
-
-	public DataflowResponse(@Nullable String error) {
-		this.error = error;
-	}
-
-	@Nullable
-	public String getError() {
-		return error;
-	}
+public abstract class DataflowResponse {
 }

@@ -18,8 +18,10 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
-import io.activej.datastream.StreamSupplier;
+import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.stats.BinaryNodeStat;
+import io.activej.dataflow.stats.NodeStat;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -31,24 +33,24 @@ import static java.util.Collections.singletonList;
  *
  * @param <T> data items type
  */
-public final class NodeDownload<T> implements Node {
+public final class NodeDownload<T> extends AbstractNode {
 	private final Class<T> type;
 	private final InetSocketAddress address;
 	private final StreamId streamId;
 	private final StreamId output;
 
-	public NodeDownload(Class<T> type, InetSocketAddress address, StreamId streamId, StreamId output) {
+	private BinaryNodeStat stats;
+
+	public NodeDownload(int index, Class<T> type, InetSocketAddress address, StreamId streamId) {
+		this(index, type, address, streamId, new StreamId());
+	}
+
+	public NodeDownload(int index, Class<T> type, InetSocketAddress address, StreamId streamId, StreamId output) {
+		super(index);
 		this.type = type;
 		this.address = address;
 		this.streamId = streamId;
 		this.output = output;
-	}
-
-	public NodeDownload(Class<T> type, InetSocketAddress address, StreamId streamId) {
-		this.type = type;
-		this.address = address;
-		this.streamId = streamId;
-		this.output = new StreamId();
 	}
 
 	@Override
@@ -57,10 +59,8 @@ public final class NodeDownload<T> implements Node {
 	}
 
 	@Override
-	public void createAndBind(TaskContext taskContext) {
-		DataflowClient client = taskContext.get(DataflowClient.class);
-		StreamSupplier<T> stream = StreamSupplier.ofPromise(client.download(address, streamId, type));
-		taskContext.export(output, stream);
+	public void createAndBind(Task task) {
+		task.export(output, task.get(DataflowClient.class).download(address, streamId, type, stats = new BinaryNodeStat()));
 	}
 
 	public Class<T> getType() {
@@ -77,6 +77,12 @@ public final class NodeDownload<T> implements Node {
 
 	public StreamId getOutput() {
 		return output;
+	}
+
+	@Override
+	@Nullable
+	public NodeStat getStats() {
+		return stats;
 	}
 
 	@Override

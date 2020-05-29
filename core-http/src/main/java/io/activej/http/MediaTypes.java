@@ -71,6 +71,7 @@ public final class MediaTypes {
 	public static final MediaType RTF = register("text/rtf", "rtf");
 	public static final MediaType XML = register("text/xml", "xml");
 	public static final MediaType XHTML = register("text/xhtml+xml", "xhtml");
+	public static final MediaType GV = register("text/vnd.graphviz", "gv"); // https://www.iana.org/assignments/media-types/text/vnd.graphviz
 
 	@Deprecated
 	public static final MediaType JAVASCRIPT_TXT = register("text/javascript");

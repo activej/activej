@@ -1,4 +1,4 @@
-package io.datakernel.dataflow.dataset.impl;
+package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowContext;
@@ -39,7 +39,7 @@ public final class DatasetRepartition<T, K> extends Dataset<T> {
 		List<NodeShard<K, T>> sharders = new ArrayList<>();
 		for (StreamId inputStreamId : input.channels(context.withoutFixedNonce())) {
 			Partition partition = graph.getPartition(inputStreamId);
-			NodeShard<K, T> sharder = new NodeShard<>(keyFunction, inputStreamId, nonce);
+			NodeShard<K, T> sharder = new NodeShard<>(context.generateNodeIndex(), keyFunction, inputStreamId, nonce);
 			graph.addNode(partition, sharder);
 			sharders.add(sharder);
 		}
@@ -49,10 +49,10 @@ public final class DatasetRepartition<T, K> extends Dataset<T> {
 			for (NodeShard<K, T> sharder : sharders) {
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
-				StreamId unionInput = forwardChannel(graph, input.valueType(), sharderOutput, partition);
+				StreamId unionInput = forwardChannel(context, input.valueType(), sharderOutput, partition);
 				unionInputs.add(unionInput);
 			}
-			NodeUnion<T> nodeUnion = new NodeUnion<>(unionInputs);
+			NodeUnion<T> nodeUnion = new NodeUnion<>(context.generateNodeIndex(), unionInputs);
 			graph.addNode(partition, nodeUnion);
 
 			outputStreamIds.add(nodeUnion.getOutput());

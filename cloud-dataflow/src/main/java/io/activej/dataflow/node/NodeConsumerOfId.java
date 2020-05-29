@@ -3,7 +3,7 @@ package io.activej.dataflow.node;
 import io.activej.async.function.AsyncConsumer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.datastream.StreamConsumer;
 
 import java.util.Collection;
@@ -16,7 +16,7 @@ import static java.util.Collections.singletonList;
  *
  * @param <T> data items type
  */
-public final class NodeConsumerOfId<T> implements Node {
+public final class NodeConsumerOfId<T> extends AbstractNode {
 	private final String id;
 	private final int partitionIndex;
 	private final int maxPartitions;
@@ -30,7 +30,8 @@ public final class NodeConsumerOfId<T> implements Node {
 	 * @param maxPartitions  total number of partitions
 	 * @param input          id of input stream
 	 */
-	public NodeConsumerOfId(String id, int partitionIndex, int maxPartitions, StreamId input) {
+	public NodeConsumerOfId(int index, String id, int partitionIndex, int maxPartitions, StreamId input) {
+		super(index);
 		this.id = id;
 		this.partitionIndex = partitionIndex;
 		this.maxPartitions = maxPartitions;
@@ -44,8 +45,8 @@ public final class NodeConsumerOfId<T> implements Node {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void createAndBind(TaskContext taskContext) {
-		Object object = taskContext.get(id);
+	public void createAndBind(Task task) {
+		Object object = task.get(id);
 		StreamConsumer<T> streamConsumer;
 		if (object instanceof Collection) {
 			Collection<T> set = (Collection<T>) object;
@@ -66,7 +67,7 @@ public final class NodeConsumerOfId<T> implements Node {
 		} else {
 			throw new IllegalStateException("Object with id " + id + " is not a valid consumer of data: " + object);
 		}
-		taskContext.bindChannel(input, streamConsumer);
+		task.bindChannel(input, streamConsumer);
 	}
 
 	public String getId() {

@@ -19,14 +19,18 @@ package io.activej.dataflow.inject;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredOutput;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.dataflow.command.DataflowCommand;
-import io.activej.dataflow.command.DataflowCommandDownload;
-import io.activej.dataflow.command.DataflowCommandExecute;
-import io.activej.dataflow.command.DataflowResponse;
+import io.activej.dataflow.command.*;
+import io.activej.dataflow.command.DataflowResponsePartitionData.TaskDesc;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.TaskStatus;
+import io.activej.dataflow.http.ReducedTaskData;
+import io.activej.dataflow.http.LocalTaskData;
 import io.activej.dataflow.inject.CodecsModule.SubtypeNameFactory;
 import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.node.*;
+import io.activej.dataflow.stats.BinaryNodeStat;
+import io.activej.dataflow.stats.NodeStat;
+import io.activej.dataflow.stats.TestNodeStat;
 import io.activej.datastream.processor.StreamJoin.Joiner;
 import io.activej.datastream.processor.StreamReducers.MergeSortReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -44,6 +48,7 @@ import io.activej.inject.util.Types;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +56,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.codec.StructuredCodec.ofObject;
-import static io.activej.codec.StructuredCodecs.object;
-import static io.activej.codec.StructuredCodecs.ofList;
+import static io.activej.codec.StructuredCodecs.*;
+import static io.activej.dataflow.inject.CodecsModule.codec;
 import static io.activej.datastream.processor.StreamReducers.MergeDistinctReducer;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -72,7 +77,8 @@ public final class DataflowCodecs extends AbstractModule {
 	protected void configure() {
 		install(CodecsModule.create());
 
-		bind(new Key<StructuredCodec<DataflowCommand>>() {}).qualified(Subtypes.class);
+		bind(codec(DataflowCommand.class).qualified(Subtypes.class));
+		bind(codec(DataflowResponse.class).qualified(Subtypes.class));
 
 		bind(Key.ofType(Types.parameterized(StructuredCodec.class, NATURAL_ORDER_CLASS)))
 				.toInstance(StructuredCodec.ofObject(() -> NATURAL_ORDER));
@@ -105,22 +111,28 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<DataflowCommandDownload> datagraphCommandDownload(StructuredCodec<StreamId> streamId) {
+	StructuredCodec<DataflowCommandDownload> dataflowCommandDownload(StructuredCodec<StreamId> streamId) {
 		return object(DataflowCommandDownload::new,
 				"streamId", DataflowCommandDownload::getStreamId, streamId);
 	}
 
 	@Provides
-	StructuredCodec<DataflowCommandExecute> datagraphCommandExecute(@Subtypes StructuredCodec<Node> node) {
+	StructuredCodec<DataflowCommandExecute> dataflowCommandExecute(@Subtypes StructuredCodec<Node> node, StructuredCodec<Long> longCodec) {
 		return object(DataflowCommandExecute::new,
-				"nodes", DataflowCommandExecute::getNodes, ofList(node));
+				"taskId", DataflowCommandExecute::getTaskId, longCodec,
+				"nodeStats", DataflowCommandExecute::getNodes, ofList(node));
 	}
 
 	@Provides
-	StructuredCodec<DataflowResponse> datagraphResponse(StructuredCodec<String> string) {
-		//noinspection ConstantConditions - intellji false positive
-		return object(DataflowResponse::new,
-				"error", DataflowResponse::getError, string.nullable());
+	StructuredCodec<DataflowCommandGetTasks> dataflowCommandGetTasks(StructuredCodec<Long> longCodec) {
+		return object(DataflowCommandGetTasks::new,
+				"taskId", DataflowCommandGetTasks::getTaskId, longCodec.nullable());
+	}
+
+	@Provides
+	StructuredCodec<DataflowResponseResult> datagraphResponse(StructuredCodec<String> string) {
+		return object(DataflowResponseResult::new,
+				"error", DataflowResponseResult::getError, string.nullable());
 	}
 
 	@Provides
@@ -165,8 +177,9 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<NodeDownload> nodeDownload(StructuredCodec<Class<?>> cls, StructuredCodec<InetSocketAddress> address, StructuredCodec<StreamId> streamId) {
+	StructuredCodec<NodeDownload> nodeDownload(StructuredCodec<Class<?>> cls, StructuredCodec<Integer> integer, StructuredCodec<InetSocketAddress> address, StructuredCodec<StreamId> streamId) {
 		return object(NodeDownload::new,
+				"index", NodeDownload::getIndex, integer,
 				"type", NodeDownload::getType, cls,
 				"address", NodeDownload::getAddress, address,
 				"streamId", NodeDownload::getStreamId, streamId,
@@ -174,23 +187,26 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<NodeUpload> nodeUpload(StructuredCodec<Class<?>> cls, StructuredCodec<StreamId> streamId) {
+	StructuredCodec<NodeUpload> nodeUpload(StructuredCodec<Class<?>> cls, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId) {
 		return object(NodeUpload::new,
+				"index", NodeUpload::getIndex, integer,
 				"type", NodeUpload::getType, cls,
 				"streamId", NodeUpload::getStreamId, streamId);
 	}
 
 	@Provides
-	StructuredCodec<NodeMap> nodeMap(@Subtypes StructuredCodec<Function> function, StructuredCodec<StreamId> streamId) {
+	StructuredCodec<NodeMap> nodeMap(@Subtypes StructuredCodec<Function> function, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId) {
 		return object(NodeMap::new,
+				"index", NodeMap::getIndex, integer,
 				"function", NodeMap::getFunction, function,
 				"input", NodeMap::getInput, streamId,
 				"output", NodeMap::getOutput, streamId);
 	}
 
 	@Provides
-	StructuredCodec<NodeFilter> nodeFilter(@Subtypes StructuredCodec<Predicate> predicate, StructuredCodec<StreamId> streamId) {
+	StructuredCodec<NodeFilter> nodeFilter(@Subtypes StructuredCodec<Predicate> predicate, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId) {
 		return object(NodeFilter::new,
+				"index", NodeFilter::getIndex, integer,
 				"predicate", NodeFilter::getPredicate, predicate,
 				"input", NodeFilter::getInput, streamId,
 				"output", NodeFilter::getOutput, streamId);
@@ -199,6 +215,7 @@ public final class DataflowCodecs extends AbstractModule {
 	@Provides
 	StructuredCodec<NodeShard> nodeShard(@Subtypes StructuredCodec<Function> function, StructuredCodec<StreamId> streamId, StructuredCodec<List<StreamId>> streamIds, StructuredCodec<Integer> integer) {
 		return object(NodeShard::new,
+				"index", NodeShard::getIndex, integer,
 				"keyFunction", NodeShard::getKeyFunction, function,
 				"input", NodeShard::getInput, streamId,
 				"outputs", NodeShard::getOutputs, streamIds,
@@ -206,8 +223,9 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<NodeMerge> nodeMerge(@Subtypes StructuredCodec<Function> function, @Subtypes StructuredCodec<Comparator> comparator, StructuredCodec<Boolean> bool, StructuredCodec<StreamId> streamId, StructuredCodec<List<StreamId>> streamIds) {
+	StructuredCodec<NodeMerge> nodeMerge(@Subtypes StructuredCodec<Function> function, @Subtypes StructuredCodec<Comparator> comparator, StructuredCodec<Integer> integer, StructuredCodec<Boolean> bool, StructuredCodec<StreamId> streamId, StructuredCodec<List<StreamId>> streamIds) {
 		return object(NodeMerge::new,
+				"index", NodeMerge::getIndex, integer,
 				"keyFunction", NodeMerge::getKeyFunction, function,
 				"keyComparator", NodeMerge::getKeyComparator, comparator,
 				"deduplicate", NodeMerge::isDeduplicate, bool,
@@ -216,16 +234,18 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<NodeReduce> nodeReduce(@Subtypes StructuredCodec<Comparator> comparator, StructuredCodec<StreamId> streamId, StructuredCodec<Map<StreamId, NodeReduce.Input>> inputs) {
-		return object((a, b, c) -> new NodeReduce(a, b, c),
+	StructuredCodec<NodeReduce> nodeReduce(@Subtypes StructuredCodec<Comparator> comparator, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId, StructuredCodec<Map<StreamId, NodeReduce.Input>> inputs) {
+		return object((a, b, c, d) -> new NodeReduce(a, b, c, d),
+				"index", NodeReduce::getIndex, integer,
 				"keyComparator", NodeReduce::getKeyComparator, comparator,
 				"inputs", n -> (Map<StreamId, NodeReduce.Input>) n.getInputMap(), inputs,
 				"output", NodeReduce::getOutput, streamId);
 	}
 
 	@Provides
-	StructuredCodec<NodeReduceSimple> nodeReduceSimple(@Subtypes StructuredCodec<Function> function, @Subtypes StructuredCodec<Comparator> comparator, @Subtypes StructuredCodec<Reducer> reducer, StructuredCodec<StreamId> streamId, StructuredCodec<List<StreamId>> streamIds) {
+	StructuredCodec<NodeReduceSimple> nodeReduceSimple(@Subtypes StructuredCodec<Function> function, @Subtypes StructuredCodec<Comparator> comparator, @Subtypes StructuredCodec<Reducer> reducer, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId, StructuredCodec<List<StreamId>> streamIds) {
 		return object(NodeReduceSimple::new,
+				"index", NodeReduceSimple::getIndex, integer,
 				"keyFunction", NodeReduceSimple::getKeyFunction, function,
 				"keyComparator", NodeReduceSimple::getKeyComparator, comparator,
 				"reducer", NodeReduceSimple::getReducer, reducer,
@@ -234,8 +254,9 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<NodeUnion> nodeUnion(StructuredCodec<StreamId> streamId, StructuredCodec<List<StreamId>> streamIds) {
+	StructuredCodec<NodeUnion> nodeUnion(StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId, StructuredCodec<List<StreamId>> streamIds) {
 		return object(NodeUnion::new,
+				"index", NodeUnion::getIndex, integer,
 				"inputs", NodeUnion::getInputs, streamIds,
 				"output", NodeUnion::getOutput, streamId);
 	}
@@ -243,6 +264,7 @@ public final class DataflowCodecs extends AbstractModule {
 	@Provides
 	StructuredCodec<NodeSupplierOfId> nodeSupplierOfId(StructuredCodec<String> string, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId) {
 		return object(NodeSupplierOfId::new,
+				"index", NodeSupplierOfId::getIndex, integer,
 				"id", NodeSupplierOfId::getId, string,
 				"partitionIndex", NodeSupplierOfId::getPartitionIndex, integer,
 				"maxPartitions", NodeSupplierOfId::getMaxPartitions, integer,
@@ -252,6 +274,7 @@ public final class DataflowCodecs extends AbstractModule {
 	@Provides
 	StructuredCodec<NodeConsumerOfId> nodeConsumerToList(StructuredCodec<String> string, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId) {
 		return object(NodeConsumerOfId::new,
+				"index", NodeConsumerOfId::getIndex, integer,
 				"id", NodeConsumerOfId::getId, string,
 				"partitionIndex", NodeConsumerOfId::getPartitionIndex, integer,
 				"maxPartitions", NodeConsumerOfId::getMaxPartitions, integer,
@@ -262,6 +285,7 @@ public final class DataflowCodecs extends AbstractModule {
 	StructuredCodec<NodeSort> nodeSort(StructuredCodec<Class<?>> cls, @Subtypes StructuredCodec<Comparator> comparator, @Subtypes StructuredCodec<Function> function, StructuredCodec<StreamId> streamId, StructuredCodec<Boolean> bool, StructuredCodec<Integer> integer) {
 		return ofObject(
 				in -> new NodeSort(
+						in.readKey("index", integer),
 						in.readKey("type", cls),
 						in.readKey("keyFunction", function),
 						in.readKey("keyComparator", comparator),
@@ -270,6 +294,7 @@ public final class DataflowCodecs extends AbstractModule {
 						in.readKey("input", streamId),
 						in.readKey("output", streamId)),
 				(StructuredOutput out, NodeSort node) -> {
+					out.writeKey("index", integer, node.getIndex());
 					out.writeKey("type", cls, (Class<Object>) node.getType());
 					out.writeKey("keyFunction", function, node.getKeyFunction());
 					out.writeKey("keyComparator", comparator, node.getKeyComparator());
@@ -281,9 +306,10 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<NodeJoin> nodeJoin(@Subtypes StructuredCodec<Joiner> joiner, @Subtypes StructuredCodec<Comparator> comparator, @Subtypes StructuredCodec<Function> function, StructuredCodec<StreamId> streamId) {
+	StructuredCodec<NodeJoin> nodeJoin(@Subtypes StructuredCodec<Joiner> joiner, @Subtypes StructuredCodec<Comparator> comparator, @Subtypes StructuredCodec<Function> function, StructuredCodec<Integer> integer, StructuredCodec<StreamId> streamId) {
 		return ofObject(
 				in -> new NodeJoin(
+						in.readKey("index", integer),
 						in.readKey("left", streamId),
 						in.readKey("right", streamId),
 						in.readKey("output", streamId),
@@ -292,6 +318,7 @@ public final class DataflowCodecs extends AbstractModule {
 						in.readKey("rightKeyFunction", function),
 						in.readKey("joiner", joiner)),
 				(StructuredOutput out, NodeJoin node) -> {
+					out.writeKey("index", integer, node.getIndex());
 					out.writeKey("left", streamId, node.getLeft());
 					out.writeKey("right", streamId, node.getRight());
 					out.writeKey("output", streamId, node.getOutput());
@@ -303,13 +330,75 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
+	StructuredCodec<TaskDesc> taskDesc(StructuredCodec<Long> longCodec, StructuredCodec<TaskStatus> status) {
+		return object(TaskDesc::new,
+				"id", TaskDesc::getId, longCodec,
+				"status", TaskDesc::getStatus, status);
+	}
+
+	@Provides
+	StructuredCodec<DataflowResponsePartitionData> partitionStats(StructuredCodec<List<TaskDesc>> tasks, StructuredCodec<Integer> integer) {
+		return object(DataflowResponsePartitionData::new,
+				"running", DataflowResponsePartitionData::getRunning, integer,
+				"succeeded", DataflowResponsePartitionData::getSucceeded, integer,
+				"failed", DataflowResponsePartitionData::getFailed, integer,
+				"canceled", DataflowResponsePartitionData::getCanceled, integer,
+				"last", DataflowResponsePartitionData::getLast, tasks);
+	}
+
+	@Provides
+	StructuredCodec<Instant> instant(StructuredCodec<Long> longCodec) {
+		return longCodec.transform(Instant::ofEpochMilli, Instant::toEpochMilli);
+	}
+
+	@Provides
+	StructuredCodec<DataflowResponseTaskData> localTaskStat(StructuredCodec<TaskStatus> status, StructuredCodec<Map<Integer, NodeStat>> nodes, StructuredCodec<String> string, StructuredCodec<Instant> instant) {
+		return object(DataflowResponseTaskData::new,
+				"status", DataflowResponseTaskData::getStatus, status,
+				"start", DataflowResponseTaskData::getStartTime, instant.nullable(),
+				"finish", DataflowResponseTaskData::getFinishTime, instant.nullable(),
+				"error", DataflowResponseTaskData::getErrorString, string.nullable(),
+				"nodeStats", DataflowResponseTaskData::getNodes, nodes,
+				"graphviz", DataflowResponseTaskData::getGraphViz, string);
+	}
+
+	@Provides
+	StructuredCodec<LocalTaskData> localTaskData(StructuredCodec<TaskStatus> status, StructuredCodec<String> string, StructuredCodec<List<Integer>> intList, StructuredCodec<Integer> integer, StructuredCodec<NodeStat> nodeStats, StructuredCodec<Instant> instant) {
+		return object(LocalTaskData::new,
+				"status", LocalTaskData::getStatus, status,
+				"graph", LocalTaskData::getGraph, string,
+				"nodeStats", LocalTaskData::getNodeStats, ofMap(integer, nodeStats.nullable()),
+				"started", LocalTaskData::getStarted, instant.nullable(),
+				"finished", LocalTaskData::getFinished, instant.nullable(),
+				"error", LocalTaskData::getError, string.nullable());
+	}
+
+	@Provides
+	StructuredCodec<ReducedTaskData> reducedTaskData(StructuredCodec<TaskStatus> status, StructuredCodec<String> string, StructuredCodec<List<Integer>> intList, StructuredCodec<Integer> integer, StructuredCodec<NodeStat> nodeStats) {
+		return object(ReducedTaskData::new,
+				"statuses", ReducedTaskData::getStatuses, ofList(status.nullable()),
+				"graph", ReducedTaskData::getGraph, string,
+				"nodeStats", ReducedTaskData::getReducedNodeStats, ofMap(integer, nodeStats.nullable()));
+	}
+
+	@Provides
+	StructuredCodec<TestNodeStat> testNodeStats(StructuredCodec<Integer> integerCodec) {
+		return object(TestNodeStat::new, "nodeIndex", TestNodeStat::getNodeIndex, integerCodec);
+	}
+
+	@Provides
+	StructuredCodec<BinaryNodeStat> binaryNodeStats(StructuredCodec<Long> longint) {
+		return object(
+				bytes -> {
+					BinaryNodeStat stats = new BinaryNodeStat();
+					stats.record(bytes);
+					return stats;
+				},
+				"bytes", BinaryNodeStat::getBytes, longint);
+	}
+
+	@Provides
 	SubtypeNameFactory subtypeNames() {
-		return subtype -> {
-			if (subtype == NATURAL_ORDER_CLASS) return "Comparator.naturalOrder";
-			if (subtype == DataflowCommandDownload.class) return "Download";
-			if (subtype == DataflowCommandExecute.class) return "Execute";
-			if (subtype == DataflowResponse.class) return "Response";
-			return null;
-		};
+		return subtype -> subtype == NATURAL_ORDER_CLASS ? "Comparator.naturalOrder" : null;
 	}
 }

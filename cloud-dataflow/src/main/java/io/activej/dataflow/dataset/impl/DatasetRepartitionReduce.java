@@ -23,9 +23,11 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
+import java.util.Collection;
 import java.util.List;
 
 import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndReduce;
+import static java.util.Collections.singletonList;
 
 public final class DatasetRepartitionReduce<K, I, O> extends Dataset<O> {
 	private final LocallySortedDataset<K, I> input;
@@ -51,5 +53,10 @@ public final class DatasetRepartitionReduce<K, I, O> extends Dataset<O> {
 				partitions :
 				context.getGraph().getAvailablePartitions();
 		return repartitionAndReduce(context, input, reducer, ps);
+	}
+
+	@Override
+	public Collection<Dataset<?>> getBases() {
+		return singletonList(input);
 	}
 }

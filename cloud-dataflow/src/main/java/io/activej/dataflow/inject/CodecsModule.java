@@ -47,8 +47,12 @@ public final class CodecsModule extends AbstractModule {
 		return new CodecsModule();
 	}
 
+	public static <T> Key<StructuredCodec<T>> codec(Class<T> itemClass) {
+		return Key.ofType(Types.parameterized(StructuredCodec.class, itemClass));
+	}
+
 	@QualifierAnnotation
-	@Target({FIELD, PARAMETER, METHOD})
+	@Target({FIELD, PARAMETER, METHOD, TYPE})
 	@Retention(RUNTIME)
 	public @interface Subtypes {
 	}
@@ -59,6 +63,7 @@ public final class CodecsModule extends AbstractModule {
 		String getName(Class<?> subtype);
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	protected void configure() {
 		bindPrimitive(void.class, VOID_CODEC);
@@ -86,10 +91,13 @@ public final class CodecsModule extends AbstractModule {
 		bind(new Key<StructuredCodec<Class<?>>>() {}).toInstance(CLASS_CODEC);
 
 		generate(StructuredCodec.class, (bindings, scope, key) -> {
-			if (key.getQualifier() != Subtypes.class) {
+			Class<Object> type = key.getTypeParameter(0).getRawType();
+			if (type.isEnum()) {
+				return Binding.to(() -> ofEnum((Class) type));
+			}
+			if (key.getQualifier() != Subtypes.class && !type.isAnnotationPresent(Subtypes.class)) {
 				return null;
 			}
-			Class<?> type = key.getTypeParameter(0).getRawType();
 			return Binding.to(args -> {
 				Injector injector = (Injector) args[0];
 				SubtypeNameFactory names = (SubtypeNameFactory) args[1];

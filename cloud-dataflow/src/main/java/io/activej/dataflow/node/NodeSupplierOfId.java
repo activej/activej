@@ -18,7 +18,7 @@ package io.activej.dataflow.node;
 
 import io.activej.csp.ChannelSupplier;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.datastream.StreamSupplier;
 
 import java.util.Collection;
@@ -32,17 +32,18 @@ import static java.util.Collections.singletonList;
  *
  * @param <T> data items type
  */
-public final class NodeSupplierOfId<T> implements Node {
+public final class NodeSupplierOfId<T> extends AbstractNode {
 	private final String id;
 	private final int partitionIndex;
 	private final int maxPartitions;
 	private final StreamId output;
 
-	public NodeSupplierOfId(String id, int partitionIndex, int maxPartitions) {
-		this(id, partitionIndex, maxPartitions, new StreamId());
+	public NodeSupplierOfId(int index, String id, int partitionIndex, int maxPartitions) {
+		this(index, id, partitionIndex, maxPartitions, new StreamId());
 	}
 
-	public NodeSupplierOfId(String id, int partitionIndex, int maxPartitions,  StreamId output) {
+	public NodeSupplierOfId(int index, String id, int partitionIndex, int maxPartitions,  StreamId output) {
+		super(index);
 		this.id = id;
 		this.partitionIndex = partitionIndex;
 		this.maxPartitions = maxPartitions;
@@ -56,9 +57,9 @@ public final class NodeSupplierOfId<T> implements Node {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void createAndBind(TaskContext taskContext) {
+	public void createAndBind(Task task) {
 		StreamSupplier<T> supplier;
-		Object object = taskContext.get(id);
+		Object object = task.get(id);
 		if (object instanceof Iterator) {
 			supplier = StreamSupplier.ofIterator((Iterator<T>) object);
 		} else if (object instanceof Iterable) {
@@ -74,7 +75,7 @@ public final class NodeSupplierOfId<T> implements Node {
 		} else {
 			throw new IllegalArgumentException("Object with id '" + id + "' is not a valid supplier of data: " + object);
 		}
-		taskContext.export(output, supplier);
+		task.export(output, supplier);
 	}
 
 	public String getId() {

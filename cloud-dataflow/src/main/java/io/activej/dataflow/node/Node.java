@@ -17,8 +17,11 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.stats.NodeStat;
+import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.Collection;
 
 import static java.util.Collections.emptyList;
@@ -27,6 +30,15 @@ import static java.util.Collections.emptyList;
  * Defines a node in a single server.
  */
 public interface Node {
+	/**
+	 * Returns an index of this node in the task.
+	 * When the graph is spread over the cluster, nodes with the
+	 * same index on multiple partitions are the ones that were
+	 * compiled from the same dataset.
+	 * @return index of the node that is unique in the partition scope
+	 */
+	int getIndex();
+
 	/**
 	 * Returns a list of ids of inputs of this node.
 	 *
@@ -48,7 +60,31 @@ public interface Node {
 	/**
 	 * Defines internal node logic and binds it to the task context.
 	 *
-	 * @param taskContext task context to which certain logic is to be bound
+	 * @param task task context to which certain logic is to be bound
 	 */
-	void createAndBind(TaskContext taskContext);
+	void createAndBind(Task task);
+
+	/**
+	 * Is called when all streams that were exported by this node finish streaming.
+	 */
+	void finish(@Nullable Throwable error);
+
+	/**
+	 * Returns a point in time when this node instance finished processing data.
+	 * Must return null if node did not finish processing yet.
+	 */
+	@Nullable
+	Instant getFinished();
+
+	/**
+	 * If this node caused the task to fail, returns the exception that caused it.
+	 */
+	@Nullable
+	Throwable getError();
+
+	/**
+	 * Optionally return some custom node statistics for debugging.
+	 */
+	@Nullable
+	NodeStat getStats();
 }

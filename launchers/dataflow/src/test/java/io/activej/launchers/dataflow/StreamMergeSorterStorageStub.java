@@ -1,6 +1,6 @@
 package io.activej.launchers.dataflow;
 
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
@@ -17,7 +17,7 @@ public class StreamMergeSorterStorageStub<T> implements StreamSorterStorage<T> {
 
 	public static final StreamSorterStorageFactory FACTORY_STUB = new StreamSorterStorageFactory() {
 		@Override
-		public <C> StreamSorterStorage<C> create(Class<C> type, TaskContext context, Promise<Void> taskExecuted) {
+		public <C> StreamSorterStorage<C> create(Class<C> type, Task context, Promise<Void> taskExecuted) {
 			return new StreamMergeSorterStorageStub<>();
 		}
 	};

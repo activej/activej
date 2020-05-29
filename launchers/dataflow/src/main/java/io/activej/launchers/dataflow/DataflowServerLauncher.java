@@ -27,6 +27,7 @@ import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
+import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Optional;
@@ -78,6 +79,7 @@ public abstract class DataflowServerLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
+				.with("dataflow.server.listenAddresses", "127.0.0.1:3333")
 				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}

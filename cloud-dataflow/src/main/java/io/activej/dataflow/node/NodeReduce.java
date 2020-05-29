@@ -17,7 +17,9 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.stats.NodeStat;
+import io.activej.dataflow.stats.TestNodeStat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -37,7 +39,7 @@ import static java.util.Collections.singletonList;
  * @param <O> output data type
  * @param <A> accumulator type
  */
-public final class NodeReduce<K, O, A> implements Node {
+public final class NodeReduce<K, O, A> extends AbstractNode {
 	public static class Input<K, O, A> {
 		private final Reducer<K, ?, O, A> reducer;
 		private final Function<?, K> keyFunction;
@@ -66,13 +68,14 @@ public final class NodeReduce<K, O, A> implements Node {
 	private final Map<StreamId, Input<K, O, A>> inputs;
 	private final StreamId output;
 
-	public NodeReduce(Comparator<K> keyComparator) {
-		this(keyComparator, new LinkedHashMap<>(), new StreamId());
+	public NodeReduce(int index, Comparator<K> keyComparator) {
+		this(index, keyComparator, new LinkedHashMap<>(), new StreamId());
 	}
 
-	public NodeReduce(Comparator<K> keyComparator,
+	public NodeReduce(int index, Comparator<K> keyComparator,
 			Map<StreamId, Input<K, O, A>> inputs,
 			StreamId output) {
+		super(index);
 		this.keyComparator = keyComparator;
 		this.inputs = inputs;
 		this.output = output;
@@ -94,16 +97,16 @@ public final class NodeReduce<K, O, A> implements Node {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void createAndBind(TaskContext taskContext) {
+	public void createAndBind(Task task) {
 		StreamReducer<K, O, A> streamReducer = StreamReducer.create(keyComparator);
 		for (Map.Entry<StreamId, Input<K, O, A>> entry : inputs.entrySet()) {
 			Input<K, O, A> koaInput = entry.getValue();
 			StreamConsumer<Object> input = streamReducer.newInput(
 					((Function<Object, K>) koaInput.keyFunction),
 					(Reducer<K, Object, O, A>) koaInput.reducer);
-			taskContext.bindChannel(entry.getKey(), input);
+			task.bindChannel(entry.getKey(), input);
 		}
-		taskContext.export(output, streamReducer.getOutput());
+		task.export(output, streamReducer.getOutput());
 	}
 
 	public Comparator<K> getKeyComparator() {
@@ -116,6 +119,11 @@ public final class NodeReduce<K, O, A> implements Node {
 
 	public StreamId getOutput() {
 		return output;
+	}
+
+	@Override
+	public NodeStat getStats() {
+		return new TestNodeStat(getIndex());
 	}
 
 	@Override

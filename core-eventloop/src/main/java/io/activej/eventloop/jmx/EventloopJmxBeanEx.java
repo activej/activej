@@ -40,5 +40,4 @@ public interface EventloopJmxBeanEx extends EventloopJmxBean {
 	default void setSmoothingWindow(Duration smoothingWindowSeconds) {
 		StatsUtils.setSmoothingWindow(this, smoothingWindowSeconds);
 	}
-
 }

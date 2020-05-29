@@ -17,7 +17,7 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamJoin;
 import io.activej.datastream.processor.StreamJoin.Joiner;
 
@@ -36,7 +36,7 @@ import static java.util.Collections.singletonList;
  * @param <R> right stream data type
  * @param <V> output stream data type
  */
-public final class NodeJoin<K, L, R, V> implements Node {
+public final class NodeJoin<K, L, R, V> extends AbstractNode {
 	private final StreamId left;
 	private final StreamId right;
 	private final StreamId output;
@@ -45,15 +45,16 @@ public final class NodeJoin<K, L, R, V> implements Node {
 	private final Function<R, K> rightKeyFunction;
 	private final Joiner<K, L, R, V> joiner;
 
-	public NodeJoin(StreamId left, StreamId right,
+	public NodeJoin(int index, StreamId left, StreamId right,
 			Comparator<K> keyComparator, Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
 			Joiner<K, L, R, V> joiner) {
-		this(left, right, new StreamId(), keyComparator, leftKeyFunction, rightKeyFunction, joiner);
+		this(index, left, right, new StreamId(), keyComparator, leftKeyFunction, rightKeyFunction, joiner);
 	}
 
-	public NodeJoin(StreamId left, StreamId right, StreamId output,
+	public NodeJoin(int index, StreamId left, StreamId right, StreamId output,
 			Comparator<K> keyComparator, Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
 			Joiner<K, L, R, V> joiner) {
+		super(index);
 		this.left = left;
 		this.right = right;
 		this.output = output;
@@ -74,12 +75,11 @@ public final class NodeJoin<K, L, R, V> implements Node {
 	}
 
 	@Override
-	public void createAndBind(TaskContext taskContext) {
-		StreamJoin<K, L, R, V> join =
-				StreamJoin.create(keyComparator, leftKeyFunction, rightKeyFunction, joiner);
-		taskContext.export(output, join.getOutput());
-		taskContext.bindChannel(left, join.getLeft());
-		taskContext.bindChannel(right, join.getRight());
+	public void createAndBind(Task task) {
+		StreamJoin<K, L, R, V> join = StreamJoin.create(keyComparator, leftKeyFunction, rightKeyFunction, joiner);
+		task.bindChannel(left, join.getLeft());
+		task.bindChannel(right, join.getRight());
+		task.export(output, join.getOutput());
 	}
 
 	public StreamId getLeft() {

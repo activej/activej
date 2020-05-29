@@ -17,7 +17,7 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamMapper;
 
 import java.util.Collection;
@@ -31,16 +31,17 @@ import static java.util.Collections.singletonList;
  * @param <I> input items data type
  * @param <O> output items data type
  */
-public final class NodeMap<I, O> implements Node {
+public final class NodeMap<I, O> extends AbstractNode {
 	private final Function<I, O> function;
 	private final StreamId input;
 	private final StreamId output;
 
-	public NodeMap(Function<I, O> function, StreamId input) {
-		this(function, input, new StreamId());
+	public NodeMap(int index, Function<I, O> function, StreamId input) {
+		this(index, function, input, new StreamId());
 	}
 
-	public NodeMap(Function<I, O> function, StreamId input, StreamId output) {
+	public NodeMap(int index, Function<I, O> function, StreamId input, StreamId output) {
+		super(index);
 		this.function = function;
 		this.input = input;
 		this.output = output;
@@ -57,10 +58,10 @@ public final class NodeMap<I, O> implements Node {
 	}
 
 	@Override
-	public void createAndBind(TaskContext taskContext) {
+	public void createAndBind(Task task) {
 		StreamMapper<I, O> streamMap = StreamMapper.create(function);
-		taskContext.bindChannel(input, streamMap.getInput());
-		taskContext.export(output, streamMap.getOutput());
+		task.bindChannel(input, streamMap.getInput());
+		task.export(output, streamMap.getOutput());
 	}
 
 	public Function<I, O> getFunction() {

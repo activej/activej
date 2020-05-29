@@ -17,7 +17,7 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamUnion;
 
 import java.util.Collection;
@@ -25,15 +25,16 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 
-public final class NodeUnion<T> implements Node {
+public final class NodeUnion<T> extends AbstractNode {
 	private final List<StreamId> inputs;
 	private final StreamId output;
 
-	public NodeUnion(List<StreamId> inputs) {
-		this(inputs, new StreamId());
+	public NodeUnion(int index, List<StreamId> inputs) {
+		this(index, inputs, new StreamId());
 	}
 
-	public NodeUnion(List<StreamId> inputs, StreamId output) {
+	public NodeUnion(int index, List<StreamId> inputs, StreamId output) {
+		super(index);
 		this.inputs = inputs;
 		this.output = output;
 	}
@@ -44,12 +45,12 @@ public final class NodeUnion<T> implements Node {
 	}
 
 	@Override
-	public void createAndBind(TaskContext taskContext) {
+	public void createAndBind(Task task) {
 		StreamUnion<T> streamUnion = StreamUnion.create();
 		for (StreamId input : inputs) {
-			taskContext.bindChannel(input, streamUnion.newInput());
+			task.bindChannel(input, streamUnion.newInput());
 		}
-		taskContext.export(output, streamUnion.getOutput());
+		task.export(output, streamUnion.getOutput());
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowResponse;
+import io.activej.dataflow.command.DataflowResponseResult;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -14,6 +15,7 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.http.DataflowDebugServlet;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.inject.DataflowModule;
@@ -22,8 +24,11 @@ import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.AsyncHttpClient;
+import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
+import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
@@ -481,14 +486,28 @@ public final class DataflowTest {
 					DataflowGraph graph(DataflowClient client, @Subtypes StructuredCodec<Node> nodeCodec) {
 						return new DataflowGraph(client, graphPartitions, nodeCodec);
 					}
+
+					@Provides
+					AsyncHttpClient httpClient(Eventloop eventloop) {
+						return AsyncHttpClient.create(eventloop);
+					}
+
+					@Provides
+					AsyncHttpServer debugServer(Eventloop eventloop, AsyncHttpClient client, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, Injector env) {
+						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(graphPartitions, client, executor, codec, env));
+					}
 				})
 				.bind(new Key<StructuredCodec<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
 				.bind(new Key<StructuredCodec<TestKeyFunction>>() {}).toInstance(ofObject(TestKeyFunction::new))
 				.bind(new Key<StructuredCodec<TestPredicate>>() {}).toInstance(ofObject(TestPredicate::new));
 	}
 
-	static InetSocketAddress getFreeListenAddress() throws UnknownHostException {
-		return new InetSocketAddress(InetAddress.getByName("127.0.0.1"), getFreePort());
+	static InetSocketAddress getFreeListenAddress() {
+		try {
+			return new InetSocketAddress(InetAddress.getByName("127.0.0.1"), getFreePort());
+		} catch (UnknownHostException ignored) {
+			throw new AssertionError();
+		}
 	}
 
 	private static <T> boolean isSorted(Collection<T> collection, Comparator<T> comparator) {

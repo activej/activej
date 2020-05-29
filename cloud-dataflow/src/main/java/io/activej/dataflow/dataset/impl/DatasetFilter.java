@@ -23,8 +23,11 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeFilter;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
+
+import static java.util.Collections.singletonList;
 
 public final class DatasetFilter<T> extends Dataset<T> {
 	private final Dataset<T> input;
@@ -41,11 +44,17 @@ public final class DatasetFilter<T> extends Dataset<T> {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 		List<StreamId> streamIds = input.channels(context);
+		int index = context.generateNodeIndex();
 		for (StreamId streamId : streamIds) {
-			NodeFilter<T> node = new NodeFilter<>(predicate, streamId);
+			NodeFilter<T> node = new NodeFilter<>(index, predicate, streamId);
 			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.add(node.getOutput());
 		}
 		return outputStreamIds;
+	}
+
+	@Override
+	public Collection<Dataset<?>> getBases() {
+		return singletonList(input);
 	}
 }

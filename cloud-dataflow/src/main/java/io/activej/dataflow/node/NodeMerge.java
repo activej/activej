@@ -17,7 +17,7 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.TaskContext;
+import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamMerger;
 
 import java.util.ArrayList;
@@ -34,18 +34,19 @@ import static java.util.Collections.singletonList;
  * @param <K> keys data type
  * @param <T> data items type
  */
-public final class NodeMerge<K, T> implements Node {
+public final class NodeMerge<K, T> extends AbstractNode {
 	private final Function<T, K> keyFunction;
 	private final Comparator<K> keyComparator;
 	private final boolean deduplicate;
 	private final List<StreamId> inputs;
 	private final StreamId output;
 
-	public NodeMerge(Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
-		this(keyFunction, keyComparator, deduplicate, new ArrayList<>(), new StreamId());
+	public NodeMerge(int index, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
+		this(index, keyFunction, keyComparator, deduplicate, new ArrayList<>(), new StreamId());
 	}
 
-	public NodeMerge(Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate, List<StreamId> inputs, StreamId output) {
+	public NodeMerge(int index, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate, List<StreamId> inputs, StreamId output) {
+		super(index);
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
 		this.deduplicate = deduplicate;
@@ -68,12 +69,12 @@ public final class NodeMerge<K, T> implements Node {
 	}
 
 	@Override
-	public void createAndBind(TaskContext taskContext) {
+	public void createAndBind(Task task) {
 		StreamMerger<K, T> streamMerger = StreamMerger.create(keyFunction, keyComparator, deduplicate);
 		for (StreamId input : inputs) {
-			taskContext.bindChannel(input, streamMerger.newInput());
+			task.bindChannel(input, streamMerger.newInput());
 		}
-		taskContext.export(output, streamMerger.getOutput());
+		task.export(output, streamMerger.getOutput());
 	}
 
 	public Function<T, K> getKeyFunction() {

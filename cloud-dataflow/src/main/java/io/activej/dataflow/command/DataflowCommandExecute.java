@@ -21,10 +21,16 @@ import io.activej.dataflow.node.Node;
 import java.util.List;
 
 public final class DataflowCommandExecute extends DataflowCommand {
+	private final long taskId;
 	private final List<Node> nodes;
 
-	public DataflowCommandExecute(List<Node> nodes) {
+	public DataflowCommandExecute(long taskId, List<Node> nodes) {
+		this.taskId = taskId;
 		this.nodes = nodes;
+	}
+
+	public long getTaskId() {
+		return taskId;
 	}
 
 	public List<Node> getNodes() {
@@ -33,6 +39,6 @@ public final class DataflowCommandExecute extends DataflowCommand {
 
 	@Override
 	public String toString() {
-		return "DatagraphCommandExecute{nodes=" + nodes + "} ";
+		return "DatagraphCommandExecute{nodeStats=" + nodes + '}';
 	}
 }

@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.graph;
 
+import io.activej.common.ref.RefInt;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -23,16 +24,23 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class DataflowContext {
 	private final DataflowGraph graph;
 
+	private final RefInt nextNodeIndex;
+
 	@Nullable
 	private final Integer nonce;
 
-	private DataflowContext(DataflowGraph graph, @Nullable Integer nonce) {
+	private DataflowContext(DataflowGraph graph, @Nullable Integer nonce, RefInt nextNodeIndex) {
 		this.nonce = nonce;
 		this.graph = graph;
+		this.nextNodeIndex = nextNodeIndex;
 	}
 
 	public static DataflowContext of(DataflowGraph graph) {
-		return new DataflowContext(graph, null);
+		return new DataflowContext(graph, null, new RefInt(0));
+	}
+
+	public int generateNodeIndex() {
+		return nextNodeIndex.value++;
 	}
 
 	public DataflowGraph getGraph() {
@@ -46,10 +54,10 @@ public final class DataflowContext {
 	}
 
 	public DataflowContext withFixedNonce(int nonce) {
-		return new DataflowContext(graph, nonce);
+		return new DataflowContext(graph, nonce, nextNodeIndex);
 	}
 
 	public DataflowContext withoutFixedNonce() {
-		return new DataflowContext(graph, null);
+		return new DataflowContext(graph, null, nextNodeIndex);
 	}
 }
