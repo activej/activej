@@ -66,12 +66,12 @@ public final class JmxModule extends AbstractModule implements Initializable<Jmx
 
 	private final Map<Key<?>, JmxBeanSettings> keyToSettings = new HashMap<>();
 	private final Map<Type, JmxBeanSettings> typeToSettings = new HashMap<>();
-	private final Map<Key<?>, String> keyToObjectNames = new HashMap<>();
 	private final Map<Type, JmxCustomTypeAdapter<?>> customTypes = new HashMap<>();
 	private final Map<Type, Key<?>> globalMBeans = new HashMap<>();
 
 	private Duration refreshPeriod = REFRESH_PERIOD_DEFAULT;
 	private int maxJmxRefreshesPerOneCycle = MAX_JMX_REFRESHES_PER_ONE_CYCLE_DEFAULT;
+	private ProtoObjectNameMapper objectNameMapper = ProtoObjectNameMapper.identity();
 	private boolean withScopes = true;
 
 	private JmxModule() {
@@ -152,8 +152,8 @@ public final class JmxModule extends AbstractModule implements Initializable<Jmx
 		return this;
 	}
 
-	public JmxModule withObjectName(Key<?> key, String objectName) {
-		this.keyToObjectNames.put(key, objectName);
+	public JmxModule withObjectNameMapping(ProtoObjectNameMapper objectNameMapper) {
+		this.objectNameMapper = objectNameMapper;
 		return this;
 	}
 
@@ -181,7 +181,8 @@ public final class JmxModule extends AbstractModule implements Initializable<Jmx
 
 	@Provides
 	JmxRegistry jmxRegistry(DynamicMBeanFactory mbeanFactory) {
-		return JmxRegistry.create(ManagementFactory.getPlatformMBeanServer(), mbeanFactory, keyToObjectNames, customTypes)
+		return JmxRegistry.create(ManagementFactory.getPlatformMBeanServer(), mbeanFactory, customTypes)
+				.withObjectNameMapping(objectNameMapper)
 				.withScopes(withScopes);
 	}
 

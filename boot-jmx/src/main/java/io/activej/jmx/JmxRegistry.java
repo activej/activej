@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.management.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -34,6 +35,7 @@ import java.util.*;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.StringFormatUtils.formatDuration;
 import static io.activej.common.StringFormatUtils.parseDuration;
+import static io.activej.common.reflection.ReflectionUtils.getAnnotationString;
 import static io.activej.jmx.Utils.*;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
@@ -44,14 +46,13 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 	private static final Logger logger = LoggerFactory.getLogger(JmxRegistry.class);
 
 	private static final String GENERIC_PARAM_NAME_FORMAT = "T%d=%s";
-	private static final String ROOT_PACKAGE_NAME = "";
 
 	private final MBeanServer mbs;
 	private final DynamicMBeanFactory mbeanFactory;
-	private final Map<Key<?>, String> keyToObjectNames;
 	private final Map<Type, JmxCustomTypeAdapter<?>> customTypes;
 	private final Map<WorkerPool, Key<?>> workerPoolKeys = new HashMap<>();
 	private final Set<ObjectName> registeredObjectNames = new HashSet<>();
+	private ProtoObjectNameMapper objectNameMapper = ProtoObjectNameMapper.identity();
 	private boolean withScopes = true;
 
 	// jmx
@@ -61,27 +62,29 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 
 	private JmxRegistry(@NotNull MBeanServer mbs,
 			DynamicMBeanFactory mbeanFactory,
-			Map<Key<?>, String> keyToObjectNames,
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		this.mbs = mbs;
 		this.mbeanFactory = mbeanFactory;
-		this.keyToObjectNames = keyToObjectNames;
 		this.customTypes = customTypes;
 	}
 
 	public static JmxRegistry create(MBeanServer mbs, DynamicMBeanFactory mbeanFactory) {
-		return new JmxRegistry(mbs, mbeanFactory, Collections.emptyMap(), Collections.emptyMap());
+		return new JmxRegistry(mbs, mbeanFactory, Collections.emptyMap());
 	}
 
 	public static JmxRegistry create(MBeanServer mbs,
 			DynamicMBeanFactory mbeanFactory,
-			Map<Key<?>, String> keyToObjectNames,
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
-		return new JmxRegistry(mbs, mbeanFactory, keyToObjectNames, customTypes);
+		return new JmxRegistry(mbs, mbeanFactory, customTypes);
 	}
 
 	public JmxRegistry withScopes(boolean withScopes) {
 		this.withScopes = withScopes;
+		return this;
+	}
+
+	public JmxRegistry withObjectNameMapping(ProtoObjectNameMapper objectNameMapper) {
+		this.objectNameMapper = objectNameMapper;
 		return this;
 	}
 
@@ -105,19 +108,22 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			return;
 		}
 
-		String name;
+		ProtoObjectName protoName;
 		try {
-			name = createNameForKey(key);
+			protoName = createProtoObjectNameForKey(key);
 		} catch (ReflectiveOperationException e) {
 			logger.error("Error during generation name for instance with key {}", key, e);
 			return;
 		}
 
+		protoName = objectNameMapper.apply(protoName);
+
 		ObjectName objectName;
 		try {
-			objectName = new ObjectName(name);
-		} catch (MalformedObjectNameException e) {
-			logger.error("Cannot create ObjectName for instance with key {}. Proposed String name was \"{}\".", key, name, e);
+			objectName = createObjectName(protoName);
+		} catch (MalformedObjectNameException | ReflectiveOperationException e) {
+			logger.error("Cannot create ObjectName for instance with key {}. " +
+					"Proposed proto name was \"{}\".", key, protoName, e);
 			return;
 		}
 
@@ -139,8 +145,9 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 	public void unregisterSingleton(@NotNull Key<?> key, Object singletonInstance) {
 		if (isMBean(singletonInstance.getClass())) {
 			try {
-				String name = createNameForKey(key);
-				ObjectName objectName = new ObjectName(name);
+				ProtoObjectName name = createProtoObjectNameForKey(key);
+				name = objectNameMapper.apply(name);
+				ObjectName objectName = createObjectName(name);
 				mbs.unregisterMBean(objectName);
 				registeredObjectNames.remove(objectName);
 			} catch (ReflectiveOperationException | JMException e) {
@@ -164,13 +171,13 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 
 		if (!isJmxBean(poolInstances.get(0).getClass())) {
 			logger.info("Pool of instances with key {} was not registered to jmx, " +
-					"because instances' type or any of instances' supertypes is not annotated with @JmxBean annotation", key);
+							"because instances' type or any of instances' supertypes is not annotated with @JmxBean annotation", key);
 			return;
 		}
 
-		String commonName;
+		ProtoObjectName commonName;
 		try {
-			commonName = createNameForKey(key, pool);
+			commonName = createProtoObjectNameForKey(key, pool);
 		} catch (Exception e) {
 			String msg = format("Error during generation name for pool of instances with key %s", key.toString());
 			logger.error(msg, e);
@@ -195,12 +202,14 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			return;
 		}
 
+		ProtoObjectName mappedName = objectNameMapper.apply(commonName);
+
 		ObjectName objectName;
 		try {
-			objectName = new ObjectName(commonName);
-		} catch (MalformedObjectNameException e) {
+			objectName = createObjectName(mappedName);
+		} catch (MalformedObjectNameException | ReflectiveOperationException e) {
 			String msg = format("Cannot create ObjectName for aggregated MBean of pool of workers with key %s. " +
-					"Proposed String name was \"%s\".", key.toString(), commonName);
+					"Proposed String name was \"%s\".", key.toString(), mappedName);
 			logger.error(msg, e);
 			return;
 		}
@@ -233,9 +242,9 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			return;
 		}
 
-		String commonName;
+		ProtoObjectName commonName;
 		try {
-			commonName = createNameForKey(key, pool);
+			commonName = createProtoObjectNameForKey(key, pool);
 		} catch (ReflectiveOperationException e) {
 			String msg = format("Error during generation name for pool of instances with key %s", key.toString());
 			logger.error(msg, e);
@@ -245,11 +254,12 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		// unregister mbeans for each worker separately
 		for (int i = 0; i < poolInstances.size(); i++) {
 			try {
-				String workerName = createWorkerName(commonName, i);
-				ObjectName objectName = new ObjectName(workerName);
+				ProtoObjectName workerName = addWorkerName(commonName, i);
+				ProtoObjectName mappedWorkerName = objectNameMapper.apply(workerName);
+				ObjectName objectName = createObjectName(mappedWorkerName);
 				mbs.unregisterMBean(objectName);
 				registeredObjectNames.remove(objectName);
-			} catch (JMException e) {
+			} catch (JMException | ReflectiveOperationException e) {
 				String msg = format("Error during attempt to unregister mbean for worker" +
 								" of pool of instances with key %s. Worker id is \"%d\"",
 						key.toString(), i);
@@ -257,12 +267,14 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			}
 		}
 
+		ProtoObjectName mappedName = objectNameMapper.apply(commonName);
+
 		// unregister aggregated mbean for pool of workers
 		try {
-			ObjectName objectName = new ObjectName(commonName);
+			ObjectName objectName = createObjectName(mappedName);
 			mbs.unregisterMBean(objectName);
 			registeredObjectNames.remove(objectName);
-		} catch (JMException e) {
+		} catch (JMException | ReflectiveOperationException e) {
 			String msg = format("Error during attempt to unregister aggregated mbean for pool of instances " +
 					"with key %s.", key.toString());
 			logger.error(msg, e);
@@ -283,9 +295,10 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		}
 	}
 
-	private void registerMBeanForWorker(Object worker, int workerId, String commonName,
+	private void registerMBeanForWorker(Object worker, int workerId, ProtoObjectName commonName,
 			Key<?> key, JmxBeanSettings settings) {
-		String workerName = createWorkerName(commonName, workerId);
+		ProtoObjectName workerName = addWorkerName(commonName, workerId);
+		ProtoObjectName mappedWorkerName = objectNameMapper.apply(workerName);
 
 		DynamicMBean mbean;
 		try {
@@ -299,10 +312,10 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 
 		ObjectName objectName;
 		try {
-			objectName = new ObjectName(workerName);
-		} catch (MalformedObjectNameException e) {
+			objectName = createObjectName(mappedWorkerName);
+		} catch (MalformedObjectNameException | ReflectiveOperationException e) {
 			String msg = format("Cannot create ObjectName for worker of pool of instances with key %s. " +
-					"Proposed String name was \"%s\".", key.toString(), workerName);
+					"Proposed proto object name was \"%s\".", key.toString(), mappedWorkerName);
 			logger.error(msg, e);
 			return;
 		}
@@ -320,67 +333,63 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		}
 	}
 
-	private static String createWorkerName(String commonName, int workerId) {
-		return commonName + format(",workerId=worker-%d", workerId);
+	private static ProtoObjectName addWorkerName(ProtoObjectName protoObjectName, int workerId) {
+		return protoObjectName.withWorkerId("worker-" + workerId);
 	}
 
-	private String createNameForKey(Key<?> key) throws ReflectiveOperationException {
-		return createNameForKey(key, null);
+	private ProtoObjectName createProtoObjectNameForKey(Key<?> key) throws ReflectiveOperationException {
+		return createProtoObjectNameForKey(key, null);
 	}
 
-	private String createNameForKey(Key<?> key, @Nullable WorkerPool pool) throws ReflectiveOperationException {
-		if (keyToObjectNames.containsKey(key)) {
-			return keyToObjectNames.get(key);
-		}
+	private ProtoObjectName createProtoObjectNameForKey(Key<?> key, @Nullable WorkerPool pool) throws ReflectiveOperationException {
 		Class<?> rawType = key.getRawType();
+		Package domainPackage = rawType.getPackage();
+		String packageName = domainPackage == null ? "" : domainPackage.getName();
+
+		ProtoObjectName protoObjectName = ProtoObjectName.create(rawType.getSimpleName(), packageName);
+
 		Object keyQualifier = key.getQualifier();
 		if (keyQualifier instanceof UniqueQualifierImpl) {
 			keyQualifier = ((UniqueQualifierImpl) keyQualifier).getOriginalQualifier();
 		}
-		Package domainPackage = rawType.getPackage();
-		String domain = domainPackage == null ? ROOT_PACKAGE_NAME : domainPackage.getName();
-		String name = domain + ":" + "type=" + rawType.getSimpleName();
+		protoObjectName = protoObjectName.withQualifier(keyQualifier);
 
-		if (keyQualifier != null) { // with annotation
-			name += ',';
-			String qualifierString = getQualifierString(keyQualifier);
-			if (!qualifierString.contains("(")) {
-				name += "annotation=" + qualifierString;
-			} else if (!qualifierString.startsWith("(")) {
-				name += qualifierString.substring(0, qualifierString.indexOf('('));
-				name += '=' + qualifierString.substring(qualifierString.indexOf('(') + 1, qualifierString.length() - 1);
-			} else {
-				name += qualifierString.substring(1, qualifierString.length() - 1);
-			}
-		}
 		if (pool != null) {
 			if (withScopes) {
 				Scope scope = pool.getScope();
-				name += format(",scope=%s", scope.getDisplayString());
+				protoObjectName = protoObjectName.withScope(scope.getDisplayString());
 			}
 			Key<?> poolKey = workerPoolKeys.get(pool);
 			if (poolKey != null && poolKey.getQualifier() != null) {
 				String qualifierString = getQualifierString(poolKey.getQualifier());
-				name += format(",workerPool=WorkerPool@%s", qualifierString);
+				protoObjectName = protoObjectName.withWorkerPoolQualifier("WorkerPool@" + qualifierString);
 			}
 		}
-		return addGenericParamsInfo(name, key);
-	}
 
-	private static String addGenericParamsInfo(String srcName, Key<?> key) {
 		Type type = key.getType();
-		StringBuilder resultName = new StringBuilder(srcName);
 		if (type instanceof ParameterizedType) {
 			ParameterizedType pType = (ParameterizedType) type;
 			Type[] genericArgs = pType.getActualTypeArguments();
-			for (int i = 0; i < genericArgs.length; i++) {
-				Type genericArg = genericArgs[i];
+			List<String> genericParams = new ArrayList<>();
+			for (Type genericArg : genericArgs) {
 				String argClassName = formatSimpleGenericName(genericArg);
-				int argId = i + 1;
-				resultName.append(",").append(format(GENERIC_PARAM_NAME_FORMAT, argId, argClassName));
+				genericParams.add(argClassName);
 			}
+			protoObjectName = protoObjectName.withGenericParameters(genericParams);
 		}
-		return resultName.toString();
+
+		return protoObjectName;
+	}
+
+	private static String formatAnnotationString(String annotationString) {
+		if (!annotationString.contains("(")) {
+			return "annotation=" + annotationString;
+		} else if (!annotationString.startsWith("(")) {
+			String annotationName = annotationString.substring(0, annotationString.indexOf('('));
+			return annotationName + '=' + annotationString.substring(annotationString.indexOf('(') + 1, annotationString.length() - 1);
+		} else {
+			return annotationString.substring(1, annotationString.length() - 1);
+		}
 	}
 
 	private static String formatSimpleGenericName(Type type) {
@@ -392,6 +401,56 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 				Arrays.stream(genericType.getActualTypeArguments())
 						.map(JmxRegistry::formatSimpleGenericName)
 						.collect(joining(";", "<", ">"));
+	}
+
+	private ObjectName createObjectName(ProtoObjectName protoObjectName) throws MalformedObjectNameException, ReflectiveOperationException {
+		StringBuilder builder = new StringBuilder(protoObjectName.getPackageName());
+
+		builder.append(":type=").append(protoObjectName.getClassName());
+
+		Object qualifier = protoObjectName.getQualifier();
+		if (qualifier != null) {
+			String qualifierString = null;
+			if (qualifier instanceof Class) {
+				Class<?> qualifierClass = (Class<?>) qualifier;
+				if (qualifierClass.isAnnotation()) {
+					qualifierString = qualifierClass.getSimpleName();
+				}
+			} else if (qualifier instanceof Annotation) {
+				qualifierString = getAnnotationString((Annotation) qualifier);
+			}
+			if (qualifierString != null){
+				qualifierString = formatAnnotationString(qualifierString);
+			} else {
+				qualifierString = "qualifier=" + qualifier;
+			}
+			builder.append(',').append(qualifierString);
+		}
+
+		String scope = protoObjectName.getScope();
+		if (scope != null) {
+			builder.append(",scope=").append(scope);
+		}
+
+		String workerPoolQualifier = protoObjectName.getWorkerPoolQualifier();
+		if (workerPoolQualifier != null) {
+			builder.append(",workerPool=").append(workerPoolQualifier);
+		}
+
+		List<String> genericParameters = protoObjectName.getGenericParameters();
+		if (genericParameters != null) {
+			for (int i = 0; i < genericParameters.size(); i++) {
+				int argId = i + 1;
+				builder.append(",").append(format(GENERIC_PARAM_NAME_FORMAT, argId, genericParameters.get(i)));
+			}
+		}
+
+		String workerId = protoObjectName.getWorkerId();
+		if (workerId != null) {
+			builder.append(",workerId=").append(workerId);
+		}
+
+		return new ObjectName(builder.toString());
 	}
 
 	// region jmx
