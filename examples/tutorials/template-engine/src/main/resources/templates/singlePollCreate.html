@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Poll tutorial</title>
+  <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 300px;
+    }
+
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #dddddd;
+    }
+
+  </style>
+</head>
+<body>
+<h2>New poll</h2>
+<form method="post" action="/add">
+  <table>
+    <tr>
+      <th>Title: <input name="title"></th>
+      <th>Message: <input name="message"></th>
+    </tr>
+
+    <tr>
+      <th>Option1: <input name="option1"></th>
+      <th>Option2: <input name="option2"></th>
+    </tr>
+  </table>
+
+  <button>Add</button>
+</form>
+</body>
+</html>

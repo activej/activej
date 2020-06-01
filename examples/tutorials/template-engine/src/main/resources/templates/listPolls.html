@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Poll-tutorial</title>
+
+  <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 300px;
+    }
+
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #dddddd;
+    }
+
+  </style>
+</head>
+<body>
+<H3><a href="create/">Create new</a></H3>
+
+<div style="margin: 10px">
+  <div style="float: left; margin: 10px;">
+    {{#polls}}
+    <form method="post" action="/vote">
+      <table>
+        <tr>
+          <input name="id" value="{{key}}" hidden>
+          <th colspan="2" style="text-align: center">
+            <h3><a href="/poll/{{key}}">Title: {{value.title}}</a></h3>
+          </th>
+        </tr>
+        <tr>
+          <th colspan="2" style="text-align: center">Question: {{value.message}}</th>
+        </tr>
+        <tr>
+          <th>
+            <center>
+              <select name="option">
+                {{#value.options}}
+                <option value="{{key}}">{{key}}</option>
+                {{/value.options}}
+              </select>
+            </center>
+          </th>
+          <th style="text-align: center"></th>
+        </tr>
+        {{#value.options}}
+        <tr>
+          <th style="text-align: center">Option: {{key}}</th>
+          <th style="text-align: center">Votes: {{value}}</th>
+        </tr>
+        {{/value.options}}
+        <tr>
+          <th style="text-align: center"></th>
+          <th style="text-align: center">
+            <button>Vote</button>
+          </th>
+        </tr>
+      </table>
+    </form>
+
+    <form method="post" action="/delete">
+      <input name="id" value="{{key}}" hidden>
+      <button>Delete</button>
+    </form>
+    <br>
+    {{/polls}}
+
+    <div>
+      {{^polls}}
+      <h2>Empty list</h2>
+      {{/polls}}
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+digraph OTStateManagerFSM {
+	rankdir=TB;
+
+    {rank=min; "Idle", "Idle:\n pendingCommit"}
+
+    "Idle" [shape = doublecircle]
+    "Idle" -> "Fetch1" [ label="sync()"]
+    "Idle:\n pendingCommit" -> "Push1:\n pendingCommit" [ label="sync()"]
+
+    "Idle:\n pendingCommit" -> "Idle" [ label="reset()" ]
+    "Idle" -> "Idle" [ label="reset()" ]
+
+    "Idle:\n pendingCommit" -> "Idle:\n pendingCommit" [ label="rebase()" ]
+    "Idle" -> "Idle" [ label="rebase()" ]
+
+    subgraph cluster {
+        "Push1:\n pendingCommit" -> "Fetch1" [ label="$ ->\n pendingCommit := null"]
+        "Fetch1" -> "Commit" [label = "FetchData(id, diffs) -> \n commitId := id\n workingDiffs := rebase(diffs)" ]
+        "Commit" -> "Push2:\n pendingCommit" [ label="commit -> \n pendingCommit := commit\n "]
+        "Push2:\n pendingCommit" -> "Fetch2" [ label="$ ->\n pendingCommit := null"]
+        "Fetch2" -> "Idle"
+
+        "Push1:\n pendingCommit" -> "Idle:\n pendingCommit" [ color = red; ]
+        "Fetch1" -> "Idle" [ color = red; ]
+        "Commit" -> "Idle" [ color = red; ]
+        "Push2:\n pendingCommit" -> "Idle:\n pendingCommit" [ color = red; ]
+        "Fetch2" -> "Idle" [ color = red; ]
+
+		color=blue
+	}
+
+}

@@ -1,0 +1,62 @@
+/*
+ * Copyright (C) 2020 ActiveJ LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.activej.http.loader;
+
+import io.activej.bytebuf.ByteBuf;
+import io.activej.promise.Promise;
+
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+import static io.activej.bytebuf.ByteBuf.wrapForReading;
+
+class StaticLoaderCache implements StaticLoader {
+	public static final byte[] NOT_FOUND = {};
+
+	private final StaticLoader resourceLoader;
+	private final Function<String, byte[]> get;
+	private final BiConsumer<String, byte[]> put;
+
+	public StaticLoaderCache(StaticLoader resourceLoader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
+		this.resourceLoader = resourceLoader;
+		this.get = get;
+		this.put = put;
+	}
+
+	@Override
+	public Promise<ByteBuf> load(String path) {
+		byte[] bytes = get.apply(path);
+		if (bytes == NOT_FOUND) {
+			return Promise.ofException(NOT_FOUND_EXCEPTION);
+		} else if (bytes != null) {
+			return Promise.of(wrapForReading(bytes));
+		} else {
+			return doLoad(path);
+		}
+	}
+
+	private Promise<ByteBuf> doLoad(String path) {
+		return resourceLoader.load(path)
+				.whenComplete((buf, e2) -> {
+					if (e2 == null) {
+						put.accept(path, buf.getArray());
+					} else if (e2 == NOT_FOUND_EXCEPTION) {
+						put.accept(path, NOT_FOUND);
+					}
+				});
+	}
+}

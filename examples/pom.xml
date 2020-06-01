@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.activej</groupId>
+    <artifactId>activej</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <packaging>pom</packaging>
+
+  <artifactId>examples</artifactId>
+  <name>Examples</name>
+
+  <modules>
+    <module>tutorials/getting-started</module>
+    <module>tutorials/template-engine</module>
+    <module>tutorials/decoder</module>
+    <module>tutorials/auth</module>
+    <module>tutorials/react-integration</module>
+    <module>tutorials/react-integration-2</module>
+    <module>tutorials/uikernel-integration</module>
+    <module>tutorials/rpc-kv-storage</module>
+
+    <module>core/codegen</module>
+    <module>core/bytebuf</module>
+    <module>core/codec</module>
+    <module>core/csp</module>
+    <module>core/boot</module>
+    <module>core/serializer</module>
+    <module>core/net</module>
+    <module>core/datastream</module>
+    <module>core/promise</module>
+    <module>core/http</module>
+    <module>core/eventloop</module>
+    <module>core/di</module>
+    <module>core/di-2</module>
+    <module>core/specializer</module>
+
+    <module>cloud/fs</module>
+    <module>cloud/rpc</module>
+    <module>cloud/crdt</module>
+  </modules>
+
+  <dependencies>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
+  </dependencies>
+</project>

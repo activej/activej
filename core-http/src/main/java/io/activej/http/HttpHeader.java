@@ -1,0 +1,80 @@
+/*
+ * Copyright (C) 2020 ActiveJ LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.activej.http;
+
+import io.activej.bytebuf.ByteBuf;
+import io.activej.http.CaseInsensitiveTokenMap.Token;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
+
+/**
+ * This is a specialized token to be used in {@link CaseInsensitiveTokenMap} for header names.
+ */
+public final class HttpHeader extends Token {
+	@NotNull
+	protected final byte[] bytes;
+	protected final int offset;
+	protected final int length;
+
+	HttpHeader(@NotNull byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
+		super(lowerCaseBytes, lowerCaseHashCode);
+		this.bytes = bytes;
+		this.offset = offset;
+		this.length = length;
+	}
+
+	public int size() {
+		return length;
+	}
+
+	public void writeTo(@NotNull ByteBuf buf) {
+		buf.put(bytes, offset, length);
+	}
+
+	@Override
+	public int hashCode() {
+		return lowerCaseHashCode;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof HttpHeader)) return false;
+		HttpHeader that = (HttpHeader) o;
+
+		if (length != that.length) return false;
+		for (int i = 0; i < length; i++) {
+			byte thisChar = this.bytes[offset + i];
+			byte thatChar = that.bytes[that.offset + i];
+			if (thisChar >= 'A' && thisChar <= 'Z')
+				thisChar += 'a' - 'A';
+			if (thatChar >= 'A' && thatChar <= 'Z')
+				thatChar += 'a' - 'A';
+			if (thisChar != thatChar)
+				return false;
+		}
+		return true;
+	}
+
+	@Override
+	@NotNull
+	public String toString() {
+		return decodeAscii(bytes, offset, length);
+	}
+}

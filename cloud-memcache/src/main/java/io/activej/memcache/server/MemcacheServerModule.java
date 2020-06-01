@@ -1,0 +1,75 @@
+/*
+ * Copyright (C) 2020 ActiveJ LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.activej.memcache.server;
+
+import io.activej.config.Config;
+import io.activej.di.annotation.Provides;
+import io.activej.di.module.AbstractModule;
+import io.activej.eventloop.Eventloop;
+import io.activej.memcache.protocol.SerializerDefSlice;
+import io.activej.promise.Promise;
+import io.activej.rpc.server.RpcServer;
+import io.activej.serializer.SerializerBuilder;
+
+import static io.activej.common.MemSize.kilobytes;
+import static io.activej.config.ConfigConverters.*;
+import static io.activej.memcache.protocol.MemcacheRpcMessage.*;
+import static io.activej.rpc.server.RpcServer.DEFAULT_SERVER_SOCKET_SETTINGS;
+import static io.activej.rpc.server.RpcServer.DEFAULT_SOCKET_SETTINGS;
+
+public class MemcacheServerModule extends AbstractModule {
+	private MemcacheServerModule() {}
+
+	public static MemcacheServerModule create() {
+		return new MemcacheServerModule();
+	}
+
+	@Provides
+	Eventloop eventloop() {
+		return Eventloop.create();
+	}
+
+	@Provides
+	RingBuffer ringBuffer(Config config) {
+		return RingBuffer.create(
+				config.get(ofInteger(), "memcache.buffers"),
+				config.get(ofMemSize(), "memcache.bufferCapacity").toInt());
+	}
+
+	@Provides
+	RpcServer server(Eventloop eventloop, Config config, RingBuffer storage) {
+		return RpcServer.create(eventloop)
+				.withHandler(GetRequest.class, GetResponse.class,
+						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
+				.withHandler(PutRequest.class, PutResponse.class,
+						request -> {
+							Slice slice = request.getData();
+							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
+							return Promise.of(PutResponse.INSTANCE);
+						})
+				.withSerializerBuilder(SerializerBuilder.create(ClassLoader.getSystemClassLoader())
+						.withSerializer(Slice.class, new SerializerDefSlice()))
+				.withMessageTypes(MESSAGE_TYPES)
+				.withStreamProtocol(
+						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
+						config.get(ofMemSize(), "protocol.packetSizeMax", kilobytes(64)),
+						config.get(ofBoolean(), "protocol.compression", false))
+				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", DEFAULT_SERVER_SOCKET_SETTINGS))
+				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", DEFAULT_SOCKET_SETTINGS))
+				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "server.listenAddresses"));
+	}
+}

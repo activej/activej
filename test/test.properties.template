@@ -1,0 +1,6 @@
+dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+dataSource.user=
+dataSource.password=
+dataSource.databaseName=
+dataSource.timeZone=UTC
+dataSource.serverName=localhost

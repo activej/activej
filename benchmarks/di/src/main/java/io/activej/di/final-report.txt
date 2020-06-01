@@ -1,0 +1,44 @@
+CookieBucket instantiating via bind, threadsafe = false
+Benchmark                              (arg)  Mode  Cnt     Score    Error  Units
+DkDirectScopebindBenchmark.testMethod      0  avgt   20    40.895 ±  0.393  ns/op
+DkDirectScopebindBenchmark.testMethod      1  avgt   20   259.648 ±  3.716  ns/op
+DkDirectScopebindBenchmark.testMethod     10  avgt   20  2108.685 ± 16.358  ns/op
+
+CookieBucket instantiating via bind and predefined Key.of(type), threadsafe = false
+Benchmark                              (arg)  Mode  Cnt     Score    Error  Units
+DkDirectScopebindBenchmark.testMethod      0  avgt   20    41.173 ±  0.279  ns/op
+DkDirectScopebindBenchmark.testMethod      1  avgt   20   222.759 ±  3.352  ns/op
+DkDirectScopebindBenchmark.testMethod     10  avgt   20  1780.391 ± 24.140  ns/op
+
+CookieBucket instantiating via bind, threadsafe = true
+Benchmark                              (arg)  Mode  Cnt     Score    Error  Units
+DkDirectScopebindBenchmark.testMethod      0  avgt   20    40.686 ±  0.181  ns/op
+DkDirectScopebindBenchmark.testMethod      1  avgt   20   326.094 ±  3.723  ns/op
+DkDirectScopebindBenchmark.testMethod     10  avgt   20  2835.007 ± 40.070  ns/op
+
+
+CookieBucket instantiating via bind and predefined Key.of(type), threadsafe = true
+Benchmark                              (arg)  Mode  Cnt     Score    Error  Units
+DkDirectScopebindBenchmark.testMethod      0  avgt   20    41.214 ±  0.304  ns/op
+DkDirectScopebindBenchmark.testMethod      1  avgt   20   294.525 ±  3.466  ns/op
+DkDirectScopebindBenchmark.testMethod     10  avgt   20  2349.895 ± 30.631  ns/op
+
+
+CookieBucket via @Provides, threadsafe = true
+Benchmark                       (arg)  Mode  Cnt     Score    Error  Units
+DkDiScopesBenchmark.testMethod      0  avgt   20    41.203 ±  0.330  ns/op
+DkDiScopesBenchmark.testMethod      1  avgt   20   404.545 ±  5.134  ns/op
+DkDiScopesBenchmark.testMethod     10  avgt   20  3482.703 ± 72.545  ns/o
+
+
+Guice unscoped + CookieBucket access.
+Benchmark                          (arg)  Mode  Cnt     Score     Error  Units
+GuiceDiScopesBenchmark.testMethod      0  avgt   20    77.086 ±   1.826  ns/op
+GuiceDiScopesBenchmark.testMethod      1  avgt   20  1050.370 ±  17.707  ns/op
+GuiceDiScopesBenchmark.testMethod     10  avgt   20  9069.315 ± 446.218  ns/op
+
+Spring, only CookieBucket access.
+Benchmark                  (arg)  Mode  Cnt     Score    Error  Units
+SpringDiBenchmark.measure      0  avgt   20    18.583 ±  1.323  us/op
+SpringDiBenchmark.measure      1  avgt   20   141.145 ±  2.116  us/op
+SpringDiBenchmark.measure     10  avgt   20  1277.517 ± 28.185  us/op

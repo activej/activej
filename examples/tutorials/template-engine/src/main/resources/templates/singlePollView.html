@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Poll-tutorial</title>
+
+  <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 300px;
+    }
+
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #dddddd;
+    }
+
+  </style>
+</head>
+<body>
+
+{{#poll}}
+<form method="post" action="/vote">
+  <table>
+    <tr>
+      <input name="id" value="{{id}}" hidden>
+      <th colspan="2" style="text-align: center"><h3>Title: {{title}}</h3></th>
+    </tr>
+    <tr>
+      <th colspan="2" style="text-align: center">Question: {{message}}</th>
+    </tr>
+    <tr>
+      <th>
+        <center>
+          <select name="option">
+            {{#options}}
+            <option value="{{key}}">{{key}}</option>
+            {{/options}}
+          </select>
+        </center>
+      </th>
+      <th style="text-align: center"></th>
+    </tr>
+    {{#options}}
+    <tr>
+      <th style="text-align: center">Option: {{key}}</th>
+      <th style="text-align: center">Votes: {{value}}</th>
+    </tr>
+    {{/options}}
+    <tr>
+      <th style="text-align: center"></th>
+      <th style="text-align: center">
+        <button>Vote</button>
+      </th>
+    </tr>
+  </table>
+</form>
+
+<form method="post" action="/delete">
+  <input name="id" value="{{id}}" hidden>
+  <button>Delete</button>
+</form>
+{{/poll}}
+
+</body>
+</html>

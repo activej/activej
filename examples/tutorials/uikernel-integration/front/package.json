@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "scripts": {
+    "build": "gulp",
+    "postinstall": "bower i"
+  },
+  "dependencies": {
+    "babel": "~5.8.3",
+    "babel-preset-react": "^6.1.18",
+    "babelify": "^7.2.0",
+    "bower": "^1.5.2",
+    "browserify": "^12.0.1",
+    "create-react-class": "^15.6.3",
+    "del": "^2.2.0",
+    "gulp": "^4.0.2",
+    "gulp-less": "^4.0.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-rsync": "^0.0.5",
+    "gulp-shell": "^0.5.1",
+    "gulp-sync": "^0.1.4",
+    "lodash": "^3.10.0",
+    "promise": "^7.0.4",
+    "react": "^16.6.0",
+    "react-dom": "^16.6.0",
+    "uikernel": "^1.0.0",
+    "xhr": "^2.2.0"
+  }
+}

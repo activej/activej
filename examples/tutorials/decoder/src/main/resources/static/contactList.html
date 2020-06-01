@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Decoder example</title>
+  <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #dddddd;
+    }
+
+    div {
+      text-align: center;
+    }
+
+    span {
+      color: red;
+    }
+
+  </style>
+</head>
+<body>
+<div>
+  <form action="/add" method="post">
+    <table>
+      <tr>
+        <th>Name: <input type="text" name="name"> <span>{{errors.name}}</span></th>
+        <th>Age: <input type="text" name="age"> <span>{{errors.age}}</span></th>
+        <th>Address: <input type="text" name="title"> <span>{{errors.contact-address-title}}</span>
+        </th>
+      </tr>
+      <input type="submit" value="Submit">
+    </table>
+  </form>
+</div>
+<br>
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Age</th>
+    <th>Address</th>
+  </tr>
+  {{#contacts}}
+  <tr>
+    <th>{{name}}</th>
+    <th>{{age}}</th>
+    <th>{{address.title}}</th>
+  </tr>
+  {{/contacts}}
+</table>
+</body>
+</html>
