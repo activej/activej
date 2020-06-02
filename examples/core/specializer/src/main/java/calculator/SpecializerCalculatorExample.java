@@ -49,7 +49,7 @@ public final class SpecializerCalculatorExample {
 
 	public static final Parser<CalculatorExpression> PARSER = EXPRESSION.from(LEXER, IGNORED);
 
-	private static final Specializer SPECIALIZER = Specializer.create();
+	private static final Specializer SPECIALIZER = Specializer.create(Thread.currentThread().getContextClassLoader());
 
 	//[START REGION_2]
 	public static void main(String[] args) {

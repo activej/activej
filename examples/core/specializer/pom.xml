@@ -23,15 +23,6 @@
       <artifactId>activej-specializer</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-generator-annprocess</artifactId>
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
 
   <build>
@@ -39,15 +30,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <configuration>
-          <systemProperties>
-            <systemProperty>
-              <key>java.class.path</key>
-              <!--suppress UnresolvedMavenProperty -->
-              <value>${project.build.outputDirectory}${path.separator}${depClasspath}</value>
-            </systemProperty>
-          </systemProperties>
-        </configuration>
         <executions>
           <execution>
             <id>SpecializerCalculatorExample</id>

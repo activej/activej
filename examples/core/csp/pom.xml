@@ -18,26 +18,6 @@
       <artifactId>activej-csp</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-di</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-launcher</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-servicegraph</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-config</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
 
   <build>

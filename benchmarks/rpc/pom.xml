@@ -15,7 +15,12 @@
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>examples-rpc</artifactId>
+      <artifactId>activej-launchers-rpc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-memcache</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

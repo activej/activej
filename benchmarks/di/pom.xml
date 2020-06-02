@@ -19,7 +19,7 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-boot</artifactId>
+      <artifactId>activej-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

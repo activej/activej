@@ -18,6 +18,11 @@
       <artifactId>activej-promise</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-bytebuf</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>

@@ -16,15 +16,6 @@
     Module containing various general utilities for ActiveJ project.
   </description>
 
-  <dependencies>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-jmxapi</artifactId>
-      <version>${project.version}</version>
-      <optional>true</optional>
-    </dependency>
-  </dependencies>
-
   <build>
     <plugins>
       <plugin>

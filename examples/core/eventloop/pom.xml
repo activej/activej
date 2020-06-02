@@ -18,11 +18,6 @@
       <artifactId>activej-eventloop</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-csp</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
 
   <build>

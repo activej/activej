@@ -28,21 +28,6 @@
       <artifactId>activej-datastream</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-launcher</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-servicegraph</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-boot</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
 
   <build>
