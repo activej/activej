@@ -12,7 +12,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-public final class TestInjectorIternals {
+public final class TestInjectorInternals {
 
 	interface SomeService {}
 

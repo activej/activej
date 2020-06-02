@@ -208,7 +208,7 @@ public abstract class HttpMessage {
 
 	/**
 	 * Similarly to {@link #getBodyStream}, this method transfers ownership and can be called only once.
-	 * It returns sucessfully only when this message in in {@link #MUST_LOAD_BODY non-streaming mode}
+	 * It returns successfully only when this message in in {@link #MUST_LOAD_BODY non-streaming mode}
 	 */
 	public final ByteBuf takeBody() {
 		if (CHECK) checkState(!isRecycled());

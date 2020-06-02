@@ -1066,7 +1066,7 @@ public final class TestDI {
 
 	public static class PostConstructed implements PostConstruct {
 		private final String s;
-		private boolean inited;
+		private boolean initialized;
 
 		public PostConstructed(String s) {
 			this.s = s;
@@ -1074,7 +1074,7 @@ public final class TestDI {
 
 		@Override
 		public void init() {
-			inited = true;
+			initialized = true;
 		}
 
 		@Override
@@ -1093,13 +1093,13 @@ public final class TestDI {
 
 		PostConstructed instance1 = injector.getInstance(PostConstructed.class);
 		assertEquals("str_1", instance1.s);
-		assertTrue(instance1.inited);
+		assertTrue(instance1.initialized);
 		PostConstructed instance2 = injector.getInstance(PostConstructed.class);
 		assertEquals("str_2", instance2.s);
-		assertTrue(instance2.inited);
+		assertTrue(instance2.initialized);
 		PostConstructed instance3 = injector.getInstance(PostConstructed.class);
 		assertEquals("str_3", instance3.s);
-		assertTrue(instance3.inited);
+		assertTrue(instance3.initialized);
 	}
 
 	@Test

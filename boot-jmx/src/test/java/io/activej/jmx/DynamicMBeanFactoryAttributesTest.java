@@ -30,7 +30,7 @@ public class DynamicMBeanFactoryAttributesTest {
 	public ExpectedException expectedException = ExpectedException.none();
 
 	@Test
-	public void retreivesProperMBeanInfo() {
+	public void retrievesProperMBeanInfo() {
 		MBeanWithSimpleAttrsAndPojo mbeanOneSample = new MBeanWithSimpleAttrsAndPojo("data", new SamplePojo(5, 100));
 		DynamicMBean mbean = createDynamicMBeanFor(mbeanOneSample);
 
@@ -52,7 +52,7 @@ public class DynamicMBeanFactoryAttributesTest {
 	}
 
 	@Test
-	public void retreivesProperAttributeValues() throws Exception {
+	public void retrievesProperAttributeValues() throws Exception {
 		MBeanWithSimpleAttrsAndPojo mbeanOneSample = new MBeanWithSimpleAttrsAndPojo("data", new SamplePojo(5, 100L));
 		DynamicMBean mbean = createDynamicMBeanFor(mbeanOneSample);
 
@@ -222,7 +222,7 @@ public class DynamicMBeanFactoryAttributesTest {
 	}
 
 	@Test
-	public void setsWrittableAttributesInInnerPojo() throws Exception {
+	public void setsWritableAttributesInInnerPojo() throws Exception {
 		PojoWithSettableAttribute pojo = new PojoWithSettableAttribute(20);
 		MBeanWithPojoWithSettableAttribute settableMBean = new MBeanWithPojoWithSettableAttribute(pojo);
 		DynamicMBean mbean = createDynamicMBeanFor(settableMBean);

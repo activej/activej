@@ -659,7 +659,7 @@ public class ValueStatsTest {
 	}
 
 	@Test
-	public void testScientficNotation() {
+	public void testScientificNotation() {
 		ValueStats valueStats = ValueStats.create(Duration.ofSeconds(10)).withScientificNotation();
 
 		long currentTimestamp = 0;

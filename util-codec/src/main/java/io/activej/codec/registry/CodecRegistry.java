@@ -54,7 +54,7 @@ public final class CodecRegistry implements CodecFactory {
 	}
 
 	/**
-	 * Creates a registry with a set of default codcecs - primitives, some Java types, collections, ActiveJ tuples.
+	 * Creates a registry with a set of default codecs - primitives, some Java types, collections, ActiveJ tuples.
 	 */
 	public static CodecRegistry createDefault() {
 		return create()

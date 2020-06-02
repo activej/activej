@@ -27,8 +27,8 @@ public class AsyncHttpClientBufsConsumerDecoderTest {
 	private static final String URL_WITH_REQUIRED_SSL = "https://paypal.com";
 	private static final String URL_TEST_SSL = "https://ukraine.craigslist.org/";
 	private static final String URL_TEST_SSL2 = "https://www.forbes.com/";
-	private static final String URL_TEST_HTTP_ParseExecption = "http://www.reverso.net/";
-	private static final String URL_TEST_HTTP_ParseExecption2 = "https://www.hepsiburada.com/";
+	private static final String URL_TEST_HTTP_ParseException = "http://www.reverso.net/";
+	private static final String URL_TEST_HTTP_ParseException2 = "https://www.hepsiburada.com/";
 
 	@ClassRule
 	public static EventloopRule eventloopRule = new EventloopRule();
@@ -71,13 +71,13 @@ public class AsyncHttpClientBufsConsumerDecoderTest {
 	}
 
 	@Test
-	public void testPotentialParseExeption() {
-		testUrl(URL_TEST_HTTP_ParseExecption);
+	public void testPotentialParseException() {
+		testUrl(URL_TEST_HTTP_ParseException);
 	}
 
 	@Test
-	public void testPotentialParseExeption2() {
-		testUrl(URL_TEST_HTTP_ParseExecption2);
+	public void testPotentialParseException2() {
+		testUrl(URL_TEST_HTTP_ParseException2);
 	}
 
 	public void testUrl(String url) {

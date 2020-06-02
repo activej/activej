@@ -113,7 +113,7 @@ public final class BufsConsumerChunkedDecoderTest {
 	}
 
 	@Test
-	public void testForSplittedChunkSize() {
+	public void testForSplitChunkSize() {
 		consumer.setExpectedByteArray("1234567890123456789".getBytes());
 		String message1 = "1";
 		String message2 = "3;asdasdasdasd\r\n";
@@ -209,9 +209,9 @@ public final class BufsConsumerChunkedDecoderTest {
 		if (expectedException == null) {
 			await(processResult);
 		} else {
-			Throwable actualExceeption = awaitException(processResult);
+			Throwable actualException = awaitException(processResult);
 			if (expectedException != IGNORE_EXCEPTION){
-				assertEquals(expectedException, actualExceeption);
+				assertEquals(expectedException, actualException);
 			}
 		}
 	}

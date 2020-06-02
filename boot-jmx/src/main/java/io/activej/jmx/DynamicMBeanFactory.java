@@ -143,7 +143,7 @@ public final class DynamicMBeanFactory {
 			rootNode.setVisible(included);
 		}
 
-		// TODO(vmykhalko): check in JmxRegistry that modifiers are applied only once in case of workers and pool registartion
+		// TODO(vmykhalko): check in JmxRegistry that modifiers are applied only once in case of workers and pool registration
 		for (String attrName : setting.getModifiers().keySet()) {
 			AttributeModifier<?> modifier = setting.getModifiers().get(attrName);
 			try {

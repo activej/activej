@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * @since 3.0.0
  */
 @State(Scope.Benchmark)
-public class DkPromiseBenchmark {
+public class ActiveJPromiseBenchmark {
 
 	@Benchmark
 	public void oneCallMeasure(Blackhole blackhole) {
@@ -38,7 +38,7 @@ public class DkPromiseBenchmark {
 	public static void main(String[] args) throws RunnerException {
 
 		Options opt = new OptionsBuilder()
-				.include(DkPromiseBenchmark.class.getSimpleName())
+				.include(ActiveJPromiseBenchmark.class.getSimpleName())
 				.forks(2)
 				.warmupIterations(3)
 				.warmupTime(TimeValue.seconds(1L))

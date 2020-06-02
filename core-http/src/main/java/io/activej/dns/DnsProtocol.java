@@ -42,10 +42,10 @@ public final class DnsProtocol {
 
 	private static final byte[] STANDARD_QUERY_HEADER = {
 			0x01, 0x00, // flags: 0x0100 - standard query
-			0x00, 0x01, // nubmer of questions      : 1
-			0x00, 0x00, // nubmer of answer RRs     : 0
-			0x00, 0x00, // nubmer of authority RRs  : 0
-			0x00, 0x00, // nubmer of additional RRs : 0
+			0x00, 0x01, // number of questions      : 1
+			0x00, 0x00, // number of answer RRs     : 0
+			0x00, 0x00, // number of authority RRs  : 0
+			0x00, 0x00, // number of additional RRs : 0
 	};
 
 	private static final AtomicInteger xorshiftState = new AtomicInteger(1);

@@ -43,9 +43,9 @@ public final class TestLocalFsClientRevisions {
 	@Test
 	public void uploadOverride() {
 		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 0, 1)));
-		await(ChannelSupplier.of(wrapUtf8("OVERRIDEN")).streamTo(client.upload("test.txt", 0, 2)));
+		await(ChannelSupplier.of(wrapUtf8("OVERRIDDEN")).streamTo(client.upload("test.txt", 0, 2)));
 
-		assertEquals("OVERRIDEN", download("test.txt"));
+		assertEquals("OVERRIDDEN", download("test.txt"));
 	}
 
 	@Test
@@ -74,13 +74,13 @@ public final class TestLocalFsClientRevisions {
 		assertNotNull(metadata);
 		assertTrue(metadata.isTombstone());
 
-		await(ChannelSupplier.of(wrapUtf8("OVERRIDEN")).streamTo(client.upload("test.txt", 0, 2)));
+		await(ChannelSupplier.of(wrapUtf8("OVERRIDDEN")).streamTo(client.upload("test.txt", 0, 2)));
 
 		metadata = await(client.getMetadata("test.txt"));
 		assertNotNull(metadata);
 		assertFalse(metadata.isTombstone());
 
-		assertEquals("OVERRIDEN", download("test.txt"));
+		assertEquals("OVERRIDDEN", download("test.txt"));
 	}
 
 	@Test

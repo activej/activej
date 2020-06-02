@@ -240,8 +240,8 @@ public final class HttpUrlTest {
 
 	@Test
 	public void testUrlWithColonInPath() {
-		String domain = "www.examle.in";
-		String path = "/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/www.examle.in/search/label/javascript:void(0)";
+		String domain = "www.example.in";
+		String path = "/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/www.example.in/search/label/javascript:void(0)";
 		String query = "q=v&q";
 		String fragment = "abc/a";
 		String url = "http://" + domain + path + "?" + query + "#" + fragment;

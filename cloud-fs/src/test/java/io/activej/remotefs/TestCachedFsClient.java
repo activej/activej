@@ -194,7 +194,7 @@ public final class TestCachedFsClient {
 		Files.write(serverStorage.resolve("test1.txt"), "11server".getBytes());
 		Files.write(serverStorage.resolve("a/test2.txt"), "22server".getBytes());
 
-		// Adding 1 new file, tottal is 9
+		// Adding 1 new file, total is 9
 		Files.write(serverStorage.resolve("newFile.txt"), "New data".getBytes());
 
 		List<FileMetadata> list = await(cacheRemote.list("**"));
@@ -249,7 +249,7 @@ public final class TestCachedFsClient {
 		await(cacheRemote.start());
 
 		// ~10 KB
-		initializeCacheDownloadFiles(2, "tetsFile_");
+		initializeCacheDownloadFiles(2, "testFile_");
 
 		MemSize cacheSize = await(cacheRemote.getTotalCacheSize());
 

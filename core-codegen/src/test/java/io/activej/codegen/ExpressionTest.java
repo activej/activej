@@ -591,7 +591,7 @@ public class ExpressionTest {
 	}
 
 	@org.junit.Test
-	public void testBuildedInstance() {
+	public void testBuiltInstance() {
 		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 
 		Initializer<ClassBuilder<Object>> initializer = builder -> builder

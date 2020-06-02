@@ -175,9 +175,9 @@ public class DiDependencyGraphExplore {
 
 		System.out.println("Parent injector, before entering scope : " + injector);
 
-		Injector subinjector = injector.enterScope(ORDER_SCOPE);
-		System.out.println("Parent injector, after entering scope : " + subinjector.getParent());
-		System.out.println("Parent injector is 'injector' : " + injector.equals(subinjector.getParent()));
+		Injector subInjector = injector.enterScope(ORDER_SCOPE);
+		System.out.println("Parent injector, after entering scope : " + subInjector.getParent());
+		System.out.println("Parent injector is 'injector' : " + injector.equals(subInjector.getParent()));
 		//[END REGION_2]
 		System.out.println();
 		System.out.println("============================ ");
@@ -186,7 +186,7 @@ public class DiDependencyGraphExplore {
 		/// bindings check
 		// FYI: getBinding().toString() gives us a dependencies of current binding.
 		//[START REGION_3]
-		System.out.println("Pastry binding check : " + subinjector.getBinding(Pastry.class));
+		System.out.println("Pastry binding check : " + subInjector.getBinding(Pastry.class));
 		//[END REGION_3]
 		System.out.println();
 		System.out.println("============================ ");
@@ -194,7 +194,7 @@ public class DiDependencyGraphExplore {
 
 		// graphviz visualization.
 		//[START REGION_4]
-		Utils.printGraphVizGraph(subinjector.getBindingsTrie());
+		Utils.printGraphVizGraph(subInjector.getBindingsTrie());
 		//[END REGION_4]
 	}
 }

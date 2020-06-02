@@ -138,8 +138,8 @@ public final class TestPartialRemoteFs {
 	public void overridingUpload() throws IOException {
 		Path path = serverStorage.resolve("test_file.txt");
 		String content = "Hello! Ima slow green fox, running over an active dog";
-		String override = "over an active dog, that is the best dog ever possible in existense";
-		String updated = "Hello! Ima slow green fox, running over an active dog, that is the best dog ever possible in existense";
+		String override = "over an active dog, that is the best dog ever possible in existence";
+		String updated = "Hello! Ima slow green fox, running over an active dog, that is the best dog ever possible in existence";
 
 		Files.write(path, content.getBytes(UTF_8));
 

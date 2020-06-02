@@ -77,13 +77,13 @@ public class DynamicMBeanFactorySettingsTest {
 	@Test
 	public void modifiesDynamicMBeanComponentsAccordingToSettings() throws Exception {
 		Map<String, AttributeModifier<?>> nameToModifier = new HashMap<>();
-		nameToModifier.put("stats", (AttributeModifier<ConfigurableStats>) attribute -> attribute.setConfigurableText("configurated"));
+		nameToModifier.put("stats", (AttributeModifier<ConfigurableStats>) attribute -> attribute.setConfigurableText("configured"));
 		JmxBeanSettings settings = JmxBeanSettings.of(NO_BEANS, nameToModifier, NO_CUSTOM_TYPES);
 		MBeanStubTwo mBeanStubTwo = new MBeanStubTwo();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(asList(mBeanStubTwo), settings, false);
 
-		assertEquals("configurated", mbean.getAttribute("stats_data"));
+		assertEquals("configured", mbean.getAttribute("stats_data"));
 	}
 
 	public static final class MBeanStubTwo implements ConcurrentJmxBean {

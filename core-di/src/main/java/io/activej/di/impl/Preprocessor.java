@@ -89,7 +89,7 @@ public final class Preprocessor {
 			Scope[] scope, Key<?> key, @Nullable BindingSet<?> bindingSet,
 			Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
 
-		// shortest path - if it was already resolved, just return it (also serves as a visited set so graph loops dont cause infinite recursion)
+		// shortest path - if it was already resolved, just return it (also serves as a visited set so graph loops don't cause infinite recursion)
 		MarkedBinding<?> already = resolved.get(key);
 		if (already != null) {
 			return already;

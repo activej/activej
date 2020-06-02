@@ -215,8 +215,8 @@ public final class BinaryOutputUtils {
 			buf[off] = (byte) bytes;
 			return pos + 1;
 		}
-		int bytesVarintSize = 1 + (31 - Integer.numberOfLeadingZeros(bytes)) / 7;
-		System.arraycopy(buf, off + 1, buf, off + bytesVarintSize, bytes);
+		int bytesVarIntSize = 1 + (31 - Integer.numberOfLeadingZeros(bytes)) / 7;
+		System.arraycopy(buf, off + 1, buf, off + bytesVarIntSize, bytes);
 		off = writeVarInt(buf, off, bytes);
 		return off + bytes;
 	}
@@ -252,9 +252,9 @@ public final class BinaryOutputUtils {
 			buf[off] = (byte) bytesPlus1;
 			return pos;
 		}
-		int bytesVarintSize = 1 + (31 - Integer.numberOfLeadingZeros(bytesPlus1)) / 7;
+		int bytesVarIntSize = 1 + (31 - Integer.numberOfLeadingZeros(bytesPlus1)) / 7;
 		int bytes = bytesPlus1 - 1;
-		System.arraycopy(buf, off + 1, buf, off + bytesVarintSize, bytes);
+		System.arraycopy(buf, off + 1, buf, off + bytesVarIntSize, bytes);
 		off = writeVarInt(buf, off, bytesPlus1);
 		return off + bytes;
 	}

@@ -57,7 +57,7 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	public static final StacklessException INVALID_MESSAGE = new StacklessException(RemoteFsClient.class, "Invalid or unexpected message received");
 	public static final StacklessException TOO_MUCH_DATA = new StacklessException(RemoteFsClient.class, "Received more bytes than expected");
 	public static final StacklessException UNEXPECTED_END_OF_STREAM = new StacklessException(RemoteFsClient.class, "Unexpected end of stream");
-	public static final StacklessException UNKNOWN_SERVER_ERROR = new StacklessException(RemoteFsClient.class, "Unknown server error occured");
+	public static final StacklessException UNKNOWN_SERVER_ERROR = new StacklessException(RemoteFsClient.class, "Unknown server error occurred");
 
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
 			nullTerminatedJson(RemoteFsResponses.CODEC, RemoteFsCommands.CODEC);

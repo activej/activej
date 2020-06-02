@@ -191,7 +191,7 @@ public interface ByteBufsDecoder<T> {
                                 size |= b << 28;
                                 prefixSize = 5;
                             } else {
-                                throw new ParseException(ByteBufsDecoder.class, "Varint is too long for 32-bit integer");
+                                throw new ParseException(ByteBufsDecoder.class, "VarInt is too long for 32-bit integer");
                             }
                         }
                     }

@@ -22,7 +22,7 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Drops exactly N bytes from a csp strem of byte buffers and limits that stream to exactly M bytes in length
+ * Drops exactly N bytes from a csp stream of byte buffers and limits that stream to exactly M bytes in length
  */
 public final class ChannelByteRanger extends AbstractChannelTransformer<ChannelByteRanger, ByteBuf, ByteBuf> {
 	private final long offset;

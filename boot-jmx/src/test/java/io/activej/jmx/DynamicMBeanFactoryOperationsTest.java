@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 public final class DynamicMBeanFactoryOperationsTest {
 
 	@Test
-	public void itShouldCollectInformationAbountJMXOperationsToMBeanInfo() {
+	public void itShouldCollectInformationAboutJMXOperationsToMBeanInfo() {
 		BeanStubWithOperations bean = new BeanStubWithOperations();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(singletonList(bean), defaultSettings(), false);
@@ -57,7 +57,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 	}
 
 	@Test
-	public void itShouldInvokeAnnotanedOperationsThroughDynamicMBeanInterface() throws Exception {
+	public void itShouldInvokeAnnotatedOperationsThroughDynamicMBeanInterface() throws Exception {
 		BeanStubWithOperations bean = new BeanStubWithOperations();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(singletonList(bean), defaultSettings(), false);

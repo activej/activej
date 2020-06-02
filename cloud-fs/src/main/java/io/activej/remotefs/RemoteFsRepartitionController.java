@@ -203,11 +203,11 @@ public final class RemoteFsRepartitionController implements Initializable<Remote
 								});
 					}
 					if (uploadTargets.size() == 1 && uploadTargets.get(0) == localStorage) { // everybody had the file AND
-						logger.info("handled file {} (ensured on {})", meta, selected);      // we dont delete the local copy
+						logger.info("handled file {} (ensured on {})", meta, selected);      // we don't delete the local copy
 						return Promise.of(true);
 					}
 
-					// else we need to upload to at least one nonlocal partition
+					// else we need to upload to at least one non-local partition
 
 					logger.trace("uploading file {} to partitions {}...", meta, uploadTargets);
 
@@ -238,7 +238,7 @@ public final class RemoteFsRepartitionController implements Initializable<Remote
 									return Promise.of(false);
 								}
 
-								if (uploadTargets.contains(localPartitionId)) { // dont delete local if it was marked
+								if (uploadTargets.contains(localPartitionId)) { // don't delete local if it was marked
 									logger.info("handled file {} (ensured on {}, uploaded to {})", meta, selected, uploadTargets);
 									return Promise.of(true);
 								}
@@ -263,7 +263,7 @@ public final class RemoteFsRepartitionController implements Initializable<Remote
 						return Promise.of(Try.of(null));  // and skip other logic
 					}
 					return clients.get(partitionId)
-							.listEntities(fileToUpload.getName()) // checking file existense and size on particular partition
+							.listEntities(fileToUpload.getName()) // checking file existence and size on particular partition
 							.whenComplete((list, e) -> {
 								if (e != null) {
 									logger.warn("failed connecting to partition " + partitionId + " (" + e + ')');

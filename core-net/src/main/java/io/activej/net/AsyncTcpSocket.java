@@ -50,10 +50,10 @@ public interface AsyncTcpSocket extends AsyncCloseable {
 	/**
 	 * Operation to write some data to network. Returns a promise of void that represents successful write.
 	 * <p>
-	 * Many write operations may be called. However, when some write is successfull, all of the promises received from write calls before it will be completed at once.
+	 * Many write operations may be called. However, when some write is successful, all of the promises received from write calls before it will be completed at once.
 	 *
 	 * @param buf data to be sent to network
-	 * @return promise that represents successfull write operation
+	 * @return promise that represents successful write operation
 	 */
 	@NotNull
 	Promise<Void> write(@Nullable ByteBuf buf);

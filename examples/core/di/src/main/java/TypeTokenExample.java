@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 
 /**
  * A Key class is a type token by itself, so you can construct complex keys with long generics nicely.
- * If you dont like the excess subclassing, you can use Types.parameterized (or even Types.arrayOf),
+ * If you don't like the excess subclassing, you can use Types.parameterized (or even Types.arrayOf),
  * as shown in getInstance call.
  */
 //[START EXAMPLE]

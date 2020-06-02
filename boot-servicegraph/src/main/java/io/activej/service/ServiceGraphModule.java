@@ -63,7 +63,7 @@ import static java.util.stream.Collectors.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Builds dependency graph of {@code Service} objects based on Guice's object
+ * Builds dependency graph of {@code Service} objects based on DI's object
  * graph. Service graph module is capable to start services concurrently.
  * <p>
  * Consider some lifecycle details of this module:

@@ -35,7 +35,7 @@ public final class ReadSettingsTest {
 		String query = "fields=[first, second, third]" +
 				"&offset=0" +
 				"&limit=55" +
-				"&filters={age:12, name:Арт%26уሴр}" + // added utf-8 symbol and encoded ampersant
+				"&filters={age:12, name:Арт%26уሴр}" + // added utf-8 symbol and encoded ampersand
 				"&sort=[[name,asc]]" +
 				"&extra=[]";
 

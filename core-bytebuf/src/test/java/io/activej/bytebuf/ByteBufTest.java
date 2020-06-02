@@ -272,7 +272,7 @@ public class ByteBufTest {
 
 	@Test
 	@Ignore("Takes some time and resources")
-	// Should not fail with OOME
+	// Should not fail with OutOfMemoryError
 	public void testProperMemoryFreeing() {
 		int bufSize = (int) (Runtime.getRuntime().maxMemory() / 2000);
 

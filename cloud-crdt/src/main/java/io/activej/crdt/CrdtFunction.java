@@ -39,13 +39,13 @@ public interface CrdtFunction<S> {
 	 * This method should create a CRDT value that, when combined with 'old',
 	 * gives you 'state', which is 'old' updated to current time.
 	 * <p>
-	 * Basically this is almost like taking a CRDT diff betweend 'old' and 'state'.
+	 * Basically this is almost like taking a CRDT diff between 'old' and 'state'.
 	 * <p>
 	 * It can be a huge optimization e.g. for big CRDT maps:
 	 * <p>
 	 * The whole map state could contain thousands of key-value pairs,
 	 * and instead of combining 'old' with 'state' (which with CRDT would achieve the most complete map)
-	 * that requires serializing, transfering and/or storing the whole 'state',
+	 * that requires serializing, transferring and/or storing the whole 'state',
 	 * one could extract only the entries that are changed between 'old' and 'state',
 	 * serialize and transfer only those and then CRDT-combine those with 'old', achieving the
 	 * same result with much less resources spent.

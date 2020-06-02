@@ -376,14 +376,14 @@ public final class ConfigConverters {
 	}
 
 	/**
-	 * @return config converter with bytes in memsize
+	 * @return config converter with bytes in MemSize
 	 */
 	public static ConfigConverter<Long> ofMemSizeAsLong() {
 		return ofMemSize().transform(MemSize::toLong, MemSize::of);
 	}
 
 	/**
-	 * @return config converter with bytes in memsize
+	 * @return config converter with bytes in MemSize
 	 */
 	public static ConfigConverter<Integer> ofMemSizeAsInt() {
 		return ofMemSize().transform(MemSize::toInt, (Function<Integer, MemSize>) MemSize::of);

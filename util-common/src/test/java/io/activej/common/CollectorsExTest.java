@@ -22,7 +22,7 @@ public class CollectorsExTest {
 	}
 
 	@Test
-	public void testTolast() {
+	public void testToLast() {
 		Integer collect = Stream.of(1, 2, 3).collect(CollectorsEx.toLast());
 		assertEquals(3, collect.intValue());
 	}

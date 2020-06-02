@@ -89,7 +89,7 @@ public final class PromisesTest {
 	}
 
 	@Test
-	public void arraytoArrayDoubleTest() {
+	public void arrayToArrayDoubleTest() {
 		Integer[] array = await(toArray(Integer.class, Promise.of(321), Promise.of(322)));
 		assertEquals(2, array.length);
 		assertEquals(new Integer(321), array[0]);

@@ -306,8 +306,8 @@ public final class RemoteFsClusterClient implements FsClient, Initializable<Remo
 											filename + ", only " + successCount + " finished uploads", ackTries);
 								}
 								if (successCount < replicationCount) {
-									return ofFailure("Couldn't finish uploadind file " +
-											filename + ", only " + successCount + " acknowlegdes received", ackTries);
+									return ofFailure("Couldn't finish uploading file " +
+											filename + ", only " + successCount + " acknowledgements received", ackTries);
 								}
 								return Promise.complete();
 							})

@@ -105,7 +105,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 
 	/**
 	 * Returns registered token value for given input, or null if no such value was registered.
-	 * This methid is very fast.
+	 * This method is very fast.
 	 */
 	public final T get(byte[] bytes, int offset, int length, int lowerCaseHashCode) {
 		for (int p = 0; p < maxProbings; p++) {

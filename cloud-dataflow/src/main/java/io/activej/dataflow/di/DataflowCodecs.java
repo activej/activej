@@ -91,12 +91,12 @@ public final class DataflowCodecs extends AbstractModule {
 					String str = in.readString();
 					String[] split = str.split(":");
 					if (split.length != 2) {
-						throw new ParseException("Address should be splitted with a single ':'");
+						throw new ParseException("Address should be split with a single ':'");
 					}
 					try {
 						return new InetSocketAddress(InetAddress.getByName(split[0]), Integer.parseInt(split[1]));
 					} catch (UnknownHostException e) {
-						throw new ParseException(DataflowCodecs.class, "Failed to create InetSocketAdress", e);
+						throw new ParseException(DataflowCodecs.class, "Failed to create InetSocketAddress", e);
 					}
 				},
 				(out, addr) -> out.writeString(addr.getAddress().getHostAddress() + ':' + addr.getPort())

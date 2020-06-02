@@ -82,18 +82,18 @@ public final class BufsConsumerIntegrationTest {
 	private void writeMultipleBufs() {
 		byte[] data = new byte[100_000];
 		ThreadLocalRandom.current().nextBytes(data);
-		ByteBuf toBeSplitted = ByteBufPool.allocate(data.length);
+		ByteBuf toBeSplit = ByteBufPool.allocate(data.length);
 		ByteBuf expected = ByteBufPool.allocate(data.length);
-		toBeSplitted.put(data);
+		toBeSplit.put(data);
 		expected.put(data);
 		consumer.setExpectedBuf(expected);
-		while (toBeSplitted.readRemaining() != 0) {
-			int part = Math.min(ThreadLocalRandom.current().nextInt(100) + 100, toBeSplitted.readRemaining());
-			ByteBuf slice = toBeSplitted.slice(part);
-			toBeSplitted.moveHead(part);
+		while (toBeSplit.readRemaining() != 0) {
+			int part = Math.min(ThreadLocalRandom.current().nextInt(100) + 100, toBeSplit.readRemaining());
+			ByteBuf slice = toBeSplit.slice(part);
+			toBeSplit.moveHead(part);
 			list.add(slice);
 		}
-		toBeSplitted.recycle();
+		toBeSplit.recycle();
 	}
 
 	private void doTest(AsyncProcess process1, AsyncProcess process2) {
