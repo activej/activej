@@ -46,7 +46,7 @@ public final class TcpClientExample {
 						.whenResult(list -> list.forEach(System.out::println));
 
 			} else {
-				System.out.printf("Could not connect to server, make sure it is started: %s\n", e);
+				System.out.printf("Could not connect to server, make sure it is started: %s%n", e);
 			}
 		});
 

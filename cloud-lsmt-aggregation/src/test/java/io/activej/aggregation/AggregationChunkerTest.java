@@ -14,7 +14,6 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +34,6 @@ import static org.junit.Assert.assertSame;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class AggregationChunkerTest {
-
-	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

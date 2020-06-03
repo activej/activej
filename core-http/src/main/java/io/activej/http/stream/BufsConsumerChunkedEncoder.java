@@ -31,7 +31,7 @@ import static io.activej.common.Preconditions.checkState;
  */
 public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<BufsConsumerChunkedEncoder, ByteBuf, ByteBuf> {
-	private final ByteBuf LAST_CHUNK = ByteBuf.wrapForReading(new byte[]{48, 13, 10, 13, 10});
+	private static final byte[] LAST_CHUNK_BYTES = new byte[]{48, 13, 10, 13, 10};
 
 	private ChannelSupplier<ByteBuf> input;
 	private ChannelConsumer<ByteBuf> output;
@@ -76,7 +76,7 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 	protected void doProcess() {
 		input.filter(ByteBuf::canRead)
 				.streamTo(ChannelConsumer.of(buf -> output.accept(encodeBuf(buf))))
-				.then(() -> output.accept(LAST_CHUNK))
+				.then(() -> output.accept(ByteBuf.wrapForReading(LAST_CHUNK_BYTES)))
 				.then(() -> output.acceptEndOfStream())
 				.whenResult(this::completeProcess);
 	}

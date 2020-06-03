@@ -162,10 +162,6 @@ public final class JmxModule extends AbstractModule implements Initializable<Jmx
 		return this;
 	}
 
-//	public JmxModule withObjectName(Type type, String objectName) {
-//		return withObjectName(Key.of(type), objectName);
-//	}
-
 	public <T> JmxModule withCustomType(Class<T> type, Function<T, String> to, Function<String, T> from) {
 		this.customTypes.put(type, new JmxCustomTypeAdapter<>(to, from));
 		return this;
@@ -263,11 +259,10 @@ public final class JmxModule extends AbstractModule implements Initializable<Jmx
 			}
 		}
 
-		for (Type type : globalMBeanObjects.keySet()) {
-			List<Object> objects = globalMBeanObjects.get(type);
-			Key<?> key = globalMBeans.get(type);
+		for (Map.Entry<Type, List<Object>> entry : globalMBeanObjects.entrySet()) {
+			Key<?> key = globalMBeans.get(entry.getKey());
 			DynamicMBean globalMBean =
-					mbeanFactory.createDynamicMBean(objects, ensureSettingsFor(key), false);
+					mbeanFactory.createDynamicMBean(entry.getValue(), ensureSettingsFor(key), false);
 			jmxRegistry.registerSingleton(key, globalMBean, defaultSettings());
 		}
 	}

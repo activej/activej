@@ -234,7 +234,7 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 								id = fromFileName(filename.substring(0, filename.length() - LOG.length()));
 							} catch (NumberFormatException e) {
 								cleanupWarnings.recordException(e);
-								logger.warn("Invalid chunk filename: " + file);
+								logger.warn("Invalid chunk filename: {}", file);
 								return false;
 							}
 							if (preserveChunks.contains(id)) {

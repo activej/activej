@@ -37,7 +37,7 @@ import static java.lang.System.currentTimeMillis;
  * because it can be rewritten by the new data when it overfills
  */
 public final class RingBuffer implements RingBufferMBean {
-	private static final Boolean CHECK = Check.isEnabled(RingBuffer.class);
+	private static final boolean CHECK = Check.isEnabled(RingBuffer.class);
 
 	/**
 	 * The main class for the caching the byte-arrays
@@ -80,9 +80,9 @@ public final class RingBuffer implements RingBufferMBean {
 
 		static int intValueOf(byte[] bytes) {
 			return ((bytes[0] << 24)) |
-					((bytes[1] & 0xff) << 16) |
-					((bytes[2] & 0xff) << 8) |
-					((bytes[3] & 0xff));
+					(bytes[1] & 0xff) << 16 |
+					(bytes[2] & 0xff) << 8 |
+					(bytes[3] & 0xff);
 		}
 
 		static long longValueOf(byte[] bytes) {

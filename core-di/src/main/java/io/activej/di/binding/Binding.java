@@ -689,7 +689,7 @@ public final class Binding<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <K> Binding<T> rebindDependencies(@NotNull Map<Key<?>, Key<?>> map) {
+	public Binding<T> rebindDependencies(@NotNull Map<Key<?>, Key<?>> map) {
 		if (map.isEmpty()) {
 			return this;
 		}

@@ -191,7 +191,7 @@ public final class ChannelLZ4Decompressor extends AbstractCommunicatingProcess
 		output.closeEx(e);
 	}
 
-	public final static class Header {
+	public static final class Header {
 		public int originalLen;
 		public int compressedLen;
 		public int compressionMethod;

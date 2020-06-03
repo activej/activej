@@ -49,9 +49,9 @@ public class MemcacheMultiServerModule extends AbstractModule {
 	@Worker
 	RpcServer server(Eventloop eventloop, RingBuffer storage, InetSocketAddress address) {
 		return RpcServer.create(eventloop)
-				.withHandler(GetRequest.class, GetResponse.class,
+				.withHandler(GetRequest.class,
 						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
-				.withHandler(PutRequest.class, PutResponse.class,
+				.withHandler(PutRequest.class,
 						request -> {
 							Slice slice = request.getData();
 							System.out.println("Server on port #" + address.getPort() + " accepted message!");

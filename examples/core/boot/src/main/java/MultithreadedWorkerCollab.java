@@ -17,7 +17,7 @@ public final class MultithreadedWorkerCollab extends AbstractModule {
 	@Worker
 	Eventloop eventloop(@WorkerId int wid, ConcurrentLinkedQueue<Integer> queue) {
 		Eventloop eventloop = Eventloop.create();
-		eventloop.delay(100 * wid, () -> queue.add(wid));
+		eventloop.delay(100L * wid, () -> queue.add(wid));
 		return eventloop;
 	}
 

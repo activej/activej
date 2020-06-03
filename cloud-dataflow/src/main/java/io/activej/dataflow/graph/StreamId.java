@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class StreamId {
 	private static final AtomicLong seed = new AtomicLong(0);
-//	private static final AtomicLong seed = new AtomicLong(new Random().nextInt() & (Integer.MAX_VALUE >>> 1));
 
 	private final long id;
 

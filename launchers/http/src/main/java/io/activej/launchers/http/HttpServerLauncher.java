@@ -93,7 +93,7 @@ public abstract class HttpServerLauncher extends Launcher {
 
 	@Override
 	protected void run() throws Exception {
-		logger.info("HTTP Server is now available at " + String.join(", ", httpServer.getHttpAddresses()));
+		logger.info("HTTP Server is now available at {}", String.join(", ", httpServer.getHttpAddresses()));
 		awaitShutdown();
 	}
 

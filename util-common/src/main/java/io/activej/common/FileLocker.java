@@ -30,7 +30,7 @@ import static io.activej.common.Preconditions.checkState;
 public final class FileLocker {
 	private static final Logger logger = LoggerFactory.getLogger(FileLocker.class);
 
-	synchronized public static FileLocker obtainLockOrDie(String filename) {
+	public static synchronized FileLocker obtainLockOrDie(String filename) {
 		FileLocker fileLocker = new FileLocker(filename);
 		if (!fileLocker.obtainLock()) {
 			logger.error("Could not obtain lock for {}", filename);
@@ -54,7 +54,7 @@ public final class FileLocker {
 		this.lockFile = lockFile.getAbsoluteFile();
 	}
 
-	synchronized public void obtainLockOrDie() {
+	public synchronized void obtainLockOrDie() {
 		if (!obtainLock()) {
 			logger.error("Could not obtain lock for {}", this);
 			throw new RuntimeException("Could not obtain lock");
@@ -62,7 +62,7 @@ public final class FileLocker {
 	}
 
 	@SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
-	synchronized public boolean obtainLock() {
+	public synchronized boolean obtainLock() {
 		try {
 			File parentDir = lockFile.getCanonicalFile().getParentFile();
 			if (parentDir != null) {
@@ -79,7 +79,7 @@ public final class FileLocker {
 		}
 	}
 
-	synchronized public void releaseLock() {
+	public synchronized void releaseLock() {
 		try {
 			if (fileLock != null) {
 				fileLock.release();

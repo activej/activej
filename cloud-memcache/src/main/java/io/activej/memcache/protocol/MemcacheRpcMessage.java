@@ -25,6 +25,9 @@ import io.activej.serializer.annotations.SerializeNullable;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+
 public class MemcacheRpcMessage {
 	public static final HashFunction<Object> HASH_FUNCTION =
 			item -> {
@@ -38,7 +41,7 @@ public class MemcacheRpcMessage {
 				throw new IllegalArgumentException("Unknown request type " + item);
 			};
 
-	public static final List<Class<?>> MESSAGE_TYPES = Arrays.asList(GetRequest.class, GetResponse.class, PutRequest.class, PutResponse.class);
+	public static final List<Class<?>> MESSAGE_TYPES = unmodifiableList(asList(GetRequest.class, GetResponse.class, PutRequest.class, PutResponse.class));
 
 	public static final class GetRequest implements RpcMandatoryData {
 		private final byte[] key;

@@ -148,9 +148,10 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 	public void truncateTables() throws SQLException {
 		logger.trace("Truncate tables");
 		try (Connection connection = dataSource.getConnection()) {
-			Statement statement = connection.createStatement();
-			statement.execute(sql("TRUNCATE TABLE {diffs}"));
-			statement.execute(sql("TRUNCATE TABLE {revisions}"));
+			try (Statement statement = connection.createStatement()) {
+				statement.execute(sql("TRUNCATE TABLE {diffs}"));
+				statement.execute(sql("TRUNCATE TABLE {revisions}"));
+			}
 		}
 	}
 

@@ -118,7 +118,7 @@ public class ChannelSupplierTest {
 			readSize += buf.readRemaining();
 			buf.recycle();
 		}
-		assertEquals(readSize, 0);
+		assertEquals(0, readSize);
 	}
 
 	@Test
@@ -159,7 +159,7 @@ public class ChannelSupplierTest {
 						while ((b = inputStream.read()) != -1) {
 							buf.writeByte((byte) b);
 						}
-						assertEquals(buf.asString(UTF_8), "");
+						assertTrue(buf.asString(UTF_8).isEmpty());
 					} catch (IOException e) {
 						throw new UncheckedIOException(e);
 					}

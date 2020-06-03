@@ -85,7 +85,7 @@ public final class BinaryStructuredOutput implements StructuredOutput {
 	@Override
 	public void writeBytes(byte[] bytes, int off, int len) {
 		buf = ByteBufPool.ensureWriteRemaining(buf, 5 + len);
-		buf.writeVarInt(bytes.length);
+		buf.writeVarInt(len);
 		buf.write(bytes, off, len);
 	}
 

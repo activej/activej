@@ -41,7 +41,7 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 	private int maxRefreshesPerCycle;
 
 	@Override
-	synchronized public void execute(Object bean, Runnable command) {
+	public synchronized void execute(Object bean, Runnable command) {
 		Eventloop eventloop = beanToEventloop.get(bean);
 		checkNotNull(eventloop, () -> "Unregistered bean " + bean);
 		eventloop.execute(wrapContext(bean, command));
@@ -59,7 +59,7 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 	}
 
 	@Override
-	synchronized public void registerRefreshableBean(Object bean, List<JmxRefreshable> beanRefreshables) {
+	public synchronized void registerRefreshableBean(Object bean, List<JmxRefreshable> beanRefreshables) {
 		checkNotNull(refreshPeriod, "Not initialized");
 
 		Eventloop eventloop = ensureEventloop(bean);

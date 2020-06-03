@@ -143,7 +143,7 @@ public final class UrlParser {
 			host = index;
 
 			short hostPortEnd = findHostPortEnd(host);
-			if (host == hostPortEnd || raw.indexOf(":", host) == host) {
+			if (host == hostPortEnd || raw.indexOf(':', host) == host) {
 				throw new ParseException("Domain name cannot be null or empty");
 			}
 
@@ -542,7 +542,7 @@ public final class UrlParser {
 		for (int i = pos; i < len; i++) {
 			char c = s.charAt(i);
 			if (c == '+' || c == '%')
-				return _urlDecode(s, pos, i); // inline hint
+				return urlDecode(s, pos, i); // inline hint
 			if (c == '&' || c == '#')
 				return s.substring(pos, i);
 		}
@@ -550,7 +550,7 @@ public final class UrlParser {
 	}
 
 	@Nullable
-	private static String _urlDecode(String s, int pos, int encodedSuffixPos) {
+	private static String urlDecode(String s, int pos, int encodedSuffixPos) {
 		int len = s.length();
 
 		CachedBuffers cachedBuffers = CACHED_BUFFERS.get();

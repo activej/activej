@@ -202,7 +202,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		CommandHandler handler = handlers.get(command.getClass());
 		if (handler == null) {
 			messaging.close();
-			logger.error("missing handler for " + command);
+			logger.error("missing handler for {}", command);
 		} else {
 			handler.onCommand(messaging, command);
 		}

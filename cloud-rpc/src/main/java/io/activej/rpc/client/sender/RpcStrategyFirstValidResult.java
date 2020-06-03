@@ -68,7 +68,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 	@Override
 	public RpcSender createSender(RpcClientConnectionPool pool) {
 		List<RpcSender> senders = list.listOfSenders(pool);
-		if (senders.size() == 0)
+		if (senders.isEmpty())
 			return null;
 		return new Sender(senders, resultValidator, noValidResultException);
 	}
@@ -81,7 +81,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 
 		Sender(@NotNull List<RpcSender> senders, @NotNull ResultValidator<?> resultValidator,
 				@Nullable StacklessException noValidResultException) {
-			assert senders.size() > 0;
+			assert !senders.isEmpty();
 			this.subSenders = senders.toArray(new RpcSender[0]);
 			this.resultValidator = resultValidator;
 			this.noValidResultException = noValidResultException;

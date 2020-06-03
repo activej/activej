@@ -545,10 +545,10 @@ public interface Config {
 			result.put(THIS, getValue());
 		}
 		Map<String, Config> children = getChildren();
-		for (String key : children.keySet()) {
-			Map<String, String> childMap = children.get(key).toMap();
+		for (Map.Entry<String, Config> entry : children.entrySet()) {
+			Map<String, String> childMap = entry.getValue().toMap();
 			result.putAll(childMap.entrySet().stream()
-					.collect(Collectors.toMap(entry -> concatPath(key, entry.getKey()), Map.Entry::getValue)));
+					.collect(Collectors.toMap(e -> concatPath(entry.getKey(), e.getKey()), Map.Entry::getValue)));
 		}
 		return result;
 	}

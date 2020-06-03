@@ -29,7 +29,7 @@ import static io.activej.common.Preconditions.checkArgument;
  * Its purpose is to map header values to references to Java objects with maximum efficiency and speed.
  */
 public final class CaseInsensitiveTokenMap<T extends Token> {
-	public static abstract class Token {
+	public abstract static class Token {
 		protected final byte[] lowerCaseBytes;
 		protected final int lowerCaseHashCode;
 

@@ -67,10 +67,9 @@ public final class TestUtils {
 			}
 			try {
 				consumer.accept(t);
+			} catch (AssertionError e2) {
+				throw e2;
 			} catch (Throwable e2) {
-				if (e2 instanceof AssertionError) {
-					throw (AssertionError) e2;
-				}
 				throw new AssertionError(e2);
 			}
 		};

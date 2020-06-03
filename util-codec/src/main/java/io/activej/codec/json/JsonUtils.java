@@ -137,11 +137,6 @@ public class JsonUtils {
 			setIndent(indent);
 		}
 
-		@Override
-		public JsonWriter name(String name) throws IOException {
-			return super.name(name);
-		}
-
 		public final String getIndentEx() {
 			return indentEx;
 		}

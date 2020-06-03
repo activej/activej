@@ -274,7 +274,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 			if (getConnectionsCount() != 0) {
 				scheduleExpiredConnectionsCheck();
 				if (isClosing) {
-					logger.info("...Waiting for " + this);
+					logger.info("...Waiting for {}", this);
 				}
 			}
 		}));
@@ -313,7 +313,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 				eventloop.delayBackground(serveTimeoutMillisShutdown, wrapContext(this, poolServing::closeAllConnections));
 			}
 			closeCallback = cb;
-			logger.info("Waiting for " + this);
+			logger.info("Waiting for {}", this);
 		}
 	}
 

@@ -286,10 +286,9 @@ public final class DataflowGraph {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		Map<Partition, List<Node>> map = getNodesByPartition();
-		for (Partition partition : map.keySet()) {
-			List<Node> nodes = map.get(partition);
-			sb.append("--- ").append(partition).append("\n\n");
-			sb.append(toJson(listNodeCodec, nodes));
+		for (Map.Entry<Partition, List<Node>> entry : map.entrySet()) {
+			sb.append("--- ").append(entry.getKey()).append("\n\n");
+			sb.append(toJson(listNodeCodec, entry.getValue()));
 			sb.append("\n\n");
 		}
 		return sb.toString();

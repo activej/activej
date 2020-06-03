@@ -49,7 +49,7 @@ public final class RemoteFsCommands {
 					"glob", List::getGlob, STRING_CODEC,
 					"tombstones", List::needTombstones, BOOLEAN_CODEC));
 
-	public static abstract class FsCommand {
+	public abstract static class FsCommand {
 	}
 
 	public static final class Upload extends FsCommand {

@@ -90,7 +90,7 @@ public interface RetryPolicy<S> {
 			return nextRetryTimestamp(now, lastError, retryState.retryCount, retryState.retryFirstTimestamp);
 		}
 
-		abstract public long nextRetryTimestamp(long now, Throwable lastError, int retryCount, long firstRetryTimestamp);
+		public abstract long nextRetryTimestamp(long now, Throwable lastError, int retryCount, long firstRetryTimestamp);
 	}
 
 	static RetryPolicy<SimpleRetryState> exponentialBackoff(Duration initialDelay, Duration maxDelay, double exponent) {
@@ -139,7 +139,7 @@ public interface RetryPolicy<S> {
 			return nextRetryTimestamp(now, lastError, retryState.getValue1(), retryState.getValue2());
 		}
 
-		abstract public long nextRetryTimestamp(long now, Throwable lastError, S retryState, DS delegateRetryState);
+		public abstract long nextRetryTimestamp(long now, Throwable lastError, S retryState, DS delegateRetryState);
 	}
 
 	default RetryPolicy<Tuple2<RefInt, S>> withMaxTotalRetryCount(int maxRetryCount) {

@@ -35,9 +35,9 @@ public final class LogDiffCodec<D> implements StructuredCodec<LogDiff<D>> {
 	public static final String TO = "to";
 	public static final String OPS = "ops";
 
-	public final static StructuredCodec<LogPosition> LOG_POSITION_CODEC = oneline(new LogPositionCodec());
+	public static final StructuredCodec<LogPosition> LOG_POSITION_CODEC = oneline(new LogPositionCodec());
 
-	public final static class LogPositionCodec implements StructuredCodec<LogPosition> {
+	public static final class LogPositionCodec implements StructuredCodec<LogPosition> {
 		@Override
 		public void encode(StructuredOutput out, LogPosition logPosition) {
 			out.writeTuple(() -> {

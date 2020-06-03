@@ -45,7 +45,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * usi it afterwards.
  */
 public final class HttpResponse extends HttpMessage implements Async<HttpResponse>, Initializable<HttpResponse> {
-	private static final Boolean CHECK = Check.isEnabled(HttpResponse.class);
+	private static final boolean CHECK = Check.isEnabled(HttpResponse.class);
 
 	private static final byte[] HTTP11_BYTES = encodeAscii("HTTP/1.1 ");
 	private static final byte[] CODE_ERROR_BYTES = encodeAscii(" Error");

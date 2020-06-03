@@ -47,9 +47,10 @@ public interface SqlAtomicSequence {
 			public long getAndAdd(Connection connection, int stride) throws SQLException {
 				try (Statement statement = connection.createStatement()) {
 					statement.execute(finalSql.replace(":stride", Integer.toString(stride)), Statement.RETURN_GENERATED_KEYS);
-					ResultSet generatedKeys = statement.getGeneratedKeys();
-					generatedKeys.next();
-					return generatedKeys.getLong(1);
+					try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+						generatedKeys.next();
+						return generatedKeys.getLong(1);
+					}
 				}
 			}
 		};

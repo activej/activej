@@ -121,7 +121,7 @@ public final class ScopeExample {
 		}
 
 		try {
-			Injector subSubInjector = injector.enterScope(HTTP_SCOPE).enterScope(HTTP_SCOPE);
+			injector.enterScope(HTTP_SCOPE).enterScope(HTTP_SCOPE);
 		} catch (Exception e) {
 			System.err.println("\nNo bindings in scope ()->@HttpScope()->@HttpScope()\n");
 		}

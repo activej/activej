@@ -139,7 +139,7 @@ public class MapReduceTest {
 
 		Dataset<String> items = datasetOfList("items", String.class);
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), StringCount.class);
-		Dataset<StringCount> reducedItems = sort_Reduce_Repartition_Reduce(mappedItems,
+		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), new StringComparator());
 		Collector<StringCount> collector = new Collector<>(reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);

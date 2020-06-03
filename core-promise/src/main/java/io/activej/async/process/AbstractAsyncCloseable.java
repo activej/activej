@@ -26,7 +26,7 @@ import static io.activej.common.Preconditions.checkState;
 import static io.activej.common.Recyclable.tryRecycle;
 
 public abstract class AbstractAsyncCloseable implements AsyncCloseable {
-	private static final Boolean CHECK = Check.isEnabled(AbstractAsyncCloseable.class);
+	private static final boolean CHECK = Check.isEnabled(AbstractAsyncCloseable.class);
 
 	protected final Eventloop eventloop = Eventloop.getCurrentEventloop();
 

@@ -412,23 +412,21 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 	@Override
 	public Map<String, Type> getAttributeTypes() {
 		Map<String, Type> result = new LinkedHashMap<>();
-		for (String dimension : dimensionTypes.keySet()) {
-			result.put(dimension, dimensionTypes.get(dimension).getDataType());
+		for (Entry<String, FieldType> entry : dimensionTypes.entrySet()) {
+			result.put(entry.getKey(), entry.getValue().getDataType());
 		}
-		for (String attribute : attributeTypes.keySet()) {
-			result.put(attribute, attributeTypes.get(attribute));
-		}
+		result.putAll(attributeTypes);
 		return result;
 	}
 
 	@Override
 	public Map<String, Type> getMeasureTypes() {
 		Map<String, Type> result = new LinkedHashMap<>();
-		for (String measure : measures.keySet()) {
-			result.put(measure, measures.get(measure).getFieldType().getDataType());
+		for (Entry<String, Measure> entry : measures.entrySet()) {
+			result.put(entry.getKey(), entry.getValue().getFieldType().getDataType());
 		}
-		for (String measure : computedMeasures.keySet()) {
-			result.put(measure, computedMeasures.get(measure).getType(measures));
+		for (Entry<String, ComputedMeasure> entry : computedMeasures.entrySet()) {
+			result.put(entry.getKey(), entry.getValue().getType(measures));
 		}
 		return result;
 	}
@@ -580,12 +578,12 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 	 * @return supplier that streams query results
 	 */
 	public <T> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
-			Class<T> resultClass) throws QueryException {
+			Class<T> resultClass) {
 		return queryRawStream(dimensions, storedMeasures, where, resultClass, classLoader);
 	}
 
 	public <T> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
-			Class<T> resultClass, DefiningClassLoader queryClassLoader) throws QueryException {
+			Class<T> resultClass, DefiningClassLoader queryClassLoader) {
 
 		List<AggregationContainer> compatibleAggregations = getCompatibleAggregationsForQuery(dimensions, storedMeasures, where);
 
@@ -854,8 +852,6 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 
 		void prepareDimensions() throws QueryException {
 			for (String attribute : query.getAttributes()) {
-				//				if (resultAttributes.contains(attribute))
-				//					continue;
 				recordAttributes.add(attribute);
 				List<String> dimensions = new ArrayList<>();
 				if (dimensionTypes.containsKey(attribute)) {
@@ -865,8 +861,9 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 					for (String dimension : resolverContainer.dimensions) {
 						dimensions.addAll(getAllParents(dimension));
 					}
-				} else
+				} else {
 					throw new QueryException("Attribute not found: " + attribute);
+				}
 				resultDimensions.addAll(dimensions);
 				resultAttributes.addAll(dimensions);
 				resultAttributes.add(attribute);
@@ -888,9 +885,9 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 			for (AggregationContainer aggregationContainer : compatibleAggregations) {
 				compatibleMeasures.addAll(aggregationContainer.measures);
 			}
-			for (String computedMeasure : computedMeasures.keySet()) {
-				if (compatibleMeasures.containsAll(computedMeasures.get(computedMeasure).getMeasureDependencies())) {
-					compatibleMeasures.add(computedMeasure);
+			for (Entry<String, ComputedMeasure> entry : computedMeasures.entrySet()) {
+				if (compatibleMeasures.containsAll(entry.getValue().getMeasureDependencies())) {
+					compatibleMeasures.add(entry.getKey());
 				}
 			}
 
@@ -1045,7 +1042,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 				if (!attributes.isEmpty()) {
 					tasks.add(io.activej.cube.Utils.resolveAttributes(results, resolverContainer.resolver,
 							resolverContainer.dimensions, attributes,
-							fullySpecifiedDimensions, (Class) resultClass, queryClassLoader));
+							fullySpecifiedDimensions, resultClass, queryClassLoader));
 				}
 			}
 
@@ -1118,7 +1115,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 					});
 		}
 
-		List applyLimitAndOffset(List results) {
+		List<R> applyLimitAndOffset(List<R> results) {
 			Integer offset = query.getOffset();
 			Integer limit = query.getLimit();
 			int start;
@@ -1141,8 +1138,8 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 			}
 
 			if (comparator != null) {
-				return ((List<Object>) results).stream()
-						.sorted((Comparator<Object>) comparator)
+				return results.stream()
+						.sorted(comparator)
 						.skip(offset)
 						.limit(limit)
 						.collect(Collectors.toList());

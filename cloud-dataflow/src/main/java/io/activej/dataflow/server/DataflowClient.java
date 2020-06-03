@@ -62,7 +62,7 @@ public final class DataflowClient {
 	private final ByteBufsCodec<DatagraphResponse, DatagraphCommand> codec;
 	private final BinarySerializerLocator serializers;
 
-	private final AtomicInteger secondaryId = new AtomicInteger(Math.abs(ThreadLocalRandom.current().nextInt()));
+	private final AtomicInteger secondaryId = new AtomicInteger(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
 
 	private int bufferMinSize, bufferMaxSize;
 

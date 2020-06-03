@@ -33,7 +33,7 @@ public final class JmxHistograms {
 		return t - (v < TABLE_10[t] ? 1 : 0);
 	}
 
-	public static abstract class AbstractJmxHistogram implements JmxHistogram {
+	public abstract static class AbstractJmxHistogram implements JmxHistogram {
 		protected final long[] counters;
 		protected final int[] levels;
 

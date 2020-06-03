@@ -18,6 +18,6 @@ package io.activej.csp.dsl;
 
 import io.activej.csp.ChannelOutput;
 
-public interface WithChannelOutputs<B, T> {
+public interface WithChannelOutputs<T> {
 	ChannelOutput<T> addOutput();
 }

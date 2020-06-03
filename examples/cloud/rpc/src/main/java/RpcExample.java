@@ -40,7 +40,7 @@ public class RpcExample extends Launcher {
 	RpcServer rpcServer(Eventloop eventloop) {
 		return RpcServer.create(eventloop)
 				.withMessageTypes(String.class)
-				.withHandler(String.class, String.class,
+				.withHandler(String.class,
 						request -> Promise.of("Hello " + request))
 				.withListenPort(SERVICE_PORT);
 	}
@@ -68,7 +68,7 @@ public class RpcExample extends Launcher {
 		CompletableFuture<Object> future = eventloop.submit(() ->
 				client.sendRequest("World", 1000)
 		);
-		System.out.printf("\nRPC result: %s \n\n", future.get());
+		System.out.printf("%nRPC result: %s %n%n", future.get());
 	}
 
 	public static void main(String[] args) throws Exception {

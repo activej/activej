@@ -37,8 +37,8 @@ import static java.lang.Math.max;
 
 public final class ChannelLZ4Compressor extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelLZ4Compressor, ByteBuf, ByteBuf> {
-	public static final byte[] MAGIC = {'L', 'Z', '4', 'B', 'l', 'o', 'c', 'k'};
-	public static final int MAGIC_LENGTH = MAGIC.length;
+	static final byte[] MAGIC = {'L', 'Z', '4', 'B', 'l', 'o', 'c', 'k'};
+	static final int MAGIC_LENGTH = MAGIC.length;
 
 	public static final int HEADER_LENGTH =
 			MAGIC_LENGTH    // magic bytes

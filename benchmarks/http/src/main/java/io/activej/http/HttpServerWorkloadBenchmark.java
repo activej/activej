@@ -21,12 +21,12 @@ import static io.activej.di.module.Modules.combine;
 import static java.lang.Math.min;
 
 public class HttpServerWorkloadBenchmark extends Launcher {
-	private final static int KEEP_ALIVE = 30;
-	private final static int TOTAL_REQUESTS = 1_000_000;
-	private final static int WARMUP_ROUNDS = 3;
-	private final static int BENCHMARK_ROUNDS = 5;
-	private final static int ACTIVE_REQUESTS_MAX = 300;
-	private final static int ACTIVE_REQUESTS_MIN = 200;
+	private static final int KEEP_ALIVE = 30;
+	private static final int TOTAL_REQUESTS = 1_000_000;
+	private static final int WARMUP_ROUNDS = 3;
+	private static final int BENCHMARK_ROUNDS = 5;
+	private static final int ACTIVE_REQUESTS_MAX = 300;
+	private static final int ACTIVE_REQUESTS_MIN = 200;
 
 	private String address;
 	private int totalRequests;
@@ -164,9 +164,8 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 				}
 
 				if (active <= activeRequestsMin) {
-					for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++) {
+					for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++, sent++) {
 						doGet(this);
-						sent++;
 					}
 				}
 			}

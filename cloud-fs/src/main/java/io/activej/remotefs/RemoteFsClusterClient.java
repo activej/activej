@@ -191,7 +191,7 @@ public final class RemoteFsClusterClient implements FsClient, Initializable<Remo
 	private void markAlive(Object partitionId) {
 		FsClient client = deadClients.remove(partitionId);
 		if (client != null) {
-			logger.info("Partition " + partitionId + " is alive again!");
+			logger.info("Partition {} is alive again!", partitionId);
 			aliveClients.put(partitionId, client);
 		}
 	}
@@ -208,7 +208,7 @@ public final class RemoteFsClusterClient implements FsClient, Initializable<Remo
 	public boolean markDead(Object partitionId, @Nullable Throwable e) {
 		FsClient client = aliveClients.remove(partitionId);
 		if (client != null) {
-			logger.warn("marking " + partitionId + " as dead (" + e + ')');
+			logger.warn("marking {} as dead ", partitionId, e);
 			deadClients.put(partitionId, client);
 			return true;
 		}

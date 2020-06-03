@@ -215,7 +215,7 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 	@Override
 	public String toString() {
 		if (totalCount == 0) {
-			return null;
+			return "";
 		}
 		DecimalFormat decimalFormat;
 		double smoothedRate = getSmoothedRate();

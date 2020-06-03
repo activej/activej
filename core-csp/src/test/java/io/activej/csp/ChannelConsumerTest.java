@@ -21,6 +21,7 @@ import static io.activej.csp.ChannelConsumers.outputStreamAsChannelConsumer;
 import static io.activej.eventloop.Eventloop.initWithEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.junit.Assert.*;
@@ -47,7 +48,7 @@ public class ChannelConsumerTest {
 				ByteBuf.wrapForReading("Hello".getBytes()),
 				ByteBuf.wrapForReading("World".getBytes())));
 
-		assertEquals(buf.asString(Charset.defaultCharset()), "HelloWorld");
+		assertEquals("HelloWorld", buf.asString(Charset.defaultCharset()));
 	}
 
 	@Test
@@ -63,20 +64,22 @@ public class ChannelConsumerTest {
 		ChannelConsumer<ByteBuf> channelConsumer = outputStreamAsChannelConsumer(newSingleThreadExecutor(), outputStream);
 		await(channelConsumer.acceptAll(ByteBuf.empty(), ByteBuf.empty()));
 
-		assertEquals(buf.asString(Charset.defaultCharset()), "");
+		assertTrue(buf.asString(UTF_8).isEmpty());
 	}
 
 	@Test
 	public void testToOutputStreamException() {
+		IOException exception = new IOException("Some exception");
 		OutputStream outputStream = new OutputStream() {
 			@Override
 			public void write(int i) throws IOException {
-				throw new IOException("Some exception");
+				throw exception;
 			}
 		};
 
 		ChannelConsumer<ByteBuf> channelConsumer = outputStreamAsChannelConsumer(newSingleThreadExecutor(), outputStream);
-		awaitException(channelConsumer.acceptAll(ByteBuf.empty(), ByteBuf.wrapForReading("Hello".getBytes())));
+		Throwable throwable = awaitException(channelConsumer.acceptAll(ByteBuf.empty(), ByteBuf.wrapForReading("Hello".getBytes())));
+		assertSame(exception, throwable);
 	}
 
 	@Test

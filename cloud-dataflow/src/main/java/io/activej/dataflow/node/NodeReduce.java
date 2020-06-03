@@ -96,12 +96,12 @@ public final class NodeReduce<K, O, A> implements Node {
 	@Override
 	public void createAndBind(TaskContext taskContext) {
 		StreamReducer<K, O, A> streamReducer = StreamReducer.create(keyComparator);
-		for (StreamId streamId : inputs.keySet()) {
-			Input<K, O, A> koaInput = inputs.get(streamId);
+		for (Map.Entry<StreamId, Input<K, O, A>> entry : inputs.entrySet()) {
+			Input<K, O, A> koaInput = entry.getValue();
 			StreamConsumer<Object> input = streamReducer.newInput(
 					((Function<Object, K>) koaInput.keyFunction),
 					(Reducer<K, Object, O, A>) koaInput.reducer);
-			taskContext.bindChannel(streamId, input);
+			taskContext.bindChannel(entry.getKey(), input);
 		}
 		taskContext.export(output, streamReducer.getOutput());
 	}

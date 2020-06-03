@@ -36,12 +36,7 @@ final class TypedModsMap {
 		}
 
 		private Builder ensureChild(int childKey) {
-			Builder result = children.get(childKey);
-			if (result == null) {
-				result = new Builder();
-				children.put(childKey, result);
-			}
-			return result;
+			return children.computeIfAbsent(childKey, $ -> new Builder());
 		}
 
 		public Builder ensureChild(int[] path) {

@@ -61,13 +61,13 @@ public abstract class AbstractGraphReducer<K, D, A, R> implements GraphReducer<K
 					Map<K, A> toHeads = accumulators.remove(commit.getId());
 					for (K parent : commit.getParents().keySet()) {
 						Map<K, A> parentToHeads = accumulators.computeIfAbsent(parent, $ -> new HashMap<>());
-						for (K head : toHeads.keySet()) {
-							A newAccumulatedDiffs = diffsReducer.accumulate(toHeads.get(head), commit.getParents().get(parent));
-							A existingAccumulatedDiffs = parentToHeads.get(head);
+						for (Map.Entry<K, A> entry : toHeads.entrySet()) {
+							A newAccumulatedDiffs = diffsReducer.accumulate(entry.getValue(), commit.getParents().get(parent));
+							A existingAccumulatedDiffs = parentToHeads.get(entry.getKey());
 							A combinedAccumulatedDiffs = existingAccumulatedDiffs == null ?
 									newAccumulatedDiffs :
 									diffsReducer.combine(existingAccumulatedDiffs, newAccumulatedDiffs);
-							parentToHeads.put(head, combinedAccumulatedDiffs);
+							parentToHeads.put(entry.getKey(), combinedAccumulatedDiffs);
 						}
 					}
 					return resumePromise();

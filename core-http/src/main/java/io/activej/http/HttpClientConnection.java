@@ -260,12 +260,9 @@ final class HttpClientConnection extends AbstractHttpConnection {
 		(pool = client.poolReadWrite).addLastNode(this);
 		poolTimestamp = eventloop.currentTimeMillis();
 		HttpHeaderValue connectionHeader = CONNECTION_KEEP_ALIVE_HEADER;
-		if (client.keepAliveTimeoutMillis == 0) {
+		if (client.keepAliveTimeoutMillis == 0 ||
+				client.maxKeepAliveRequests != 0 && ++numberOfKeepAliveRequests >= client.maxKeepAliveRequests) {
 			connectionHeader = CONNECTION_CLOSE_HEADER;
-		} else if (client.maxKeepAliveRequests != 0) {
-			if (++numberOfKeepAliveRequests >= client.maxKeepAliveRequests) {
-				connectionHeader = CONNECTION_CLOSE_HEADER;
-			}
 		}
 		request.addHeader(CONNECTION, connectionHeader);
 		ByteBuf buf = renderHttpMessage(request);

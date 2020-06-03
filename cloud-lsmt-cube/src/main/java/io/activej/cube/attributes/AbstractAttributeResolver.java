@@ -19,16 +19,10 @@ package io.activej.cube.attributes;
 import io.activej.promise.Promise;
 
 import java.util.List;
-import java.util.Map;
 
 public abstract class AbstractAttributeResolver<K, A> implements AttributeResolver {
-	@Override
-	public abstract Class<?>[] getKeyTypes();
 
 	protected abstract K toKey(Object[] keyArray);
-
-	@Override
-	public abstract Map<String, Class<?>> getAttributeTypes();
 
 	protected abstract Object[] toAttributes(A attributes);
 

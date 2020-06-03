@@ -72,7 +72,7 @@ abstract class AttributeNodeForLeafAbstract implements AttributeNode {
 		String attrName = first(attrNames);
 		checkArgument(name.equals(attrName));
 
-		if (sources.size() == 0) {
+		if (sources.isEmpty()) {
 			return singletonMap(attrName, null);
 		}
 

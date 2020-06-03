@@ -208,7 +208,7 @@ public final class Injector implements ResourceLocator {
 
 		Trie<Scope, ScopeLocalData> scopeDataTree = compileBindingsTrie(
 				parent != null ? parent.scopeCaches.length : 0,
-				UNSCOPED,
+				scope,
 				bindings,
 				parent != null ? parent.localCompiledBindings : emptyMap()
 		);

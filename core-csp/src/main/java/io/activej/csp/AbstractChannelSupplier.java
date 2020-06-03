@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.common.Preconditions.checkState;
 
 public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable implements ChannelSupplier<T> {
-	protected static final Boolean CHECK = Check.isEnabled(AbstractChannelSupplier.class);
+	protected static final boolean CHECK = Check.isEnabled(AbstractChannelSupplier.class);
 
 	// region creators
 	protected AbstractChannelSupplier() {

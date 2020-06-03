@@ -190,7 +190,7 @@ public final class ThrottlingController extends ForwardingEventloopInspector imp
 		int lastTimePredicted = (int) (throttlingKeys * smoothedTimePerKeyMillis);
 		if (gcTimeMillis != 0.0 && businessLogicTime > lastTimePredicted + gcTimeMillis) {
 			logger.debug("GC detected {} ms, {} keys", businessLogicTime, throttlingKeys);
-			businessLogicTime = lastTimePredicted + gcTimeMillis;
+			businessLogicTime = lastTimePredicted + (long) gcTimeMillis;
 			infoRoundsGc++;
 		}
 

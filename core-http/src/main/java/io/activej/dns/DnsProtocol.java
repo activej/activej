@@ -62,20 +62,6 @@ public final class DnsProtocol {
 		});
 	}
 
-//	public static void main(String[] args) {
-//		long start = System.currentTimeMillis();
-//		boolean[] set = new boolean[1 << 16];
-//		for (int i = 0; i < 1 << 16 - 1; i++) {
-//			int idx = generateTransactionId() & 0xFFFF;
-//			if (set[idx]) {
-//				System.out.println(i + " - FAIL " + idx);
-//				continue;
-//			}
-//			set[idx] = true;
-//		}
-//		System.out.println("took " + (System.currentTimeMillis() - start) + " ms");
-//	}
-
 	/**
 	 * Creates a bytebuf with a DNS query payload
 	 *
@@ -177,15 +163,6 @@ public final class DnsProtocol {
 			if (errorCode != ResponseErrorCode.NO_ERROR) {
 				return DnsResponse.ofFailure(transaction, errorCode);
 			}
-
-//			// skip other queries if any (we are sending only one and checking for it above, so this is dead code)
-//			for (int i = 0; i < questionCount - 1; i++) {
-//				// skip domain name (bytes until zero-terminator)
-//				while ((componentSize = payload.readByte()) != 0) {
-//					payload.moveHead(componentSize);
-//				}
-//				payload.moveHead(4); // skip query record type and class (2 bytes each)
-//			}
 
 			List<InetAddress> ips = new ArrayList<>();
 			int minTtl = Integer.MAX_VALUE;

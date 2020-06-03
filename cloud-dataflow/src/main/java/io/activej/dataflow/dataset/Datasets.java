@@ -81,28 +81,28 @@ public final class Datasets {
 		return new DatasetLocalSortReduce<>(stream, reducer, resultType, resultKeyFunction);
 	}
 
-	public static <K, I, O> Dataset<O> repartition_Reduce(LocallySortedDataset<K, I> dataset,
+	public static <K, I, O> Dataset<O> repartitionReduce(LocallySortedDataset<K, I> dataset,
 	                                                      Reducer<K, I, O, ?> reducer,
 	                                                      Class<O> resultType) {
 		return new DatasetRepartitionReduce<>(dataset, reducer, resultType);
 	}
 
-	public static <K, I, O> Dataset<O> repartition_Reduce(LocallySortedDataset<K, I> dataset,
+	public static <K, I, O> Dataset<O> repartitionReduce(LocallySortedDataset<K, I> dataset,
 	                                                      Reducer<K, I, O, ?> reducer,
 	                                                      Class<O> resultType, List<Partition> partitions) {
 		return new DatasetRepartitionReduce<>(dataset, reducer, resultType, partitions);
 	}
 
-	public static <K, T> SortedDataset<K, T> repartition_Sort(LocallySortedDataset<K, T> dataset) {
+	public static <K, T> SortedDataset<K, T> repartitionSort(LocallySortedDataset<K, T> dataset) {
 		return new DatasetRepartitionAndSort<>(dataset);
 	}
 
-	public static <K, T> SortedDataset<K, T> repartition_Sort(LocallySortedDataset<K, T> dataset,
+	public static <K, T> SortedDataset<K, T> repartitionSort(LocallySortedDataset<K, T> dataset,
 	                                                          List<Partition> partitions) {
 		return new DatasetRepartitionAndSort<>(dataset, partitions);
 	}
 
-	public static <K, I, O, A> Dataset<O> sort_Reduce_Repartition_Reduce(Dataset<I> dataset,
+	public static <K, I, O, A> Dataset<O> sortReduceRepartitionReduce(Dataset<I> dataset,
 	                                                                     ReducerToResult<K, I, O, A> reducer,
 	                                                                     Class<K> keyType,
 	                                                                     Function<I, K> inputKeyFunction,
@@ -113,33 +113,33 @@ public final class Datasets {
 		LocallySortedDataset<K, I> partiallySorted = localSort(dataset, keyType, inputKeyFunction, keyComparator);
 		LocallySortedDataset<K, A> partiallyReduced = localReduce(partiallySorted, reducer.inputToAccumulator(),
 				accumulatorType, accumulatorKeyFunction);
-		return repartition_Reduce(partiallyReduced, reducer.accumulatorToOutput(), outputType);
+		return repartitionReduce(partiallyReduced, reducer.accumulatorToOutput(), outputType);
 	}
 
-	public static <K, I, A> Dataset<A> sort_Reduce_Repartition_Reduce(Dataset<I> dataset,
+	public static <K, I, A> Dataset<A> sortReduceRepartitionReduce(Dataset<I> dataset,
 	                                                                  ReducerToResult<K, I, A, A> reducer,
 	                                                                  Class<K> keyType,
 	                                                                  Function<I, K> inputKeyFunction,
 	                                                                  Comparator<K> keyComparator,
 	                                                                  Class<A> accumulatorType,
 	                                                                  Function<A, K> accumulatorKeyFunction) {
-		return sort_Reduce_Repartition_Reduce(dataset, reducer,
+		return sortReduceRepartitionReduce(dataset, reducer,
 				keyType, inputKeyFunction, keyComparator,
 				accumulatorType, accumulatorKeyFunction, accumulatorType
 		);
 	}
 
-	public static <K, T> Dataset<T> sort_Reduce_Repartition_Reduce(Dataset<T> dataset,
+	public static <K, T> Dataset<T> sortReduceRepartitionReduce(Dataset<T> dataset,
 	                                                               ReducerToResult<K, T, T, T> reducer,
 	                                                               Class<K> keyType, Function<T, K> keyFunction,
 	                                                               Comparator<K> keyComparator) {
-		return sort_Reduce_Repartition_Reduce(dataset, reducer,
+		return sortReduceRepartitionReduce(dataset, reducer,
 				keyType, keyFunction, keyComparator,
 				dataset.valueType(), keyFunction, dataset.valueType()
 		);
 	}
 
-	public static <K, I, O, A> Dataset<O> splitSortReduce_Repartition_Reduce(Dataset<I> dataset,
+	public static <K, I, O, A> Dataset<O> splitSortReduceRepartitionReduce(Dataset<I> dataset,
 	                                                                         ReducerToResult<K, I, O, A> reducer,
 	                                                                         Function<I, K> inputKeyFunction,
 	                                                                         Comparator<K> keyComparator,
@@ -151,23 +151,23 @@ public final class Datasets {
 
 	}
 
-	public static <K, I, A> Dataset<A> splitSortReduce_Repartition_Reduce(Dataset<I> dataset,
+	public static <K, I, A> Dataset<A> splitSortReduceRepartitionReduce(Dataset<I> dataset,
 	                                                                      ReducerToResult<K, I, A, A> reducer,
 	                                                                      Function<I, K> inputKeyFunction,
 	                                                                      Comparator<K> keyComparator,
 	                                                                      Class<A> accumulatorType,
 	                                                                      Function<A, K> accumulatorKeyFunction) {
-		return splitSortReduce_Repartition_Reduce(dataset, reducer,
+		return splitSortReduceRepartitionReduce(dataset, reducer,
 				inputKeyFunction, keyComparator,
 				accumulatorType, accumulatorKeyFunction, accumulatorType
 		);
 	}
 
-	public static <K, T> Dataset<T> splitSortReduce_Repartition_Reduce(Dataset<T> dataset,
+	public static <K, T> Dataset<T> splitSortReduceRepartitionReduce(Dataset<T> dataset,
 			ReducerToResult<K, T, T, T> reducer,
 			Function<T, K> keyFunction,
 			Comparator<K> keyComparator) {
-		return splitSortReduce_Repartition_Reduce(dataset, reducer,
+		return splitSortReduceRepartitionReduce(dataset, reducer,
 				keyFunction, keyComparator,
 				dataset.valueType(), keyFunction, dataset.valueType()
 		);

@@ -46,7 +46,7 @@ import static io.activej.http.HttpMethod.*;
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
 final class HttpServerConnection extends AbstractHttpConnection {
-	private static final Boolean CHECK = Check.isEnabled(HttpServerConnection.class);
+	private static final boolean CHECK = Check.isEnabled(HttpServerConnection.class);
 
 	private static final int HEADERS_SLOTS = 256;
 	private static final int MAX_PROBINGS = 2;
@@ -210,10 +210,8 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	 */
 	@Override
 	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws ParseException {
-		if (header == HttpHeaders.EXPECT) {
-			if (equalsLowerCaseAscii(EXPECT_100_CONTINUE, array, off, len)) {
-				socket.write(ByteBuf.wrapForReading(EXPECT_RESPONSE_CONTINUE));
-			}
+		if (header == HttpHeaders.EXPECT && equalsLowerCaseAscii(EXPECT_100_CONTINUE, array, off, len)) {
+			socket.write(ByteBuf.wrapForReading(EXPECT_RESPONSE_CONTINUE));
 		}
 		//noinspection ConstantConditions
 		if (request.headers.size() >= MAX_HEADERS) {
@@ -224,10 +222,8 @@ final class HttpServerConnection extends AbstractHttpConnection {
 
 	private void writeHttpResponse(HttpResponse httpResponse) {
 		HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
-		if (server.maxKeepAliveRequests != 0) {
-			if (++numberOfKeepAliveRequests >= server.maxKeepAliveRequests) {
-				connectionHeader = CONNECTION_CLOSE_HEADER;
-			}
+		if (server.maxKeepAliveRequests != 0 && ++numberOfKeepAliveRequests >= server.maxKeepAliveRequests) {
+			connectionHeader = CONNECTION_CLOSE_HEADER;
 		}
 		httpResponse.addHeader(CONNECTION, connectionHeader);
 		ByteBuf buf = renderHttpMessage(httpResponse);

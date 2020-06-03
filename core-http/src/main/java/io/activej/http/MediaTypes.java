@@ -26,7 +26,7 @@ import java.util.Map;
  */
 public final class MediaTypes {
 	static final CaseInsensitiveTokenMap<MediaType> mimes = new CaseInsensitiveTokenMap<>(2048, 2, MediaType.class, MediaType::new);
-	private final static Map<String, MediaType> ext2mime = new HashMap<>();
+	private static final Map<String, MediaType> ext2mime = new HashMap<>();
 
 	public static final MediaType ANY = register("*/*");
 	public static final MediaType ANY_APPLICATION = register("application/*");

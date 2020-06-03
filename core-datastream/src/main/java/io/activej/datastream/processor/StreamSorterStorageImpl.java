@@ -164,7 +164,7 @@ public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T> 
 				try {
 					Files.delete(path1);
 				} catch (IOException e) {
-					logger.warn("Could not delete {} : {}", path1, e.toString());
+					logger.warn("Could not delete {}", path1, e);
 				}
 			}
 			return null;

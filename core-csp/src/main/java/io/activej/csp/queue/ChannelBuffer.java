@@ -35,7 +35,7 @@ import static java.lang.Math.max;
  * @param <T> the type of values that are stored in the buffer
  */
 public final class ChannelBuffer<T> implements ChannelQueue<T> {
-	private static final Boolean CHECK = Check.isEnabled(ChannelBuffer.class);
+	private static final boolean CHECK = Check.isEnabled(ChannelBuffer.class);
 
 	private Exception exception;
 

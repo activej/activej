@@ -159,9 +159,10 @@ public class OTLoadedGraph<K, D> {
 			if (!visited.add(node)) continue;
 			assert node2child != null;
 			Map<K, List<? extends D>> nodeParents = nullToEmpty(getParents(node));
-			for (K nodeParent : nodeParents.keySet()) {
+			for (Map.Entry<K, List<? extends D>> entry : nodeParents.entrySet()) {
+				K nodeParent = entry.getKey();
 				if (!visited.contains(nodeParent) && !result.containsKey(nodeParent)) {
-					List<D> parent2child = concat(nodeParents.get(nodeParent), node2child);
+					List<D> parent2child = concat(entry.getValue(), node2child);
 					if (nodeParent.equals(parent)) return parent2child;
 					result.put(nodeParent, parent2child);
 					queue.add(nodeParent);
@@ -227,9 +228,10 @@ public class OTLoadedGraph<K, D> {
 				}
 			}
 			Map<K, List<? extends D>> parentsMap = nullToEmpty(getParents(node));
-			for (K parent : parentsMap.keySet()) {
+			for (Map.Entry<K, List<? extends D>> entry : parentsMap.entrySet()) {
+				K parent = entry.getKey();
 				if (visited.contains(parent) || paths.containsKey(parent)) continue;
-				paths.put(parent, concat(parentsMap.get(parent), path));
+				paths.put(parent, concat(entry.getValue(), path));
 				queue.add(parent);
 			}
 		}
@@ -240,7 +242,7 @@ public class OTLoadedGraph<K, D> {
 
 	@SuppressWarnings("unchecked")
 	private K doMerge(Set<K> nodes) throws OTException {
-		assert nodes.size() > 0;
+		assert !nodes.isEmpty();
 		if (nodes.size() == 1) return first(nodes);
 
 		Optional<K> min = nodes.stream().min(comparingInt((K node) -> findRoots(node).size()));
@@ -281,16 +283,16 @@ public class OTLoadedGraph<K, D> {
 	public String toGraphViz(@Nullable K currentCommit) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("digraph {\n");
-		for (K child : child2parent.keySet()) {
-			Map<K, List<? extends D>> parent2diffs = child2parent.get(child);
+		for (Map.Entry<K, Map<K, List<? extends D>>> entry : child2parent.entrySet()) {
+			K child = entry.getKey();
+			Map<K, List<? extends D>> parent2diffs = entry.getValue();
 			String color = (parent2diffs.size() == 1) ? "color=blue; " : "";
-			for (K parent : parent2diffs.keySet()) {
-				List<? extends D> diffs = parent2diffs.get(parent);
+			for (Map.Entry<K, List<? extends D>> parentAndDiffs : parent2diffs.entrySet()) {
 				sb.append("\t" +
 						nodeToGraphViz(child) +
-						" -> " + nodeToGraphViz(parent) +
+						" -> " + nodeToGraphViz(parentAndDiffs.getKey()) +
 						" [ dir=\"back\"; " + color + "label=\"" +
-						diffsToGraphViz(diffs) +
+						diffsToGraphViz(parentAndDiffs.getValue()) +
 						"\"];\n");
 			}
 			addStyle(sb, child, currentCommit);

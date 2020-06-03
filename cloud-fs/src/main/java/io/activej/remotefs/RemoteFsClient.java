@@ -118,20 +118,20 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 											.withAcknowledgement(ack -> ack
 													.then(messaging::receive)
 													.then(msg2 -> {
-                                                        messaging.close();
-                                                        return msg2 instanceof UploadFinished ?
+														messaging.close();
+														return msg2 instanceof UploadFinished ?
 																Promise.complete() :
 																handleInvalidResponse(msg2);
 													})
 													.whenException(e -> {
 														messaging.closeEx(e);
-														logger.warn("Cancelled while trying to upload file " + filename + " (" + e + "): " + this);
+														logger.warn("Cancelled while trying to upload file {} : {}", filename, this, e);
 													})
 													.whenComplete(uploadFinishPromise.recordStats())));
 								})
 								.whenException(e -> {
 									messaging.closeEx(e);
-									logger.warn("Error while trying to upload file " + filename + " (" + e + "): " + this);
+									logger.warn("Error while trying to upload file {} : {}", filename, this, e);
 								}))
 				.whenComplete(toLogger(logger, "upload", filename, this))
 				.whenComplete(uploadStartPromise.recordStats());
@@ -160,10 +160,10 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 														if (size.get() == receivingSize) {
 															return Promise.of(result);
 														}
-														logger.error("invalid stream size for file " + name +
-																" (offset " + offset + ", length " + length + ")," +
-																" expected: " + receivingSize +
-																" actual: " + size.get());
+														logger.error("invalid stream size for file {}" +
+																" (offset {}, length {})," +
+																" expected: {} actual: {}",
+																name, offset, length, receivingSize, size.get());
 														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM : TOO_MUCH_DATA);
 													})
 													.whenComplete(downloadFinishPromise.recordStats())
@@ -171,7 +171,7 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 								})
 								.whenException(e -> {
 									messaging.closeEx(e);
-									logger.warn("error trying to download file " + name + " (offset=" + offset + ", length=" + length + ") (" + e + "): " + this);
+									logger.warn("error trying to download file {} (offset={}, length={}) : {}", name, offset, length, this, e);
 								}))
 				.whenComplete(toLogger(logger, "download", name, offset, length, this))
 				.whenComplete(downloadStartPromise.recordStats());
@@ -216,18 +216,18 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 		return AsyncTcpSocketNio.connect(address, 0, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))
-				.whenException(e -> logger.warn("failed connecting to [" + address + "] (" + e + "): " + this))
+				.whenException(e -> logger.warn("failed connecting to [{}] : {}", address, this, e))
 				.whenComplete(connectPromise.recordStats());
 	}
 
 	private <T> Promise<T> handleInvalidResponse(@Nullable FsResponse msg) {
 		if (msg == null) {
-			logger.warn(this + ": Received unexpected end of stream");
+			logger.warn("{}: Received unexpected end of stream", this);
 			return Promise.ofException(UNEXPECTED_END_OF_STREAM);
 		}
 		if (msg instanceof ServerError) {
 			int code = ((ServerError) msg).getCode();
-			Throwable error = code >= 1 && code <= KNOWN_ERRORS.length ? KNOWN_ERRORS[code - 1] : UNKNOWN_SERVER_ERROR;
+			Throwable error = code >= 1 && code <= KNOWN_ERRORS.size() ? KNOWN_ERRORS.get(code - 1) : UNKNOWN_SERVER_ERROR;
 			return Promise.ofException(error);
 		}
 		return Promise.ofException(INVALID_MESSAGE);
@@ -239,15 +239,15 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 						messaging.send(command)
 								.then(messaging::receive)
 								.then(msg -> {
-                                    messaging.close();
-                                    if (msg != null && msg.getClass() == responseType) {
+									messaging.close();
+									if (msg != null && msg.getClass() == responseType) {
 										return Promise.of(answerExtractor.apply(responseType.cast(msg)));
 									}
 									return handleInvalidResponse(msg);
 								})
 								.whenException(e -> {
 									messaging.closeEx(e);
-									logger.warn("Error while processing command " + command + " (" + e + ") : " + this);
+									logger.warn("Error while processing command {} : {}", command, this, e);
 								}));
 	}
 

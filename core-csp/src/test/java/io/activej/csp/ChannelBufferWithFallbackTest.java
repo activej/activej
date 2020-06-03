@@ -9,10 +9,7 @@ import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
@@ -26,11 +23,11 @@ import static org.junit.Assert.*;
 
 public final class ChannelBufferWithFallbackTest {
 
-	@Rule
-	public ByteBufRule byteBufRule = new ByteBufRule();
+	@ClassRule
+	public static ByteBufRule byteBufRule = new ByteBufRule();
 
-	@Rule
-	public EventloopRule eventloopRule = new EventloopRule();
+	@ClassRule
+	public static EventloopRule eventloopRule = new EventloopRule();
 
 	@Rule
 	public TemporaryFolder temporaryFolder = new TemporaryFolder();

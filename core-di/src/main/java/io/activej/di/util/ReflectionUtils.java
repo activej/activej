@@ -179,47 +179,6 @@ public final class ReflectionUtils {
 		return result;
 	}
 
-//	private static class Found extends RuntimeException {
-//		private final int lineNumber;
-//
-//		public Found(int lineNumber) {
-//			this.lineNumber = lineNumber;
-//		}
-//	}
-//
-//	public int getLineNumber(Method method) {
-//		try {
-//			String resource = method.getDeclaringClass().getName().replace('.', '/') + ".class";
-//			InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(resource);
-//			if (is == null) {
-//				return 0;
-//			}
-//
-//			Type target = Type.getType(method);
-//			ClassReader cr = new ClassReader(is);
-//			cr.accept(new ClassVisitor(ASM5) {
-//				@Override
-//				public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-//					MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-//					if (!Type.getType(descriptor).equals(target)) {
-//						return mv;
-//					}
-//					return new MethodVisitor(ASM5, mv) {
-//						@Override
-//						public void visitLineNumber(int line, Label start) {
-//							throw new Found(line);
-//						}
-//					};
-//				}
-//			}, 0);
-//			return 0;
-//		} catch (Found found) {
-//			return found.lineNumber;
-//		} catch (IOException ignored) {
-//			return 0;
-//		}
-//	}
-
 	public static <T> Binding<T> generateImplicitBinding(Key<T> key) {
 		return generateImplicitBinding(key, null);
 	}

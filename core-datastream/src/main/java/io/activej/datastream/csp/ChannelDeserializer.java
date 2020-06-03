@@ -201,8 +201,9 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 						if (b >= 0) {
 							dataSize += (b << 14);
 							headerSize = 3;
-						} else
+						} else {
 							throw new IllegalArgumentException("Invalid header size");
+						}
 					}
 				} else {
 					return true;
@@ -238,8 +239,9 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 						if (b >= 0) {
 							dataSize += (b << 14);
 							headerSize = 3;
-						} else
+						} else {
 							throw new IllegalArgumentException("Invalid header size");
+						}
 					} else {
 						break;
 					}

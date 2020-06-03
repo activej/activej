@@ -63,11 +63,11 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 	public static AggregationPredicateCodec create(CodecFactory mapping,
 			Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
 		Map<String, StructuredCodec<?>> attributeCodecs = new LinkedHashMap<>();
-		for (String attribute : attributeTypes.keySet()) {
-			attributeCodecs.put(attribute, mapping.get(attributeTypes.get(attribute)).nullable());
+		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
+			attributeCodecs.put(entry.getKey(), mapping.get(entry.getValue()).nullable());
 		}
-		for (String measure : measureTypes.keySet()) {
-			attributeCodecs.put(measure, mapping.get(measureTypes.get(measure)));
+		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
+			attributeCodecs.put(entry.getKey(), mapping.get(entry.getValue()));
 		}
 		return new AggregationPredicateCodec(attributeCodecs);
 	}
@@ -198,8 +198,9 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 					writer.writeString(TRUE);
 				} else if (predicate instanceof PredicateAlwaysFalse) {
 					writer.writeString(FALSE);
-				} else
+				} else {
 					throw new IllegalArgumentException("Unknown predicate type");
+				}
 			});
 		}
 	}

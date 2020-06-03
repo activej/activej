@@ -21,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import static io.activej.common.Preconditions.checkArgument;
@@ -139,13 +138,13 @@ public final class EffectiveConfig implements Config {
 	public void saveEffectiveConfigTo(Path outputPath) {
 		try {
 			String renderedConfig = renderEffectiveConfig();
-			Files.write(outputPath, renderedConfig.getBytes(UTF_8), new StandardOpenOption[]{CREATE, WRITE, TRUNCATE_EXISTING});
+			Files.write(outputPath, renderedConfig.getBytes(UTF_8), CREATE, WRITE, TRUNCATE_EXISTING);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to serialize effective config as properties file", e);
 		}
 	}
 
-	synchronized public String renderEffectiveConfig() {
+	public synchronized String renderEffectiveConfig() {
 		CallsRegistry register = callsRegistry;
 		StringBuilder sb = new StringBuilder();
 

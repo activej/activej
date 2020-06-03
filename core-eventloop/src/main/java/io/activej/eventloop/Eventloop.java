@@ -78,7 +78,7 @@ import static java.util.Collections.emptyIterator;
  */
 public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, Initializable<Eventloop>, EventloopJmxBeanEx {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
-	private static final Boolean CHECK = Check.isEnabled(Eventloop.class);
+	private static final boolean CHECK = Check.isEnabled(Eventloop.class);
 
 	public static final boolean JIGSAW_DETECTED;
 	static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
@@ -419,7 +419,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 					inspector.onUpdateSelectorSelectTime(selectorSelectTime);
 				}
 
-				timeAfterBusinessLogic = timestamp; //refreshTimestampAndGet();
+				timeAfterBusinessLogic = timestamp;
 				boolean taskOrKeyPresent = (keys + concurrentTasks + scheduledTasks + backgroundTasks + localTasks) != 0;
 				boolean externalTaskPresent = lastExternalTasksCount != 0;
 				long businessLogicTime = timeAfterBusinessLogic - timeAfterSelectorSelect;
@@ -1148,7 +1148,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	}
 
 	private void recordIoError(@NotNull Exception e, @Nullable Object context) {
-		logger.warn("IO Error in {}: {}", context, e.toString());
+		logger.warn("IO Error in {}", context, e);
 	}
 
 	private void onFatalError(@NotNull Throwable e, @Nullable Runnable runnable) {
@@ -1163,7 +1163,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		while (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
-		logger.error("Fatal Error in " + context, e);
+		logger.error("Fatal Error in {}", context, e);
 		if (fatalErrorHandler != null) {
 			handleFatalError(fatalErrorHandler, e, context);
 		} else {

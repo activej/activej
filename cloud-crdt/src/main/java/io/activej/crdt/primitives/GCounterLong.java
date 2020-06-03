@@ -25,7 +25,7 @@ import static io.activej.common.Preconditions.checkArgument;
 import static java.lang.Math.max;
 
 public final class GCounterLong implements CrdtMergable<GCounterLong> {
-	private static final Boolean CHECK = Check.isEnabled(GCounterLong.class);
+	private static final boolean CHECK = Check.isEnabled(GCounterLong.class);
 
 	public static final BinarySerializer<GCounterLong> SERIALIZER = new Serializer();
 

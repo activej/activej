@@ -52,7 +52,7 @@ public class AsyncServletDecoratorTest {
 				});
 		rootServlet.serve(null);
 
-		assertEquals(result.size(), 4);
+		assertEquals(4, result.size());
 		assertArrayEquals(result.toArray(new Integer[0]), new Integer[]{1, 2, 3, 4});
 	}
 
@@ -100,7 +100,7 @@ public class AsyncServletDecoratorTest {
 
 		HttpResponse response = await(servlet.serveAsync(HttpRequest.get("http://example.com")));
 		assertNotNull(response.getCookie("test2"));
-		assertEquals(response.getCookie("test2").getValue(), "test2");
+		assertEquals("test2", response.getCookie("test2").getValue());
 	}
 
 	@Test
@@ -112,9 +112,12 @@ public class AsyncServletDecoratorTest {
 								.withBody(ByteBufPool.allocate(100)));
 
 		ByteBuf body = ByteBufPool.allocate(100);
-		await(servlet.serveAsync(HttpRequest.get("http://example.com")
+		HttpResponse response = await(servlet.serveAsync(HttpRequest.get("http://example.com")
 				.withBody(body)));
 		body.recycle();
+
+		assertEquals(200, response.getCode());
+		assertTrue(response.getCookies().isEmpty());
 	}
 
 	@Test
@@ -128,9 +131,12 @@ public class AsyncServletDecoratorTest {
 								ByteBufPool.allocate(100))));
 
 		ByteBuf body = ByteBufPool.allocate(100);
-		await(servlet.serveAsync(HttpRequest.get("http://example.com")
+		HttpResponse response = await(servlet.serveAsync(HttpRequest.get("http://example.com")
 				.withBody(body)));
 		body.recycle();
+
+		assertEquals(200, response.getCode());
+		assertTrue(response.getCookies().isEmpty());
 	}
 
 	@Test
@@ -148,7 +154,7 @@ public class AsyncServletDecoratorTest {
 				.serve(request -> Promise.ofException(new HttpException(300)));
 
 		HttpResponse response = await(servlet.serveAsync(HttpRequest.get("http://test.com")));
-		assertEquals(response.getCode(), 200);
+		assertEquals(200, response.getCode());
 	}
 
 	@Test

@@ -215,12 +215,12 @@ public final class OTAlgorithms {
 									try {
 										Map<K, List<D>> mergeResult = graph.merge(graph.excludeParents(heads));
 										if (logger.isTraceEnabled()) {
-											logger.info(graph.toGraphViz() + "\n");
+											logger.info("{}\n", graph.toGraphViz());
 										}
 										return Promise.of(mergeResult);
 									} catch (OTException e) {
 										if (logger.isTraceEnabled()) {
-											logger.error(graph.toGraphViz() + "\n", e);
+											logger.error("{}\n", graph.toGraphViz(), e);
 										}
 										return Promise.ofException(e);
 									}

@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.function.Function;
 
@@ -55,7 +56,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 	/**
 	 * Represents a joiner that produces only inner joins
 	 */
-	public static abstract class InnerJoiner<K, L, R, V> implements Joiner<K, L, R, V> {
+	public abstract static class InnerJoiner<K, L, R, V> implements Joiner<K, L, R, V> {
 		/**
 		 * Left join does nothing for absence null fields in result inner join
 		 */
@@ -67,7 +68,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 	/**
 	 * Simple implementation of Joiner, which does inner and left join
 	 */
-	public static abstract class ValueJoiner<K, L, R, V> implements Joiner<K, L, R, V> {
+	public abstract static class ValueJoiner<K, L, R, V> implements Joiner<K, L, R, V> {
 		/**
 		 * Method which contains realization inner join.
 		 */
@@ -138,9 +139,9 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 	}
 
 	private final class Input<I> extends AbstractStreamConsumer<I> implements StreamDataAcceptor<I> {
-		private final ArrayDeque<I> deque;
+		private final Deque<I> deque;
 
-		public Input(ArrayDeque<I> deque) {
+		public Input(Deque<I> deque) {
 			this.deque = deque;
 		}
 

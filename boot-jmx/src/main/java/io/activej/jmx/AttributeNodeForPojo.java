@@ -100,13 +100,13 @@ final class AttributeNodeForPojo implements AttributeNode {
 		Map<String, Map<String, String>> nameToDescriptions = new HashMap<>();
 		for (AttributeNode subNode : subNodes) {
 			Map<String, Map<String, String>> currentSubNodeDescriptions = subNode.getDescriptions();
-			for (String subNodeAttrName : currentSubNodeDescriptions.keySet()) {
-				String resultAttrName = addPrefix(subNodeAttrName);
+			for (Map.Entry<String, Map<String, String>> entry : currentSubNodeDescriptions.entrySet()) {
+				String resultAttrName = addPrefix(entry.getKey());
 				Map<String, String> curDescriptions = new LinkedHashMap<>();
 				if (description != null) {
 					curDescriptions.put(name, description);
 				}
-				curDescriptions.putAll(currentSubNodeDescriptions.get(subNodeAttrName));
+				curDescriptions.putAll(entry.getValue());
 				nameToDescriptions.put(resultAttrName, curDescriptions);
 			}
 		}
@@ -118,10 +118,9 @@ final class AttributeNodeForPojo implements AttributeNode {
 		Map<String, OpenType<?>> allTypes = new HashMap<>();
 		for (AttributeNode subNode : subNodes) {
 			Map<String, OpenType<?>> subAttrTypes = subNode.getOpenTypes();
-			for (String subAttrName : subAttrTypes.keySet()) {
-				OpenType<?> attrType = subAttrTypes.get(subAttrName);
-				String attrName = addPrefix(subAttrName);
-				allTypes.put(attrName, attrType);
+			for (Map.Entry<String, OpenType<?>> entry : subAttrTypes.entrySet()) {
+				String attrName = addPrefix(entry.getKey());
+				allTypes.put(attrName, entry.getValue());
 			}
 		}
 		return allTypes;
@@ -131,7 +130,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> aggregateAttributes(@NotNull Set<String> attrNames, @NotNull List<?> sources) {
 		List<?> notNullSources = sources.stream().filter(Objects::nonNull).collect(Collectors.toList());
-		if (notNullSources.size() == 0 || attrNames.isEmpty()) {
+		if (notNullSources.isEmpty() || attrNames.isEmpty()) {
 			Map<String, Object> nullMap = new HashMap<>();
 			for (String attrName : attrNames) {
 				nullMap.put(attrName, null);
@@ -150,22 +149,20 @@ final class AttributeNodeForPojo implements AttributeNode {
 		}
 
 		Map<String, Object> aggregatedAttrs = new HashMap<>();
-		for (AttributeNode subnode : groupedAttrs.keySet()) {
-			Set<String> subAttrNames = groupedAttrs.get(subnode);
+		for (Map.Entry<AttributeNode, Set<String>> entry : groupedAttrs.entrySet()) {
 			Map<String, Object> subAttrs;
 
 			try {
-				subAttrs = subnode.aggregateAttributes(subAttrNames, subsources);
+				subAttrs = entry.getKey().aggregateAttributes(entry.getValue(), subsources);
 			} catch (Exception | AssertionError e) {
-				for (String subAttrName : subAttrNames) {
+				for (String subAttrName : entry.getValue()) {
 					aggregatedAttrs.put(addPrefix(subAttrName), e);
 				}
 				continue;
 			}
 
-			for (String subAttrName : subAttrs.keySet()) {
-				Object subAttrValue = subAttrs.get(subAttrName);
-				aggregatedAttrs.put(addPrefix(subAttrName), subAttrValue);
+			for (Map.Entry<String, Object> subAttrsEntry : subAttrs.entrySet()) {
+				aggregatedAttrs.put(addPrefix(subAttrsEntry.getKey()), subAttrsEntry.getValue());
 			}
 		}
 
@@ -252,7 +249,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	@Override
 	public final void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
 		List<?> notNullTargets = targets.stream().filter(Objects::nonNull).collect(Collectors.toList());
-		if (notNullTargets.size() == 0) {
+		if (notNullTargets.isEmpty()) {
 			return;
 		}
 
@@ -287,7 +284,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	@Override
 	public void hideNullPojos(@NotNull List<?> sources) {
 		List<?> innerPojos = fetchInnerPojos(sources);
-		if (innerPojos.size() == 0) {
+		if (innerPojos.isEmpty()) {
 			this.visible = false;
 			return;
 		}
@@ -309,10 +306,9 @@ final class AttributeNodeForPojo implements AttributeNode {
 			return;
 		}
 
-		for (String fullAttrName : fullNameToNode.keySet()) {
-			if (flattenedAttrNameContainsNode(fullAttrName, attrName)) {
-				AttributeNode appropriateSubNode = fullNameToNode.get(fullAttrName);
-				appropriateSubNode.applyModifier(removePrefix(attrName), modifier, fetchInnerPojos(target));
+		for (Map.Entry<String, AttributeNode> entry : fullNameToNode.entrySet()) {
+			if (flattenedAttrNameContainsNode(entry.getKey(), attrName)) {
+				entry.getValue().applyModifier(removePrefix(attrName), modifier, fetchInnerPojos(target));
 				return;
 			}
 		}

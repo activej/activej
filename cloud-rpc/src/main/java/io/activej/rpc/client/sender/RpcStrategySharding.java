@@ -74,7 +74,7 @@ public final class RpcStrategySharding implements RpcStrategy {
 		private final RpcSender[] subSenders;
 
 		Sender(@NotNull ShardingFunction<?> shardingFunction, @NotNull List<RpcSender> senders) {
-			assert senders.size() > 0;
+			assert !senders.isEmpty();
 			this.shardingFunction = shardingFunction;
 			this.subSenders = senders.toArray(new RpcSender[0]);
 		}

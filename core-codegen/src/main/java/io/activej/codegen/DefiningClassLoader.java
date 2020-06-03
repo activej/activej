@@ -74,9 +74,13 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 		super(parent);
 	}
 
-	public static DefiningClassLoader create() {return new DefiningClassLoader();}
+	public static DefiningClassLoader create() {
+		return new DefiningClassLoader();
+	}
 
-	public static DefiningClassLoader create(ClassLoader parent) {return new DefiningClassLoader(parent);}
+	public static DefiningClassLoader create(ClassLoader parent) {
+		return new DefiningClassLoader(parent);
+	}
 	// endregion
 
 	public Class<?> defineClass(String className, byte[] bytecode) {
@@ -85,7 +89,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 		return definedClass;
 	}
 
-	synchronized public Class<?> defineAndCacheClass(@Nullable ClassKey key, String className, byte[] bytecode) {
+	public synchronized Class<?> defineAndCacheClass(@Nullable ClassKey key, String className, byte[] bytecode) {
 		Class<?> definedClass = defineClass(className, bytecode);
 		if (key != null) {
 			cachedClasses.put(key, definedClass);
@@ -94,23 +98,23 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	}
 
 	@Nullable
-	synchronized public Class<?> getCachedClass(@NotNull ClassKey key) {
+	public synchronized Class<?> getCachedClass(@NotNull ClassKey key) {
 		return cachedClasses.get(key);
 	}
 
 	// jmx
 	@Override
-	synchronized public int getDefinedClassesCount() {
+	public synchronized int getDefinedClassesCount() {
 		return cachedClasses.size();
 	}
 
 	@Override
-	synchronized public int getCachedClassesCount() {
+	public synchronized int getCachedClassesCount() {
 		return cachedClasses.size();
 	}
 
 	@Override
-	synchronized public Map<String, Long> getCachedClassesCountByType() {
+	public synchronized Map<String, Long> getCachedClassesCountByType() {
 		return cachedClasses.keySet().stream()
 				.map(key -> concat(singletonList(key.superclass), key.interfaces).toString())
 				.collect(groupingBy(identity(), counting()));

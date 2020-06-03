@@ -53,9 +53,9 @@ public class MemcacheServerModule extends AbstractModule {
 	@Provides
 	RpcServer server(Eventloop eventloop, Config config, RingBuffer storage) {
 		return RpcServer.create(eventloop)
-				.withHandler(GetRequest.class, GetResponse.class,
+				.withHandler(GetRequest.class,
 						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
-				.withHandler(PutRequest.class, PutResponse.class,
+				.withHandler(PutRequest.class,
 						request -> {
 							Slice slice = request.getData();
 							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());

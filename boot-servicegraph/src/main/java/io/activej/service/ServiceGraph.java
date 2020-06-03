@@ -156,10 +156,6 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 			return stopEnd != 0;
 		}
 
-//		boolean isStoppedSuccessfully() {
-//			return stopEnd != 0 && stopException == null;
-//		}
-
 		long getStartTime() {
 			checkState(startBegin != 0L && startEnd != 0L, "Start() has not been called or has not finished yet");
 			return startEnd - startBegin;
@@ -271,14 +267,14 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 		add(key, concat(singletonList(first), asList(rest)));
 	}
 
-	synchronized public boolean isStarted() {
+	public synchronized boolean isStarted() {
 		return started;
 	}
 
 	/**
 	 * Start services in the service graph
 	 */
-	synchronized public CompletableFuture<?> startFuture() {
+	public synchronized CompletableFuture<?> startFuture() {
 		if (started) {
 			return CompletableFuture.completedFuture(false);
 		}
@@ -310,7 +306,7 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 	/**
 	 * Stop services from the service graph
 	 */
-	synchronized public CompletableFuture<?> stopFuture() {
+	public synchronized CompletableFuture<?> stopFuture() {
 		Set<Key> leafNodes = difference(union(services.keySet(), backwards.keySet()), forwards.keySet());
 		logger.info("Stopping services");
 		logger.trace("Leaf nodes: {}", leafNodes);
@@ -333,12 +329,12 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 						.collect(toList()));
 	}
 
-	synchronized private CompletionStage<?> processNode(Key node, boolean start, Map<Key, CompletionStage<?>> cache) {
+	private synchronized CompletionStage<?> processNode(Key node, boolean start, Map<Key, CompletionStage<?>> cache) {
 
 		if (cache.containsKey(node)) {
 			CompletionStage<?> future = cache.get(node);
 			if (logger.isTraceEnabled()) {
-				logger.trace(keyToString(node) + " : reusing " + future);
+				logger.trace("{} : reusing {}", keyToString(node), future);
 			}
 			return future;
 		}
@@ -346,7 +342,7 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 		Set<Key> dependencies = (start ? forwards : backwards).getOrDefault(node, emptySet());
 
 		if (logger.isTraceEnabled()) {
-			logger.trace(keyToString(node) + " : processing " + dependencies);
+			logger.trace("{} : processing {}", keyToString(node), dependencies);
 		}
 
 		CompletableFuture<?> future = combineAll(
@@ -356,17 +352,17 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 				.thenCompose($ -> {
 					Service service = services.get(node);
 					if (service == null) {
-						logger.trace("...skipping no-service node: " + keyToString(node));
+						logger.trace("...skipping no-service node: {}", keyToString(node));
 						return CompletableFuture.completedFuture(null);
 					}
 
 					if (!start && !nodeStatuses.getOrDefault(node, NodeStatus.DEFAULT).isStartedSuccessfully()) {
-						logger.trace("...skipping not running node: " + keyToString(node));
+						logger.trace("...skipping not running node: {}", keyToString(node));
 						return CompletableFuture.completedFuture(null);
 					}
 
 					Stopwatch sw = Stopwatch.createStarted();
-					logger.trace((start ? "Starting " : "Stopping ") + keyToString(node) + " ...");
+					logger.trace("{} {} ...", start ? "Starting" : "Stopping", keyToString(node));
 					NodeStatus nodeStatus = nodeStatuses.computeIfAbsent(node, $1 -> new NodeStatus());
 					if (start) {
 						nodeStatus.startBegin = currentTimeMillis();
@@ -449,7 +445,7 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 			for (Key node : path.isEmpty() ? services.keySet() : forwards.getOrDefault(path.get(path.size() - 1), emptySet())) {
 				int loopIndex = path.indexOf(node);
 				if (loopIndex != -1) {
-					logger.warn("Circular dependencies found: " + path.subList(loopIndex, path.size()).stream()
+					logger.warn("Circular dependencies found: {}", path.subList(loopIndex, path.size()).stream()
 							.map(this::keyToString)
 							.collect(joining(", ", "[", "]")));
 					return path.subList(loopIndex, path.size());
@@ -555,8 +551,9 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 		if (!graphvizGraph.isEmpty()) {
 			sb.append("\t" + graphvizGraph + "\n");
 		}
-		for (Key node : forwards.keySet()) {
-			for (Key dependency : forwards.get(node)) {
+		for (Map.Entry<Key, Set<Key>> entry : forwards.entrySet()) {
+			Key node = entry.getKey();
+			for (Key dependency : entry.getValue()) {
 				sb.append("\t" + keyToNode(node) + " -> " + keyToNode(dependency))
 						.append(slowestChain != null &&
 								slowestChain.path.contains(node) && slowestChain.path.contains(dependency) &&
@@ -567,7 +564,7 @@ public final class ServiceGraph implements Initializable<ServiceGraph>, Concurre
 			}
 		}
 
-		Map<NodeStatus.Operation, String> nodeColors = new HashMap<>();
+		Map<NodeStatus.Operation, String> nodeColors = new EnumMap<>(NodeStatus.Operation.class);
 		nodeColors.put(NodeStatus.Operation.STARTING, graphvizStarting);
 		nodeColors.put(NodeStatus.Operation.STARTED, graphvizStarted);
 		nodeColors.put(NodeStatus.Operation.STOPPING, graphvizStopping);

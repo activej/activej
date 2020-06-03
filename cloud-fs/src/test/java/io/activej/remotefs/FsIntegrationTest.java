@@ -223,8 +223,10 @@ public final class FsIntegrationTest {
 	public void testDeleteMissingFile() {
 		String file = "no_file.txt";
 
-		await(client.delete(file)
+		FileMetadata metadata = await(client.delete(file)
+				.then(() -> client.getMetadata(file))
 				.whenComplete(server::close));
+		assertNull(metadata);
 	}
 
 	@Test

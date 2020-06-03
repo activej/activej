@@ -17,7 +17,7 @@ public final class ScopeServletExample extends HttpServerLauncher {
 		return new ScopeServlet(injector) {
 			@Provides
 			Function<Object[], String> template() {
-				return args -> String.format("Hello world from DI Servlet\n\n%1$s", args);
+				return args -> String.format("Hello world from DI Servlet%n%n%1$s", args);
 			}
 
 			@Provides

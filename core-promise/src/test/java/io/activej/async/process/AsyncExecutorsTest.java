@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.promise.TestUtils.await;
+import static org.junit.Assert.assertEquals;
 
 public class AsyncExecutorsTest {
 
@@ -31,6 +32,7 @@ public class AsyncExecutorsTest {
 				}
 			}));
 		}
-		await(Promises.toList(promises));
+		List<Void> results = await(Promises.toList(promises));
+		assertEquals(100_000, results.size());
 	}
 }

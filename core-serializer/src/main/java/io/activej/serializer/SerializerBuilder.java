@@ -382,11 +382,11 @@ public final class SerializerBuilder {
 		if (annotations.length == 0) {
 			return rootBuilder.build();
 		}
-		for (Class<? extends Annotation> annotationType : annotationsMap.keySet()) {
-			Class<? extends Annotation> annotationExType = annotationsExMap.get(annotationType);
-			AnnotationHandler annotationHandler = annotationsMap.get(annotationType);
+		for (Map.Entry<Class<? extends Annotation>, AnnotationHandler<?, ?>> entry : annotationsMap.entrySet()) {
+			Class<? extends Annotation> annotationExType = annotationsExMap.get(entry.getKey());
+			AnnotationHandler annotationHandler = entry.getValue();
 			for (Annotation annotation : annotations) {
-				if (annotation.annotationType() == annotationType) {
+				if (annotation.annotationType() == entry.getKey()) {
 					SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(helper, annotation, compatibilityLevel);
 					Builder child = rootBuilder.ensureChild(annotationHandler.extractPath(annotation));
 					child.add(serializerDefBuilder);

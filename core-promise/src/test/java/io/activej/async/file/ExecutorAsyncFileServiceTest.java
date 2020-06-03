@@ -3,9 +3,7 @@ package io.activej.async.file;
 import io.activej.promise.Promises;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -24,8 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class ExecutorAsyncFileServiceTest {
-	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 

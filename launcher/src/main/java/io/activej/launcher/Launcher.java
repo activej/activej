@@ -135,7 +135,7 @@ public abstract class Launcher {
 			Injector injector = createInjector(args);
 			injector.getInstance(this.getClass());
 			if (logger0.isInfoEnabled()) {
-				logger0.info("Effective Injector:\n\n" + makeGraphVizGraph(injector.getBindingsTrie()));
+				logger0.info("Effective Injector:\n\n{}", makeGraphVizGraph(injector.getBindingsTrie()));
 			}
 
 			onInit(injector);
@@ -146,12 +146,12 @@ public abstract class Launcher {
 			Set<LauncherService> services = injector.getInstanceOr(new Key<Set<LauncherService>>() {}, emptySet());
 			Set<LauncherService> startedServices = new HashSet<>();
 
-			logger0.info("Post-injected instances: " + postInjectInstances(injector));
+			logger0.info("Post-injected instances: {}", postInjectInstances(injector));
 
 			logger.info("=== STARTING APPLICATION");
 			try {
 				instantOfStart = Instant.now();
-				logger0.info("Starting RootServices: " + services);
+				logger0.info("Starting Root Services: {}", services);
 				startServices(services, startedServices);
 				onStart();
 				onStartFuture.complete(null);
@@ -228,7 +228,7 @@ public abstract class Launcher {
 					latch.countDown();
 					continue;
 				}
-				logger0.info("Starting RootService: " + service);
+				logger0.info("Starting Root Service: {}", service);
 				service.start().whenComplete(($, e) -> {
 					synchronized (this) {
 						if (e == null) {
@@ -252,7 +252,7 @@ public abstract class Launcher {
 	private void stopServices(Collection<LauncherService> startedServices) throws InterruptedException {
 		CountDownLatch latch = new CountDownLatch(startedServices.size());
 		for (LauncherService service : startedServices) {
-			logger0.info("Stopping RootService: " + service);
+			logger0.info("Stopping Root Service: {}", service);
 			service.stop().whenComplete(($, e) -> {
 				if (e != null) {
 					logger.error("Stop error in " + service,

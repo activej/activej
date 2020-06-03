@@ -587,7 +587,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<List<T>> toList(@NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
-		return promise1.combine(promise2, (value1, value2) -> asList(value1, value2));
+		return promise1.combine(promise2, Arrays::asList);
 	}
 
 	/**
@@ -805,13 +805,13 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T1> Promise<Tuple1<T1>> toTuple(@NotNull Promise<? extends T1> promise1) {
-		return promise1.map((Function<T1, Tuple1<T1>>) Tuple1::new);
+		return promise1.map(Tuple1::new);
 	}
 
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2> Promise<Tuple2<T1, T2>> toTuple(@NotNull Promise<? extends T1> promise1, @NotNull Promise<? extends T2> promise2) {
-		return promise1.combine(promise2, (BiFunction<T1, T2, Tuple2<T1, T2>>) Tuple2::new);
+		return promise1.combine(promise2, Tuple2::new);
 	}
 
 	@SuppressWarnings("unchecked")

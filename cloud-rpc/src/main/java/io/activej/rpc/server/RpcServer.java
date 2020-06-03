@@ -109,11 +109,6 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	private boolean monitoring;
 	// endregion
 
-//	private final StreamBinarySerializer.JmxInspector statsSerializer = new StreamBinarySerializer.JmxInspector();
-//	private final StreamBinaryDeserializer.JmxInspector statsDeserializer = new StreamBinaryDeserializer.JmxInspector();
-//	private final StreamLZ4Compressor.JmxInspector statsCompressor = new StreamLZ4Compressor.JmxInspector();
-//	private final StreamLZ4Decompressor.JmxInspector statsDecompressor = new StreamLZ4Decompressor.JmxInspector();
-
 	// region builders
 	private RpcServer(Eventloop eventloop) {
 		super(eventloop);
@@ -123,7 +118,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 		return new RpcServer(eventloop)
 				.withServerSocketSettings(DEFAULT_SERVER_SOCKET_SETTINGS)
 				.withSocketSettings(DEFAULT_SOCKET_SETTINGS)
-				.withHandler(RpcControlMessage.class, RpcControlMessage.class, request -> {
+				.withHandler(RpcControlMessage.class, request -> {
 					if (request == RpcControlMessage.PING) {
 						return Promise.of(RpcControlMessage.PONG);
 					}
@@ -180,14 +175,14 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	 * Adds a handler for a specified request-response pair.
 	 *
 	 * @param requestClass  a class representing a request structure
-	 * @param responseClass a class representing a response structure
 	 * @param handler       a class containing logic of request processing and
 	 *                      creating a response
 	 * @param <I>           class of request
 	 * @param <O>           class of response
 	 * @return server instance capable for handling requests of concrete types
 	 */
-	public <I, O> RpcServer withHandler(Class<I> requestClass, Class<O> responseClass, RpcRequestHandler<I, O> handler) {
+	public <I, O> RpcServer withHandler(Class<I> requestClass, RpcRequestHandler<I, O> handler) {
+		checkArgument(!handlers.containsKey(requestClass), "Handler for {} has already been added", requestClass);
 		handlers.put(requestClass, handler);
 		return this;
 	}
@@ -215,11 +210,11 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 
 	@Override
 	protected void onClose(SettablePromise<Void> cb) {
-		if (connections.size() == 0) {
+		if (connections.isEmpty()) {
 			logger.info("RpcServer is closing. Active connections count: 0.");
 			cb.set(null);
 		} else {
-			logger.info("RpcServer is closing. Active connections count: " + connections.size());
+			logger.info("RpcServer is closing. Active connections count: {}", connections.size());
 			for (RpcServerConnection connection : new ArrayList<>(connections)) {
 				connection.shutdown();
 			}
@@ -247,9 +242,9 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 
 		if (closeCallback != null) {
 			logger.info("RpcServer is closing. One more connection was closed. " +
-					"Active connections count: " + connections.size());
+					"Active connections count: {}", connections.size());
 
-			if (connections.size() == 0) {
+			if (connections.isEmpty()) {
 				closeCallback.set(null);
 			}
 		}
@@ -299,12 +294,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	}
 
 	private EventStats ensureConnectStats(InetAddress address) {
-		EventStats stats = connectsPerAddress.get(address);
-		if (stats == null) {
-			stats = EventStats.create(SMOOTHING_WINDOW);
-			connectsPerAddress.put(address, stats);
-		}
-		return stats;
+		return connectsPerAddress.computeIfAbsent(address, $ -> EventStats.create(SMOOTHING_WINDOW));
 	}
 
 	@JmxOperation(description = "detailed information about connections")
@@ -338,26 +328,5 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	public ExceptionStats getLastProtocolError() {
 		return lastProtocolError;
 	}
-
-//	@JmxAttribute
-//	public StreamBinarySerializer.JmxInspector getStatsSerializer() {
-//		return statsSerializer;
-//	}
-//
-//	@JmxAttribute
-//	public StreamBinaryDeserializer.JmxInspector getStatsDeserializer() {
-//		return statsDeserializer;
-//	}
-//
-//	@JmxAttribute
-//	public StreamLZ4Compressor.JmxInspector getStatsCompressor() {
-//		return compression ? statsCompressor : null;
-//	}
-//
-//	@JmxAttribute
-//	public StreamLZ4Decompressor.JmxInspector getStatsDecompressor() {
-//		return compression ? statsDecompressor : null;
-//	}
-	// endregion
 }
 

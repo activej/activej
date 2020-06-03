@@ -51,7 +51,7 @@ public final class Check {
 		else if (enabled.equals("off")) ENABLED_BY_DEFAULT = false;
 		else throw new RuntimeException(getErrorMessage(enabled));
 
-		logger.trace("All checks are " + (ENABLED_BY_DEFAULT ? "enabled" : "disabled") + " by default");
+		logger.trace("All checks are {} by default", ENABLED_BY_DEFAULT ? "enabled" : "disabled");
 	}
 
 	/**
@@ -66,7 +66,7 @@ public final class Check {
 		if ((property = System.getProperty(ENV_PREFIX + path)) == null) {
 			property = System.getProperty(ENV_PREFIX + cls.getSimpleName());
 			while (property == null) {
-				int idx = path.lastIndexOf(".");
+				int idx = path.lastIndexOf('.');
 				if (idx == -1) break;
 				path = path.substring(0, idx);
 				property = System.getProperty(ENV_PREFIX + path);
@@ -79,7 +79,7 @@ public final class Check {
 			else if (property.equals("off")) enabled = false;
 			else throw new RuntimeException(getErrorMessage(property));
 		}
-		logger.trace("Check is " + (enabled ? "ON" : "OFF") + " for class {}", cls);
+		logger.trace("Check is {} for class {}", enabled ? "ON" : "OFF", cls);
 		return enabled;
 	}
 

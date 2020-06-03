@@ -37,7 +37,7 @@ import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.RunnableWithContext.wrapContext;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
-		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<ChannelSplitter<T>, T> {
+		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {
 	private ChannelSupplier<T> input;
 	private final List<ChannelConsumer<T>> outputs = new ArrayList<>();
 

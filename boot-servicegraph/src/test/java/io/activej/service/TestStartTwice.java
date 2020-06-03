@@ -61,7 +61,7 @@ public class TestStartTwice {
 			serviceGraph.stopFuture().get();
 		}
 
-		assertEquals(countStart.get(), 1);
-		assertEquals(countStop.get(), 1);
+		assertEquals(1, countStart.get());
+		assertEquals(1, countStop.get());
 	}
 }

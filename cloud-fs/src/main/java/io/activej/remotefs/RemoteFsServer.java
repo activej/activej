@@ -98,14 +98,14 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 					}
 					MessagingHandler<FsCommand> handler = handlers.get(msg.getClass());
 					if (handler == null) {
-						logger.warn("received a message with no associated handler, type: " + msg.getClass());
+						logger.warn("received a message with no associated handler, type: {}", msg.getClass());
 						return Promise.ofException(NO_HANDLER_FOR_MESSAGE);
 					}
 					return handler.onMessage(messaging, msg);
 				})
 				.whenComplete(handleRequestPromise.recordStats())
 				.whenException(e -> {
-					logger.warn("got an error while handling message (" + e + ") : " + this);
+					logger.warn("got an error while handling message : {}", this, e);
 					messaging.send(new ServerError(getErrorCode(e)))
 							.then(messaging::sendEndOfStream)
 							.whenResult(messaging::close);

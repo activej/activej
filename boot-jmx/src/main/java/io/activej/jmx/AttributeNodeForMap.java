@@ -26,6 +26,7 @@ import java.util.*;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.collection.CollectionUtils.first;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.*;
 
 final class AttributeNodeForMap extends AttributeNodeForLeafAbstract {
 	private static final String KEY_COLUMN_NAME = "> key";
@@ -53,7 +54,7 @@ final class AttributeNodeForMap extends AttributeNodeForLeafAbstract {
 		Set<String> visibleAttrs = subNode.getVisibleAttributes();
 		Map<String, OpenType<?>> attrTypes = subNode.getOpenTypes();
 
-		if (visibleAttrs.size() == 0) {
+		if (visibleAttrs.isEmpty()) {
 			throw new IllegalArgumentException("Arrays must have at least one visible attribute. " + nodeName);
 		}
 
@@ -80,10 +81,9 @@ final class AttributeNodeForMap extends AttributeNodeForLeafAbstract {
 
 		List<String> columnNames = new ArrayList<>();
 		List<OpenType<?>> columnTypes = new ArrayList<>();
-		for (String subAttrName : attrNameToType.keySet()) {
-			OpenType<?> subAttrType = attrNameToType.get(subAttrName);
-			columnNames.add(subAttrName);
-			columnTypes.add(subAttrType);
+		for (Map.Entry<String, OpenType<?>> entry : attrNameToType.entrySet()) {
+			columnNames.add(entry.getKey());
+			columnTypes.add(entry.getValue());
 		}
 		String[] columnNamesArr = columnNames.toArray(new String[0]);
 		OpenType<?>[] columnTypesArr = columnTypes.toArray(new OpenType<?>[0]);
@@ -116,12 +116,11 @@ final class AttributeNodeForMap extends AttributeNodeForLeafAbstract {
 
 		TabularDataSupport tdSupport = new TabularDataSupport(tabularType);
 		Set<String> visibleSubAttrs = subNode.getVisibleAttributes();
-		for (Object key : groupedByKey.keySet()) {
-			List<Object> group = groupedByKey.get(key);
+		for (Map.Entry<Object, List<Object>> entry : groupedByKey.entrySet()) {
 			Map<String, Object> aggregatedGroup =
-					subNode.aggregateAttributes(visibleSubAttrs, group);
+					subNode.aggregateAttributes(visibleSubAttrs, entry.getValue());
 			try {
-				tdSupport.put(createTabularDataRow(key.toString(), aggregatedGroup));
+				tdSupport.put(createTabularDataRow(entry.getKey().toString(), aggregatedGroup));
 			} catch (OpenDataException e) {
 				throw new RuntimeException(e);
 			}
@@ -158,16 +157,9 @@ final class AttributeNodeForMap extends AttributeNodeForLeafAbstract {
 			}
 		}
 
-		Map<Object, List<Object>> grouped = new HashMap<>();
-		for (Map<?, ?> currentMap : listOfMaps) {
-			for (Object key : currentMap.keySet()) {
-				if (!grouped.containsKey(key)) {
-					grouped.put(key, new ArrayList<>());
-				}
-				grouped.get(key).add(currentMap.get(key));
-			}
-		}
-		return grouped;
+		return listOfMaps.stream()
+				.flatMap(map -> map.entrySet().stream())
+				.collect(groupingBy(Map.Entry::getKey, mapping(e -> (Object) e.getValue(), toList())));
 	}
 
 	@Override

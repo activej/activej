@@ -53,7 +53,7 @@ public final class RpcBinaryProtocolTest {
 
 		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withHandler(String.class, String.class, request -> Promise.of("Hello, " + request + "!"))
+				.withHandler(String.class, request -> Promise.of("Hello, " + request + "!"))
 				.withListenPort(LISTEN_PORT);
 		server.listen();
 
@@ -110,7 +110,7 @@ public final class RpcBinaryProtocolTest {
 
 		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withHandler(String.class, String.class, Promise::of)
+				.withHandler(String.class, Promise::of)
 				.withListenPort(LISTEN_PORT);
 		server.listen();
 
@@ -121,7 +121,7 @@ public final class RpcBinaryProtocolTest {
 					server.close();
 				}));
 
-		assertEquals(e.getMessage(), "Message overflow");
+		assertEquals("Message overflow", e.getMessage());
 	}
 
 	@Test
@@ -138,7 +138,7 @@ public final class RpcBinaryProtocolTest {
 		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(MemSize.bytes(100), MemSize.bytes(1000), false)
-				.withHandler(String.class, String.class, Promise::of)
+				.withHandler(String.class, Promise::of)
 				.withListenPort(LISTEN_PORT);
 		server.listen();
 

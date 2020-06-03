@@ -52,7 +52,7 @@ import static io.activej.eventloop.RunnableWithContext.wrapContext;
 
 @SuppressWarnings("WeakerAccess")
 public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventHandler {
-	private static final Boolean CHECK = Check.isEnabled(AsyncTcpSocketNio.class);
+	private static final boolean CHECK = Check.isEnabled(AsyncTcpSocketNio.class);
 
 	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(AsyncTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
 

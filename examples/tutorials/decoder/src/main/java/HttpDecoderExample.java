@@ -21,14 +21,14 @@ import static io.activej.http.decoder.Decoders.ofPost;
 
 //[START REGION_1]
 public final class HttpDecoderExample extends HttpServerLauncher {
-	private final static String SEPARATOR = "-";
+	private static final String SEPARATOR = "-";
 
-	private final static Decoder<Address> ADDRESS_DECODER = Decoder.of(Address::new,
+	private static final Decoder<Address> ADDRESS_DECODER = Decoder.of(Address::new,
 			ofPost("title", "")
 					.validate(param -> !param.isEmpty(), "Title cannot be empty")
 	);
 
-	private final static Decoder<Contact> CONTACT_DECODER = Decoder.of(Contact::new,
+	private static final Decoder<Contact> CONTACT_DECODER = Decoder.of(Contact::new,
 			ofPost("name")
 					.validate(name -> !name.isEmpty(), "Name cannot be empty"),
 			ofPost("age")

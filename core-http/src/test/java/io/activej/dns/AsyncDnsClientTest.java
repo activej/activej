@@ -12,14 +12,14 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static io.activej.dns.DnsProtocol.ResponseErrorCode.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.stream.Collectors.joining;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 @Ignore
 public final class AsyncDnsClientTest {
@@ -75,8 +75,10 @@ public final class AsyncDnsClientTest {
 	public void testDnsClient() {
 		AsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Eventloop.getCurrentEventloop());
 
-		await(Promises.toList(Stream.of("www.google.com", "www.github.com", "www.kpi.ua")
+		List<DnsResponse> list = await(Promises.toList(Stream.of("www.google.com", "www.github.com", "www.kpi.ua")
 				.map(dnsClient::resolve4)));
+
+		assertFalse(list.isEmpty());
 	}
 
 	@Test

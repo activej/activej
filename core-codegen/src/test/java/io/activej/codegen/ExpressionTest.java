@@ -464,10 +464,10 @@ public class ExpressionTest {
 				.withStaticMethod("method", long.class, asList(long.class), arg(0))
 				.buildClassAndCreateNewInstance();
 
-		assert testClass.callOther1(100) == 100;
-		assert testClass.callOther2() == -1;
-		assert testClass.callStatic1(1, 2) == 2;
-		assert testClass.callStatic2(3L) == 3L;
+		assertEquals(100, testClass.callOther1(100));
+		assertEquals(-1, testClass.callOther2());
+		assertEquals(2, testClass.callStatic1(1, 2));
+		assertEquals(3L, testClass.callStatic2(3L));
 	}
 
 	public interface TestArgument {
@@ -563,7 +563,7 @@ public class ExpressionTest {
 				.withMethod("a", value(1))
 				.buildClassAndCreateNewInstance();
 
-		assertEquals(testClass.a(), 1);
+		assertEquals(1, testClass.a());
 	}
 
 	public interface Initializable {
@@ -781,10 +781,10 @@ public class ExpressionTest {
 				.withMethod("c", value("44"))
 				.buildClassAndCreateNewInstance();
 
-		assertEquals(instance.t(), 40);
-		assertEquals(instance.a(), 42);
-		assertEquals(((B) instance).b(), Integer.valueOf(43));
-		assertEquals(((C) instance).c(), "44");
+		assertEquals(40, instance.t());
+		assertEquals(42, instance.a());
+		assertEquals(Integer.valueOf(43), ((B) instance).b());
+		assertEquals("44", ((C) instance).c());
 	}
 
 	@org.junit.Test
@@ -796,7 +796,7 @@ public class ExpressionTest {
 				.buildClassAndCreateNewInstance();
 
 		assertEquals(instance.b(), Integer.valueOf(43));
-		assertEquals(((C) instance).c(), "44");
+		assertEquals("44", ((C) instance).c());
 
 	}
 
@@ -812,7 +812,7 @@ public class ExpressionTest {
 				.buildClassAndCreateNewInstance();
 
 		assertNull(instance.b());
-		assertEquals(instance.toString(), "{null}");
+		assertEquals("{null}", instance.toString());
 	}
 
 	@org.junit.Test
@@ -827,9 +827,9 @@ public class ExpressionTest {
 								.withQuotes("{", "}", ", ")
 								.with(call(self(), "b")))
 				.buildClassAndCreateNewInstance();
-		assertEquals(folder.list().length, 1);
+		assertEquals(1, folder.list().length );
 		assertNull(instance.b());
-		assertEquals(instance.toString(), "{null}");
+		assertEquals("{null}", instance.toString());
 	}
 
 	public interface TestArraySet {
@@ -857,8 +857,8 @@ public class ExpressionTest {
 		TestCallStatic instance = ClassBuilder.create(definingClassLoader, TestCallStatic.class)
 				.withMethod("method", staticCall(Math.class, "min", arg(0), arg(1)))
 				.buildClassAndCreateNewInstance();
-		assertEquals(instance.method(5, 0), 0);
-		assertEquals(instance.method(5, 10), 5);
+		assertEquals(0, instance.method(5, 0));
+		assertEquals(5, instance.method(5, 10));
 	}
 
 	public interface TestIsNull {
@@ -903,8 +903,8 @@ public class ExpressionTest {
 				.withMethod("ints", arrayNew(int[].class, arg(0)))
 				.withMethod("integers", arrayNew(String[].class, arg(0)))
 				.buildClassAndCreateNewInstance();
-		assertEquals(instance.ints(1).length, 1);
-		assertEquals(instance.integers(2).length, 2);
+		assertEquals(1, instance.ints(1).length);
+		assertEquals(2, instance.integers(2).length);
 	}
 
 	@org.junit.Test

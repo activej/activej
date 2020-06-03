@@ -35,7 +35,7 @@ import static io.activej.common.Recyclable.tryRecycle;
  * @param <T> type of data passed through the buffer
  */
 public final class ChannelZeroBuffer<T> implements ChannelQueue<T> {
-	private static final Boolean CHECK = Check.isEnabled(ChannelZeroBuffer.class);
+	private static final boolean CHECK = Check.isEnabled(ChannelZeroBuffer.class);
 
 	private Exception exception;
 

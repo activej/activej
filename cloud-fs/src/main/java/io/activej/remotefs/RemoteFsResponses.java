@@ -42,7 +42,7 @@ public final class RemoteFsResponses {
 			.with(ListFinished.class, object(ListFinished::new, "files", ListFinished::getFiles, ofList(FILE_META_CODEC)))
 			.with(ServerError.class, object(ServerError::new, "code", ServerError::getCode, INT_CODEC));
 
-	public static abstract class FsResponse {
+	public abstract static class FsResponse {
 	}
 
 	public static class UploadAck extends FsResponse {

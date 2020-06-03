@@ -81,6 +81,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcServer
  */
 public final class RpcClient implements IRpcClient, EventloopService, Initializable<RpcClient>, EventloopJmxBeanEx {
+	private static final boolean CHECK = Check.isEnabled(RpcClient.class);
+
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = Duration.ofSeconds(1);
@@ -89,7 +91,6 @@ public final class RpcClient implements IRpcClient, EventloopService, Initializa
 	public static final StacklessException START_EXCEPTION = new StacklessException("Could not establish initial connection");
 
 	private Logger logger = getLogger(getClass());
-	private static final Boolean CHECK = Check.isEnabled(RpcClient.class);
 
 	private final Eventloop eventloop;
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
@@ -363,8 +364,8 @@ public final class RpcClient implements IRpcClient, EventloopService, Initializa
 					requestSender = nullToSupplier(strategy.createSender(pool), NoSenderAvailable::new);
 
 					// jmx
-					generalConnectsStats.successfulConnects++;
-					connectsStatsPerAddress.get(address).successfulConnects++;
+					generalConnectsStats.recordSuccessfulConnection();
+					connectsStatsPerAddress.get(address).recordSuccessfulConnection();
 
 					logger.info("Connection to {} established", address);
 				})
@@ -386,8 +387,8 @@ public final class RpcClient implements IRpcClient, EventloopService, Initializa
 
 	private void processClosedConnection(InetSocketAddress address) {
 		//jmx
-		generalConnectsStats.failedConnects++;
-		connectsStatsPerAddress.get(address).failedConnects++;
+		generalConnectsStats.recordFailedConnection();
+		connectsStatsPerAddress.get(address).recordFailedConnection();
 
 		if (stopPromise == null) {
 			eventloop.delayBackground(reconnectIntervalMillis, wrapContext(this, () -> {

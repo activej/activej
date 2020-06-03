@@ -39,7 +39,7 @@ import static io.activej.eventloop.RunnableWithContext.wrapContext;
 
 @SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
 abstract class AbstractPromise<T> implements Promise<T> {
-	private static final Boolean CHECK = Check.isEnabled(AbstractPromise.class);
+	private static final boolean CHECK = Check.isEnabled(AbstractPromise.class);
 
 	private static final Object PROMISE_NOT_SET = new Object();
 	private static final boolean RESET_CALLBACKS = ApplicationSettings.getBoolean(AbstractPromise.class, "resetCallbacks", false);
@@ -746,7 +746,6 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 	private static final String IDENT = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
 	private static final Pattern PACKAGE_NAME_AND_LAMBDA_PART = Pattern.compile("^(?:" + IDENT + "\\.)*((?:" + IDENT + "?)\\$\\$Lambda\\$\\d+)/.*$");
-	private static final Pattern START_OF_NEW_LINE = Pattern.compile("(?:\r?\n)(?!\\z)");
 
 	private static <T> void appendChildren(StringBuilder sb, Callback<T> callback, String indent) {
 		if (callback == null) {
@@ -773,7 +772,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		}
 	}
 
-	private static <T> String formatToString(Object object) {
+	private static String formatToString(Object object) {
 		return PACKAGE_NAME_AND_LAMBDA_PART.matcher(object.toString()).replaceAll("$1");
 	}
 

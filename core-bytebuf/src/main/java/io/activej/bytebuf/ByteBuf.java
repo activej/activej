@@ -46,7 +46,7 @@ import static java.lang.Math.min;
 
 @SuppressWarnings({"WeakerAccess", "DefaultAnnotationParam", "unused"})
 public class ByteBuf implements Recyclable, Sliceable<ByteBuf>, AutoCloseable {
-	private static final Boolean CHECK = Check.isEnabled(ByteBuf.class);
+	private static final boolean CHECK = Check.isEnabled(ByteBuf.class);
 
 	static final boolean CHECK_RECYCLE = ByteBufPool.REGISTRY || CHECK;
 
@@ -896,8 +896,9 @@ public class ByteBuf implements Recyclable, Sliceable<ByteBuf>, AutoCloseable {
 						if ((b = array[head + 4]) >= 0) {
 							result |= b << 28;
 							head += 5;
-						} else
+						} else {
 							throw new IllegalStateException("Read varint was too long");
+						}
 					}
 				}
 			}
@@ -966,7 +967,7 @@ public class ByteBuf implements Recyclable, Sliceable<ByteBuf>, AutoCloseable {
 	public void writeChar(char v) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		array[tail] = (byte) (v >>> 8);
-		array[tail] = (byte) v;
+		array[tail + 1] = (byte) v;
 		tail = tail + 2;
 	}
 

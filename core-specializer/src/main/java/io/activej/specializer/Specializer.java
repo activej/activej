@@ -755,13 +755,13 @@ public final class Specializer {
 
 	}
 
-	synchronized static private int registerStaticValue(Object value) {
+	private static synchronized int registerStaticValue(Object value) {
 		int idx = STATIC_VALUE_N.incrementAndGet();
 		STATIC_VALUES.put(idx, value);
 		return idx;
 	}
 
-	synchronized static public Object takeStaticValue(int idx) {
+	public static synchronized Object takeStaticValue(int idx) {
 		return STATIC_VALUES.remove(idx);
 	}
 

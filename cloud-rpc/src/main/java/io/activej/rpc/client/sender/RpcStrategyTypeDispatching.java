@@ -64,12 +64,11 @@ public final class RpcStrategyTypeDispatching implements RpcStrategy {
 	@Override
 	public RpcSender createSender(RpcClientConnectionPool pool) {
 		HashMap<Class<?>, RpcSender> typeToSender = new HashMap<>();
-		for (Class<?> dataType : dataTypeToStrategy.keySet()) {
-			RpcStrategy strategy = dataTypeToStrategy.get(dataType);
-			RpcSender sender = strategy.createSender(pool);
+		for (Map.Entry<Class<?>, RpcStrategy> entry : dataTypeToStrategy.entrySet()) {
+			RpcSender sender = entry.getValue().createSender(pool);
 			if (sender == null)
 				return null;
-			typeToSender.put(dataType, sender);
+			typeToSender.put(entry.getKey(), sender);
 		}
 		RpcSender defaultSender = null;
 		if (defaultStrategy != null) {

@@ -32,7 +32,7 @@ public final class JmxReducers {
 	public static final class JmxReducerDistinct implements JmxReducer<Object> {
 		@Override
 		public Object reduce(List<?> list) {
-			if (list.size() == 0) return null;
+			if (list.isEmpty()) return null;
 			Object firstValue = list.get(0);
 			return list.stream().allMatch(value -> Objects.equals(firstValue, value)) ? firstValue : null;
 		}

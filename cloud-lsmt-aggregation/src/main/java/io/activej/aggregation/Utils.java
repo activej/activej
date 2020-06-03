@@ -216,14 +216,14 @@ public class Utils {
 				.withMethod("createAccumulator",
 						let(constructor(outputClass), accumulator ->
 								sequence(expressions -> {
-									for (String key : keyFields.keySet()) {
-										String inputField = keyFields.get(key);
+									for (Entry<String, String> entry : keyFields.entrySet()) {
 										expressions.add(set(
-												property(accumulator, key),
-												property(cast(arg(0), inputClass), inputField)));
+												property(accumulator, entry.getKey()),
+												property(cast(arg(0), inputClass), entry.getValue())));
 									}
-									for (String measure : measureFields.keySet()) {
-										String inputFields = measureFields.get(measure);
+									for (Entry<String, String> entry : measureFields.entrySet()) {
+										String measure = entry.getKey();
+										String inputFields = entry.getValue();
 										Measure aggregateFunction = aggregation.getMeasure(measure);
 
 										expressions.add(aggregateFunction.initAccumulatorWithValue(
@@ -234,8 +234,9 @@ public class Utils {
 								})))
 				.withMethod("accumulate",
 						sequence(expressions -> {
-							for (String measure : measureFields.keySet()) {
-								String inputFields = measureFields.get(measure);
+							for (Entry<String, String> entry : measureFields.entrySet()) {
+								String measure = entry.getKey();
+								String inputFields = entry.getValue();
 								Measure aggregateFunction = aggregation.getMeasure(measure);
 
 								expressions.add(aggregateFunction.accumulate(

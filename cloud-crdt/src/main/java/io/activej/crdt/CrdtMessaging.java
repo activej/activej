@@ -44,7 +44,7 @@ public final class CrdtMessaging {
 		PING
 	}
 
-	public final static class Download implements CrdtMessage {
+	public static final class Download implements CrdtMessage {
 		private final long token;
 
 		public Download(long token) {
@@ -67,14 +67,14 @@ public final class CrdtMessaging {
 		PONG
 	}
 
-	public final static class DownloadStarted implements CrdtResponse {
+	public static final class DownloadStarted implements CrdtResponse {
 		@Override
 		public String toString() {
 			return "DownloadStarted";
 		}
 	}
 
-	public final static class ServerError implements CrdtResponse {
+	public static final class ServerError implements CrdtResponse {
 		private final String msg;
 
 		public ServerError(String msg) {

@@ -32,6 +32,6 @@ public class DecoderTest {
 		Either<Double, DecodeErrors> key = parser.decode(HttpRequest.get("http://example.com")
 				.withCookie(HttpCookie.of("key", "11")));
 		DecodeErrors exception = key.getRight();
-		assertEquals(exception.getErrors().get(0).getMessage(), "Is even");
+		assertEquals("Is even", exception.getErrors().get(0).getMessage());
 	}
 }

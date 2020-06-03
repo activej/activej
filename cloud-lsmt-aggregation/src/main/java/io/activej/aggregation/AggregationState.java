@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.aggregation.AggregationPredicates.toRangeScan;
@@ -265,13 +264,9 @@ public final class AggregationState implements OTState<AggregationDiff> {
 			if (!minKeyPrefix.equals(maxKeyPrefix))
 				return null; // not partitioned
 
-			RangeTree<PrimaryKey, AggregationChunk> tree = partitioningKeyToTree.get(minKeyPrefix);
-			if (tree == null) {
-				tree = RangeTree.create();
-				partitioningKeyToTree.put(minKeyPrefix, tree);
-			}
+			partitioningKeyToTree.computeIfAbsent(minKeyPrefix, $ -> RangeTree.create())
+					.put(chunk.getMinPrimaryKey(), chunk.getMaxPrimaryKey(), chunk);
 
-			tree.put(chunk.getMinPrimaryKey(), chunk.getMaxPrimaryKey(), chunk);
 		}
 
 		return partitioningKeyToTree;
@@ -437,18 +432,6 @@ public final class AggregationState implements OTState<AggregationDiff> {
 			PrimaryKey minChunkKey, PrimaryKey maxChunkKey) {
 		return chunkMightContainQueryValues(minQueryKey.values(), maxQueryKey.values(),
 				minChunkKey.values(), maxChunkKey.values());
-	}
-
-	private Predicate<AggregationChunk> chunkMightContainQueryValuesPredicate(PrimaryKey minQueryKey,
-			PrimaryKey maxQueryKey) {
-		return chunk -> {
-			List<Object> queryMinValues = minQueryKey.values();
-			List<Object> queryMaxValues = maxQueryKey.values();
-			List<Object> chunkMinValues = chunk.getMinPrimaryKey().values();
-			List<Object> chunkMaxValues = chunk.getMaxPrimaryKey().values();
-
-			return chunkMightContainQueryValues(queryMinValues, queryMaxValues, chunkMinValues, chunkMaxValues);
-		};
 	}
 
 	@SuppressWarnings("unchecked")

@@ -37,7 +37,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public final class ServiceAdapters {
 	private static final Logger logger = getLogger(ServiceAdapters.class);
 
-	public static abstract class SimpleServiceAdapter<S> implements ServiceAdapter<S> {
+	public abstract static class SimpleServiceAdapter<S> implements ServiceAdapter<S> {
 		private final boolean startConcurrently;
 		private final boolean stopConcurrently;
 
@@ -252,7 +252,7 @@ public final class ServiceAdapters {
 				eventloop.execute(() -> {
 					eventloop.keepAlive(false);
 					logStopping(eventloop);
-					Eventloop.logger.info("Waiting for " + eventloop);
+					Eventloop.logger.info("Waiting for {}", eventloop);
 				});
 				executor.execute(wrapContext(eventloop, () -> {
 					try {
@@ -268,7 +268,7 @@ public final class ServiceAdapters {
 			private void logStopping(Eventloop eventloop) {
 				eventloop.delayBackground(1000L, () -> {
 					if (eventloop.getEventloopThread() != null) {
-						Eventloop.logger.info("...Waiting for " + eventloop);
+						Eventloop.logger.info("...Waiting for {}", eventloop);
 						logStopping(eventloop);
 					}
 				});

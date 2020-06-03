@@ -37,7 +37,7 @@ public final class BytecodeClassLoader extends ClassLoader {
 	}
 
 	@Override
-	synchronized protected Class<?> findClass(final String name) throws ClassNotFoundException {
+	protected synchronized Class<?> findClass(final String name) throws ClassNotFoundException {
 		byte[] classBytes = this.extraClassDefs.remove(name);
 		if (classBytes != null) {
 			return defineClass(name, classBytes, 0, classBytes.length);

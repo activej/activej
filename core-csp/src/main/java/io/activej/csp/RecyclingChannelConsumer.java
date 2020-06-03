@@ -18,19 +18,15 @@ package io.activej.csp;
 
 import io.activej.common.Recyclable;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class RecyclingChannelConsumer<T extends Recyclable> implements ChannelConsumer<T> {
+public final class RecyclingChannelConsumer<T extends Recyclable> extends AbstractChannelConsumer<T> {
+
 	@Override
-	public @NotNull Promise<Void> accept(@Nullable Recyclable value) {
+	protected Promise<Void> doAccept(@Nullable T value) {
 		if (value != null) {
 			value.recycle();
 		}
 		return Promise.complete();
-	}
-
-	@Override
-	public void closeEx(@NotNull Throwable e) {
 	}
 }

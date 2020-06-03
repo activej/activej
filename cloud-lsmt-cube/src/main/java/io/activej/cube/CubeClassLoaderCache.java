@@ -83,18 +83,16 @@ public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean {
 
 	public synchronized DefiningClassLoader getOrCreate(Key key) {
 		cacheRequests++;
-		DefiningClassLoader classLoader = cache.get(key);
-		if (classLoader == null) {
+		return cache.computeIfAbsent(key, $ -> {
 			cacheMisses++;
-			classLoader = DefiningClassLoader.create(rootClassLoader);
-			cache.put(key, classLoader);
-		}
-		return classLoader;
+			return DefiningClassLoader.create(rootClassLoader);
+		});
+
 	}
 
 	// JMX
 	@Override
-	synchronized public void clear() {
+	public synchronized void clear() {
 		cache.clear();
 	}
 
@@ -109,7 +107,7 @@ public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean {
 	}
 
 	@Override
-	synchronized public int getDefinedClassesCount() {
+	public synchronized int getDefinedClassesCount() {
 		int result = 0;
 		for (DefiningClassLoader classLoader : cache.values()) {
 			result += classLoader.getCachedClassesCount();
@@ -118,7 +116,7 @@ public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean {
 	}
 
 	@Override
-	synchronized public int getDefinedClassesCountMaxPerKey() {
+	public synchronized int getDefinedClassesCountMaxPerKey() {
 		int result = 0;
 		for (DefiningClassLoader classLoader : cache.values()) {
 			result = Math.max(result, classLoader.getCachedClassesCount());
@@ -128,7 +126,7 @@ public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean {
 
 	@Override
 	public int getCacheKeys() {
-		return targetCacheKeys;
+		return cache.size();
 	}
 
 	@Override

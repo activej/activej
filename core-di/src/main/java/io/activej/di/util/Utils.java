@@ -150,7 +150,6 @@ public final class Utils {
 	 * A shortcut for printing the result of {@link #makeGraphVizGraph} into the standard output.
 	 */
 	public static void printGraphVizGraph(Trie<Scope, Map<Key<?>, BindingInfo>> trie) {
-//		System.out.println("https://somegraphvizurl/#" + URLEncoder.encode(makeGraphVizGraph(trie), "utf-8").replaceAll("\\+", "%20"));
 		System.out.println(makeGraphVizGraph(trie));
 	}
 
@@ -185,7 +184,7 @@ public final class Utils {
 			Key<?> key = entry.getKey();
 			BindingInfo bindingInfo = entry.getValue();
 
-			if (bindingInfo.getDependencies().size() == 0) {
+			if (bindingInfo.getDependencies().isEmpty()) {
 				leafs.add(key);
 			}
 			known.add(ScopedValue.of(scope, key));

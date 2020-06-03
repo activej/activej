@@ -35,8 +35,8 @@ public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 	private static final int ALLOCATION_SIZE = 32;
 	private static final int THREADS = 32;
 	private static final int ITERATIONS = 200_000;
-	private final static int WARMUP_ROUNDS = 3;
-	private final static int BENCHMARK_ROUNDS = 10;
+	private static final int WARMUP_ROUNDS = 3;
+	private static final int BENCHMARK_ROUNDS = 10;
 
 	@Inject
 	Config config;

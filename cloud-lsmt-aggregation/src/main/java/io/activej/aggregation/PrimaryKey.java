@@ -31,7 +31,7 @@ import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 
 public class PrimaryKey implements Comparable<PrimaryKey> {
-	private static final Boolean CHECK = Check.isEnabled(PrimaryKey.class);
+	private static final boolean CHECK = Check.isEnabled(PrimaryKey.class);
 
 	private final Object[] values;
 

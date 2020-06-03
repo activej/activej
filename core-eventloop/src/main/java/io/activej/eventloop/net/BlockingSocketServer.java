@@ -48,7 +48,7 @@ public final class BlockingSocketServer {
 		this.acceptHandler = acceptHandler;
 	}
 
-	private static BlockingSocketServer create(Executor executor, AcceptHandler acceptHandler) {
+	public static BlockingSocketServer create(Executor executor, AcceptHandler acceptHandler) {
 		return new BlockingSocketServer(executor, acceptHandler);
 	}
 

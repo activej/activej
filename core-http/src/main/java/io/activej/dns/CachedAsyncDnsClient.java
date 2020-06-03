@@ -42,7 +42,7 @@ import static io.activej.eventloop.RunnableWithContext.wrapContext;
  */
 public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanEx {
 	private final Logger logger = LoggerFactory.getLogger(CachedAsyncDnsClient.class);
-	private static final Boolean CHECK = Check.isEnabled(CachedAsyncDnsClient.class);
+	private static final boolean CHECK = Check.isEnabled(CachedAsyncDnsClient.class);
 
 	private final Eventloop eventloop;
 	private final AsyncDnsClient client;

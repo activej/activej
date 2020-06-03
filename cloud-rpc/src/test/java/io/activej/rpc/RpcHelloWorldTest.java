@@ -75,7 +75,7 @@ public final class RpcHelloWorldTest {
 	private static RpcServer createServer(Eventloop eventloop) {
 		return RpcServer.create(eventloop)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withHandler(HelloRequest.class, HelloResponse.class, helloServiceRequestHandler(name -> {
+				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
 					if (name.equals("--")) {
 						throw new Exception("Illegal name");
 					}

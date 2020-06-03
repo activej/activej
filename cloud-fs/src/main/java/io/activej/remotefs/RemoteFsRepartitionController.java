@@ -54,7 +54,7 @@ import static io.activej.remotefs.RemoteFsUtils.isWildcard;
 
 public final class RemoteFsRepartitionController implements Initializable<RemoteFsRepartitionController>, EventloopJmxBeanEx, EventloopService {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteFsRepartitionController.class);
-	private static final Boolean CHECK = Check.isEnabled(RemoteFsRepartitionController.class);
+	private static final boolean CHECK = Check.isEnabled(RemoteFsRepartitionController.class);
 
 	private final Eventloop eventloop;
 	private final Object localPartitionId;
@@ -226,7 +226,7 @@ public final class RemoteFsRepartitionController implements Initializable<Remote
 												.set(ChannelConsumer.ofPromise(clients.get(partitionId).upload(name, 0, revision))
 														.withAcknowledgement(fn)))
 										.whenException(e -> {
-											logger.warn("failed uploading to partition " + partitionId + " (" + e + ')');
+											logger.warn("failed uploading to partition {}", partitionId, e);
 											cluster.markDead(partitionId, e);
 										})
 										.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
@@ -266,7 +266,7 @@ public final class RemoteFsRepartitionController implements Initializable<Remote
 							.listEntities(fileToUpload.getName()) // checking file existence and size on particular partition
 							.whenComplete((list, e) -> {
 								if (e != null) {
-									logger.warn("failed connecting to partition " + partitionId + " (" + e + ')');
+									logger.warn("failed connecting to partition {}", partitionId, e);
 									cluster.markDead(partitionId, e);
 									return;
 								}
@@ -279,7 +279,7 @@ public final class RemoteFsRepartitionController implements Initializable<Remote
 				}))
 				.then(tries -> {
 					if (!tries.stream().allMatch(Try::isSuccess)) { // any of list calls failed
-						logger.warn("failed figuring out partitions for file " + fileToUpload + ", skipping");
+						logger.warn("failed figuring out partitions for file {}, skipping", fileToUpload);
 						return Promise.of(null); // using null to mark failure without exceptions
 					}
 					return Promise.of(uploadTargets);

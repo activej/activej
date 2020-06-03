@@ -17,9 +17,9 @@ import static io.activej.config.ConfigConverters.ofInteger;
 
 @SuppressWarnings("WeakerAccess")
 public class CspBenchmark extends Launcher {
-	private final static int TOTAL_ELEMENTS = 50_000_000;
-	private final static int WARMUP_ROUNDS = 3;
-	private final static int BENCHMARK_ROUNDS = 10;
+	private static final int TOTAL_ELEMENTS = 50_000_000;
+	private static final int WARMUP_ROUNDS = 3;
+	private static final int BENCHMARK_ROUNDS = 10;
 
 	static final class IntegerChannelSupplier extends AbstractChannelSupplier<Integer> {
 		private Integer integer;

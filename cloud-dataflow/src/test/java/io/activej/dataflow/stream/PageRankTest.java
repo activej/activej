@@ -207,7 +207,7 @@ public class PageRankTest {
 	private static SortedDataset<Long, Rank> pageRankIteration(SortedDataset<Long, Page> pages, SortedDataset<Long, Rank> ranks) {
 		Dataset<Rank> updates = join(pages, ranks, new PageRankJoiner(), Rank.class, new RankKeyFunction());
 
-		Dataset<Rank> newRanks = sort_Reduce_Repartition_Reduce(updates, new RankAccumulatorReducer(),
+		Dataset<Rank> newRanks = sortReduceRepartitionReduce(updates, new RankAccumulatorReducer(),
 				Long.class, new RankKeyFunction(), new LongComparator(),
 				RankAccumulator.class, new RankAccumulatorKeyFunction(),
 				Rank.class);
@@ -270,7 +270,7 @@ public class PageRankTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		SortedDataset<Long, Page> pages = repartition_Sort(sortedDatasetOfList("items",
+		SortedDataset<Long, Page> pages = repartitionSort(sortedDatasetOfList("items",
 				Page.class, Long.class, new PageKeyFunction(), new LongComparator()));
 
 		SortedDataset<Long, Rank> pageRanks = pageRank(pages);

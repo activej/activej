@@ -169,9 +169,9 @@ public final class SerializerDefClass implements SerializerDef {
 		for (List<String> list : setters.values()) {
 			usedFields.addAll(list);
 		}
-		for (String fieldName : fields.keySet()) {
-			FieldDef fieldDef = fields.get(fieldName);
-			Method getter = fieldDef.method;
+		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
+			String fieldName = entry.getKey();
+			Method getter = entry.getValue().method;
 			if (getter == null)
 				continue;
 			if (usedFields.contains(fieldName))
@@ -190,8 +190,8 @@ public final class SerializerDefClass implements SerializerDef {
 
 	@Override
 	public void accept(Visitor visitor) {
-		for (String field : fields.keySet()) {
-			visitor.visit(field, fields.get(field).serializer);
+		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
+			visitor.visit(entry.getKey(), entry.getValue().serializer);
 
 		}
 	}
@@ -242,8 +242,9 @@ public final class SerializerDefClass implements SerializerDef {
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		List<Expression> list = new ArrayList<>();
 
-		for (String fieldName : this.fields.keySet()) {
-			FieldDef fieldDef = this.fields.get(fieldName);
+		for (Map.Entry<String, FieldDef> entry : this.fields.entrySet()) {
+			String fieldName = entry.getKey();
+			FieldDef fieldDef = entry.getValue();
 			if (!fieldDef.hasVersion(version)) continue;
 
 			Class<?> fieldType = fieldDef.serializer.getEncodeType();
@@ -281,8 +282,7 @@ public final class SerializerDefClass implements SerializerDef {
 
 		return let(Utils.of(() -> {
 					List<Expression> fieldDeserializers = new ArrayList<>();
-					for (String fieldName : fields.keySet()) {
-						FieldDef fieldDef = fields.get(fieldName);
+					for (FieldDef fieldDef : fields.values()) {
 						if (!fieldDef.hasVersion(version)) continue;
 						fieldDeserializers.add(
 								fieldDef.serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel));
@@ -292,19 +292,20 @@ public final class SerializerDefClass implements SerializerDef {
 				fieldValues -> {
 					Map<String, Expression> map = new HashMap<>();
 					int i = 0;
-					for (String fieldName : fields.keySet()) {
-						FieldDef fieldDef = fields.get(fieldName);
+					for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
+						FieldDef fieldDef = entry.getValue();
 						if (!fieldDef.hasVersion(version)) continue;
-						map.put(fieldName, cast(fieldValues.get(i++), fieldDef.getRawType()));
+						map.put(entry.getKey(), cast(fieldValues.get(i++), fieldDef.getRawType()));
 					}
 
 					return let(factory == null ?
 									callConstructor(decodeType, map, version) :
 									callFactory(map, version),
 							instance -> sequence(list -> {
-								for (Method method : setters.keySet()) {
+								for (Map.Entry<Method, List<String>> entry : setters.entrySet()) {
+									Method method = entry.getKey();
 									boolean found = false;
-									for (String fieldName : setters.get(method)) {
+									for (String fieldName : entry.getValue()) {
 										FieldDef fieldDef = fields.get(fieldName);
 										checkNotNull(fieldDef, "Field '%s' is not found in '%s'", fieldName, method);
 										if (fieldDef.hasVersion(version)) {
@@ -315,7 +316,7 @@ public final class SerializerDefClass implements SerializerDef {
 									if (found) {
 										Expression[] temp = new Expression[method.getParameterTypes().length];
 										int j = 0;
-										for (String fieldName : setters.get(method)) {
+										for (String fieldName : entry.getValue()) {
 											FieldDef fieldDef = fields.get(fieldName);
 											assert fieldDef != null;
 											if (fieldDef.hasVersion(version)) {
@@ -328,8 +329,9 @@ public final class SerializerDefClass implements SerializerDef {
 									}
 								}
 
-								for (String fieldName : fields.keySet()) {
-									FieldDef fieldDef = fields.get(fieldName);
+								for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
+									String fieldName = entry.getKey();
+									FieldDef fieldDef = entry.getValue();
 									if (!fieldDef.hasVersion(version))
 										continue;
 									if (fieldDef.field == null || isFinal(fieldDef.field.getModifiers()))
@@ -384,10 +386,10 @@ public final class SerializerDefClass implements SerializerDef {
 	private Expression deserializeInterface(StaticDecoders staticDecoders, Expression in,
 			int version, CompatibilityLevel compatibilityLevel) {
 		ClassBuilder<?> classBuilder = staticDecoders.buildClass(decodeType);
-		for (String fieldName : fields.keySet()) {
-			FieldDef fieldDef = fields.get(fieldName);
+		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
+			String fieldName = entry.getKey();
 
-			Method method = checkNotNull(fieldDef.method);
+			Method method = checkNotNull(entry.getValue().method);
 
 			classBuilder
 					.withField(fieldName, method.getReturnType())
@@ -399,11 +401,11 @@ public final class SerializerDefClass implements SerializerDef {
 		return let(
 				constructor(newClass),
 				instance -> sequence(expressions -> {
-					for (String fieldName : fields.keySet()) {
-						FieldDef fieldDef = fields.get(fieldName);
+					for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
+						FieldDef fieldDef = entry.getValue();
 						if (!fieldDef.hasVersion(version))
 							continue;
-						Variable property = property(instance, fieldName);
+						Variable property = property(instance, entry.getKey());
 
 						Expression expression =
 								fieldDef.serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel);
@@ -419,12 +421,12 @@ public final class SerializerDefClass implements SerializerDef {
 				constructor(decodeType),
 				instance ->
 						sequence(expressions -> {
-							for (String fieldName : fields.keySet()) {
-								FieldDef fieldDef = fields.get(fieldName);
+							for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
+								FieldDef fieldDef = entry.getValue();
 								if (!fieldDef.hasVersion(version)) continue;
 
 								expressions.add(
-										set(property(instance, fieldName),
+										set(property(instance, entry.getKey()),
 												fieldDef.serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)));
 							}
 							expressions.add(instance);

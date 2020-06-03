@@ -242,11 +242,10 @@ public final class ClassBuilder<T> implements Initializable<ClassBuilder<T>> {
 
 			Class<T> definedClass = (Class<T>) classLoader.defineAndCacheClass(classKey, className, bytecode);
 
-			for (String staticField : staticConstants.keySet()) {
-				Object staticValue = staticConstants.get(staticField);
+			for (Map.Entry<String, Object> entry : staticConstants.entrySet()) {
 				try {
-					Field field = definedClass.getField(staticField);
-					field.set(null, staticValue);
+					Field field = definedClass.getField(entry.getKey());
+					field.set(null, entry.getValue());
 				} catch (NoSuchFieldException | IllegalAccessException e) {
 					throw new AssertionError(e);
 				}
@@ -277,9 +276,8 @@ public final class ClassBuilder<T> implements Initializable<ClassBuilder<T>> {
 			g.endMethod();
 		}
 
-		for (String field : fields.keySet()) {
-			Class<?> fieldClass = fields.get(field);
-			cw.visitField(ACC_PUBLIC, field, getType(fieldClass).getDescriptor(), null, null);
+		for (Map.Entry<String, Class<?>> entry : fields.entrySet()) {
+			cw.visitField(ACC_PUBLIC, entry.getKey(), getType(entry.getValue()).getDescriptor(), null, null);
 		}
 
 		Set<Method> methods = new HashSet<>();
@@ -328,12 +326,12 @@ public final class ClassBuilder<T> implements Initializable<ClassBuilder<T>> {
 			staticMethods.addAll(newStaticMethods);
 		}
 
-		for (String staticField : staticFields.keySet()) {
-			cw.visitField(ACC_PUBLIC + ACC_STATIC, staticField, getType(staticFields.get(staticField)).getDescriptor(), null, null);
+		for (Map.Entry<String, Class<?>> entry : staticFields.entrySet()) {
+			cw.visitField(ACC_PUBLIC + ACC_STATIC, entry.getKey(), getType(entry.getValue()).getDescriptor(), null, null);
 		}
 
-		for (String staticField : staticConstants.keySet()) {
-			cw.visitField(ACC_PUBLIC + ACC_STATIC, staticField, getType(staticConstants.get(staticField).getClass()).getDescriptor(), null, null);
+		for (Map.Entry<String, Object> entry : staticConstants.entrySet()) {
+			cw.visitField(ACC_PUBLIC + ACC_STATIC, entry.getKey(), getType(entry.getValue().getClass()).getDescriptor(), null, null);
 		}
 
 		if (bytecodeSaveDir != null) {

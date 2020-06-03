@@ -50,7 +50,7 @@ final class AttributeNodeForList extends AttributeNodeForLeafAbstract {
 		Set<String> visibleAttrs = subNode.getVisibleAttributes();
 		Map<String, OpenType<?>> attrTypes = subNode.getOpenTypes();
 
-		if (visibleAttrs.size() == 0) {
+		if (visibleAttrs.isEmpty()) {
 			throw new IllegalArgumentException("Arrays must have at least one visible attribute. " + nodeName);
 		}
 
@@ -110,7 +110,7 @@ final class AttributeNodeForList extends AttributeNodeForLeafAbstract {
 			}
 		}
 
-		return attributesFromAllElements.size() > 0 ? createArrayFrom(attributesFromAllElements) : null;
+		return attributesFromAllElements.isEmpty() ? null : createArrayFrom(attributesFromAllElements) ;
 	}
 
 	private Object[] createArrayFrom(List<Map<String, Object>> attributesFromAllElements) {

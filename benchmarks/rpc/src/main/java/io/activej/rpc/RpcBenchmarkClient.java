@@ -26,12 +26,12 @@ import static java.lang.Math.min;
 
 @SuppressWarnings("WeakerAccess")
 public class RpcBenchmarkClient extends Launcher {
-	private final static int TOTAL_REQUESTS = 10000000;
-	private final static int WARMUP_ROUNDS = 3;
-	private final static int BENCHMARK_ROUNDS = 10;
-	private final static int SERVICE_PORT = 25565;
-	private final static int ACTIVE_REQUESTS_MIN = 10000;
-	private final static int ACTIVE_REQUESTS_MAX = 10000;
+	private static final int TOTAL_REQUESTS = 10000000;
+	private static final int WARMUP_ROUNDS = 3;
+	private static final int BENCHMARK_ROUNDS = 10;
+	private static final int SERVICE_PORT = 25565;
+	private static final int ACTIVE_REQUESTS_MIN = 10000;
+	private static final int ACTIVE_REQUESTS_MAX = 10000;
 
 	@Inject
 	RpcClient rpcClient;
@@ -162,9 +162,8 @@ public class RpcBenchmarkClient extends Launcher {
 				}
 
 				if (active <= activeRequestsMin) {
-					for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++) {
+					for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++, sent++) {
 						rpcClient.sendRequest(sent, this);
-						sent++;
 					}
 				}
 			}

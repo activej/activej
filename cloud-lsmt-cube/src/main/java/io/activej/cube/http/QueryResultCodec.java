@@ -63,15 +63,15 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 		Map<String, StructuredCodec<?>> measureCodecs = new LinkedHashMap<>();
 		Map<String, Class<?>> attributeRawTypes = new LinkedHashMap<>();
 		Map<String, Class<?>> measureRawTypes = new LinkedHashMap<>();
-		for (String attribute : attributeTypes.keySet()) {
-			RecursiveType token = RecursiveType.of(attributeTypes.get(attribute));
-			attributeCodecs.put(attribute, mapping.get(token.getType()).nullable());
-			attributeRawTypes.put(attribute, token.getRawType());
+		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
+			RecursiveType token = RecursiveType.of(entry.getValue());
+			attributeCodecs.put(entry.getKey(), mapping.get(token.getType()).nullable());
+			attributeRawTypes.put(entry.getKey(), token.getRawType());
 		}
-		for (String measure : measureTypes.keySet()) {
-			RecursiveType token = RecursiveType.of(measureTypes.get(measure));
-			measureCodecs.put(measure, mapping.get(token.getType()));
-			measureRawTypes.put(measure, token.getRawType());
+		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
+			RecursiveType token = RecursiveType.of(entry.getValue());
+			measureCodecs.put(entry.getKey(), mapping.get(token.getType()));
+			measureRawTypes.put(entry.getKey(), token.getRawType());
 		}
 		return new QueryResultCodec(attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
 	}
@@ -247,11 +247,10 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 	@SuppressWarnings("unchecked")
 	private void writeFilterAttributes(StructuredOutput writer, Map<String, Object> filterAttributes) {
 		writer.writeObject(() -> {
-			for (String attribute : filterAttributes.keySet()) {
-				Object value = filterAttributes.get(attribute);
-				writer.writeKey(attribute);
-				StructuredCodec<Object> codec = (StructuredCodec<Object>) attributeCodecs.get(attribute);
-				codec.encode(writer, value);
+			for (Map.Entry<String, Object> entry : filterAttributes.entrySet()) {
+				writer.writeKey(entry.getKey());
+				StructuredCodec<Object> codec = (StructuredCodec<Object>) attributeCodecs.get(entry.getKey());
+				codec.encode(writer, entry.getValue());
 			}
 		});
 	}

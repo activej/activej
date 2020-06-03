@@ -41,7 +41,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
@@ -112,10 +111,6 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 	public CubeCleanerController<K, D, C> withFreezeTimeout(Duration freezeTimeout) {
 		this.freezeTimeout = freezeTimeout;
 		return this;
-	}
-
-	private static <K, D> Stream<D> commitToDiffs(OTCommit<K, D> commit) {
-		return commit.getParents().values().stream().flatMap(Collection::stream);
 	}
 
 	private final AsyncSupplier<Void> cleanup = reuse(this::doCleanup);

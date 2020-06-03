@@ -10,9 +10,9 @@ import static java.util.stream.Collectors.toList;
 
 @Inject
 public class PersonGridModel implements GridModel<Integer, Person> {
-	private final static Map<String, Comparator<Person>> comparators = createComparators();
-	private final static Map<Integer, Person> storage = initStorage();
-	private static int cursor = storage.size() + 1;
+	private final Map<String, Comparator<Person>> comparators = createComparators();
+	private final Map<Integer, Person> storage = initStorage();
+	private int cursor = storage.size() + 1;
 
 	private static Map<Integer, Person> initStorage() {
 		Map<Integer, Person> storage = new HashMap<>();
@@ -130,10 +130,8 @@ public class PersonGridModel implements GridModel<Integer, Person> {
 		@Override
 		public boolean test(Person person) {
 			String searchParam = filters.get("search");
-			if (searchParam != null && !searchParam.isEmpty()) {
-				if (!person.getName().contains(searchParam)) {
-					return false;
-				}
+			if (searchParam != null && !searchParam.isEmpty() && !person.getName().contains(searchParam)) {
+				return false;
 			}
 
 			String ageParam = filters.get("age");

@@ -20,12 +20,24 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 
 public final class RpcConnectStats {
-	public long successfulConnects;
-	public long failedConnects;
-	public long closedConnects;
+	private long successfulConnects;
+	private long failedConnects;
+	private long closedConnects;
 
 	public void reset() {
 		successfulConnects = failedConnects = closedConnects = 0;
+	}
+
+	public void recordSuccessfulConnection() {
+		successfulConnects++;
+	}
+
+	public void recordFailedConnection() {
+		failedConnects++;
+	}
+
+	public void recordClosedConnection() {
+		closedConnects++;
 	}
 
 	@JmxAttribute(reducer = JmxReducerSum.class)

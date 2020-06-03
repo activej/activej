@@ -43,7 +43,7 @@ import static java.nio.file.StandardOpenOption.READ;
 public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileReader.class);
 
-	public static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{READ};
+	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{READ};
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(8);
 
@@ -149,9 +149,9 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 			}
 
 			channel.close();
-			logger.trace(this + ": closed file");
+			logger.trace("{}: closed file", this);
 		} catch (IOException | CloseException e1) {
-			logger.error(this + ": failed to close file", e1);
+			logger.error("{}: failed to close file", this, e1);
 		}
 	}
 

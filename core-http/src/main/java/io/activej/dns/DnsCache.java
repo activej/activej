@@ -38,7 +38,7 @@ import static io.activej.common.Preconditions.checkState;
  */
 public final class DnsCache {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
-	private static final Boolean CHECK = Check.isEnabled(DnsCache.class);
+	private static final boolean CHECK = Check.isEnabled(DnsCache.class);
 
 	public static final Duration DEFAULT_TIMED_OUT_EXCEPTION_TTL = Duration.ofSeconds(1);
 	public static final Duration DEFAULT_ERROR_CACHE_EXPIRATION = Duration.ofMinutes(1);
@@ -147,7 +147,7 @@ public final class DnsCache {
 		long expirationTime = now.currentTimeMillis();
 		if (response.isSuccessful()) {
 			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assert?
-			long minTtl = response.getRecord().getMinTtl() * 1000;
+			long minTtl = response.getRecord().getMinTtl() * 1000L;
 			if (minTtl == 0) {
 				return;
 			}

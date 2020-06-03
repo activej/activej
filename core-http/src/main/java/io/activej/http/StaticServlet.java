@@ -114,7 +114,7 @@ public final class StaticServlet implements AsyncServlet {
 	}
 
 	public static ContentType getContentType(String path) {
-		int pos = path.lastIndexOf(".");
+		int pos = path.lastIndexOf('.');
 		if (pos == -1) {
 			return ContentType.of(MediaTypes.OCTET_STREAM);
 		}

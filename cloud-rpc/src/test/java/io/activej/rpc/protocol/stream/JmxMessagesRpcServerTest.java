@@ -32,7 +32,7 @@ public class JmxMessagesRpcServerTest {
 		server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE, true)
-				.withHandler(String.class, String.class, request ->
+				.withHandler(String.class, request ->
 						Promise.of("Hello, " + request + "!"))
 				.withListenPort(LISTEN_PORT)
 				.withAcceptOnce();

@@ -52,7 +52,7 @@ public abstract class AbstractExpressionIteratorForEach implements Expression {
 		VarLocal varIter = ctx.newLocal(getType(Iterator.class));
 
 		Class<?> t = ctx.toJavaType(collectionType);
-		if (t.isInstance(Iterator.class) || t == Iterator.class) {
+		if (Iterator.class.isAssignableFrom(t)) {
 			// do nothing
 		} else {
 			ctx.invoke(collectionType, "iterator");

@@ -30,17 +30,20 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static io.activej.remotefs.FsClient.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.unmodifiableList;
 
 public final class RemoteFsUtils {
 	private static final Pattern ANY_GLOB_METACHARS = Pattern.compile("[*?{}\\[\\]\\\\]");
 	private static final Pattern UNESCAPED_GLOB_METACHARS = Pattern.compile("(?<!\\\\)(?:\\\\\\\\)*[*?{}\\[\\]]");
 
-	public static final Throwable[] KNOWN_ERRORS = {
+	public static final List<Throwable> KNOWN_ERRORS = unmodifiableList(Arrays.asList(
 			FILE_NOT_FOUND,
 			FILE_EXISTS,
 			BAD_PATH,
@@ -49,7 +52,7 @@ public final class RemoteFsUtils {
 			BAD_RANGE,
 			MOVING_DIRS,
 			UNSUPPORTED_REVISION
-	};
+	));
 
 	/**
 	 * Escapes any glob metacharacters so that given path string can ever only match one file.

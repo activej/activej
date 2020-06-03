@@ -18,6 +18,6 @@ package io.activej.csp.dsl;
 
 import io.activej.csp.ChannelInput;
 
-public interface WithChannelInputs<B, T> {
+public interface WithChannelInputs<T> {
 	ChannelInput<T> addInput();
 }

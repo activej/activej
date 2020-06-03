@@ -49,13 +49,12 @@ public class CubeDiffCodec implements StructuredCodec<CubeDiff> {
 	@Override
 	public void encode(StructuredOutput out, CubeDiff cubeDiff) {
 		out.writeObject(() -> {
-			for (String aggregation : aggregationDiffCodecs.keySet()) {
-				AggregationDiff aggregationDiff = cubeDiff.get(aggregation);
+			for (Map.Entry<String, AggregationDiffCodec> entry : aggregationDiffCodecs.entrySet()) {
+				AggregationDiff aggregationDiff = cubeDiff.get(entry.getKey());
 				if (aggregationDiff == null)
 					continue;
-				AggregationDiffCodec aggregationDiffCodec = aggregationDiffCodecs.get(aggregation);
-				out.writeKey(aggregation);
-				aggregationDiffCodec.encode(out, aggregationDiff);
+				out.writeKey(entry.getKey());
+				entry.getValue().encode(out, aggregationDiff);
 			}
 		});
 	}

@@ -21,7 +21,7 @@ import io.activej.common.Check;
 import static io.activej.common.Preconditions.checkArgument;
 
 final class AddressLinkedList {
-	private static final Boolean CHECK = Check.isEnabled(AddressLinkedList.class);
+	private static final boolean CHECK = Check.isEnabled(AddressLinkedList.class);
 
 	private HttpClientConnection first;
 	private HttpClientConnection last;

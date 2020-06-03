@@ -213,9 +213,9 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 
 	@SuppressWarnings("unchecked")
 	private void scanClassSettings(Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggers, KeyWithWorkerData internalKey, Object instance) {
-		for (Class<?> clazz : classSettings.keySet()) {
-			for (TriggerConfig<?> config : classSettings.get(clazz)) {
-				if (clazz.isAssignableFrom(instance.getClass())) {
+		for (Map.Entry<Class<?>, Set<TriggerConfig<?>>> entry : classSettings.entrySet()) {
+			for (TriggerConfig<?> config : entry.getValue()) {
+				if (entry.getKey().isAssignableFrom(instance.getClass())) {
 					triggers.computeIfAbsent(internalKey, $ -> new ArrayList<>())
 							.add(new TriggerRegistryRecord(config.severity, config.name, () ->
 									((TriggerConfig<Object>) config).triggerFunction.apply(instance)));

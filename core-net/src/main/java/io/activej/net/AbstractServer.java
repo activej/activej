@@ -64,7 +64,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @SuppressWarnings("WeakerAccess, unused")
 public abstract class AbstractServer<Self extends AbstractServer<Self>> implements EventloopServer, WorkerServer, Initializable<Self>, EventloopJmxBeanEx {
 	protected Logger logger = getLogger(getClass());
-	private static final Boolean CHECK = Check.isEnabled(AbstractServer.class);
+	private static final boolean CHECK = Check.isEnabled(AbstractServer.class);
 
 	@NotNull
 	protected final Eventloop eventloop;
@@ -340,10 +340,6 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		AsyncTcpSocket asyncTcpSocket = wrapChannel(eventloop, socketChannel, socketSettings);
 		asyncTcpSocket = ssl ? wrapServerSocket(asyncTcpSocket, sslContext, sslExecutor) : asyncTcpSocket;
 		serve(asyncTcpSocket, remoteAddress);
-	}
-
-	private boolean isInetAddressAny(InetSocketAddress listenAddress) {
-		return listenAddress.getAddress().isAnyLocalAddress();
 	}
 
 	public ServerSocketSettings getServerSocketSettings() {

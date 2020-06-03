@@ -55,10 +55,10 @@ public class RpcStrategyRandomSampling implements RpcStrategy {
 	public RpcSender createSender(RpcClientConnectionPool pool) {
 		Map<RpcSender, Integer> senderToWeight = new HashMap<>();
 		int totalWeight = 0;
-		for (RpcStrategy rpcStrategy : strategyToWeight.keySet()) {
-			RpcSender sender = rpcStrategy.createSender(pool);
+		for (Map.Entry<RpcStrategy, Integer> entry : strategyToWeight.entrySet()) {
+			RpcSender sender = entry.getKey().createSender(pool);
 			if (sender != null) {
-				int weight = strategyToWeight.get(rpcStrategy);
+				int weight = entry.getValue();
 				senderToWeight.put(sender, weight);
 				totalWeight += weight;
 			}
@@ -88,9 +88,9 @@ public class RpcStrategyRandomSampling implements RpcStrategy {
 			cumulativeWeights = new int[senderToWeight.size()];
 			int currentCumulativeWeight = 0;
 			int currentSender = 0;
-			for (RpcSender rpcSender : senderToWeight.keySet()) {
-				currentCumulativeWeight += senderToWeight.get(rpcSender);
-				senders.add(rpcSender);
+			for (Map.Entry<RpcSender, Integer> entry : senderToWeight.entrySet()) {
+				currentCumulativeWeight += entry.getValue();
+				senders.add(entry.getKey());
 				cumulativeWeights[currentSender++] = currentCumulativeWeight;
 			}
 			totalWeight = currentCumulativeWeight;

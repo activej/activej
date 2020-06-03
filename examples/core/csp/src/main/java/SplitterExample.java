@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 public class SplitterExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
-		List<Integer> integers = Stream.iterate(1, (i) -> i + 1)
+		List<Integer> integers = Stream.iterate(1, i -> i + 1)
 				.limit(5)
 				.collect(Collectors.toList());
 

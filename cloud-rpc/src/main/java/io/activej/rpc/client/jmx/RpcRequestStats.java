@@ -45,10 +45,6 @@ public final class RpcRequestStats implements JmxRefreshable {
 		serverExceptions = ExceptionStats.create();
 	}
 
-//	public static RpcRequestStats create(double smoothingWindow) {
-//		return new RpcRequestStats(smoothingWindow);
-//	}
-
 	public static RpcRequestStats create(Duration smoothingWindow) {
 		return new RpcRequestStats(smoothingWindow);
 	}

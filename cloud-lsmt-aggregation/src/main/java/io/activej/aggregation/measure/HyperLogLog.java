@@ -24,7 +24,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 
 public final class HyperLogLog implements Comparable<HyperLogLog> {
-	private static final Boolean CHECK = Check.isEnabled(HyperLogLog.class);
+	private static final boolean CHECK = Check.isEnabled(HyperLogLog.class);
 
 	private final byte[] registers;
 

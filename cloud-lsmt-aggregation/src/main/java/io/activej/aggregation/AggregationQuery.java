@@ -113,13 +113,6 @@ public final class AggregationQuery {
 		return this;
 	}
 
-//	public AggregationQuery addPredicates(List<Predicate> predicates) {
-//		for (Predicate predicate : predicates) {
-//			this.predicates.add(predicate);
-//		}
-//		return this;
-//	}
-
 	@Override
 	public String toString() {
 		return "AggregationQuery{" +

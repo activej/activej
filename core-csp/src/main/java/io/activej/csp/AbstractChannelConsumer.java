@@ -27,7 +27,7 @@ import static io.activej.common.Preconditions.checkState;
 import static io.activej.common.Recyclable.tryRecycle;
 
 public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable implements ChannelConsumer<T> {
-	protected static final Boolean CHECK = Check.isEnabled(AbstractChannelConsumer.class);
+	protected static final boolean CHECK = Check.isEnabled(AbstractChannelConsumer.class);
 
 	// region creators
 	protected AbstractChannelConsumer() {

@@ -56,6 +56,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 @SuppressWarnings("rawtypes")
@@ -125,7 +126,7 @@ public final class DynamicMBeanFactory {
 	 * Creates Jmx MBean for beans with operations and attributes.
 	 */
 	public DynamicMBean createDynamicMBean(@NotNull List<?> beans, @NotNull JmxBeanSettings setting, boolean enableRefresh) {
-		checkArgument(beans.size() > 0, "Size of list of beans should be greater than 0");
+		checkArgument(!beans.isEmpty(), "List of beans should not be empty");
 		checkArgument(beans.stream().noneMatch(Objects::isNull), "Bean can not be null");
 		checkArgument(beans.stream().map(Object::getClass).collect(toSet()).size() == 1, "Beans should be of the same type");
 
@@ -224,7 +225,7 @@ public final class DynamicMBeanFactory {
 			attrNodes.add(attrNode);
 		}
 
-		if (includedOptionals.size() > 0) {
+		if (!includedOptionals.isEmpty()) {
 			assert getter != null; // in this case getter cannot be null
 			throw new RuntimeException(format("Error in \"extraSubAttributes\" parameter in @JmxAnnotation" +
 							" on %s.%s(). There is no field \"%s\" in %s.",
@@ -367,7 +368,7 @@ public final class DynamicMBeanFactory {
 				List<AttributeNode> subNodes =
 						createNodesFor(returnClass, beanClass, extraSubAttributes, getter, customTypes);
 
-				if (subNodes.size() == 0) {
+				if (subNodes.isEmpty()) {
 					throw new IllegalArgumentException(format(
 							"JmxRefreshableStats of type \"%s\" does not have JmxAttributes",
 							returnClass.getName()));
@@ -382,7 +383,7 @@ public final class DynamicMBeanFactory {
 				List<AttributeNode> subNodes =
 						createNodesFor(returnClass, beanClass, extraSubAttributes, getter, customTypes);
 
-				if (subNodes.size() == 0) {
+				if (subNodes.isEmpty()) {
 					throw new IllegalArgumentException(format("Unrecognized type of Jmx attribute: %s", attrType.getTypeName()));
 				} else {
 					// POJO case
@@ -627,16 +628,9 @@ public final class DynamicMBeanFactory {
 			return first(groupDescriptions.values());
 		}
 
-		String descriptionTemplate = "\"%s\": %s";
-		String separator = "  |  ";
-		StringBuilder totalDescription = new StringBuilder();
-		for (String groupName : groupDescriptions.keySet()) {
-			String groupDescription = groupDescriptions.get(groupName);
-			totalDescription.append(String.format(descriptionTemplate, groupName, groupDescription));
-			totalDescription.append(separator);
-		}
-		totalDescription.delete(totalDescription.length() - separator.length(), totalDescription.length());
-		return totalDescription.toString();
+		return groupDescriptions.entrySet().stream()
+				.map(entry -> String.format("\"%s\": %s", entry.getKey(), entry.getValue()))
+				.collect(joining("  |  "));
 	}
 
 	private static MBeanOperationInfo[] fetchOperationsInfo(Class<?> beanClass) {
@@ -849,10 +843,9 @@ public final class DynamicMBeanFactory {
 			Set<String> attrNames = new HashSet<>(Arrays.asList(attributes));
 			try {
 				Map<String, Object> aggregatedAttrs = rootNode.aggregateAttributes(attrNames, beans);
-				for (String aggregatedAttrName : aggregatedAttrs.keySet()) {
-					Object aggregatedValue = aggregatedAttrs.get(aggregatedAttrName);
-					if (!(aggregatedValue instanceof Throwable)) {
-						attrList.add(new Attribute(aggregatedAttrName, aggregatedValue));
+				for (Map.Entry<String, Object> entry : aggregatedAttrs.entrySet()) {
+					if (!(entry.getValue() instanceof Throwable)) {
+						attrList.add(new Attribute(entry.getKey(), entry.getValue()));
 					}
 				}
 			} catch (Exception e) {

@@ -72,7 +72,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = getLogger(AsyncHttpClient.class);
-	private static final Boolean CHECK = Check.isEnabled(AsyncHttpClient.class);
+	private static final boolean CHECK = Check.isEnabled(AsyncHttpClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration CONNECT_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpClient.class, "connectTimeout", Duration.ZERO);
@@ -379,7 +379,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 			if (getConnectionsCount() != 0) {
 				scheduleExpiredConnectionsCheck();
 				if (isClosing) {
-					logger.info("...Waiting for " + this);
+					logger.info("...Waiting for {}", this);
 				}
 			}
 		}));
@@ -525,7 +525,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 			promise.set(null);
 		} else {
 			closePromise = promise;
-			logger.info("Waiting for " + this);
+			logger.info("Waiting for {}", this);
 		}
 		return promise;
 	}

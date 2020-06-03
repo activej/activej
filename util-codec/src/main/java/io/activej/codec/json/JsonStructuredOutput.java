@@ -23,6 +23,7 @@ import io.activej.codec.StructuredOutput;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +115,11 @@ public class JsonStructuredOutput implements StructuredOutput {
 
 	@Override
 	public void writeBytes(byte[] bytes, int off, int len) {
-		// TODO
+		try {
+			writer.value(Base64.getEncoder().encodeToString(Arrays.copyOfRange(bytes, off, off + len)));
+		} catch (IOException ignored) {
+			throw new AssertionError();
+		}
 	}
 
 	@Override

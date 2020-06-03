@@ -44,7 +44,7 @@ import static java.lang.System.arraycopy;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class ByteBufQueue implements Recyclable {
-	private static final Boolean CHECK = Check.isEnabled(ByteBufQueue.class);
+	private static final boolean CHECK = Check.isEnabled(ByteBufQueue.class);
 
 	private static final int DEFAULT_CAPACITY = 8;
 	/**

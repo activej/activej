@@ -39,7 +39,7 @@ import static java.nio.file.StandardOpenOption.*;
 public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileWriter.class);
 
-	public static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{WRITE, CREATE_NEW, APPEND};
+	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{WRITE, CREATE_NEW, APPEND};
 
 	private final AsyncFileService fileService;
 	private final FileChannel channel;
@@ -143,9 +143,9 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 			}
 
 			channel.close();
-			logger.trace(this + ": closed file");
+			logger.trace("{}: closed file", this);
 		} catch (IOException e) {
-			logger.error(this + ": failed to close file", e);
+			logger.error("{}: failed to close file", this, e);
 		}
 	}
 

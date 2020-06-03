@@ -54,7 +54,7 @@ import static io.activej.promise.Promises.timeout;
  */
 public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanEx {
 	private final Logger logger = LoggerFactory.getLogger(RemoteAsyncDnsClient.class);
-	private static final Boolean CHECK = Check.isEnabled(RemoteAsyncDnsClient.class);
+	private static final boolean CHECK = Check.isEnabled(RemoteAsyncDnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;

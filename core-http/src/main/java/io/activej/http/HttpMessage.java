@@ -46,7 +46,7 @@ import static java.util.Collections.emptySet;
  */
 @SuppressWarnings({"unused", "WeakerAccess", "PointlessBitwiseExpression"})
 public abstract class HttpMessage {
-	private static final Boolean CHECK = Check.isEnabled(HttpMessage.class);
+	private static final boolean CHECK = Check.isEnabled(HttpMessage.class);
 
 	/**
 	 * This flag means that the body of this message should not be streamed

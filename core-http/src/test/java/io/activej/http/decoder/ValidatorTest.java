@@ -36,6 +36,6 @@ public class ValidatorTest {
 				Validator.of(Objects::nonNull, "Cannot be null");
 		validator = validator.then(Validator.of(s -> s.length() > 5, "Invalid length"));
 
-		assertEquals(validator.validate(null).get(0).getMessage(), "Cannot be null");
+		assertEquals("Cannot be null", validator.validate(null).get(0).getMessage());
 	}
 }

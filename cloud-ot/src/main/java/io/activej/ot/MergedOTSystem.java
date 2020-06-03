@@ -190,12 +190,12 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 
 	private static <D1, D2> Tuple2<List<D1>, List<D2>> extractTuple2(List<Tuple2<List<D1>, List<D2>>> tuples) {
 		assert tuples.size() < 2;
-		return tuples.size() == 0 ? new Tuple2<>(emptyList(), emptyList()) : tuples.get(0);
+		return tuples.isEmpty() ? new Tuple2<>(emptyList(), emptyList()) : tuples.get(0);
 	}
 
 	private static <D1, D2, D3> Tuple3<List<D1>, List<D2>, List<D3>> extractTuple3(List<Tuple3<List<D1>, List<D2>, List<D3>>> tuples) {
 		assert tuples.size() < 2;
-		return tuples.size() == 0 ? new Tuple3<>(emptyList(), emptyList(), emptyList()) : tuples.get(0);
+		return tuples.isEmpty() ? new Tuple3<>(emptyList(), emptyList(), emptyList()) : tuples.get(0);
 	}
 
 }

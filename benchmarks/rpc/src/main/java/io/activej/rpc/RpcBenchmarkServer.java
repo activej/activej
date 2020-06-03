@@ -18,7 +18,7 @@ import static io.activej.di.module.Modules.combine;
 import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
 
 public class RpcBenchmarkServer extends Launcher {
-	private final static int SERVICE_PORT = 25565;
+	private static final int SERVICE_PORT = 25565;
 
 	@Provides
 	@Named("server")
@@ -37,7 +37,7 @@ public class RpcBenchmarkServer extends Launcher {
 						config.get(ofBoolean(), "rpc.compression", false))
 				.withListenPort(config.get(ofInteger(), "rpc.server.port"))
 				.withMessageTypes(Integer.class)
-				.withHandler(Integer.class, Integer.class, req -> Promise.of(req * 2));
+				.withHandler(Integer.class, req -> Promise.of(req * 2));
 
 	}
 

@@ -29,8 +29,8 @@ public final class RpcNoServerTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	@Rule
-	public final EventloopRule eventloopRule = new EventloopRule();
+	@ClassRule
+	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
@@ -72,7 +72,7 @@ public final class RpcNoServerTest {
 	private static RpcServer createServer(Eventloop eventloop) {
 		return RpcServer.create(eventloop)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withHandler(HelloRequest.class, HelloResponse.class, helloServiceRequestHandler(name -> {
+				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
 					if (name.equals("--")) {
 						throw new Exception("Illegal name");
 					}
@@ -120,7 +120,7 @@ public final class RpcNoServerTest {
 					.whenComplete(($, e) -> {
 						if (e != null) {
 							System.err.println(e.getMessage());
-							assertSame(e, RpcClient.START_EXCEPTION); // connectTimeout
+							assertSame(RpcClient.START_EXCEPTION, e); // connectTimeout
 						}
 					})
 					.thenEx(($1, $2) -> rpcClient.stop())

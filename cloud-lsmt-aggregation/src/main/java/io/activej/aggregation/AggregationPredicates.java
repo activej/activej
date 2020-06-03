@@ -68,7 +68,7 @@ public class AggregationPredicates {
 		AggregationPredicate simplifyAnd(L left, R right);
 	}
 
-	private final static Map<PredicateSimplifierKey<?, ?>, PredicateSimplifier<?, ?>> simplifiers = new HashMap<>();
+	private static final Map<PredicateSimplifierKey<?, ?>, PredicateSimplifier<?, ?>> simplifiers = new HashMap<>();
 
 	private static <L extends AggregationPredicate, R extends AggregationPredicate> void register(Class<L> leftType, Class<R> rightType, PredicateSimplifier<L, R> operation) {
 		PredicateSimplifierKey keyLeftRight = new PredicateSimplifierKey<>(leftType, rightType);
@@ -443,18 +443,6 @@ public class AggregationPredicates {
 				return in(left.key, left.values);
 			return alwaysFalse();
 		});
-	}
-
-	@Nullable
-	@SuppressWarnings("unchecked")
-	private static AggregationPredicate simplifyAnd(AggregationPredicate left, AggregationPredicate right) {
-		if (left.equals(right))
-			return left;
-		PredicateSimplifierKey key = new PredicateSimplifierKey(left.getClass(), right.getClass());
-		PredicateSimplifier<AggregationPredicate, AggregationPredicate> simplifier = (PredicateSimplifier<AggregationPredicate, AggregationPredicate>) simplifiers.get(key);
-		if (simplifier == null)
-			return null;
-		return simplifier.simplifyAnd(left, right);
 	}
 
 	public static final class PredicateAlwaysFalse implements AggregationPredicate {
@@ -1279,6 +1267,18 @@ public class AggregationPredicates {
 					simplifiedPredicates.size() == 1 ?
 							first(simplifiedPredicates) :
 							and(new ArrayList<>(simplifiedPredicates));
+		}
+
+		@Nullable
+		@SuppressWarnings("unchecked")
+		private static AggregationPredicate simplifyAnd(AggregationPredicate left, AggregationPredicate right) {
+			if (left.equals(right))
+				return left;
+			PredicateSimplifierKey key = new PredicateSimplifierKey(left.getClass(), right.getClass());
+			PredicateSimplifier<AggregationPredicate, AggregationPredicate> simplifier = (PredicateSimplifier<AggregationPredicate, AggregationPredicate>) simplifiers.get(key);
+			if (simplifier == null)
+				return null;
+			return simplifier.simplifyAnd(left, right);
 		}
 
 		@Override

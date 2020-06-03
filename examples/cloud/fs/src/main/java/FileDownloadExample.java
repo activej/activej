@@ -62,7 +62,7 @@ public final class FileDownloadExample extends Launcher {
 		CompletableFuture<Void> future = eventloop.submit(() ->
 				ChannelSupplier.ofPromise(client.download(REQUIRED_FILE))
 						.streamTo(ChannelFileWriter.open(executor, clientStorage.resolve(DOWNLOADED_FILE)))
-						.whenResult(() -> System.out.printf("\nFile '%s' successfully downloaded to '%s'\n\n",
+						.whenResult(() -> System.out.printf("%nFile '%s' successfully downloaded to '%s'%n%n",
 								REQUIRED_FILE, clientStorage))
 		);
 		future.get();

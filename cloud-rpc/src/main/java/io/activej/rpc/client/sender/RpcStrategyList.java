@@ -34,7 +34,7 @@ public final class RpcStrategyList {
 	}
 
 	public static RpcStrategyList ofAddresses(@NotNull List<InetSocketAddress> addresses) {
-		checkArgument(addresses.size() > 0, "At least one address must be present");
+		checkArgument(!addresses.isEmpty(), "At least one address must be present");
 		return new RpcStrategyList(addresses.stream()
 				.map(RpcStrategySingleServer::create)
 				.collect(toList()));

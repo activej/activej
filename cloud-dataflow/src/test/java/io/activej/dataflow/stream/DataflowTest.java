@@ -173,7 +173,7 @@ public final class DataflowTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		SortedDataset<Long, TestItem> items = repartition_Sort(sortedDatasetOfList("items",
+		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfList("items",
 				TestItem.class, Long.class, new TestKeyFunction(), new TestComparator()));
 		DatasetListConsumer<?> consumerNode = listConsumer(items, "result");
 		consumerNode.compileInto(graph);

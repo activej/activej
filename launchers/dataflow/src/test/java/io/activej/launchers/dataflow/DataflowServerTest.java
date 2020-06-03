@@ -187,7 +187,7 @@ public class DataflowServerTest {
 
 		Dataset<String> items = datasetOfList("items", String.class);
 		Dataset<StringCount> mappedItems = map(items, new TestMapFunction(), StringCount.class);
-		Dataset<StringCount> reducedItems = splitSortReduce_Repartition_Reduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
+		Dataset<StringCount> reducedItems = splitSortReduceRepartitionReduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
 		Collector<StringCount> collector = new Collector<>(reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create(result);
@@ -208,7 +208,7 @@ public class DataflowServerTest {
 		DataflowGraph graph = injector.getInstance(DataflowGraph.class);
 
 		Dataset<String> items = datasetOfList("items", String.class);
-		Dataset<String> sorted = repartition_Sort(localSort(items, String.class, new StringFunction(), new TestComparator()));
+		Dataset<String> sorted = repartitionSort(localSort(items, String.class, new StringFunction(), new TestComparator()));
 		DatasetListConsumer<?> consumerNode = listConsumer(sorted, "result");
 		consumerNode.compileInto(graph);
 

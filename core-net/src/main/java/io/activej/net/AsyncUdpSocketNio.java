@@ -47,7 +47,7 @@ import static io.activej.common.Preconditions.checkState;
 import static io.activej.common.Recyclable.deepRecycle;
 
 public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventHandler {
-	private static final Boolean CHECK = Check.isEnabled(AsyncUdpSocketNio.class);
+	private static final boolean CHECK = Check.isEnabled(AsyncUdpSocketNio.class);
 
 	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
 	public static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant

@@ -31,15 +31,15 @@ import static io.activej.di.module.Modules.combine;
 import static java.lang.Math.min;
 
 public class MemcacheRpcBenchmark extends Launcher {
-	private final static int TOTAL_REQUESTS = 10_000_000;
-	private final static int WARMUP_ROUNDS = 3;
-	private final static int BENCHMARK_ROUNDS = 10;
-	private final static int ACTIVE_REQUESTS_MAX = 2500;
-	private final static int ACTIVE_REQUESTS_MIN = 2000;
+	private static final int TOTAL_REQUESTS = 10_000_000;
+	private static final int WARMUP_ROUNDS = 3;
+	private static final int BENCHMARK_ROUNDS = 10;
+	private static final int ACTIVE_REQUESTS_MAX = 2500;
+	private static final int ACTIVE_REQUESTS_MIN = 2000;
 
-	private final static int NUMBER_BUFFERS = 4;
-	private final static MemSize BUFFER_CAPACITY = MemSize.megabytes(1);
-	public static final byte[] BYTES = "Hello world".getBytes();
+	private static final int NUMBER_BUFFERS = 4;
+	private static final MemSize BUFFER_CAPACITY = MemSize.megabytes(1);
+	private static final byte[] BYTES = "Hello world".getBytes();
 
 	private int totalRequests;
 	private int warmupRounds;
@@ -164,9 +164,8 @@ public class MemcacheRpcBenchmark extends Launcher {
 				}
 
 				if (active <= activeRequestsMin) {
-					for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++) {
+					for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++, sent++) {
 						doPut(this);
-						sent++;
 					}
 				}
 			}
@@ -204,9 +203,8 @@ public class MemcacheRpcBenchmark extends Launcher {
 				}
 
 				if (active <= activeRequestsMax) {
-					for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++) {
+					for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++, sent++) {
 						doGet(this);
-						sent++;
 					}
 				}
 			}

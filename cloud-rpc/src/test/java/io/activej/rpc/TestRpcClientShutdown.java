@@ -9,7 +9,6 @@ import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -30,8 +29,8 @@ public final class TestRpcClientShutdown {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 	public static final int PORT = getFreePort();
 
-	@Rule
-	public final EventloopRule eventloopRule = new EventloopRule();
+	@ClassRule
+	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@Test
 	public void testServerOnClientShutdown() throws IOException {
@@ -41,7 +40,7 @@ public final class TestRpcClientShutdown {
 
 		RpcServer rpcServer = RpcServer.create(eventloop)
 				.withMessageTypes(messageTypes)
-				.withHandler(Request.class, Response.class,
+				.withHandler(Request.class,
 						request -> Promise.ofBlockingCallable(executor, () -> {
 							Thread.sleep(100);
 							return new Response();

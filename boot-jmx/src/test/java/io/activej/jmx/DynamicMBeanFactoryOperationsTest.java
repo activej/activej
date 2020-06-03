@@ -70,9 +70,9 @@ public final class DynamicMBeanFactoryOperationsTest {
 
 		mbean.invoke("multiplyAndAdd", new Object[]{120, 150}, new String[]{"long", "long"});
 
-		assertEquals(bean.getCount(), 2);
-		assertEquals(bean.getInfo(), "data1data2");
-		assertEquals(bean.getSum(), 120 * 150);
+		assertEquals(2, bean.getCount());
+		assertEquals("data1data2", bean.getInfo());
+		assertEquals(120 * 150, bean.getSum());
 	}
 
 	@Ignore("does not work concurrently yet")

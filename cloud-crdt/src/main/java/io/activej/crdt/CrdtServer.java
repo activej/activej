@@ -92,7 +92,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
                     if (e == null) {
                         return;
                     }
-                    logger.warn("got an error while handling message (" + e + ") : " + this);
+                    logger.warn("got an error while handling message {}", this, e);
                     String prefix = e.getClass() != StacklessException.class ? e.getClass().getSimpleName() + ": " : "";
                     messaging.send(new ServerError(prefix + e.getMessage()))
                             .then(messaging::sendEndOfStream)

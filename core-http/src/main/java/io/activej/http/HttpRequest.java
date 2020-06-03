@@ -51,9 +51,9 @@ import static java.util.Collections.singletonList;
  * creating and configuring an HTTP request.
  */
 public final class HttpRequest extends HttpMessage implements Initializable<HttpRequest> {
-	private static final Boolean CHECK = Check.isEnabled(HttpRequest.class);
+	private static final boolean CHECK = Check.isEnabled(HttpRequest.class);
 
-	private final static int LONGEST_HTTP_METHOD_SIZE = 12;
+	private static final int LONGEST_HTTP_METHOD_SIZE = 12;
 	private static final byte[] HTTP_1_1 = encodeAscii(" HTTP/1.1");
 	private static final int HTTP_1_1_SIZE = HTTP_1_1.length;
 	@NotNull

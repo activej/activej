@@ -22,10 +22,7 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static io.activej.codegen.Expressions.*;
 import static io.activej.common.Utils.of;
@@ -63,8 +60,8 @@ public final class SerializerDefSubclass implements SerializerDefWithNullable {
 
 	@Override
 	public void accept(Visitor visitor) {
-		for (Class<?> subclass : subclassSerializers.keySet()) {
-			visitor.visit(subclass.getName(), subclassSerializers.get(subclass));
+		for (Map.Entry<Class<?>, SerializerDef> entry : subclassSerializers.entrySet()) {
+			visitor.visit(entry.getKey().getName(), entry.getValue());
 		}
 	}
 
@@ -90,9 +87,9 @@ public final class SerializerDefSubclass implements SerializerDefWithNullable {
 
 		List<Expression> listKey = new ArrayList<>();
 		List<Expression> listValue = new ArrayList<>();
-		for (Class<?> subclass : subclassSerializers.keySet()) {
-			SerializerDef subclassSerializer = subclassSerializers.get(subclass);
-			listKey.add(cast(value(getType(subclass)), Object.class));
+		for (Map.Entry<Class<?>, SerializerDef> entry : subclassSerializers.entrySet()) {
+			SerializerDef subclassSerializer = entry.getValue();
+			listKey.add(cast(value(getType(entry.getKey())), Object.class));
 			listValue.add(sequence(
 					writeByte(buf, pos, value((byte) subClassIndex)),
 					subclassSerializer.defineEncoder(staticEncoders, buf, pos, cast(value, subclassSerializer.getEncodeType()), version, compatibilityLevel)

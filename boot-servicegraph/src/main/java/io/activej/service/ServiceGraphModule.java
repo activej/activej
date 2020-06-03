@@ -301,13 +301,13 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 						.whenComplete(($, e) -> {
 							if (e == null) {
 								if (logger.isInfoEnabled()) {
-									logger.info("Effective ServiceGraph:\n\n" + serviceGraph);
+									logger.info("Effective ServiceGraph:\n\n{}", serviceGraph);
 								}
 								future.complete(null);
 							} else {
-								logger.error("Could not start ServiceGraph: " + e);
+								logger.error("Could not start ServiceGraph", e);
 								if (logger.isInfoEnabled()) {
-									logger.info("Effective ServiceGraph:\n\n" + serviceGraph);
+									logger.info("Effective ServiceGraph:\n\n{}", serviceGraph);
 								}
 								logger.warn("Stopping services of partially started ServiceGraph...");
 								serviceGraph.stopFuture()
@@ -395,11 +395,11 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 								}
 
 								if (rawTypeMatches && !(instance instanceof WorkerPool)) {
-									logger.warn("Unsupported service " + key + " at " + bindingInfo.getLocation() + " : worker instances is expected");
+									logger.warn("Unsupported service {} at {} : worker instances is expected", key, bindingInfo.getLocation());
 								}
 
 								if (instanceMatches) {
-									logger.warn("Unsupported service " + key + " at " + bindingInfo.getLocation() + " : dependency to WorkerPool or WorkerPools is expected");
+									logger.warn("Unsupported service {} at {} : dependency to WorkerPool or WorkerPools is expected", key, bindingInfo.getLocation());
 								}
 								return new ServiceKey(dependency.getKey());
 							})
@@ -521,13 +521,13 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		public CompletableFuture<?> stop() {
 			return combineAll(services.stream().map(service -> safeCall(service::stop)).collect(toList()));
 		}
-	}
 
-	private static <T> CompletionStage<T> safeCall(Supplier<? extends CompletionStage<T>> invoke) {
-		try {
-			return invoke.get();
-		} catch (Exception e) {
-			return completedExceptionallyFuture(e);
+		private static <T> CompletionStage<T> safeCall(Supplier<? extends CompletionStage<T>> invoke) {
+			try {
+				return invoke.get();
+			} catch (Exception e) {
+				return completedExceptionallyFuture(e);
+			}
 		}
 	}
 
@@ -606,7 +606,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		}
 
 		@Override
-		synchronized public CompletableFuture<?> start() {
+		public synchronized CompletableFuture<?> start() {
 			checkState(stopFuture == null, "Already stopped");
 			started++;
 			if (startFuture == null) {
@@ -616,7 +616,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		}
 
 		@Override
-		synchronized public CompletableFuture<?> stop() {
+		public synchronized CompletableFuture<?> stop() {
 			checkState(startFuture != null, "Has not been started yet");
 			if (--started != 0) return completedFuture(null);
 			if (stopFuture == null) {

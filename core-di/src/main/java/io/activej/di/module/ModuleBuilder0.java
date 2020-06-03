@@ -102,8 +102,6 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 		return to(Binding.toSupplier(supplierType));
 	}
 
-	// region public BuilderModule<T> to(constructor*, dependencies...) { ... }
-
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
 	 */

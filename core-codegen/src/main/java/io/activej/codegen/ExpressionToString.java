@@ -83,11 +83,11 @@ public final class ExpressionToString implements Expression {
 
 		boolean first = true;
 
-		for (Object key : arguments.keySet()) {
+		for (Map.Entry<Object, Expression> entry : arguments.entrySet()) {
 			String str = first ? begin : separator;
 			first = false;
-			if (key instanceof String) {
-				str += key;
+			if (entry.getKey() instanceof String) {
+				str += entry.getKey();
 			}
 			if (!str.isEmpty()) {
 				g.dup();
@@ -97,8 +97,7 @@ public final class ExpressionToString implements Expression {
 			}
 
 			g.dup();
-			Expression expression = arguments.get(key);
-			Type type = expression.load(ctx);
+			Type type = entry.getValue().load(ctx);
 			if (isPrimitiveType(type)) {
 				g.invokeStatic(wrap(type), new Method("toString", getType(String.class), new Type[]{type}));
 			} else {

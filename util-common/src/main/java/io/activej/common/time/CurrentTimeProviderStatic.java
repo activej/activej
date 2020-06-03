@@ -23,7 +23,7 @@ public final class CurrentTimeProviderStatic implements CurrentTimeProvider {
 	/**
 	 * Creates a new instance of provider
 	 */
-	private final static CurrentTimeProviderStatic INSTANCE = new CurrentTimeProviderStatic();
+	private static final CurrentTimeProviderStatic INSTANCE = new CurrentTimeProviderStatic();
 
 	/**
 	 * @return instance of provider

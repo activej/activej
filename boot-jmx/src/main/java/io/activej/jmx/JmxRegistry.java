@@ -99,9 +99,9 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		} else if (isStandardMBean(instanceClass) || isMXBean(instanceClass) || isDynamicMBean(instanceClass)) {
 			mbean = singletonInstance;
 		} else {
-			logger.trace(format("Instance with key %s was not registered to jmx, " +
+			logger.trace("Instance with key {} was not registered to jmx, " +
 					"because its type or any of its supertypes is not annotated with @JmxBean annotation " +
-					"and does not implement neither *MBean nor *MXBean interface", key.toString()));
+					"and does not implement neither *MBean nor *MXBean interface", key);
 			return;
 		}
 
@@ -109,8 +109,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		try {
 			name = createNameForKey(key);
 		} catch (ReflectiveOperationException e) {
-			String msg = format("Error during generation name for instance with key %s", key.toString());
-			logger.error(msg, e);
+			logger.error("Error during generation name for instance with key {}", key, e);
 			return;
 		}
 
@@ -118,16 +117,13 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		try {
 			objectName = new ObjectName(name);
 		} catch (MalformedObjectNameException e) {
-			String msg = format("Cannot create ObjectName for instance with key %s. " +
-					"Proposed String name was \"%s\".", key.toString(), name);
-			logger.error(msg, e);
+			logger.error("Cannot create ObjectName for instance with key {}. Proposed String name was \"{}\".", key, name, e);
 			return;
 		}
 
 		try {
 			mbs.registerMBean(mbean, objectName);
-			logger.trace(format("Instance with key %s was successfully registered to jmx " +
-					"with ObjectName \"%s\" ", key.toString(), objectName.toString()));
+			logger.trace("Instance with key {} was successfully registered to jmx with ObjectName \"{}\" ", key, objectName);
 
 			registeredObjectNames.add(objectName);
 			registeredSingletons++;
@@ -156,20 +152,19 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 	}
 
 	public void registerWorkers(@NotNull WorkerPool pool, Key<?> key, @NotNull List<?> poolInstances, JmxBeanSettings settings) {
-		if (poolInstances.size() == 0) {
-			logger.info(format("Pool of instances with key %s is empty", key.toString()));
+		if (poolInstances.isEmpty()) {
+			logger.info("Pool of instances with key {} is empty", key);
 			return;
 		}
 
 		if (poolInstances.stream().map(Object::getClass).collect(toSet()).size() != 1) {
-			logger.info(format("Pool of instances with key %s was not registered to jmx because their types differ", key.toString()));
+			logger.info("Pool of instances with key {} was not registered to jmx because their types differ", key);
 			return;
 		}
 
 		if (!isJmxBean(poolInstances.get(0).getClass())) {
-			logger.info(format("Pool of instances with key %s was not registered to jmx, " +
-					"because instances' type or any of instances' supertypes is not annotated with @JmxBean annotation",
-					key.toString()));
+			logger.info("Pool of instances with key {} was not registered to jmx, " +
+					"because instances' type or any of instances' supertypes is not annotated with @JmxBean annotation", key);
 			return;
 		}
 
@@ -212,8 +207,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 
 		try {
 			mbs.registerMBean(mbean, objectName);
-			logger.trace(format("Pool of instances with key %s was successfully registered to jmx " +
-					"with ObjectName \"%s\"", key.toString(), objectName.toString()));
+			logger.trace("Pool of instances with key {} was successfully registered to jmx with ObjectName \"{}\"", key, objectName);
 
 			registeredObjectNames.add(objectName);
 			registeredPools++;
@@ -227,7 +221,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 	}
 
 	public void unregisterWorkers(WorkerPool pool, @NotNull Key<?> key, List<?> poolInstances) {
-		if (poolInstances.size() == 0) {
+		if (poolInstances.isEmpty()) {
 			return;
 		}
 

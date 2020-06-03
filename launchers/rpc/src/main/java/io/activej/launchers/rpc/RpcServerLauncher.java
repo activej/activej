@@ -89,7 +89,7 @@ public abstract class RpcServerLauncher extends Launcher {
 					Initializer<RpcServer> rpcServerInitializer() {
 						return server -> server
 								.withMessageTypes(String.class)
-								.withHandler(String.class, String.class,
+								.withHandler(String.class,
 										req -> Promise.of("Request: " + req));
 					}
 				};

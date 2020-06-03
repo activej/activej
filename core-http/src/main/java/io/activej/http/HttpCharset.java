@@ -35,8 +35,8 @@ import static java.nio.charset.Charset.forName;
  * This is a specialized token to be used in {@link CaseInsensitiveTokenMap} for charset header values.
  */
 public final class HttpCharset extends Token {
-	private final static CaseInsensitiveTokenMap<HttpCharset> charsets = new CaseInsensitiveTokenMap<>(256, 2, HttpCharset.class, HttpCharset::new);
-	private final static Map<Charset, HttpCharset> java2http = new HashMap<>();
+	private static final CaseInsensitiveTokenMap<HttpCharset> charsets = new CaseInsensitiveTokenMap<>(256, 2, HttpCharset.class, HttpCharset::new);
+	private static final Map<Charset, HttpCharset> java2http = new HashMap<>();
 
 	public static final HttpCharset UTF_8 = charsets.register("utf-8").addCharset(StandardCharsets.UTF_8);
 	public static final HttpCharset US_ASCII = charsets.register("us-ascii").addCharset(StandardCharsets.US_ASCII);

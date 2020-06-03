@@ -10,9 +10,7 @@ import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +30,6 @@ import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings({"Duplicates", "unchecked", "ArraysAsListWithZeroOrOneArgument", "rawtypes"})
 public class AggregationGroupReducerTest {
-
-	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

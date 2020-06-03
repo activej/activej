@@ -73,7 +73,7 @@ public class Aggregation implements IAggregation, Initializable<Aggregation>, Ev
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;
-	public static final int DEFAULT_REDUCER_BUFFER_SIZE = StreamReducer.DEFAULT_BUFFER_SIZE;
+	public static final int DEFAULT_REDUCER_BUFFER_SIZE = AbstractStreamReducer.DEFAULT_BUFFER_SIZE;
 	public static final int DEFAULT_SORTER_ITEMS_IN_MEMORY = 1_000_000;
 	public static final Duration DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD = Duration.ofMinutes(10);
 	public static final int DEFAULT_MAX_CHUNKS_TO_CONSOLIDATE = 1000;
@@ -544,7 +544,7 @@ public class Aggregation implements IAggregation, Initializable<Aggregation>, Ev
 		try {
 			Files.delete(sortDir);
 		} catch (IOException e) {
-			logger.warn("Could not delete temporal directory {} : {}", temporarySortDir, e.toString());
+			logger.warn("Could not delete temporal directory {} : {}", temporarySortDir, e);
 		}
 	}
 

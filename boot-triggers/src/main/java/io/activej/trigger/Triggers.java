@@ -98,11 +98,11 @@ public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers
 		return withTrigger(Trigger.of(severity, component, name, triggerFunction));
 	}
 
-	synchronized public void addTrigger(Trigger trigger) {
+	public synchronized void addTrigger(Trigger trigger) {
 		withTrigger(trigger);
 	}
 
-	synchronized public void addTrigger(Severity severity, String component, String name, Supplier<TriggerResult> triggerFunction) {
+	public synchronized void addTrigger(Severity severity, String component, String name, Supplier<TriggerResult> triggerFunction) {
 		withTrigger(severity, component, name, triggerFunction);
 	}
 
@@ -127,21 +127,20 @@ public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers
 				cachedResults.remove(trigger);
 				suppressedResults.remove(trigger);
 			}
-			for (Trigger trigger : newResults.keySet()) {
-				TriggerResult newResult = newResults.get(trigger);
+			for (Map.Entry<Trigger, TriggerResult> entry : newResults.entrySet()) {
+				TriggerResult newResult = entry.getValue();
 				if (!newResult.hasTimestamp()) {
-					TriggerResult oldResult = cachedResults.get(trigger);
+					TriggerResult oldResult = cachedResults.get(entry.getKey());
 					newResult = TriggerResult.create(
 							oldResult == null ? currentTime : oldResult.getTimestamp(),
 							newResult.getThrowable(),
 							newResult.getValue());
 				}
-				cachedResults.put(trigger, newResult.withCount(0));
+				cachedResults.put(entry.getKey(), newResult.withCount(0));
 			}
-			for (Trigger trigger : newResults.keySet()) {
-				TriggerResult oldResult = cachedResults.get(trigger);
-				TriggerResult newResult = newResults.get(trigger);
-				cachedResults.put(trigger, oldResult.withCount(oldResult.getCount() + newResult.getCount()));
+			for (Map.Entry<Trigger, TriggerResult> entry : newResults.entrySet()) {
+				TriggerResult oldResult = cachedResults.get(entry.getKey());
+				cachedResults.put(entry.getKey(), oldResult.withCount(oldResult.getCount() + entry.getValue().getCount()));
 			}
 			maxSeverityResults = new HashMap<>(cachedResults.size());
 			for (Map.Entry<Trigger, TriggerResult> entry : cachedResults.entrySet()) {
@@ -188,32 +187,32 @@ public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers
 	}
 
 	@JmxAttribute
-	synchronized public List<TriggerWithResult> getResultsDebug() {
+	public synchronized List<TriggerWithResult> getResultsDebug() {
 		return getResultsBySeverity(Severity.DEBUG);
 	}
 
 	@JmxAttribute
-	synchronized public List<TriggerWithResult> getResultsInformation() {
+	public synchronized List<TriggerWithResult> getResultsInformation() {
 		return getResultsBySeverity(Severity.INFORMATION);
 	}
 
 	@JmxAttribute
-	synchronized public List<TriggerWithResult> getResultsWarning() {
+	public synchronized List<TriggerWithResult> getResultsWarning() {
 		return getResultsBySeverity(Severity.WARNING);
 	}
 
 	@JmxAttribute
-	synchronized public List<TriggerWithResult> getResultsAverage() {
+	public synchronized List<TriggerWithResult> getResultsAverage() {
 		return getResultsBySeverity(Severity.AVERAGE);
 	}
 
 	@JmxAttribute
-	synchronized public List<TriggerWithResult> getResultsHigh() {
+	public synchronized List<TriggerWithResult> getResultsHigh() {
 		return getResultsBySeverity(Severity.HIGH);
 	}
 
 	@JmxAttribute
-	synchronized public List<TriggerWithResult> getResultsDisaster() {
+	public synchronized List<TriggerWithResult> getResultsDisaster() {
 		return getResultsBySeverity(Severity.DISASTER);
 	}
 
@@ -232,7 +231,7 @@ public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers
 	}
 
 	@JmxAttribute
-	synchronized public List<TriggerWithResult> getResults() {
+	public synchronized List<TriggerWithResult> getResults() {
 		refresh();
 		return maxSeverityResults.values().stream()
 				.filter(isNotSuppressed)
@@ -247,7 +246,7 @@ public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers
 	}
 
 	@JmxAttribute
-	synchronized public String getMultilineSuppressedResults() {
+	public synchronized String getMultilineSuppressedResults() {
 		return formatListAsMultilineString(new ArrayList<>(suppressedResults.keySet()));
 	}
 
@@ -309,7 +308,7 @@ public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers
 	}
 
 	@JmxAttribute
-	synchronized public List<String> getTriggers() {
+	public synchronized List<String> getTriggers() {
 		return triggers.stream()
 				.sorted(comparing(Trigger::getSeverity).reversed().thenComparing(Trigger::getComponent).thenComparing(Trigger::getName))
 				.map(t -> t.getSeverity() + " : " + t.getComponent() + " : " + t.getName())
@@ -318,7 +317,7 @@ public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers
 	}
 
 	@JmxAttribute
-	synchronized public List<String> getTriggerNames() {
+	public synchronized List<String> getTriggerNames() {
 		return triggers.stream()
 				.sorted(comparing(Trigger::getComponent).thenComparing(Trigger::getName))
 				.map(t -> t.getComponent() + " : " + t.getName())
@@ -327,7 +326,7 @@ public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers
 	}
 
 	@JmxAttribute
-	synchronized public String getTriggerComponents() {
+	public synchronized String getTriggerComponents() {
 		return triggers.stream()
 				.sorted(comparing(Trigger::getComponent))
 				.map(Trigger::getComponent)

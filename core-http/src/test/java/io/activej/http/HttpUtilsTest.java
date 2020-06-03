@@ -64,7 +64,7 @@ public class HttpUtilsTest {
 			trimAndDecodePositiveInt(bytesRepr, 0, string.length());
 			fail();
 		} catch (ParseException e) {
-			assertEquals(e.getMessage(), "Bigger than max int value: 92233720368547758081242123");
+			assertEquals("Bigger than max int value: 92233720368547758081242123", e.getMessage());
 		}
 	}
 

@@ -75,8 +75,8 @@ public final class RecordScheme {
 	}
 
 	public void addFields(Map<String, Class<?>> types) {
-		for (String field : types.keySet()) {
-			withField(field, types.get(field));
+		for (Map.Entry<String, Class<?>> entry : types.entrySet()) {
+			addField(entry.getKey(), entry.getValue());
 		}
 	}
 
