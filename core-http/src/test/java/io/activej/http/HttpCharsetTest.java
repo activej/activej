@@ -12,6 +12,7 @@ import java.util.List;
 import static io.activej.bytebuf.ByteBufStrings.asAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static java.nio.charset.Charset.forName;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -29,7 +30,7 @@ public class HttpCharsetTest {
 	@Test
 	public void testParser() {
 		HttpCharset expected = HttpCharset.US_ASCII;
-		byte[] asciis = "us-ascii".getBytes(forName("ASCII"));
+		byte[] asciis = "us-ascii".getBytes(US_ASCII);
 		HttpCharset actual = HttpCharset.parse(asciis, 0, asciis.length);
 		assertSame(expected, actual);
 	}

@@ -132,7 +132,7 @@ public final class ConfigModule extends AbstractModule implements Initializable<
 				return binding;
 			}
 			Key<CompletionStage<Void>> completionStageKey = new Key<CompletionStage<Void>>(OnStart.class) {};
-			return ((Binding<Config>) (Binding) binding)
+			return ((Binding<Config>) (Binding<?>) binding)
 					.addDependencies(completionStageKey)
 					.mapInstance(singletonList(completionStageKey), (args, config) -> {
 						CompletionStage<Void> onStart = (CompletionStage<Void>) args[0];

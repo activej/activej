@@ -50,7 +50,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	private final Eventloop eventloop;
 	private final CrdtFunction<S> function;
 
-	private CrdtFilter<S> filter = $ -> true;
+	private final CrdtFilter<S> filter = $ -> true;
 
 	private final SortedMap<K, CrdtData<K, S>> storage = new ConcurrentSkipListMap<>();
 

@@ -12,9 +12,9 @@ public interface PollDao {
 	void remove(int id);
 
 	class Poll {
-		private String title;
-		private String message;
-		private Map<String, Integer> optionsToVote;
+		private final String title;
+		private final String message;
+		private final Map<String, Integer> optionsToVote;
 
 		public Poll(String title, String message, List<String> options) {
 			this.title = title;

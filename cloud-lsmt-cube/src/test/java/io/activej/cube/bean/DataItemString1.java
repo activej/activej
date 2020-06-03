@@ -43,7 +43,7 @@ public class DataItemString1 {
 		if (key2 != that.key2) return false;
 		if (metric1 != that.metric1) return false;
 		if (metric2 != that.metric2) return false;
-		return !(!Objects.equals(key1, that.key1));
+		return Objects.equals(key1, that.key1);
 
 	}
 

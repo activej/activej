@@ -3,7 +3,6 @@ package io.activej.specializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.function.IntUnaryOperator;
 
 public class SpecializerTest {
@@ -84,7 +83,7 @@ public class SpecializerTest {
 	}
 
 	@Test
-	public void name() throws IOException {
+	public void name() {
 		TestClass1 specializableClass = new TestClass1(new TestClass2(), new TestClass1(null, null));
 		Specializer specializer = Specializer.create();
 //				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath());

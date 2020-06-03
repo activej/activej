@@ -38,24 +38,24 @@ public final class HttpApiTest {
 	private AsyncHttpClient client;
 
 	// request
-	private List<AcceptMediaType> requestAcceptContentTypes = new ArrayList<>();
-	private List<AcceptCharset> requestAcceptCharsets = new ArrayList<>();
-	private Instant requestDate = createDate(1999, 1, 1);
-	private Instant dateIMS = createDate(2011, 3, 4);
-	private Instant dateIUMS = createDate(2012, 5, 6);
-	private MediaType requestMime = MediaTypes.ANY_TEXT;
-	private ContentType requestContentType = ContentType.of(requestMime);
-	private List<HttpCookie> requestCookies = new ArrayList<>();
+	private final List<AcceptMediaType> requestAcceptContentTypes = new ArrayList<>();
+	private final List<AcceptCharset> requestAcceptCharsets = new ArrayList<>();
+	private final Instant requestDate = createDate(1999, 1, 1);
+	private final Instant dateIMS = createDate(2011, 3, 4);
+	private final Instant dateIUMS = createDate(2012, 5, 6);
+	private final MediaType requestMime = MediaTypes.ANY_TEXT;
+	private final ContentType requestContentType = ContentType.of(requestMime);
+	private final List<HttpCookie> requestCookies = new ArrayList<>();
 
 	// response
-	private Instant responseDate = createDate(2000, 11, 17);
-	private Instant expiresDate = createDate(2011, 2, 22);
-	private Instant lastModified = createDate(2099, 11, 13);
-	private MediaType responseMime = MediaType.of("font/woff2");
-	private Charset responseCharset = StandardCharsets.UTF_16LE;
-	private ContentType responseContentType = ContentType.of(responseMime, responseCharset);
-	private List<HttpCookie> responseCookies = new ArrayList<>();
-	private int age = 10_000;
+	private final Instant responseDate = createDate(2000, 11, 17);
+	private final Instant expiresDate = createDate(2011, 2, 22);
+	private final Instant lastModified = createDate(2099, 11, 13);
+	private final MediaType responseMime = MediaType.of("font/woff2");
+	private final Charset responseCharset = StandardCharsets.UTF_16LE;
+	private final ContentType responseContentType = ContentType.of(responseMime, responseCharset);
+	private final List<HttpCookie> responseCookies = new ArrayList<>();
+	private final int age = 10_000;
 
 	@Before
 	public void setUp() {
@@ -74,7 +74,7 @@ public final class HttpApiTest {
 		requestAcceptContentTypes.add(AcceptMediaType.of(MediaTypes.ATOM));
 		requestAcceptContentTypes.add(AcceptMediaType.of(MediaType.of("hello/world")));
 
-		requestAcceptCharsets.add(AcceptCharset.of(Charset.forName("UTF-8")));
+		requestAcceptCharsets.add(AcceptCharset.of(StandardCharsets.UTF_8));
 		requestAcceptCharsets.add(AcceptCharset.of(Charset.forName("ISO-8859-5"), 10));
 		requestAcceptCharsets.add(AcceptCharset.of(Charset.forName("ISO-8859-2"), 10));
 		requestAcceptCharsets.add(AcceptCharset.of(Charset.forName("ISO-8859-3"), 10));

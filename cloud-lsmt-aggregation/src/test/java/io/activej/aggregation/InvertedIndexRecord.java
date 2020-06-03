@@ -9,8 +9,8 @@ import java.util.Objects;
  * First we define the structure of the input record which represents the word and id of the document that contains this word.
  */
 public class InvertedIndexRecord {
-	private String word;
-	private int documentId;
+	private final String word;
+	private final int documentId;
 
 	@Key("word")
 	public String getWord() {

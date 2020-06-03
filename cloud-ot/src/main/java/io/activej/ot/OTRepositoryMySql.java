@@ -296,7 +296,6 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 						Map<Long, DiffsWithLevel<D>> parentDiffs = new HashMap<>();
 
 						int epoch = 0;
-						long level = 0L;
 						long timestamp = 0;
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
@@ -315,7 +314,7 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 
 							while (resultSet.next()) {
 								epoch = resultSet.getInt(1);
-								level = resultSet.getLong(2);
+								long level = resultSet.getLong(2);
 								timestamp = resultSet.getLong(3) * 1000L;
 								long parentId = resultSet.getLong(4);
 								String diffString = resultSet.getString(5);

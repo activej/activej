@@ -24,9 +24,10 @@ public class DynamicMBeanRegistrationTest {
 
 	@Rule
 	public JUnitRuleMockery context = new JUnitRuleMockery();
-	private MBeanServer mBeanServer = context.mock(MBeanServer.class);
-	private DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();
-	private JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, mbeanFactory);
+
+	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
+	private final DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();
+	private final JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, mbeanFactory);
 	private final String domain = CustomKeyClass.class.getPackage().getName();
 
 	@Test
@@ -53,7 +54,7 @@ public class DynamicMBeanRegistrationTest {
 	}
 
 	@Test
-	public void itShouldThrowExceptionForNonPublicMBeans() throws Exception {
+	public void itShouldThrowExceptionForNonPublicMBeans() {
 		NonPublicMBean instance = new NonPublicMBean();
 
 		try {

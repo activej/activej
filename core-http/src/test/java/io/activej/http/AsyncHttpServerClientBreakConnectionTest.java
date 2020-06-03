@@ -26,9 +26,9 @@ public class AsyncHttpServerClientBreakConnectionTest {
 	@ClassRule
 	public static final ByteBufRule bufRule = new ByteBufRule();
 
+	private final Eventloop eventloop = Eventloop.getCurrentEventloop();
 	private AsyncHttpServer server;
 	private AsyncHttpClient client;
-	private Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 	@Before
 	public void init() throws IOException {

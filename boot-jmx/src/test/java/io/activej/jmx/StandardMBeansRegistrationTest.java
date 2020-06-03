@@ -15,8 +15,9 @@ public class StandardMBeansRegistrationTest {
 
 	@Rule
 	public JUnitRuleMockery context = new JUnitRuleMockery();
-	private MBeanServer mBeanServer = context.mock(MBeanServer.class);
-	private JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, DynamicMBeanFactory.create());
+
+	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
+	private final JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, DynamicMBeanFactory.create());
 	private final String domain = ServiceStub.class.getPackage().getName();
 
 	@Test
@@ -35,10 +36,10 @@ public class StandardMBeansRegistrationTest {
 	public void itShouldNotRegisterClassesThatAreNotMBeans() {
 		NonMBeanServiceImpl nonMBean = new NonMBeanServiceImpl();
 
-		context.checking(new Expectations() {{
+		context.checking(new Expectations() {
 			// we do not expect any calls
 			// any call of mBeanServer will produce error
-		}});
+		});
 
 		Key<?> key = Key.of(NonMBeanServiceImpl.class);
 		jmxRegistry.registerSingleton(key, nonMBean, defaultSettings());

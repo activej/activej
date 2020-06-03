@@ -60,7 +60,7 @@ public class InvertedIndexTest {
 			InvertedIndexQueryResult that = (InvertedIndexQueryResult) o;
 
 			if (!Objects.equals(word, that.word)) return false;
-			return !(!Objects.equals(documents, that.documents));
+			return Objects.equals(documents, that.documents);
 
 		}
 

@@ -10,8 +10,8 @@ import java.util.Random;
 
 /**
  * Represents a log item (or fact).
- *
- * @Serialize annotation is used to mark fields that are to be serialized.
+ * <p>
+ * {@link Serialize} annotation is used to mark fields that are to be serialized.
  * Such fields must also be declared 'public' for serializer to work.
  */
 public class LogItem {

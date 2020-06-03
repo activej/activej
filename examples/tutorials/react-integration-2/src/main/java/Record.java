@@ -3,7 +3,7 @@ import java.util.List;
 //[START EXAMPLE]
 public final class Record {
 	private String title;
-	private List<Plan> plans;
+	private final List<Plan> plans;
 
 	public Record(String title, List<Plan> plans) {
 		this.title = title;

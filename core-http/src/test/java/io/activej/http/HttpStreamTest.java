@@ -45,7 +45,7 @@ public final class HttpStreamTest {
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
-	private String requestBody = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.\n" +
+	private final String requestBody = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.\n" +
 			"Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.\n" +
 			"Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.\n" +
 			"Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu.\n" +

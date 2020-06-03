@@ -33,20 +33,20 @@ import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
 
 class StressClient {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private InetSocketAddress address = new InetSocketAddress("localhost", 5560);
-	private Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
-	private ExecutorService executor = Executors.newCachedThreadPool();
+	private final InetSocketAddress address = new InetSocketAddress("localhost", 5560);
+	private final Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+	private final ExecutorService executor = Executors.newCachedThreadPool();
 
-	private RemoteFsClient client = RemoteFsClient.create(eventloop, address);
+	private final RemoteFsClient client = RemoteFsClient.create(eventloop, address);
 
-	private static Random rand = new Random();
+	private static final Random rand = new Random();
 
 	private static final Path clientStorage = Paths.get("./test_data/clients_storage");
 
 	private static Path downloads;
 
-	private List<String> existingClientFiles = new ArrayList<>();
-	private List<Operation> operations = new ArrayList<>();
+	private final List<String> existingClientFiles = new ArrayList<>();
+	private final List<Operation> operations = new ArrayList<>();
 
 	public void setup() throws IOException {
 		downloads = clientStorage.resolve("downloads");

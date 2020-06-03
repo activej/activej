@@ -288,7 +288,7 @@ public class OTStateManagerTest {
 		assertEquals(131, testOpState.getValue());
 	}
 
-	class OTUplinkDecorator implements OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
+	static class OTUplinkDecorator implements OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
 		private final OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
 
 		OTUplinkDecorator(OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node) {

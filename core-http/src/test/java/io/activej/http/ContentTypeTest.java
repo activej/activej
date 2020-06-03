@@ -4,14 +4,13 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.parse.ParseException;
 import org.junit.Test;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpUtils.parseQ;
 import static io.activej.http.MediaTypes.*;
-import static java.nio.charset.Charset.forName;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -29,7 +28,7 @@ public class ContentTypeTest {
 		byte[] contentType = encodeAscii("text/plain;param=value; url-form=www;CHARSET=UTF-8; a=v");
 		ContentType actual = ContentType.parse(contentType, 0, contentType.length);
 		assertSame(MediaTypes.PLAIN_TEXT, actual.getMediaType());
-		assertSame(forName("UTF-8"), actual.getCharset());
+		assertSame(UTF_8, actual.getCharset());
 	}
 
 	@Test
@@ -84,7 +83,7 @@ public class ContentTypeTest {
 	public void testRenderContentType() {
 		String expected = "text/html; charset=utf-8";
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[expected.length()]);
-		ContentType type = ContentType.of(HTML, StandardCharsets.UTF_8);
+		ContentType type = ContentType.of(HTML, UTF_8);
 		ContentType.render(type, buf);
 		String actual = asAscii(buf);
 		assertEquals(expected, actual);

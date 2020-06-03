@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,12 +40,10 @@ public final class StaticServletsTest {
 	public static final TemporaryFolder tmpFolder = new TemporaryFolder();
 
 	private static Path resourcesPath;
-	private static File resourcesFile;
 
 	@BeforeClass
 	public static void setup() throws IOException {
 		resourcesPath = tmpFolder.newFolder("static").toPath();
-		resourcesFile = resourcesPath.toFile();
 
 		Files.write(resourcesPath.resolve("index.html"), encodeAscii(EXPECTED_CONTENT));
 	}

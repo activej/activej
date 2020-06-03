@@ -645,8 +645,8 @@ public final class TestDI {
 	public void injectConstructor() {
 
 		class Injectable {
-			String string;
-			Integer integer;
+			final String string;
+			final Integer integer;
 
 			@Inject
 			Injectable(String string, @Optional @Nullable Integer integer) {

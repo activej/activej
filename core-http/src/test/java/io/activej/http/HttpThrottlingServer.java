@@ -18,7 +18,7 @@ public class HttpThrottlingServer {
 	public static final int SERVER_PORT = getFreePort();
 
 	static class ServerOptions {
-		private int loadBusinessLogic;
+		private final int loadBusinessLogic;
 
 		public ServerOptions(int loadBusinessLogic) {
 			checkArgument(loadBusinessLogic >= 0, "Load business logic should be a non-negative value");

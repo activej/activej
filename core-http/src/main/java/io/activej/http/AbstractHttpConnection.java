@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.async.callback.Callback;
-import io.activej.async.function.AsyncConsumer;
 import io.activej.async.process.AsyncProcess;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -56,8 +55,6 @@ public abstract class AbstractHttpConnection {
 	public static final ParseException INCOMPLETE_MESSAGE = new ParseException(AbstractHttpConnection.class, "Incomplete HTTP message");
 	public static final ParseException UNEXPECTED_READ = new ParseException(AbstractHttpConnection.class, "Unexpected read data");
 	public static final ParseException INVALID_CRLF = new ParseException(AbstractHttpConnection.class, "Invalid CRLF");
-
-	public static final ChannelConsumer<ByteBuf> BUF_RECYCLER = ChannelConsumer.of(AsyncConsumer.of(ByteBuf::recycle));
 
 	public static final MemSize MAX_HEADER_LINE_SIZE = MemSize.of(ApplicationSettings.getInt(HttpMessage.class, "maxHeaderLineSize", MemSize.kilobytes(8).toInt())); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values
 	public static final int MAX_HEADER_LINE_SIZE_BYTES = MAX_HEADER_LINE_SIZE.toInt(); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values

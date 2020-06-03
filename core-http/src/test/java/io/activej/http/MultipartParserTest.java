@@ -52,6 +52,7 @@ public final class MultipartParserTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
+	@SuppressWarnings("ConstantConditions")
 	@Test
 	public void test() {
 		List<ByteBuf> split = new ArrayList<>();

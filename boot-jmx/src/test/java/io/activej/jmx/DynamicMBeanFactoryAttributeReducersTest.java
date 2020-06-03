@@ -105,14 +105,14 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 		@Override
 		public PojoStub reduce(List<? extends PojoStub> list) {
 			int totalCount = 0;
-			String totalName = "";
+			StringBuilder totalName = new StringBuilder();
 
 			for (PojoStub pojoStub : list) {
 				totalCount += pojoStub.getCount();
-				totalName += pojoStub.getName();
+				totalName.append(pojoStub.getName());
 			}
 
-			return new PojoStub(totalCount, totalName);
+			return new PojoStub(totalCount, totalName.toString());
 		}
 	}
 	// endregion

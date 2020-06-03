@@ -42,7 +42,7 @@ public final class DnsTransaction {
 
 	@Override
 	public String toString() {
-		return "DnsTransaction{id=" + Integer.toHexString(id & 0xffff) + ", query='" + query + "\'}";
+		return "DnsTransaction{id=" + Integer.toHexString(id & 0xffff) + ", query='" + query + "'}";
 	}
 
 	@Override

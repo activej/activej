@@ -67,6 +67,7 @@ public final class AsyncCollector<R> implements AsyncCloseable {
 		return run();
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> Promise<T> addPromise(@NotNull Promise<T> promise, @NotNull Accumulator<R, T> accumulator) {
 		if (resultPromise.isException()) return (Promise<T>) resultPromise;
 		checkState(!resultPromise.isComplete());

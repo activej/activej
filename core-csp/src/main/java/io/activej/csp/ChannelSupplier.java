@@ -486,11 +486,10 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 							if (e == null) {
 								if (item != null) return Promise.of(item);
 								endOfStream.trySet(null);
-								return (Promise<T>) newEndOfStream;
 							} else {
 								endOfStream.trySetException(e);
-								return (Promise<T>) newEndOfStream;
 							}
+							return (Promise<T>) newEndOfStream;
 						});
 			}
 

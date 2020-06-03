@@ -40,7 +40,7 @@ public class JmxMessagesRpcServerTest {
 	}
 
 	@Test
-	public void testWithoutProtocolError() throws IOException {
+	public void testWithoutProtocolError() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE, true)
@@ -54,30 +54,28 @@ public class JmxMessagesRpcServerTest {
 	}
 
 	@Test
-	public void testWithProtocolError() throws IOException {
+	public void testWithProtocolError() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
-		await(client.start().whenResult(() -> {
-			client.sendRequest("msg", 10000)
-					.whenComplete(() -> {
-						assertTrue(server.getLastProtocolError().getTotal() > 0);
-						client.stop();
-					});
-		}));
+		await(client.start()
+				.whenResult(() -> client.sendRequest("msg", 10000)
+						.whenComplete(() -> {
+							assertTrue(server.getLastProtocolError().getTotal() > 0);
+							client.stop();
+						})));
 	}
 
 	@Test
-	public void testWithProtocolError2() throws IOException {
+	public void testWithProtocolError2() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
-		await(client.start().whenResult(() -> {
-			client.sendRequest("Message larger than LZ4 header", 1000)
-					.whenComplete(() -> {
-						assertTrue(server.getLastProtocolError().getTotal() > 0);
-						client.stop();
-					});
-		}));
+		await(client.start()
+				.whenResult(() -> client.sendRequest("Message larger than LZ4 header", 1000)
+						.whenComplete(() -> {
+							assertTrue(server.getLastProtocolError().getTotal() > 0);
+							client.stop();
+						})));
 	}
 }

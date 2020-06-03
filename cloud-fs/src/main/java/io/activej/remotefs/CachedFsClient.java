@@ -272,7 +272,7 @@ public final class CachedFsClient implements FsClient, EventloopService {
 					cacheStat.lastHitTimestamp = timeProvider.currentTimeMillis();
 					return cacheStat;
 				}))
-				.whenResult(() -> cacheStats.computeIfAbsent(fileName, s -> new CacheStat(1, timeProvider.currentTimeMillis())))
+				.whenResult(() -> cacheStats.computeIfAbsent(fileName, s -> new CacheStat(timeProvider.currentTimeMillis())))
 				.toVoid();
 	}
 
@@ -307,11 +307,10 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	}
 
 	private static final class CacheStat {
-		private long numberOfHits;
+		private long numberOfHits = 1;
 		private long lastHitTimestamp;
 
-		private CacheStat(long numberOfHits, long lastHitTimestamp) {
-			this.numberOfHits = numberOfHits;
+		private CacheStat(long lastHitTimestamp) {
 			this.lastHitTimestamp = lastHitTimestamp;
 		}
 

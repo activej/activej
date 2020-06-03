@@ -35,8 +35,8 @@ public class StreamConsumerSwitcherTest {
 		StreamConsumerSwitcher<Integer> switcher = StreamConsumerSwitcher.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
-			RefInt refInt = new RefInt(0);
-			Iterator<StreamConsumerToList<Integer>> iterator = consumers.iterator();
+			final RefInt refInt = new RefInt(0);
+			final Iterator<StreamConsumerToList<Integer>> iterator = consumers.iterator();
 
 			@Override
 			protected void onStarted() {
@@ -81,7 +81,7 @@ public class StreamConsumerSwitcherTest {
 		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
-			RefInt refInt = new RefInt(0);
+			final RefInt refInt = new RefInt(0);
 
 			@Override
 			protected void onStarted() {
@@ -186,8 +186,8 @@ public class StreamConsumerSwitcherTest {
 		StreamConsumerSwitcher<Integer> switcher = StreamConsumerSwitcher.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
-			RefInt refInt = new RefInt(0);
-			Iterator<StreamConsumer<Integer>> iterator = consumers.iterator();
+			final RefInt refInt = new RefInt(0);
+			final Iterator<StreamConsumer<Integer>> iterator = consumers.iterator();
 
 			@Override
 			protected void onStarted() {

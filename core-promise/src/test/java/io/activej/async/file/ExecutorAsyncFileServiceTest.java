@@ -29,7 +29,7 @@ public final class ExecutorAsyncFileServiceTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private ExecutorAsyncFileService service = new ExecutorAsyncFileService(Executors.newCachedThreadPool());
+	private final ExecutorAsyncFileService service = new ExecutorAsyncFileService(Executors.newCachedThreadPool());
 
 	static {
 		System.setProperty("AsyncFileService.aio", "false");

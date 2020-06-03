@@ -73,7 +73,7 @@ public final class StringFormatUtils {
 		}
 	}
 
-	private static final Pattern MEM_SIZE_PATTERN = Pattern.compile("(?<size>\\d+)([\\.](?<floating>\\d+))?\\s*(?<unit>(|g|m|k|t)b?)?(\\s+|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern MEM_SIZE_PATTERN = Pattern.compile("(?<size>\\d+)([.](?<floating>\\d+))?\\s*(?<unit>(|g|m|k|t)b?)?(\\s+|$)", Pattern.CASE_INSENSITIVE);
 
 	public static MemSize parseMemSize(String string) {
 		Set<String> units = new HashSet<>();
@@ -175,7 +175,7 @@ public final class StringFormatUtils {
 		return result.trim();
 	}
 
-	private final static Pattern DURATION_PATTERN = Pattern.compile("(?<time>-?\\d+)([\\.](?<floating>\\d+))?\\s+(?<unit>days?|hours?|minutes?|seconds?|millis?|nanos?)(\\s+|$)");
+	private final static Pattern DURATION_PATTERN = Pattern.compile("(?<time>-?\\d+)([.](?<floating>\\d+))?\\s+(?<unit>days?|hours?|minutes?|seconds?|millis?|nanos?)(\\s+|$)");
 	private final static int NANOS_IN_MILLI = 1000000;
 	private final static int MILLIS_IN_SECOND = 1000;
 	private final static int SECONDS_PER_MINUTE = 60;
@@ -279,7 +279,7 @@ public final class StringFormatUtils {
 		return result.trim();
 	}
 
-	private final static Pattern PERIOD_PATTERN = Pattern.compile("(?<str>((?<time>-?\\d+)([\\.](?<floating>\\d+))?\\s+(?<unit>years?|months?|days?))(\\s+|$))");
+	private final static Pattern PERIOD_PATTERN = Pattern.compile("(?<str>((?<time>-?\\d+)([.](?<floating>\\d+))?\\s+(?<unit>years?|months?|days?))(\\s+|$))");
 
 	/**
 	 * Parses value to Period.

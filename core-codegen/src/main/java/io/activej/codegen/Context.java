@@ -354,7 +354,7 @@ public final class Context {
 
 		for (Method method : methodSet) {
 			if (!name.equals(method.getName())) continue;
-			Class[] methodArguments = Stream.of(method.getArgumentTypes()).map(this::toJavaType).toArray(Class[]::new);
+			Class<?>[] methodArguments = Stream.of(method.getArgumentTypes()).map(this::toJavaType).toArray(Class[]::new);
 			if (!isAssignable(methodArguments, arguments)) {
 				continue;
 			}

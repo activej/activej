@@ -159,11 +159,11 @@ public class RpcStrategiesTest {
 		}
 
 		double acceptableError = iterationsPerLoop / 10.0;
-		assertEquals(iterationsPerLoop / 3 + iterationsPerLoop / 2, connection1.getRequests(), acceptableError);
+		assertEquals(iterationsPerLoop / 3.0 + iterationsPerLoop / 2.0, connection1.getRequests(), acceptableError);
 		assertEquals(0, connection2.getRequests());
-		assertEquals(iterationsPerLoop / 3, connection3.getRequests(), acceptableError);
+		assertEquals(iterationsPerLoop / 3.0, connection3.getRequests(), acceptableError);
 		assertEquals(0, connection4.getRequests());
-		assertEquals(iterationsPerLoop / 3 + iterationsPerLoop / 2, connection5.getRequests(), acceptableError);
+		assertEquals(iterationsPerLoop / 3.0 + iterationsPerLoop / 2.0, connection5.getRequests(), acceptableError);
 	}
 	//[END REGION_5]
 

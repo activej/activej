@@ -42,6 +42,7 @@ import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.Preconditions.checkNotNull;
 import static io.activej.common.Utils.nullToDefault;
 import static io.activej.common.Utils.of;
+import static io.activej.serializer.SerializerDef.StaticEncoders.POS;
 import static io.activej.serializer.Utils.findAnnotation;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
@@ -890,22 +891,19 @@ public final class SerializerBuilder {
 	}
 
 	private static SerializerDef.StaticEncoders staticEncoders(ClassBuilder<?> classBuilder) {
-		return new SerializerDef.StaticEncoders() {
-			@Override
-			public Expression define(Class<?> valueClazz, Expression buf, Variable pos, Expression value, Expression method) {
-				String methodName;
-				for (int i = 1; ; i++) {
-					methodName = "encode_" +
-							valueClazz.getSimpleName().replace('[', 's').replace(']', '_') +
-							(i == 1 ? "" : "_" + i);
-					String _methodName = methodName;
-					if (classBuilder.getStaticMethods().keySet().stream().noneMatch(m -> m.getName().equals(_methodName)))
-						break;
-				}
-				classBuilder.withStaticMethod(methodName, int.class, asList(byte[].class, int.class, valueClazz),
-						sequence(method, POS));
-				return set(pos, staticCallSelf(methodName, buf, pos, cast(value, valueClazz)));
+		return (valueClazz, buf, pos, value, method) -> {
+			String methodName;
+			for (int i = 1; ; i++) {
+				methodName = "encode_" +
+						valueClazz.getSimpleName().replace('[', 's').replace(']', '_') +
+						(i == 1 ? "" : "_" + i);
+				String _methodName = methodName;
+				if (classBuilder.getStaticMethods().keySet().stream().noneMatch(m -> m.getName().equals(_methodName)))
+					break;
 			}
+			classBuilder.withStaticMethod(methodName, int.class, asList(byte[].class, int.class, valueClazz),
+					sequence(method, POS));
+			return set(pos, staticCallSelf(methodName, buf, pos, cast(value, valueClazz)));
 		};
 	}
 

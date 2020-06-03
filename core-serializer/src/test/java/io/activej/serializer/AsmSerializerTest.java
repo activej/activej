@@ -405,7 +405,7 @@ public class AsmSerializerTest {
 		Integer getIBoxed();
 	}
 
-	public class TestDataInterfaceImpl implements TestDataInterface {
+	public static class TestDataInterfaceImpl implements TestDataInterface {
 		private int i;
 		private Integer iBoxed;
 
@@ -1553,7 +1553,7 @@ public class AsmSerializerTest {
 			TestObj testObj = (TestObj) o;
 
 			if (!Objects.equals(string, testObj.string)) return false;
-			return !(!Objects.equals(integer, testObj.integer));
+			return Objects.equals(integer, testObj.integer);
 
 		}
 

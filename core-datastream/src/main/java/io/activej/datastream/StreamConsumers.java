@@ -190,7 +190,7 @@ final class StreamConsumers {
 
 	static final class ToCollector<T, A, R> extends AbstractStreamConsumer<T> {
 		private final SettablePromise<R> resultPromise = new SettablePromise<>();
-		private Collector<T, A, R> collector;
+		private final Collector<T, A, R> collector;
 		private A accumulator;
 
 		public ToCollector(Collector<T, A, R> collector) {

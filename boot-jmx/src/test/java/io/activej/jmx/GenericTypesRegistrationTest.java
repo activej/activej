@@ -17,13 +17,14 @@ public class GenericTypesRegistrationTest {
 
 	@Rule
 	public JUnitRuleMockery context = new JUnitRuleMockery();
-	private MBeanServer mBeanServer = context.mock(MBeanServer.class);
-	private JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, DynamicMBeanFactory.create());
+
+	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
+	private final JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, DynamicMBeanFactory.create());
 	private final String domain = ServiceStubOne.class.getPackage().getName();
 
 	@Test
 	public void itShouldFormProperNameForTypeWithSingleGenericParameter() throws Exception {
-		ServiceStubOne<?> service = new ServiceStubOne();
+		ServiceStubOne<?> service = new ServiceStubOne<>();
 
 		context.checking(new Expectations() {{
 			oneOf(mBeanServer).registerMBean(with(service),

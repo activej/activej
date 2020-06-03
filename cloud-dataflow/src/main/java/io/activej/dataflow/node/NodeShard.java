@@ -44,7 +44,7 @@ public final class NodeShard<K, T> implements Node {
 
 	private StreamId input;
 	private List<StreamId> outputs;
-	private int nonce;
+	private final int nonce;
 
 	public NodeShard(Function<T, K> keyFunction, StreamId input, int nonce) {
 		this.keyFunction = keyFunction;

@@ -41,7 +41,7 @@ final class ExpressionConstant implements Expression {
 		this.type = null;
 	}
 
-	ExpressionConstant(Object value, Type type) {
+	ExpressionConstant(Object value, @Nullable Type type) {
 		this.value = checkNotNull(value);
 		this.type = type;
 	}
@@ -51,7 +51,7 @@ final class ExpressionConstant implements Expression {
 		this.type = getType(type);
 	}
 
-	public Object getValue() {
+	public @NotNull Object getValue() {
 		return value;
 	}
 

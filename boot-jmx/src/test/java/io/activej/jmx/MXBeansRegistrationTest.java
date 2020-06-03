@@ -15,9 +15,10 @@ public class MXBeansRegistrationTest {
 
 	@Rule
 	public JUnitRuleMockery context = new JUnitRuleMockery();
-	private MBeanServer mBeanServer = context.mock(MBeanServer.class);
-	private DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();
-	private JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, mbeanFactory);
+
+	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
+	private final DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();
+	private final JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, mbeanFactory);
 	private final String domain = ServiceStub.class.getPackage().getName();
 
 	@Test
@@ -68,7 +69,7 @@ public class MXBeansRegistrationTest {
 
 	}
 
-	public class ServiceTransitiveInterface implements TransitiveInterface {
+	public static class ServiceTransitiveInterface implements TransitiveInterface {
 
 		@Override
 		public int getCount() {
@@ -93,11 +94,11 @@ public class MXBeansRegistrationTest {
 		jmxRegistry.registerSingleton(key, service, defaultSettings());
 	}
 
-	public abstract class TransitiveClass implements InterfaceMXBean {
+	public abstract static class TransitiveClass implements InterfaceMXBean {
 
 	}
 
-	public class ServiceTransitiveClass extends TransitiveClass {
+	public static class ServiceTransitiveClass extends TransitiveClass {
 
 		@Override
 		public int getCount() {
@@ -127,7 +128,7 @@ public class MXBeansRegistrationTest {
 		int getCount();
 	}
 
-	public class ServiceWithMXBeanInterfaceAnnotation implements JMXInterfaceWithAnnotation {
+	public static class ServiceWithMXBeanInterfaceAnnotation implements JMXInterfaceWithAnnotation {
 		@Override
 		public int getCount() {
 			return 0;

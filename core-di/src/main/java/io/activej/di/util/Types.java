@@ -382,7 +382,7 @@ public final class Types {
 		}
 
 		private String toString(Type type) {
-			return type instanceof Class ? ((Class) type).getName() : type.toString();
+			return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
 		}
 
 		@Override
@@ -433,7 +433,7 @@ public final class Types {
 
 		@Override
 		public String toString() {
-			return (componentType instanceof Class ? ((Class) componentType).getName() : componentType.toString()) + "[]";
+			return (componentType instanceof Class ? ((Class<?>) componentType).getName() : componentType.toString()) + "[]";
 		}
 	}
 }

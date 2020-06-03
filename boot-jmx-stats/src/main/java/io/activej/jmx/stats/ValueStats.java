@@ -179,7 +179,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 
 	// endregion
 
-	public void setHistogram(JmxHistogram histogram) {
+	public void setHistogram(@Nullable JmxHistogram histogram) {
 		this.histogram = histogram;
 	}
 

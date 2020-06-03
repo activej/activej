@@ -13,6 +13,7 @@ import static io.activej.codegen.ExpressionComparator.leftProperty;
 import static io.activej.codegen.ExpressionComparator.rightProperty;
 import static io.activej.codegen.Expressions.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class ExpressionTest {
@@ -95,7 +96,7 @@ public class ExpressionTest {
 			if (property5 != testPojo2.property5) return false;
 			if (Double.compare(testPojo2.property6, property6) != 0) return false;
 			if (!Objects.equals(property1, testPojo2.property1)) return false;
-			return !(!Objects.equals(property7, testPojo2.property7));
+			return Objects.equals(property7, testPojo2.property7);
 
 		}
 
@@ -456,7 +457,7 @@ public class ExpressionTest {
 				.withMethod("callOther1", call(self(), "method", arg(0)))
 				.withMethod("callOther2", call(self(), "method"))
 				.withMethod("method", int.class, asList(int.class), arg(0))
-				.withMethod("method", long.class, Collections.emptyList(), value(-1L))
+				.withMethod("method", long.class, asList(), value(-1L))
 				.withMethod("callStatic1", int.class, asList(int.class, int.class), staticCallSelf("method", arg(0), arg(1)))
 				.withMethod("callStatic2", long.class, asList(long.class), staticCallSelf("method", arg(0)))
 				.withStaticMethod("method", int.class, asList(int.class, int.class), arg(1))
@@ -673,7 +674,7 @@ public class ExpressionTest {
 		}
 	}
 
-	public class StringHolderComparator implements Comparator<StringHolder> {
+	public static class StringHolderComparator implements Comparator<StringHolder> {
 		public int compare(StringHolder var1, StringHolder var2) {
 			String var1String1 = var1.string1;
 			String var2String1 = var2.string1;
@@ -789,7 +790,7 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testMultipleInterfaces() {
 		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
-		B instance = ClassBuilder.create(definingClassLoader, B.class, Collections.singletonList(C.class))
+		B instance = ClassBuilder.create(definingClassLoader, B.class, singletonList(C.class))
 				.withMethod("b", value(43))
 				.withMethod("c", value("44"))
 				.buildClassAndCreateNewInstance();
@@ -814,7 +815,6 @@ public class ExpressionTest {
 		assertEquals(instance.toString(), "{null}");
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	@org.junit.Test
 	public void testSetSaveBytecode() throws IOException {
 		File folder = tempFolder.newFolder();

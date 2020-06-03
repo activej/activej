@@ -1,6 +1,5 @@
 package io.activej.http;
 
-import io.activej.common.parse.ParseException;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -19,7 +18,7 @@ public final class HttpHeadersTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
-	public void testValuesToStrings() throws ParseException {
+	public void testValuesToStrings() {
 		HttpRequest request = HttpRequest.post("http://example.com")
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withHeader(ACCEPT, ofAcceptMediaTypes(AcceptMediaType.of(ANY_IMAGE, 50), AcceptMediaType.of(MediaTypes.HTML)))

@@ -49,7 +49,6 @@ import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 
 public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends AbstractModule {
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void configure() {
 		Type genericSuperclass = getClass().getGenericSuperclass();

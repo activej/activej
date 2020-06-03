@@ -9,6 +9,7 @@ import org.junit.rules.ExpectedException;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public class DynamicMBeanFactoryAttributeExceptionsTest {
 	@Rule
@@ -49,7 +50,7 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 				"or public no-arg constructor");
 
 		DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(new MBeanWithAbstractClassAsJmxStatsAttributes()), defaultSettings(), false);
+				.createDynamicMBean(singletonList(new MBeanWithAbstractClassAsJmxStatsAttributes()), defaultSettings(), false);
 	}
 
 	@Test
@@ -62,7 +63,7 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 				"or public no-arg constructor");
 
 		DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(new MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor()), defaultSettings(), false);
+				.createDynamicMBean(singletonList(new MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor()), defaultSettings(), false);
 	}
 
 	public static final class ConcurrentJmxBeanWithSingleIntAttr implements ConcurrentJmxBean {

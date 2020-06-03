@@ -4,8 +4,8 @@ import java.util.Random;
 
 //[START EXAMPLE]
 public final class PollDaoImpl implements PollDao {
-	private Map<Integer, Poll> polls = new HashMap<>();
-	private Random random = new Random();
+	private final Map<Integer, Poll> polls = new HashMap<>();
+	private final Random random = new Random();
 
 	@Override
 	public Poll find(int id) {

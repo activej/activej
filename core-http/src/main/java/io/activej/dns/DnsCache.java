@@ -48,8 +48,8 @@ public final class DnsCache {
 	private final Eventloop eventloop;
 
 	private long errorCacheExpiration = DEFAULT_ERROR_CACHE_EXPIRATION.toMillis();
-	private long timedOutExceptionTtl = DEFAULT_HARD_EXPIRATION_DELTA.toMillis();
-	private long hardExpirationDelta = DEFAULT_TIMED_OUT_EXCEPTION_TTL.toMillis();
+	private long timedOutExceptionTtl = DEFAULT_TIMED_OUT_EXCEPTION_TTL.toMillis();
+	private long hardExpirationDelta = DEFAULT_HARD_EXPIRATION_DELTA.toMillis();
 	private long maxTtl = Long.MAX_VALUE;
 
 	private final AtomicBoolean cleaningUpNow = new AtomicBoolean(false);
@@ -92,7 +92,7 @@ public final class DnsCache {
 	 * @param timedOutExceptionTtl expiration time for timed out exception
 	 */
 	public DnsCache withTimedOutExceptionTtl(Duration timedOutExceptionTtl) {
-		this.errorCacheExpiration = timedOutExceptionTtl.toMillis();
+		this.timedOutExceptionTtl = timedOutExceptionTtl.toMillis();
 		return this;
 	}
 

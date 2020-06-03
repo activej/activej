@@ -55,8 +55,8 @@ public class SpringDiBenchmark {
 	}
 
 	static class Butter {
-		private float weight;
-		private String name;
+		private final float weight;
+		private final String name;
 
 		@Autowired
 		public Butter() {
@@ -74,8 +74,8 @@ public class SpringDiBenchmark {
 	}
 
 	static class Flour {
-		private float weight;
-		private String name;
+		private final float weight;
+		private final String name;
 
 		@Autowired
 		public Flour() {

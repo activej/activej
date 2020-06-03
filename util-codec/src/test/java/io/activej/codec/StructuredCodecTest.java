@@ -7,11 +7,8 @@ import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 import static io.activej.codec.StructuredCodecs.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("ConstantConditions")
@@ -32,11 +29,11 @@ public class StructuredCodecTest {
 				Tuple2::getValue1, STRING_CODEC.nullable(),
 				Tuple2::getValue2, INT_CODEC.nullable());
 
-		test(STRING_CODEC.ofList(), Arrays.asList("abc"));
+		test(STRING_CODEC.ofList(), asList("abc"));
 
-		test(codec.nullable().ofList(), singletonList(null));
 		test(codec.ofList().nullable(), null);
-		test(codec.ofList(), singletonList(new Tuple2<>("abc", 123)));
+		test(codec.nullable().ofList(), asList((Tuple2<String, Integer>) null));
+		test(codec.ofList(), asList(new Tuple2<>("abc", 123)));
 		test(codec.nullable().ofList(), asList(null, new Tuple2<>("abc", 123)));
 
 		test(STRING_CODEC, "abc");

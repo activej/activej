@@ -35,7 +35,7 @@ import static io.activej.common.Preconditions.*;
 import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
 import static io.activej.serializer.SerializerDef.StaticEncoders.*;
 import static java.lang.reflect.Modifier.*;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.objectweb.asm.Type.*;
 
 public final class SerializerDefClass implements SerializerDef {
@@ -180,7 +180,7 @@ public final class SerializerDefClass implements SerializerDef {
 			try {
 				Method setter = decodeType.getMethod(setterName, getter.getReturnType());
 				if (!isPrivate(setter.getModifiers())) {
-					addSetter(setter, asList(fieldName));
+					addSetter(setter, singletonList(fieldName));
 				}
 			} catch (NoSuchMethodException e) {
 				throw new RuntimeException(e);

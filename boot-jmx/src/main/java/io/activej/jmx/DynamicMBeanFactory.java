@@ -149,7 +149,6 @@ public final class DynamicMBeanFactory {
 			try {
 				rootNode.applyModifier(attrName, modifier, beans);
 			} catch (ClassCastException e) {
-				//noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException - doesn't ignore
 				throw new IllegalArgumentException(format("Cannot apply modifier \"%s\" for attribute \"%s\": %s",
 						modifier.getClass().getName(), attrName, e));
 			}

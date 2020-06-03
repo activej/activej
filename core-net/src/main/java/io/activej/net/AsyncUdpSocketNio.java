@@ -291,11 +291,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 			writeQueue.poll();
 			packet.recycle();
 		}
-		if (writeQueue.isEmpty()) {
-			writeInterest(false);
-		} else {
-			writeInterest(true);
-		}
+		writeInterest(!writeQueue.isEmpty());
 	}
 
 	@SuppressWarnings("MagicConstant")

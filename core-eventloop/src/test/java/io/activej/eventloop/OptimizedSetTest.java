@@ -63,7 +63,7 @@ public class OptimizedSetTest {
 		}
 	}
 
-	private class SimpleSelectionKey extends SelectionKey {
+	private static class SimpleSelectionKey extends SelectionKey {
 		int id;
 
 		SimpleSelectionKey(int id) {

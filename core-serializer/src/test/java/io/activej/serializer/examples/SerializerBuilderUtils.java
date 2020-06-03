@@ -18,7 +18,7 @@ public class SerializerBuilderUtils {
 	public static final List<Class<?>> TYPES = asList(
 			byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
 	);
-	private static Map<Class<?>, SerializerDef> primitiveSerializers = new HashMap<Class<?>, SerializerDef>() {{
+	private static final Map<Class<?>, SerializerDef> primitiveSerializers = new HashMap<Class<?>, SerializerDef>() {{
 		put(byte.class, new SerializerDefByte(false));
 		put(short.class, new SerializerDefShort(false));
 		put(int.class, new SerializerDefInt(false, true));
@@ -28,7 +28,7 @@ public class SerializerBuilderUtils {
 		put(char.class, new SerializerDefChar(false));
 	}};
 
-	private static Map<String, String> collectionImplSuffix = new HashMap<String, String>() {{
+	private static final Map<String, String> collectionImplSuffix = new HashMap<String, String>() {{
 		put("Set", "HashSet");
 		put("IndexedContainer", "ArrayList");
 	}};

@@ -191,21 +191,15 @@ public class AsyncServletDecoratorTest {
 		AsyncServlet servlet = mapHttpException404(
 				request -> {
 					String path = request.getPath();
-					switch (path) {
-						case "/resource":
-							return HttpResponse.ok200().withBody("Resource not found".getBytes(UTF_8));
-						default:
-							throw new AssertionError();
-					}
+					assertEquals("/resource", path);
+					return HttpResponse.ok200().withBody("Resource not found".getBytes(UTF_8));
 				})
 				.serve(request -> {
 					String path = request.getPath();
-					switch (path) {
-						case "/resource":
-							return Promise.ofException(HttpException.ofCode(404));
-						default:
-							return Promise.of(HttpResponse.ok200());
+					if ("/resource".equals(path)) {
+						return Promise.ofException(HttpException.ofCode(404));
 					}
+					return Promise.of(HttpResponse.ok200());
 				});
 
 		ByteBuf bodyClient = await(servlet.serveAsync(HttpRequest.get("http://localhost/resource")).then(HttpResponse::loadBody));

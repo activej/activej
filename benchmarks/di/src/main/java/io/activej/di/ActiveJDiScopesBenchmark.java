@@ -61,8 +61,8 @@ public class ActiveJDiScopesBenchmark {
 	}
 
 	static class Butter {
-		private float weight;
-		private String name;
+		private final float weight;
+		private final String name;
 
 		@Inject
 		public Butter() {

@@ -202,7 +202,7 @@ public final class Specializer {
 					String fieldName = entry.getValue();
 
 					javaField.setAccessible(true);
-					Object fieldInstance = null;
+					Object fieldInstance;
 					try {
 						fieldInstance = javaField.get(this.instance);
 					} catch (IllegalAccessException e) {

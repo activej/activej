@@ -49,11 +49,10 @@ public final class Utils {
 					String methodName = m.getName();
 					if ("value".equals(methodName) && first) {
 						sb.append(valueStr);
-						first = false;
 					} else {
 						sb.append(first ? "" : ",").append(methodName).append("=").append(valueStr);
-						first = false;
 					}
+					first = false;
 				} catch (ReflectiveOperationException ignored) {
 				}
 			}

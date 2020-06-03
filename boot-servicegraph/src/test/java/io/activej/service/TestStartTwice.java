@@ -11,8 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.Assert.assertEquals;
 
 public class TestStartTwice {
-	private static AtomicInteger countStart = new AtomicInteger(0);
-	private static AtomicInteger countStop = new AtomicInteger(0);
+	private static final AtomicInteger countStart = new AtomicInteger(0);
+	private static final AtomicInteger countStop = new AtomicInteger(0);
 
 	interface A extends Service {}
 

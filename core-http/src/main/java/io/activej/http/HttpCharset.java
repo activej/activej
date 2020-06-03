@@ -82,20 +82,18 @@ public final class HttpCharset extends Token {
 	}
 
 	Charset toJavaCharset() throws ParseException {
-		if (javaCharset != null) {
-			return javaCharset;
-		} else {
+		if (javaCharset == null) {
 			String charsetName = decodeAscii(bytes, offset, length);
 			try {
-				if (charsetName.startsWith("\"") || charsetName.startsWith("\'")) {
+				if (charsetName.startsWith("\"") || charsetName.startsWith("'")) {
 					charsetName = charsetName.substring(1, charsetName.length() - 1);
 				}
 				javaCharset = forName(charsetName);
 			} catch (Exception e) {
 				throw new ParseException(HttpCharset.class, "Can't fetch charset for " + charsetName, e);
 			}
-			return javaCharset;
 		}
+		return javaCharset;
 	}
 
 	int size() {

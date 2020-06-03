@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.jmx.helper.Utils.nameToAttribute;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -31,7 +31,7 @@ public class DynamicMBeanFactorySettingsTest {
 	public void includesOptionalAttributes_thatAreSpecifiedInSettings() {
 		JmxBeanSettings settings = JmxBeanSettings.of(singleton("stats_text"), NO_MODIFIERS, NO_CUSTOM_TYPES);
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(new MBeanStubOne()), settings, false);
+				.createDynamicMBean(singletonList(new MBeanStubOne()), settings, false);
 
 		MBeanInfo mBeanInfo = mbean.getMBeanInfo();
 		Map<String, MBeanAttributeInfo> attrs = nameToAttribute(mBeanInfo.getAttributes());
@@ -81,7 +81,7 @@ public class DynamicMBeanFactorySettingsTest {
 		JmxBeanSettings settings = JmxBeanSettings.of(NO_BEANS, nameToModifier, NO_CUSTOM_TYPES);
 		MBeanStubTwo mBeanStubTwo = new MBeanStubTwo();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(mBeanStubTwo), settings, false);
+				.createDynamicMBean(singletonList(mBeanStubTwo), settings, false);
 
 		assertEquals("configured", mbean.getAttribute("stats_data"));
 	}

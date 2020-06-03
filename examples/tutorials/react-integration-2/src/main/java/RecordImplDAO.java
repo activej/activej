@@ -3,7 +3,7 @@ import java.util.Map;
 
 //[START EXAMPLE]
 public final class RecordImplDAO implements RecordDAO {
-	private Map<Integer, Record> recordMap = new HashMap<>();
+	private final Map<Integer, Record> recordMap = new HashMap<>();
 	private int counter;
 
 	public void add(Record record) {

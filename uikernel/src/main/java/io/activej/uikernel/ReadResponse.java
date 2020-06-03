@@ -28,9 +28,9 @@ import java.util.List;
 public final class ReadResponse<K, R extends AbstractRecord<K>> {
 	private final List<R> records;
 	private final int count;
-	private List<R> extra;
+	private final List<R> extra;
 	@Nullable
-	private R totals;
+	private final R totals;
 
 	private ReadResponse(@NotNull List<R> records, int count, @NotNull List<R> extra, @Nullable R totals) {
 		this.records = records;

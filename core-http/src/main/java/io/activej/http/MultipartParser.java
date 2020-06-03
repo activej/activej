@@ -82,7 +82,9 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 	}
 
 	private Promise<Map<String, String>> getContentDispositionFields(MultipartFrame frame) {
-		String header = frame.getHeaders().get("content-disposition");
+		Map<String, String> headers = frame.getHeaders();
+		assert headers != null;
+		String header = headers.get("content-disposition");
 		if (header == null) {
 			return Promise.ofException(new StacklessException(MultipartParser.class, "Headers had no Content-Disposition"));
 		}

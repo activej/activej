@@ -146,7 +146,7 @@ public final class JmxHistograms {
 				}
 				int subindex = value / power;
 				counters[index * 9 + subindex + 1]++;
-			} else if (value < 0) {
+			} else {
 				counters[0]++;
 			}
 		}

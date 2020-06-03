@@ -65,6 +65,7 @@ public interface Multibinder<T> {
 									.map(bindingCompiler -> bindingCompiler.compile(compiledBindings, true, scope, null))
 									.toArray(CompiledBinding[]::new);
 
+							//noinspection Convert2Lambda
 							return slot == null || bindings.getType() == TRANSIENT ?
 									new CompiledBinding<T>() {
 										@SuppressWarnings("unchecked")

@@ -69,7 +69,7 @@ public final class ByteBufQueue implements Recyclable {
 		this.bufs = new ByteBuf[capacity];
 	}
 
-	private static Collector<ByteBuf, ByteBufQueue, ByteBuf> COLLECTOR = Collector.of(
+	private static final Collector<ByteBuf, ByteBufQueue, ByteBuf> COLLECTOR = Collector.of(
 			ByteBufQueue::new,
 			ByteBufQueue::add,
 			(bufs1, bufs2) -> {

@@ -65,7 +65,7 @@ public final class StreamBuffer<T> implements StreamTransformer<T, T> {
 	}
 
 	public static <T> StreamBuffer<T> create(int bufferMinSize, int bufferMaxSize) {
-		return new StreamBuffer<T>(bufferMinSize, bufferMaxSize);
+		return new StreamBuffer<>(bufferMinSize, bufferMaxSize);
 	}
 
 	public boolean isSaturated() {

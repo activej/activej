@@ -211,7 +211,6 @@ public final class CrdtClusterTest {
 				}));
 	}
 
-	@SuppressWarnings("deprecation") // StreamConsumer#of
 	@Test
 	public void downloadStuff() {
 		CrdtStorageClient<String, Integer> client = CrdtStorageClient.create(Eventloop.getCurrentEventloop(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);

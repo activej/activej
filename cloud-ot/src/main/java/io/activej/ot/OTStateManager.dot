@@ -1,7 +1,7 @@
 digraph OTStateManagerFSM {
 	rankdir=TB;
 
-    {rank=min; "Idle", "Idle:\n pendingCommit"}
+    {rank=min; "Idle"; "Idle:\n pendingCommit"}
 
     "Idle" [shape = doublecircle]
     "Idle" -> "Fetch1" [ label="sync()"]

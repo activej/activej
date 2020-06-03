@@ -14,7 +14,6 @@ import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
 import org.junit.Test;
 
-import javax.management.DynamicMBean;
 import javax.management.MBeanServer;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -26,12 +25,11 @@ import static java.util.Arrays.asList;
 public class JmxRegistryTest {
 	@Rule
 	public JUnitRuleMockery context = new JUnitRuleMockery();
-	private MBeanServer mBeanServer = context.mock(MBeanServer.class);
-	private DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();
-	private DynamicMBean dynamicMBean = context.mock(DynamicMBean.class);
-	private JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, mbeanFactory);
+
+	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
+	private final DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();
+	private final JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, mbeanFactory);
 	private final String domain = ServiceStub.class.getPackage().getName();
-	private final JmxBeanSettings settings = JmxBeanSettings.defaultSettings();
 
 	@Test
 	public void unregisterSingletonInstance() throws Exception {

@@ -22,7 +22,6 @@ import io.activej.di.Scope;
 import io.activej.di.impl.BindingLocator;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -58,7 +57,7 @@ public interface BindingTransformer<T> {
 	static BindingTransformer<?> combinedTransformer(Map<Integer, Set<BindingTransformer<?>>> transformers) {
 
 		List<Set<BindingTransformer<?>>> transformerList = transformers.entrySet().stream()
-				.sorted(Comparator.comparing(Entry::getKey))
+				.sorted(Entry.comparingByKey())
 				.map(Entry::getValue)
 				.collect(toList());
 

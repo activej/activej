@@ -52,11 +52,10 @@ public final class TestRemoteFsClusterClient {
 	private List<RemoteFsServer> servers;
 	private Path clientStorage;
 	private RemoteFsClusterClient client;
-	private Executor executor;
 
 	@Before
 	public void setup() throws IOException {
-		executor = Executors.newSingleThreadExecutor();
+		Executor executor = Executors.newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 		clientStorage = Paths.get(tmpFolder.newFolder("client").toURI());
 

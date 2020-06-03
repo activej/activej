@@ -22,8 +22,9 @@ import org.slf4j.LoggerFactory;
 public final class SteppingCurrentTimeProvider implements CurrentTimeProvider {
 	private static final Logger logger = LoggerFactory.getLogger(SteppingCurrentTimeProvider.class);
 
+	private final long step;
+
 	private long timeMillis;
-	private long step;
 
 	private SteppingCurrentTimeProvider(long timeMillis, long step) {
 		this.timeMillis = timeMillis;

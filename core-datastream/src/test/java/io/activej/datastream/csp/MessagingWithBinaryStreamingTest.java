@@ -34,7 +34,7 @@ public final class MessagingWithBinaryStreamingTest {
 	private static final int LISTEN_PORT = getFreePort();
 	public static final InetSocketAddress ADDRESS = new InetSocketAddress("localhost", LISTEN_PORT);
 
-	private static ByteBufsCodec<String, String> STRING_SERIALIZER = ByteBufsCodec
+	private static final ByteBufsCodec<String, String> STRING_SERIALIZER = ByteBufsCodec
 			.ofDelimiter(
 					ofNullTerminatedBytes(),
 					buf -> {
@@ -45,7 +45,7 @@ public final class MessagingWithBinaryStreamingTest {
 			.andThen(
 					buf -> buf.asString(UTF_8),
 					str -> ByteBuf.wrapForReading(str.getBytes(UTF_8)));
-	private static ByteBufsCodec<Integer, Integer> INTEGER_SERIALIZER = STRING_SERIALIZER.andThen(Integer::parseInt, n -> Integer.toString(n));
+	private static final ByteBufsCodec<Integer, Integer> INTEGER_SERIALIZER = STRING_SERIALIZER.andThen(Integer::parseInt, n -> Integer.toString(n));
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

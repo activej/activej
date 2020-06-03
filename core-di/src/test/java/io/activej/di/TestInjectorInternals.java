@@ -16,9 +16,9 @@ public final class TestInjectorInternals {
 
 	interface SomeService {}
 
-	class SomeServiceImpl implements SomeService {}
+	static class SomeServiceImpl implements SomeService {}
 
-	class Container {
+	static class Container {
 		private final SomeService service;
 
 		public Container(SomeService service) {

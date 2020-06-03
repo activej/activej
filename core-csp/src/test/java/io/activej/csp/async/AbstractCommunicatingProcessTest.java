@@ -34,10 +34,10 @@ public final class AbstractCommunicatingProcessTest {
 	private final int size = 10;
 	private final List<ByteBuf> actualData = new ArrayList<>();
 	private final ParseException error = new ParseException(AbstractCommunicatingProcessTest.class, "Test Error");
+	private final PassThroughProcess[] processes = new PassThroughProcess[size];
+	private final List<ByteBuf> expectedData = new ArrayList<>();
 
-	private PassThroughProcess[] processes = new PassThroughProcess[size];
 	private Promise<Void> acknowledgement;
-	private List<ByteBuf> expectedData = new ArrayList<>();
 	private boolean consumedAll = false;
 
 	@Before

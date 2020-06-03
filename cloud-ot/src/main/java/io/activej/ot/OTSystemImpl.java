@@ -88,7 +88,7 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 		return new OTSystemImpl<>();
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public <L extends D, R extends D> OTSystemImpl<D> withTransformFunction(Class<? super L> leftType, Class<? super R> rightType,
 			TransformFunction<D, L, R> transformer) {
 		transformers.put(new KeyPair(leftType, rightType), transformer);
@@ -108,7 +108,7 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public <O1 extends D, O2 extends D> OTSystemImpl<D> withSquashFunction(Class<? super O1> opType1, Class<? super O2> opType2,
 			SquashFunction<D, O1, O2> squashFunction) {
 		squashers.put(new KeyPair(opType1, opType2), squashFunction);
@@ -160,7 +160,7 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 		throw new AssertionError();
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public TransformResult<D> doTransform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws OTTransformException {
 		if (leftDiffs.isEmpty() && rightDiffs.isEmpty())
 			return TransformResult.empty();
@@ -188,7 +188,7 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 		return TransformResult.of(transform2.left, concat(transform1.right, transform2.right));
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public List<D> squash(List<? extends D> ops) {
 		if (squashers.isEmpty())

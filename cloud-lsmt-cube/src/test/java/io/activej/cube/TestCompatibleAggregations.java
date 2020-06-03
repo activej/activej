@@ -23,6 +23,7 @@ import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.collection.CollectionUtils.entriesToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Stream.of;
 import static org.junit.Assert.*;
 
@@ -226,7 +227,7 @@ public class TestCompatibleAggregations {
 		AggregationPredicate whereQueryPredicate = alwaysTrue();
 
 		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
-				asList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+				singletonList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cube.getAggregation(DAILY_AGGREGATION.getId());
 
@@ -300,7 +301,7 @@ public class TestCompatibleAggregations {
 
 		List<AggregationContainer> actualAggregations =
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
-						asList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+						singletonList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
 		Aggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());
@@ -318,7 +319,7 @@ public class TestCompatibleAggregations {
 
 		List<AggregationContainer> actualAggregations =
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
-						asList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+						singletonList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cubeWithDetailedAggregation.getAggregation(ADVERTISERS_AGGREGATION.getId());
 
@@ -332,7 +333,7 @@ public class TestCompatibleAggregations {
 
 		List<AggregationContainer> actualAggregations =
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
-						asList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+						singletonList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
 		Aggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());

@@ -76,7 +76,7 @@ public class GlobalSingletonsRegistrationTest {
 
 	static class GlobalSingletonClass1 implements GlobalSingletonClass1MBean {
 		private static final GlobalSingletonClass1 INSTANCE = new GlobalSingletonClass1();
-		private CustomClass custom = new CustomClass();
+		private final CustomClass custom = new CustomClass();
 
 		private GlobalSingletonClass1() {}
 
@@ -89,7 +89,7 @@ public class GlobalSingletonsRegistrationTest {
 			return custom;
 		}
 
-		class CustomClass {}
+		static class CustomClass {}
 	}
 
 	public interface StubMXBean {
