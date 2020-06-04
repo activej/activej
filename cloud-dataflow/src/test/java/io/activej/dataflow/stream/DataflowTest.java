@@ -40,9 +40,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,6 +48,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.codec.StructuredCodec.ofObject;
+import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.di.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
@@ -57,7 +56,9 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public final class DataflowTest {
 
@@ -198,6 +199,101 @@ public final class DataflowTest {
 				new TestItem(5),
 				new TestItem(6),
 				new TestItem(6)), results);
+	}
+
+	@Test
+	public void testRepartitionWithFurtherSort() throws Exception {
+		InetSocketAddress address1 = getFreeListenAddress();
+		InetSocketAddress address2 = getFreeListenAddress();
+		InetSocketAddress address3 = getFreeListenAddress();
+
+		Partition partition1 = new Partition(address1);
+		Partition partition2 = new Partition(address2);
+		Partition partition3 = new Partition(address3);
+
+		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(partition1, partition2, partition3))
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.build();
+
+		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
+		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
+		StreamConsumerToList<TestItem> result3 = StreamConsumerToList.create();
+
+		List<TestItem> list1 = asList(
+				new TestItem(15),
+				new TestItem(12),
+				new TestItem(13),
+				new TestItem(17),
+				new TestItem(11),
+				new TestItem(13));
+		Module serverModule1 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(list1)
+				.bind(datasetId("result")).toInstance(result1)
+				.build();
+
+		List<TestItem> list2 = asList(
+				new TestItem(21),
+				new TestItem(26));
+		Module serverModule2 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(list2)
+				.bind(datasetId("result")).toInstance(result2)
+				.build();
+
+		List<TestItem> list3 = asList(
+				new TestItem(33),
+				new TestItem(35),
+				new TestItem(31),
+				new TestItem(38),
+				new TestItem(36));
+		Module serverModule3 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(list3)
+				.bind(datasetId("result")).toInstance(result3)
+				.build();
+
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server3 = Injector.of(serverModule3).getInstance(DataflowServer.class).withListenAddress(address3);
+
+		server1.listen();
+		server2.listen();
+		server3.listen();
+
+		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+
+		Dataset<TestItem> items = localSort(
+				repartition(
+						datasetOfList("items", TestItem.class),
+						new TestKeyFunction(),
+						asList(partition2, partition3)
+				),
+				Long.class,
+				new TestKeyFunction(),
+				new TestComparator()
+		);
+		DatasetListConsumer<?> consumerNode = listConsumer(items, "result");
+		consumerNode.compileInto(graph);
+
+		await(graph.execute()
+				.whenComplete(assertComplete($ -> {
+					server1.close();
+					server2.close();
+					server3.close();
+				})));
+
+		Set<TestItem> expectedOnServers2And3 = new HashSet<>();
+		expectedOnServers2And3.addAll(list1);
+		expectedOnServers2And3.addAll(list2);
+		expectedOnServers2And3.addAll(list3);
+
+		assertTrue(isSorted(result2.getList(), comparing(testItem -> testItem.value)));
+		assertTrue(isSorted(result3.getList(), comparing(testItem -> testItem.value)));
+
+		Set<TestItem> actualOnServers2And3 = new HashSet<>(concat(result2.getList(), result3.getList()));
+		assertEquals(expectedOnServers2And3, actualOnServers2And3);
+		assertTrue(result1.getList().isEmpty());
 	}
 
 	@Test
@@ -392,5 +488,19 @@ public final class DataflowTest {
 
 	static InetSocketAddress getFreeListenAddress() throws UnknownHostException {
 		return new InetSocketAddress(InetAddress.getByName("127.0.0.1"), getFreePort());
+	}
+
+	private static <T> boolean isSorted(Collection<T> collection, Comparator<T> comparator) {
+		if (collection.size() < 2) return true;
+		Iterator<T> iterator = collection.iterator();
+		T current = iterator.next();
+		while (iterator.hasNext()) {
+			T next = iterator.next();
+			if (comparator.compare(current, next) > 0) {
+				return false;
+			}
+			current = next;
+		}
+		return true;
 	}
 }

@@ -23,6 +23,7 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.datastream.processor.StreamJoin.Joiner;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
+import io.datakernel.dataflow.dataset.impl.DatasetRepartition;
 
 import java.util.Comparator;
 import java.util.List;
@@ -79,6 +80,14 @@ public final class Datasets {
 	                                                               Class<O> resultType,
 	                                                               Function<O, K> resultKeyFunction) {
 		return new DatasetLocalSortReduce<>(stream, reducer, resultType, resultKeyFunction);
+	}
+
+	public static <T, K> Dataset<T> repartition(Dataset<T> dataset, Function<T, K> keyFunction, List<Partition> partitions) {
+		return new DatasetRepartition<>(dataset, keyFunction, partitions);
+	}
+
+	public static <T, K> Dataset<T> repartition(Dataset<T> dataset, Function<T, K> keyFunction){
+		return new DatasetRepartition<>(dataset, keyFunction, null);
 	}
 
 	public static <K, I, O> Dataset<O> repartitionReduce(LocallySortedDataset<K, I> dataset,
