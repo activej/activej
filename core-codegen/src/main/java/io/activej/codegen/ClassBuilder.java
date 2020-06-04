@@ -17,8 +17,9 @@
 package io.activej.codegen;
 
 import io.activej.codegen.DefiningClassLoader.ClassKey;
-import io.activej.codegen.utils.DefiningClassWriter;
-import io.activej.common.Initializable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.util.DefiningClassWriter;
+import io.activej.common.api.Initializable;
 import io.activej.common.collection.CollectionUtils;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;

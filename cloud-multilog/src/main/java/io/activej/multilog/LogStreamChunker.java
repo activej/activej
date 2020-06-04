@@ -18,10 +18,10 @@ package io.activej.multilog;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.time.CurrentTimeProvider;
-import io.activej.csp.AbstractCommunicatingProcess;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelSupplier;
+import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.promise.Promise;
 import io.activej.remotefs.FsClient;
 import org.jetbrains.annotations.Nullable;

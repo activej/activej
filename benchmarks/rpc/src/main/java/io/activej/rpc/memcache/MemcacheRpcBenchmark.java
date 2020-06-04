@@ -1,8 +1,8 @@
 package io.activej.rpc.memcache;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.Initializer;
 import io.activej.common.MemSize;
+import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.di.Key;
@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-import static io.activej.config.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.di.module.Modules.combine;
 import static java.lang.Math.min;
 

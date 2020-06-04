@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Check;
-import io.activej.common.Initializable;
+import io.activej.common.api.Initializable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSetCookies;
 import io.activej.promise.Async;

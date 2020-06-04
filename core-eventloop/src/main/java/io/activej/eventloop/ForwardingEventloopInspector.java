@@ -16,7 +16,8 @@
 
 package io.activej.eventloop;
 
-import io.activej.common.Stopwatch;
+import io.activej.common.time.Stopwatch;
+import io.activej.eventloop.inspector.EventloopInspector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

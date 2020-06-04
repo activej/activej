@@ -16,6 +16,8 @@
 
 package io.activej.codegen;
 
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.VarLocal;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -27,7 +29,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static io.activej.codegen.Utils.*;
+import static io.activej.codegen.util.Utils.*;
 import static io.activej.common.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;

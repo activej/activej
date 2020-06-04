@@ -1,12 +1,12 @@
 package io.activej.dataflow.helper;
 
+import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeUpload;
-import io.activej.dataflow.server.DataflowClient;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;

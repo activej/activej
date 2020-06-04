@@ -17,8 +17,8 @@
 package io.activej.launchers.initializers;
 
 import io.activej.async.service.EventloopTaskScheduler;
-import io.activej.common.Initializer;
 import io.activej.common.MemSize;
+import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.di.Key;
 import io.activej.eventloop.Eventloop;
@@ -29,7 +29,7 @@ import io.activej.net.PrimaryServer;
 
 import java.time.Duration;
 
-import static io.activej.config.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.*;
 
 public class Initializers {
 	public static final String GLOBAL_EVENTLOOP_NAME = "GlobalEventloopStats";

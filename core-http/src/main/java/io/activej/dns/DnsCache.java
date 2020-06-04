@@ -18,6 +18,10 @@ package io.activej.dns;
 
 import io.activej.common.Check;
 import io.activej.common.time.CurrentTimeProvider;
+import io.activej.dns.protocol.DnsProtocol;
+import io.activej.dns.protocol.DnsQuery;
+import io.activej.dns.protocol.DnsQueryException;
+import io.activej.dns.protocol.DnsResponse;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;

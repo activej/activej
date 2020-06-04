@@ -20,7 +20,10 @@ import io.activej.common.exception.Exceptions;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.ref.RefInt;
-import io.activej.csp.*;
+import io.activej.csp.ChannelConsumer;
+import io.activej.csp.ChannelInput;
+import io.activej.csp.ChannelOutput;
+import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelInput;
 import io.activej.csp.dsl.WithChannelOutputs;
 import io.activej.promise.Promise;
@@ -31,10 +34,10 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.Preconditions.checkState;
-import static io.activej.common.Recyclable.tryRecycle;
-import static io.activej.common.Sliceable.trySlice;
+import static io.activej.common.api.Recyclable.tryRecycle;
+import static io.activej.common.api.Sliceable.trySlice;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {

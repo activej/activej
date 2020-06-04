@@ -17,6 +17,7 @@
 package io.activej.ot;
 
 import io.activej.ot.exceptions.OTException;
+import io.activej.ot.system.OTSystem;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

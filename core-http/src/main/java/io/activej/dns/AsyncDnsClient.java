@@ -16,6 +16,7 @@
 
 package io.activej.dns;
 
+import io.activej.dns.protocol.*;
 import io.activej.http.HttpUtils;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;

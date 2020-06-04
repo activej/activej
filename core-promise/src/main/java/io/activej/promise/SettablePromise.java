@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Represents a {@link Promise} which can be completed or completedExceptionally

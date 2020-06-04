@@ -16,10 +16,8 @@
 
 package io.activej.http;
 
-import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.exception.UncheckedException;
-import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.*;
 
-import static io.activej.csp.ChannelConsumers.recycling;
 import static io.activej.http.AsyncServlet.firstSuccessful;
 import static java.util.Arrays.asList;
 
@@ -97,10 +94,6 @@ public interface AsyncServletDecorator {
 						.map(response -> {
 							HttpResponse newResponse = fn.apply(request, response);
 							if (response != newResponse) {
-								ChannelSupplier<ByteBuf> bodyStream = response.getBodyStream();
-								if (bodyStream != null) {
-									bodyStream.streamTo(recycling());
-								}
 								response.recycle();
 							}
 							return newResponse;

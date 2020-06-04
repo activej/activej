@@ -17,6 +17,7 @@
 package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
+import io.activej.dataflow.dataset.DatasetUtils;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;

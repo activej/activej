@@ -3,6 +3,7 @@ package io.activej.worker;
 import io.activej.common.ref.RefInt;
 import io.activej.di.Injector;
 import io.activej.di.module.AbstractModule;
+import io.activej.worker.annotation.Worker;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

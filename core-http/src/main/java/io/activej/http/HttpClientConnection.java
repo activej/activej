@@ -17,15 +17,15 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.parse.ParseException;
-import io.activej.common.parse.UnknownFormatException;
+import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient.Inspector;
 import io.activej.http.stream.BufsConsumerGzipInflater;
-import io.activej.net.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;

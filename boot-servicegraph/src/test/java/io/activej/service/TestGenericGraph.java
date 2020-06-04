@@ -5,11 +5,11 @@ import io.activej.di.Key;
 import io.activej.di.annotation.Named;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
-import io.activej.service.ServiceAdapters.SimpleServiceAdapter;
-import io.activej.worker.Worker;
+import io.activej.service.adapter.ServiceAdapters.SimpleServiceAdapter;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;
 import io.activej.worker.WorkerPools;
+import io.activej.worker.annotation.Worker;
 import org.junit.Test;
 
 public class TestGenericGraph {

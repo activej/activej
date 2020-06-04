@@ -2,6 +2,10 @@ package io.activej.ot;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.StacklessException;
+import io.activej.ot.repository.OTRepository;
+import io.activej.ot.system.OTSystem;
+import io.activej.ot.uplink.OTUplink;
+import io.activej.ot.uplink.OTUplinkImpl;
 import io.activej.ot.utils.OTRepositoryStub;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.TestOpState;

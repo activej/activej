@@ -20,7 +20,7 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * A stub client which forwards requests straight to the underlying servlet without any real I/O operations.

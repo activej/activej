@@ -16,8 +16,8 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
 import static io.activej.serializer.SerializerDef.StaticEncoders.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;

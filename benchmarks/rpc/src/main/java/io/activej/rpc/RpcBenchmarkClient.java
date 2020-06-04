@@ -18,9 +18,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.config.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.di.module.Modules.combine;
-import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 

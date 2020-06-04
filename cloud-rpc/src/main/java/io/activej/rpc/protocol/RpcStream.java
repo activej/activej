@@ -27,7 +27,7 @@ import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.net.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 

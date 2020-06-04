@@ -7,6 +7,7 @@ import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.ExecutionException;
 
+
 //[START EXAMPLE]
 public final class ServiceGraphModuleExample extends AbstractModule {
 	@Provides

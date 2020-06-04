@@ -18,14 +18,14 @@ package io.activej.cube.service;
 
 import io.activej.aggregation.RemoteFsChunkStorage;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.cube.CubeDiffScheme;
+import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
-import io.activej.ot.OTRepositoryEx;
-import io.activej.ot.OTSystem;
+import io.activej.ot.repository.OTRepositoryEx;
+import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;

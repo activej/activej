@@ -1,5 +1,6 @@
 package io.activej.ot;
 
+import io.activej.ot.system.OTSystem;
 import io.activej.ot.utils.OTGraphBuilder;
 import io.activej.ot.utils.OTRepositoryStub;
 import io.activej.ot.utils.TestOp;

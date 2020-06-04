@@ -17,9 +17,9 @@
 package io.activej.aggregation;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.codegen.Expression;
-import io.activej.codegen.Expressions;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
+import io.activej.codegen.expression.Variable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

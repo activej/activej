@@ -25,10 +25,14 @@ import io.activej.di.annotation.Optional;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ThrottlingController;
+import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.remotefs.*;
+import io.activej.remotefs.FsClient;
+import io.activej.remotefs.RemoteFsServer;
+import io.activej.remotefs.cluster.RemoteFsClusterClient;
+import io.activej.remotefs.cluster.RemoteFsRepartitionController;
+import io.activej.remotefs.cluster.ServerSelector;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.HashMap;
@@ -36,19 +40,19 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Utils.nullToDefault;
-import static io.activej.config.ConfigConverters.ofPath;
+import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.di.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
 import static io.activej.launchers.remotefs.Initializers.*;
-import static io.activej.remotefs.ServerSelector.RENDEZVOUS_HASH_SHARDER;
+import static io.activej.remotefs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public abstract class RemoteFsClusterLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "remotefs-cluster.properties";
 
 	@Inject
-	RemoteFsRepartitionController controller;
+    RemoteFsRepartitionController controller;
 
 	@Inject
 	@Named("repartition")

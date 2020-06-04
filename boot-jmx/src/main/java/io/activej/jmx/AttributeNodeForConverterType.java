@@ -32,7 +32,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 @SuppressWarnings("unchecked")
-public class AttributeNodeForConverterType<T> extends AttributeNodeForLeafAbstract {
+public class AttributeNodeForConverterType<T> extends AbstractAttributeNodeForLeaf {
 	private static final Logger logger = LoggerFactory.getLogger(AttributeNodeForConverterType.class);
 
 	@Nullable

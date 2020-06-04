@@ -16,9 +16,9 @@
 
 package io.activej.service;
 
-import io.activej.common.Initializable;
-import io.activej.common.Stopwatch;
+import io.activej.common.api.Initializable;
 import io.activej.common.collection.CollectionUtils;
+import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -40,7 +40,7 @@ import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.di.util.ReflectionUtils.getDisplayName;
 import static io.activej.di.util.Utils.getDisplayString;
 import static io.activej.di.util.Utils.union;
-import static io.activej.service.util.Utils.combineAll;
+import static io.activej.service.Utils.combineAll;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;

@@ -24,9 +24,9 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerTransformer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.StreamSupplierTransformer;
+import io.activej.datastream.processor.StreamConsumerTransformer;
+import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 

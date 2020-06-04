@@ -29,7 +29,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 
 class StressClient {
 	private final Logger logger = LoggerFactory.getLogger(getClass());

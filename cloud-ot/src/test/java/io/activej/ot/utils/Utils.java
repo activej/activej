@@ -3,10 +3,10 @@ package io.activej.ot.utils;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.ot.OTCommit;
-import io.activej.ot.OTSystem;
-import io.activej.ot.OTSystemImpl;
+import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.OTSystemImpl;
 
 import java.util.*;
 import java.util.function.Consumer;

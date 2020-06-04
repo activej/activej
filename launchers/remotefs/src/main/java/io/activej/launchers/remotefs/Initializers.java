@@ -16,20 +16,20 @@
 
 package io.activej.launchers.remotefs;
 
-import io.activej.common.Initializer;
+import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.remotefs.RemoteFsClient;
-import io.activej.remotefs.RemoteFsClusterClient;
-import io.activej.remotefs.RemoteFsRepartitionController;
 import io.activej.remotefs.RemoteFsServer;
+import io.activej.remotefs.cluster.RemoteFsClusterClient;
+import io.activej.remotefs.cluster.RemoteFsRepartitionController;
 
 import java.util.Map;
 
 import static io.activej.common.Preconditions.checkState;
 import static io.activej.config.Config.THIS;
-import static io.activej.config.ConfigConverters.ofInetSocketAddress;
-import static io.activej.config.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 
 public final class Initializers {

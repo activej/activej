@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Random;
 
-import static io.activej.config.ConfigConverters.ofInetSocketAddress;
+import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.test.TestUtils.getFreePort;
 
 @Ignore

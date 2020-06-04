@@ -1,13 +1,13 @@
 package io.activej.dataflow.stream;
 
 import io.activej.codec.StructuredCodec;
+import io.activej.dataflow.DataflowClient;
+import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
-import io.activej.dataflow.server.Collector;
-import io.activej.dataflow.server.DataflowClient;
-import io.activej.dataflow.server.DataflowServer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;

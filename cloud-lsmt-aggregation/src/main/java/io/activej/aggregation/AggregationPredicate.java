@@ -17,7 +17,7 @@
 package io.activej.aggregation;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.codegen.Expression;
+import io.activej.codegen.expression.Expression;
 
 import java.util.Map;
 import java.util.Set;

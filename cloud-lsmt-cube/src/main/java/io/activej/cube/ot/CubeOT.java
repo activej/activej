@@ -18,10 +18,10 @@ package io.activej.cube.ot;
 
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationOT;
-import io.activej.ot.OTSystem;
-import io.activej.ot.OTSystemImpl;
 import io.activej.ot.TransformResult;
 import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.OTSystemImpl;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

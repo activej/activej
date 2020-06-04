@@ -1,5 +1,9 @@
-import io.activej.csp.*;
+import io.activej.csp.ChannelConsumer;
+import io.activej.csp.ChannelInput;
+import io.activej.csp.ChannelOutput;
+import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelTransformer;
+import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.eventloop.Eventloop;
 
 /**

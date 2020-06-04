@@ -1,5 +1,6 @@
 package io.activej.dns;
 
+import io.activej.dns.protocol.*;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ActivePromisesRule;
@@ -15,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static io.activej.dns.DnsProtocol.ResponseErrorCode.*;
+import static io.activej.dns.protocol.DnsProtocol.ResponseErrorCode.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.stream.Collectors.joining;

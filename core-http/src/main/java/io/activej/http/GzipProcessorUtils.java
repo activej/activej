@@ -20,9 +20,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.Check;
 import io.activej.common.collection.ConcurrentStack;
-import io.activej.common.parse.InvalidSizeException;
-import io.activej.common.parse.ParseException;
-import io.activej.common.parse.UnknownFormatException;
+import io.activej.common.exception.parse.InvalidSizeException;
+import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.parse.UnknownFormatException;
 
 import java.util.zip.CRC32;
 import java.util.zip.DataFormatException;

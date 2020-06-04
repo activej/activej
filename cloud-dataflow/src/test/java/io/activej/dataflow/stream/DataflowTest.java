@@ -2,6 +2,11 @@ package io.activej.dataflow.stream;
 
 import io.activej.codec.StructuredCodec;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.dataflow.DataflowClient;
+import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.command.DataflowCommand;
+import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -14,11 +19,6 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
-import io.activej.dataflow.server.Collector;
-import io.activej.dataflow.server.DataflowClient;
-import io.activej.dataflow.server.DataflowServer;
-import io.activej.dataflow.server.command.DatagraphCommand;
-import io.activej.dataflow.server.command.DatagraphResponse;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.di.Injector;
@@ -468,12 +468,12 @@ public final class DataflowTest {
 				.scan(new Object() {
 
 					@Provides
-					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DatagraphCommand, DatagraphResponse> codec, BinarySerializerModule.BinarySerializerLocator serializers, Injector environment) {
+					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerModule.BinarySerializerLocator serializers, Injector environment) {
 						return new DataflowServer(eventloop, codec, serializers, environment);
 					}
 
 					@Provides
-					DataflowClient client(Executor executor, ByteBufsCodec<DatagraphResponse, DatagraphCommand> codec, BinarySerializerModule.BinarySerializerLocator serializers) {
+					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerModule.BinarySerializerLocator serializers) {
 						return new DataflowClient(executor, secondaryPath, codec, serializers);
 					}
 

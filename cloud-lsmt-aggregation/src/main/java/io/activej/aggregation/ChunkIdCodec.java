@@ -19,7 +19,7 @@ package io.activej.aggregation;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 	String toFileName(C chunkId);

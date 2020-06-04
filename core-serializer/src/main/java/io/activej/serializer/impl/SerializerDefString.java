@@ -16,15 +16,15 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
-import io.activej.serializer.BinaryOutputUtils;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.StringFormat;
+import io.activej.serializer.util.BinaryOutputUtils;
 
 import java.util.Set;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Utils.of;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.StringFormat.UTF8;

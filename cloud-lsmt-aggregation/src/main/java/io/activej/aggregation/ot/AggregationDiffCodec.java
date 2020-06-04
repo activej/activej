@@ -22,12 +22,12 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 import java.util.Collections;
 import java.util.Set;
 
-import static io.activej.aggregation.Utils.getPrimaryKeyCodec;
+import static io.activej.aggregation.util.Utils.getPrimaryKeyCodec;
 import static io.activej.codec.StructuredCodecs.ofSet;
 import static io.activej.codec.json.JsonUtils.oneline;
 

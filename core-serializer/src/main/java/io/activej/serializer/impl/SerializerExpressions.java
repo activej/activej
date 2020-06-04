@@ -16,12 +16,12 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
-import io.activej.serializer.BinaryOutputUtils;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
+import io.activej.serializer.util.BinaryOutputUtils;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 /**
  * Provides methods for writing primitives

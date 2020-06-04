@@ -25,7 +25,7 @@ import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.List;
 
-import static io.activej.dataflow.dataset.impl.DatasetUtils.repartitionAndReduce;
+import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndReduce;
 
 public final class DatasetRepartitionReduce<K, I, O> extends Dataset<O> {
 	private final LocallySortedDataset<K, I> input;

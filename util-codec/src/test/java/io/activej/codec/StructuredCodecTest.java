@@ -1,7 +1,7 @@
 package io.activej.codec;
 
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.common.tuple.Tuple2;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;

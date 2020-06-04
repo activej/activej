@@ -21,13 +21,13 @@ import io.activej.common.MemSize;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ScheduledRunnable;
+import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.AbstractServer;
-import io.activej.net.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +39,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
 import static java.util.stream.Collectors.toList;
 

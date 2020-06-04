@@ -1,7 +1,7 @@
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredCodecs;
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import util.Person;
 import util.Registry;
 

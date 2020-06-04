@@ -30,7 +30,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-final class AttributeNodeForList extends AttributeNodeForLeafAbstract {
+final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 	private final AttributeNode subNode;
 	private final ArrayType<?> arrayType;
 	private final boolean isListOfJmxRefreshables;

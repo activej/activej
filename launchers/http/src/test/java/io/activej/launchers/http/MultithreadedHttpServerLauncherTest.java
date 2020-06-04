@@ -3,8 +3,8 @@ package io.activej.launchers.http;
 import io.activej.di.annotation.Provides;
 import io.activej.http.AsyncServlet;
 import io.activej.test.rules.ByteBufRule;
-import io.activej.worker.Worker;
-import io.activej.worker.WorkerId;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 import org.junit.ClassRule;
 import org.junit.Test;
 

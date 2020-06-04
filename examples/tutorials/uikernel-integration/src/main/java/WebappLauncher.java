@@ -16,8 +16,8 @@ import io.activej.uikernel.UiKernelServlets;
 
 import java.util.concurrent.Executor;
 
-import static io.activej.config.ConfigConverters.ofInteger;
-import static io.activej.config.ConfigConverters.ofString;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofString;
 import static io.activej.di.module.Modules.combine;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 

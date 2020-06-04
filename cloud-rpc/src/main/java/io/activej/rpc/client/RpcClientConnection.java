@@ -19,8 +19,8 @@ package io.activej.rpc.client;
 import io.activej.async.callback.Callback;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Check;
-import io.activej.common.Stopwatch;
 import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.common.time.Stopwatch;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.JmxRefreshable;
@@ -39,7 +39,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static io.activej.common.Preconditions.checkState;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.rpc.client.IRpcClient.RPC_OVERLOAD_EXCEPTION;
 import static io.activej.rpc.client.IRpcClient.RPC_TIMEOUT_EXCEPTION;
 import static org.slf4j.LoggerFactory.getLogger;

@@ -1,5 +1,6 @@
 package io.activej.eventloop;
 
+import io.activej.eventloop.executor.BlockingEventloopExecutor;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -7,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static org.junit.Assert.assertEquals;
 
 public final class BlockingEventloopExecutorTest {

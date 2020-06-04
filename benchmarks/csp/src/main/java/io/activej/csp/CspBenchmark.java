@@ -13,7 +13,7 @@ import io.activej.service.ServiceGraphModule;
 
 import java.util.function.Function;
 
-import static io.activej.config.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 
 @SuppressWarnings("WeakerAccess")
 public class CspBenchmark extends Launcher {

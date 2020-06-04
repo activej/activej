@@ -17,9 +17,9 @@
 package io.activej.cube;
 
 import io.activej.aggregation.measure.Measure;
-import io.activej.codegen.Expression;
-import io.activej.codegen.Expressions;
-import io.activej.codegen.utils.Primitives;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
+import io.activej.codegen.util.Primitives;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

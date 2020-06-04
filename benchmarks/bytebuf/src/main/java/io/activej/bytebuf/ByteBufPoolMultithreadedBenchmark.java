@@ -5,7 +5,7 @@ import io.activej.di.annotation.Inject;
 import io.activej.di.annotation.Provides;
 import io.activej.launcher.Launcher;
 
-import static io.activej.config.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 
 public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 

@@ -6,9 +6,9 @@ import org.junit.Test;
 import java.util.NoSuchElementException;
 
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.config.ConfigConverters.ofByte;
-import static io.activej.config.ConfigConverters.ofInteger;
 import static io.activej.config.ConfigTestUtils.testBaseConfig;
+import static io.activej.config.converter.ConfigConverters.ofByte;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static org.junit.Assert.*;
 
 public class TreeConfigTest {

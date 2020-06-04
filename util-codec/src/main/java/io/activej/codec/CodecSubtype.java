@@ -16,8 +16,8 @@
 
 package io.activej.codec;
 
-import io.activej.common.Initializable;
-import io.activej.common.parse.ParseException;
+import io.activej.common.api.Initializable;
+import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;

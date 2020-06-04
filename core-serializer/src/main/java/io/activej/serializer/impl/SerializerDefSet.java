@@ -16,15 +16,15 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.Expression;
+import io.activej.codegen.expression.Expression;
 import io.activej.serializer.SerializerDef;
 
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static io.activej.codegen.Expressions.staticCall;
-import static io.activej.codegen.Expressions.value;
+import static io.activej.codegen.expression.Expressions.staticCall;
+import static io.activej.codegen.expression.Expressions.value;
 
 public final class SerializerDefSet extends AbstractSerializerDefCollection {
 	public SerializerDefSet(SerializerDef valueSerializer) {

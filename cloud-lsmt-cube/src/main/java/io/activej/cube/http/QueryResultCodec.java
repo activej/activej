@@ -18,7 +18,7 @@ package io.activej.cube.http;
 
 import io.activej.codec.*;
 import io.activej.codec.registry.CodecFactory;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.common.reflection.RecursiveType;
 import io.activej.cube.QueryResult;
 import io.activej.cube.Record;

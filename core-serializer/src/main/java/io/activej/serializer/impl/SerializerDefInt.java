@@ -16,12 +16,12 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import static io.activej.codegen.Expressions.cast;
+import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 

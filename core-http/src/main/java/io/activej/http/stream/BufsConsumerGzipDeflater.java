@@ -20,8 +20,12 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.MemSize;
-import io.activej.csp.*;
+import io.activej.csp.ChannelConsumer;
+import io.activej.csp.ChannelInput;
+import io.activej.csp.ChannelOutput;
+import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelTransformer;
+import io.activej.csp.process.AbstractCommunicatingProcess;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.zip.CRC32;

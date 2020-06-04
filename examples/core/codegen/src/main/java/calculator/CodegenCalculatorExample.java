@@ -2,8 +2,8 @@ package calculator;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.Expression;
-import io.activej.codegen.Expressions;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import org.jparsec.OperatorTable;
 import org.jparsec.Parser;
 import org.jparsec.Parsers;

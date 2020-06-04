@@ -19,7 +19,7 @@ package io.activej.cube.http;
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.registry.CodecFactory;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;

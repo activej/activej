@@ -28,7 +28,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Represents a {@code Promise} which is completed with an exception.

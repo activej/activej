@@ -19,6 +19,8 @@ package io.activej.crdt;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.StacklessException;
+import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamConsumer;
@@ -33,7 +35,7 @@ import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.net.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +46,7 @@ import java.util.function.Function;
 import static io.activej.crdt.CrdtMessaging.*;
 import static io.activej.crdt.CrdtMessaging.CrdtMessages.PING;
 import static io.activej.crdt.CrdtMessaging.CrdtResponses.*;
-import static io.activej.crdt.Utils.nullTerminatedJson;
+import static io.activej.crdt.util.Utils.nullTerminatedJson;
 
 public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService, EventloopJmxBeanEx {
 	private final Eventloop eventloop;

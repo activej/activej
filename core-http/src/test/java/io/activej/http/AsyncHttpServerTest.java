@@ -21,7 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.Random;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;

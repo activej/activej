@@ -17,6 +17,8 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.*;
+import io.activej.datastream.dsl.HasStreamInput;
+import io.activej.datastream.dsl.HasStreamOutputs;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promises;
 

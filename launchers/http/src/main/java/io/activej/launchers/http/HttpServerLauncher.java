@@ -24,7 +24,7 @@ import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
 import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ThrottlingController;
+import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
@@ -36,7 +36,7 @@ import java.net.InetSocketAddress;
 
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
-import static io.activej.config.ConfigConverters.ofInetSocketAddress;
+import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.di.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;

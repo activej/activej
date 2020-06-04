@@ -3,8 +3,8 @@ import io.activej.di.annotation.Provides;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.launchers.http.MultithreadedHttpServerLauncher;
-import io.activej.worker.Worker;
-import io.activej.worker.WorkerId;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 
 /**
  * HTTP multithreaded server example.

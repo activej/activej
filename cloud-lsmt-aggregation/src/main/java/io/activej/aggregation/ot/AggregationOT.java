@@ -16,10 +16,10 @@
 
 package io.activej.aggregation.ot;
 
-import io.activej.ot.OTSystem;
-import io.activej.ot.OTSystemImpl;
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
+import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.OTSystemImpl;
 
 import static io.activej.common.collection.CollectionUtils.hasIntersection;
 import static java.util.Collections.singletonList;

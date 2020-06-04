@@ -18,10 +18,10 @@ package io.activej.async.service;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
-import io.activej.common.Initializable;
+import io.activej.common.api.Initializable;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ScheduledRunnable;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 
 import static io.activej.common.Utils.nullify;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("UnusedReturnValue")

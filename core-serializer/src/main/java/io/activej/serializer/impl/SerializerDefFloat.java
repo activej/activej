@@ -16,8 +16,8 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 

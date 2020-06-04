@@ -2,6 +2,8 @@ package io.activej.ot;
 
 import io.activej.common.tuple.Tuple3;
 import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.OTSystemImpl;
 import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestSet;
 import io.activej.ot.utils.TestSetName;
@@ -11,9 +13,9 @@ import org.junit.Test;
 import java.util.List;
 
 import static io.activej.common.collection.CollectionUtils.concat;
-import static io.activej.ot.MergedOTSystem.mergeOtSystems;
 import static io.activej.ot.TransformResult.left;
 import static io.activej.ot.TransformResult.right;
+import static io.activej.ot.system.MergedOTSystem.mergeOtSystems;
 import static io.activej.ot.utils.TestSetName.setName;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.ot.utils.Utils.set;

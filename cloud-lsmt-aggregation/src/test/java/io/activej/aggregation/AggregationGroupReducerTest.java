@@ -18,12 +18,12 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.Utils.*;
+import static io.activej.aggregation.StreamUtils.assertEndOfStream;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.measure.Measures.union;
+import static io.activej.aggregation.util.Utils.*;
 import static io.activej.common.collection.CollectionUtils.keysToMap;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.stream.TestUtils.assertEndOfStream;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;

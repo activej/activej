@@ -1,8 +1,8 @@
 import io.activej.crdt.CrdtData;
-import io.activej.crdt.CrdtDataSerializer;
-import io.activej.crdt.CrdtFunction;
-import io.activej.crdt.TimestampContainer;
-import io.activej.crdt.local.CrdtStorageFs;
+import io.activej.crdt.function.CrdtFunction;
+import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;

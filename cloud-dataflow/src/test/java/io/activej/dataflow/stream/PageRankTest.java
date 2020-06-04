@@ -1,6 +1,7 @@
 package io.activej.dataflow.stream;
 
 import io.activej.codec.StructuredCodec;
+import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
@@ -8,7 +9,6 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
-import io.activej.dataflow.server.DataflowServer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamJoin.InnerJoiner;

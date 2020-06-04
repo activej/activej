@@ -17,8 +17,8 @@
 package io.activej.serializer.impl;
 
 import io.activej.codegen.ClassBuilder;
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.common.Utils;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
@@ -30,7 +30,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Preconditions.*;
 import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
 import static io.activej.serializer.SerializerDef.StaticEncoders.*;

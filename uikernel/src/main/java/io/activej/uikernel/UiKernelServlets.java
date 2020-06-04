@@ -18,7 +18,7 @@ package io.activej.uikernel;
 
 import com.google.gson.Gson;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 

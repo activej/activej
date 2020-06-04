@@ -16,17 +16,16 @@
 
 package io.activej.csp.process;
 
-import io.activej.csp.AbstractCommunicatingProcess;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelInput;
 
 import static io.activej.common.Preconditions.checkState;
-import static io.activej.common.Recyclable.tryRecycle;
-import static io.activej.common.Sliceable.trySlice;
+import static io.activej.common.api.Recyclable.tryRecycle;
+import static io.activej.common.api.Sliceable.trySlice;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Communicating process which distributes

@@ -17,7 +17,7 @@
 package io.activej.csp;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Recyclable;
+import io.activej.common.api.Recyclable;
 import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
@@ -32,8 +32,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
-import static io.activej.common.Recyclable.deepRecycle;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.common.api.Recyclable.deepRecycle;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Provides additional functionality for managing {@link ChannelConsumer}s.

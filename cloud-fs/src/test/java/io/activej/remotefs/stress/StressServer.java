@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 
-import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 

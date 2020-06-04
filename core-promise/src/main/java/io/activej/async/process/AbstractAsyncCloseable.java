@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Preconditions.checkState;
-import static io.activej.common.Recyclable.tryRecycle;
+import static io.activej.common.api.Recyclable.tryRecycle;
 
 public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 	private static final boolean CHECK = Check.isEnabled(AbstractAsyncCloseable.class);

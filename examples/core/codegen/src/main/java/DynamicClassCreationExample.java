@@ -1,9 +1,9 @@
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.ExpressionToString;
+import io.activej.codegen.expression.ExpressionToString;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 /**
  * In this example a Class that implements the specified interface is dynamically created.

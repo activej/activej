@@ -9,8 +9,8 @@ import io.activej.http.di.RequestScope;
 import io.activej.http.di.ScopeServlet;
 import io.activej.launchers.http.MultithreadedHttpServerLauncher;
 import io.activej.promise.Promise;
-import io.activej.worker.Worker;
-import io.activej.worker.WorkerId;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 
 import java.util.function.Function;
 

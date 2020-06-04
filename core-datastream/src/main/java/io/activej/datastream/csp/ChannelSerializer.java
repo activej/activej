@@ -37,7 +37,7 @@ import java.util.function.BiConsumer;
 
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.Utils.nullify;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.max;
 
 /**

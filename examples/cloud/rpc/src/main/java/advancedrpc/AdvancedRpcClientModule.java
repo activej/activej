@@ -1,7 +1,7 @@
 package advancedrpc;
 
 import io.activej.config.Config;
-import io.activej.config.ConfigConverters;
+import io.activej.config.converter.ConfigConverters;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;

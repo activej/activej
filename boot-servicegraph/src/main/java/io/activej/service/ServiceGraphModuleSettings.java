@@ -17,6 +17,7 @@
 package io.activej.service;
 
 import io.activej.di.Key;
+import io.activej.service.adapter.ServiceAdapter;
 
 @SuppressWarnings("unused")
 public interface ServiceGraphModuleSettings {

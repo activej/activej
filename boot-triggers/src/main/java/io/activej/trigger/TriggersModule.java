@@ -16,8 +16,8 @@
 
 package io.activej.trigger;
 
-import io.activej.common.Initializable;
-import io.activej.common.Initializer;
+import io.activej.common.api.Initializable;
+import io.activej.common.api.Initializer;
 import io.activej.di.Injector;
 import io.activej.di.Key;
 import io.activej.di.annotation.Optional;
@@ -25,7 +25,7 @@ import io.activej.di.annotation.Provides;
 import io.activej.di.annotation.ProvidesIntoSet;
 import io.activej.di.module.AbstractModule;
 import io.activej.launcher.LauncherService;
-import io.activej.trigger.jmx.KeyWithWorkerData;
+import io.activej.trigger.util.KeyWithWorkerData;
 import io.activej.trigger.util.Utils;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPools;

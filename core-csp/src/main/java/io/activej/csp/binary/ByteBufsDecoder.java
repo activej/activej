@@ -18,9 +18,9 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.parse.InvalidSizeException;
-import io.activej.common.parse.ParseException;
-import io.activej.common.parse.ParserFunction;
+import io.activej.common.api.ParserFunction;
+import io.activej.common.exception.parse.InvalidSizeException;
+import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;

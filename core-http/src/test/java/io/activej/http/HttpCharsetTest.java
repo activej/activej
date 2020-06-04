@@ -1,7 +1,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import org.junit.Test;
 
 import java.nio.charset.Charset;

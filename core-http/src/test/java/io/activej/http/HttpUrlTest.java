@@ -3,7 +3,7 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.test.rules.ByteBufRule;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.ClassRule;

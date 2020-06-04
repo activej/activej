@@ -29,7 +29,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.net.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.remotefs.RemoteFsCommands.*;

@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 
 import static io.activej.common.Preconditions.checkState;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 @SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
 abstract class AbstractPromise<T> implements Promise<T> {

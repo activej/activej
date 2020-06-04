@@ -17,7 +17,7 @@
 package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 class Utils {
 

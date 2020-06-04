@@ -16,7 +16,7 @@
 
 package io.activej.rpc.server;
 
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;

@@ -20,7 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.StructuredEncoder;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 public final class BinaryUtils {
 

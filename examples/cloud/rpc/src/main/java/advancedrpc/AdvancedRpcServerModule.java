@@ -7,9 +7,9 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerBuilder;
-import io.activej.worker.Worker;
-import io.activej.worker.WorkerId;
 import io.activej.worker.WorkerPool;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 
 public class AdvancedRpcServerModule extends AbstractModule {
 	@Override

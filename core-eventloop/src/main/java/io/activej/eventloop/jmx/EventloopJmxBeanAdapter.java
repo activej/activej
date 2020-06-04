@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Preconditions.*;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 	private static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);

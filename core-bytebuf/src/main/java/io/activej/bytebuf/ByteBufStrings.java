@@ -18,7 +18,7 @@ package io.activej.bytebuf;
 
 import io.activej.common.Check;
 import io.activej.common.concurrent.ThreadLocalCharArray;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 import static io.activej.common.Preconditions.checkArgument;
 

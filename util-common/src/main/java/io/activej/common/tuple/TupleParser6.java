@@ -16,7 +16,7 @@
 
 package io.activej.common.tuple;
 
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 @FunctionalInterface
 public interface TupleParser6<T1, T2, T3, T4, T5, T6, R> {

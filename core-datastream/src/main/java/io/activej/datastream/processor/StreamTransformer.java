@@ -16,7 +16,10 @@
 
 package io.activej.datastream.processor;
 
-import io.activej.datastream.*;
+import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.dsl.HasStreamInput;
+import io.activej.datastream.dsl.HasStreamOutput;
 
 import java.util.function.Function;
 

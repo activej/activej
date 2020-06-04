@@ -1,7 +1,7 @@
 package io.activej.launchers.crdt;
 
-import io.activej.crdt.CrdtDataSerializer;
-import io.activej.crdt.TimestampContainer;
+import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.TimestampContainer;
 import io.activej.di.annotation.Provides;
 import org.junit.Test;
 

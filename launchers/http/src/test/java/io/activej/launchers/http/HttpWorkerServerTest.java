@@ -11,8 +11,8 @@ import io.activej.http.HttpResponse;
 import io.activej.net.PrimaryServer;
 import io.activej.service.ServiceGraph;
 import io.activej.test.rules.ByteBufRule;
-import io.activej.worker.Worker;
-import io.activej.worker.WorkerId;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ import java.util.LinkedHashSet;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.config.ConfigConverters.ofInetSocketAddress;
+import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;

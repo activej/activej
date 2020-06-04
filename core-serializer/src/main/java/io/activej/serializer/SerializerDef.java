@@ -17,12 +17,12 @@
 package io.activej.serializer;
 
 import io.activej.codegen.ClassBuilder;
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 
 import java.util.Set;
 
-import static io.activej.codegen.Expressions.arg;
+import static io.activej.codegen.expression.Expressions.arg;
 
 /**
  * Represents a serializer and deserializer of a particular class to byte arrays

@@ -30,7 +30,7 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-final class AttributeNodeForThrowable extends AttributeNodeForLeafAbstract {
+final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 	private static final String THROWABLE_TYPE_KEY = "type";
 	private static final String THROWABLE_MESSAGE_KEY = "message";
 	private static final String THROWABLE_STACK_TRACE_KEY = "stackTrace";

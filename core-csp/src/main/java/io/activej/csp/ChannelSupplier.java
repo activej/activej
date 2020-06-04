@@ -24,7 +24,7 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +40,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Recyclable.tryRecycle;
+import static io.activej.common.api.Recyclable.tryRecycle;
 import static io.activej.common.collection.CollectionUtils.asIterator;
 
 /**

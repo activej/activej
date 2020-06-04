@@ -18,12 +18,12 @@ package io.activej.launchers.crdt;
 
 import io.activej.common.reflection.RecursiveType;
 import io.activej.config.Config;
-import io.activej.crdt.CrdtRepartitionController;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.CrdtStorage;
-import io.activej.crdt.CrdtStorageCluster;
-import io.activej.crdt.local.CrdtStorageFs;
-import io.activej.crdt.local.CrdtStorageMap;
+import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.cluster.CrdtRepartitionController;
+import io.activej.crdt.storage.cluster.CrdtStorageCluster;
+import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.di.Key;
 import io.activej.di.annotation.Provides;
 import io.activej.di.annotation.QualifierAnnotation;

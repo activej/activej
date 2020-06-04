@@ -19,7 +19,11 @@ import io.activej.service.ServiceGraphModule;
 import io.activej.trigger.Severity;
 import io.activej.trigger.TriggerResult;
 import io.activej.trigger.TriggersModule;
-import io.activej.worker.*;
+import io.activej.worker.WorkerPool;
+import io.activej.worker.WorkerPoolModule;
+import io.activej.worker.WorkerPools;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

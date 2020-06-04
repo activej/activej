@@ -18,6 +18,9 @@ package io.activej.dns;
 
 import io.activej.common.Check;
 import io.activej.dns.DnsCache.DnsQueryCacheResult;
+import io.activej.dns.protocol.DnsQuery;
+import io.activej.dns.protocol.DnsQueryException;
+import io.activej.dns.protocol.DnsResponse;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.promise.Promise;
@@ -34,7 +37,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Preconditions.checkState;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Implementation of {@link AsyncDnsClient} that asynchronously

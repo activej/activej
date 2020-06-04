@@ -19,27 +19,27 @@ package io.activej.launchers.dataflow;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.dataflow.DataflowClient;
+import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.command.DataflowCommand;
+import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.di.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.di.DataflowModule;
-import io.activej.dataflow.server.DataflowClient;
-import io.activej.dataflow.server.DataflowServer;
-import io.activej.dataflow.server.command.DatagraphCommand;
-import io.activej.dataflow.server.command.DatagraphResponse;
 import io.activej.di.Injector;
 import io.activej.di.annotation.Inject;
 import io.activej.di.annotation.Optional;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ThrottlingController;
+import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.Executor;
 
-import static io.activej.config.ConfigConverters.getExecutor;
-import static io.activej.config.ConfigConverters.ofPath;
+import static io.activej.config.converter.ConfigConverters.getExecutor;
+import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.di.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
@@ -64,14 +64,14 @@ public abstract class DataflowServerLauncher extends Launcher {
 	}
 
 	@Provides
-	DataflowServer server(Eventloop eventloop, Config config, ByteBufsCodec<DatagraphCommand, DatagraphResponse> codec, BinarySerializerLocator serializers, Injector environment) {
+	DataflowServer server(Eventloop eventloop, Config config, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment) {
 		return new DataflowServer(eventloop, codec, serializers, environment)
 				.initialize(ofAbstractServer(config.getChild("dataflow.server")))
 				.initialize(s -> s.withSocketSettings(s.getSocketSettings().withTcpNoDelay(true)));
 	}
 
 	@Provides
-	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DatagraphResponse, DatagraphCommand> codec, BinarySerializerLocator serializers) {
+	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) {
 		return new DataflowClient(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers);
 	}
 

@@ -17,9 +17,9 @@
 package io.activej.bytebuf;
 
 import io.activej.common.Check;
-import io.activej.common.Recyclable;
-import io.activej.common.Sliceable;
 import io.activej.common.Utils;
+import io.activej.common.api.Recyclable;
+import io.activej.common.api.Sliceable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 

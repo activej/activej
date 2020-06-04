@@ -18,9 +18,9 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.parse.InvalidSizeException;
-import io.activej.common.parse.ParseException;
-import io.activej.common.parse.UnknownFormatException;
+import io.activej.common.exception.parse.InvalidSizeException;
+import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.parse.UnknownFormatException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -229,7 +229,7 @@ public final class UrlParser {
 	}
 
 	// getters
-	boolean isRelativePath() {
+	public boolean isRelativePath() {
 		return host == -1;
 	}
 

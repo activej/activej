@@ -2,6 +2,7 @@ package io.activej.datastream;
 
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.ChannelConsumer;
+import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

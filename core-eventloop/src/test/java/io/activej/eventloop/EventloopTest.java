@@ -1,6 +1,7 @@
 package io.activej.eventloop;
 
 import io.activej.common.ref.Ref;
+import io.activej.eventloop.util.RunnableWithContext;
 import org.junit.Test;
 
 import static java.util.Objects.requireNonNull;

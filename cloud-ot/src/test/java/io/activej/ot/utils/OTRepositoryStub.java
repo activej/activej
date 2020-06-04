@@ -2,7 +2,7 @@ package io.activej.ot.utils;
 
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTCommitFactory;
-import io.activej.ot.OTRepository;
+import io.activej.ot.repository.OTRepository;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 

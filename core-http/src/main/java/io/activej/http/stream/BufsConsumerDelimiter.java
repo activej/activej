@@ -18,13 +18,13 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.csp.AbstractCommunicatingProcess;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.dsl.WithBinaryChannelInput;
 import io.activej.csp.dsl.WithChannelTransformer;
+import io.activej.csp.process.AbstractCommunicatingProcess;
 
 import static io.activej.common.Preconditions.checkState;
 

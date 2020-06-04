@@ -22,6 +22,7 @@ import io.activej.di.Scope;
 import io.activej.di.annotation.ShortTypeName;
 import io.activej.di.binding.BindingInfo;
 import io.activej.di.util.Trie;
+import io.activej.worker.annotation.WorkerId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

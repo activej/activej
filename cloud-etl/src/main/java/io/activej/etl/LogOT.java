@@ -16,10 +16,10 @@
 
 package io.activej.etl;
 
-import io.activej.ot.OTSystem;
-import io.activej.ot.OTSystemImpl;
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
+import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.OTSystemImpl;
 
 import java.util.HashMap;
 import java.util.List;

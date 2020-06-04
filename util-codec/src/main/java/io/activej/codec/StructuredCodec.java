@@ -16,9 +16,9 @@
 
 package io.activej.codec;
 
+import io.activej.common.api.ParserFunction;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.parse.ParseException;
-import io.activej.common.parse.ParserFunction;
+import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;

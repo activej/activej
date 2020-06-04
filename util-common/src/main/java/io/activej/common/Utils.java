@@ -16,7 +16,7 @@
 
 package io.activej.common;
 
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

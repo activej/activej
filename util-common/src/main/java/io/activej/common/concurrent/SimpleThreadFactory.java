@@ -16,7 +16,7 @@
 
 package io.activej.common.concurrent;
 
-import io.activej.common.Initializable;
+import io.activej.common.api.Initializable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ThreadFactory;

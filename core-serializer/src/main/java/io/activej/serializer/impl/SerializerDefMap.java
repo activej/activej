@@ -16,7 +16,7 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.Expression;
+import io.activej.codegen.expression.Expression;
 import io.activej.serializer.SerializerDef;
 
 import java.util.EnumMap;
@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static org.objectweb.asm.Type.getType;
 
 public final class SerializerDefMap extends AbstractSerializerDefMap {

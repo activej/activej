@@ -21,7 +21,7 @@ import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;

@@ -17,10 +17,10 @@
 package io.activej.jmx;
 
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.Initializable;
-import io.activej.common.Initializer;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
+import io.activej.common.api.Initializable;
+import io.activej.common.api.Initializer;
 import io.activej.di.Injector;
 import io.activej.di.Key;
 import io.activej.di.annotation.Optional;

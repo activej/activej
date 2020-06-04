@@ -1,6 +1,6 @@
 package io.activej.serializer.examples;
 
-import io.activej.codegen.Expression;
+import io.activej.codegen.expression.Expression;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.AbstractSerializerDefCollection;
 

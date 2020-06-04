@@ -1,5 +1,6 @@
 package io.activej.config;
 
+import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.net.ServerSocketSettings;
 import org.junit.Assert;
 import org.junit.Test;

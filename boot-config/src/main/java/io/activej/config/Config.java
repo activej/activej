@@ -17,6 +17,8 @@
 package io.activej.config;
 
 import io.activej.common.CollectorsEx;
+import io.activej.config.converter.ConfigConverter;
+import io.activej.config.converter.ConfigConverters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;

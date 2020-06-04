@@ -18,8 +18,8 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.parse.ParseException;
-import io.activej.common.parse.ParserFunction;
+import io.activej.common.api.ParserFunction;
+import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

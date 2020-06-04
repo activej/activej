@@ -22,6 +22,7 @@ import io.activej.datastream.StreamConsumers.ClosingWithError;
 import io.activej.datastream.StreamConsumers.Idle;
 import io.activej.datastream.StreamConsumers.OfChannelConsumer;
 import io.activej.datastream.StreamConsumers.Skip;
+import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;

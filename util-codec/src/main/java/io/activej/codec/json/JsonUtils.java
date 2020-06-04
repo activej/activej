@@ -25,7 +25,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.codec.*;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 import java.io.*;
 

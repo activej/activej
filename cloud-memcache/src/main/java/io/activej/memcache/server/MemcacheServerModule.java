@@ -26,7 +26,7 @@ import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerBuilder;
 
 import static io.activej.common.MemSize.kilobytes;
-import static io.activej.config.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.*;
 import static io.activej.rpc.server.RpcServer.DEFAULT_SERVER_SOCKET_SETTINGS;
 import static io.activej.rpc.server.RpcServer.DEFAULT_SOCKET_SETTINGS;

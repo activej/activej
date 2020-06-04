@@ -18,8 +18,8 @@ package io.activej.serializer;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.SerializerDef.StaticDecoders;
 import io.activej.serializer.TypedModsMap.Builder;
 import io.activej.serializer.annotations.*;
@@ -37,15 +37,15 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.*;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.Preconditions.checkNotNull;
 import static io.activej.common.Utils.nullToDefault;
 import static io.activej.common.Utils.of;
 import static io.activej.serializer.SerializerDef.StaticEncoders.POS;
-import static io.activej.serializer.Utils.findAnnotation;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
+import static io.activej.serializer.util.Utils.findAnnotation;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Arrays.asList;
 

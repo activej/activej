@@ -16,6 +16,8 @@
 
 package io.activej.serializer;
 
+import io.activej.serializer.util.BinaryOutputUtils;
+
 import java.util.*;
 import java.util.function.Supplier;
 

@@ -29,7 +29,7 @@ import io.activej.serializer.SerializerBuilder;
 import java.time.Duration;
 
 import static io.activej.common.MemSize.kilobytes;
-import static io.activej.config.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.HASH_FUNCTION;
 import static io.activej.rpc.client.RpcClient.DEFAULT_SOCKET_SETTINGS;
 import static io.activej.rpc.client.sender.RpcStrategies.rendezvousHashing;

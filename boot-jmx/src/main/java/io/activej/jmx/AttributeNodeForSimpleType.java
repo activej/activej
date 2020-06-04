@@ -36,7 +36,7 @@ import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes")
-final class AttributeNodeForSimpleType extends AttributeNodeForLeafAbstract {
+final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 	@Nullable
 	private final Method setter;
 	private final Class<?> type;

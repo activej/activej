@@ -19,7 +19,7 @@ package io.activej.aggregation.ot;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
-import io.activej.common.Initializable;
+import io.activej.common.api.Initializable;
 
 import java.util.*;
 

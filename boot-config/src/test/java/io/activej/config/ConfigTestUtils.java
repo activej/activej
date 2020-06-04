@@ -1,5 +1,8 @@
 package io.activej.config;
 
+import io.activej.config.converter.ConfigConverter;
+import io.activej.config.converter.ConfigConverters;
+
 import java.util.NoSuchElementException;
 
 import static io.activej.common.collection.CollectionUtils.set;

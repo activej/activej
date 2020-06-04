@@ -17,6 +17,7 @@
 package io.activej.net;
 
 import io.activej.eventloop.Eventloop;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 
 import java.net.InetAddress;
 import java.util.function.Consumer;

@@ -23,7 +23,7 @@ import io.activej.common.exception.StacklessException;
 import io.activej.common.ref.RefInt;
 import io.activej.common.tuple.*;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ScheduledRunnable;
+import io.activej.eventloop.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +41,7 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.common.collection.CollectionUtils.asIterator;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 

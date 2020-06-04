@@ -20,7 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Recyclable;
+import io.activej.common.api.Recyclable;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelConsumer;

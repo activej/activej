@@ -20,7 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

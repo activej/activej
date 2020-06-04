@@ -22,6 +22,7 @@ import io.activej.datastream.StreamSuppliers.Closing;
 import io.activej.datastream.StreamSuppliers.ClosingWithError;
 import io.activej.datastream.StreamSuppliers.Idle;
 import io.activej.datastream.StreamSuppliers.OfIterator;
+import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;

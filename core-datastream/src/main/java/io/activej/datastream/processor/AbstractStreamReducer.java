@@ -17,6 +17,8 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.*;
+import io.activej.datastream.dsl.HasStreamInputs;
+import io.activej.datastream.dsl.HasStreamOutput;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

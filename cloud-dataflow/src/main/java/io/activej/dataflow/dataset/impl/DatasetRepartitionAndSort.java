@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-import static io.activej.dataflow.dataset.impl.DatasetUtils.repartitionAndSort;
+import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
 
 public final class DatasetRepartitionAndSort<K, T> extends SortedDataset<K, T> {
 	private final LocallySortedDataset<K, T> input;

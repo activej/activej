@@ -17,7 +17,7 @@
 package io.activej.net;
 
 import io.activej.common.Check;
-import io.activej.common.Initializable;
+import io.activej.common.api.Initializable;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
@@ -25,7 +25,9 @@ import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.AsyncTcpSocketNio.Inspector;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio.Inspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
@@ -46,10 +48,10 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 import static io.activej.common.Preconditions.checkState;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
-import static io.activej.net.AsyncTcpSocketNio.wrapChannel;
-import static io.activej.net.AsyncTcpSocketSsl.wrapServerSocket;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.net.socket.tcp.AsyncTcpSocketNio.wrapChannel;
+import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapServerSocket;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.slf4j.LoggerFactory.getLogger;

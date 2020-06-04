@@ -14,13 +14,14 @@ import io.activej.di.annotation.Provides;
 import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
 import io.activej.launcher.Launcher;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.config.ConfigConverters.ofInetSocketAddress;
-import static io.activej.config.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 
 @SuppressWarnings("WeakerAccess")

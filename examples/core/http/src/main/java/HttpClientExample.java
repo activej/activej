@@ -16,8 +16,8 @@ import io.activej.service.ServiceGraphModule;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.config.ConfigConverters.ofDuration;
-import static io.activej.config.ConfigConverters.ofInetAddress;
+import static io.activej.config.converter.ConfigConverters.ofDuration;
+import static io.activej.config.converter.ConfigConverters.ofInetAddress;
 import static io.activej.di.module.Modules.combine;
 import static java.nio.charset.StandardCharsets.UTF_8;
 

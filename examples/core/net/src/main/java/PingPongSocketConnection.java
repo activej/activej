@@ -2,8 +2,8 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.AsyncTcpSocketNio;
 import io.activej.net.SimpleServer;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

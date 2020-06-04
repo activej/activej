@@ -16,7 +16,7 @@
 
 package io.activej.csp;
 
-import io.activej.common.Recyclable;
+import io.activej.common.api.Recyclable;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 

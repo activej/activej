@@ -1,4 +1,4 @@
-import io.activej.common.Initializer;
+import io.activej.common.api.Initializer;
 import io.activej.di.Key;
 import io.activej.di.annotation.Inject;
 import io.activej.di.annotation.Provides;

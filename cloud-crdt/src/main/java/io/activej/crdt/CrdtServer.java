@@ -17,40 +17,42 @@
 package io.activej.crdt;
 
 import io.activej.common.exception.StacklessException;
+import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
-import io.activej.net.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
 
 import java.net.InetAddress;
 
 import static io.activej.crdt.CrdtMessaging.*;
-import static io.activej.crdt.Utils.nullTerminatedJson;
+import static io.activej.crdt.util.Utils.nullTerminatedJson;
 
 public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {
-    private final CrdtStorage<K, S> client;
+    private final CrdtStorage<K, S> storage;
     private final CrdtDataSerializer<K, S> serializer;
     private final BinarySerializer<K> keySerializer;
 
-    private CrdtServer(Eventloop eventloop, CrdtStorage<K, S> client, CrdtDataSerializer<K, S> serializer) {
+    private CrdtServer(Eventloop eventloop, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
         super(eventloop);
-        this.client = client;
+        this.storage = storage;
         this.serializer = serializer;
 
         keySerializer = serializer.getKeySerializer();
     }
 
-    public static <K extends Comparable<K>, S> CrdtServer<K, S> create(Eventloop eventloop, CrdtStorage<K, S> client, CrdtDataSerializer<K, S> serializer) {
-        return new CrdtServer<>(eventloop, client, serializer);
+    public static <K extends Comparable<K>, S> CrdtServer<K, S> create(Eventloop eventloop, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
+        return new CrdtServer<>(eventloop, storage, serializer);
     }
 
-    public static <K extends Comparable<K>, S> CrdtServer<K, S> create(Eventloop eventloop, CrdtStorage<K, S> client, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
-        return new CrdtServer<>(eventloop, client, new CrdtDataSerializer<>(keySerializer, stateSerializer));
+    public static <K extends Comparable<K>, S> CrdtServer<K, S> create(Eventloop eventloop, CrdtStorage<K, S> storage, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
+        return new CrdtServer<>(eventloop, storage, new CrdtDataSerializer<>(keySerializer, stateSerializer));
     }
 
     @Override
@@ -65,7 +67,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
                     if (msg == CrdtMessages.UPLOAD) {
                         return messaging.receiveBinaryStream()
                                 .transformWith(ChannelDeserializer.create(serializer))
-                                .streamTo(StreamConsumer.ofPromise(client.upload()))
+                                .streamTo(StreamConsumer.ofPromise(storage.upload()))
                                 .then(() -> messaging.send(CrdtResponses.UPLOAD_FINISHED))
                                 .then(messaging::sendEndOfStream)
                                 .whenResult(messaging::close);
@@ -74,13 +76,13 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
                     if (msg == CrdtMessages.REMOVE) {
                         return messaging.receiveBinaryStream()
                                 .transformWith(ChannelDeserializer.create(keySerializer))
-                                .streamTo(StreamConsumer.ofPromise(client.remove()))
+                                .streamTo(StreamConsumer.ofPromise(storage.remove()))
                                 .then(() -> messaging.send(CrdtResponses.REMOVE_FINISHED))
                                 .then(messaging::sendEndOfStream)
                                 .whenResult(messaging::close);
                     }
                     if (msg instanceof Download) {
-                        return client.download(((Download) msg).getToken())
+                        return storage.download(((Download) msg).getToken())
                                 .whenResult(() -> messaging.send(new DownloadStarted()))
                                 .then(supplier -> supplier
                                         .transformWith(ChannelSerializer.create(serializer))

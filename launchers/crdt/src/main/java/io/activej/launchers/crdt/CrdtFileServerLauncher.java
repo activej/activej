@@ -19,7 +19,7 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.di.annotation.Inject;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
@@ -35,8 +35,8 @@ import java.util.concurrent.ExecutorService;
 
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
-import static io.activej.config.ConfigConverters.ofExecutor;
-import static io.activej.config.ConfigConverters.ofPath;
+import static io.activej.config.converter.ConfigConverters.ofExecutor;
+import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.di.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 

@@ -16,13 +16,13 @@
 
 package io.activej.launchers.crdt;
 
-import io.activej.common.Initializer;
+import io.activej.common.api.Initializer;
 import io.activej.config.Config;
-import io.activej.config.ConfigConverters;
+import io.activej.config.converter.ConfigConverters;
 import io.activej.crdt.CrdtStorageClient;
-import io.activej.crdt.CrdtStorageCluster;
-import io.activej.crdt.local.CrdtStorageFs;
-import io.activej.crdt.local.CrdtStorageMap;
+import io.activej.crdt.storage.cluster.CrdtStorageCluster;
+import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
 
 import java.net.InetSocketAddress;
@@ -30,8 +30,8 @@ import java.time.Duration;
 import java.util.Map;
 
 import static io.activej.common.Preconditions.checkState;
-import static io.activej.config.ConfigConverters.ofDuration;
-import static io.activej.config.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofDuration;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 
 public final class Initializers {
 

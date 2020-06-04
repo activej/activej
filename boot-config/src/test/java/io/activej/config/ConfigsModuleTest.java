@@ -1,9 +1,10 @@
 package io.activej.config;
 
+import io.activej.config.converter.ConfigConverter;
 import io.activej.di.Injector;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
-import io.activej.launcher.OnStart;
+import io.activej.launcher.annotation.OnStart;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -11,7 +12,7 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-import static io.activej.config.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 

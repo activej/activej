@@ -18,8 +18,8 @@ package io.activej.cube.attributes;
 
 import io.activej.async.service.EventloopService;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ScheduledRunnable;
 import io.activej.eventloop.jmx.EventloopJmxBean;
+import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.common.Utils.nullify;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A> implements EventloopService, EventloopJmxBean {
 	protected final Eventloop eventloop;

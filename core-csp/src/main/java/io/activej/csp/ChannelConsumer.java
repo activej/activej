@@ -25,7 +25,7 @@ import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +38,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static io.activej.common.Recyclable.tryRecycle;
+import static io.activej.common.api.Recyclable.tryRecycle;
 
 /**
  * This interface represents consumer of data items that should be used serially

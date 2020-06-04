@@ -18,8 +18,8 @@ package io.activej.aggregation.measure;
 
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.Context;
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.SerializerDefArray;
 import io.activej.serializer.impl.SerializerDefByte;
@@ -28,8 +28,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static io.activej.codec.StructuredCodecs.INT_CODEC;
-import static io.activej.codegen.Expressions.*;
-import static io.activej.codegen.Utils.isWrapperType;
+import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.Utils.isWrapperType;
 import static java.util.Collections.singletonList;
 import static org.objectweb.asm.Type.*;
 

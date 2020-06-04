@@ -20,10 +20,14 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
-import io.activej.datastream.*;
+import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.processor.StreamConsumerTransformer;
+import io.activej.datastream.processor.StreamSupplierTransformer;
 
 public interface StreamStats<T> extends
-		StreamSupplierTransformer<T, StreamSupplier<T>>, StreamConsumerTransformer<T, StreamConsumer<T>>,
+        StreamSupplierTransformer<T, StreamSupplier<T>>, StreamConsumerTransformer<T, StreamConsumer<T>>,
 		ChannelSupplierTransformer<T, ChannelSupplier<T>>, ChannelConsumerTransformer<T, ChannelConsumer<T>> {
 	StreamDataAcceptor<T> createDataAcceptor(StreamDataAcceptor<T> actualDataAcceptor);
 

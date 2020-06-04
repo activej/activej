@@ -9,13 +9,13 @@ import io.activej.memcache.server.RingBuffer;
 import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerBuilder;
-import io.activej.worker.Worker;
-import io.activej.worker.WorkerId;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.config.ConfigConverters.ofInteger;
-import static io.activej.config.ConfigConverters.ofMemSize;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofMemSize;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.*;
 
 public class MemcacheMultiServerModule extends AbstractModule {

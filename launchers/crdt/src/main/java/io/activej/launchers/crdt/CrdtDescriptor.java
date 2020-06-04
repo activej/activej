@@ -17,8 +17,8 @@
 package io.activej.launchers.crdt;
 
 import io.activej.codec.StructuredCodec;
-import io.activej.crdt.CrdtDataSerializer;
-import io.activej.crdt.CrdtFunction;
+import io.activej.crdt.function.CrdtFunction;
+import io.activej.crdt.util.CrdtDataSerializer;
 
 public final class CrdtDescriptor<K extends Comparable<K>, S> {
 	private final CrdtFunction<S> crdtFunction;

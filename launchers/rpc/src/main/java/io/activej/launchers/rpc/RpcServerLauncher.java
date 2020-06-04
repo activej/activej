@@ -16,7 +16,7 @@
 
 package io.activej.launchers.rpc;
 
-import io.activej.common.Initializer;
+import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.di.annotation.Inject;
@@ -25,7 +25,7 @@ import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
 import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ThrottlingController;
+import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;

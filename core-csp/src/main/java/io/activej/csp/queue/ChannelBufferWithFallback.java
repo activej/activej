@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-import static io.activej.common.Recyclable.tryRecycle;
+import static io.activej.common.api.Recyclable.tryRecycle;
 
 public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 	private final ChannelQueue<T> queue;

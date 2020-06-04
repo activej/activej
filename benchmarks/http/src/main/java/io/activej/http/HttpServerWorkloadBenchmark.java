@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-import static io.activej.config.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.di.module.Modules.combine;
 import static java.lang.Math.min;
 

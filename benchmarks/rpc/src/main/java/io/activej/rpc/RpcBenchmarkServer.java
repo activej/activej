@@ -13,9 +13,9 @@ import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
-import static io.activej.config.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.di.module.Modules.combine;
-import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 
 public class RpcBenchmarkServer extends Launcher {
 	private static final int SERVICE_PORT = 25565;

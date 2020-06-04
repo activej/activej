@@ -1,11 +1,11 @@
 package io.activej.dataflow.stream;
 
+import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.server.DataflowServer;
 import io.activej.dataflow.stream.DataflowTest.TestComparator;
 import io.activej.dataflow.stream.DataflowTest.TestItem;
 import io.activej.dataflow.stream.DataflowTest.TestKeyFunction;

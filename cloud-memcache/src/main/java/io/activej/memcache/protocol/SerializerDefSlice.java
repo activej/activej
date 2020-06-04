@@ -16,18 +16,18 @@
 
 package io.activej.memcache.protocol;
 
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.serializer.BinaryInput;
-import io.activej.serializer.BinaryOutputUtils;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.SerializerDefWithNullable;
+import io.activej.serializer.util.BinaryOutputUtils;
 
 import java.util.Set;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Collections.emptySet;
 
 @SuppressWarnings("unused")

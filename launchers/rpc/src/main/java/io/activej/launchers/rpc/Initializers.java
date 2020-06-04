@@ -16,13 +16,13 @@
 
 package io.activej.launchers.rpc;
 
-import io.activej.common.Initializer;
+import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.rpc.server.RpcServer;
 
 import java.time.Duration;
 
-import static io.activej.config.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
 import static io.activej.rpc.server.RpcServer.DEFAULT_MAX_MESSAGE_SIZE;

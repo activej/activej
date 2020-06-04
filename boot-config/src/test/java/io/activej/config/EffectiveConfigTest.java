@@ -1,5 +1,6 @@
 package io.activej.config;
 
+import io.activej.config.converter.ConfigConverter;
 import io.activej.eventloop.net.ServerSocketSettings;
 import org.junit.Before;
 import org.junit.Rule;
@@ -13,9 +14,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static io.activej.config.ConfigConverters.ofLong;
-import static io.activej.config.ConfigConverters.ofServerSocketSettings;
 import static io.activej.config.ConfigTestUtils.testBaseConfig;
+import static io.activej.config.converter.ConfigConverters.ofLong;
+import static io.activej.config.converter.ConfigConverters.ofServerSocketSettings;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
 

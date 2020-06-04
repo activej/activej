@@ -7,12 +7,12 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.AsyncTcpSocket;
-import io.activej.net.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 

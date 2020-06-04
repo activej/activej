@@ -5,6 +5,7 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.ref.RefLong;
 import io.activej.eventloop.net.SocketSettings;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;

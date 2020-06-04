@@ -1,7 +1,7 @@
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 public final class CodegenExpressionsExample {
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException {

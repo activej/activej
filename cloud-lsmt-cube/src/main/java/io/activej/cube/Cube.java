@@ -24,14 +24,18 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCollector;
-import io.activej.codegen.*;
-import io.activej.common.Initializable;
+import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.DefiningClassLoader;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.ExpressionComparator;
+import io.activej.codegen.expression.Variable;
+import io.activej.common.api.Initializable;
 import io.activej.common.ref.Ref;
 import io.activej.cube.CubeQuery.Ordering;
-import io.activej.cube.asm.MeasuresFunction;
-import io.activej.cube.asm.RecordFunction;
-import io.activej.cube.asm.TotalsFunction;
 import io.activej.cube.attributes.AttributeResolver;
+import io.activej.cube.function.MeasuresFunction;
+import io.activej.cube.function.RecordFunction;
+import io.activej.cube.function.TotalsFunction;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerWithResult;
@@ -66,11 +70,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.Utils.*;
-import static io.activej.codegen.ExpressionComparator.leftProperty;
-import static io.activej.codegen.ExpressionComparator.rightProperty;
-import static io.activej.codegen.Expressions.*;
-import static io.activej.codegen.utils.Primitives.isWrapperType;
+import static io.activej.aggregation.util.Utils.*;
+import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
+import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
+import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.Primitives.isWrapperType;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.Preconditions.checkState;
 import static io.activej.common.Utils.of;
@@ -637,7 +641,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 				break;
 			}
 
-			Function<S, K> keyFunction = io.activej.aggregation.Utils.createKeyFunction(aggregationClass, resultKeyClass, dimensions, queryClassLoader);
+			Function<S, K> keyFunction = io.activej.aggregation.util.Utils.createKeyFunction(aggregationClass, resultKeyClass, dimensions, queryClassLoader);
 
 			Reducer<K, S, T, A> reducer = aggregationContainer.aggregation.aggregationReducer(aggregationClass, resultClass,
 					dimensions, compatibleMeasures, queryClassLoader);

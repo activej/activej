@@ -1,7 +1,7 @@
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.di.annotation.Provides;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;

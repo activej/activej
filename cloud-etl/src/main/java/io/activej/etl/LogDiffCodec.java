@@ -17,7 +17,7 @@
 package io.activej.etl;
 
 import io.activej.codec.*;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 

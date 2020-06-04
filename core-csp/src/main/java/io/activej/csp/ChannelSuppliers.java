@@ -20,7 +20,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.common.Recyclable;
+import io.activej.common.api.Recyclable;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
@@ -44,9 +44,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
-import static io.activej.common.Recyclable.deepRecycle;
 import static io.activej.common.Utils.nullify;
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.common.api.Recyclable.deepRecycle;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 
 /**

@@ -1,7 +1,11 @@
 import io.activej.di.Injector;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
-import io.activej.worker.*;
+import io.activej.worker.WorkerPool;
+import io.activej.worker.WorkerPoolModule;
+import io.activej.worker.WorkerPools;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 
 //[START EXAMPLE]
 public final class WorkerPoolModuleExample extends AbstractModule {

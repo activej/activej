@@ -20,9 +20,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.codec.StructuredCodec;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.dataflow.command.DataflowCommand;
+import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.di.CodecsModule.Subtypes;
-import io.activej.dataflow.server.command.DatagraphCommand;
-import io.activej.dataflow.server.command.DatagraphResponse;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
 import io.activej.di.module.Module;
@@ -48,12 +48,12 @@ public final class DataflowModule extends AbstractModule {
 	}
 
 	@Provides
-	ByteBufsCodec<DatagraphCommand, DatagraphResponse> commandToResponse(@Subtypes StructuredCodec<DatagraphCommand> command, StructuredCodec<DatagraphResponse> response) {
+	ByteBufsCodec<DataflowCommand, DataflowResponse> commandToResponse(@Subtypes StructuredCodec<DataflowCommand> command, StructuredCodec<DataflowResponse> response) {
 		return nullTerminated(command, response);
 	}
 
 	@Provides
-	ByteBufsCodec<DatagraphResponse, DatagraphCommand> responseToCommand(@Subtypes StructuredCodec<DatagraphCommand> command, StructuredCodec<DatagraphResponse> response) {
+	ByteBufsCodec<DataflowResponse, DataflowCommand> responseToCommand(@Subtypes StructuredCodec<DataflowCommand> command, StructuredCodec<DataflowResponse> response) {
 		return nullTerminated(response, command);
 	}
 

@@ -16,15 +16,15 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
 import java.net.Inet4Address;
 import java.util.Set;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.readBytes;
 import static io.activej.serializer.impl.SerializerExpressions.writeBytes;
 import static java.util.Collections.emptySet;

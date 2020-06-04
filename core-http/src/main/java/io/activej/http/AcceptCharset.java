@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 import java.nio.charset.Charset;
 import java.util.List;

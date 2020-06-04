@@ -16,9 +16,9 @@
 
 package io.activej.dataflow.node;
 
+import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskContext;
-import io.activej.dataflow.server.DataflowServer;
 
 import java.util.Collection;
 

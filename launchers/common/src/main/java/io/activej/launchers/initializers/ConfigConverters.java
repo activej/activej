@@ -17,7 +17,7 @@
 package io.activej.launchers.initializers;
 
 import io.activej.config.Config;
-import io.activej.config.ConfigConverter;
+import io.activej.config.converter.ConfigConverter;
 import io.activej.dns.DnsCache;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.Contract;
@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-import static io.activej.config.ConfigConverters.ofDuration;
+import static io.activej.config.converter.ConfigConverters.ofDuration;
 import static io.activej.dns.DnsCache.*;
 
 public final class ConfigConverters {

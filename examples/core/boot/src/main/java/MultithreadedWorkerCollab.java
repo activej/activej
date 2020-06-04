@@ -3,7 +3,11 @@ import io.activej.di.Key;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;
-import io.activej.worker.*;
+import io.activej.worker.WorkerPool;
+import io.activej.worker.WorkerPoolModule;
+import io.activej.worker.WorkerPools;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -19,8 +19,7 @@ package io.activej.eventloop;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.Check;
-import io.activej.common.Initializable;
-import io.activej.common.Stopwatch;
+import io.activej.common.api.Initializable;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
@@ -28,10 +27,19 @@ import io.activej.common.inspector.BaseInspector;
 import io.activej.common.reflection.ReflectionUtils;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.time.CurrentTimeProviderSystem;
+import io.activej.common.time.Stopwatch;
+import io.activej.eventloop.error.FatalErrorHandler;
+import io.activej.eventloop.error.FatalErrorHandlers;
+import io.activej.eventloop.executor.EventloopExecutor;
+import io.activej.eventloop.inspector.EventloopInspector;
+import io.activej.eventloop.inspector.EventloopStats;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
+import io.activej.eventloop.schedule.ScheduledRunnable;
+import io.activej.eventloop.schedule.Scheduler;
 import io.activej.eventloop.util.OptimizedSelectedKeysSet;
+import io.activej.eventloop.util.RunnableWithContext;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import org.jetbrains.annotations.Async;
@@ -81,7 +89,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private static final boolean CHECK = Check.isEnabled(Eventloop.class);
 
 	public static final boolean JIGSAW_DETECTED;
-	static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
 	static {
 		JIGSAW_DETECTED = ReflectionUtils.isClassPresent("java.lang.Module");

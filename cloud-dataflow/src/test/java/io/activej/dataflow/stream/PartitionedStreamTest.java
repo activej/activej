@@ -10,6 +10,10 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
+import io.activej.dataflow.DataflowClient;
+import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.command.DataflowCommand;
+import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.di.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.di.CodecsModule.Subtypes;
@@ -22,10 +26,6 @@ import io.activej.dataflow.helper.PartitionedCollector;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
-import io.activej.dataflow.server.DataflowClient;
-import io.activej.dataflow.server.DataflowServer;
-import io.activej.dataflow.server.command.DatagraphCommand;
-import io.activej.dataflow.server.command.DatagraphResponse;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -40,7 +40,6 @@ import io.activej.di.module.AbstractModule;
 import io.activej.di.module.Module;
 import io.activej.di.module.Modules;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.FatalErrorHandlers;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -72,6 +71,7 @@ import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -102,7 +102,7 @@ public final class PartitionedStreamTest {
 		sourceFsServers = new ArrayList<>();
 		targetFsServers = new ArrayList<>();
 		dataflowServers = new ArrayList<>();
-		serverEventloop = Eventloop.create().withFatalErrorHandler(FatalErrorHandlers.rethrowOnAnyError());
+		serverEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
 		serverEventloop.keepAlive(true);
 		new Thread(serverEventloop).start();
 	}
@@ -294,7 +294,7 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DatagraphCommand, DatagraphResponse> codec, BinarySerializerLocator locator, Injector injector) {
+					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
 						return new DataflowServer(eventloop, codec, locator, injector);
 					}
 
@@ -376,7 +376,7 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					DataflowClient client(Executor executor,
-							ByteBufsCodec<DatagraphResponse, DatagraphCommand> codec,
+							ByteBufsCodec<DataflowResponse, DataflowCommand> codec,
 							BinarySerializerLocator locator) throws IOException {
 						return new DataflowClient(executor, Files.createTempDirectory("").toAbsolutePath(), codec, locator);
 					}

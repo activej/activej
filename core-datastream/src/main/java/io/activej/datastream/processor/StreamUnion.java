@@ -16,7 +16,12 @@
 
 package io.activej.datastream.processor;
 
-import io.activej.datastream.*;
+import io.activej.datastream.AbstractStreamConsumer;
+import io.activej.datastream.AbstractStreamSupplier;
+import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.dsl.HasStreamInputs;
+import io.activej.datastream.dsl.HasStreamOutput;
 import io.activej.eventloop.Eventloop;
 
 import java.util.ArrayList;

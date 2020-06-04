@@ -17,8 +17,8 @@
 package io.activej.launchers.crdt;
 
 import io.activej.async.service.EventloopService;
-import io.activej.crdt.local.CrdtStorageFs;
-import io.activej.crdt.local.CrdtStorageMap;
+import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.datastream.StreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;

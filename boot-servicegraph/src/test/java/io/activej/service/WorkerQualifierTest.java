@@ -6,12 +6,16 @@ import io.activej.di.annotation.Named;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
 import io.activej.test.rules.ByteBufRule;
-import io.activej.worker.*;
+import io.activej.worker.WorkerPool;
+import io.activej.worker.WorkerPoolModule;
+import io.activej.worker.WorkerPools;
+import io.activej.worker.annotation.Worker;
+import io.activej.worker.annotation.WorkerId;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import static io.activej.service.ServiceAdapters.combinedAdapter;
-import static io.activej.service.ServiceAdapters.immediateServiceAdapter;
+import static io.activej.service.adapter.ServiceAdapters.combinedAdapter;
+import static io.activej.service.adapter.ServiceAdapters.immediateServiceAdapter;
 
 public final class WorkerQualifierTest {
 	public static final int WORKERS = 4;

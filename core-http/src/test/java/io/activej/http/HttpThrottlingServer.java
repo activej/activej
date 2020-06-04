@@ -2,13 +2,13 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.EventloopInspector;
-import io.activej.eventloop.ThrottlingController;
+import io.activej.eventloop.inspector.EventloopInspector;
+import io.activej.eventloop.inspector.ThrottlingController;
 
 import java.util.Random;
 
 import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.eventloop.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.test.TestUtils.getFreePort;
 
 public class HttpThrottlingServer {

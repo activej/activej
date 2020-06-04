@@ -3,6 +3,10 @@ package io.activej.launchers.dataflow;
 import io.activej.codec.StructuredCodec;
 import io.activej.config.Config;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.dataflow.DataflowClient;
+import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.command.DataflowCommand;
+import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.di.BinarySerializerModule.BinarySerializerLocator;
@@ -13,10 +17,6 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
-import io.activej.dataflow.server.Collector;
-import io.activej.dataflow.server.DataflowClient;
-import io.activej.dataflow.server.command.DatagraphCommand;
-import io.activej.dataflow.server.command.DatagraphResponse;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
@@ -344,7 +344,7 @@ public class DataflowServerTest {
 				.scan(new Object() {
 
 					@Provides
-					DataflowClient client(ByteBufsCodec<DatagraphResponse, DatagraphCommand> codec, BinarySerializerLocator serializers) throws IOException {
+					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) throws IOException {
 						return new DataflowClient(Executors.newSingleThreadExecutor(), temporaryFolder.newFolder().toPath(), codec, serializers);
 					}
 

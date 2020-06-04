@@ -5,8 +5,8 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.ot.OTCommit;
-import io.activej.ot.OTRepositoryMySql;
 import io.activej.ot.OTStateManager;
+import io.activej.ot.repository.OTRepositoryMySql;
 
 import java.io.IOException;
 import java.sql.SQLException;

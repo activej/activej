@@ -6,7 +6,7 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ActivePromisesRule;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.common.Recyclable.deepRecycle;
+import static io.activej.common.api.Recyclable.deepRecycle;
 import static io.activej.http.stream.BufsConsumerChunkedDecoder.CRLF;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;

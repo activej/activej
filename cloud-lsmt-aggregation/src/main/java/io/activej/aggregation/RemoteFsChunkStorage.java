@@ -20,8 +20,8 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.Initializable;
 import io.activej.common.MemSize;
+import io.activej.common.api.Initializable;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.csp.process.ChannelLZ4Compressor;
@@ -59,7 +59,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.activej.aggregation.Utils.createBinarySerializer;
+import static io.activej.aggregation.util.Utils.createBinarySerializer;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.collection.CollectionUtils.difference;

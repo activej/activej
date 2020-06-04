@@ -17,8 +17,8 @@
 package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
-import io.activej.crdt.CrdtDataSerializer;
-import io.activej.crdt.TimestampContainer;
+import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.TimestampContainer;
 import io.activej.di.annotation.Provides;
 import io.activej.di.module.AbstractModule;
 import io.activej.di.module.Module;
@@ -30,8 +30,8 @@ import io.activej.remotefs.LocalFsClient;
 import java.util.concurrent.Executor;
 
 import static io.activej.codec.StructuredCodecs.*;
-import static io.activej.config.ConfigConverters.ofExecutor;
-import static io.activej.config.ConfigConverters.ofPath;
+import static io.activej.config.converter.ConfigConverters.ofExecutor;
+import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;

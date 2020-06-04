@@ -17,8 +17,8 @@
 package io.activej.aggregation.measure;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.codegen.Expression;
-import io.activej.codegen.Variable;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 
 @SuppressWarnings("rawtypes")
 public abstract class Measure {

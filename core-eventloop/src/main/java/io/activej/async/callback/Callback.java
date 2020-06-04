@@ -19,7 +19,7 @@ package io.activej.async.callback;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.eventloop.RunnableWithContext.wrapContext;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Represents a universal Callback interface

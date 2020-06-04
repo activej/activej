@@ -1,6 +1,9 @@
 package io.activej.crdt;
 
-import io.activej.crdt.local.CrdtStorageMap;
+import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.test.rules.ByteBufRule;

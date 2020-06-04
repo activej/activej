@@ -1,6 +1,6 @@
 package io.activej.rpc;
 
-import io.activej.common.Stopwatch;
+import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;

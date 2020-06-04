@@ -22,11 +22,12 @@ import io.activej.cube.attributes.AttributeResolver;
 import io.activej.cube.attributes.AttributeResolver.AttributesFunction;
 import io.activej.cube.attributes.AttributeResolver.KeyFunction;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.promise.Promise;
 
 import java.util.*;
 
-import static io.activej.codegen.Expressions.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static java.util.stream.Collectors.toSet;
 
 public final class Utils {
@@ -105,7 +106,7 @@ public final class Utils {
 
 	@SuppressWarnings("unchecked")
 	public static <D, C> Set<C> chunksInDiffs(CubeDiffScheme<D> cubeDiffsExtractor,
-			List<? extends D> diffs) {
+                                              List<? extends D> diffs) {
 		return diffs.stream()
 				.flatMap(cubeDiffsExtractor::unwrapToStream)
 				.flatMap(CubeDiff::addedChunks)

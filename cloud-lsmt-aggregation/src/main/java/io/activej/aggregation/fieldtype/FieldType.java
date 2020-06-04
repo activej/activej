@@ -17,7 +17,7 @@
 package io.activej.aggregation.fieldtype;
 
 import io.activej.codec.StructuredCodec;
-import io.activej.codegen.Expression;
+import io.activej.codegen.expression.Expression;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.Nullable;
 

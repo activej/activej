@@ -16,9 +16,9 @@
 
 package io.activej.dataflow.node;
 
+import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskContext;
-import io.activej.dataflow.server.DataflowClient;
 import io.activej.datastream.StreamSupplier;
 
 import java.net.InetSocketAddress;

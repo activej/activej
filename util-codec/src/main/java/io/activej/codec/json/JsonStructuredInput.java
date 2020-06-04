@@ -22,7 +22,7 @@ import com.google.gson.stream.MalformedJsonException;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.StructuredInput;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 
 import java.io.EOFException;
 import java.io.IOException;

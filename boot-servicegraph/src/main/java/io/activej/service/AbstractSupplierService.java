@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Preconditions.checkNotNull;
-import static io.activej.service.util.Utils.completedExceptionallyFuture;
+import static io.activej.service.Utils.completedExceptionallyFuture;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public abstract class AbstractSupplierService<V> implements SupplierService<V> {

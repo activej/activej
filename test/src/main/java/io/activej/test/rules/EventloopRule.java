@@ -17,7 +17,7 @@
 package io.activej.test.rules;
 
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.FatalErrorHandlers;
+import io.activej.eventloop.error.FatalErrorHandlers;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;

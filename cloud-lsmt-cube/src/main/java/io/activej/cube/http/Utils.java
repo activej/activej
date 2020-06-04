@@ -18,7 +18,7 @@ package io.activej.cube.http;
 
 import io.activej.codec.registry.CodecFactory;
 import io.activej.codec.registry.CodecRegistry;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.ReportType;
 

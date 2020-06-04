@@ -4,8 +4,8 @@ import io.activej.di.module.ModuleBuilder;
 
 import java.net.InetAddress;
 
-import static io.activej.config.ConfigConverters.ofInetAddress;
-import static io.activej.config.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofInetAddress;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 
 //[START EXAMPLE]
 public final class ConfigModuleExample {

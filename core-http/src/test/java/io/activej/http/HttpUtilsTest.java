@@ -1,7 +1,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.parse.ParseException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.test.rules.LambdaStatement.ThrowingRunnable;
 import org.junit.Test;
 

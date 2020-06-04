@@ -1,7 +1,6 @@
 package io.datakernel.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.dataset.impl.DatasetUtils;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
@@ -13,6 +12,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+
+import static io.activej.dataflow.dataset.DatasetUtils.forwardChannel;
 
 public final class DatasetRepartition<T, K> extends Dataset<T> {
 	private final Dataset<T> input;
@@ -48,7 +49,7 @@ public final class DatasetRepartition<T, K> extends Dataset<T> {
 			for (NodeShard<K, T> sharder : sharders) {
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
-				StreamId unionInput = DatasetUtils.forwardChannel(graph, input.valueType(), sharderOutput, partition);
+				StreamId unionInput = forwardChannel(graph, input.valueType(), sharderOutput, partition);
 				unionInputs.add(unionInput);
 			}
 			NodeUnion<T> nodeUnion = new NodeUnion<>(unionInputs);

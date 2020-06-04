@@ -16,7 +16,7 @@
 
 package io.activej.http;
 
-import io.activej.common.Initializable;
+import io.activej.common.api.Initializable;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
