@@ -75,14 +75,13 @@ public final class ReportingTest {
 	private AsyncHttpServer cubeHttpServer;
 	private CubeHttpClient cubeHttpClient;
 	private Cube cube;
+	private int serverPort;
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@Rule
 	public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-	private static final int SERVER_PORT = getFreePort();
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
 			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
@@ -270,6 +269,7 @@ public final class ReportingTest {
 		eventloop = Eventloop.getCurrentEventloop();
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
+		serverPort = getFreePort();
 
 		AggregationChunkStorage<Long> aggregationChunkStorage = RemoteFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalFsClient.create(eventloop, executor, aggregationsDir));
 		cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
@@ -350,13 +350,13 @@ public final class ReportingTest {
 		await(logCubeStateManager.sync());
 
 		cubeHttpServer = AsyncHttpServer.create(eventloop, ReportingServiceServlet.createRootServlet(eventloop, cube))
-				.withListenPort(SERVER_PORT)
+				.withListenPort(serverPort)
 				.withAcceptOnce();
 		cubeHttpServer.listen();
 
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
 				.withNoKeepAlive();
-		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + SERVER_PORT)
+		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
 				.withAttribute("advertiser", int.class)
 				.withAttribute("campaign", int.class)

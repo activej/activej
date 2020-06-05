@@ -106,7 +106,7 @@ public final class ChannelBufferWithFallbackTest {
 		assertEquals("this is a string for testing", res.asString(US_ASCII));
 
 		assertEquals(0, counter.value);
-		cfq.put(wrapAscii("this should not be appended because the take will be completed immediately"));
+		await(cfq.put(wrapAscii("this should not be appended because the take will be completed immediately")));
 		assertEquals(1, counter.value);
 
 		cfq.close();

@@ -3,6 +3,7 @@ package io.activej.rpc.client.sender;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcMessageDataStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -20,10 +21,18 @@ public class RpcStrategyTypeDispatchingTest {
 
 	private static final String HOST = "localhost";
 
-	private static final InetSocketAddress ADDRESS_1 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_2 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_3 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_4 = new InetSocketAddress(HOST, getFreePort());
+	private InetSocketAddress address1;
+	private InetSocketAddress address2;
+	private InetSocketAddress address3;
+	private InetSocketAddress address4;
+
+	@Before
+	public void setUp() {
+		address1 = new InetSocketAddress(HOST, getFreePort());
+		address2 = new InetSocketAddress(HOST, getFreePort());
+		address3 = new InetSocketAddress(HOST, getFreePort());
+		address4 = new InetSocketAddress(HOST, getFreePort());
+	}
 
 	@Test
 	public void itShouldChooseSubStrategyDependingOnRpcMessageDataType() {
@@ -31,12 +40,12 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
-		RpcStrategySingleServer server1 = server(ADDRESS_1);
-		RpcStrategySingleServer server2 = server(ADDRESS_2);
-		RpcStrategySingleServer server3 = server(ADDRESS_3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
 		RpcStrategy typeDispatchingStrategy = RpcStrategyTypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
@@ -68,14 +77,14 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
 		RpcSenderStub connection4 = new RpcSenderStub();
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
-		pool.put(ADDRESS_4, connection4);
-		RpcStrategySingleServer server1 = server(ADDRESS_1);
-		RpcStrategySingleServer server2 = server(ADDRESS_2);
-		RpcStrategySingleServer server3 = server(ADDRESS_3);
-		RpcStrategySingleServer defaultServer = server(ADDRESS_4);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
+		pool.put(address4, connection4);
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
+		RpcStrategySingleServer defaultServer = server(address4);
 		RpcStrategy typeDispatchingStrategy = RpcStrategyTypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
@@ -98,12 +107,12 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
-		RpcStrategySingleServer server1 = RpcStrategySingleServer.create(ADDRESS_1);
-		RpcStrategySingleServer server2 = RpcStrategySingleServer.create(ADDRESS_2);
-		RpcStrategySingleServer server3 = RpcStrategySingleServer.create(ADDRESS_3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
+		RpcStrategySingleServer server1 = RpcStrategySingleServer.create(address1);
+		RpcStrategySingleServer server2 = RpcStrategySingleServer.create(address2);
+		RpcStrategySingleServer server3 = RpcStrategySingleServer.create(address3);
 		RpcStrategy typeDispatchingStrategy = RpcStrategyTypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
@@ -122,17 +131,17 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategySingleServer server1 = RpcStrategySingleServer.create(ADDRESS_1);
-		RpcStrategySingleServer server2 = RpcStrategySingleServer.create(ADDRESS_2);
-		RpcStrategySingleServer server3 = RpcStrategySingleServer.create(ADDRESS_3);
+		RpcStrategySingleServer server1 = RpcStrategySingleServer.create(address1);
+		RpcStrategySingleServer server2 = RpcStrategySingleServer.create(address2);
+		RpcStrategySingleServer server3 = RpcStrategySingleServer.create(address3);
 		RpcStrategy typeDispatchingStrategy = RpcStrategyTypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
 				.on(RpcMessageDataTypeThree.class, server3);
 
-		pool.put(ADDRESS_1, connection1);
+		pool.put(address1, connection1);
 		// we don't put connection 2
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address3, connection3);
 
 		assertNull(typeDispatchingStrategy.createSender(pool));
 	}
@@ -143,19 +152,19 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategySingleServer server1 = RpcStrategySingleServer.create(ADDRESS_1);
-		RpcStrategySingleServer server2 = RpcStrategySingleServer.create(ADDRESS_2);
-		RpcStrategySingleServer server3 = RpcStrategySingleServer.create(ADDRESS_3);
-		RpcStrategySingleServer defaultServer = RpcStrategySingleServer.create(ADDRESS_4);
+		RpcStrategySingleServer server1 = RpcStrategySingleServer.create(address1);
+		RpcStrategySingleServer server2 = RpcStrategySingleServer.create(address2);
+		RpcStrategySingleServer server3 = RpcStrategySingleServer.create(address3);
+		RpcStrategySingleServer defaultServer = RpcStrategySingleServer.create(address4);
 		RpcStrategy typeDispatchingStrategy = RpcStrategyTypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
 				.on(RpcMessageDataTypeThree.class, server3)
 				.onDefault(defaultServer);
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
 		// we don't add connection for default server
 
 		assertNull(typeDispatchingStrategy.createSender(pool));

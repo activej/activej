@@ -20,21 +20,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JmxMessagesRpcServerTest {
-	private final int LISTEN_PORT = getFreePort();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
+
+	private int listenPort;
 
 	RpcServer server;
 
 	@Before
 	public void setup() throws IOException {
+		listenPort = getFreePort();
 		server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE, true)
 				.withHandler(String.class, request ->
 						Promise.of("Hello, " + request + "!"))
-				.withListenPort(LISTEN_PORT)
+				.withListenPort(listenPort)
 				.withAcceptOnce();
 		server.listen();
 	}
@@ -44,7 +46,7 @@ public class JmxMessagesRpcServerTest {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE, true)
-				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
+				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 		await(client.start().whenResult(() ->
 				client.sendRequest("msg", 1000)
 						.whenComplete(() -> {
@@ -57,7 +59,7 @@ public class JmxMessagesRpcServerTest {
 	public void testWithProtocolError() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
+				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 		await(client.start()
 				.whenResult(() -> client.sendRequest("msg", 10000)
 						.whenComplete(() -> {
@@ -70,7 +72,7 @@ public class JmxMessagesRpcServerTest {
 	public void testWithProtocolError2() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
+				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 		await(client.start()
 				.whenResult(() -> client.sendRequest("Message larger than LZ4 header", 1000)
 						.whenComplete(() -> {

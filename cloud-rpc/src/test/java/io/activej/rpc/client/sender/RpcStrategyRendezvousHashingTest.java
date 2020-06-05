@@ -5,6 +5,7 @@ import io.activej.rpc.client.sender.helper.RpcMessageDataStubWithKey;
 import io.activej.rpc.client.sender.helper.RpcMessageDataStubWithKeyHashFunction;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.rpc.hash.HashFunction;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -19,9 +20,16 @@ public class RpcStrategyRendezvousHashingTest {
 
 	private static final String HOST = "localhost";
 
-	private static final InetSocketAddress ADDRESS_1 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_2 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_3 = new InetSocketAddress(HOST, getFreePort());
+	private InetSocketAddress address1;
+	private InetSocketAddress address2;
+	private InetSocketAddress address3;
+
+	@Before
+	public void setUp() {
+		address1 = new InetSocketAddress(HOST, getFreePort());
+		address2 = new InetSocketAddress(HOST, getFreePort());
+		address3 = new InetSocketAddress(HOST, getFreePort());
+	}
 
 	@SuppressWarnings("ConstantConditions")
 	@Test
@@ -34,9 +42,9 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId2 = 2;
 		int shardId3 = 3;
 		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
-		RpcStrategySingleServer server1 = server(ADDRESS_1);
-		RpcStrategySingleServer server2 = server(ADDRESS_2);
-		RpcStrategySingleServer server3 = server(ADDRESS_3);
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
 		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
@@ -45,19 +53,19 @@ public class RpcStrategyRendezvousHashingTest {
 		int callsPerLoop = 10000;
 		int timeout = 50;
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
 		sender = rendezvousHashing.createSender(pool);
 		for (int i = 0; i < callsPerLoop; i++) {
 			sender.sendRequest(new RpcMessageDataStubWithKey(i), timeout, assertNoCalls());
 		}
-		pool.remove(ADDRESS_1);
+		pool.remove(address1);
 		sender = rendezvousHashing.createSender(pool);
 		for (int i = 0; i < callsPerLoop; i++) {
 			sender.sendRequest(new RpcMessageDataStubWithKey(i), timeout, assertNoCalls());
 		}
-		pool.remove(ADDRESS_3);
+		pool.remove(address3);
 		sender = rendezvousHashing.createSender(pool);
 		for (int i = 0; i < callsPerLoop; i++) {
 			sender.sendRequest(new RpcMessageDataStubWithKey(i), timeout, assertNoCalls());
@@ -80,16 +88,16 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId2 = 2;
 		int shardId3 = 3;
 		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
-		RpcStrategySingleServer server1 = server(ADDRESS_1);
-		RpcStrategySingleServer server2 = server(ADDRESS_2);
-		RpcStrategySingleServer server3 = server(ADDRESS_3);
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
 		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
 
 		// server3 is active
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address3, connection3);
 
 		assertNotNull(rendezvousHashing.createSender(pool));
 	}
@@ -101,9 +109,9 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId2 = 2;
 		int shardId3 = 3;
 		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
-		RpcStrategySingleServer server1 = server(ADDRESS_1);
-		RpcStrategySingleServer server2 = server(ADDRESS_2);
-		RpcStrategySingleServer server3 = server(ADDRESS_3);
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
 		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
@@ -133,18 +141,18 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId2 = 2;
 		int shardId3 = 3;
 		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
-		RpcStrategySingleServer server1 = server(ADDRESS_1);
-		RpcStrategySingleServer server2 = server(ADDRESS_2);
-		RpcStrategySingleServer server3 = server(ADDRESS_3);
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
 		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
 				.withMinActiveShards(4)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
 
 		assertNotNull(server1.createSender(pool));
 		assertNotNull(server2.createSender(pool));
@@ -161,17 +169,17 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId2 = 2;
 		int shardId3 = 3;
 		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
-		RpcStrategySingleServer server1 = server(ADDRESS_1);
-		RpcStrategySingleServer server2 = server(ADDRESS_2);
-		RpcStrategySingleServer server3 = server(ADDRESS_3);
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
 		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
 				.withMinActiveShards(4)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
 		// we don't add connection3
 
 		assertNotNull(server1.createSender(pool));

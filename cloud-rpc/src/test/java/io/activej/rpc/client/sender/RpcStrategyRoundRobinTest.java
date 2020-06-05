@@ -3,6 +3,7 @@ package io.activej.rpc.client.sender;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcMessageDataStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -17,11 +18,20 @@ public class RpcStrategyRoundRobinTest {
 
 	private static final String HOST = "localhost";
 
-	private static final InetSocketAddress ADDRESS_1 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_2 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_3 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_4 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_5 = new InetSocketAddress(HOST, getFreePort());
+	private InetSocketAddress address1;
+	private InetSocketAddress address2;
+	private InetSocketAddress address3;
+	private InetSocketAddress address4;
+	private InetSocketAddress address5;
+
+	@Before
+	public void setUp() {
+		address1 = new InetSocketAddress(HOST, getFreePort());
+		address2 = new InetSocketAddress(HOST, getFreePort());
+		address3 = new InetSocketAddress(HOST, getFreePort());
+		address4 = new InetSocketAddress(HOST, getFreePort());
+		address5 = new InetSocketAddress(HOST, getFreePort());
+	}
 
 	@Test
 	public void itShouldSendRequestUsingRoundRobinAlgorithm() {
@@ -29,18 +39,18 @@ public class RpcStrategyRoundRobinTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy server1 = server(ADDRESS_1);
-		RpcStrategy server2 = server(ADDRESS_2);
-		RpcStrategy server3 = server(ADDRESS_3);
+		RpcStrategy server1 = server(address1);
+		RpcStrategy server2 = server(address2);
+		RpcStrategy server3 = server(address3);
 		RpcStrategy roundRobin = roundRobin(server1, server2, server3);
 		RpcSender senderRoundRobin;
 		int timeout = 50;
 		Object data = new RpcMessageDataStub();
 		int callsAmount = 5;
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
 		senderRoundRobin = roundRobin.createSender(pool);
 		for (int i = 0; i < callsAmount; i++) {
 			senderRoundRobin.sendRequest(data, timeout, assertNoCalls());
@@ -57,15 +67,15 @@ public class RpcStrategyRoundRobinTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection4 = new RpcSenderStub();
-		RpcStrategy roundRobinStrategy = roundRobin(servers(ADDRESS_1, ADDRESS_2, ADDRESS_3, ADDRESS_4, ADDRESS_5));
+		RpcStrategy roundRobinStrategy = roundRobin(servers(address1, address2, address3, address4, address5));
 		RpcSender senderRoundRobin;
 		int timeout = 50;
 		Object data = new RpcMessageDataStub();
 		int callsAmount = 10;
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_4, connection4);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address4, connection4);
 		// we don't add connections for ADDRESS_3 and ADDRESS_5
 		senderRoundRobin = roundRobinStrategy.createSender(pool);
 		for (int i = 0; i < callsAmount; i++) {
@@ -82,8 +92,8 @@ public class RpcStrategyRoundRobinTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection = new RpcSenderStub();
 		// one connection is added
-		pool.put(ADDRESS_2, connection);
-		RpcStrategy roundRobin = RpcStrategyRoundRobin.create(servers(ADDRESS_1, ADDRESS_2));
+		pool.put(address2, connection);
+		RpcStrategy roundRobin = RpcStrategyRoundRobin.create(servers(address1, address2));
 
 		assertNotNull(roundRobin.createSender(pool));
 	}
@@ -92,7 +102,7 @@ public class RpcStrategyRoundRobinTest {
 	public void itShouldNotBeCreatedWhenThereAreNoActiveSubSenders() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategy roundRobin = roundRobin(servers(ADDRESS_1, ADDRESS_2, ADDRESS_3));
+		RpcStrategy roundRobin = roundRobin(servers(address1, address2, address3));
 
 		assertNull(roundRobin.createSender(pool));
 	}
@@ -103,12 +113,12 @@ public class RpcStrategyRoundRobinTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy roundRobin = roundRobin(servers(ADDRESS_1, ADDRESS_2, ADDRESS_3))
+		RpcStrategy roundRobin = roundRobin(servers(address1, address2, address3))
 				.withMinActiveSubStrategies(4);
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
 
 		assertNull(roundRobin.createSender(pool));
 	}
@@ -118,11 +128,11 @@ public class RpcStrategyRoundRobinTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
-		RpcStrategy roundRobin = roundRobin(servers(ADDRESS_1, ADDRESS_2, ADDRESS_3))
+		RpcStrategy roundRobin = roundRobin(servers(address1, address2, address3))
 				.withMinActiveSubStrategies(3);
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
 		// we don't add connection3
 
 		assertNull(roundRobin.createSender(pool));

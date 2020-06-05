@@ -32,11 +32,8 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertSame;
 
 public final class TestPartialRemoteFs {
-	private static final int PORT = getFreePort();
 	private static final String FILE = "file.txt";
 	private static final byte[] CONTENT = "test content of the file".getBytes(UTF_8);
-
-	private static final InetSocketAddress ADDRESS = new InetSocketAddress("localhost", PORT);
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -56,12 +53,13 @@ public final class TestPartialRemoteFs {
 	@Before
 	public void setup() throws IOException {
 		Executor executor = Executors.newSingleThreadExecutor();
+		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
 
 		serverStorage = tempFolder.newFolder().toPath();
 		clientStorage = tempFolder.newFolder().toPath();
-		server = RemoteFsServer.create(Eventloop.getCurrentEventloop(), executor, serverStorage).withListenAddress(ADDRESS);
+		server = RemoteFsServer.create(Eventloop.getCurrentEventloop(), executor, serverStorage).withListenAddress(address);
 		server.listen();
-		client = RemoteFsClient.create(Eventloop.getCurrentEventloop(), ADDRESS);
+		client = RemoteFsClient.create(Eventloop.getCurrentEventloop(), address);
 
 		Files.write(serverStorage.resolve(FILE), CONTENT);
 	}

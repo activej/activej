@@ -26,8 +26,6 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 
 public final class HttpApiTest {
-	public static final int PORT = getFreePort();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -36,6 +34,7 @@ public final class HttpApiTest {
 
 	private AsyncHttpServer server;
 	private AsyncHttpClient client;
+	private int port;
 
 	// request
 	private final List<AcceptMediaType> requestAcceptContentTypes = new ArrayList<>();
@@ -59,12 +58,13 @@ public final class HttpApiTest {
 
 	@Before
 	public void setUp() {
+		port = getFreePort();
 		server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
 				request -> {
 					testRequest(request);
 					return createResponse();
 				})
-				.withListenPort(PORT);
+				.withListenPort(port);
 
 		client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
 
@@ -113,7 +113,7 @@ public final class HttpApiTest {
 	}
 
 	private HttpRequest createRequest() {
-		return HttpRequest.get("http://127.0.0.1:" + PORT)
+		return HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT, ofAcceptMediaTypes(requestAcceptContentTypes))
 				.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(requestAcceptCharsets))
 				.withHeader(DATE, ofInstant(requestDate))

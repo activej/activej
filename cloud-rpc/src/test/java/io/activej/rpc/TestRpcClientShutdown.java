@@ -8,6 +8,7 @@ import io.activej.rpc.client.RpcClientConnection;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -27,10 +28,16 @@ import static org.junit.Assert.assertSame;
 public final class TestRpcClientShutdown {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-	public static final int PORT = getFreePort();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
+
+	public int port;
+
+	@Before
+	public void setUp() {
+		port = getFreePort();
+	}
 
 	@Test
 	public void testServerOnClientShutdown() throws IOException {
@@ -45,11 +52,11 @@ public final class TestRpcClientShutdown {
 							Thread.sleep(100);
 							return new Response();
 						}))
-				.withListenPort(PORT);
+				.withListenPort(port);
 
 		RpcClient rpcClient = RpcClient.create(eventloop)
 				.withMessageTypes(messageTypes)
-				.withStrategy(server(new InetSocketAddress(PORT)));
+				.withStrategy(server(new InetSocketAddress(port)));
 
 		rpcServer.listen();
 

@@ -6,6 +6,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -26,11 +27,18 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public final class SimpleProxyServerTest {
-	private static final int ECHO_SERVER_PORT = getFreePort();
-	private static final int PROXY_SERVER_PORT = getFreePort();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	private int echoServerPort;
+	private int proxyServerPort;
+
+	@Before
+	public void setUp() {
+		echoServerPort = getFreePort();
+		proxyServerPort = getFreePort();
+	}
 
 	private void readAndAssert(InputStream is, String expected) {
 		byte[] bytes = new byte[expected.length()];
@@ -46,7 +54,7 @@ public final class SimpleProxyServerTest {
 		AsyncHttpServer echoServer = AsyncHttpServer.create(eventloop1,
 				request -> HttpResponse.ok200()
 						.withBody(encodeAscii(request.getUrl().getPathAndQuery())))
-				.withListenPort(ECHO_SERVER_PORT);
+				.withListenPort(echoServerPort);
 		echoServer.listen();
 
 		Thread echoServerThread = new Thread(eventloop1);
@@ -61,21 +69,21 @@ public final class SimpleProxyServerTest {
 
 		AsyncHttpServer proxyServer = AsyncHttpServer.create(eventloop2,
 				request -> {
-					String path = ECHO_SERVER_PORT + request.getUrl().getPath();
+					String path = echoServerPort + request.getUrl().getPath();
 					return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path))
 							.then(result -> result.loadBody()
 									.then(body -> Promise.of(HttpResponse.ofCode(result.getCode())
 											.withBody(encodeAscii("FORWARDED: " + body
 													.getString(UTF_8))))));
 				})
-				.withListenPort(PROXY_SERVER_PORT);
+				.withListenPort(proxyServerPort);
 		proxyServer.listen();
 
 		Thread proxyServerThread = new Thread(eventloop2);
 		proxyServerThread.start();
 
 		Socket socket = new Socket();
-		socket.connect(new InetSocketAddress("localhost", PROXY_SERVER_PORT));
+		socket.connect(new InetSocketAddress("localhost", proxyServerPort));
 		OutputStream stream = socket.getOutputStream();
 
 		stream.write(encodeAscii("GET /abc HTTP1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));

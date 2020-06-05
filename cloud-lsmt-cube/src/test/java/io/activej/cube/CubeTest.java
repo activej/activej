@@ -44,7 +44,6 @@ import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
 public final class CubeTest {
-	private static final int LISTEN_PORT = getFreePort();
 
 	@Rule
 	public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -60,9 +59,11 @@ public final class CubeTest {
 
 	private AggregationChunkStorage<Long> chunkStorage;
 	private Cube cube;
+	private int listenPort;
 
 	@Before
 	public void setUp() throws Exception {
+		listenPort = getFreePort();
 		LocalFsClient storage = LocalFsClient.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
 		chunkStorage = RemoteFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
 		cube = newCube(executor, classLoader, chunkStorage);
@@ -119,7 +120,7 @@ public final class CubeTest {
 
 	private RemoteFsServer startServer(Executor executor, Path serverStorage) throws IOException {
 		RemoteFsServer fileServer = RemoteFsServer.create(Eventloop.getCurrentEventloop(), executor, serverStorage)
-				.withListenPort(LISTEN_PORT);
+				.withListenPort(listenPort);
 		fileServer.listen();
 		return fileServer;
 	}
@@ -129,7 +130,7 @@ public final class CubeTest {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		RemoteFsServer remoteFsServer1 = startServer(executor, serverStorage);
-		RemoteFsClient storage = RemoteFsClient.create(Eventloop.getCurrentEventloop(), new InetSocketAddress("localhost", LISTEN_PORT));
+		RemoteFsClient storage = RemoteFsClient.create(Eventloop.getCurrentEventloop(), new InetSocketAddress("localhost", listenPort));
 		AggregationChunkStorage<Long> chunkStorage = RemoteFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 

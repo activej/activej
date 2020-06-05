@@ -34,7 +34,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
 public final class HttpStreamTest {
-	private static final int PORT = getFreePort();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -52,9 +51,11 @@ public final class HttpStreamTest {
 			"In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium.";
 
 	private List<ByteBuf> expectedList;
+	private int port;
 
 	@Before
 	public void setUp() {
+		port = getFreePort();
 		expectedList = getBufsList(requestBody.getBytes());
 	}
 
@@ -68,7 +69,7 @@ public final class HttpStreamTest {
 				.then(s -> Promise.of(HttpResponse.ok200())));
 
 		Integer code = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.request(HttpRequest.post("http://127.0.0.1:" + PORT)
+				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSupplier.ofIterable(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
 				.async()
@@ -85,7 +86,7 @@ public final class HttpStreamTest {
 								.mapAsync(item -> Promises.delay(1L, item))));
 
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.request(HttpRequest.post("http://127.0.0.1:" + PORT))
+				.request(HttpRequest.post("http://127.0.0.1:" + port))
 				.async()
 				.whenComplete(assertComplete(response -> assertEquals(200, response.getCode())))
 				.then(response -> response.getBodyStream().async().toCollector(ByteBufQueue.collector())));
@@ -103,7 +104,7 @@ public final class HttpStreamTest {
 				.then(bodyStream -> Promise.of(HttpResponse.ok200().withBodyStream(bodyStream.async()))));
 
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.request(HttpRequest.post("http://127.0.0.1:" + PORT)
+				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSupplier.ofIterable(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
 				.whenComplete(assertComplete(response -> assertEquals(200, response.getCode())))
@@ -121,7 +122,7 @@ public final class HttpStreamTest {
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofIterable(expectedList);
 
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.request(HttpRequest.post("http://127.0.0.1:" + PORT)
+				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(supplier))
 				.then(response -> response.getBodyStream().toCollector(ByteBufQueue.collector())));
 
@@ -146,7 +147,7 @@ public final class HttpStreamTest {
 						"Connection: keep-alive" + crlf + crlf +
 						"Test";
 
-		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(PORT))
+		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
 						.then(() -> ChannelSupplier.ofSocket(socket).toCollector(ByteBufQueue.collector()))
@@ -169,7 +170,7 @@ public final class HttpStreamTest {
 						"Transfer-Encoding: chunked" + crlf + crlf +
 						"ffffffffff";
 
-		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(PORT))
+		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(socket::read)
 						.whenComplete(socket::close)));
@@ -197,7 +198,7 @@ public final class HttpStreamTest {
 						"Transfer-Encoding: chunked" + crlf + crlf +
 						"3";
 
-		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(PORT))
+		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
 						.then(socket::read)
@@ -220,7 +221,7 @@ public final class HttpStreamTest {
 
 		Throwable e = awaitException(
 				AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-						.request(HttpRequest.post("http://127.0.0.1:" + PORT)
+						.request(HttpRequest.post("http://127.0.0.1:" + port)
 								.withBodyStream(ChannelSuppliers.concat(
 										ChannelSupplier.ofIterable(expectedList),
 										ChannelSupplier.ofException(exception))))
@@ -231,7 +232,7 @@ public final class HttpStreamTest {
 
 	private void startTestServer(AsyncServlet servlet) throws IOException {
 		AsyncHttpServer.create(Eventloop.getCurrentEventloop(), servlet)
-				.withListenPort(PORT)
+				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
 	}

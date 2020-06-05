@@ -17,6 +17,7 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,8 +49,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
 public final class AsyncHttpClientTest {
-	private static final int PORT = getFreePort();
-
 	private static final String KEYSTORE_PATH = "./src/test/resources/keystore.jks";
 	private static final String KEYSTORE_PASS = "testtest";
 	private static final String KEY_PASS = "testtest";
@@ -65,7 +64,14 @@ public final class AsyncHttpClientTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	public static void startServer() throws IOException {
+	private int port;
+
+	@Before
+	public void setUp() {
+		port = getFreePort();
+	}
+
+	public void startServer() throws IOException {
 		AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
 				request -> HttpResponse.ok200()
 						.withBodyStream(ChannelSupplier.ofStream(
@@ -75,7 +81,7 @@ public final class AsyncHttpClientTest {
 											buf.put(HELLO_WORLD[idx]);
 											return buf;
 										}))))
-				.withListenPort(PORT)
+				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
 	}
@@ -85,7 +91,7 @@ public final class AsyncHttpClientTest {
 		startServer();
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		await(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+		await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody()
 						.whenComplete(assertComplete(body -> {
 							assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8));
@@ -108,7 +114,7 @@ public final class AsyncHttpClientTest {
 		int maxBodySize = HELLO_WORLD.length - 1;
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		InvalidSizeException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+		InvalidSizeException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody(maxBodySize)));
 		assertThat(e.getMessage(), containsString("HTTP body size exceeds load limit " + maxBodySize));
 	}
@@ -120,12 +126,12 @@ public final class AsyncHttpClientTest {
 						.whenResult(ByteBuf::recycle)
 						.then(() -> socket.write(wrapAscii("\r\n")))
 						.whenComplete(socket::close))
-				.withListenPort(PORT)
+				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		UnknownFormatException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+		UnknownFormatException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(HttpMessage::loadBody));
 
 		assertSame(INVALID_RESPONSE, e);
@@ -139,7 +145,7 @@ public final class AsyncHttpClientTest {
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 				request -> Promise.ofCallback(responses::add))
-				.withListenPort(PORT);
+				.withListenPort(port);
 
 		server.listen();
 
@@ -151,11 +157,11 @@ public final class AsyncHttpClientTest {
 				.withInspector(inspector);
 
 		AsyncTimeoutException e = awaitException(Promises.all(
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)))
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)))
 				.whenComplete(() -> {
 					server.close();
 					responses.forEach(response -> response.set(HttpResponse.ok200()));
@@ -182,7 +188,7 @@ public final class AsyncHttpClientTest {
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 				request -> HttpResponse.ok200())
 				.withAcceptOnce()
-				.withListenPort(PORT);
+				.withListenPort(port);
 
 		server.listen();
 
@@ -190,7 +196,7 @@ public final class AsyncHttpClientTest {
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
 				.withInspector(inspector);
 
-		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT));
+		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + port));
 		assertEquals(1, inspector.getActiveRequests());
 		await(requestPromise);
 		assertEquals(0, inspector.getActiveRequests());
@@ -242,7 +248,7 @@ public final class AsyncHttpClientTest {
 
 	@Test
 	public void testAsyncPipelining() throws IOException {
-		ServerSocket listener = new ServerSocket(PORT);
+		ServerSocket listener = new ServerSocket(port);
 		Ref<Socket> socketRef = new Ref<>();
 		new Thread(() -> {
 			while (Thread.currentThread().isAlive()) {
@@ -266,9 +272,9 @@ public final class AsyncHttpClientTest {
 				.withKeepAliveTimeout(Duration.ofSeconds(30));
 
 		int code = await(client
-				.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+				.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody().async()
-						.then(() -> client.request(HttpRequest.get("http://127.0.0.1:" + PORT)))
+						.then(() -> client.request(HttpRequest.get("http://127.0.0.1:" + port)))
 						.then(res -> {
 							assertFalse(res.isRecycled());
 							return res.loadBody()
@@ -314,14 +320,14 @@ public final class AsyncHttpClientTest {
 						.whenResult(asyncTcpSocket::close))
 				.withAcceptOnce();
 		if (ssl) {
-			server.withSslListenAddress(createSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(PORT));
+			server.withSslListenAddress(createSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(port));
 		} else {
-			server.withListenAddress(new InetSocketAddress(PORT));
+			server.withListenAddress(new InetSocketAddress(port));
 		}
 		server.listen();
 		return AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withSslEnabled(createSslContext(), Executors.newSingleThreadExecutor())
-				.request(HttpRequest.get("http" + (ssl ? "s" : "") + "://127.0.0.1:" + PORT));
+				.request(HttpRequest.get("http" + (ssl ? "s" : "") + "://127.0.0.1:" + port));
 	}
 
 	private static SSLContext createSslContext() {

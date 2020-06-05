@@ -6,6 +6,7 @@ import io.activej.di.module.AbstractModule;
 import io.activej.di.module.Module;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -22,13 +23,19 @@ import static io.activej.test.TestUtils.getFreePort;
 
 @Ignore
 public final class RemoteFsClusterLauncherTest {
-	private static final int serverNumber = getFreePort();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	private int serverPort;
+
+	@Before
+	public void setUp() {
+		serverPort = getFreePort();
+	}
 
 	@Test
 	public void testInjector() {
@@ -45,8 +52,8 @@ public final class RemoteFsClusterLauncherTest {
 					@Provides
 					Config config() {
 						return Config.create()
-								.with("remotefs.path", Config.ofValue("storages/server_" + serverNumber))
-								.with("remotefs.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(serverNumber)));
+								.with("remotefs.path", Config.ofValue("storages/server_" + serverPort))
+								.with("remotefs.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(serverPort)));
 					}
 				};
 			}
