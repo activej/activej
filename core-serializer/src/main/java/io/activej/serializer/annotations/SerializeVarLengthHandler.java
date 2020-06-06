@@ -21,13 +21,12 @@ import io.activej.serializer.SerializerBuilder.Helper;
 import io.activej.serializer.impl.SerializerDefBuilder;
 import io.activej.serializer.impl.SerializerDefWithVarLength;
 
-import static io.activej.common.Preconditions.checkArgument;
-
 public final class SerializeVarLengthHandler implements AnnotationHandler<SerializeVarLength, SerializeVarLengthEx> {
 	@Override
 	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializeVarLength annotation, CompatibilityLevel compatibilityLevel) {
 		return (type, generics, target) -> {
-			checkArgument(generics.length == 0, "Type should have no generics");
+			if (generics.length != 0)
+				throw new IllegalArgumentException("Type should have no generics");
 			if (target instanceof SerializerDefWithVarLength) {
 				return ((SerializerDefWithVarLength) target).ensureVarLength();
 			}

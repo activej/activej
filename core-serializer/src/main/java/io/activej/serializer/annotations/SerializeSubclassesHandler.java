@@ -20,14 +20,14 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerBuilder.Helper;
 import io.activej.serializer.impl.SerializerDefBuilder;
 
-import static io.activej.common.Preconditions.checkArgument;
-
 public final class SerializeSubclassesHandler implements AnnotationHandler<SerializeSubclasses, SerializeSubclassesEx> {
 	@Override
 	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializeSubclasses annotation, CompatibilityLevel compatibilityLevel) {
 		return (superclass, superclassGenerics, target) -> {
-			checkArgument(superclass.getTypeParameters().length == 0, "Superclass must have no type parameters");
-			checkArgument(superclassGenerics.length == 0, "Superclass must have no generics");
+			if (superclass.getTypeParameters().length != 0)
+				throw new IllegalArgumentException("Superclass must have no type parameters");
+			if (superclassGenerics.length != 0)
+				throw new IllegalArgumentException("Superclass must have no generics");
 
 			return serializerBuilder.createSubclassesSerializer(superclass, annotation);
 		};

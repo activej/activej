@@ -25,11 +25,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.of;
 import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
 import static io.activej.serializer.SerializerDef.StaticEncoders.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
+import static io.activej.serializer.util.Utils.of;
 import static java.util.Collections.emptySet;
 import static org.objectweb.asm.Type.getType;
 

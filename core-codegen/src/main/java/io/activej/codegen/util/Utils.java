@@ -18,6 +18,7 @@ package io.activej.codegen.util;
 
 import io.activej.codegen.Context;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -25,8 +26,6 @@ import org.objectweb.asm.commons.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static org.objectweb.asm.Type.*;
 import static org.objectweb.asm.commons.Method.getMethod;
@@ -116,8 +115,12 @@ public final class Utils {
 	}
 
 	public static Type unwrap(@NotNull Type type) {
-		checkArgument(type.getSort() == OBJECT, "Cannot unwrap type that is not an object reference");
-		return checkNotNull(WRAPPER_TO_PRIMITIVE.get(type.getClassName()));
+		if (type.getSort() != OBJECT)
+			throw new IllegalArgumentException("Cannot unwrap type that is not an object reference");
+		@Nullable Type reference = WRAPPER_TO_PRIMITIVE.get(type.getClassName());
+		if (reference == null)
+			throw new NullPointerException();
+		return reference;
 	}
 
 	public static void invokeVirtualOrInterface(GeneratorAdapter g, Class<?> owner, Method method) {

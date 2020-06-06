@@ -19,9 +19,9 @@ package io.activej.serializer.impl;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.Utils;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import io.activej.serializer.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -31,9 +31,9 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Preconditions.*;
 import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
 import static io.activej.serializer.SerializerDef.StaticEncoders.*;
+import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Collections.singletonList;
 import static org.objectweb.asm.Type.*;
@@ -100,42 +100,57 @@ public final class SerializerDefClass implements SerializerDef {
 	}
 
 	public static SerializerDefClass of(@NotNull Class<?> encodeType, @NotNull Class<?> decodeType) {
-		checkArgument(encodeType.isAssignableFrom(decodeType), "Class should be assignable from %s", decodeType);
+		if (!encodeType.isAssignableFrom(decodeType))
+			throw new IllegalArgumentException(format("Class should be assignable from %s", decodeType));
 		return new SerializerDefClass(encodeType, decodeType);
 	}
 
 	public void addSetter(@NotNull Method method, @NotNull List<String> fields) {
-		checkState(!decodeType.isInterface(), "Class should either implement an interface or be an interface");
-		checkArgument(!isPrivate(method.getModifiers()), "Setter cannot be private: %s", method);
-		checkArgument(method.getGenericParameterTypes().length == fields.size(), "Number of arguments of a method should match a size of list of fields");
-		checkArgument(!setters.containsKey(method), "Setter has already been added");
+		if (decodeType.isInterface())
+			throw new IllegalStateException("Class should either implement an interface or be an interface");
+		if (isPrivate(method.getModifiers()))
+			throw new IllegalArgumentException(format("Setter cannot be private: %s", method));
+		if (method.getGenericParameterTypes().length != fields.size())
+			throw new IllegalArgumentException("Number of arguments of a method should match a size of list of fields");
+		if (setters.containsKey(method)) throw new IllegalArgumentException("Setter has already been added");
 		setters.put(method, fields);
 	}
 
 	public void setFactory(@NotNull Method methodFactory, @NotNull List<String> fields) {
-		checkState(!decodeType.isInterface(), "Class should either implement an interface or be an interface");
-		checkArgument(this.factory == null, "Factory is already set: %s", this.factory);
-		checkArgument(!isPrivate(methodFactory.getModifiers()), "Factory cannot be private: %s", methodFactory);
-		checkArgument(isStatic(methodFactory.getModifiers()), "Factory must be static: %s", methodFactory);
-		checkArgument(methodFactory.getGenericParameterTypes().length == fields.size(), "Number of arguments of a method should match a size of list of fields");
+		if (decodeType.isInterface())
+			throw new IllegalStateException("Class should either implement an interface or be an interface");
+		if (this.factory != null)
+			throw new IllegalArgumentException(format("Factory is already set: %s", this.factory));
+		if (isPrivate(methodFactory.getModifiers()))
+			throw new IllegalArgumentException(format("Factory cannot be private: %s", methodFactory));
+		if (!isStatic(methodFactory.getModifiers()))
+			throw new IllegalArgumentException(format("Factory must be static: %s", methodFactory));
+		if (methodFactory.getGenericParameterTypes().length != fields.size())
+			throw new IllegalArgumentException("Number of arguments of a method should match a size of list of fields");
 		this.factory = methodFactory;
 		this.factoryParams = fields;
 	}
 
 	public void setConstructor(@NotNull Constructor<?> constructor, @NotNull List<String> fields) {
-		checkState(!decodeType.isInterface(), "Class should either implement an interface or be an interface");
-		checkArgument(this.constructor == null, "Constructor is already set: %s", this.constructor);
-		checkArgument(!isPrivate(constructor.getModifiers()), "Constructor cannot be private: %s", constructor);
-		checkArgument(constructor.getGenericParameterTypes().length == fields.size(), "Number of arguments of a constructor should match a size of list of fields");
+		if (decodeType.isInterface())
+			throw new IllegalStateException("Class should either implement an interface or be an interface");
+		if (this.constructor != null)
+			throw new IllegalArgumentException(format("Constructor is already set: %s", this.constructor));
+		if (isPrivate(constructor.getModifiers()))
+			throw new IllegalArgumentException(format("Constructor cannot be private: %s", constructor));
+		if (constructor.getGenericParameterTypes().length != fields.size())
+			throw new IllegalArgumentException("Number of arguments of a constructor should match a size of list of fields");
 		this.constructor = constructor;
 		this.constructorParams = fields;
 	}
 
 	public void addField(Field field, SerializerDef serializer, int added, int removed) {
-		checkState(!decodeType.isInterface(), "Class should either implement an interface or be an interface");
-		checkArgument(isPublic(field.getModifiers()), "Method should be public");
+		if (decodeType.isInterface())
+			throw new IllegalStateException("Class should either implement an interface or be an interface");
+		if (!isPublic(field.getModifiers()))
+			throw new IllegalArgumentException("Method should be public");
 		String fieldName = field.getName();
-		checkArgument(!fields.containsKey(fieldName), "Duplicate field '%s'", field);
+		if (fields.containsKey(fieldName)) throw new IllegalArgumentException(format("Duplicate field '%s'", field));
 		FieldDef fieldDef = new FieldDef();
 		fieldDef.field = field;
 		fieldDef.serializer = serializer;
@@ -145,10 +160,12 @@ public final class SerializerDefClass implements SerializerDef {
 	}
 
 	public void addGetter(Method method, SerializerDef serializer, int added, int removed) {
-		checkArgument(method.getGenericParameterTypes().length == 0, "Method should have 0 generic parameter types");
-		checkArgument(isPublic(method.getModifiers()), "Method should be public");
+		if (method.getGenericParameterTypes().length != 0)
+			throw new IllegalArgumentException("Method should have 0 generic parameter types");
+		if (!isPublic(method.getModifiers()))
+			throw new IllegalArgumentException("Method should be public");
 		String fieldName = stripGet(method.getName(), method.getReturnType());
-		checkArgument(!fields.containsKey(fieldName), "Duplicate field '%s'", method);
+		if (fields.containsKey(fieldName)) throw new IllegalArgumentException(format("Duplicate field '%s'", method));
 		FieldDef fieldDef = new FieldDef();
 		fieldDef.method = method;
 		fieldDef.serializer = serializer;
@@ -158,7 +175,8 @@ public final class SerializerDefClass implements SerializerDef {
 	}
 
 	public void addMatchingSetters() {
-		checkArgument(!decodeType.isInterface(), "Class should either implement an interface or be an interface");
+		if (decodeType.isInterface())
+			throw new IllegalArgumentException("Class should either implement an interface or be an interface");
 		Set<String> usedFields = new HashSet<>();
 		if (constructorParams != null) {
 			usedFields.addAll(constructorParams);
@@ -307,7 +325,7 @@ public final class SerializerDefClass implements SerializerDef {
 									boolean found = false;
 									for (String fieldName : entry.getValue()) {
 										FieldDef fieldDef = fields.get(fieldName);
-										checkNotNull(fieldDef, "Field '%s' is not found in '%s'", fieldName, method);
+										if (fieldDef == null) throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, method));
 										if (fieldDef.hasVersion(version)) {
 											found = true;
 											break;
@@ -351,7 +369,8 @@ public final class SerializerDefClass implements SerializerDef {
 		int i = 0;
 		for (String fieldName : factoryParams) {
 			FieldDef fieldDef = fields.get(fieldName);
-			checkNotNull(fieldDef, "Field '%s' is not found in '%s'", fieldName, factory);
+			if (fieldDef == null)
+				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, factory));
 			if (fieldDef.hasVersion(version)) {
 				param[i++] = map.get(fieldName);
 			} else {
@@ -372,7 +391,8 @@ public final class SerializerDefClass implements SerializerDef {
 		int i = 0;
 		for (String fieldName : constructorParams) {
 			FieldDef fieldDef = fields.get(fieldName);
-			checkNotNull(fieldDef, "Field '%s' is not found in '%s'", fieldName, constructor);
+			if (fieldDef == null)
+				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, constructor));
 			if (fieldDef.hasVersion(version)) {
 				param[i++] = map.get(fieldName);
 			} else {
@@ -389,7 +409,9 @@ public final class SerializerDefClass implements SerializerDef {
 		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 			String fieldName = entry.getKey();
 
-			Method method = checkNotNull(entry.getValue().method);
+			if (entry.getValue().method == null)
+				throw new NullPointerException();
+			Method method = entry.getValue().method;
 
 			classBuilder
 					.withField(fieldName, method.getReturnType())

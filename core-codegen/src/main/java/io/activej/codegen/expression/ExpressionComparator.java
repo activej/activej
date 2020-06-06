@@ -28,7 +28,6 @@ import java.util.List;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static io.activej.codegen.util.Utils.wrap;
-import static io.activej.common.Preconditions.checkArgument;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 
@@ -113,7 +112,8 @@ public final class ExpressionComparator implements Expression {
 			Type leftPropertyType = pair.left.load(ctx);
 			Type rightPropertyType = pair.right.load(ctx);
 
-			checkArgument(leftPropertyType.equals(rightPropertyType), "Types of compared values should match");
+			if (!leftPropertyType.equals(rightPropertyType))
+				throw new IllegalArgumentException("Types of compared values should match");
 			if (isPrimitiveType(leftPropertyType)) {
 				g.invokeStatic(wrap(leftPropertyType), new Method("compare", INT_TYPE, new Type[]{leftPropertyType, leftPropertyType}));
 				g.dup();

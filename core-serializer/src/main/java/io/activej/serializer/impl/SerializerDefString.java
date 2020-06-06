@@ -25,9 +25,9 @@ import io.activej.serializer.util.BinaryOutputUtils;
 import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.of;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.StringFormat.UTF8;
+import static io.activej.serializer.util.Utils.of;
 import static java.util.Collections.emptySet;
 
 public final class SerializerDefString implements SerializerDefWithNullable {

@@ -21,12 +21,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
-import static io.activej.common.collection.CollectionUtils.concat;
-import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.*;
 
 /**
  * Represents a loader for defining dynamically generated classes.
@@ -116,7 +114,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	@Override
 	public synchronized Map<String, Long> getCachedClassesCountByType() {
 		return cachedClasses.keySet().stream()
-				.map(key -> concat(singletonList(key.superclass), key.interfaces).toString())
+				.map(key -> Stream.concat(Stream.of(key.superclass), key.interfaces.stream()).collect(toList()).toString())
 				.collect(groupingBy(identity(), counting()));
 	}
 

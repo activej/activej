@@ -23,14 +23,14 @@ import io.activej.serializer.impl.SerializerDefNullable;
 import io.activej.serializer.impl.SerializerDefString;
 import io.activej.serializer.impl.SerializerDefWithNullable;
 
-import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 public final class SerializeNullableHandler implements AnnotationHandler<SerializeNullable, SerializeNullableEx> {
 	@Override
 	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializeNullable annotation, CompatibilityLevel compatibilityLevel) {
 		return (type, generics, target) -> {
-			checkArgument(!type.isPrimitive(), "Type must not represent a primitive type");
+			if (type.isPrimitive())
+				throw new IllegalArgumentException("Type must not represent a primitive type");
 			if (target instanceof SerializerDefString)
 				return ((SerializerDefString) target).ensureNullable();
 			if (compatibilityLevel.compareTo(LEVEL_3) >= 0 && target instanceof SerializerDefWithNullable) {

@@ -23,7 +23,6 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.List;
 
-import static io.activej.common.Preconditions.checkArgument;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
 /**
@@ -43,7 +42,8 @@ final class ExpressionBooleanOr implements Expression {
 		Label labelTrue = new Label();
 		for (Expression predicate : expressions) {
 			Type type = predicate.load(ctx);
-			checkArgument(type == BOOLEAN_TYPE);
+			if (type != BOOLEAN_TYPE)
+				throw new IllegalArgumentException();
 			g.ifZCmp(GeneratorAdapter.NE, labelTrue);
 		}
 		g.push(false);

@@ -4,7 +4,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.operation.ArithmeticOperation;
 import io.activej.codegen.operation.CompareOperation;
-import io.activej.common.api.Initializer;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -12,6 +11,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
 import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
@@ -599,7 +599,7 @@ public class ExpressionTest {
 	public void testBuiltInstance() {
 		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 
-		Initializer<ClassBuilder<Object>> initializer = builder -> builder
+		Consumer<ClassBuilder<Object>> initializer = builder -> builder
 				.withField("x", int.class)
 				.withField("y", Long.class)
 				.withMethod("compare", int.class, asList(TestPojo.class, TestPojo.class),

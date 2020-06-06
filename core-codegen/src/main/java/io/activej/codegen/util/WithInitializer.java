@@ -14,27 +14,16 @@
  * limitations under the License.
  */
 
-package io.activej.serializer.util;
+package io.activej.codegen.util;
 
-import org.jetbrains.annotations.Nullable;
-
-import java.lang.annotation.Annotation;
-import java.util.function.Supplier;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unchecked")
-public final class Utils {
+public interface WithInitializer<T extends WithInitializer<T>> {
 
-	@Nullable
-	public static <A extends Annotation> A findAnnotation(Class<A> type, Annotation[] annotations) {
-		for (Annotation annotation : annotations) {
-			if (annotation.annotationType() == type)
-				return (A) annotation;
-		}
-		return null;
-	}
-
-	public static <T> T of(Supplier<T> supplier) {
-		return supplier.get();
+	default T withInitializer(Consumer<? super T> initializer) {
+		initializer.accept((T) this);
+		return (T) this;
 	}
 
 }

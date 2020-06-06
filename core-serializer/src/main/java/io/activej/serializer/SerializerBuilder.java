@@ -38,14 +38,12 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkNotNull;
-import static io.activej.common.Utils.nullToDefault;
-import static io.activej.common.Utils.of;
 import static io.activej.serializer.SerializerDef.StaticEncoders.POS;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.findAnnotation;
+import static io.activej.serializer.util.Utils.of;
+import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Arrays.asList;
 
@@ -105,8 +103,10 @@ public final class SerializerBuilder {
 		SerializerBuilder builder = new SerializerBuilder(definingClassLoader);
 
 		builder.setSerializer(Object.class, (type, generics, target) -> {
-			checkArgument(type.getTypeParameters().length == generics.length, "Number of type parameters should be equal to number of generics");
-			checkArgument(target == null, "Target must be null");
+			if (type.getTypeParameters().length != generics.length)
+				throw new IllegalArgumentException("Number of type parameters should be equal to number of generics");
+			if (target != null)
+				throw new IllegalArgumentException("Target must be null");
 			SerializeInterface annotation = type.getAnnotation(SerializeInterface.class);
 			SerializerDefClass serializer = annotation != null && annotation.impl() != void.class ?
 					SerializerDefClass.of(type, annotation.impl()) :
@@ -115,19 +115,23 @@ public final class SerializerBuilder {
 			return serializer;
 		});
 		builder.setSerializer(List.class, (type, generics, target) -> {
-			checkArgument(generics.length == 1, "List must have 1 generic type parameter");
+			if (generics.length != 1)
+				throw new IllegalArgumentException("List must have 1 generic type parameter");
 			return new SerializerDefList(generics[0].serializer);
 		});
 		builder.setSerializer(Collection.class, (type, generics, target) -> {
-			checkArgument(generics.length == 1, "Collection must have 1 generic type parameter");
+			if (generics.length != 1)
+				throw new IllegalArgumentException("Collection must have 1 generic type parameter");
 			return new SerializerDefList(generics[0].serializer);
 		});
 		builder.setSerializer(Set.class, (type, generics, target) -> {
-			checkArgument(generics.length == 1, "Set must have 1 generic type parameter");
+			if (generics.length != 1)
+				throw new IllegalArgumentException("Set must have 1 generic type parameter");
 			return new SerializerDefSet(generics[0].serializer);
 		});
 		builder.setSerializer(Map.class, (type, generics, target) -> {
-			checkArgument(generics.length == 2, "Map must have 2 generic type parameter");
+			if (generics.length != 2)
+				throw new IllegalArgumentException("Map must have 2 generic type parameter");
 			return new SerializerDefMap(generics[0].serializer, generics[1].serializer);
 		});
 		builder.setSerializer(Enum.class, (type, generics, target) -> {
@@ -252,7 +256,8 @@ public final class SerializerBuilder {
 
 	public <T> void setSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
 		LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(subclasses);
-		checkArgument(subclassesSet.size() == subclasses.size(), "Subclasses should be unique");
+		if (subclassesSet.size() != subclasses.size())
+			throw new IllegalArgumentException("Subclasses should be unique");
 		SerializerDef subclassesSerializer = createSubclassesSerializer(type, subclassesSet, 0);
 		setSerializer(type, subclassesSerializer);
 	}
@@ -315,7 +320,8 @@ public final class SerializerBuilder {
 		}
 
 		if (type.isArray()) {
-			checkArgument(generics.length == 1, "Number of generics should be equal to 1");
+			if (generics.length != 1)
+				throw new IllegalArgumentException("Number of generics should be equal to 1");
 			SerializerDef itemSerializer = generics[0].serializer;
 			return new SerializerDefArray(itemSerializer, type);
 		}
@@ -331,12 +337,15 @@ public final class SerializerBuilder {
 			throw new IllegalArgumentException("No builder for type " + key);
 		}
 		SerializerDef serializer = builder.serializer(type, generics, null);
-		return checkNotNull(serializer);
+		if (serializer == null)
+			throw new NullPointerException();
+		return serializer;
 	}
 
 	private SerializerDef createSubclassesSerializer(Class<?> type, SerializeSubclasses serializeSubclasses) {
 		LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(Arrays.asList(serializeSubclasses.value()));
-		checkArgument(subclassesSet.size() == serializeSubclasses.value().length, "Subclasses should be unique");
+		if (subclassesSet.size() != serializeSubclasses.value().length)
+			throw new IllegalArgumentException("Subclasses should be unique");
 
 		if (!serializeSubclasses.extraSubclassesId().isEmpty()) {
 			Collection<Class<?>> registeredSubclasses = extraSubclassesMap.get(serializeSubclasses.extraSubclassesId());
@@ -349,11 +358,13 @@ public final class SerializerBuilder {
 
 	private SerializerDef createSubclassesSerializer(Class<?> type, @NotNull LinkedHashSet<Class<?>> subclassesSet,
 			int startIndex) {
-		checkArgument(!subclassesSet.isEmpty(), "Set of subclasses should not be empty");
+		if (subclassesSet.isEmpty()) throw new IllegalArgumentException("Set of subclasses should not be empty");
 		LinkedHashMap<Class<?>, SerializerDef> subclasses = new LinkedHashMap<>();
 		for (Class<?> subclass : subclassesSet) {
-			checkArgument(subclass.getTypeParameters().length == 0, "Subclass should have no type parameters");
-			checkArgument(type.isAssignableFrom(subclass), "Unrelated subclass '%s' for '%s'", subclass, type);
+			if (subclass.getTypeParameters().length != 0)
+				throw new IllegalArgumentException("Subclass should have no type parameters");
+			if (!type.isAssignableFrom(subclass))
+				throw new IllegalArgumentException(format("Unrelated subclass '%s' for '%s'", subclass, type));
 
 			subclasses.put(subclass, createSerializerDef(
 					subclass,
@@ -417,7 +428,8 @@ public final class SerializerBuilder {
 					break;
 				}
 			}
-			checkArgument(i < classType.getTypeParameters().length, "No type variable '%s' is found in type parameters of %s", typeVariableName, classType);
+			if (!(i < classType.getTypeParameters().length))
+				throw new IllegalArgumentException(format("No type variable '%s' is found in type parameters of %s", typeVariableName, classType));
 
 			SerializerDef serializer = typedModsMap.rewrite(classGenerics[i].rawType, new SerializerForType[]{}, classGenerics[i].serializer);
 			return new SerializerForType(classGenerics[i].rawType, serializer);
@@ -570,9 +582,12 @@ public final class SerializerBuilder {
 		if (result == null) {
 			return null;
 		}
-		checkArgument(isPublic(field.getModifiers()), "Field %s must be public", field);
-		checkArgument(!isStatic(field.getModifiers()), "Field %s must not be static", field);
-		checkArgument(!isTransient(field.getModifiers()), "Field %s must not be transient", field);
+		if (!isPublic(field.getModifiers()))
+			throw new IllegalArgumentException(format("Field %s must be public", field));
+		if (isStatic(field.getModifiers()))
+			throw new IllegalArgumentException(format("Field %s must not be static", field));
+		if (isTransient(field.getModifiers()))
+			throw new IllegalArgumentException(format("Field %s must not be transient", field));
 		result.serializer = resolveSerializer(classType, classGenerics, field.getGenericType(), result.mods).serializer;
 		return result;
 	}
@@ -586,9 +601,12 @@ public final class SerializerBuilder {
 		if (result == null) {
 			return null;
 		}
-		checkArgument(isPublic(getter.getModifiers()), "Getter %s must be public", getter);
-		checkArgument(!isStatic(getter.getModifiers()), "Getter %s must not be static", getter);
-		checkArgument(getter.getReturnType() != Void.TYPE && getter.getParameterTypes().length == 0, "%s must be getter", getter);
+		if (!isPublic(getter.getModifiers()))
+			throw new IllegalArgumentException(format("Getter %s must be public", getter));
+		if (isStatic(getter.getModifiers()))
+			throw new IllegalArgumentException(format("Getter %s must not be static", getter));
+		if (getter.getReturnType() == Void.TYPE || getter.getParameterTypes().length != 0)
+			throw new IllegalArgumentException(format("%s must be getter", getter));
 
 		result.serializer = resolveSerializer(classType, classGenerics, getter.getGenericReturnType(), result.mods).serializer;
 
@@ -611,8 +629,10 @@ public final class SerializerBuilder {
 			}
 			return;
 		}
-		checkArgument(!classType.isAnonymousClass(), "Class should not be anonymous");
-		checkArgument(!classType.isLocalClass(), "Class should not be local");
+		if (classType.isAnonymousClass())
+			throw new IllegalArgumentException("Class should not be anonymous");
+		if (classType.isLocalClass())
+			throw new IllegalArgumentException("Class should not be local");
 		scanClass(classType, classGenerics, serializer);
 		scanFactories(classType, serializer);
 		scanConstructors(classType, serializer);
@@ -639,8 +659,10 @@ public final class SerializerBuilder {
 	private void addMethodsAndGettersToClass(SerializerDefClass serializer, List<FoundSerializer> foundSerializers) {
 		Set<Integer> orders = new HashSet<>();
 		for (FoundSerializer foundSerializer : foundSerializers) {
-			checkArgument(foundSerializer.order >= 0, "Invalid order %s for %s in %s", foundSerializer.order, foundSerializer, serializer);
-			checkArgument(orders.add(foundSerializer.order), "Duplicate order %s for %s in %s", foundSerializer.order, foundSerializer, serializer);
+			if (foundSerializer.order < 0)
+				throw new IllegalArgumentException(format("Invalid order %s for %s in %s", foundSerializer.order, foundSerializer, serializer));
+			if (!orders.add(foundSerializer.order))
+				throw new IllegalArgumentException(format("Duplicate order %s for %s in %s", foundSerializer.order, foundSerializer, serializer));
 		}
 		Collections.sort(foundSerializers);
 		for (FoundSerializer foundSerializer : foundSerializers) {
@@ -722,7 +744,8 @@ public final class SerializerBuilder {
 				if (fields.size() == method.getParameterTypes().length) {
 					serializer.addSetter(method, fields);
 				} else {
-					checkArgument(fields.isEmpty(), "Fields should not be empty");
+					if (!fields.isEmpty())
+						throw new IllegalArgumentException("Fields should not be empty");
 				}
 			}
 		}
@@ -748,7 +771,8 @@ public final class SerializerBuilder {
 				if (fields.size() == factory.getParameterTypes().length) {
 					serializer.setFactory(factory, fields);
 				} else {
-					checkArgument(fields.isEmpty(), "@Deserialize is not fully specified for %s", fields);
+					if (!fields.isEmpty())
+						throw new IllegalArgumentException(format("@Deserialize is not fully specified for %s", fields));
 				}
 			}
 		}
@@ -767,17 +791,20 @@ public final class SerializerBuilder {
 				}
 			}
 			if (constructor.getParameterTypes().length != 0 && fields.size() == constructor.getParameterTypes().length) {
-				checkArgument(!found, "Duplicate @Deserialize constructor %s", constructor);
+				if (found)
+					throw new IllegalArgumentException(format("Duplicate @Deserialize constructor %s", constructor));
 				found = true;
 				serializer.setConstructor(constructor, fields);
 			} else {
-				checkArgument(fields.isEmpty(), "@Deserialize is not fully specified for %s", fields);
+				if (!fields.isEmpty())
+					throw new IllegalArgumentException(format("@Deserialize is not fully specified for %s", fields));
 			}
 		}
 	}
 
 	private BinarySerializer<?> buildImpl(SerializerDef serializer, int serializeVersion) {
-		checkArgument(serializeVersion >= 0, "serializerVersion is negative");
+		if (serializeVersion < 0)
+			throw new IllegalArgumentException("serializerVersion is negative");
 
 		ClassBuilder<BinarySerializer> classBuilder = ClassBuilder.create(classLoader, BinarySerializer.class).withClassKey(classKey);
 		if (saveBytecodePath != null) {
@@ -835,7 +862,7 @@ public final class SerializerBuilder {
 						buf,
 						pos,
 						data,
-						nullToDefault(currentVersion, 0),
+						currentVersion != null ? currentVersion : 0,
 						compatibilityLevel),
 
 				pos);

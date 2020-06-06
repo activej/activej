@@ -25,7 +25,6 @@ import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.codegen.util.Primitives.wrap;
-import static io.activej.common.Preconditions.checkArgument;
 import static java.util.Collections.emptySet;
 
 public abstract class SerializerDefPrimitive implements SerializerDef {
@@ -35,7 +34,8 @@ public abstract class SerializerDefPrimitive implements SerializerDef {
 	protected final boolean wrapped;
 
 	protected SerializerDefPrimitive(Class<?> primitiveType, boolean wrapped) {
-		checkArgument(primitiveType.isPrimitive(), "Not a primitive type");
+		if (!primitiveType.isPrimitive())
+			throw new IllegalArgumentException("Not a primitive type");
 		this.primitiveType = primitiveType;
 		this.wrappedType = wrap(primitiveType);
 		this.wrapped = wrapped;

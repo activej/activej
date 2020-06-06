@@ -20,7 +20,6 @@ import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import static io.activej.common.Preconditions.checkArgument;
 import static org.objectweb.asm.Type.getType;
 
 final class ExpressionArrayNew implements Expression {
@@ -28,7 +27,9 @@ final class ExpressionArrayNew implements Expression {
 	private final Expression length;
 
 	ExpressionArrayNew(Class<?> type, Expression length) {
-		this.type = checkArgument(type, Class::isArray);
+		if (!type.isArray())
+			throw new IllegalArgumentException();
+		this.type = type;
 		this.length = length;
 	}
 

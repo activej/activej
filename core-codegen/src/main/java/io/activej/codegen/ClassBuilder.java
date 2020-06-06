@@ -19,8 +19,7 @@ package io.activej.codegen;
 import io.activej.codegen.DefiningClassLoader.ClassKey;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.util.DefiningClassWriter;
-import io.activej.common.api.WithInitializer;
-import io.activej.common.collection.CollectionUtils;
+import io.activej.codegen.util.WithInitializer;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -35,11 +34,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.collection.CollectionUtils.difference;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.getInternalName;
 import static org.objectweb.asm.Type.getType;
@@ -93,11 +91,12 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 
 	public static <T> ClassBuilder<T> create(DefiningClassLoader classLoader, Class<? super T> implementation, List<Class<?>> interfaces) {
-		checkArgument(interfaces.stream().allMatch(Class::isInterface));
+		if (!interfaces.stream().allMatch(Class::isInterface))
+			throw new IllegalArgumentException();
 		if (implementation.isInterface()) {
 			return new ClassBuilder<>(classLoader,
 					Object.class,
-					CollectionUtils.concat(singletonList(implementation), interfaces));
+					Stream.concat(Stream.of(implementation), interfaces.stream()).collect(toList()));
 		} else {
 			return new ClassBuilder<>(classLoader,
 					implementation,
@@ -184,7 +183,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				}
 			}
 		}
-		checkArgument(foundMethod != null, "Could not find method '" + methodName + "'");
+		if (foundMethod == null)
+			throw new IllegalArgumentException(String.format("Could not find method '%s'", methodName));
 		methods.put(foundMethod, expression);
 		return this;
 	}
@@ -285,8 +285,11 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		Set<Method> staticMethods = new HashSet<>();
 
 		while (true) {
-			Set<Method> newMethods = difference(this.methods.keySet(), methods);
-			Set<Method> newStaticMethods = difference(this.staticMethods.keySet(), staticMethods);
+			Set<Method> newMethods = new LinkedHashSet<>(this.methods.keySet());
+			newMethods.removeAll(methods);
+			Set<Method> newStaticMethods = new LinkedHashSet<>(this.staticMethods.keySet());
+			newStaticMethods.removeAll(staticMethods);
+
 			if (newMethods.isEmpty() && newStaticMethods.isEmpty()) {
 				break;
 			}

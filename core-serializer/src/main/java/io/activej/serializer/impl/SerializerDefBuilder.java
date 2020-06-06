@@ -19,8 +19,6 @@ package io.activej.serializer.impl;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.common.Preconditions.checkArgument;
-
 @FunctionalInterface
 public interface SerializerDefBuilder {
 
@@ -64,7 +62,8 @@ public interface SerializerDefBuilder {
 
 	static SerializerDefBuilder of(SerializerDef serializer) {
 		return (type, generics, target) -> {
-			checkArgument(generics.length == 0, "Type should have no generics");
+			if (generics.length != 0)
+				throw new IllegalArgumentException("Type should have no generics");
 			return serializer;
 		};
 	}

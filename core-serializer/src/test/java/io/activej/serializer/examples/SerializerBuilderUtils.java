@@ -9,9 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkNotNull;
 import static java.lang.Character.toUpperCase;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 public class SerializerBuilderUtils {
@@ -98,16 +97,19 @@ public class SerializerBuilderUtils {
 
 	private static SerializerDefBuilder serializerDefMapBuilder(Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
 		String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
-		checkArgument(mapType.getSimpleName().startsWith(prefix), "Expected mapType '%s', but was begin '%s'", mapType.getSimpleName(), prefix);
+		if (!mapType.getSimpleName().startsWith(prefix))
+			throw new IllegalArgumentException(format("Expected mapType '%s', but was begin '%s'", mapType.getSimpleName(), prefix));
 		return (type, generics, target) -> {
 			SerializerDef keySerializer;
 			SerializerDef valueSerializer;
 			if (generics.length == 2) {
-				checkArgument((keyType == Object.class) && (valueType == Object.class), "keyType and valueType must be Object.class");
+				if (keyType != Object.class || valueType != Object.class)
+					throw new IllegalArgumentException("keyType and valueType must be Object.class");
 				keySerializer = generics[0].serializer;
 				valueSerializer = generics[1].serializer;
 			} else if (generics.length == 1) {
-				checkArgument((keyType == Object.class) || (valueType == Object.class), "keyType or valueType must be Object.class");
+				if (keyType != Object.class && valueType != Object.class)
+					throw new IllegalArgumentException("keyType or valueType must be Object.class");
 				if (keyType == Object.class) {
 					keySerializer = generics[0].serializer;
 					valueSerializer = primitiveSerializers.get(valueType);
@@ -119,22 +121,30 @@ public class SerializerBuilderUtils {
 				keySerializer = primitiveSerializers.get(keyType);
 				valueSerializer = primitiveSerializers.get(valueType);
 			}
-			return new SerializerDefHppc7Map(checkNotNull(keySerializer), checkNotNull(valueSerializer), mapType, mapImplType, keyType, valueType);
+			if (valueSerializer == null)
+				throw new NullPointerException();
+			if (keySerializer == null)
+				throw new NullPointerException();
+			return new SerializerDefHppc7Map(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType);
 		};
 	}
 
 	private static SerializerDefBuilder serializerDefCollectionBuilder(Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
 		String prefix = capitalize(valueType.getSimpleName());
-		checkArgument(collectionType.getSimpleName().startsWith(prefix), "Expected setType '%s', but was begin '%s'", collectionType.getSimpleName(), prefix);
+		if (!collectionType.getSimpleName().startsWith(prefix))
+			throw new IllegalArgumentException(format("Expected setType '%s', but was begin '%s'", collectionType.getSimpleName(), prefix));
 		return (type, generics, target) -> {
 			SerializerDef valueSerializer;
 			if (generics.length == 1) {
-				checkArgument(valueType == Object.class, "valueType must be Object.class");
+				if (valueType != Object.class)
+					throw new IllegalArgumentException("valueType must be Object.class");
 				valueSerializer = generics[0].serializer;
 			} else {
 				valueSerializer = primitiveSerializers.get(valueType);
 			}
-			return new SerializerDefHppc7Collection(collectionType, collectionImplType, valueType, checkNotNull(valueSerializer));
+			if (valueSerializer == null)
+				throw new NullPointerException();
+			return new SerializerDefHppc7Collection(collectionType, collectionImplType, valueType, valueSerializer);
 		};
 	}
 }

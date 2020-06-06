@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import static io.activej.common.Preconditions.checkNotNull;
 import static org.objectweb.asm.Type.getType;
 
 /**
@@ -37,18 +36,18 @@ final class ExpressionConstant implements Expression {
 
 	private String staticConstantField;
 
-	ExpressionConstant(Object value) {
-		this.value = checkNotNull(value);
+	ExpressionConstant(@NotNull Object value) {
+		this.value = value;
 		this.type = null;
 	}
 
-	ExpressionConstant(Object value, @Nullable Type type) {
-		this.value = checkNotNull(value);
+	ExpressionConstant(@NotNull Object value, @Nullable Type type) {
+		this.value = value;
 		this.type = type;
 	}
 
-	ExpressionConstant(Object value, Class<?> type) {
-		this.value = checkNotNull(value);
+	ExpressionConstant(@NotNull Object value, Class<?> type) {
+		this.value = value;
 		this.type = getType(type);
 	}
 

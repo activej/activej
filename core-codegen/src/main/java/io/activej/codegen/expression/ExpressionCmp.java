@@ -27,7 +27,6 @@ import java.util.Objects;
 
 import static io.activej.codegen.operation.CompareOperation.*;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
-import static io.activej.common.Preconditions.checkArgument;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.INT_TYPE;
 
@@ -55,7 +54,8 @@ final class ExpressionCmp implements Expression {
 
 		Type leftType = left.load(ctx);
 		Type rightType = right.load(ctx);
-		checkArgument(Objects.equals(leftType, rightType), "Types of compared values should match");
+		if (!Objects.equals(leftType, rightType))
+			throw new IllegalArgumentException("Types of compared values should match");
 
 		if (isPrimitiveType(leftType)) {
 			g.ifCmp(leftType, operation.opCode, labelTrue);

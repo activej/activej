@@ -30,7 +30,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.util.Utils.*;
-import static io.activej.common.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Arrays.asList;
@@ -333,7 +332,8 @@ public final class Context {
 
 	public Type invokeConstructor(Type ownerType, Type... argumentTypes) {
 		Class<?>[] arguments = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
-		checkArgument(!ownerType.equals(getSelfType()));
+		if (ownerType.equals(getSelfType()))
+			throw new IllegalArgumentException();
 		Method foundMethod = findMethod(
 				Arrays.stream(toJavaType(ownerType).getConstructors())
 						.map(Method::getMethod),
