@@ -22,6 +22,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.sql.DataSource;
 import java.io.*;
+import java.net.BindException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -34,12 +36,28 @@ import java.util.function.Supplier;
 public final class TestUtils {
 	private static int activePromises = 0;
 
+	static int port = 1024;
+
 	public static synchronized int getFreePort() {
-		try (ServerSocket s = new ServerSocket(0)) {
-			return s.getLocalPort();
-		} catch (IOException e) {
-			throw new AssertionError(e);
+		while (++port < 65536) {
+			if (!probeBindAddress(new InetSocketAddress(port))) continue;
+			if (!probeBindAddress(new InetSocketAddress("localhost", port))) continue;
+			if (!probeBindAddress(new InetSocketAddress("127.0.0.1", port))) continue;
+			return port;
 		}
+		throw new AssertionError();
+	}
+
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
+	private static boolean probeBindAddress(InetSocketAddress inetSocketAddress) {
+		try (ServerSocket s = new ServerSocket()) {
+			s.bind(inetSocketAddress);
+		} catch (BindException e) {
+			return false;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return true;
 	}
 
 	public static DataSource dataSource(String databasePropertiesPath) throws IOException, SQLException {
