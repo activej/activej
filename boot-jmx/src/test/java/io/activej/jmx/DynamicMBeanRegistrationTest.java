@@ -1,7 +1,7 @@
 package io.activej.jmx;
 
-import io.activej.di.Key;
-import io.activej.di.annotation.QualifierAnnotation;
+import io.activej.inject.Key;
+import io.activej.inject.annotation.QualifierAnnotation;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import org.jmock.Expectations;

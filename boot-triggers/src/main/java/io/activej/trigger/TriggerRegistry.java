@@ -16,7 +16,7 @@
 
 package io.activej.trigger;
 
-import io.activej.di.Key;
+import io.activej.inject.Key;
 
 import java.util.function.Supplier;
 

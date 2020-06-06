@@ -16,7 +16,7 @@
 
 package io.activej.worker.annotation;
 
-import io.activej.di.annotation.QualifierAnnotation;
+import io.activej.inject.annotation.QualifierAnnotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

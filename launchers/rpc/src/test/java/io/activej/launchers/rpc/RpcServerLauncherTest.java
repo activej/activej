@@ -1,6 +1,6 @@
 package io.activej.launchers.rpc;
 
-import io.activej.di.annotation.Provides;
+import io.activej.inject.annotation.Provides;
 import io.activej.rpc.server.RpcServer;
 import org.junit.Test;
 

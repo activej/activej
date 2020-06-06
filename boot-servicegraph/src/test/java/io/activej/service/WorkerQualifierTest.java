@@ -1,10 +1,10 @@
 package io.activej.service;
 
-import io.activej.di.Injector;
-import io.activej.di.Key;
-import io.activej.di.annotation.Named;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;

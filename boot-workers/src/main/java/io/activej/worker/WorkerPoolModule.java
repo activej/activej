@@ -16,10 +16,10 @@
 
 package io.activej.worker;
 
-import io.activej.di.Injector;
-import io.activej.di.Key;
-import io.activej.di.binding.Binding;
-import io.activej.di.module.AbstractModule;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.module.AbstractModule;
 import io.activej.worker.annotation.Worker;
 import io.activej.worker.annotation.WorkerId;
 

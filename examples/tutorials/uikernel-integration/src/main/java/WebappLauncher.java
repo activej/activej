@@ -1,15 +1,15 @@
 import com.google.gson.Gson;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StaticServlet;
 import io.activej.http.loader.StaticLoader;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 import io.activej.uikernel.UiKernelServlets;
@@ -18,7 +18,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.config.converter.ConfigConverters.ofString;
-import static io.activej.di.module.Modules.combine;
+import static io.activej.inject.module.Modules.combine;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public class WebappLauncher extends Launcher {

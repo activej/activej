@@ -16,16 +16,16 @@
 
 package io.activej.test;
 
-import io.activej.di.Injector;
-import io.activej.di.InstanceInjector;
-import io.activej.di.Key;
-import io.activej.di.binding.Binding;
-import io.activej.di.binding.Dependency;
-import io.activej.di.module.Module;
-import io.activej.di.module.ModuleBuilder;
-import io.activej.di.module.Modules;
-import io.activej.di.util.ReflectionUtils;
-import io.activej.di.util.Types;
+import io.activej.inject.Injector;
+import io.activej.inject.InstanceInjector;
+import io.activej.inject.Key;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.Dependency;
+import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
+import io.activej.inject.module.Modules;
+import io.activej.inject.util.ReflectionUtils;
+import io.activej.inject.util.Types;
 import io.activej.test.rules.LambdaStatement;
 import org.junit.After;
 import org.junit.Before;

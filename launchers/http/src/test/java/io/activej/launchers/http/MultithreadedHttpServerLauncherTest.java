@@ -1,7 +1,7 @@
 package io.activej.launchers.http;
 
-import io.activej.di.annotation.Provides;
 import io.activej.http.AsyncServlet;
+import io.activej.inject.annotation.Provides;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.worker.annotation.Worker;
 import io.activej.worker.annotation.WorkerId;

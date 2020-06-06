@@ -2,9 +2,9 @@ package advancedrpc;
 
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverters;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.serializer.SerializerBuilder;

@@ -1,6 +1,6 @@
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerBuilder;

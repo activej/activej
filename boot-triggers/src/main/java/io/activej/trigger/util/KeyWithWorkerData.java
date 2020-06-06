@@ -16,7 +16,7 @@
 
 package io.activej.trigger.util;
 
-import io.activej.di.Key;
+import io.activej.inject.Key;
 import io.activej.worker.WorkerPool;
 import org.jetbrains.annotations.Nullable;
 

@@ -4,11 +4,11 @@ import io.activej.async.callback.Callback;
 import io.activej.common.MemSize;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Named;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -19,8 +19,8 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 
 import static io.activej.config.converter.ConfigConverters.*;
-import static io.activej.di.module.Modules.combine;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.inject.module.Modules.combine;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 

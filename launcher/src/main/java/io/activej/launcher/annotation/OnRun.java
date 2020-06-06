@@ -16,7 +16,7 @@
 
 package io.activej.launcher.annotation;
 
-import io.activej.di.annotation.QualifierAnnotation;
+import io.activej.inject.annotation.QualifierAnnotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

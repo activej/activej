@@ -16,19 +16,19 @@
 
 package io.activej.worker;
 
-import io.activej.di.Injector;
-import io.activej.di.Key;
-import io.activej.di.Scope;
-import io.activej.di.annotation.ShortTypeName;
-import io.activej.di.binding.BindingInfo;
-import io.activej.di.util.Trie;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.Scope;
+import io.activej.inject.annotation.ShortTypeName;
+import io.activej.inject.binding.BindingInfo;
+import io.activej.inject.util.Trie;
 import io.activej.worker.annotation.WorkerId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static io.activej.di.binding.BindingType.TRANSIENT;
+import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 

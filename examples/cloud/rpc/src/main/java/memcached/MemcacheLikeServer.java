@@ -1,10 +1,10 @@
 package memcached;
 
 import io.activej.config.Config;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.Module;
-import io.activej.di.module.ModuleBuilder;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.launcher.Launcher;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;

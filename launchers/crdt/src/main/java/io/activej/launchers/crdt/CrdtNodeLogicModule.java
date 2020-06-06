@@ -24,11 +24,11 @@ import io.activej.crdt.storage.cluster.CrdtRepartitionController;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
-import io.activej.di.Key;
-import io.activej.di.annotation.Provides;
-import io.activej.di.annotation.QualifierAnnotation;
-import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.Key;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.annotation.QualifierAnnotation;
+import io.activej.inject.module.AbstractModule;
 import io.activej.remotefs.FsClient;
 import org.jetbrains.annotations.NotNull;
 

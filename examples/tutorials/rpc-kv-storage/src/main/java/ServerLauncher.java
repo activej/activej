@@ -1,10 +1,10 @@
-import io.activej.di.annotation.Inject;
-import io.activej.di.module.Module;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
-import static io.activej.di.module.Modules.combine;
+import static io.activej.inject.module.Modules.combine;
 
 // [START EXAMPLE]
 public class ServerLauncher extends Launcher {

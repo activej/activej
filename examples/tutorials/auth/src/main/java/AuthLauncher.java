@@ -1,10 +1,10 @@
-import io.activej.di.annotation.Named;
-import io.activej.di.annotation.Provides;
 import io.activej.http.*;
 import io.activej.http.loader.StaticLoader;
 import io.activej.http.session.SessionServlet;
 import io.activej.http.session.SessionStore;
 import io.activej.http.session.SessionStoreInMemory;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 
 import java.time.Duration;

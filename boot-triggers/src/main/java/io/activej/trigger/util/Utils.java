@@ -17,7 +17,7 @@
 package io.activej.trigger.util;
 
 import io.activej.common.reflection.RecursiveType;
-import io.activej.di.Key;
+import io.activej.inject.Key;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

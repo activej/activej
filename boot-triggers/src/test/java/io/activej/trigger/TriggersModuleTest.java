@@ -1,12 +1,12 @@
 package io.activej.trigger;
 
 import io.activej.common.ref.RefBoolean;
-import io.activej.di.Injector;
-import io.activej.di.Key;
-import io.activej.di.annotation.Named;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.LauncherService;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;

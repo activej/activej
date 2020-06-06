@@ -1,15 +1,15 @@
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.di.Injector;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.Module;
 import io.activej.dns.AsyncDnsClient;
 import io.activej.dns.RemoteAsyncDnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpMessage;
 import io.activej.http.HttpRequest;
+import io.activej.inject.Injector;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 
 import static io.activej.config.converter.ConfigConverters.ofDuration;
 import static io.activej.config.converter.ConfigConverters.ofInetAddress;
-import static io.activej.di.module.Modules.combine;
+import static io.activej.inject.module.Modules.combine;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**

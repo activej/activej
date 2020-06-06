@@ -16,7 +16,7 @@
 
 package io.activej.service;
 
-import io.activej.di.Key;
+import io.activej.inject.Key;
 import io.activej.service.adapter.ServiceAdapter;
 
 @SuppressWarnings("unused")

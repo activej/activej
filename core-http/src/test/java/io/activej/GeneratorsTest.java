@@ -1,11 +1,11 @@
 package io.activej;
 
-import io.activej.di.Injector;
-import io.activej.di.Key;
-import io.activej.di.module.Module;
-import io.activej.di.module.ModuleBuilder;
-import io.activej.di.module.OptionalGeneratorModule;
-import io.activej.http.di.PromiseGeneratorModule;
+import io.activej.http.inject.PromiseGeneratorModule;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
+import io.activej.inject.module.OptionalGeneratorModule;
 import io.activej.promise.Promise;
 import org.junit.Test;
 

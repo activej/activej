@@ -16,10 +16,10 @@
 
 package io.activej.dataflow.graph;
 
-import io.activej.dataflow.di.DatasetIdModule.DatasetIds;
+import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.di.ResourceLocator;
+import io.activej.inject.ResourceLocator;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;

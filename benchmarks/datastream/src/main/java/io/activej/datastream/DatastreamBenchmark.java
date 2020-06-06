@@ -2,12 +2,12 @@ package io.activej.datastream;
 
 import io.activej.config.Config;
 import io.activej.datastream.processor.StreamMapper;
-import io.activej.di.InstanceProvider;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
-import io.activej.di.annotation.Transient;
-import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.InstanceProvider;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.annotation.Transient;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.service.ServiceGraphModule;

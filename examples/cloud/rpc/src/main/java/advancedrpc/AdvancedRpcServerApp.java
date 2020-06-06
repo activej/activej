@@ -1,8 +1,8 @@
 package advancedrpc;
 
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.Module;
-import io.activej.di.module.ModuleBuilder;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 import io.activej.worker.WorkerPool;

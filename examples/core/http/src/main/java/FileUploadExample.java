@@ -1,11 +1,11 @@
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.di.Injector;
-import io.activej.di.annotation.Provides;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.MultipartParser.MultipartDataHandler;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StaticServlet;
+import io.activej.inject.Injector;
+import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
 

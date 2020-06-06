@@ -1,9 +1,9 @@
 package io.activej.launchers.remotefs;
 
 import io.activej.config.Config;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
-import io.activej.di.module.Module;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
+import io.activej.inject.module.Module;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;

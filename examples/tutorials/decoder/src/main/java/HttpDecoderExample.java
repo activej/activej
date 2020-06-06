@@ -3,13 +3,13 @@ import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.common.collection.Either;
-import io.activej.di.annotation.Provides;
 import io.activej.http.AsyncServlet;
 import io.activej.http.AsyncServletDecorator;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
 import io.activej.http.decoder.DecodeErrors;
 import io.activej.http.decoder.Decoder;
+import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
 

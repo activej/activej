@@ -1,9 +1,9 @@
 package memcached;
 
 import io.activej.config.Config;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.memcache.protocol.SerializerDefSlice;
 import io.activej.memcache.server.RingBuffer;
 import io.activej.promise.Promise;

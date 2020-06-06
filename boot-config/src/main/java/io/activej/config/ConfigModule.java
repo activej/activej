@@ -17,9 +17,9 @@
 package io.activej.config;
 
 import io.activej.common.api.Initializable;
-import io.activej.di.Key;
-import io.activej.di.binding.Binding;
-import io.activej.di.module.AbstractModule;
+import io.activej.inject.Key;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.annotation.OnStart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

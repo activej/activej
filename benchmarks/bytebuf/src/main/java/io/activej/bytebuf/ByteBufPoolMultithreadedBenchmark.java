@@ -1,8 +1,8 @@
 package io.activej.bytebuf;
 
 import io.activej.config.Config;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;

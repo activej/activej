@@ -1,9 +1,9 @@
 package advancedrpc;
 
-import io.activej.di.annotation.Inject;
-import io.activej.di.module.Module;
-import io.activej.di.module.ModuleBuilder;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promises;
 import io.activej.rpc.client.RpcClient;

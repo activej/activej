@@ -19,9 +19,9 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.crdt.CrdtServer;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.Module;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Cluster;
@@ -30,7 +30,7 @@ import io.activej.trigger.TriggersModule;
 
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
-import static io.activej.di.module.Modules.combine;
+import static io.activej.inject.module.Modules.combine;
 
 public abstract class CrdtNodeLauncher<K extends Comparable<K>, S> extends Launcher {
 	public static final String PROPERTIES_FILE = "crdt-node.properties";

@@ -1,6 +1,6 @@
 package io.activej.jmx;
 
-import io.activej.di.Key;
+import io.activej.inject.Key;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;

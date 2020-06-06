@@ -1,9 +1,9 @@
 import io.activej.csp.file.ChannelFileReader;
-import io.activej.di.Injector;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.Injector;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.remotefs.RemoteFsClient;
 import io.activej.service.ServiceGraphModule;

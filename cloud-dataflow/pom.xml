@@ -36,7 +36,7 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-di</artifactId>
+      <artifactId>activej-inject</artifactId>
       <version>${project.version}</version>
     </dependency>
 

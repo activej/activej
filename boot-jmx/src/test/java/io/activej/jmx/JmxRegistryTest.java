@@ -1,9 +1,9 @@
 package io.activej.jmx;
 
-import io.activej.di.Injector;
-import io.activej.di.Key;
-import io.activej.di.annotation.QualifierAnnotation;
-import io.activej.di.module.AbstractModule;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.annotation.QualifierAnnotation;
+import io.activej.inject.module.AbstractModule;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;

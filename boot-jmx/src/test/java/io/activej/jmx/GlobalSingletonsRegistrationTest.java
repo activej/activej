@@ -1,7 +1,7 @@
 package io.activej.jmx;
 
-import io.activej.di.Injector;
-import io.activej.di.Key;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
 import io.activej.jmx.GlobalSingletonsRegistrationTest.GlobalSingletonClass1.CustomClass;
 import io.activej.launcher.LauncherService;
 import org.junit.Test;

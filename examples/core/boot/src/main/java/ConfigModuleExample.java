@@ -1,6 +1,6 @@
 import io.activej.config.Config;
-import io.activej.di.Injector;
-import io.activej.di.module.ModuleBuilder;
+import io.activej.inject.Injector;
+import io.activej.inject.module.ModuleBuilder;
 
 import java.net.InetAddress;
 

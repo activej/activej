@@ -2,7 +2,7 @@ package io.activej.launchers.crdt;
 
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
-import io.activej.di.annotation.Provides;
+import io.activej.inject.annotation.Provides;
 import org.junit.Test;
 
 import static io.activej.codec.StructuredCodecs.*;

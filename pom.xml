@@ -42,7 +42,7 @@
     <module>core-net</module>
     <module>core-datastream</module>
     <module>core-http</module>
-    <module>core-di</module>
+    <module>core-inject</module>
     <module>cloud-rpc</module>
     <module>cloud-memcache</module>
     <module>cloud-fs</module>

@@ -1,9 +1,9 @@
 package io.activej.config;
 
 import io.activej.config.converter.ConfigConverter;
-import io.activej.di.Injector;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
+import io.activej.inject.Injector;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.annotation.OnStart;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

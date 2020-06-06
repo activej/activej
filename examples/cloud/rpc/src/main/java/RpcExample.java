@@ -1,10 +1,10 @@
 import io.activej.common.api.Initializer;
-import io.activej.di.Key;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
-import io.activej.di.annotation.ProvidesIntoSet;
-import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.Key;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.annotation.ProvidesIntoSet;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;

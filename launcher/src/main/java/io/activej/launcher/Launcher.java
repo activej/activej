@@ -16,12 +16,12 @@
 
 package io.activej.launcher;
 
-import io.activej.di.Injector;
-import io.activej.di.InstanceInjector;
-import io.activej.di.Key;
-import io.activej.di.module.Module;
-import io.activej.di.module.ModuleBuilder;
-import io.activej.di.util.Types;
+import io.activej.inject.Injector;
+import io.activej.inject.InstanceInjector;
+import io.activej.inject.Key;
+import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
+import io.activej.inject.util.Types;
 import io.activej.jmx.api.ConcurrentJmxBeanAdapter;
 import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -38,7 +38,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static io.activej.di.util.Utils.makeGraphVizGraph;
+import static io.activej.inject.util.Utils.makeGraphVizGraph;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toSet;

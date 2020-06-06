@@ -16,7 +16,7 @@
 
 package io.activej.test;
 
-import io.activej.di.module.Module;
+import io.activej.inject.module.Module;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

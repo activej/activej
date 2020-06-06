@@ -2,12 +2,12 @@ package io.activej.launchers.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.config.Config;
-import io.activej.di.Injector;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
-import io.activej.di.module.Module;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.inject.Injector;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
+import io.activej.inject.module.Module;
 import io.activej.net.PrimaryServer;
 import io.activej.service.ServiceGraph;
 import io.activej.test.rules.ByteBufRule;

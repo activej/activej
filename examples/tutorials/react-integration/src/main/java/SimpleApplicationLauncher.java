@@ -1,6 +1,6 @@
-import io.activej.di.annotation.Provides;
 import io.activej.http.AsyncServlet;
 import io.activej.http.StaticServlet;
+import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 
 import java.util.concurrent.Executor;

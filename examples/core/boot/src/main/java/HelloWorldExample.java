@@ -1,5 +1,5 @@
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Provides;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 
 //[START EXAMPLE]

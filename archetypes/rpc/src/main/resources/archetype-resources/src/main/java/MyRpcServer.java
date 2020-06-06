@@ -3,7 +3,7 @@ package ${groupId};
 import io.activej.promise.Promise;
 import io.activej.config.Config;
 import io.activej.config.ConfigConverters;
-import io.activej.di.annotation.Provides;
+import io.activej.inject.annotation.Provides;
 import io.activej.eventloop.Eventloop;
 import io.activej.launchers.rpc.RpcServerLauncher;
 import io.activej.rpc.server.RpcServer;

@@ -23,12 +23,12 @@ import io.activej.common.exception.parse.ParseException;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.storage.local.CrdtStorageMap;
-import io.activej.di.annotation.Optional;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.*;
 import io.activej.http.loader.StaticLoader;
+import io.activej.inject.annotation.Optional;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 
 import java.util.concurrent.Executor;

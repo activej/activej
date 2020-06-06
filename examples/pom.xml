@@ -34,8 +34,8 @@
     <module>core/promise</module>
     <module>core/http</module>
     <module>core/eventloop</module>
-    <module>core/di</module>
-    <module>core/di-2</module>
+    <module>core/inject</module>
+    <module>core/inject-2</module>
     <module>core/specializer</module>
 
     <module>cloud/fs</module>

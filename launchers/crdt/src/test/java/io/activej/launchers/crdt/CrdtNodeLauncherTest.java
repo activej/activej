@@ -2,8 +2,8 @@ package io.activej.launchers.crdt;
 
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
-import io.activej.di.annotation.Provides;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.annotation.Provides;
 import io.activej.remotefs.FsClient;
 import io.activej.remotefs.LocalFsClient;
 import org.junit.Test;

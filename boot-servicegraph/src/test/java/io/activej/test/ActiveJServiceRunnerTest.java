@@ -1,8 +1,8 @@
 package io.activej.test;
 
-import io.activej.di.annotation.Named;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.service.Service;
 import io.activej.service.ServiceGraphModule;
 import io.activej.test.ActiveJServiceRunnerTest.TestModule;

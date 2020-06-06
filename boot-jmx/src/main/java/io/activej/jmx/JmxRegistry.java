@@ -16,9 +16,9 @@
 
 package io.activej.jmx;
 
-import io.activej.di.Key;
-import io.activej.di.Scope;
-import io.activej.di.module.UniqueQualifierImpl;
+import io.activej.inject.Key;
+import io.activej.inject.Scope;
+import io.activej.inject.module.UniqueQualifierImpl;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 import io.activej.worker.WorkerPool;
 import org.jetbrains.annotations.NotNull;

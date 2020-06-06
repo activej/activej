@@ -17,7 +17,7 @@
     <module>bytebuf</module>
     <module>csp</module>
     <module>datastream</module>
-    <module>di</module>
+    <module>inject</module>
     <module>http</module>
     <module>net</module>
     <module>promise</module>

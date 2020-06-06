@@ -1,4 +1,4 @@
-import io.activej.di.annotation.Inject;
+import io.activej.inject.annotation.Inject;
 import io.activej.promise.Promise;
 import io.activej.uikernel.*;
 

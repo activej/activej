@@ -1,7 +1,7 @@
-import io.activej.di.Injector;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.Injector;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.service.ServiceGraph;
 import io.activej.service.ServiceGraphModule;
 

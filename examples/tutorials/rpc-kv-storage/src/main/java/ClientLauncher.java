@@ -1,13 +1,13 @@
-import io.activej.di.annotation.Inject;
-import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.rpc.client.RpcClient;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.CompletableFuture;
 
-import static io.activej.di.module.Modules.combine;
+import static io.activej.inject.module.Modules.combine;
 
 // [START EXAMPLE]
 public class ClientLauncher extends Launcher {

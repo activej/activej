@@ -3,19 +3,19 @@ package io.activej.rpc;
 import io.activej.common.MemSize;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.di.annotation.Eager;
-import io.activej.di.annotation.Named;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.Module;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.annotation.Eager;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
 import static io.activej.config.converter.ConfigConverters.*;
-import static io.activej.di.module.Modules.combine;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.inject.module.Modules.combine;
 
 public class RpcBenchmarkServer extends Launcher {
 	private static final int SERVICE_PORT = 25565;

@@ -1,17 +1,17 @@
 package io.activej.launchers.http;
 
-import io.activej.di.Key;
-import io.activej.di.Scope;
-import io.activej.di.annotation.Eager;
-import io.activej.di.annotation.Named;
-import io.activej.di.annotation.Provides;
-import io.activej.di.annotation.ScopeAnnotation;
-import io.activej.di.module.Module;
-import io.activej.di.module.Modules;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.inject.Key;
+import io.activej.inject.Scope;
+import io.activej.inject.annotation.Eager;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.annotation.ScopeAnnotation;
+import io.activej.inject.module.Module;
+import io.activej.inject.module.Modules;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;

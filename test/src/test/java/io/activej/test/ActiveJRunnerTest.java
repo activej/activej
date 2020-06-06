@@ -1,12 +1,12 @@
 package io.activej.test;
 
-import io.activej.di.Injector;
-import io.activej.di.Key;
-import io.activej.di.Qualifiers;
-import io.activej.di.annotation.Inject;
-import io.activej.di.annotation.Named;
-import io.activej.di.annotation.Provides;
-import io.activej.di.module.AbstractModule;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.Qualifiers;
+import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
 import io.activej.test.ActiveJRunnerTest.ClassModule;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;

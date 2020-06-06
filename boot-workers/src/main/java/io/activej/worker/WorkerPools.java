@@ -16,8 +16,8 @@
 
 package io.activej.worker;
 
-import io.activej.di.Injector;
-import io.activej.di.Scope;
+import io.activej.inject.Injector;
+import io.activej.inject.Scope;
 import io.activej.worker.annotation.Worker;
 
 import java.util.ArrayList;

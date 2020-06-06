@@ -16,7 +16,7 @@
 
 package io.activej.worker.annotation;
 
-import io.activej.di.annotation.ScopeAnnotation;
+import io.activej.inject.annotation.ScopeAnnotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

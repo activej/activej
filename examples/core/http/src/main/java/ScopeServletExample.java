@@ -1,10 +1,10 @@
-import io.activej.di.Injector;
-import io.activej.di.annotation.Provides;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
-import io.activej.http.di.RequestScope;
-import io.activej.http.di.ScopeServlet;
+import io.activej.http.inject.RequestScope;
+import io.activej.http.inject.ScopeServlet;
+import io.activej.inject.Injector;
+import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.promise.Promise;
 
@@ -17,7 +17,7 @@ public final class ScopeServletExample extends HttpServerLauncher {
 		return new ScopeServlet(injector) {
 			@Provides
 			Function<Object[], String> template() {
-				return args -> String.format("Hello world from DI Servlet%n%n%1$s", args);
+				return args -> String.format("Hello world from ActiveInject Servlet%n%n%1$s", args);
 			}
 
 			@Provides

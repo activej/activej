@@ -18,12 +18,12 @@ package io.activej.trigger;
 
 import io.activej.common.api.Initializable;
 import io.activej.common.api.Initializer;
-import io.activej.di.Injector;
-import io.activej.di.Key;
-import io.activej.di.annotation.Optional;
-import io.activej.di.annotation.Provides;
-import io.activej.di.annotation.ProvidesIntoSet;
-import io.activej.di.module.AbstractModule;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.annotation.Optional;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.annotation.ProvidesIntoSet;
+import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.LauncherService;
 import io.activej.trigger.util.KeyWithWorkerData;
 import io.activej.trigger.util.Utils;
