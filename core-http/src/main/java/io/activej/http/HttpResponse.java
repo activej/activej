@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Check;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSetCookies;
 import io.activej.promise.Async;
@@ -44,7 +44,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Represents HTTP response for {@link HttpRequest}. After handling {@code HttpResponse} will be recycled so you cannot
  * usi it afterwards.
  */
-public final class HttpResponse extends HttpMessage implements Async<HttpResponse>, Initializable<HttpResponse> {
+public final class HttpResponse extends HttpMessage implements Async<HttpResponse>, WithInitializer<HttpResponse> {
 	private static final boolean CHECK = Check.isEnabled(HttpResponse.class);
 
 	private static final byte[] HTTP11_BYTES = encodeAscii("HTTP/1.1 ");

@@ -16,8 +16,8 @@
 
 package io.activej.trigger;
 
-import io.activej.common.api.Initializable;
 import io.activej.common.api.Initializer;
+import io.activej.common.api.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Optional;
@@ -41,7 +41,7 @@ import static java.util.Collections.emptySet;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @SuppressWarnings("unused")
-public final class TriggersModule extends AbstractModule implements TriggersModuleSettings, Initializable<TriggersModule> {
+public final class TriggersModule extends AbstractModule implements TriggersModuleSettings, WithInitializer<TriggersModule> {
 	private Function<Key<?>, String> keyToString = Utils::prettyPrintSimpleKeyName;
 
 	private final Map<Class<?>, Set<TriggerConfig<?>>> classSettings = new LinkedHashMap<>();

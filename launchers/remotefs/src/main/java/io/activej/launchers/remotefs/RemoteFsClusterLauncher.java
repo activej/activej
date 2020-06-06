@@ -65,29 +65,29 @@ public abstract class RemoteFsClusterLauncher extends Launcher {
 	@Provides
 	Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
 		return Eventloop.create()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.initialize(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(ofEventloop(config.getChild("eventloop")))
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
 	}
 
 	@Provides
 	@Named("repartition")
 	EventloopTaskScheduler eventloopTaskScheduler(Config config, Eventloop eventloop, RemoteFsRepartitionController controller1) {
 		return EventloopTaskScheduler.create(eventloop, controller1::repartition)
-				.initialize(ofEventloopTaskScheduler(config.getChild("scheduler.repartition")));
+				.withInitializer(ofEventloopTaskScheduler(config.getChild("scheduler.repartition")));
 	}
 
 	@Provides
 	@Named("clusterDeadCheck")
 	EventloopTaskScheduler deadCheckScheduler(Config config, Eventloop eventloop, RemoteFsClusterClient cluster) {
 		return EventloopTaskScheduler.create(eventloop, cluster::checkDeadPartitions)
-				.initialize(ofEventloopTaskScheduler(config.getChild("scheduler.cluster.deadCheck")));
+				.withInitializer(ofEventloopTaskScheduler(config.getChild("scheduler.cluster.deadCheck")));
 	}
 
 	@Provides
 	RemoteFsRepartitionController repartitionController(Config config,
 			RemoteFsServer localServer, RemoteFsClusterClient cluster) {
 		return RemoteFsRepartitionController.create(config.get("remotefs.repartition.localPartitionId"), cluster)
-				.initialize(ofRepartitionController(config.getChild("remotefs.repartition")));
+				.withInitializer(ofRepartitionController(config.getChild("remotefs.repartition")));
 	}
 
 	@Provides
@@ -98,13 +98,13 @@ public abstract class RemoteFsClusterLauncher extends Launcher {
 		clients.put(config.get("remotefs.repartition.localPartitionId"), localServer.getClient());
 		return RemoteFsClusterClient.create(eventloop, clients)
 				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER))
-				.initialize(ofRemoteFsCluster(eventloop, config.getChild("remotefs.cluster")));
+				.withInitializer(ofRemoteFsCluster(eventloop, config.getChild("remotefs.cluster")));
 	}
 
 	@Provides
 	RemoteFsServer remoteFsServer(Config config, Eventloop eventloop, Executor executor) {
 		return RemoteFsServer.create(eventloop, executor, config.get(ofPath(), "remotefs.server.path"))
-				.initialize(ofRemoteFsServer(config.getChild("remotefs.server")));
+				.withInitializer(ofRemoteFsServer(config.getChild("remotefs.server")));
 	}
 
 	@Provides

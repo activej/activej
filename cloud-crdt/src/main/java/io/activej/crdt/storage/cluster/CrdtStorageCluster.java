@@ -17,7 +17,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.service.EventloopService;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
 import io.activej.crdt.CrdtData;
@@ -52,7 +52,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes") // JMX
-public final class CrdtStorageCluster<I extends Comparable<I>, K extends Comparable<K>, S> implements CrdtStorage<K, S>, Initializable<CrdtStorageCluster<I, K, S>>, EventloopService, EventloopJmxBeanEx {
+public final class CrdtStorageCluster<I extends Comparable<I>, K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<I, K, S>>, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageCluster.class);
 
 	private final Eventloop eventloop;

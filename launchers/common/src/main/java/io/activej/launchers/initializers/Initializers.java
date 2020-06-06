@@ -66,8 +66,8 @@ public class Initializers {
 
 	public static Initializer<AsyncHttpServer> ofHttpServer(Config config) {
 		return server -> server
-				.initialize(ofAbstractServer(config))
-				.initialize(ofHttpWorker(config));
+				.withInitializer(ofAbstractServer(config))
+				.withInitializer(ofHttpWorker(config));
 	}
 
 	public static Initializer<AsyncHttpServer> ofHttpWorker(Config config) {

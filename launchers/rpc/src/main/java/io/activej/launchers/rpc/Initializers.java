@@ -31,7 +31,7 @@ public final class Initializers {
 
 	public static Initializer<RpcServer> ofRpcServer(Config config) {
 		return server -> server
-				.initialize(ofAbstractServer(config.getChild("rpc.server")))
+				.withInitializer(ofAbstractServer(config.getChild("rpc.server")))
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.streamProtocol.defaultPacketSize", DEFAULT_INITIAL_BUFFER_SIZE),
 						config.get(ofMemSize(), "rpc.streamProtocol.maxPacketSize", DEFAULT_MAX_MESSAGE_SIZE),

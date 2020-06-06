@@ -29,7 +29,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.attributes.AttributeResolver;
@@ -95,7 +95,7 @@ import static java.util.stream.Collectors.toMap;
  * Also provides functionality for managing aggregations.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>, EventloopJmxBeanEx {
+public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
@@ -241,7 +241,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 		return this;
 	}
 
-	public static final class AggregationConfig implements Initializable<AggregationConfig> {
+	public static final class AggregationConfig implements WithInitializer<AggregationConfig> {
 		private final String id;
 		private final List<String> dimensions = new ArrayList<>();
 		private final List<String> measures = new ArrayList<>();
@@ -352,11 +352,11 @@ public final class Cube implements ICube, OTState<CubeDiff>, Initializable<Cube>
 		checkArgument(!aggregations.containsKey(config.id), "Aggregation '%s' is already defined", config.id);
 
 		AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
-				.initialize(s -> config.dimensions.forEach(dimensionId ->
+				.withInitializer(s -> config.dimensions.forEach(dimensionId ->
 						s.withKey(dimensionId, dimensionTypes.get(dimensionId))))
-				.initialize(s -> config.measures.forEach(measureId ->
+				.withInitializer(s -> config.measures.forEach(measureId ->
 						s.withMeasure(measureId, measures.get(measureId))))
-				.initialize(s -> measures.forEach((measureId, measure) -> {
+				.withInitializer(s -> measures.forEach((measureId, measure) -> {
 					if (!config.measures.contains(measureId)) {
 						s.withIgnoredMeasure(measureId, measure.getFieldType());
 					}

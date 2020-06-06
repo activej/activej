@@ -16,10 +16,12 @@
 
 package io.activej.common.api;
 
-@SuppressWarnings("unchecked")
-public interface Initializable<T extends Initializable<T>> {
+import java.util.function.Consumer;
 
-	default T initialize(Initializer<? super T> initializer) {
+@SuppressWarnings("unchecked")
+public interface WithInitializer<T extends WithInitializer<T>> {
+
+	default T withInitializer(Consumer<? super T> initializer) {
 		initializer.accept((T) this);
 		return (T) this;
 	}

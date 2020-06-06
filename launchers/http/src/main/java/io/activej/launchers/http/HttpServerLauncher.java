@@ -55,14 +55,14 @@ public abstract class HttpServerLauncher extends Launcher {
 	@Provides
 	Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
 		return Eventloop.create()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.initialize(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(ofEventloop(config.getChild("eventloop")))
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
 	}
 
 	@Provides
 	AsyncHttpServer server(Eventloop eventloop, AsyncServlet rootServlet, Config config) {
 		return AsyncHttpServer.create(eventloop, rootServlet)
-				.initialize(ofHttpServer(config.getChild("http")));
+				.withInitializer(ofHttpServer(config.getChild("http")));
 	}
 
 	@Provides

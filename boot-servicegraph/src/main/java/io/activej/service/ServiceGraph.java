@@ -16,7 +16,7 @@
 
 package io.activej.service;
 
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.ConcurrentJmxBean;
@@ -54,7 +54,7 @@ import static java.util.stream.Collectors.toList;
  * {@link ServiceGraphModule}.
  */
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-public final class ServiceGraph implements Initializable<ServiceGraph>, ConcurrentJmxBean {
+public final class ServiceGraph implements WithInitializer<ServiceGraph>, ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(ServiceGraph.class);
 
 	public interface Key {

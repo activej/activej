@@ -19,7 +19,7 @@ package io.activej.remotefs.cluster;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.tuple.Tuple2;
@@ -56,7 +56,7 @@ import static java.util.stream.Collectors.toList;
  * An implementation of {@link FsClient} which operates on a map of other clients as a cluster.
  * Contains some redundancy and fail-safety capabilities.
  */
-public final class RemoteFsClusterClient implements FsClient, Initializable<RemoteFsClusterClient>, EventloopService, EventloopJmxBeanEx {
+public final class RemoteFsClusterClient implements FsClient, WithInitializer<RemoteFsClusterClient>, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteFsClusterClient.class);
 
 	private final Eventloop eventloop;

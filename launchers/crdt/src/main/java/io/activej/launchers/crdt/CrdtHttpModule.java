@@ -44,7 +44,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	@Provides
 	AsyncHttpServer server(Eventloop eventloop, AsyncServlet servlet, Config config) {
 		return AsyncHttpServer.create(eventloop, servlet)
-				.initialize(ofHttpServer(config.getChild("crdt.http")));
+				.withInitializer(ofHttpServer(config.getChild("crdt.http")));
 	}
 
 	@Provides

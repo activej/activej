@@ -20,7 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Check;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -55,7 +55,7 @@ import static io.activej.common.Preconditions.checkState;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.remotefs.RemoteFsUtils.isWildcard;
 
-public final class RemoteFsRepartitionController implements Initializable<RemoteFsRepartitionController>, EventloopJmxBeanEx, EventloopService {
+public final class RemoteFsRepartitionController implements WithInitializer<RemoteFsRepartitionController>, EventloopJmxBeanEx, EventloopService {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteFsRepartitionController.class);
 	private static final boolean CHECK = Check.isEnabled(RemoteFsRepartitionController.class);
 

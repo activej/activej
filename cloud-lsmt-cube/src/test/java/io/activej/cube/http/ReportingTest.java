@@ -274,8 +274,8 @@ public final class ReportingTest {
 		AggregationChunkStorage<Long> aggregationChunkStorage = RemoteFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalFsClient.create(eventloop, executor, aggregationsDir));
 		cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(classLoader, 5))
-				.initialize(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
-				.initialize(cube -> MEASURES.forEach(cube::addMeasure))
+				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
+				.withInitializer(cube -> MEASURES.forEach(cube::addMeasure))
 				.withRelation("campaign", "advertiser")
 				.withRelation("banner", "campaign")
 				.withRelation("site", "affiliate")

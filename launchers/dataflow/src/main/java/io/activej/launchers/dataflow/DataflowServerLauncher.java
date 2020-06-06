@@ -54,8 +54,8 @@ public abstract class DataflowServerLauncher extends Launcher {
 	@Provides
 	Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
 		return Eventloop.create()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.initialize(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(ofEventloop(config.getChild("eventloop")))
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
 	}
 
 	@Provides
@@ -66,8 +66,8 @@ public abstract class DataflowServerLauncher extends Launcher {
 	@Provides
 	DataflowServer server(Eventloop eventloop, Config config, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment) {
 		return new DataflowServer(eventloop, codec, serializers, environment)
-				.initialize(ofAbstractServer(config.getChild("dataflow.server")))
-				.initialize(s -> s.withSocketSettings(s.getSocketSettings().withTcpNoDelay(true)));
+				.withInitializer(ofAbstractServer(config.getChild("dataflow.server")))
+				.withInitializer(s -> s.withSocketSettings(s.getSocketSettings().withTcpNoDelay(true)));
 	}
 
 	@Provides

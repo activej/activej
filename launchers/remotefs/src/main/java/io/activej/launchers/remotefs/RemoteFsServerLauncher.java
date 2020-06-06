@@ -46,15 +46,15 @@ public abstract class RemoteFsServerLauncher extends Launcher {
 	@Provides
 	public Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
 		return Eventloop.create()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.initialize(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(ofEventloop(config.getChild("eventloop")))
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
 	}
 
 	@Provides
 	RemoteFsServer remoteFsServer(Eventloop eventloop, Executor executor,
 			Config config) {
 		return RemoteFsServer.create(eventloop, executor, config.get(ofPath(), "remotefs.path"))
-				.initialize(ofRemoteFsServer(config.getChild("remotefs")));
+				.withInitializer(ofRemoteFsServer(config.getChild("remotefs")));
 
 	}
 

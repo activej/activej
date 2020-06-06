@@ -17,7 +17,7 @@
 package io.activej.net;
 
 import io.activej.common.Check;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
@@ -64,7 +64,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * This is simply a higher-level wrapper around eventloop {@link Eventloop#listen} call.
  */
 @SuppressWarnings("WeakerAccess, unused")
-public abstract class AbstractServer<Self extends AbstractServer<Self>> implements EventloopServer, WorkerServer, Initializable<Self>, EventloopJmxBeanEx {
+public abstract class AbstractServer<Self extends AbstractServer<Self>> implements EventloopServer, WorkerServer, WithInitializer<Self>, EventloopJmxBeanEx {
 	protected Logger logger = getLogger(getClass());
 	private static final boolean CHECK = Check.isEnabled(AbstractServer.class);
 

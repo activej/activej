@@ -19,7 +19,7 @@ package io.activej.codegen;
 import io.activej.codegen.DefiningClassLoader.ClassKey;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.util.DefiningClassWriter;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.CollectionUtils;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -51,7 +51,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
  * @param <T> type of item
  */
 @SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
-public final class ClassBuilder<T> implements Initializable<ClassBuilder<T>> {
+public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final String DEFAULT_CLASS_NAME = ClassBuilder.class.getPackage().getName() + ".Class";

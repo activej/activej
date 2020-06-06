@@ -19,7 +19,7 @@ package io.activej.crdt.storage.local;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
@@ -63,7 +63,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 
 public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
-		Initializable<CrdtStorageFs<K, S>>, EventloopService, EventloopJmxBeanEx {
+		WithInitializer<CrdtStorageFs<K, S>>, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
 
 	private final Eventloop eventloop;

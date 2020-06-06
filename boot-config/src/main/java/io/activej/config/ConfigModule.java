@@ -16,7 +16,7 @@
 
 package io.activej.config;
 
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.inject.Key;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.module.AbstractModule;
@@ -43,7 +43,7 @@ import static java.util.Collections.singletonList;
 /**
  * Supplies config to your application, looks after usage of config, prevents usage of config in any part of lifecycle except for startup.
  */
-public final class ConfigModule extends AbstractModule implements Initializable<ConfigModule> {
+public final class ConfigModule extends AbstractModule implements WithInitializer<ConfigModule> {
 	private static final Logger logger = LoggerFactory.getLogger(ConfigModule.class);
 	public static final Key<Config> KEY_OF_CONFIG = Key.of(Config.class);
 

@@ -75,7 +75,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, Config config, FsClient fsClient, CrdtDescriptor<K, S> descriptor) {
 		return CrdtStorageFs.create(eventloop, fsClient, descriptor.getSerializer(), descriptor.getCrdtFunction())
-				.initialize(ofFsCrdtClient(config));
+				.withInitializer(ofFsCrdtClient(config));
 	}
 
 	@Provides
@@ -84,7 +84,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 				localClient.getEventloop(),
 				singletonMap(config.get("crdt.cluster.localPartitionId"), localClient),
 				descriptor.getCrdtFunction())
-				.initialize(ofCrdtCluster(config.getChild("crdt.cluster"), localClient, descriptor));
+				.withInitializer(ofCrdtCluster(config.getChild("crdt.cluster"), localClient, descriptor));
 	}
 
 	@Provides
@@ -95,20 +95,20 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	CrdtServer<K, S> crdtServer(Eventloop eventloop, CrdtStorageMap<K, S> client, CrdtDescriptor<K, S> descriptor, Config config) {
 		return CrdtServer.create(eventloop, client, descriptor.getSerializer())
-				.initialize(ofAbstractServer(config.getChild("crdt.server")));
+				.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 	}
 
 	@Provides
 	@Cluster
 	CrdtServer<K, S> clusterServer(Eventloop eventloop, CrdtStorageCluster<String, K, S> client, CrdtDescriptor<K, S> descriptor, Config config) {
 		return CrdtServer.create(eventloop, client, descriptor.getSerializer())
-				.initialize(ofAbstractServer(config.getChild("crdt.cluster.server")));
+				.withInitializer(ofAbstractServer(config.getChild("crdt.cluster.server")));
 	}
 
 	@Provides
 	Eventloop eventloop(Config config) {
 		return Eventloop.create()
-				.initialize(ofEventloop(config));
+				.withInitializer(ofEventloop(config));
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)

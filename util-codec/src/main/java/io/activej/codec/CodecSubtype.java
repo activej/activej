@@ -16,7 +16,7 @@
 
 package io.activej.codec;
 
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +30,7 @@ import static java.lang.Math.max;
  * This is a {@link StructuredCodec codec} that stores subtypes of T with different codecs
  * as a <a href="https://en.wikipedia.org/wiki/Tagged_union">tagged union</a> with string tags.
  */
-public final class CodecSubtype<T> implements Initializable<CodecSubtype<T>>, StructuredCodec<T> {
+public final class CodecSubtype<T> implements WithInitializer<CodecSubtype<T>>, StructuredCodec<T> {
 	private final Map<String, StructuredCodec<? extends T>> namesToAdapters = new HashMap<>();
 	private final Map<Type, String> subtypesToNames = new HashMap<>();
 

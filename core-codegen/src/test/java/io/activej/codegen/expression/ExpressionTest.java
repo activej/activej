@@ -607,12 +607,12 @@ public class ExpressionTest {
 
 		Class<?> testClass1 = ClassBuilder.create(definingClassLoader, Object.class)
 				.withClassKey("TestKey")
-				.initialize(initializer)
+				.withInitializer(initializer)
 				.build();
 
 		Class<?> testClass2 = ClassBuilder.create(definingClassLoader, Object.class)
 				.withClassKey("TestKey")
-				.initialize(initializer)
+				.withInitializer(initializer)
 				.build();
 
 		assertEquals(testClass1, testClass2);

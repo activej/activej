@@ -19,7 +19,7 @@ package io.activej.eventloop;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.Check;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
@@ -84,7 +84,7 @@ import static java.util.Collections.emptyIterator;
  * Working of this eventloop will be ended when it has no selected keys
  * and its queues with tasks are empty.
  */
-public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, Initializable<Eventloop>, EventloopJmxBeanEx {
+public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, WithInitializer<Eventloop>, EventloopJmxBeanEx {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
 	private static final boolean CHECK = Check.isEnabled(Eventloop.class);
 

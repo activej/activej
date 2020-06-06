@@ -23,7 +23,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.Utils;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplier;
@@ -70,7 +70,7 @@ import static java.util.stream.Collectors.toSet;
  * Provides methods for loading and querying data.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class Aggregation implements IAggregation, Initializable<Aggregation>, EventloopJmxBeanEx {
+public class Aggregation implements IAggregation, WithInitializer<Aggregation>, EventloopJmxBeanEx {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;

@@ -38,6 +38,7 @@ import static io.activej.config.Config.ofSystemProperties;
 import static io.activej.config.converter.ConfigConverters.ofExecutor;
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.inject.module.Modules.combine;
+import static io.activej.launchers.crdt.Initializers.ofFsCrdtClient;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 
 public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends Launcher {
@@ -85,13 +86,13 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 		@Provides
 		CrdtServer<K, S> crdtServer(Eventloop eventloop, CrdtStorageFs<K, S> crdtClient, CrdtDescriptor<K, S> descriptor, Config config) {
 			return CrdtServer.create(eventloop, crdtClient, descriptor.getSerializer())
-					.initialize(ofAbstractServer(config.getChild("crdt.server")));
+					.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 		}
 
 		@Provides
 		CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, LocalFsClient localFsClient, CrdtDescriptor<K, S> descriptor, Config config) {
 			return CrdtStorageFs.create(eventloop, localFsClient, descriptor.getSerializer(), descriptor.getCrdtFunction())
-					.initialize(Initializers.ofFsCrdtClient(config.getChild("crdt.files")));
+					.withInitializer(ofFsCrdtClient(config.getChild("crdt.files")));
 		}
 	}
 

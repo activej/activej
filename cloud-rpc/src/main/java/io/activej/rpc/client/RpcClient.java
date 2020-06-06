@@ -20,7 +20,7 @@ import io.activej.async.callback.Callback;
 import io.activej.async.service.EventloopService;
 import io.activej.common.Check;
 import io.activej.common.MemSize;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.StacklessException;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
@@ -80,7 +80,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcStrategies
  * @see RpcServer
  */
-public final class RpcClient implements IRpcClient, EventloopService, Initializable<RpcClient>, EventloopJmxBeanEx {
+public final class RpcClient implements IRpcClient, EventloopService, WithInitializer<RpcClient>, EventloopJmxBeanEx {
 	private static final boolean CHECK = Check.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();

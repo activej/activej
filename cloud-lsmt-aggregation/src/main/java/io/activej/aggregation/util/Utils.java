@@ -51,7 +51,7 @@ public class Utils {
 		List<String> keyList = new ArrayList<>(keys.keySet());
 		return ClassBuilder.<K>create(classLoader, Comparable.class)
 				.withClassKey(keyList)
-				.initialize(cb ->
+				.withInitializer(cb ->
 						keys.forEach((key, value) ->
 								cb.withField(key, value.getInternalDataType())))
 				.withMethod("compareTo", compareToImpl(keyList))
@@ -120,10 +120,10 @@ public class Utils {
 		List<String> fieldsList = new ArrayList<>(fields.keySet());
 		return (Class<T>) ClassBuilder.create(classLoader, Object.class)
 				.withClassKey(keysList, fieldsList)
-				.initialize(cb ->
+				.withInitializer(cb ->
 						keys.forEach((key, value) ->
 								cb.withField(key, value.getInternalDataType())))
-				.initialize(cb ->
+				.withInitializer(cb ->
 						fields.forEach((key, value) ->
 								cb.withField(key, value.getInternalDataType())))
 				.withMethod("toString", toStringImpl(concat(keys.keySet(), fields.keySet())))

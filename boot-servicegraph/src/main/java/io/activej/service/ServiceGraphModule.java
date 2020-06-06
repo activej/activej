@@ -17,8 +17,8 @@
 package io.activej.service;
 
 import io.activej.async.service.EventloopService;
-import io.activej.common.api.Initializable;
 import io.activej.common.api.Initializer;
+import io.activej.common.api.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.BlockingSocketServer;
 import io.activej.inject.Injector;
@@ -92,7 +92,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * <p>
  * An application terminates if a circular dependency found.
  */
-public final class ServiceGraphModule extends AbstractModule implements ServiceGraphModuleSettings, Initializable<ServiceGraphModule> {
+public final class ServiceGraphModule extends AbstractModule implements ServiceGraphModuleSettings, WithInitializer<ServiceGraphModule> {
 	private static final Logger logger = getLogger(ServiceGraphModule.class);
 
 	private final Map<Class<?>, ServiceAdapter<?>> registeredServiceAdapters = new LinkedHashMap<>();
@@ -125,7 +125,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 				.register(Closeable.class, forCloseable())
 				.register(ExecutorService.class, forExecutorService())
 				.register(Timer.class, forTimer())
-				.initialize(module -> {
+				.withInitializer(module -> {
 					try {
 						currentThread().getContextClassLoader().loadClass("javax.sql.DataSource");
 						module.register(DataSource.class, forDataSource());

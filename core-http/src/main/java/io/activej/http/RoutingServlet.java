@@ -16,7 +16,7 @@
 
 package io.activej.http;
 
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +33,7 @@ import static io.activej.common.Preconditions.checkArgument;
 /**
  * This servlet allows to build complex servlet trees, routing requests between them by the HTTP paths.
  */
-public final class RoutingServlet implements AsyncServlet, Initializable<RoutingServlet> {
+public final class RoutingServlet implements AsyncServlet, WithInitializer<RoutingServlet> {
 	private static final String ROOT = "/";
 	private static final String STAR = "*";
 	private static final String WILDCARD = "/" + STAR;

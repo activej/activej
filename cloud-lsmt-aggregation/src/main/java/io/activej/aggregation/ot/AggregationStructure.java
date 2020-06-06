@@ -19,14 +19,14 @@ package io.activej.aggregation.ot;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 
 import java.util.*;
 
 import static io.activej.common.Preconditions.checkArgument;
 
 @SuppressWarnings("rawtypes")
-public final class AggregationStructure implements Initializable<AggregationStructure> {
+public final class AggregationStructure implements WithInitializer<AggregationStructure> {
 	private final ChunkIdCodec<?> chunkIdCodec;
 	private final Map<String, FieldType> keyTypes = new LinkedHashMap<>();
 	private final Map<String, FieldType> measureTypes = new LinkedHashMap<>();

@@ -17,7 +17,7 @@
 package io.activej.crdt.storage.local;
 
 import io.activej.async.service.EventloopService;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
@@ -44,7 +44,7 @@ import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Stream;
 
-public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, Initializable<CrdtStorageMap<K, S>>, EventloopService, EventloopJmxBeanEx {
+public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, EventloopService, EventloopJmxBeanEx {
 	private static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final Eventloop eventloop;

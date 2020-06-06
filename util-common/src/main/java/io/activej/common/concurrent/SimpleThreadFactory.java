@@ -16,7 +16,7 @@
 
 package io.activej.common.concurrent;
 
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ThreadFactory;
@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.activej.common.Preconditions.checkArgument;
 
-public final class SimpleThreadFactory implements ThreadFactory, Initializable<SimpleThreadFactory> {
+public final class SimpleThreadFactory implements ThreadFactory, WithInitializer<SimpleThreadFactory> {
 	public static final String NAME_PATTERN = "{}";
 
 	private ThreadGroup threadGroup;

@@ -16,7 +16,7 @@
 
 package io.activej.trigger;
 
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -35,7 +35,7 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-public final class Triggers implements ConcurrentJmxBean, Initializable<Triggers> {
+public final class Triggers implements ConcurrentJmxBean, WithInitializer<Triggers> {
 	public static final Duration CACHE_TIMEOUT = Duration.ofSeconds(1);
 
 	private final List<Trigger> triggers = new ArrayList<>();

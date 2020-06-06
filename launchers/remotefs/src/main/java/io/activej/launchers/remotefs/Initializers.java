@@ -36,7 +36,7 @@ public final class Initializers {
 
 	public static Initializer<RemoteFsServer> ofRemoteFsServer(Config config) {
 		return server -> server
-				.initialize(ofAbstractServer(config));
+				.withInitializer(ofAbstractServer(config));
 	}
 
 	public static Initializer<RemoteFsRepartitionController> ofRepartitionController(Config config) {

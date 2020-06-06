@@ -128,7 +128,7 @@ public class TestCompatibleAggregations {
 	@Before
 	public void setUp() {
 		cube = new Cube(null, null, null, null)
-				.initialize(cube -> {
+				.withInitializer(cube -> {
 					MEASURES.forEach(cube::addMeasure);
 
 					DIMENSIONS_DAILY_AGGREGATION.forEach(cube::addDimension);
@@ -139,7 +139,7 @@ public class TestCompatibleAggregations {
 				});
 
 		cubeWithDetailedAggregation = new Cube(null, null, null, null)
-				.initialize(cube -> {
+				.withInitializer(cube -> {
 					MEASURES.forEach(cube::addMeasure);
 					DIMENSIONS_DAILY_AGGREGATION.forEach(cube::addDimension);
 					DIMENSIONS_ADVERTISERS_AGGREGATION.forEach(cube::addDimension);

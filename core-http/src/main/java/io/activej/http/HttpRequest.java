@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Check;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
 import io.activej.http.MultipartParser.MultipartDataHandler;
@@ -50,7 +50,7 @@ import static java.util.Collections.singletonList;
  * {@code HttpRequest} class provides methods which can be used intuitively for
  * creating and configuring an HTTP request.
  */
-public final class HttpRequest extends HttpMessage implements Initializable<HttpRequest> {
+public final class HttpRequest extends HttpMessage implements WithInitializer<HttpRequest> {
 	private static final boolean CHECK = Check.isEnabled(HttpRequest.class);
 
 	private static final int LONGEST_HTTP_METHOD_SIZE = 12;

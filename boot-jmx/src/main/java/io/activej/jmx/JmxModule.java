@@ -19,8 +19,8 @@ package io.activej.jmx;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
-import io.activej.common.api.Initializable;
 import io.activej.common.api.Initializer;
+import io.activej.common.api.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Optional;
@@ -58,7 +58,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * <br>
  * Automatically builds MBeans for parts of application and adds Jmx attributes and operations to it.
  */
-public final class JmxModule extends AbstractModule implements Initializable<JmxModule> {
+public final class JmxModule extends AbstractModule implements WithInitializer<JmxModule> {
 	public static final Duration REFRESH_PERIOD_DEFAULT = Duration.ofSeconds(1);
 	public static final int MAX_JMX_REFRESHES_PER_ONE_CYCLE_DEFAULT = 50;
 

@@ -62,15 +62,15 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	Eventloop primaryEventloop(Config config) {
 		return Eventloop.create()
-				.initialize(ofEventloop(config.getChild("eventloop.primary")));
+				.withInitializer(ofEventloop(config.getChild("eventloop.primary")));
 	}
 
 	@Provides
 	@Worker
 	Eventloop workerEventloop(Config config, @Optional ThrottlingController throttlingController) {
 		return Eventloop.create()
-				.initialize(ofEventloop(config.getChild("eventloop.worker")))
-				.initialize(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(ofEventloop(config.getChild("eventloop.worker")))
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
 	}
 
 	@Provides
@@ -81,14 +81,14 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	PrimaryServer primaryServer(Eventloop primaryEventloop, WorkerPool.Instances<AsyncHttpServer> workerServers, Config config) {
 		return PrimaryServer.create(primaryEventloop, workerServers.getList())
-				.initialize(ofPrimaryServer(config.getChild("http")));
+				.withInitializer(ofPrimaryServer(config.getChild("http")));
 	}
 
 	@Provides
 	@Worker
 	AsyncHttpServer workerServer(Eventloop eventloop, AsyncServlet servlet, Config config) {
 		return AsyncHttpServer.create(eventloop, servlet)
-				.initialize(ofHttpWorker(config.getChild("http")));
+				.withInitializer(ofHttpWorker(config.getChild("http")));
 	}
 
 	@Provides
@@ -106,7 +106,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 				ServiceGraphModule.create(),
 				WorkerPoolModule.create(),
 				JmxModule.create()
-						.initialize(ofGlobalEventloopStats()),
+						.withInitializer(ofGlobalEventloopStats()),
 				ConfigModule.create()
 						.withEffectiveConfigLogger(),
 				getBusinessLogicModule()

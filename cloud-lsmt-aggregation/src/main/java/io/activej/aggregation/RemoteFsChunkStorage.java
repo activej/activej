@@ -21,7 +21,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
-import io.activej.common.api.Initializable;
+import io.activej.common.api.WithInitializer;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.csp.process.ChannelLZ4Compressor;
@@ -68,7 +68,7 @@ import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>, EventloopService, Initializable<RemoteFsChunkStorage<C>>, EventloopJmxBeanEx {
+public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>, EventloopService, WithInitializer<RemoteFsChunkStorage<C>>, EventloopJmxBeanEx {
 	private static final Logger logger = getLogger(RemoteFsChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
