@@ -361,6 +361,7 @@ public final class ChannelSuppliers {
 	public static InputStream channelSupplierAsInputStream(Eventloop eventloop, ChannelSupplier<ByteBuf> channelSupplier) {
 		return new InputStream() {
 			@Nullable ByteBuf current = null;
+			boolean isClosed;
 
 			@Override
 			public int read() throws IOException {
@@ -373,6 +374,7 @@ public final class ChannelSuppliers {
 			}
 
 			private int doRead(ToIntFunction<ByteBuf> reader) throws IOException {
+				if (isClosed) return -1;
 				ByteBuf peeked = current;
 				if (peeked == null) {
 					ByteBuf buf;
@@ -381,9 +383,11 @@ public final class ChannelSuppliers {
 						try {
 							buf = future.get();
 						} catch (InterruptedException e) {
+							isClosed = true;
 							eventloop.execute(wrapContext(channelSupplier, channelSupplier::close));
 							throw new IOException(e);
 						} catch (ExecutionException e) {
+							isClosed = true;
 							Throwable cause = e.getCause();
 							if (cause instanceof IOException) throw (IOException) cause;
 							if (cause instanceof RuntimeException) throw (RuntimeException) cause;
@@ -391,6 +395,7 @@ public final class ChannelSuppliers {
 							throw (Error) cause;
 						}
 						if (buf == null) {
+							isClosed = true;
 							return -1;
 						}
 					} while (!buf.canRead());
@@ -408,6 +413,7 @@ public final class ChannelSuppliers {
 
 			@Override
 			public void close() {
+				isClosed = true;
 				current = nullify(current, ByteBuf::recycle);
 				eventloop.execute(wrapContext(channelSupplier, channelSupplier::close));
 			}

@@ -140,11 +140,6 @@
         <version>8.0.18</version>
       </dependency>
       <dependency>
-        <groupId>com.madgag.spongycastle</groupId>
-        <artifactId>core</artifactId>
-        <version>1.58.0.0</version>
-      </dependency>
-      <dependency>
         <groupId>com.carrotsearch</groupId>
         <artifactId>hppc</artifactId>
         <version>0.7.3</version>
@@ -163,11 +158,6 @@
         <groupId>org.openjdk.jmh</groupId>
         <artifactId>jmh-generator-annprocess</artifactId>
         <version>1.22</version>
-      </dependency>
-      <dependency>
-        <groupId>info.picocli</groupId>
-        <artifactId>picocli</artifactId>
-        <version>3.8.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
