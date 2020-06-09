@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-template-engine</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0-rc2</version>
 
   <name>Tutorials : Template-Engine</name>
 
@@ -17,7 +17,7 @@
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-launchers-http</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0-rc2</version>
     </dependency>
     <dependency>
       <groupId>com.github.spullara.mustache.java</groupId>
