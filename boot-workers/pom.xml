@@ -12,6 +12,7 @@
   <artifactId>activej-workers</artifactId>
 
   <name>ActiveJ : Boot : Workers</name>
+  <description>Simple to use, high-abstraction level I/O async programming model</description>
 
   <dependencies>
     <dependency>

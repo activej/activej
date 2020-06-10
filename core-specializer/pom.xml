@@ -11,7 +11,8 @@
 
   <artifactId>activej-specializer</artifactId>
 
-  <name>ActiveJ : Specializer</name>
+  <name>ActiveSpecializer</name>
+  <description>A little bit of magic to speed up your code. Optimizes your code for JVM.</description>
 
   <dependencies>
     <dependency>

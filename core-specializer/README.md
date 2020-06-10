@@ -1,0 +1,1 @@
+This module forms ActiveSpecializer framework. To learn more, please visit [ActiveSpecializer website](https://specializer.activej.io).

@@ -15,7 +15,7 @@
   <name>ActiveJ : Dataflow</name>
   <description>
     Distributed stream-based batch processing engine for Big Data applications.
-    Package contains tools to work with large datasets which could be spanned into multiple partitions.
+    Contains tools for working with large datasets spanned multiple partitions.
   </description>
 
   <dependencies>

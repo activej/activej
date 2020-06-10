@@ -11,9 +11,9 @@
 
   <artifactId>activej-uikernel</artifactId>
 
-  <name>ActiveJ : UiKernel</name>
+  <name>ActiveJ : UIKernel</name>
   <description>
-    Package provides integration with UIKernel.io JS frontend library: JSON serializers, grid model, basic servlets.
+    Provides integration with UIKernel.io JS frontend library: JSON serializers, grid model, basic servlets.
   </description>
 
   <dependencies>

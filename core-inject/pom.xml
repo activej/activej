@@ -11,11 +11,11 @@
 
   <artifactId>activej-inject</artifactId>
 
-  <name>ActiveJ : ActiveInject</name>
+  <name>ActiveInject</name>
   <description>
-    ActiveInject is an extremely fast and lightweight Dependency Injection framework.
+    An extremely fast and lightweight Dependency Injection framework.
     It supports nested scopes, singletons, object factories, modules and plugins which
-    allow to transform graph of dependencies at startup time without any reflection.
+    allow to transform graph of dependencies at startup time without reflection.
   </description>
 
   <dependencies>

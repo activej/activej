@@ -14,8 +14,7 @@
   <name>ActiveJ : Net</name>
   <description>
     Net module handles low-level asynchronous socket I/O (TCP/UDP).
-    Package provides a tools for TCP/UDP servers creation
-    which could be launched on the eventloop.
+    Provides tools for TCP/UDP servers creation.
   </description>
 
   <dependencies>

@@ -11,7 +11,7 @@
 
   <artifactId>activej-rpc</artifactId>
 
-  <name>ActiveJ : RPC</name>
+  <name>ActiveRPC</name>
   <description>
     High-performance and fault-tolerant remote procedure call module for building distributed applications.
     Provides a high-performance asynchronous binary RPC streaming protocol.

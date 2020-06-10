@@ -12,6 +12,7 @@
   <artifactId>activej-config</artifactId>
 
   <name>ActiveJ : Boot : Config</name>
+  <description>A useful extension for properties files</description>
 
   <dependencies>
     <dependency>

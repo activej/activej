@@ -11,10 +11,10 @@
 
   <artifactId>activej-datastream</artifactId>
 
-  <name>ActiveJ : DataStreams</name>
+  <name>ActiveJ : Datastreams</name>
   <description>
     Composable asynchronous/reactive streams with powerful data processing capabilities.
-    They are useful for transferring big volumes of lightweight values or objects.
+    Useful for transferring big volumes of lightweight objects.
   </description>
 
   <dependencies>

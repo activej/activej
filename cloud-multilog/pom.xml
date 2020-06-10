@@ -13,7 +13,7 @@
 
   <name>ActiveJ : Multilog</name>
   <description>
-    Package provides tools for working with logs stored on different partitions.
+    Provides tools for working with logs stored on different partitions.
   </description>
 
   <dependencies>

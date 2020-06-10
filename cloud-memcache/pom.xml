@@ -13,7 +13,7 @@
 
   <name>ActiveJ : Memcache</name>
   <description>
-    Package provides client and server for creation of memcached RPC messaging.
+    Provides means for implementing memcached-like RPC messaging.
   </description>
 
   <dependencies>

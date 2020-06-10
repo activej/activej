@@ -13,7 +13,7 @@
 
   <name>ActiveJ : Util : Codec</name>
   <description>
-    Tools for encoding/decoding of primitives and objects.
+    Tools for encoding/decoding custom objects.
   </description>
 
   <dependencies>

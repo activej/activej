@@ -1,0 +1,1 @@
+This module forms ActiveCRDT library. To learn more, please visit [ActiveCRDT website](https://crdt.activej.io).
