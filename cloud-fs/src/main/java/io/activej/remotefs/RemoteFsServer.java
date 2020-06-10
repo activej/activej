@@ -115,7 +115,7 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	private void addHandlers() {
 		onMessage(Upload.class, (messaging, msg) -> {
 			String name = msg.getName();
-			return client.upload(name, msg.getOffset(), msg.getRevision())
+			return client.upload(name, msg.getRevision())
 					.then(uploader -> {
 						if (uploader instanceof RecyclingChannelConsumer) {
 							return messaging.send(new UploadAck(false));

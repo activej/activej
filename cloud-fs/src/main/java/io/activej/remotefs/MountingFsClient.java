@@ -53,8 +53,8 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset, long revision) {
-		return findMount(name).upload(name, offset, revision);
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
+		return findMount(name).upload(name, revision);
 	}
 
 	@Override
@@ -83,7 +83,7 @@ final class MountingFsClient implements FsClient {
 		}
 		return first.download(name)
 				.then(supplier ->
-						second.upload(name, 0, targetRevision)
+						second.upload(name, targetRevision)
 								.then(supplier::streamTo))
 				.then(() -> first.delete(name));
 	}

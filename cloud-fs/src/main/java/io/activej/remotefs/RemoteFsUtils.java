@@ -50,7 +50,7 @@ public final class RemoteFsUtils {
 			OFFSET_TOO_BIG,
 			LENGTH_TOO_BIG,
 			BAD_RANGE,
-			MOVING_DIRS,
+			IS_DIRECTORY,
 			UNSUPPORTED_REVISION
 	));
 
@@ -114,7 +114,7 @@ public final class RemoteFsUtils {
 		if (e == BAD_RANGE) {
 			return 6;
 		}
-		if (e == MOVING_DIRS) {
+		if (e == IS_DIRECTORY) {
 			return 7;
 		}
 		if (e == UNSUPPORTED_REVISION) {
@@ -164,7 +164,7 @@ public final class RemoteFsUtils {
 					if (targetMeta == null || sourceRevision > targetMeta.getRevision()) {
 						// simply copy over when target has no such file or when source file is better
 						return from.download(name)
-								.then(supplier -> supplier.streamTo(to.upload(name, 0, sourceRevision)));
+								.then(supplier -> supplier.streamTo(to.upload(name, sourceRevision)));
 					}
 
 					if (sourceRevision < targetMeta.getRevision()) {
@@ -181,7 +181,7 @@ public final class RemoteFsUtils {
 
 					// else we copy over only the part that is missing on target
 					return from.download(name, sourceMeta.getSize())
-							.then(supplier -> supplier.streamTo(to.upload(name, sourceMeta.getSize(), sourceRevision)));
+							.then(supplier -> supplier.streamTo(to.upload(name, sourceRevision)));
 				});
 	}
 

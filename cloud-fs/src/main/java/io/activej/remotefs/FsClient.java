@@ -45,7 +45,7 @@ public interface FsClient {
 	StacklessException OFFSET_TOO_BIG = new StacklessException(FsClient.class, "Offset exceeds the actual file size");
 	StacklessException LENGTH_TOO_BIG = new StacklessException(FsClient.class, "Length with offset exceeds the actual file size");
 	StacklessException BAD_RANGE = new StacklessException(FsClient.class, "Given offset or length don't make sense");
-	StacklessException MOVING_DIRS = new StacklessException(FsClient.class, "Tried to move, copy delete or replace a directory");
+	StacklessException IS_DIRECTORY = new StacklessException(FsClient.class, "Operated file is a directory");
 	StacklessException UNSUPPORTED_REVISION = new StacklessException(FsClient.class, "Given revision is not supported");
 
 	long DEFAULT_REVISION = 0;
@@ -55,50 +55,18 @@ public interface FsClient {
 	 * <p>
 	 * So, outer promise might fail on connection try, end-of-stream promise
 	 * might fail while uploading and result promise might fail when closing.
-	 * <p>
-	 * If offset is -1 then this will fail when file exists.
-	 * If offset is 0 or more then this will override existing file starting from that byte
-	 * and fail if file does not exist or is smaller than the offset.
-	 * <p>
+	 *
 	 * Note that this method expects that you're uploading the same file prefix with same revision
-	 * so 'override' here means 'skip (size - offset) received bytes and append to existing file'.
-	 * For real overrides, upload a new file with same name and greater revision.
+	 * To override a file, upload a new file with the same name and greater revision.
 	 *
 	 * @param name   name of the file to upload
-	 * @param offset from which byte to write the uploaded data
 	 * @return promise for stream consumer of byte buffers
 	 */
-	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset, long revision);
+	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision);
 
-	// region upload shortcuts
-
-	default Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset) {
-		return upload(name, offset, DEFAULT_REVISION);
-	}
-
-	/**
-	 * Shortcut for uploading NEW file
-	 *
-	 * @param name name of the file to upload
-	 * @return promise for stream consumer of byte buffers
-	 */
 	default Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return upload(name, 0);
+		return upload(name, DEFAULT_REVISION);
 	}
-
-	default Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name) {
-		return getMetadata(name)
-				.then(m -> m != null ?
-						upload(name, m.isTombstone() ? 0 : m.getSize(), m.getRevision()) :
-						upload(name, 0, DEFAULT_REVISION));
-	}
-
-	default Promise<Void> truncate(@NotNull String name, long revision) {
-		return upload(name, 0, revision)
-				.then(ChannelConsumer::acceptEndOfStream);
-	}
-
-	// endregion
 
 	/**
 	 * Returns a supplier of bytebufs which are read (or received) from the file.
@@ -140,7 +108,6 @@ public interface FsClient {
 	default Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name) {
 		return download(name, 0, -1);
 	}
-
 	// endregion
 
 	/**

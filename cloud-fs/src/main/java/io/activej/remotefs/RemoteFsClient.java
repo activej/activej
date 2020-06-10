@@ -102,10 +102,10 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename, long offset, long revision) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename, long revision) {
 		return connect(address)
 				.then(messaging ->
-						messaging.send(new Upload(filename, offset, revision))
+						messaging.send(new Upload(filename, revision))
 								.then(messaging::receive)
 								.then(msg -> {
 									if (!(msg instanceof UploadAck)) {

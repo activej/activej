@@ -38,19 +38,11 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
 		if (!predicate.test(name)) {
 			return Promise.of(ChannelConsumers.recycling());
 		}
-		return parent.upload(name, offset);
-	}
-
-	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset, long revision) {
-		if (!predicate.test(name)) {
-			return Promise.of(ChannelConsumers.recycling());
-		}
-		return parent.upload(name, offset, revision);
+		return parent.upload(name, revision);
 	}
 
 	@Override

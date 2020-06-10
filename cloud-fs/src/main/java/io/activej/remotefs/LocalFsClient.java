@@ -20,18 +20,18 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.exception.StacklessException;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.csp.process.ChannelByteRanger;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
+import io.activej.promise.Promise.BlockingCallable;
+import io.activej.promise.Promise.BlockingRunnable;
 import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -135,7 +135,6 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	private final Executor executor;
 
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
-	private boolean lazyOverrides = true;
 	@Nullable
 	private Long defaultRevision = DEFAULT_REVISION;
 
@@ -172,11 +171,6 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		return new LocalFsClient(eventloop, storageDir, executor);
 	}
 
-	public LocalFsClient withLazyOverrides(boolean lazyOverrides) {
-		this.lazyOverrides = lazyOverrides;
-		return this;
-	}
-
 	public LocalFsClient withDefaultRevision(long defaultRevision) {
 		this.defaultRevision = defaultRevision;
 		this.namingScheme = new NoopNamingScheme(defaultRevision);
@@ -204,37 +198,28 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 	// endregion
 
-	private Promise<ChannelConsumer<ByteBuf>> doUpload(Path path, long size, long offset) throws StacklessException, IOException {
-		if (offset > size) {
-			throw OFFSET_TOO_BIG;
-		}
-		long skip = lazyOverrides ? size - offset : 0;
-
-		FileChannel channel = FileChannel.open(path, set(CREATE, WRITE));
-		return Promise.of(ChannelFileWriter.create(executor, channel)
-				.withOffset(offset + skip)
-				.transformWith(ChannelByteRanger.drop(skip)));
-	}
-
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset, long revision) {
-		checkArgument(offset >= 0, "offset < 0");
-		checkArgument(defaultRevision == null || revision == defaultRevision, "unsupported revision");
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
+		checkRevisions(revision);
 
-		return Promise.ofBlockingCallable(executor, () -> getInfo(name))
+		return execute(() -> getInfo(name))
 				.then(existing -> {
 					try {
 						if (existing == null) {
 							Path path = resolve(namingScheme.encode(name, revision, false));
-							Files.createDirectories(path.getParent());
-							return doUpload(path, 0, offset);
+							return execute(() -> Files.createDirectories(path.getParent()))
+									.then(() -> doUpload(path));
 						}
 
 						if (existing.getRevision() < revision) {
-							// cleanup existing file/tombstone with lower revision
-							Files.deleteIfExists(existing.getFilePath());
-
-							return doUpload(resolve(namingScheme.encode(name, revision, false)), 0, offset);
+							return doUpload(resolve(namingScheme.encode(name, revision, false)))
+									.whenResult(() -> execute(() -> {
+										try {
+											Files.deleteIfExists(existing.getFilePath());
+										} catch (IOException e) {
+											logger.warn("Failed to delete file {} with lesser revision", existing.getName(), e);
+										}
+									}));
 						}
 
 						if (existing.getRevision() == revision) {
@@ -242,20 +227,22 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 								return Promise.of(ChannelConsumers.<ByteBuf>recycling());
 							}
 							Path path = existing.getFilePath();
-							return doUpload(path, Files.size(path), offset);
+							return doUpload(path);
 						}
 
+						// existing.getRevision() > revision
 						return Promise.of(ChannelConsumers.<ByteBuf>recycling());
-					} catch (StacklessException | IOException e) {
+					} catch (StacklessException e) {
 						return Promise.ofException(e);
 					}
-				}).map(consumer -> consumer
+				})
+				.map(consumer -> consumer
 						// calling withAcknowledgement in eventloop thread
 						.withAcknowledgement(ack -> ack
 								.whenComplete(writeFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "writing to file", name, offset, revision, this))))
+								.whenComplete(toLogger(logger, TRACE, "writing to file", name, revision, this))))
 				.whenComplete(writeBeginPromise.recordStats())
-				.whenComplete(toLogger(logger, TRACE, "upload", name, offset, revision, this));
+				.whenComplete(toLogger(logger, TRACE, "upload", name, revision, this));
 	}
 
 	@Override
@@ -263,7 +250,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		checkArgument(offset >= 0, "offset < 0");
 		checkArgument(length >= -1, "length < -1");
 
-		return Promise.ofBlockingCallable(executor,
+		return execute(
 				() -> {
 					FilenameInfo info = getInfo(name);
 					if (info == null || info.isTombstone()) {
@@ -284,29 +271,28 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 	@Override
 	public Promise<List<FileMetadata>> listEntities(@NotNull String glob) {
-		return Promise.ofBlockingCallable(executor, () -> doList(glob, true))
+		return execute(() -> doList(glob, true))
 				.whenComplete(toLogger(logger, TRACE, "listEntities", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
 
 	@Override
 	public Promise<List<FileMetadata>> list(@NotNull String glob) {
-		return Promise.ofBlockingCallable(executor, () -> doList(glob, false))
+		return execute(() -> doList(glob, false))
 				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target, long targetRevision, long tombstoneRevision) {
-		checkArgument(defaultRevision == null || targetRevision == defaultRevision, "unsupported revision");
-		checkArgument(defaultRevision == null || tombstoneRevision == defaultRevision, "unsupported revision");
+		checkRevisions(targetRevision, tombstoneRevision);
 
-		return Promise.ofBlockingCallable(executor,
+		return execute(
 				() -> {
 					if (defaultRevision == null) {
 						doCopy(name, target, targetRevision);
 						doDelete(name, tombstoneRevision);
-						return (Void) null;
+						return;
 					}
 
 					// old logic (optimization that uses atomic moves)
@@ -317,11 +303,11 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 					Path targetPath = resolve(target);
 
 					if (Files.isDirectory(path) || Files.isDirectory(targetPath)) {
-						throw MOVING_DIRS;
+						throw IS_DIRECTORY;
 					}
 					// noop when paths are equal
 					if (path.equals(targetPath)) {
-						return null;
+						return;
 					}
 					// cannot move into existing file
 					if (Files.isRegularFile(targetPath)) {
@@ -334,7 +320,6 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 					} else {
 						Files.deleteIfExists(targetPath);
 					}
-					return null;
 				})
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(singleMovePromise.recordStats());
@@ -342,6 +327,8 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> moveDir(@NotNull String name, @NotNull String target, long targetRevision, long removeRevision) {
+		checkRevisions(targetRevision, removeRevision);
+
 		if (defaultRevision == null) {
 			return FsClient.super.moveDir(name, target, targetRevision, removeRevision);
 		}
@@ -356,53 +343,42 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 			return Promise.ofException(e);
 		}
 
-		return Promise.ofBlockingCallable(executor, () -> Files.isRegularFile(to))
-				.then(isRegular -> {
-					if (isRegular) {
-						return Promise.ofException(FILE_EXISTS);
+		return execute(
+				() -> {
+					if (Files.isRegularFile(to)) {
+						throw FILE_EXISTS;
 					}
-					return Promise.ofBlockingCallable(executor, () -> Files.isDirectory(to));
+					return Files.isDirectory(to);
 				})
 				.then(isDir -> {
 					if (isDir) {
 						return FsClient.super.moveDir(name, target, targetRevision, removeRevision);
 					}
-					return Promise.ofBlockingCallable(executor, () -> {
-						if (!Files.isDirectory(from)) {
-							return null;
-						}
+					return execute(() -> {
+						if (!Files.isDirectory(from)) return;
 						try {
 							Files.move(from, to, ATOMIC_MOVE);
 						} catch (AtomicMoveNotSupportedException e) {
 							Files.move(from, to);
 						}
-						return null;
 					});
 				});
 	}
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target, long targetRevision) {
-		checkArgument(defaultRevision == null || targetRevision == defaultRevision, "unsupported revision");
+		checkRevisions(targetRevision);
 
-		return Promise.ofBlockingCallable(executor,
-				() -> {
-					doCopy(name, target, targetRevision);
-					return (Void) null;
-				})
+		return execute(() -> doCopy(name, target, targetRevision))
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(singleCopyPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> delete(@NotNull String name, long revision) {
-		checkArgument(defaultRevision == null || revision == defaultRevision, "unsupported revision");
+		checkRevisions(revision);
 
-		return Promise.ofBlockingCallable(executor,
-				() -> {
-					doDelete(name, revision);
-					return (Void) null;
-				})
+		return execute(() -> doDelete(name, revision))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(singleDeletePromise.recordStats());
 	}
@@ -414,7 +390,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 	@Override
 	public Promise<FileMetadata> getMetadata(@NotNull String name) {
-		return Promise.ofBlockingCallable(executor, () -> {
+		return execute(() -> {
 			FilenameInfo info = getInfo(name);
 			return info != null ? toFileMetadata(info) : null;
 		});
@@ -428,7 +404,6 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		try {
 			LocalFsClient client = new LocalFsClient(eventloop, resolve(folder), executor);
 			client.readerBufferSize = readerBufferSize;
-			client.lazyOverrides = lazyOverrides;
 			client.defaultRevision = defaultRevision;
 			client.tombstoneTtl = tombstoneTtl;
 			client.namingScheme = namingScheme;
@@ -448,14 +423,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		return Promise.ofBlockingRunnable(executor,
-				() -> {
-					try {
-						Files.createDirectories(storage);
-					} catch (IOException e) {
-						throw new UncheckedException(e);
-					}
-				})
+		return execute(() -> Files.createDirectories(storage))
 				.then(this::cleanup);
 	}
 
@@ -469,43 +437,45 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		if (defaultRevision != null) {
 			return Promise.complete();
 		}
-		return Promise.ofBlockingCallable(executor, () -> {
-			long border = now.currentTimeMillis() - tombstoneTtl;
-			findMatching("**", true).stream()
-					.filter(FilenameInfo::isTombstone)
-					.forEach(info -> {
-						long ts;
+
+		long border = now.currentTimeMillis() - tombstoneTtl;
+		return execute(() -> findMatching("**", true).stream()
+				.filter(FilenameInfo::isTombstone)
+				.forEach(info -> {
+					long ts;
+					try {
+						ts = Files.getLastModifiedTime(info.getFilePath()).toMillis();
+					} catch (IOException e) {
+						logger.warn("Failed to get timestamp of the tombstone {}", info.getName());
+						return;
+					}
+					if (ts < border) {
 						try {
-							ts = Files.getLastModifiedTime(info.getFilePath()).toMillis();
+							Files.deleteIfExists(info.getFilePath());
 						} catch (IOException e) {
-							logger.warn("Failed to get timestamp of the tombstone {}", info.getName());
-							return;
+							logger.warn("Failed clean up expired tombstone {}", info.getName());
 						}
-						if (ts < border) {
-							try {
-								Files.deleteIfExists(info.getFilePath());
-							} catch (IOException e) {
-								logger.warn("Failed clean up expired tombstone {}", info.getName());
-							}
-						}
-					});
-			return null;
-		});
+					}
+				}));
 	}
 
 	public Promise<Void> remove(String name) {
-		return Promise.ofBlockingCallable(executor, () -> {
+		return execute(() -> {
 			FilenameInfo info = getInfo(name);
 			if (info != null) {
 				Files.deleteIfExists(info.getFilePath());
 			}
-			return null;
 		});
 	}
 
 	@Override
 	public String toString() {
 		return "LocalFsClient{storage=" + storage + '}';
+	}
+
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(Path path) {
+		return execute(() -> FileChannel.open(path, set(CREATE, WRITE)))
+				.map(channel -> ChannelFileWriter.create(executor, channel));
 	}
 
 	private Path resolve(String name) throws StacklessException {
@@ -538,7 +508,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		Path targetPath = resolve(namingScheme.encode(target, targetRevision, false));
 
 		if (Files.isDirectory(path) || Files.isDirectory(targetPath)) {
-			throw MOVING_DIRS;
+			throw IS_DIRECTORY;
 		}
 		// noop when paths are equal
 		if (path.equals(targetPath)) {
@@ -554,17 +524,17 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	private void doDelete(String name, long revision) throws IOException, StacklessException {
-		Path path = resolve(namingScheme.encode(name, revision, true));
+		Path tombstonePath = resolve(namingScheme.encode(name, revision, true));
 
-		if (Files.isDirectory(path)) {
-			throw MOVING_DIRS;
+		if (Files.isDirectory(tombstonePath)) {
+			throw IS_DIRECTORY;
 		}
 		FilenameInfo existing = getInfo(name);
 
 		if (existing == null) {
 			if (tombstoneTtl > 0) {
-				Files.createDirectories(path.getParent());
-				Files.createFile(path);
+				Files.createDirectories(tombstonePath.getParent());
+				Files.createFile(tombstonePath);
 			}
 			return;
 		}
@@ -572,7 +542,8 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		if (existing.isTombstone() ? existing.getRevision() < revision : existing.getRevision() <= revision) {
 			Files.deleteIfExists(existing.getFilePath());
 			if (tombstoneTtl > 0) {
-				Files.createFile(path);
+				Files.createDirectories(tombstonePath.getParent());
+				Files.createFile(tombstonePath);
 			}
 		}
 	}
@@ -581,8 +552,12 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	private FilenameInfo getInfo(String name) throws IOException, StacklessException {
 		if (defaultRevision != null) {
 			Path path = resolve(name);
-			if (Files.isRegularFile(path)) {
-				return new FilenameInfo(path, name, defaultRevision, false);
+			if (Files.exists(path)) {
+				if (Files.isRegularFile(path)) {
+					return new FilenameInfo(path, name, defaultRevision, false);
+				} else {
+					throw IS_DIRECTORY;
+				}
 			}
 			return null;
 		}
@@ -816,6 +791,21 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 				return CONTINUE;
 			}
 		});
+	}
+
+	private <T> Promise<T> execute(BlockingCallable<T> callable) {
+		return Promise.ofBlockingCallable(executor, callable);
+	}
+
+	private Promise<Void> execute(BlockingRunnable runnable) {
+		return Promise.ofBlockingRunnable(executor, runnable);
+	}
+
+	private void checkRevisions(long... revisions) {
+		if (defaultRevision != null)
+			for (long revision : revisions) {
+				if (revision != defaultRevision) throw new IllegalArgumentException("unsupported revision");
+			}
 	}
 
 	//region JMX

@@ -39,8 +39,8 @@ public final class ZeroFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset, long revision) {
-		return Promise.ofException(BAD_PATH);
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
+		return Promise.ofException(FILE_NOT_FOUND);
 	}
 
 	@Override

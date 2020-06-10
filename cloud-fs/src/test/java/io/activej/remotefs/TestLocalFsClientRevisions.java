@@ -3,7 +3,6 @@ package io.activej.remotefs;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -16,8 +15,6 @@ import java.io.IOException;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.remotefs.FsClient.OFFSET_TOO_BIG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.junit.Assert.*;
@@ -42,39 +39,22 @@ public final class TestLocalFsClientRevisions {
 
 	@Test
 	public void uploadOverride() {
-		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 0, 1)));
-		await(ChannelSupplier.of(wrapUtf8("OVERRIDDEN")).streamTo(client.upload("test.txt", 0, 2)));
+		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 1)));
+		await(ChannelSupplier.of(wrapUtf8("OVERRIDDEN")).streamTo(client.upload("test.txt", 2)));
 
 		assertEquals("OVERRIDDEN", download("test.txt"));
 	}
 
 	@Test
-	public void uploadAppend() {
-
-		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 0, 123)));
-		await(ChannelSupplier.of(wrapUtf8("rst text and some appended text too")).streamTo(client.upload("test.txt", 17, 123)));
-
-		assertEquals("hello, this is first text and some appended text too", download("test.txt"));
-	}
-
-	@Test
-	public void uploadOverrideAppend() {
-		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 0, 1)));
-
-		Promise<Void> process = ChannelSupplier.of(wrapUtf8("rst text and some appended text too")).streamTo(client.upload("test.txt", 17, 2));
-		assertSame(OFFSET_TOO_BIG, awaitException(process));
-	}
-
-	@Test
 	public void uploadDeleteUpload() {
-		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 0, 1)));
+		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 1)));
 		await(client.delete("test.txt", 1));
 
 		FileMetadata metadata = await(client.getMetadata("test.txt"));
 		assertNotNull(metadata);
 		assertTrue(metadata.isTombstone());
 
-		await(ChannelSupplier.of(wrapUtf8("OVERRIDDEN")).streamTo(client.upload("test.txt", 0, 2)));
+		await(ChannelSupplier.of(wrapUtf8("OVERRIDDEN")).streamTo(client.upload("test.txt", 2)));
 
 		metadata = await(client.getMetadata("test.txt"));
 		assertNotNull(metadata);
@@ -85,7 +65,7 @@ public final class TestLocalFsClientRevisions {
 
 	@Test
 	public void lowRevisionDelete() {
-		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 0, 10)));
+		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 10)));
 
 		await(client.delete("test.txt", 1));
 
@@ -98,7 +78,7 @@ public final class TestLocalFsClientRevisions {
 	public void deleteBeforeUpload() {
 		await(client.delete("test.txt", 10));
 
-		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 0, 1)));
+		await(ChannelSupplier.of(wrapUtf8("hello, this is first text")).streamTo(client.upload("test.txt", 1)));
 
 		FileMetadata metadata = await(client.getMetadata("test.txt"));
 		assertNotNull(metadata);
@@ -107,8 +87,8 @@ public final class TestLocalFsClientRevisions {
 
 	@Test
 	public void moveIntoLesser() {
-		await(ChannelSupplier.of(wrapUtf8("hello, this is some text")).streamTo(client.upload("test.txt", 0, 1)));
-		await(ChannelSupplier.of(wrapUtf8("and this is another")).streamTo(client.upload("test2.txt", 0, 1)));
+		await(ChannelSupplier.of(wrapUtf8("hello, this is some text")).streamTo(client.upload("test.txt", 1)));
+		await(ChannelSupplier.of(wrapUtf8("and this is another")).streamTo(client.upload("test2.txt", 1)));
 
 		await(client.move("test.txt", "test2.txt", 2, 2));
 
@@ -122,8 +102,8 @@ public final class TestLocalFsClientRevisions {
 
 	@Test
 	public void moveIntoHigher() {
-		await(ChannelSupplier.of(wrapUtf8("hello, this is some text")).streamTo(client.upload("test.txt", 0, 1)));
-		await(ChannelSupplier.of(wrapUtf8("and this is another")).streamTo(client.upload("test2.txt", 0, 10)));
+		await(ChannelSupplier.of(wrapUtf8("hello, this is some text")).streamTo(client.upload("test.txt", 1)));
+		await(ChannelSupplier.of(wrapUtf8("and this is another")).streamTo(client.upload("test2.txt", 10)));
 
 		await(client.move("test.txt", "test2.txt", 2, 2));
 		assertEquals("and this is another", download("test2.txt"));
@@ -131,8 +111,8 @@ public final class TestLocalFsClientRevisions {
 
 	@Test
 	public void copyIntoLesser() {
-		await(ChannelSupplier.of(wrapUtf8("hello, this is some text")).streamTo(client.upload("test.txt", 0, 1)));
-		await(ChannelSupplier.of(wrapUtf8("and this is another")).streamTo(client.upload("test2.txt", 0, 1)));
+		await(ChannelSupplier.of(wrapUtf8("hello, this is some text")).streamTo(client.upload("test.txt", 1)));
+		await(ChannelSupplier.of(wrapUtf8("and this is another")).streamTo(client.upload("test2.txt", 1)));
 
 		await(client.copy("test.txt", "test2.txt", 2));
 
@@ -142,8 +122,8 @@ public final class TestLocalFsClientRevisions {
 
 	@Test
 	public void copyIntoHigher() {
-		await(ChannelSupplier.of(wrapUtf8("hello, this is some text")).streamTo(client.upload("test.txt", 0, 1)));
-		await(ChannelSupplier.of(wrapUtf8("and this is another")).streamTo(client.upload("test2.txt", 0, 10)));
+		await(ChannelSupplier.of(wrapUtf8("hello, this is some text")).streamTo(client.upload("test.txt", 1)));
+		await(ChannelSupplier.of(wrapUtf8("and this is another")).streamTo(client.upload("test2.txt", 10)));
 
 		await(client.copy("test.txt", "test2.txt", 2));
 

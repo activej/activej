@@ -8,7 +8,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -117,7 +116,7 @@ public final class TestLocalFsClient {
 
 		await(
 				delayed(Arrays.asList(
-						ByteBuf.wrapForReading("oncurrent data - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
@@ -126,10 +125,10 @@ public final class TestLocalFsClient {
 						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file, 1))),
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file))),
 
 				delayed(Arrays.asList(
-						ByteBuf.wrapForReading(" data - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
@@ -142,10 +141,10 @@ public final class TestLocalFsClient {
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file, 10))),
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file))),
 
 				delayed(Arrays.asList(
-						ByteBuf.wrapForReading(" - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
@@ -158,10 +157,11 @@ public final class TestLocalFsClient {
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file, 15))),
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file))),
 
 				delayed(Arrays.asList(
-						ByteBuf.wrapForReading("urrent data - 2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
@@ -173,10 +173,10 @@ public final class TestLocalFsClient {
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file, 24))),
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file))),
 
 				delayed(Arrays.asList(
-						ByteBuf.wrapForReading(" data - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
@@ -190,7 +190,7 @@ public final class TestLocalFsClient {
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file, 10)))
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))
 		);
 
 		String expected = "Concurrent data - 1\n" +
@@ -216,14 +216,8 @@ public final class TestLocalFsClient {
 	}
 
 	private ChannelSupplier<ByteBuf> delayed(List<ByteBuf> list) {
-		Iterator<ByteBuf> iterator = list.iterator();
-		return ChannelSupplier.of(() ->
-				iterator.hasNext() ?
-						Promise.ofCallback(cb ->
-								Eventloop.getCurrentEventloop()
-										.delay(ThreadLocalRandom.current().nextInt(20) + 10, () ->
-												cb.set(iterator.next()))) :
-						Promise.of(null));
+		return ChannelSupplier.ofIterable(list)
+				.mapAsync(byteBuf -> Promises.delay(ThreadLocalRandom.current().nextInt(20) + 10, byteBuf));
 	}
 
 	@Test

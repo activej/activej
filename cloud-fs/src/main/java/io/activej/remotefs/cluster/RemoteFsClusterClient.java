@@ -245,7 +245,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promise.ofException(exception);
 	}
 
-	private Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename, long offset, @Nullable Long revision) {
+	private Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename, @Nullable Long revision) {
 		List<Object> selected = serverSelector.selectFrom(filename, aliveClients.keySet(), replicationCount);
 
 		checkState(!selected.isEmpty(), "Selected no servers to upload file " + filename);
@@ -264,7 +264,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promises.toList(selected.stream()
 				.map(id -> {
 					FsClient client = aliveClients.get(id);
-					return (revision == null ? client.upload(filename, offset) : client.upload(filename, offset, revision))
+					return (revision == null ? client.upload(filename) : client.upload(filename, revision))
 							.thenEx(wrapDeath(id))
 							.map(consumer -> new ConsumerWithId(id,
 									consumer.withAcknowledgement(ack ->
@@ -319,13 +319,13 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset) {
-		return upload(name, offset, null);
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+		return upload(name, null);
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset, long revision) {
-		return upload(name, offset, (Long) revision);
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
+		return upload(name, (Long) revision);
 	}
 
 	@Override

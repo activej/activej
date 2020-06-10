@@ -36,18 +36,13 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset) {
-		return peer.upload(name, offset);
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
+		return peer.upload(name, revision);
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		return peer.upload(name);
-	}
-
-	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset, long revision) {
-		return peer.upload(name, offset, revision);
 	}
 
 	@Override

@@ -227,7 +227,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 								// upload file to this partition
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
-												.set(ChannelConsumer.ofPromise(clients.get(partitionId).upload(name, 0, revision))
+												.set(ChannelConsumer.ofPromise(clients.get(partitionId).upload(name, revision))
 														.withAcknowledgement(fn)))
 										.whenException(e -> {
 											logger.warn("failed uploading to partition {}", partitionId, e);

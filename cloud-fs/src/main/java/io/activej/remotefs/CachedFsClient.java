@@ -21,12 +21,10 @@ import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.ref.RefLong;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.process.ChannelSplitter;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
@@ -117,13 +115,8 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset) {
-		return mainClient.upload(name, offset);
-	}
-
-	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long offset, long revision) {
-		return mainClient.upload(name, offset, revision);
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
+		return mainClient.upload(name, revision);
 	}
 
 	/**
@@ -148,9 +141,9 @@ public final class CachedFsClient implements FsClient, EventloopService {
 						return mainClient.getMetadata(name)
 								.then(mainMetadata -> {
 									if (mainMetadata == null) {
-										return Promise.ofException(new StacklessException(CachedFsClient.class, "File not found: " + name));
+										return Promise.ofException(FILE_NOT_FOUND);
 									}
-									return downloadToCache(name, offset, length, 0, mainMetadata.getSize());
+									return downloadToCache(name, length, 0, mainMetadata.getSize());
 								});
 					}
 					long sizeInCache = cacheMetadata.getSize();
@@ -168,30 +161,31 @@ public final class CachedFsClient implements FsClient, EventloopService {
 							.then(mainMetadata -> {
 								if (mainMetadata == null) {
 									return cacheClient.download(name, offset, length)
-											.whenComplete(() -> updateCacheStats(name));
+											.whenResult(() -> updateCacheStats(name));
 								}
 
 								long sizeInMain = mainMetadata.getSize();
 
 								if (sizeInCache >= sizeInMain) {
 									return cacheClient.download(name, offset, length)
-											.whenComplete(() -> updateCacheStats(name));
+											.whenResult(() -> updateCacheStats(name));
 								}
 
 								if ((length != -1) && (sizeInMain < (offset + length))) {
-									String repr = name + "(size=" + sizeInMain + (offset != 0 ? ", offset=" + offset : "") + ", length=" + length;
-									return Promise.ofException(new StacklessException(CachedFsClient.class, "Boundaries exceed file size: " + repr));
+									return Promise.ofException(LENGTH_TOO_BIG);
 								}
 
-								return downloadToCache(name, offset, length, sizeInCache, sizeInMain);
-							});
+								if (offset != 0) {
+									return mainClient.download(name, offset, length);
+								}
 
+								return downloadToCache(name, length, sizeInCache, sizeInMain);
+							});
 				});
 	}
 
-	private Promise<ChannelSupplier<ByteBuf>> downloadToCache(String fileName, long offset, long length, long sizeInCache, long sizeInMain) {
-		long size = length == -1 ? length : length + offset - sizeInCache;
-		return mainClient.download(fileName, sizeInCache, size)
+	private Promise<ChannelSupplier<ByteBuf>> downloadToCache(String fileName, long length, long sizeInCache, long sizeInMain) {
+		return mainClient.download(fileName, 0, length)
 				.then(supplier -> {
 					long toBeCached = sizeInMain - sizeInCache;
 					if (downloadingNowSize + toBeCached > cacheSizeLimit.toLong() || toBeCached > cacheSizeLimit.toLong() * (1 - LOAD_FACTOR)) {
@@ -203,12 +197,8 @@ public final class CachedFsClient implements FsClient, EventloopService {
 							.map($ -> {
 								ChannelSplitter<ByteBuf> splitter = ChannelSplitter.create(supplier);
 								splitter.addOutput()
-										.set(ChannelConsumer.ofPromise(cacheClient.upload(fileName, sizeInCache)));
-								ChannelSupplier<ByteBuf> prefix = sizeInCache != 0 ?
-										ChannelSupplier.ofPromise(cacheClient.download(fileName, offset, sizeInCache)) :
-										ChannelSupplier.of();
-
-								return ChannelSuppliers.concat(prefix, splitter.addOutput().getSupplier())
+										.set(ChannelConsumer.ofPromise(cacheClient.upload(fileName)));
+								return splitter.addOutput().getSupplier()
 										.withEndOfStream(eos -> eos
 												.both(splitter.getProcessCompletion())
 												.then(() -> {
