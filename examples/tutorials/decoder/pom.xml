@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-decoder</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>2.0-SNAPSHOT</version>
 
   <name>Tutorials : Decoder</name>
 
@@ -17,7 +17,7 @@
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-launchers-http</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>2.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.github.spullara.mustache.java</groupId>
