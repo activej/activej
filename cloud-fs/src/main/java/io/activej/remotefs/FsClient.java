@@ -33,7 +33,6 @@ import java.util.function.Predicate;
 
 import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.remotefs.RemoteFsUtils.escapeGlob;
-import static java.util.stream.Collectors.toList;
 
 /**
  * This interface represents a simple filesystem client with upload, download, move, delete and list operations.
@@ -46,9 +45,6 @@ public interface FsClient {
 	StacklessException LENGTH_TOO_BIG = new StacklessException(FsClient.class, "Length with offset exceeds the actual file size");
 	StacklessException BAD_RANGE = new StacklessException(FsClient.class, "Given offset or length don't make sense");
 	StacklessException IS_DIRECTORY = new StacklessException(FsClient.class, "Operated file is a directory");
-	StacklessException UNSUPPORTED_REVISION = new StacklessException(FsClient.class, "Given revision is not supported");
-
-	long DEFAULT_REVISION = 0;
 
 	/**
 	 * Returns a consumer of bytebufs which are written (or sent) to the file.
@@ -56,17 +52,12 @@ public interface FsClient {
 	 * So, outer promise might fail on connection try, end-of-stream promise
 	 * might fail while uploading and result promise might fail when closing.
 	 *
-	 * Note that this method expects that you're uploading the same file prefix with same revision
-	 * To override a file, upload a new file with the same name and greater revision.
+	 * Note that this method expects that you're uploading immutable files.
 	 *
 	 * @param name   name of the file to upload
 	 * @return promise for stream consumer of byte buffers
 	 */
-	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision);
-
-	default Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return upload(name, DEFAULT_REVISION);
-	}
+	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name);
 
 	/**
 	 * Returns a supplier of bytebufs which are read (or received) from the file.
@@ -116,11 +107,7 @@ public interface FsClient {
 	 * @param name name of the file to be deleted
 	 * @return marker promise that completes when deletion completes
 	 */
-	Promise<Void> delete(@NotNull String name, long revision);
-
-	default Promise<Void> delete(@NotNull String name) {
-		return delete(name, DEFAULT_REVISION);
-	}
+	Promise<Void> delete(@NotNull String name);
 
 	/**
 	 * Duplicates a file
@@ -128,12 +115,9 @@ public interface FsClient {
 	 * @param name   file to be copied
 	 * @param target new file name
 	 */
-	default Promise<Void> copy(@NotNull String name, @NotNull String target, long targetRevision) {
-		return ChannelSuppliers.streamTo(download(name), upload(target, targetRevision));
-	}
 
 	default Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		return copy(name, target, DEFAULT_REVISION);
+		return ChannelSuppliers.streamTo(download(name), upload(target));
 	}
 
 	/**
@@ -144,69 +128,41 @@ public interface FsClient {
 	 * @param name   file to be moved
 	 * @param target new file name
 	 */
-	default Promise<Void> move(@NotNull String name, @NotNull String target, long targetRevision, long tombstoneRevision) {
-		return copy(name, target, targetRevision)
-				.then(() -> delete(name, tombstoneRevision));
-	}
 
 	default Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return move(name, target, DEFAULT_REVISION, DEFAULT_REVISION);
+		return copy(name, target)
+				.then(() -> delete(name));
 	}
 
-	default Promise<Void> moveDir(@NotNull String name, @NotNull String target, long targetRevision, long removeRevision) {
+	default Promise<Void> moveDir(@NotNull String name, @NotNull String target) {
 		String finalName = name.endsWith("/") ? name : name + '/';
 		String finalTarget = target.endsWith("/") ? target : target + '/';
 		return list(finalName + "**")
 				.then(list -> Promises.all(list.stream()
 						.map(meta -> {
 							String filename = meta.getName();
-							return move(filename, finalTarget + filename.substring(finalName.length()), targetRevision, removeRevision);
+							return move(filename, finalTarget + filename.substring(finalName.length()));
 						})));
 	}
-
-	default Promise<Void> moveDir(@NotNull String name, @NotNull String target) {
-		return moveDir(name, target, DEFAULT_REVISION, DEFAULT_REVISION);
-	}
-
-	/**
-	 * Lists files or their tombstones that are matched by glob.
-	 * Be sure to escape metachars if your paths contain them.
-	 * <p>
-	 * Note that it is not recommended to use this API outside of
-	 * Cloud-FS internals or unless you really need recent tombstones for
-	 * some kind of merge or repartition operations.
-	 * <p>
-	 * Use {@link #list} instead.
-	 *
-	 * @param glob specified in {@link java.nio.file.FileSystem#getPathMatcher NIO path matcher} documentation for glob patterns
-	 * @return list of {@link FileMetadata file metadata}
-	 */
-	Promise<List<FileMetadata>> listEntities(@NotNull String glob);
 
 	/**
 	 * Lists files that are matched by glob.
 	 * Be sure to escape metachars if your paths contain them.
 	 * <p>
-	 * This method never returns tombstones.
 	 *
 	 * @param glob specified in {@link java.nio.file.FileSystem#getPathMatcher NIO path matcher} documentation for glob patterns
 	 * @return list of {@link FileMetadata file metadata}
 	 */
-	default Promise<List<FileMetadata>> list(@NotNull String glob) {
-		return listEntities(glob)
-				.map(list -> list.stream()
-						.filter(m -> !m.isTombstone())
-						.collect(toList()));
-	}
+	Promise<List<FileMetadata>> list(@NotNull String glob);
 
 	/**
-	 * Shortcut to get {@link FileMetadata metadata} of a single file or tombstone.
+	 * Shortcut to get {@link FileMetadata metadata} of a single file.
 	 *
 	 * @param name name of a file to fetch its metadata.
 	 * @return promise of file description or <code>null</code>
 	 */
 	default Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
-		return listEntities(escapeGlob(name))
+		return list(escapeGlob(name))
 				.map(list -> list.isEmpty() ? null : list.get(0));
 	}
 
@@ -217,7 +173,7 @@ public interface FsClient {
 	 * (is server up in case of remote implementation, for example).
 	 */
 	default Promise<Void> ping() {
-		return listEntities("").toVoid();
+		return list("").toVoid();
 	}
 
 	static FsClient zero() {

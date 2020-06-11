@@ -104,23 +104,6 @@ public final class TestCachedFsClient {
 	}
 
 	@Test
-	public void testDownloadFilePartlyInCache() throws IOException {
-		byte[] bytes = "line1\nline2\nline3".getBytes(UTF_8);
-		Files.write(cacheTestFile, bytes);
-		assertArrayEquals(bytes, Files.readAllBytes(cacheTestFile));
-
-		String downloadedString = await(cacheRemote.download("test.txt")
-				.then(TO_STRING));
-
-		assertEquals(testTxtContent, downloadedString);
-
-		String cachedString = await(cache.download("test.txt")
-				.then(TO_STRING));
-
-		assertEquals(testTxtContent, cachedString);
-	}
-
-	@Test
 	public void testDownloadFilePartlyInCacheWithOffsetAndLength() throws IOException {
 		Files.write(cacheTestFile, "line1\nline2\nline3".getBytes(UTF_8));
 

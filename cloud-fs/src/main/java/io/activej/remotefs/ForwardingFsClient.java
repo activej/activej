@@ -36,11 +36,6 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
-		return peer.upload(name, revision);
-	}
-
-	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		return peer.upload(name);
 	}
@@ -66,33 +61,13 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name, long revision) {
-		return peer.delete(name, revision);
-	}
-
-	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return peer.copy(name, target);
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target, long targetRevision) {
-		return peer.copy(name, target, targetRevision);
-	}
-
-	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		return peer.move(name, target);
-	}
-
-	@Override
-	public Promise<Void> move(@NotNull String filename, @NotNull String target, long targetRevision, long tombstoneRevision) {
-		return peer.move(filename, target, targetRevision, tombstoneRevision);
-	}
-
-	@Override
-	public Promise<List<FileMetadata>> listEntities(@NotNull String glob) {
-		return peer.listEntities(glob);
 	}
 
 	@Override

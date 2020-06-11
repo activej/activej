@@ -29,8 +29,7 @@ public final class RemoteFsResponses {
 	public static final StructuredCodec<FileMetadata> FILE_META_CODEC = StructuredCodecs.tuple(FileMetadata::parse,
 			FileMetadata::getName, STRING_CODEC,
 			FileMetadata::getSize, LONG_CODEC,
-			FileMetadata::getTimestamp, LONG_CODEC,
-			FileMetadata::getRevision, LONG_CODEC);
+			FileMetadata::getTimestamp, LONG_CODEC);
 
 	static final StructuredCodec<FsResponse> CODEC = CodecSubtype.<FsResponse>create()
 			.with(UploadAck.class, object(UploadAck::new, "ok", UploadAck::isOk, BOOLEAN_CODEC))

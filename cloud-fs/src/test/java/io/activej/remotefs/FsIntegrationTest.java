@@ -275,7 +275,7 @@ public final class FsIntegrationTest {
 		expected2.add("subsubfolder/first file.txt");
 
 		Tuple2<List<FileMetadata>, List<FileMetadata>> tuple = await(
-				Promises.toTuple(client.subfolder("subfolder1").listEntities("**"), client.subfolder("subfolder2").listEntities("**"))
+				Promises.toTuple(client.subfolder("subfolder1").list("**"), client.subfolder("subfolder2").list("**"))
 						.whenComplete(server::close)
 		);
 

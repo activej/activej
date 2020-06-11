@@ -115,8 +115,8 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
-		return mainClient.upload(name, revision);
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+		return mainClient.upload(name);
 	}
 
 	/**
@@ -211,13 +211,13 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target, long targetRevision, long tombstoneRevision) {
-		return mainClient.move(name, target, targetRevision, tombstoneRevision);
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+		return mainClient.move(name, target);
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target, long targetRevision) {
-		return mainClient.copy(name, target, targetRevision);
+	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+		return mainClient.copy(name, target);
 	}
 
 	/**
@@ -226,12 +226,6 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	 * @param glob specified in {@link java.nio.file.FileSystem#getPathMatcher NIO path matcher} documentation for glob patterns
 	 * @return promise that is a union of the most actual files from cache folder and server
 	 */
-	@Override
-	public Promise<List<FileMetadata>> listEntities(@NotNull String glob) {
-		return Promises.toList(cacheClient.listEntities(glob), mainClient.listEntities(glob))
-				.map(lists -> FileMetadata.flatten(lists.stream()));
-	}
-
 	@Override
 	public Promise<List<FileMetadata>> list(@NotNull String glob) {
 		return Promises.toList(cacheClient.list(glob), mainClient.list(glob))
@@ -244,9 +238,9 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	 * @return promise of {@link Void} that represents successful deletion
 	 */
 	@Override
-	public Promise<Void> delete(@NotNull String name, long revision) {
+	public Promise<Void> delete(@NotNull String name) {
 		cacheStats.remove(name);
-		return Promises.all(cacheClient.delete(name, revision), mainClient.delete(name, revision));
+		return Promises.all(cacheClient.delete(name), mainClient.delete(name));
 	}
 
 	@NotNull

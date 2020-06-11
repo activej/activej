@@ -102,10 +102,10 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename, long revision) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename) {
 		return connect(address)
 				.then(messaging ->
-						messaging.send(new Upload(filename, revision))
+						messaging.send(new Upload(filename))
 								.then(messaging::receive)
 								.then(msg -> {
 									if (!(msg instanceof UploadAck)) {
@@ -178,36 +178,29 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target, long targetRevision, long tombstoneRevision) {
-		return simpleCommand(new Move(name, target, targetRevision, tombstoneRevision), MoveFinished.class, $ -> (Void) null)
-				.whenComplete(toLogger(logger, "move", name, target, targetRevision, tombstoneRevision, this))
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+		return simpleCommand(new Move(name, target), MoveFinished.class, $ -> (Void) null)
+				.whenComplete(toLogger(logger, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target, long targetRevision) {
-		return simpleCommand(new Copy(name, target, targetRevision), CopyFinished.class, $ -> (Void) null)
-				.whenComplete(toLogger(logger, "copy", name, target, targetRevision, this))
+	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+		return simpleCommand(new Copy(name, target), CopyFinished.class, $ -> (Void) null)
+				.whenComplete(toLogger(logger, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name, long revision) {
-		return simpleCommand(new Delete(name, revision), DeleteFinished.class, $ -> (Void) null)
-				.whenComplete(toLogger(logger, "delete", name, revision, this))
+	public Promise<Void> delete(@NotNull String name) {
+		return simpleCommand(new Delete(name), DeleteFinished.class, $ -> (Void) null)
+				.whenComplete(toLogger(logger, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> listEntities(@NotNull String glob) {
-		return simpleCommand(new RemoteFsCommands.List(glob, true), ListFinished.class, ListFinished::getFiles)
-				.whenComplete(toLogger(logger, "listEntities", glob, this))
-				.whenComplete(listPromise.recordStats());
-	}
-
-	@Override
 	public Promise<List<FileMetadata>> list(@NotNull String glob) {
-		return simpleCommand(new RemoteFsCommands.List(glob, false), ListFinished.class, ListFinished::getFiles)
+		return simpleCommand(new RemoteFsCommands.List(glob), ListFinished.class, ListFinished::getFiles)
 				.whenComplete(toLogger(logger, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}

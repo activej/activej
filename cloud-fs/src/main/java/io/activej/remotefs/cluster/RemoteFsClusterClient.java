@@ -245,7 +245,8 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promise.ofException(exception);
 	}
 
-	private Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename, @Nullable Long revision) {
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename) {
 		List<Object> selected = serverSelector.selectFrom(filename, aliveClients.keySet(), replicationCount);
 
 		checkState(!selected.isEmpty(), "Selected no servers to upload file " + filename);
@@ -264,7 +265,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promises.toList(selected.stream()
 				.map(id -> {
 					FsClient client = aliveClients.get(id);
-					return (revision == null ? client.upload(filename) : client.upload(filename, revision))
+					return client.upload(filename)
 							.thenEx(wrapDeath(id))
 							.map(consumer -> new ConsumerWithId(id,
 									consumer.withAcknowledgement(ack ->
@@ -319,16 +320,6 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return upload(name, null);
-	}
-
-	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
-		return upload(name, (Long) revision);
-	}
-
-	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
 		if (deadClients.size() >= replicationCount) {
 			return ofFailure("There are more dead partitions than replication count(" +
@@ -369,7 +360,6 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 					Tuple2<Object, FileMetadata> best = maybeBest.get();
 
 					return Promises.any(found.stream()
-							.filter(piwfs -> piwfs.getValue2().getRevision() == best.getValue2().getRevision())
 							.map(piwfs -> {
 								FsClient client = aliveClients.get(piwfs.getValue1());
 								if (client == null) { // marked as dead already by somebody
@@ -389,29 +379,29 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target, long targetRevision, long tombstoneRevision) {
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		if (deadClients.size() >= replicationCount) {
 			return ofFailure("There are more dead partitions than replication count(" +
 					deadClients.size() + " dead, replication count is " + replicationCount + "), aborting", emptyList());
 		}
 
-		return Promises.all(aliveClients.entrySet().stream().map(e -> e.getValue().move(name, target, targetRevision, tombstoneRevision).thenEx(wrapDeath(e.getKey()))))
+		return Promises.all(aliveClients.entrySet().stream().map(e -> e.getValue().move(name, target).thenEx(wrapDeath(e.getKey()))))
 				.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target, long targetRevision) {
+	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		if (deadClients.size() >= replicationCount) {
 			return ofFailure("There are more dead partitions than replication count(" +
 					deadClients.size() + " dead, replication count is " + replicationCount + "), aborting", emptyList());
 		}
 
-		return Promises.all(aliveClients.entrySet().stream().map(e -> e.getValue().copy(name, target, targetRevision).thenEx(wrapDeath(e.getKey()))))
+		return Promises.all(aliveClients.entrySet().stream().map(e -> e.getValue().copy(name, target).thenEx(wrapDeath(e.getKey()))))
 				.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name, long revision) {
+	public Promise<Void> delete(@NotNull String name) {
 		return Promises.toList(
 				aliveClients.entrySet().stream()
 						.map(entry -> entry.getValue().delete(name)
@@ -447,11 +437,6 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 					return Promise.of(FileMetadata.flatten(tries.stream().filter(Try::isSuccess).map(Try::get)));
 				})
 				.whenComplete(listPromise.recordStats());
-	}
-
-	@Override
-	public Promise<List<FileMetadata>> listEntities(@NotNull String glob) {
-		return doList(glob, FsClient::listEntities);
 	}
 
 	@Override

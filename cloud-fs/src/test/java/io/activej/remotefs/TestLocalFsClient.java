@@ -1,5 +1,6 @@
 package io.activej.remotefs;
 
+import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.MemSize;
@@ -8,6 +9,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -110,72 +112,11 @@ public final class TestLocalFsClient {
 	}
 
 	@Test
-	public void testConcurrentUpload() throws IOException {
+	public void testConcurrentUpload() {
 		String file = "concurrent.txt";
-		Files.write(storagePath.resolve(file), "Concurrent data - 1\nConcurr".getBytes());
 
 		await(
-				delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file))),
-
-				delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file))),
-
-				delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file))),
-
-				delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file))),
-
-				delayed(Arrays.asList(
+				delayed(() -> delayed(Arrays.asList(
 						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
@@ -190,7 +131,75 @@ public final class TestLocalFsClient {
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
 						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))),
+
+				delayed(() -> delayed(Arrays.asList(
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))),
+
+				delayed(() -> delayed(Arrays.asList(
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))),
+
+				delayed(() -> delayed(Arrays.asList(
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))),
+
+				delayed(() -> delayed(Arrays.asList(
+						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
+						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
+						.streamTo(ChannelConsumer.ofPromise(client.upload(file))))
 		);
 
 		String expected = "Concurrent data - 1\n" +
@@ -218,6 +227,10 @@ public final class TestLocalFsClient {
 	private ChannelSupplier<ByteBuf> delayed(List<ByteBuf> list) {
 		return ChannelSupplier.ofIterable(list)
 				.mapAsync(byteBuf -> Promises.delay(ThreadLocalRandom.current().nextInt(20) + 10, byteBuf));
+	}
+
+	private <T> Promise<T> delayed(AsyncSupplier<T> supplier) {
+		return Promises.delay(ThreadLocalRandom.current().nextInt(20) + 10, supplier.get());
 	}
 
 	@Test

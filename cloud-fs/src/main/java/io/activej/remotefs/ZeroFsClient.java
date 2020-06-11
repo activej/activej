@@ -39,7 +39,7 @@ public final class ZeroFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		return Promise.ofException(FILE_NOT_FOUND);
 	}
 
@@ -49,18 +49,13 @@ public final class ZeroFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String filename, @NotNull String target, long targetRevision, long tombstoneRevision) {
+	public Promise<Void> move(@NotNull String filename, @NotNull String target) {
 		return Promise.ofException(BAD_PATH);
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target, long targetRevision) {
+	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return Promise.ofException(BAD_PATH);
-	}
-
-	@Override
-	public Promise<List<FileMetadata>> listEntities(@NotNull String glob) {
-		return Promise.of(emptyList());
 	}
 
 	@Override
@@ -69,7 +64,7 @@ public final class ZeroFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name, long revision) {
+	public Promise<Void> delete(@NotNull String name) {
 		return Promise.ofException(BAD_PATH);
 	}
 

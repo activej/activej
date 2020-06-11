@@ -115,7 +115,7 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	private void addHandlers() {
 		onMessage(Upload.class, (messaging, msg) -> {
 			String name = msg.getName();
-			return client.upload(name, msg.getRevision())
+			return client.upload(name)
 					.then(uploader -> {
 						if (uploader instanceof RecyclingChannelConsumer) {
 							return messaging.send(new UploadAck(false));
@@ -154,14 +154,10 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 					})
 					.whenComplete(downloadPromise.recordStats());
 		});
-		onMessage(Move.class, simpleHandler(msg -> client.move(msg.getName(), msg.getTarget(), msg.getTargetRevision(), msg.getRemoveRevision()), $ -> new MoveFinished(), movePromise));
-		onMessage(Copy.class, simpleHandler(msg -> client.copy(msg.getName(), msg.getTarget(), msg.getRevision()), $ -> new CopyFinished(), copyPromise));
-		onMessage(Delete.class, simpleHandler(msg -> client.delete(msg.getName(), msg.getRevision()), $ -> new DeleteFinished(), deletePromise));
-		onMessage(List.class, simpleHandler(msg ->
-						msg.needTombstones() ?
-								client.listEntities(msg.getGlob()) :
-								client.list(msg.getGlob()),
-				ListFinished::new, listPromise));
+		onMessage(Move.class, simpleHandler(msg -> client.move(msg.getName(), msg.getTarget()), $ -> new MoveFinished(), movePromise));
+		onMessage(Copy.class, simpleHandler(msg -> client.copy(msg.getName(), msg.getTarget()), $ -> new CopyFinished(), copyPromise));
+		onMessage(Delete.class, simpleHandler(msg -> client.delete(msg.getName()), $ -> new DeleteFinished(), deletePromise));
+		onMessage(List.class, simpleHandler(msg -> client.list(msg.getGlob()), ListFinished::new, listPromise));
 	}
 
 	private <T extends FsCommand, R> MessagingHandler<T> simpleHandler(Function<T, Promise<R>> action, Function<R, FsResponse> response, PromiseStats stats) {

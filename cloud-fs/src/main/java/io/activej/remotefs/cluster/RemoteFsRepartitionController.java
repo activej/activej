@@ -197,7 +197,6 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						return Promise.of(false);
 					}
 					String name = meta.getName();
-					long revision = meta.getRevision();
 					if (uploadTargets.isEmpty()) { // everybody had the file
 						logger.trace("deleting file {} locally", meta);
 						return localStorage.remove(name) // so we delete the copy which does not belong to local partition
@@ -227,7 +226,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 								// upload file to this partition
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
-												.set(ChannelConsumer.ofPromise(clients.get(partitionId).upload(name, revision))
+												.set(ChannelConsumer.ofPromise(clients.get(partitionId).upload(name))
 														.withAcknowledgement(fn)))
 										.whenException(e -> {
 											logger.warn("failed uploading to partition {}", partitionId, e);
@@ -267,7 +266,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						return Promise.of(Try.of(null));  // and skip other logic
 					}
 					return clients.get(partitionId)
-							.listEntities(fileToUpload.getName()) // checking file existence and size on particular partition
+							.list(fileToUpload.getName()) // checking file existence and size on particular partition
 							.whenComplete((list, e) -> {
 								if (e != null) {
 									logger.warn("failed connecting to partition {}", partitionId, e);

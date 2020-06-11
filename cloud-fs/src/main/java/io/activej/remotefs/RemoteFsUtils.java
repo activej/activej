@@ -25,7 +25,6 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
@@ -50,8 +49,7 @@ public final class RemoteFsUtils {
 			OFFSET_TOO_BIG,
 			LENGTH_TOO_BIG,
 			BAD_RANGE,
-			IS_DIRECTORY,
-			UNSUPPORTED_REVISION
+			IS_DIRECTORY
 	));
 
 	/**
@@ -117,9 +115,6 @@ public final class RemoteFsUtils {
 		if (e == IS_DIRECTORY) {
 			return 7;
 		}
-		if (e == UNSUPPORTED_REVISION) {
-			return 8;
-		}
 		return 0;
 	}
 
@@ -135,11 +130,7 @@ public final class RemoteFsUtils {
 		}
 	}
 
-	public static Promise<Void> copyFile(FsClient source, FsClient target, String name) {
-		return copyFile(source, target, name, null);
-	}
-
-	public static Promise<Void> copyFile(FsClient from, FsClient to, String name, @Nullable Long newRevision) {
+	public static Promise<Void> copyFile(FsClient from, FsClient to, String name) {
 		return Promises.toTuple(from.getMetadata(name), to.getMetadata(name))
 				.then(t -> {
 					FileMetadata sourceMeta = t.getValue1();
@@ -150,29 +141,11 @@ public final class RemoteFsUtils {
 						return Promise.complete();
 					}
 
-					long sourceRevision = newRevision != null ? newRevision : sourceMeta.getRevision();
-
-					if (sourceMeta.isTombstone()) {
-						if (targetMeta != null && sourceRevision < targetMeta.getRevision()) {
-							// target meta is better than our tombstone, do nothing
-							return Promise.complete();
-						}
-						// else create the same tombstone on target
-						return to.delete(name, sourceRevision);
-					}
-
-					if (targetMeta == null || sourceRevision > targetMeta.getRevision()) {
+					if (targetMeta == null) {
 						// simply copy over when target has no such file or when source file is better
 						return from.download(name)
-								.then(supplier -> supplier.streamTo(to.upload(name, sourceRevision)));
+								.then(supplier -> supplier.streamTo(to.upload(name)));
 					}
-
-					if (sourceRevision < targetMeta.getRevision()) {
-						// do nothing when target file is better
-						return Promise.complete();
-					}
-
-					// * the revisions are equal here
 
 					if (sourceMeta.getSize() <= targetMeta.getSize()) {
 						// if target is the same or bigger then it is better, do nothing
@@ -181,7 +154,7 @@ public final class RemoteFsUtils {
 
 					// else we copy over only the part that is missing on target
 					return from.download(name, sourceMeta.getSize())
-							.then(supplier -> supplier.streamTo(to.upload(name, sourceRevision)));
+							.then(supplier -> supplier.streamTo(to.upload(name)));
 				});
 	}
 

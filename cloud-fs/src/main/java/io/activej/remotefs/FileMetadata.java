@@ -30,52 +30,36 @@ import static io.activej.common.Preconditions.checkArgument;
  */
 public final class FileMetadata {
 	public static final Comparator<FileMetadata> COMPARATOR =
-			Comparator.comparingLong(FileMetadata::getRevision)
-					.thenComparing((a, b) -> a.isTombstone() == b.isTombstone() ? 0 : a.isTombstone() ? 1 : -1)
-					.thenComparing(FileMetadata::getSize)
+			Comparator.comparingLong(FileMetadata::getSize)
 					.thenComparing(FileMetadata::getTimestamp);
 
 	private final String name;
 	private final long size;
 	private final long timestamp;
-	private final long revision;
 
-	private FileMetadata(String name, long size, long timestamp, long revision) {
+	private FileMetadata(String name, long size, long timestamp) {
 		this.name = name;
 		this.size = size;
 		this.timestamp = timestamp;
-		this.revision = revision;
 	}
 
-	public static FileMetadata of(@NotNull String name, long size, long timestamp, long revision) {
+	public static FileMetadata of(@NotNull String name, long size, long timestamp) {
 		checkArgument(size >= 0, "size >= 0");
-		return new FileMetadata(name, size, timestamp, revision);
+		return new FileMetadata(name, size, timestamp);
 	}
 
-	public static FileMetadata parse(String name, long size, long timestamp, long revision) throws ParseException {
+	public static FileMetadata parse(String name, long size, long timestamp) throws ParseException {
 		if (name == null) {
 			throw new ParseException(FileMetadata.class, "Name is null");
 		}
-		if (size < -1) {
-			throw new ParseException(FileMetadata.class, "Size is less than zero and not -1");
+		if (size < 0) {
+			throw new ParseException(FileMetadata.class, "Size is less than zero");
 		}
-		return new FileMetadata(name, size, timestamp, revision);
-	}
-
-	public static FileMetadata tombstone(String name, long timestamp, long revision) {
-		return new FileMetadata(name, -1, timestamp, revision);
+		return new FileMetadata(name, size, timestamp);
 	}
 
 	public FileMetadata withName(String name) {
-		return new FileMetadata(name, size, timestamp, revision);
-	}
-
-	public FileMetadata asTombstone() {
-		return new FileMetadata(name, -1, timestamp, revision);
-	}
-
-	public boolean isTombstone() {
-		return size == -1;
+		return new FileMetadata(name, size, timestamp);
 	}
 
 	public String getName() {
@@ -90,13 +74,9 @@ public final class FileMetadata {
 		return timestamp;
 	}
 
-	public long getRevision() {
-		return revision;
-	}
-
 	@Override
 	public String toString() {
-		return name + "(size=" + size + ", timestamp=" + timestamp + ", revision=" + revision + ')';
+		return name + "(size=" + size + ", timestamp=" + timestamp + ')';
 	}
 
 	@Override
@@ -110,15 +90,14 @@ public final class FileMetadata {
 
 		FileMetadata that = (FileMetadata) o;
 
-		return size == that.size && timestamp == that.timestamp && revision == that.revision && name.equals(that.name);
+		return size == that.size && timestamp == that.timestamp && name.equals(that.name);
 	}
 
 	@Override
 	public int hashCode() {
 		return 29791 * name.hashCode()
 				+ 961 * ((int) (size ^ (size >>> 32)))
-				+ 31 * ((int) (timestamp ^ (timestamp >>> 32)))
-				+ (int) (revision ^ (revision >>> 32));
+				+ 31 * ((int) (timestamp ^ (timestamp >>> 32)));
 	}
 
 	@Nullable

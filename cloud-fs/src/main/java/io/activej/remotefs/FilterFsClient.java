@@ -38,11 +38,11 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		if (!predicate.test(name)) {
 			return Promise.of(ChannelConsumers.recycling());
 		}
-		return parent.upload(name, revision);
+		return parent.upload(name);
 	}
 
 	@Override
@@ -70,8 +70,8 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> listEntities(@NotNull String glob) {
-		return parent.listEntities(glob)
+	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+		return parent.list(glob)
 				.map(list -> list.stream()
 						.filter(meta -> predicate.test(meta.getName()))
 						.collect(toList()));
@@ -83,10 +83,10 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name, long revision) {
+	public Promise<Void> delete(@NotNull String name) {
 		if (!predicate.test(name)) {
 			return Promise.complete();
 		}
-		return parent.delete(name, revision);
+		return parent.delete(name);
 	}
 }

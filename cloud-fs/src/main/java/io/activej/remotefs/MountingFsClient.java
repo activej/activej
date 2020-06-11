@@ -53,19 +53,13 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long revision) {
-		return findMount(name).upload(name, revision);
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+		return findMount(name).upload(name);
 	}
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
 		return findMount(name).download(name, offset, length);
-	}
-
-	@Override
-	public Promise<List<FileMetadata>> listEntities(@NotNull String glob) {
-		return Promises.toList(Stream.concat(Stream.of(root), mounts.values().stream()).map(f -> f.listEntities(glob)))
-				.map(listOfLists -> FileMetadata.flatten(listOfLists.stream()));
 	}
 
 	@Override
@@ -75,32 +69,32 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target, long targetRevision, long tombstoneRevision) {
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		FsClient first = findMount(name);
 		FsClient second = findMount(target);
 		if (first == second) {
-			return first.move(name, target, targetRevision, tombstoneRevision);
+			return first.move(name, target);
 		}
 		return first.download(name)
 				.then(supplier ->
-						second.upload(name, targetRevision)
+						second.upload(name)
 								.then(supplier::streamTo))
 				.then(() -> first.delete(name));
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target, long targetRevision) {
+	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		FsClient first = findMount(name);
 		FsClient second = findMount(target);
 		if (first == second) {
-			return first.copy(name, target, targetRevision);
+			return first.copy(name, target);
 		}
-		return copyFile(first, second, name, targetRevision);
+		return copyFile(first, second, name);
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name, long revision) {
-		return findMount(name).delete(name, revision);
+	public Promise<Void> delete(@NotNull String name) {
+		return findMount(name).delete(name);
 	}
 
 	@Override
