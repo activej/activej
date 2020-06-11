@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-rpc-kv-storage</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
 
   <name>Tutorials : Rpc-KV-Storage</name>
 
@@ -17,12 +17,12 @@
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-boot</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-rpc</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
