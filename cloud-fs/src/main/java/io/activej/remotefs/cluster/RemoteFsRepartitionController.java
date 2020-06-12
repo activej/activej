@@ -62,7 +62,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	private final Eventloop eventloop;
 	private final Object localPartitionId;
 	private final RemoteFsClusterClient cluster;
-	private final LocalFsClient localStorage;
+	private final FsClient localStorage;
 	private final ServerSelector serverSelector;
 	private final Map<Object, FsClient> clients;
 	private final int replicationCount;
@@ -81,7 +81,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	private final PromiseStats singleFileRepartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 
 	private RemoteFsRepartitionController(Eventloop eventloop, Object localPartitionId, RemoteFsClusterClient cluster,
-			LocalFsClient localStorage, ServerSelector serverSelector, Map<Object, FsClient> clients,
+			FsClient localStorage, ServerSelector serverSelector, Map<Object, FsClient> clients,
 			int replicationCount) {
 		this.eventloop = eventloop;
 		this.localPartitionId = localPartitionId;
@@ -97,7 +97,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 
 		checkState(local instanceof LocalFsClient, "Local partition should be actually local and be an instance of LocalFsClient");
 
-		return new RemoteFsRepartitionController(cluster.getEventloop(), localPartitionId, cluster, (LocalFsClient) local,
+		return new RemoteFsRepartitionController(cluster.getEventloop(), localPartitionId, cluster, local,
 				cluster.getServerSelector(), cluster.getAliveClients(), cluster.getReplicationCount());
 	}
 
@@ -199,7 +199,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 					String name = meta.getName();
 					if (uploadTargets.isEmpty()) { // everybody had the file
 						logger.trace("deleting file {} locally", meta);
-						return localStorage.remove(name) // so we delete the copy which does not belong to local partition
+						return localStorage.delete(name) // so we delete the copy which does not belong to local partition
 								.map($ -> {
 									logger.info("handled file {} (ensured on {})", meta, selected);
 									return true;
@@ -247,7 +247,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 								}
 
 								logger.trace("deleting file {} on {}", meta, localPartitionId);
-								return localStorage.remove(name)
+								return localStorage.delete(name)
 										.map($ -> {
 											logger.info("handled file {} (ensured on {}, uploaded to {})", meta, selected, uploadTargets);
 											return true;

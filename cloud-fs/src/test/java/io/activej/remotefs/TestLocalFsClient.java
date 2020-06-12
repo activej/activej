@@ -3,6 +3,7 @@ package io.activej.remotefs;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -30,7 +31,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.remotefs.FsClient.FILE_EXISTS;
 import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -302,17 +302,16 @@ public final class TestLocalFsClient {
 	@Test
 	public void testMoveIntoExisting() throws IOException {
 		byte[] expected = Files.readAllBytes(storagePath.resolve("1/b.txt"));
-		assertSame(FILE_EXISTS, awaitException(client.move("1/b.txt", "1/a.txt")));
+		await(client.move("1/b.txt", "1/a.txt"));
 
-		assertArrayEquals(expected, Files.readAllBytes(storagePath.resolve("1/b.txt")));
+		assertArrayEquals(expected, Files.readAllBytes(storagePath.resolve("1/a.txt")));
 	}
 
 	@Test
 	public void testMoveNothingIntoNothing() {
-		await(client.move("i_do_not_exist.txt", "neither_am_i.txt"));
+		Throwable exception = awaitException(client.move("i_do_not_exist.txt", "neither_am_i.txt"));
 
-		assertFalse(Files.exists(storagePath.resolve("i_do_not_exist.txt")));
-		assertFalse(Files.exists(storagePath.resolve("neither_am_i.txt")));
+		assertEquals(FILE_NOT_FOUND, exception);
 	}
 
 	@Test
@@ -321,5 +320,20 @@ public final class TestLocalFsClient {
 
 		assertTrue(Files.isDirectory(storagePath.resolve("3")));
 		assertFalse(Files.exists(storagePath.resolve("2")));
+	}
+
+	@Test
+	public void testOverwritingDirAsFile() {
+		await(ChannelSupplier.of(ByteBufStrings.wrapUtf8("test")).streamTo(client.upload("newdir/a.txt")));
+		await(client.delete("newdir/a.txt"));
+
+		assertTrue(await(client.list("**")).stream().noneMatch(metadata -> metadata.getName().contains("newdir")));
+		await(ChannelSupplier.of(ByteBufStrings.wrapUtf8("test")).streamTo(client.upload("newdir")));
+		assertNotNull(await(client.getMetadata("newdir")));
+	}
+
+	@Test
+	public void testDeleteEmpty() {
+		await(client.delete(""));
 	}
 }

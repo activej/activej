@@ -30,8 +30,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.FileSystemException;
+import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Preconditions.checkArgument;
@@ -72,16 +75,22 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	}
 
 	public static Promise<ChannelFileReader> open(Executor executor, Path path, OpenOption... openOptions) {
-		return Promise.ofBlockingCallable(executor, () -> FileChannel.open(path, openOptions))
+		checkArgument(Arrays.asList(openOptions).contains(READ), "'READ' option is not present");
+		return Promise.ofBlockingCallable(executor,
+				() -> {
+					if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
+					return FileChannel.open(path, openOptions);
+				})
 				.map(channel -> create(executor, channel));
 	}
 
 	public static ChannelFileReader openBlocking(Executor executor, Path path) throws IOException {
-		FileChannel channel = FileChannel.open(path, DEFAULT_OPTIONS);
-		return create(executor, channel);
+		return openBlocking(executor, path, DEFAULT_OPTIONS);
 	}
 
 	public static ChannelFileReader openBlocking(Executor executor, Path path, OpenOption... openOptions) throws IOException {
+		checkArgument(Arrays.asList(openOptions).contains(READ), "'READ' option is not present");
+		if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
 		FileChannel channel = FileChannel.open(path, openOptions);
 		return create(executor, channel);
 	}

@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -51,10 +50,10 @@ public interface FsClient {
 	 * <p>
 	 * So, outer promise might fail on connection try, end-of-stream promise
 	 * might fail while uploading and result promise might fail when closing.
-	 *
+	 * <p>
 	 * Note that this method expects that you're uploading immutable files.
 	 *
-	 * @param name   name of the file to upload
+	 * @param name name of the file to upload
 	 * @return promise for stream consumer of byte buffers
 	 */
 	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name);
@@ -117,7 +116,7 @@ public interface FsClient {
 	 */
 
 	default Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		return ChannelSuppliers.streamTo(download(name), upload(target));
+		return download(name).then(supplier -> supplier.streamTo(upload(target)));
 	}
 
 	/**
@@ -131,7 +130,7 @@ public interface FsClient {
 
 	default Promise<Void> move(@NotNull String name, @NotNull String target) {
 		return copy(name, target)
-				.then(() -> delete(name));
+				.then(() -> name.equals(target) ? Promise.complete() : delete(name));
 	}
 
 	default Promise<Void> moveDir(@NotNull String name, @NotNull String target) {

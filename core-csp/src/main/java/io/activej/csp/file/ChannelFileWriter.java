@@ -29,8 +29,10 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.concurrent.Executor;
 
+import static io.activej.common.Preconditions.checkArgument;
 import static java.nio.file.StandardOpenOption.*;
 
 /**
@@ -69,16 +71,17 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 	}
 
 	public static Promise<ChannelFileWriter> open(Executor executor, Path path, OpenOption... openOptions) {
+		checkArgument(Arrays.asList(openOptions).contains(WRITE), "'WRITE' option is not present");
 		return Promise.ofBlockingCallable(executor, () -> FileChannel.open(path, openOptions))
 				.map(channel -> create(executor, channel));
 	}
 
 	public static ChannelFileWriter openBlocking(Executor executor, Path path) throws IOException {
-		FileChannel channel = FileChannel.open(path, DEFAULT_OPTIONS);
-		return create(executor, channel);
+		return openBlocking(executor, path, DEFAULT_OPTIONS);
 	}
 
 	public static ChannelFileWriter openBlocking(Executor executor, Path path, OpenOption... openOptions) throws IOException {
+		checkArgument(Arrays.asList(openOptions).contains(WRITE), "'WRITE' option is not present");
 		FileChannel channel = FileChannel.open(path, openOptions);
 		return create(executor, channel);
 	}

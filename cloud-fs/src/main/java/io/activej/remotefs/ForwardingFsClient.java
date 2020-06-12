@@ -71,6 +71,11 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
+	public Promise<Void> moveDir(@NotNull String name, @NotNull String target) {
+		return peer.moveDir(name, target);
+	}
+
+	@Override
 	public Promise<List<FileMetadata>> list(@NotNull String glob) {
 		return peer.list(glob);
 	}

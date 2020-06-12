@@ -20,9 +20,9 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.exception.StacklessException;
+import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
@@ -58,7 +59,8 @@ import static io.activej.remotefs.RemoteFsUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -131,22 +133,16 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		return execute(
 				() -> {
 					Path path = resolve(name);
-					if (Files.isDirectory(path)) throw IS_DIRECTORY;
 					Files.createDirectories(path.getParent());
-					return path;
+					return FileChannel.open(path, CREATE, WRITE);
 				})
-				.then(path -> ChannelFileWriter.open(executor, path, CREATE_NEW, WRITE))
-				.thenEx((writer, e) -> {
-					if (e instanceof FileAlreadyExistsException) {
-						// since file already exists, it is the same file that is being uploaded
-						return Promise.of(ChannelConsumers.<ByteBuf>recycling());
-					}
-					return Promise.of(writer, e);
-				})
-				.map(consumer -> consumer
+				.map(channel -> ChannelFileWriter.create(executor, channel)
 						.withAcknowledgement(ack -> ack
+								.thenEx(translateKnownErrors(name))
+								.whenException(() -> execute(() -> Files.deleteIfExists(resolve(name))))
 								.whenComplete(writeFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "writing to file", name, this))))
+								.whenComplete(toLogger(logger, TRACE, "uploadComplete", name, this))))
+				.thenEx(translateKnownErrors(name))
 				.whenComplete(writeBeginPromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
 	}
@@ -157,13 +153,16 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		checkArgument(length >= -1, "length < -1");
 
 		return resolveAsync(name)
-				.then(path -> ChannelFileReader.open(executor, path)
-						.thenEx(translateKnownErrors(path)))
+				.then(path -> ChannelFileReader.open(executor, path))
 				.map(consumer -> consumer
 						.withBufferSize(readerBufferSize)
 						.withOffset(offset)
 						.withLength(length == -1 ? Long.MAX_VALUE : length)
-						.withEndOfStream(eos -> eos.whenComplete(readFinishPromise.recordStats())))
+						.withEndOfStream(eos -> eos
+								.thenEx(translateKnownErrors(name))
+								.whenComplete(readFinishPromise.recordStats())
+								.whenComplete(toLogger(logger, TRACE, "downloadComplete", name, offset, length))))
+				.thenEx(translateKnownErrors(name))
 				.whenComplete(toLogger(logger, TRACE, "download", name, offset, length, this))
 				.whenComplete(readBeginPromise.recordStats());
 	}
@@ -171,7 +170,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	@Override
 	public Promise<List<FileMetadata>> list(@NotNull String glob) {
 		return execute(() -> findMatching(glob).stream()
-				.map(this::toFileMetadataSafe)
+				.map(this::toFileMetadata)
 				.filter(Objects::nonNull)
 				.collect(toList()))
 				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
@@ -185,25 +184,19 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 					Path path = resolve(name);
 					Path targetPath = resolve(target);
 
-					if (Files.isDirectory(path) || Files.isDirectory(targetPath)) {
-						throw IS_DIRECTORY;
-					}
-					// noop when paths are equal
-					if (path.equals(targetPath)) {
-						return;
-					}
-					// cannot move into existing file
-					if (Files.isRegularFile(targetPath)) {
-						throw FILE_EXISTS;
-					}
+					if (path.equals(targetPath) && Files.isRegularFile(path) && Files.isRegularFile(targetPath)) return;
+					if (!Files.exists(path)) throw FILE_NOT_FOUND;
+					if (Files.isDirectory(path) || Files.isDirectory(targetPath)) throw IS_DIRECTORY;
 
-					if (Files.isRegularFile(path)) {
-						Files.createDirectories(targetPath.getParent());
-						Files.move(path, targetPath, ATOMIC_MOVE);
-					} else {
-						Files.deleteIfExists(targetPath);
+					Files.createDirectories(targetPath.getParent());
+
+					try {
+						Files.move(path, targetPath, ATOMIC_MOVE, REPLACE_EXISTING);
+					} catch (AtomicMoveNotSupportedException e) {
+						Files.move(path, targetPath, REPLACE_EXISTING);
 					}
 				})
+				.thenEx(translateKnownErrors(name, target))
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(singleMovePromise.recordStats());
 	}
@@ -234,10 +227,11 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 					}
 					return execute(() -> {
 						if (!Files.isDirectory(from)) return;
+						Files.createDirectories(to.getParent());
 						try {
-							Files.move(from, to, ATOMIC_MOVE);
+							Files.move(from, to, ATOMIC_MOVE, REPLACE_EXISTING);
 						} catch (AtomicMoveNotSupportedException e) {
-							Files.move(from, to);
+							Files.move(from, to, REPLACE_EXISTING);
 						}
 					});
 				});
@@ -245,14 +239,52 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		return execute(() -> doCopy(name, target))
+		return execute(
+				() -> {
+					Path path = resolve(name);
+					Path targetPath = resolve(target);
+
+					if (path.equals(targetPath) && Files.isRegularFile(path) && Files.isRegularFile(targetPath)) return;
+
+					Files.createDirectories(targetPath.getParent());
+
+					try {
+						// try to create a hardlink
+						Files.createLink(targetPath, path);
+					} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
+						// if couldn't, then just actually copy it, replacing existing since contents should be the same
+						Files.copy(path, targetPath, REPLACE_EXISTING);
+					}
+				})
+				.thenEx(translateKnownErrors(name, target))
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(singleCopyPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
-		return execute(() -> doDelete(name))
+		return execute(
+				() -> {
+					Path path = resolve(name);
+
+					// cannot delete storage
+					if (path.equals(storage)) return;
+
+					try {
+						Files.deleteIfExists(path);
+					} catch (DirectoryNotEmptyException e) {
+						throw IS_DIRECTORY;
+					}
+
+					// deleting enclosing directory if it's empty
+					Path parent = path.getParent();
+					if (!parent.equals(storage)){
+						try {
+							Files.deleteIfExists(parent);
+						} catch (DirectoryNotEmptyException ignored) {
+						}
+					}
+				})
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(singleDeletePromise.recordStats());
 	}
@@ -300,10 +332,6 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		return Promise.complete();
 	}
 
-	public Promise<Void> remove(String name) {
-		return execute((BlockingRunnable) () -> Files.deleteIfExists(resolve(name)));
-	}
-
 	@Override
 	public String toString() {
 		return "LocalFsClient{storage=" + storage + '}';
@@ -323,52 +351,6 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		} catch (StacklessException e) {
 			return Promise.ofException(e);
 		}
-	}
-
-	private void tryHardlinkOrCopy(Path path, Path targetPath) throws IOException {
-		if (!Files.deleteIfExists(targetPath)) {
-			Files.createDirectories(targetPath.getParent());
-		}
-		try {
-			// try to create a hardlink
-			Files.createLink(targetPath, path);
-		} catch (UnsupportedOperationException | SecurityException e) {
-			// if couldn't, then just actually copy it
-			Files.copy(path, targetPath);
-		}
-	}
-
-	private void doCopy(String name, String target) throws StacklessException, IOException {
-		Path path = resolve(name);
-		if (!Files.exists(path)) {
-			throw FILE_NOT_FOUND;
-		}
-		Path targetPath = resolve(target);
-
-		if (Files.isDirectory(path) || Files.isDirectory(targetPath)) {
-			throw IS_DIRECTORY;
-		}
-		// noop when paths are equal
-		if (path.equals(targetPath)) {
-			return;
-		}
-
-		// cannot move into existing file
-		if (Files.isRegularFile(targetPath)) {
-			throw FILE_EXISTS;
-		}
-
-		tryHardlinkOrCopy(path, targetPath);
-	}
-
-	private void doDelete(String name) throws IOException, StacklessException {
-		Path path = resolve(name);
-
-		if (Files.isDirectory(path)) {
-			throw IS_DIRECTORY;
-		}
-
-		Files.deleteIfExists(path);
 	}
 
 	private Collection<Path> findMatching(String glob) throws IOException, StacklessException {
@@ -418,26 +400,21 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	@Nullable
-	private FileMetadata toFileMetadata(Path path) throws IOException, StacklessException {
-		if (!Files.exists(path)) return null;
-		if (Files.isDirectory(path)) throw IS_DIRECTORY;
-
-		String filename = toRemoteName.apply(storage.relativize(path).toString());
-		long timestamp = Files.getLastModifiedTime(path).toMillis();
-		return FileMetadata.of(filename, Files.size(path), timestamp);
-	}
-
-	@Nullable
-	private FileMetadata toFileMetadataSafe(Path path) {
+	private FileMetadata toFileMetadata(Path path) {
 		try {
-			return toFileMetadata(path);
+			if (!Files.exists(path)) return null;
+			if (Files.isDirectory(path)) throw IS_DIRECTORY;
+
+			String filename = toRemoteName.apply(storage.relativize(path).toString());
+			long timestamp = Files.getLastModifiedTime(path).toMillis();
+			return FileMetadata.of(filename, Files.size(path), timestamp);
 		} catch (StacklessException | IOException e) {
-			return null;
+			throw new UncheckedException(e);
 		}
 	}
 
 	@FunctionalInterface
-	interface Walker {
+	private interface Walker {
 
 		void accept(Path path) throws IOException;
 	}
@@ -522,21 +499,30 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		return Promise.ofBlockingRunnable(executor, runnable);
 	}
 
-	private <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> translateKnownErrors(Path path) {
+	private <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> translateKnownErrors(String name) {
+		return translateKnownErrors(name, null);
+	}
+
+	private <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> translateKnownErrors(String name, @Nullable String other) {
 		return (value, e) -> {
-			if (e instanceof FileAlreadyExistsException) {
-				return Promise.ofException(FILE_EXISTS);
+			if (e == null) {
+				return Promise.of(value);
+			} else if (e instanceof FileAlreadyExistsException) {
+				return execute(() -> {
+					if (Files.isDirectory(resolve(name))) throw IS_DIRECTORY;
+					if (other != null && Files.isDirectory(resolve(other))) throw IS_DIRECTORY;
+					throw FILE_EXISTS;
+				});
 			} else if (e instanceof NoSuchFileException) {
 				return Promise.ofException(FILE_NOT_FOUND);
-			} else if (e instanceof FileSystemException) {
+			} else if (e instanceof IOException) {
 				return execute(() -> {
-					if (Files.isDirectory(path)) {
-						throw IS_DIRECTORY;
-					}
-					throw (FileSystemException) e;
+					if (Files.isDirectory(resolve(name))) throw IS_DIRECTORY;
+					if (other != null && Files.isDirectory(resolve(other))) throw IS_DIRECTORY;
+					throw (IOException) e;
 				});
 			}
-			return Promise.of(value, e);
+			return Promise.ofException(e);
 		};
 	}
 
