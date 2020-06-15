@@ -42,7 +42,7 @@ public final class AsyncSuppliers {
 				if (runningPromise != null) return runningPromise;
 				runningPromise = (Promise<T>) actual.get();
 				Promise<T> runningPromise = this.runningPromise;
-				runningPromise.whenComplete((result, e) -> this.runningPromise = null);
+				runningPromise.whenComplete(() -> this.runningPromise = null);
 				return runningPromise;
 			}
 		};

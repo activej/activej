@@ -27,6 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
@@ -72,13 +73,13 @@ public final class TestCachedFsClient {
 		testTxtContent = "line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8";
 		Files.write(serverTestFile, testTxtContent.getBytes(UTF_8));
 
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Eventloop eventloop = getCurrentEventloop();
 		Executor executor = Executors.newSingleThreadExecutor();
 
 		main = LocalFsClient.create(eventloop, executor, serverStorage);
 		cache = LocalFsClient.create(eventloop, executor, cacheStorage);
-		cacheRemote = CachedFsClient.create(main, cache, CachedFsClient.lruCompare())
-				.with(MemSize.kilobytes(50));
+		cacheRemote = CachedFsClient.create(eventloop, main, cache, CachedFsClient.lruCompare())
+				.withSizeLimit(MemSize.kilobytes(50));
 	}
 
 	@Test
@@ -269,12 +270,6 @@ public final class TestCachedFsClient {
 		assertTrue(cacheSize.toLong() < cacheRemote.getCacheSizeLimit().toLong());
 	}
 
-	@Test(expected = IllegalStateException.class)
-	public void testStartWithoutMemSize() {
-		cacheRemote = CachedFsClient.create(main, cache, CachedFsClient.lruCompare());
-		await(cacheRemote.start());
-	}
-
 	@Test
 	public void testLRUComparator() throws IOException {
 		// LRU is a default cache policy here
@@ -293,7 +288,7 @@ public final class TestCachedFsClient {
 
 	@Test
 	public void testLFUComparator() throws IOException {
-		cacheRemote = CachedFsClient.create(main, cache, CachedFsClient.lfuCompare()).with(MemSize.kilobytes(25));
+		cacheRemote = CachedFsClient.create(getCurrentEventloop(), main, cache, CachedFsClient.lfuCompare()).withSizeLimit(MemSize.kilobytes(25));
 
 		// 20 KB
 		initializeCacheDownloadFiles(4, "testFile_");
