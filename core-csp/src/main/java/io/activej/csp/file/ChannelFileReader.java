@@ -106,14 +106,14 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	}
 
 	public ChannelFileReader withOffset(long offset) {
-		checkArgument(offset >= 0, "Offset cannot be negative");
+		checkArgument(offset >= 0, "Offset cannot be less than zero");
 		position = offset;
 		return this;
 	}
 
-	public ChannelFileReader withLength(long length) {
-		checkArgument(length >= 0, "Length cannot be less than zero");
-		this.limit = length;
+	public ChannelFileReader withLimit(long limit) {
+		checkArgument(limit >= 0, "Limit cannot be less than zero");
+		this.limit = limit;
 		return this;
 	}
 
@@ -168,7 +168,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	public String toString() {
 		return "ChannelFileReader{" +
 				"pos=" + position +
-				(limit == Long.MAX_VALUE ? "" : ", len=" + limit) +
+				(limit == Long.MAX_VALUE ? "" : ", limit=" + limit) +
 				'}';
 	}
 }

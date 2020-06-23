@@ -174,7 +174,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 					logger.trace("Read log file `{}` from: {}", currentLogFile, position);
 
 				return StreamSupplier.ofPromise(
-						client.download(namingScheme.path(logPartition, currentLogFile), position)
+						client.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
 								.map(fileStream -> {
 									inputStreamPosition = 0L;
 									sw.reset().start();

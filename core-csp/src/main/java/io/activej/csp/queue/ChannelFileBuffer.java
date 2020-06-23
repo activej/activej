@@ -75,7 +75,7 @@ public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
 					ChannelFileWriter writer = ChannelFileWriter.create(executor, tuple2.getValue1());
 					ChannelFileReader reader = ChannelFileReader.create(executor, tuple2.getValue2());
 					if (limit != null) {
-						reader.withLength(limit.toLong());
+						reader.withLimit(limit.toLong());
 					}
 					return new ChannelFileBuffer(reader, writer, executor, path);
 				});

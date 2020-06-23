@@ -24,7 +24,7 @@ import io.activej.common.exception.parse.ParseException;
 public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 	String toFileName(C chunkId);
 
-	C fromFileName(String chunkFileName);
+	C fromFileName(String chunkFileName) throws ParseException;
 
 	@Override
 	void encode(StructuredOutput out, C value);
@@ -40,8 +40,12 @@ public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 			}
 
 			@Override
-			public Long fromFileName(String chunkFileName) {
-				return Long.parseLong(chunkFileName);
+			public Long fromFileName(String chunkFileName) throws ParseException {
+				try {
+					return Long.parseLong(chunkFileName);
+				} catch (NumberFormatException e){
+					throw new ParseException(e);
+				}
 			}
 
 			@Override

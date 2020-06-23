@@ -22,7 +22,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.common.api.WithInitializer;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.RefInt;
+import io.activej.csp.ChannelConsumer;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.csp.process.ChannelLZ4Compressor;
 import io.activej.csp.process.ChannelLZ4Decompressor;
@@ -50,11 +52,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -65,6 +67,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
+import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
@@ -74,6 +77,7 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_BACKUP_FOLDER_NAME = "backups";
+	public static final String SUCCESSFUL_BACKUP_FILE = "_0_SUCCESSFUL_BACKUP";
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
 
@@ -109,7 +113,7 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 	private final StreamStatsDetailed<ByteBuf> writeChunker = StreamStats.detailed(forByteBufs());
 	private final StreamStatsDetailed<ByteBuf> writeFile = StreamStats.detailed(forByteBufs());
 
-	private final ExceptionStats cleanupWarnings = ExceptionStats.create();
+	private final ExceptionStats chunkNameWarnings = ExceptionStats.create();
 	private int cleanupPreservedFiles;
 	private int cleanupDeletedFiles;
 	private int cleanupDeletedFilesTotal;
@@ -141,28 +145,12 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 		return this;
 	}
 
-	private String getPath(C chunkId) {
-		return toFileName(chunkId) + LOG;
-	}
-
-	private String getTempPath(C chunkId) {
-		return toFileName(chunkId) + TEMP_LOG;
-	}
-
-	private String toFileName(C chunkId) {
-		return chunkIdCodec.toFileName(chunkId);
-	}
-
-	private C fromFileName(String fileName) {
-		return chunkIdCodec.fromFileName(fileName);
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
-		return client.download(getPath(chunkId))
+		return client.download(toPath(chunkId))
 				.whenComplete(promiseOpenR.recordStats())
 				.map(supplier -> supplier
 						.transformWith(readFile)
@@ -178,7 +166,7 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 	public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
-		return client.upload(getTempPath(chunkId))
+		return client.upload(toTempPath(chunkId))
 				.whenComplete(promiseOpenW.recordStats())
 				.map(consumer -> StreamConsumer.ofSupplier(
 						supplier -> supplier
@@ -198,8 +186,8 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 
 	@Override
 	public Promise<Void> finish(Set<C> chunkIds) {
-		finishChunks = chunkIds.size();
-		return Promises.all(chunkIds.stream().map(id -> client.move(getTempPath(id), getPath(id))))
+		return client.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
+				.whenResult(() -> finishChunks = chunkIds.size())
 				.whenComplete(promiseFinishChunks.recordStats());
 	}
 
@@ -209,11 +197,15 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 	}
 
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
-		String tempBackupDir = backupDir + File.separator + backupId + "_tmp";
+		String backupDirPrefix = backupDir + '/' + backupId + '/';
 
-		return Promises.all(chunkIds.stream().map(chunkId -> client.copy(chunkId + LOG, tempBackupDir + File.separator + chunkId + LOG)))
-				.then(() -> client.moveDir(tempBackupDir, backupDir + File.separator + backupId))
-				.whenComplete(promiseBackup.recordStats());
+		return Promises.all(chunkIds.stream()
+				.map(this::toPath)
+				.map(path -> client.copy(path, backupDirPrefix + path)))
+				.then(() -> client.upload(backupDirPrefix + SUCCESSFUL_BACKUP_FILE))
+				.then(ChannelConsumer::acceptEndOfStream)
+				.whenComplete(promiseBackup.recordStats())
+				.toVoid();
 	}
 
 	public Promise<Void> cleanup(Set<C> saveChunks) {
@@ -228,16 +220,8 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 		return client.list("*" + LOG)
 				.then(list -> Promises.all(list.stream()
 						.filter(file -> {
-							C id;
-							try {
-								String filename = file.getName();
-								id = fromFileName(filename.substring(0, filename.length() - LOG.length()));
-							} catch (NumberFormatException e) {
-								cleanupWarnings.recordException(e);
-								logger.warn("Invalid chunk filename: {}", file);
-								return false;
-							}
-							if (preserveChunks.contains(id)) {
+							C id = fromPath(file.getName());
+							if (id == null || preserveChunks.contains(id)) {
 								return false;
 							}
 							long fileTimestamp = file.getTimestamp();
@@ -267,14 +251,15 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 				.whenComplete(promiseCleanup.recordStats());
 	}
 
-	public Promise<Set<Long>> list(Predicate<String> filter, Predicate<Long> lastModified) {
+	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, Predicate<Long> lastModifiedPredicate) {
 		return client.list("*" + LOG)
 				.map(list ->
 						list.stream()
-								.filter(file -> lastModified.test(file.getTimestamp()))
+								.filter(file -> lastModifiedPredicate.test(file.getTimestamp()))
 								.map(FileMetadata::getName)
-								.filter(filter)
-								.map(name -> Long.parseLong(name.substring(0, name.length() - LOG.length())))
+								.map(this::fromPath)
+								.filter(Objects::nonNull)
+								.filter(chunkIdPredicate)
 								.collect(Collectors.toSet()))
 				.whenComplete(promiseList.recordStats());
 	}
@@ -288,6 +273,25 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 								toLimitedString(difference(requiredChunks, actualChunks), 100))))
 				.whenComplete(promiseCleanupCheckRequiredChunks.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), toLimitedString(requiredChunks, 6)));
+	}
+
+	private String toPath(C chunkId) {
+		return chunkIdCodec.toFileName(chunkId) + LOG;
+	}
+
+	private String toTempPath(C chunkId) {
+		return chunkIdCodec.toFileName(chunkId) + TEMP_LOG;
+	}
+
+	@Nullable
+	private C fromPath(String path) {
+		try {
+			return chunkIdCodec.fromFileName(path.substring(0, path.length() - LOG.length()));
+		} catch (ParseException e) {
+			chunkNameWarnings.recordException(e);
+			logger.warn("Invalid chunk filename: {}", path);
+			return null;
+		}
 	}
 
 	@NotNull
@@ -396,8 +400,8 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 	}
 
 	@JmxAttribute
-	public ExceptionStats getCleanupWarnings() {
-		return cleanupWarnings;
+	public ExceptionStats getChunkNameWarnings() {
+		return chunkNameWarnings;
 	}
 
 	@JmxAttribute

@@ -19,7 +19,11 @@ package io.activej.remotefs;
 import io.activej.codec.CodecSubtype;
 import io.activej.codec.StructuredCodec;
 
+import java.util.Map;
+import java.util.Set;
+
 import static io.activej.codec.StructuredCodecs.*;
+import static io.activej.common.collection.CollectionUtils.toLimitedString;
 
 @SuppressWarnings("WeakerAccess")
 public final class RemoteFsCommands {
@@ -30,17 +34,26 @@ public final class RemoteFsCommands {
 			.with(Download.class, object(Download::new,
 					"name", Download::getName, STRING_CODEC,
 					"offset", Download::getOffset, LONG_CODEC,
-					"length", Download::getLength, LONG_CODEC))
-			.with(Move.class, object(Move::new,
-					"name", Move::getName, STRING_CODEC,
-					"target", Move::getTarget, STRING_CODEC))
+					"limit", Download::getLimit, LONG_CODEC))
 			.with(Copy.class, object(Copy::new,
 					"name", Copy::getName, STRING_CODEC,
 					"target", Copy::getTarget, STRING_CODEC))
+			.with(CopyAll.class, object(CopyAll::new,
+					"sourceToTarget", CopyAll::getSourceToTarget, ofMap(STRING_CODEC, STRING_CODEC)))
+			.with(Move.class, object(Move::new,
+					"name", Move::getName, STRING_CODEC,
+					"target", Move::getTarget, STRING_CODEC))
+			.with(MoveAll.class, object(MoveAll::new,
+					"sourceToTarget", MoveAll::getSourceToTarget, ofMap(STRING_CODEC, STRING_CODEC)))
 			.with(Delete.class, object(Delete::new,
 					"name", Delete::getName, STRING_CODEC))
+			.with(DeleteAll.class, object(DeleteAll::new,
+					"toDelete", DeleteAll::getFilesToDelete, ofSet(STRING_CODEC)))
 			.with(List.class, object(List::new,
-					"glob", List::getGlob, STRING_CODEC));
+					"glob", List::getGlob, STRING_CODEC))
+			.with(GetMetadata.class, object(GetMetadata::new,
+					"name", GetMetadata::getName, STRING_CODEC))
+			.with(Ping.class, object(Ping::new));
 
 	public abstract static class FsCommand {
 	}
@@ -65,12 +78,12 @@ public final class RemoteFsCommands {
 	public static final class Download extends FsCommand {
 		private final String name;
 		private final long offset;
-		private final long length;
+		private final long limit;
 
-		public Download(String name, long offset, long length) {
+		public Download(String name, long offset, long limit) {
 			this.name = name;
 			this.offset = offset;
-			this.length = length;
+			this.limit = limit;
 		}
 
 		public String getName() {
@@ -81,36 +94,13 @@ public final class RemoteFsCommands {
 			return offset;
 		}
 
-		public long getLength() {
-			return length;
+		public long getLimit() {
+			return limit;
 		}
 
 		@Override
 		public String toString() {
-			return "Download{name='" + name + "', offset=" + offset + ", length=" + length + '}';
-		}
-	}
-
-	public static final class Move extends FsCommand {
-		private final String name;
-		private final String target;
-
-		public Move(String name, String target) {
-			this.name = name;
-			this.target = target;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public String getTarget() {
-			return target;
-		}
-
-		@Override
-		public String toString() {
-			return "Move{name=" + name + ", target=" + target + '}';
+			return "Download{name='" + name + "', offset=" + offset + ", limit=" + limit + '}';
 		}
 	}
 
@@ -137,6 +127,63 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	public static final class CopyAll extends FsCommand {
+		private final Map<String, String> sourceToTarget;
+
+		public CopyAll(Map<String, String> sourceToTarget) {
+			this.sourceToTarget = sourceToTarget;
+		}
+
+		public Map<String, String> getSourceToTarget() {
+			return sourceToTarget;
+		}
+
+		@Override
+		public String toString() {
+			return "CopyAll{sourceToTarget=" + toLimitedString(sourceToTarget, 50) + '}';
+		}
+	}
+
+	public static final class Move extends FsCommand {
+		private final String name;
+		private final String target;
+
+		public Move(String name, String target) {
+			this.name = name;
+			this.target = target;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getTarget() {
+			return target;
+		}
+
+		@Override
+		public String toString() {
+			return "Move{name=" + name + ", target=" + target + '}';
+		}
+	}
+
+	public static final class MoveAll extends FsCommand {
+		private final Map<String, String> sourceToTarget;
+
+		public MoveAll(Map<String, String> sourceToTarget) {
+			this.sourceToTarget = sourceToTarget;
+		}
+
+		public Map<String, String> getSourceToTarget() {
+			return sourceToTarget;
+		}
+
+		@Override
+		public String toString() {
+			return "MoveAll{sourceToTarget=" + toLimitedString(sourceToTarget, 50) + '}';
+		}
+	}
+
 	public static final class Delete extends FsCommand {
 		private final String name;
 
@@ -154,6 +201,23 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	public static final class DeleteAll extends FsCommand {
+		private final Set<String> toDelete;
+
+		public DeleteAll(Set<String> toDelete) {
+			this.toDelete = toDelete;
+		}
+
+		public Set<String> getFilesToDelete() {
+			return toDelete;
+		}
+
+		@Override
+		public String toString() {
+			return "DeleteAll{toDelete=" + toLimitedString(toDelete, 100) + '}';
+		}
+	}
+
 	public static final class List extends FsCommand {
 		private final String glob;
 
@@ -168,6 +232,30 @@ public final class RemoteFsCommands {
 		@Override
 		public String toString() {
 			return "List{glob='" + glob + "'}";
+		}
+	}
+
+	public static final class GetMetadata extends FsCommand {
+		private final String name;
+
+		public GetMetadata(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public String toString() {
+			return "GetMetadata{name='" + name + "'}";
+		}
+	}
+
+	public static final class Ping extends FsCommand {
+		@Override
+		public String toString() {
+			return "Ping{}";
 		}
 	}
 }

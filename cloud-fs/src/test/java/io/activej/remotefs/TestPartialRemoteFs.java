@@ -1,6 +1,7 @@
 package io.activej.remotefs;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufQueue;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
@@ -22,14 +23,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.await;
-import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.remotefs.FsClient.LENGTH_TOO_BIG;
-import static io.activej.remotefs.FsClient.OFFSET_TOO_BIG;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 public final class TestPartialRemoteFs {
 	private static final int PORT = getFreePort();
@@ -100,7 +97,7 @@ public final class TestPartialRemoteFs {
 
 	@Test
 	public void downloadSuffix() throws IOException {
-		await(ChannelSupplier.ofPromise(client.download(FILE, 13))
+		await(ChannelSupplier.ofPromise(client.download(FILE, 13, Long.MAX_VALUE))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
 				.whenComplete(server::close));
 
@@ -118,19 +115,20 @@ public final class TestPartialRemoteFs {
 
 	@Test
 	public void downloadOverSuffix() {
-		Throwable exception = awaitException(ChannelSupplier.ofPromise(client.download(FILE, 13, 123))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
+		int offset = 13;
+		ByteBuf result = await(ChannelSupplier.ofPromise(client.download(FILE, offset, 123))
+				.toCollector(ByteBufQueue.collector())
 				.whenComplete(server::close));
 
-		assertSame(LENGTH_TOO_BIG, exception);
+		assertEquals(new String(CONTENT, offset, CONTENT.length - offset, UTF_8), result.asString(UTF_8));
 	}
 
 	@Test
 	public void downloadOver() {
-		Throwable exception = awaitException(ChannelSupplier.ofPromise(client.download(FILE, 123, 123))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
+		ByteBuf result = await(ChannelSupplier.ofPromise(client.download(FILE, 123, 123))
+				.toCollector(ByteBufQueue.collector())
 				.whenComplete(server::close));
 
-		assertSame(OFFSET_TOO_BIG, exception);
+		assertTrue(result.asString(UTF_8).isEmpty());
 	}
 }

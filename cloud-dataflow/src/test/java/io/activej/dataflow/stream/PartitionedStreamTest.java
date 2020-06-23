@@ -113,7 +113,7 @@ public final class PartitionedStreamTest {
 			sourceFsServers.forEach(AbstractServer::close);
 			targetFsServers.forEach(AbstractServer::close);
 			dataflowServers.forEach(AbstractServer::close);
-		});
+		}).get();
 		serverEventloop.keepAlive(false);
 		Thread serverEventloopThread = serverEventloop.getEventloopThread();
 		if (serverEventloopThread != null) {

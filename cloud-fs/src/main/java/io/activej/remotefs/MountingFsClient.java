@@ -16,19 +16,22 @@
 
 package io.activej.remotefs;
 
+import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static io.activej.remotefs.RemoteFsUtils.copyFile;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 
 final class MountingFsClient implements FsClient {
 	private final FsClient root;
@@ -58,8 +61,8 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
-		return findMount(name).download(name, offset, length);
+	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+		return findMount(name).download(name, offset, limit);
 	}
 
 	@Override
@@ -69,27 +72,28 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
-		FsClient first = findMount(name);
-		FsClient second = findMount(target);
-		if (first == second) {
-			return first.move(name, target);
-		}
-		return first.download(name)
-				.then(supplier ->
-						second.upload(name)
-								.then(supplier::streamTo))
-				.then(() -> first.delete(name));
+	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
+		return findMount(name).getMetadata(name);
 	}
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		FsClient first = findMount(name);
-		FsClient second = findMount(target);
-		if (first == second) {
-			return first.copy(name, target);
-		}
-		return copyFile(first, second, name);
+		return transfer(name, target, (s, t) -> client -> client.copy(s, t), false);
+	}
+
+	@Override
+	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		return transfer(sourceToTarget, FsClient::copyAll, false);
+	}
+
+	@Override
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+		return transfer(name, target, (s, t) -> client -> client.move(s, t), true);
+	}
+
+	@Override
+	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		return transfer(sourceToTarget, FsClient::moveAll, true);
 	}
 
 	@Override
@@ -98,9 +102,57 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
+	public Promise<Void> deleteAll(Set<String> toDelete) {
+		return Promises.all(toDelete.stream()
+				.collect(groupingBy(this::findMount, IdentityHashMap::new, toSet()))
+				.entrySet().stream()
+				.map(entry -> entry.getKey().deleteAll(entry.getValue())));
+	}
+
+	@Override
 	public FsClient mount(@NotNull String mountpoint, @NotNull FsClient client) {
 		Map<String, FsClient> map = new HashMap<>(mounts);
 		map.put(mountpoint, client.strippingPrefix(mountpoint + '/'));
 		return new MountingFsClient(root, map);
+	}
+
+	private Promise<Void> transfer(String source, String target, BiFunction<String, String, Function<FsClient, Promise<Void>>> action, boolean deleteSource) {
+		FsClient first = findMount(source);
+		FsClient second = findMount(target);
+		if (first == second) {
+			return action.apply(source, target).apply(first);
+		}
+		return first.download(source)
+				.then(supplier -> supplier.streamTo(second.upload(target)))
+				.then(() -> deleteSource ? first.delete(source) : Promise.complete());
+	}
+
+	private Promise<Void> transfer(Map<String, String> sourceToTarget, BiFunction<FsClient, Map<String, String>, Promise<Void>> action, boolean deleteSource) {
+		List<AsyncSupplier<Void>> movePromises = new ArrayList<>();
+
+		Map<FsClient, Map<String, String>> groupedBySameClient = new IdentityHashMap<>();
+
+		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
+			String source = entry.getKey();
+			String target = entry.getValue();
+			FsClient first = findMount(source);
+			FsClient second = findMount(target);
+			if (first == second) {
+				groupedBySameClient
+						.computeIfAbsent(first, $ -> new HashMap<>())
+						.put(source, target);
+			} else {
+				movePromises.add(() -> {
+					return first.download(source)
+							.then(supplier -> supplier.streamTo(second.upload(target)))
+							.then(() -> first.delete(target));
+				});
+			}
+		}
+		for (Map.Entry<FsClient, Map<String, String>> entry : groupedBySameClient.entrySet()) {
+			movePromises.add(() -> action.apply(entry.getKey(), entry.getValue()));
+		}
+
+		return Promises.all(Promises.asPromises(movePromises));
 	}
 }

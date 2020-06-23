@@ -84,7 +84,7 @@ class StressClient {
 
 			if (fileName == null) return;
 
-			client.download(fileName, 0)
+			client.download(fileName)
 					.then(supplier -> supplier.streamTo(ChannelFileWriter.open(executor, downloads.resolve(fileName))))
 					.whenComplete((supplier, e) -> {
 						if (e == null) {
@@ -182,7 +182,7 @@ class StressClient {
 
 	void downloadSmallObjects(int i) {
 		String name = "someName" + i;
-		client.download(name, 0).whenComplete((supplier, e) -> {
+		client.download(name).whenComplete((supplier, e) -> {
 			if (e != null) {
 				logger.error("can't download", e);
 			} else {

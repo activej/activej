@@ -24,7 +24,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -41,13 +43,8 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
-		return peer.download(name, offset, length);
-	}
-
-	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset) {
-		return peer.download(name, offset);
+	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+		return peer.download(name, offset, limit);
 	}
 
 	@Override
@@ -61,8 +58,18 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
+	public Promise<Void> deleteAll(Set<String> toDelete) {
+		return peer.deleteAll(toDelete);
+	}
+
+	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return peer.copy(name, target);
+	}
+
+	@Override
+	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		return peer.copyAll(sourceToTarget);
 	}
 
 	@Override
@@ -71,8 +78,8 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Void> moveDir(@NotNull String name, @NotNull String target) {
-		return peer.moveDir(name, target);
+	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		return peer.moveAll(sourceToTarget);
 	}
 
 	@Override

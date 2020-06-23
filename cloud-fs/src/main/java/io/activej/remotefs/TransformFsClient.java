@@ -21,14 +21,15 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 final class TransformFsClient implements FsClient {
 	private final FsClient parent;
@@ -53,60 +54,47 @@ final class TransformFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
+	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {
 			return Promise.ofException(FILE_NOT_FOUND);
 		}
-		return parent.download(transformed.get(), offset, length);
-	}
-
-	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return renamingOp(name, target, parent::move);
-	}
-
-	@Override
-	public Promise<Void> moveDir(@NotNull String name, @NotNull String target) {
-		return renamingOp(name, target, parent::moveDir);
+		return parent.download(transformed.get(), offset, limit);
 	}
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		return renamingOp(name, target, parent::copy);
+		return transfer(name, target, parent::copy);
 	}
 
-	private Promise<Void> renamingOp(String filename, String newFilename, BiFunction<String, String, Promise<Void>> original) {
-		Optional<String> transformed = into.apply(filename);
-		Optional<String> transformedNew = into.apply(newFilename);
-		if (!transformed.isPresent() || !transformedNew.isPresent()) {
-			return Promise.ofException(BAD_PATH);
-		}
-		return original.apply(transformed.get(), transformedNew.get());
+	@Override
+	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		return transfer(sourceToTarget, parent::copyAll);
+	}
+
+	@Override
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+		return transfer(name, target, parent::move);
+	}
+
+	@Override
+	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		return transfer(sourceToTarget, parent::moveAll);
 	}
 
 	@Override
 	public Promise<List<FileMetadata>> list(@NotNull String glob) {
-		return parent.list(globInto.apply(glob).orElse("**"))
-				.map(transformList(glob));
-	}
-
-	private Function<List<FileMetadata>, List<FileMetadata>> transformList(String glob) {
-		Predicate<String> pred = RemoteFsUtils.getGlobStringPredicate(glob);
-		return list -> list.stream()
-				.map(meta ->
-						from.apply(meta.getName())
-								.map(name -> FileMetadata.of(name, meta.getSize(), meta.getTimestamp())))
-				.filter(meta -> meta.isPresent() && pred.test(meta.get().getName()))
-				.map(Optional::get)
-				.collect(toList());
+		return globInto.apply(glob)
+				.map(transformedGlob -> parent.list(transformedGlob)
+						.map(transformList($ -> true)))
+				.orElseGet(() -> parent.list("**")
+						.map(transformList(RemoteFsUtils.getGlobStringPredicate(glob))));
 	}
 
 	@Override
-	public Promise<FileMetadata> getMetadata(@NotNull String name) {
-		Optional<String> transformed = into.apply(name);
-		return transformed.map(s ->
-				parent.getMetadata(s)
+	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
+		return into.apply(name)
+				.map(transformedName -> parent.getMetadata(transformedName)
 						.map(meta -> {
 							if (meta == null) {
 								return null;
@@ -114,7 +102,8 @@ final class TransformFsClient implements FsClient {
 							return from.apply(meta.getName())
 									.map(meta::withName)
 									.orElse(null);
-						})).orElse(Promise.of(null));
+						}))
+				.orElse(Promise.of(null));
 	}
 
 	@Override
@@ -132,14 +121,51 @@ final class TransformFsClient implements FsClient {
 	}
 
 	@Override
+	public Promise<Void> deleteAll(Set<String> toDelete) {
+		return parent.deleteAll(toDelete.stream()
+				.map(into)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.collect(toSet()));
+	}
+
+	@Override
 	public FsClient transform(@NotNull Function<String, Optional<String>> into, @NotNull Function<String, Optional<String>> from, @NotNull Function<String, Optional<String>> globInto) {
-		if (into == this.from && from == this.into) { // huh
-			return parent;
-		}
 		return new TransformFsClient(parent,
 				name -> into.apply(name).flatMap(this.into),
 				name -> this.from.apply(name).flatMap(from),
 				name -> globInto.apply(name).flatMap(this.globInto)
 		);
+	}
+
+	private Promise<Void> transfer(String source, String target, BiFunction<String, String, Promise<Void>> action) {
+		Optional<String> transformed = into.apply(source);
+		Optional<String> transformedNew = into.apply(target);
+		if (!transformed.isPresent() || !transformedNew.isPresent()) {
+			return Promise.ofException(BAD_PATH);
+		}
+		return action.apply(transformed.get(), transformedNew.get());
+	}
+
+	private Promise<Void> transfer(Map<String, String> sourceToTarget, Function<Map<String, String>, Promise<Void>> action) {
+		Map<String, String> renamed = new LinkedHashMap<>();
+		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
+			Optional<String> transformed = into.apply(entry.getKey());
+			Optional<String> transformedNew = into.apply(entry.getValue());
+			if (!transformed.isPresent() || !transformedNew.isPresent()) {
+				return Promise.ofException(BAD_PATH);
+			}
+			renamed.put(transformed.get(), transformedNew.get());
+		}
+		return action.apply(renamed);
+	}
+
+	private Function<List<FileMetadata>, List<FileMetadata>> transformList(Predicate<String> postPredicate) {
+		return list -> list.stream()
+				.map(meta -> from.apply(meta.getName())
+						.map(meta::withName))
+				.filter(meta -> meta.isPresent() && postPredicate.test(meta.get().getName()))
+				.map(Optional::get)
+				.collect(toList());
 	}
 }

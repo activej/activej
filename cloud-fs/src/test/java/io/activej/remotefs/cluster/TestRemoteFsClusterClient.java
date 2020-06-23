@@ -31,8 +31,8 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.readAllBytes;
-import static java.util.Collections.singletonList;
 import static java.util.concurrent.Executors.newCachedThreadPool;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -117,7 +117,7 @@ public final class TestRemoteFsClusterClient {
 
 		Files.write(serverStorages[numOfServer].resolve(file), content.getBytes(UTF_8));
 
-		await(ChannelSupplier.ofPromise(client.download(file, 0))
+		await(ChannelSupplier.ofPromise(client.download(file))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(file)))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
@@ -130,17 +130,18 @@ public final class TestRemoteFsClusterClient {
 		ByteBuf data = ByteBuf.wrapForReading(content.getBytes(UTF_8));
 
 		client.withReplicationCount(1)
-				.withServerSelector((fileName, serverKeys, topShards) -> { // topShards are replication count, so they are 1 here
-					if (fileName.contains("1")) {
-						return singletonList("server_1");
-					}
-					if (fileName.contains("2")) {
-						return singletonList("server_2");
-					}
-					if (fileName.contains("3")) {
-						return singletonList("server_3");
-					}
-					return singletonList("server_0");
+				.withServerSelector((fileName, serverKeys) -> {
+					String firstServer = fileName.contains("1") ?
+							"server_1" :
+							fileName.contains("2") ?
+									"server_2" :
+									fileName.contains("3") ?
+											"server_3" :
+											"server_0";
+					return serverKeys.stream()
+							.map(String.class::cast)
+							.sorted(Comparator.comparing(key -> key.equals(firstServer) ? -1 : 1))
+							.collect(toList());
 				});
 
 		String[] files = {"file_1.txt", "file_2.txt", "file_3.txt", "other.txt"};

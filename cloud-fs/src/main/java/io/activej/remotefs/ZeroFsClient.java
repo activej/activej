@@ -32,7 +32,7 @@ import static java.util.Collections.emptyList;
 /**
  * This fs client simulates a situation in which all paths point outside root
  */
-public final class ZeroFsClient implements FsClient {
+final class ZeroFsClient implements FsClient {
 	public static final ZeroFsClient INSTANCE = new ZeroFsClient();
 
 	private ZeroFsClient() {
@@ -40,21 +40,11 @@ public final class ZeroFsClient implements FsClient {
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return Promise.ofException(FILE_NOT_FOUND);
-	}
-
-	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
-		return Promise.ofException(FILE_NOT_FOUND);
-	}
-
-	@Override
-	public Promise<Void> move(@NotNull String filename, @NotNull String target) {
 		return Promise.ofException(BAD_PATH);
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		return Promise.ofException(BAD_PATH);
 	}
 
@@ -65,7 +55,7 @@ public final class ZeroFsClient implements FsClient {
 
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
-		return Promise.ofException(BAD_PATH);
+		return Promise.complete();
 	}
 
 	@Override

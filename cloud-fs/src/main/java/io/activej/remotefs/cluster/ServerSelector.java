@@ -31,7 +31,7 @@ public interface ServerSelector {
 	/**
 	 * Implementation of rendezvous hash sharding algorithm
 	 */
-	ServerSelector RENDEZVOUS_HASH_SHARDER = (fileName, shards, topShards) -> {
+	ServerSelector RENDEZVOUS_HASH_SHARDER = (fileName, shards) -> {
 		class ShardWithHash {
 			private final Object shard;
 			private final int hash;
@@ -45,7 +45,6 @@ public interface ServerSelector {
 				.map(shard -> new ShardWithHash(shard, murmur3hash(fileName.hashCode(), shard.hashCode())))
 				.sorted(comparingInt(h -> h.hash))
 				.map(h -> h.shard)
-				.limit(topShards)
 				.collect(toList());
 	};
 
@@ -54,8 +53,7 @@ public interface ServerSelector {
 	 *
 	 * @param fileName  name of the file
 	 * @param shards    set of partition ids to choose from
-	 * @param topShards number of ids to return
 	 * @return list of keys of servers ordered by priority where file with given name should be
 	 */
-	List<Object> selectFrom(String fileName, Set<Object> shards, int topShards);
+	List<Object> selectFrom(String fileName, Set<Object> shards);
 }

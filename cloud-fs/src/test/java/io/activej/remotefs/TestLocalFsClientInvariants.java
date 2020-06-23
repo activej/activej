@@ -4,6 +4,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
+import io.activej.test.TestUtils.ThrowingConsumer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.NotNull;
@@ -13,14 +15,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -28,8 +33,12 @@ import static io.activej.remotefs.FsClient.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.util.Arrays.asList;
+import static java.util.Collections.*;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.toList;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
 
 public final class TestLocalFsClientInvariants {
@@ -55,276 +64,701 @@ public final class TestLocalFsClientInvariants {
 		 *
 		 * ........file
 		 * ........file2
+		 * ........directory/subdir/file3.txt
 		 * ........directory/file.txt
 		 * ........directory2/file2.txt
 		 */
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		Files.createDirectories(firstPath);
-		Files.createDirectories(secondPath);
-
-		Path file1 = firstPath.resolve("file");
-		Files.write(file1, "This is contents of the first file".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
-		Files.copy(file1, secondPath.resolve("file"));
-
-		Path file2 = firstPath.resolve("file2");
-		Files.write(file2, "This is contents of the first file2".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
-		Files.copy(file2, secondPath.resolve("file2"));
-
-		Path file3 = firstPath.resolve("directory/file.txt");
-		Files.createDirectories(file3.getParent());
-		Files.write(file3, "This is contents of file in directory/file.txt".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
-		Path secondFile3 = secondPath.resolve("directory/file.txt");
-		Files.createDirectories(secondFile3.getParent());
-		Files.copy(file3, secondFile3);
-
-		Path file4 = firstPath.resolve("directory2/file2.txt");
-		Files.createDirectories(file4.getParent());
-		Files.write(file4, "This is contents of file in directory2/file2.txt".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
-		Path secondFile4 = secondPath.resolve("directory2/file2.txt");
-		Files.createDirectories(secondFile4.getParent());
-		Files.copy(file4, secondFile4);
-
 		first = LocalFsClient.create(getCurrentEventloop(), newSingleThreadExecutor(), firstPath);
 		second = new DefaultFsClient(LocalFsClient.create(getCurrentEventloop(), newSingleThreadExecutor(), secondPath));
+
+		initializeDirs(asList(
+				"file",
+				"file2",
+				"directory/subdir/file3.txt",
+				"directory/file.txt",
+				"directory2/file2.txt"
+		));
 	}
+
+	private void initializeDirs(List<String> paths) {
+		try {
+			clearDirectory(firstPath);
+			clearDirectory(secondPath);
+
+			for (String path : paths) {
+				Path file = firstPath.resolve(path);
+				Files.createDirectories(file.getParent());
+				Files.write(file, String.format("This is contents of file %s", file).getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+
+				Path copyOfFile = secondPath.resolve(path);
+				Files.createDirectories(copyOfFile.getParent());
+				Files.copy(file, copyOfFile);
+			}
+		} catch (IOException e) {
+			throw new AssertionError(e);
+		}
+	}
+
+	// region move
+	@Test
+	public void regularMove() throws IOException {
+		String from = "file";
+		String to = "newFile";
+
+		byte[] bytesBefore = Files.readAllBytes(firstPath.resolve(from));
+		both(client -> await(client.move(from, to)));
+
+		bothPaths(path -> {
+			assertThat(listPaths(path), not(contains(from)));
+			assertArrayEquals(bytesBefore, Files.readAllBytes(path.resolve(to)));
+		});
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveToNewDirectory() throws IOException {
+		String from = "file";
+		String to = "a/b/c/d/newFile";
+
+		byte[] bytesBefore = Files.readAllBytes(firstPath.resolve(from));
+		both(client -> await(client.move(from, to)));
+
+		bothPaths(path -> {
+			assertThat(listPaths(path), not(contains(from)));
+			assertArrayEquals(bytesBefore, Files.readAllBytes(path.resolve(to)));
+		});
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveDirectory() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertSame(IS_DIRECTORY, awaitException(client.move("directory", "newDirectory"))));
+
+		assertFilesAreSame();
+		assertEquals(before, listPaths(firstPath));
+	}
+
+	@Test
+	public void moveToExistingDirectoryName() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertSame(IS_DIRECTORY, awaitException(client.move("file", "directory"))));
+
+		assertFilesAreSame();
+		assertEquals(before, listPaths(firstPath));
+	}
+
+	@Test
+	public void moveToFileInsideDirectoryAsAFile() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertSame(FILE_EXISTS, awaitException(client.move("file2", "file/newFile"))));
+
+		assertFilesAreSame();
+		assertEquals(before, listPaths(firstPath));
+	}
+
+	@Test
+	public void moveFromFileInsideDirectoryAsAFile() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertSame(FILE_NOT_FOUND, awaitException(client.move("file/someFile", "newFile"))));
+
+		assertFilesAreSame();
+		assertEquals(before, listPaths(firstPath));
+	}
+
+	@Test
+	public void moveNonExistentFile() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertSame(FILE_NOT_FOUND, awaitException(client.move("nonexistent", "nonexistentTarget"))));
+
+		assertFilesAreSame();
+		assertEquals(before, listPaths(firstPath));
+	}
+
+	@Test
+	public void moveNonExistentFileToDirectory() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertSame(FILE_NOT_FOUND, awaitException(client.move("nonexistent", "directory"))));
+
+		assertFilesAreSame();
+		assertEquals(before, listPaths(firstPath));
+	}
+
+	@Test
+	public void moveSelfFiles() {
+		both(client -> await(client.move("file2", "file2")));
+
+		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file2")))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveSelfNonExistent() {
+		both(client -> assertEquals(FILE_NOT_FOUND, awaitException(client.move("nonexistent", "nonexistent"))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveSelfDirectories() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.move("directory", "directory"))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveFromEmptyFilename() {
+		List<FileMetadata> before = await(first.list("**"));
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.move("", "newFile"))));
+		both(client -> assertMetadataEquals(before, await(client.list("**"))));
+	}
+
+	@Test
+	public void moveToEmptyFilename() {
+		List<FileMetadata> before = await(first.list("**"));
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.move("file", ""))));
+		both(client -> assertMetadataEquals(before, await(client.list("**"))));
+	}
+
+	@Test
+	public void moveUpdatesTimestamp() {
+		both(client -> {
+			FileMetadata oldMeta = await(client.getMetadata("file"));
+			await(Promises.delay(10));
+			await(client.move("file", "newFile"));
+			FileMetadata newMeta = await(client.getMetadata("newFile"));
+
+			assertEquals(oldMeta.getSize(), newMeta.getSize());
+			assertTrue(newMeta.getTimestamp() > oldMeta.getTimestamp());
+		});
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveNotIdempotent() {
+		both(client -> {
+			// first call completes successfully
+			await(client.move("file", "newFile"));
+			Throwable e = awaitException(client.move("file", "newFile"));
+			assertSame(FILE_NOT_FOUND, e);
+		});
+		assertFilesAreSame();
+	}
+	// endregion
 
 	// region copy
 	@Test
 	public void regularCopy() {
-		copy("file2", "newFile");
+		both(client -> await(client.copy("file2", "newFile")));
 		assertFileEquals("file2", "newFile");
 		assertFilesAreSame();
 	}
 
 	@Test
 	public void copyToNewDirectory() {
-		copy("file", "a/b/c/d/newFile");
+		both(client -> await(client.copy("file", "a/b/c/d/newFile")));
 		assertFileEquals("file", "a/b/c/d/newFile");
 		assertFilesAreSame();
 	}
 
 	@Test
 	public void copyDirectory() {
-		copy("directory", "newDirectory", IS_DIRECTORY);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copy("directory", "newDirectory"))));
 		assertFilesAreSame();
 	}
 
 	@Test
 	public void copyToExistingDirectoryName() {
-		copy("file", "directory", IS_DIRECTORY);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copy("file", "directory"))));
 		assertFilesAreSame();
 	}
 
 	@Test
 	public void copyToFileInsideDirectoryAsAFile() {
-		copy("file2", "file/newFile", FILE_EXISTS);
+		both(client -> assertEquals(FILE_EXISTS, awaitException(client.copy("file2", "file/newFile"))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyFromFileInsideDirectoryAsAFile() {
+		both(client -> assertEquals(FILE_NOT_FOUND, awaitException(client.copy("file/newFile", "newFile"))));
 		assertFilesAreSame();
 	}
 
 	@Test
 	public void copyNonExistentFile() {
-		copy("nonexistent", "nonexistentTarget", FILE_NOT_FOUND);
+		both(client -> assertEquals(FILE_NOT_FOUND, awaitException(client.copy("nonexistent", "nonexistentTarget"))));
 		assertFilesAreSame();
 	}
 
 	@Test
 	public void copyNonExistentFileToDirectory() {
-		copy("nonexistent", "directory", FILE_NOT_FOUND);
+		both(client -> assertEquals(FILE_NOT_FOUND, awaitException(client.copy("nonexistent", "directory"))));
 		assertFilesAreSame();
 	}
 
 	@Test
 	public void copySelf() throws IOException {
 		byte[] bytes = Files.readAllBytes(firstPath.resolve("file2"));
-		copy("file2", "file2");
+		both(client -> await(client.copy("file2", "file2")));
 		assertFilesAreSame();
 		assertArrayEquals(bytes, Files.readAllBytes(firstPath.resolve("file2")));
 	}
-	// endregion
 
-	// region move
 	@Test
-	public void regularMove() {
-		move("file", "newFile");
-		assertFilesAreSame();
+	public void copyFromEmptyFilename() {
+		List<FileMetadata> before = await(first.list("**"));
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copy("", "newFile"))));
+		both(client -> assertMetadataEquals(before, await(client.list("**"))));
 	}
 
 	@Test
-	public void moveToNewDirectory() {
-		move("file", "a/b/c/d/newFile");
-		assertFilesAreSame();
+	public void copyToEmptyFilename() {
+		List<FileMetadata> before = await(first.list("**"));
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copy("file", ""))));
+		both(client -> assertMetadataEquals(before, await(client.list("**"))));
 	}
 
 	@Test
-	public void moveDirectory() {
-		move("directory", "newDirectory", IS_DIRECTORY);
-		assertFilesAreSame();
-	}
-
-	@Test
-	public void moveToExistingDirectoryName() {
-		move("file", "directory", IS_DIRECTORY);
-		assertFilesAreSame();
-	}
-
-	@Test
-	public void moveToFileInsideDirectoryAsAFile() {
-		move("file2", "file/newFile", FILE_EXISTS);
-		assertFilesAreSame();
-	}
-
-	@Test
-	public void moveNonExistentFile() {
-		move("nonexistent", "nonexistentTarget", FILE_NOT_FOUND);
-		assertFilesAreSame();
-	}
-
-	@Test
-	public void moveNonExistentFileToDirectory() {
-		move("nonexistent", "directory", FILE_NOT_FOUND);
-		assertFilesAreSame();
-	}
-
-	@Test
-	public void moveSelf() throws IOException {
-		byte[] bytes = Files.readAllBytes(firstPath.resolve("file2"));
-		move("file2", "file2");
-		assertFilesAreSame();
-		assertArrayEquals(bytes, Files.readAllBytes(firstPath.resolve("file2")));
-	}
-	// endregion
-
-	// region moveDir
-	@Test
-	public void regularMoveDir() {
-		List<FileMetadata> filesBefore = await(first.list("directory/**"));
-		assertFalse(filesBefore.isEmpty());
-
-		moveDir("directory", "newDirectory");
-
-		both(client -> assertTrue(await(client.list("**")).stream().noneMatch(meta -> meta.getName().contains("directory/"))));
-		both(client -> assertMetadataEquals(filesBefore, await(client.list("newDirectory/**")), 1));
-
-		assertFilesAreSame();
-	}
-
-	@Test
-	public void moveNonExistingDir() {
-		moveDir("nonexistent", "newDirectory");
-		assertFilesAreSame();
-
-		both(client -> assertTrue(await(client.list("**")).stream()
-				.map(FileMetadata::getName)
-				.noneMatch(name -> name.contains("nonexistent") || name.contains("newDirectory"))));
-	}
-
-	@Test
-	public void moveNonExistingDirToExisting() {
-		List<FileMetadata> before = await(first.list("directory2/**"));
-
-		moveDir("nonexistent", "directory2");
-		assertFilesAreSame();
-
-		both(client -> assertTrue(await(client.list("**")).stream()
-				.map(FileMetadata::getName)
-				.noneMatch(name -> name.contains("nonexistent"))));
-
-		both(client -> assertMetadataEquals(before, await(client.list("directory2/**")), 0));
-	}
-
-	@Test
-	public void moveToNewSubDir() {
-		List<FileMetadata> before = await(first.list("directory/**"));
-
-		moveDir("directory", "path/to/new/directory");
-		assertFilesAreSame();
-
-		both(client -> assertTrue(await(client.list("**")).stream()
-				.map(FileMetadata::getName)
-				.noneMatch(name -> name.startsWith("directory" + File.separator))));
-
-		both(client -> assertMetadataEquals(before, await(client.list("path/to/new/directory/**")), 1, 4));
-	}
-
-	@Test
-	public void moveToExistingDir() {
-		List<FileMetadata> before = await(first.list("directory/**"));
-
-		moveDir("directory", "directory2");
-		assertFilesAreSame();
-
-		both(client -> assertTrue(await(client.list("**")).stream()
-				.map(FileMetadata::getName)
-				.noneMatch(name -> name.startsWith("directory" + File.separator))));
-
+	public void copyUpdatesTimestamp() {
 		both(client -> {
-			List<FileMetadata> after = await(client.list("directory2/**"));
-			assertTrue(after.size() > before.size());
-			assertTrue(strip(after, 1).containsAll(strip(before, 1)));
+			FileMetadata oldMeta = await(client.getMetadata("file"));
+			await(Promises.delay(10));
+			await(client.copy("file", "newFile"));
+			FileMetadata newMeta = await(client.getMetadata("newFile"));
+
+			assertEquals(oldMeta.getSize(), newMeta.getSize());
+			assertTrue(newMeta.getTimestamp() > oldMeta.getTimestamp());
 		});
-	}
-
-	@Test
-	public void moveFileAsDir() {
-		moveDir("file", "newDirectory");
 		assertFilesAreSame();
 	}
 
 	@Test
-	public void moveDirToFile() {
-		moveDir("directory", "file", FILE_EXISTS);
-		assertFilesAreSame();
-	}
-
-	@Test
-	public void moveDirSelf() {
-		moveDir("directory", "directory");
+	public void copyIsIdempotent() {
+		both(client -> {
+			await(client.copy("file", "newFile"));
+			await(client.copy("file", "newFile"));
+			await(client.copy("file", "newFile"));
+			await(client.copy("file", "newFile"));
+			await(client.copy("file", "newFile"));
+			await(client.copy("file", "newFile"));
+		});
+		assertFileEquals("file", "newFile");
 		assertFilesAreSame();
 	}
 	// endregion
+
+	// region deleteAll
+	@Test
+	public void deleteAllEmpty() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> await(client.deleteAll(emptySet())));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllSingleFile() {
+		both(client -> await(client.deleteAll(singleton("file"))));
+
+		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file")))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllMultipleFiles() {
+		both(client -> await(client.deleteAll(set("file", "file2"))));
+
+		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2")))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllSingleDirectory() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.deleteAll(singleton("directory")))));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllMultipleDirectories() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.deleteAll(set("directory", "directory2")))));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllFilesAndDirectories() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.deleteAll(set("file", "directory")))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllWithNonExisting() {
+		both(client -> await(client.deleteAll(set("file", "nonexistent"))));
+
+		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file")))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllWithRoot() {
+		both(client -> await(client.deleteAll(set("file", ""))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllWithFileOutsideRoot() {
+		both(client -> assertEquals(BAD_PATH, awaitException(client.deleteAll(set("file", "..")))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void deleteAllIsIdempotent() {
+		both(client -> {
+			await(client.deleteAll(set("file", "file2")));
+			await(client.deleteAll(set("file", "file2")));
+			await(client.deleteAll(set("file", "file2")));
+			await(client.deleteAll(set("file", "file2")));
+		});
+
+		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2")))));
+		assertFilesAreSame();
+	}
+	//endregion
+
+	// region copyAll
+	@Test
+	public void copyAllEmpty() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> await(client.copyAll(emptyMap())));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllSingleFile() {
+		both(client -> await(client.copyAll((map("file", "newFile")))));
+
+		assertFileEquals("file", "newFile");
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllMultipleFiles() {
+		both(client -> await(client.copyAll(map(
+				"file", "newFile",
+				"file2", "newFile2"
+		))));
+
+		assertFileEquals("file", "newFile");
+		assertFileEquals("file2", "newFile2");
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllFromSingleDirectory() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copyAll(map("directory", "newFile")))));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllToSingleDirectory() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copyAll(map("file", "directory")))));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllMultipleDirectories() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copyAll((map(
+				"directory", "newDirectory",
+				"directory2", "newDirectory2"
+		))))));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllFilesAndDirectories() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copyAll(map(
+				"file", "newFile",
+				"directory", "newDirectory"
+		)))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllWithFromNonExisting() {
+		both(client -> assertEquals(FILE_NOT_FOUND, awaitException(client.copyAll(map(
+				"file", "newFile",
+				"nonexistent", "newFile2"
+		)))));
+
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllFromRoot() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copyAll(map(
+				"file", "newFile",
+				"", "newRoot"
+		)))));
+
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllToRoot() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copyAll(map(
+				"file", "newFile",
+				"file2", ""
+		)))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllToFileOutsideRoot() {
+		both(client -> assertEquals(BAD_PATH, awaitException(client.copyAll(map(
+				"file", "newFile",
+				"file2", "../new"
+		)))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllFromFileOutsideRoot() {
+		both(client -> assertEquals(BAD_PATH, awaitException(client.copyAll(map(
+				"file", "newFile",
+				"../new", "newFile2"
+		)))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllIsIdempotent() {
+		both(client -> {
+			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
+			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
+			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
+			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
+			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
+			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
+		});
+
+		assertFileEquals("file", "newFile");
+		assertFileEquals("file2", "newFile2");
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void copyAllUpdatesTimestamps() {
+		both(client -> {
+			FileMetadata oldMeta1 = await(client.getMetadata("file"));
+			FileMetadata oldMeta2 = await(client.getMetadata("file2"));
+
+			await(Promises.delay(10));
+
+			await(client.copyAll(map(
+					"file", "newFile",
+					"file2", "newFile2"
+			)));
+
+			FileMetadata newMeta1 = await(client.getMetadata("newFile"));
+			FileMetadata newMeta2 = await(client.getMetadata("newFile2"));
+
+			assertEquals(oldMeta1.getSize(), newMeta1.getSize());
+			assertEquals(oldMeta2.getSize(), newMeta2.getSize());
+
+			assertTrue(newMeta1.getTimestamp() > oldMeta1.getTimestamp());
+			assertTrue(newMeta2.getTimestamp() > oldMeta2.getTimestamp());
+		});
+
+		assertFilesAreSame();
+	}
+	//endregion
+
+	// region moveAll
+	@Test
+	public void moveAllEmpty() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> await(client.moveAll(emptyMap())));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllSingleFile() throws IOException {
+		byte[] bytesBefore = Files.readAllBytes(firstPath.resolve("file"));
+
+		both(client -> await(client.moveAll((map("file", "newFile")))));
+
+		bothPaths(path -> {
+			assertThat(listPaths(path), not(contains(Paths.get("file"))));
+			assertArrayEquals(bytesBefore, Files.readAllBytes(path.resolve("newFile")));
+		});
+
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllMultipleFiles() throws IOException {
+		byte[] bytesBefore1 = Files.readAllBytes(firstPath.resolve("file"));
+		byte[] bytesBefore2 = Files.readAllBytes(firstPath.resolve("file2"));
+
+		both(client -> await(client.moveAll((map(
+				"file", "newFile",
+				"file2", "newFile2"
+		)))));
+
+		bothPaths(path -> {
+			assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2"))));
+			assertArrayEquals(bytesBefore1, Files.readAllBytes(path.resolve("newFile")));
+			assertArrayEquals(bytesBefore2, Files.readAllBytes(path.resolve("newFile2")));
+		});
+
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllFromSingleDirectory() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.moveAll(map("directory", "newFile")))));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllToSingleDirectory() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.moveAll(map("file", "directory")))));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllMultipleDirectories() {
+		List<Path> before = listPaths(firstPath);
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.moveAll((map(
+				"directory", "newDirectory",
+				"directory2", "newDirectory2"
+		))))));
+
+		assertEquals(before, listPaths(firstPath));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllFilesAndDirectories() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.moveAll(map(
+				"file", "newFile",
+				"directory", "newDirectory"
+		)))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllWithFromNonExisting() {
+		both(client -> assertEquals(FILE_NOT_FOUND, awaitException(client.moveAll(map(
+				"file", "newFile",
+				"nonexistent", "newFile2"
+		)))));
+
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllFromRoot() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.moveAll(map(
+				"file", "newFile",
+				"", "newRoot"
+		)))));
+
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllToRoot() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.moveAll(map(
+				"file", "newFile",
+				"file2", ""
+		)))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllToFileOutsideRoot() {
+		both(client -> assertEquals(BAD_PATH, awaitException(client.moveAll(map(
+				"file", "newFile",
+				"file2", "../new"
+		)))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllFromFileOutsideRoot() {
+		both(client -> assertEquals(BAD_PATH, awaitException(client.moveAll(map(
+				"file", "newFile",
+				"../new", "newFile2"
+		)))));
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllNotIdempotent() {
+		both(client -> {
+			await(client.moveAll(map("file", "newFile", "file2", "newFile2")));
+			assertEquals(FILE_NOT_FOUND, awaitException(client.moveAll(map("file", "newFile", "file2", "newFile2"))));
+		});
+
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllUpdatesTimestamps() {
+		both(client -> {
+			FileMetadata oldMeta1 = await(client.getMetadata("file"));
+			FileMetadata oldMeta2 = await(client.getMetadata("file2"));
+
+			await(Promises.delay(10));
+
+			await(client.moveAll(map(
+					"file", "newFile",
+					"file2", "newFile2"
+			)));
+
+			FileMetadata newMeta1 = await(client.getMetadata("newFile"));
+			FileMetadata newMeta2 = await(client.getMetadata("newFile2"));
+
+			assertEquals(oldMeta1.getSize(), newMeta1.getSize());
+			assertEquals(oldMeta2.getSize(), newMeta2.getSize());
+
+			assertTrue(newMeta1.getTimestamp() > oldMeta1.getTimestamp());
+			assertTrue(newMeta2.getTimestamp() > oldMeta2.getTimestamp());
+		});
+
+		assertFilesAreSame();
+	}
+	//endregion
 
 	// region helpers
-	private void copy(String from, String to) {
-		await(first.copy(from, to));
-		await(second.copy(from, to));
-	}
-
-	private void copy(String from, String to, Exception expected) {
-		Throwable firstException = awaitException(first.copy(from, to));
-		Throwable secondException = awaitException(second.copy(from, to));
-
-		assertEquals(firstException, secondException);
-		assertEquals(expected, firstException);
-	}
-
-	private void move(String from, String to) {
-		await(first.move(from, to));
-		await(second.move(from, to));
-	}
-
-	private void move(String from, String to, Exception expected) {
-		Throwable firstException = awaitException(first.move(from, to));
-		Throwable secondException = awaitException(second.move(from, to));
-
-		assertEquals(firstException, secondException);
-		assertEquals(expected, firstException);
-	}
-
-	private void moveDir(String from, String to) {
-		await(first.moveDir(from, to));
-		await(second.moveDir(from, to));
-	}
-
-	private void moveDir(String from, String to, Exception expected) {
-		Throwable firstException = awaitException(first.moveDir(from, to));
-		Throwable secondException = awaitException(second.moveDir(from, to));
-
-		assertEquals(firstException, secondException);
-		assertEquals(expected, firstException);
-	}
-
 	private void assertFileEquals(String first, String second) {
 		try {
 			assertArrayEquals(Files.readAllBytes(firstPath.resolve(first)), Files.readAllBytes(firstPath.resolve(second)));
@@ -352,50 +786,70 @@ public final class TestLocalFsClientInvariants {
 		}
 	}
 
-	private List<Path> listFiles(Path directoryPath) throws IOException {
+	private List<Path> listPaths(Path directoryPath) {
+		List<Path> paths = new ArrayList<>();
+		list(directoryPath, paths, true);
+		return paths.stream()
+				.map(directoryPath::relativize)
+				.collect(toList());
+	}
+
+
+	private List<Path> listFiles(Path directoryPath) {
 		List<Path> list = new ArrayList<>();
-		listFiles(directoryPath, list);
+		list(directoryPath, list, false);
 		return list;
 	}
 
-	private void listFiles(Path directoryPath, List<Path> files) throws IOException {
-		List<Path> paths = Files.list(directoryPath).collect(toList());
-		for (Path path : paths) {
-			if (Files.isRegularFile(path)) {
-				files.add(path);
-			} else if (Files.isDirectory(path)) {
-				listFiles(path, files);
-			} else {
-				throw new AssertionError();
+	private void list(Path directoryPath, List<Path> paths, boolean includeDirs) {
+		try {
+			List<Path> subPaths = Files.list(directoryPath).collect(toList());
+			for (Path path : subPaths) {
+				if (Files.isRegularFile(path)) {
+					paths.add(path);
+				} else if (Files.isDirectory(path)) {
+					if (includeDirs) paths.add(path);
+					list(path, paths, includeDirs);
+				} else {
+					throw new AssertionError();
+				}
 			}
+		} catch (IOException e) {
+			throw new AssertionError(e);
 		}
 	}
 
-	private void assertMetadataEquals(List<FileMetadata> expected, List<FileMetadata> actual, int ignoreLevel) {
-		assertMetadataEquals(expected, actual, ignoreLevel, ignoreLevel);
+	private void clearDirectory(Path dir) throws IOException {
+		for (Iterator<Path> iterator = Files.list(dir).iterator(); iterator.hasNext(); ) {
+			Path file = iterator.next();
+			if (Files.isDirectory(file))
+				clearDirectory(file);
+			Files.delete(file);
+		}
 	}
 
-	private void assertMetadataEquals(List<FileMetadata> expected, List<FileMetadata> actual, int ignoreFirst, int ignoreSecond) {
-		assertEquals(strip(expected, ignoreFirst), strip(actual, ignoreSecond));
+	private void assertMetadataEquals(List<FileMetadata> expected, List<FileMetadata> actual) {
+		assertEquals(removeTimestamp(expected), removeTimestamp(actual));
 	}
 
-	private List<FileMetadata> strip(List<FileMetadata> list, int level) {
+	private List<FileMetadata> removeTimestamp(List<FileMetadata> list) {
 		return list.stream()
-				.map(meta -> {
-					String name = meta.getName();
-					for (int i = 0; i < level; i++) {
-						int index = name.indexOf(File.separatorChar);
-						if (index == -1) throw new AssertionError();
-						name = name.substring(index + 1);
-					}
-					return FileMetadata.of(name, meta.getSize(), 0);
-				})
+				.map(meta -> FileMetadata.of(meta.getName(), meta.getSize(), 0))
 				.collect(toList());
 	}
 
 	private void both(Consumer<FsClient> clientConsumer) {
 		clientConsumer.accept(first);
 		clientConsumer.accept(second);
+	}
+
+	private void bothPaths(ThrowingConsumer<Path> pathConsumer) {
+		try {
+			pathConsumer.accept(firstPath);
+			pathConsumer.accept(secondPath);
+		} catch (Throwable e) {
+			throw new AssertionError(e);
+		}
 	}
 	// endregion
 
@@ -413,8 +867,8 @@ public final class TestLocalFsClientInvariants {
 		}
 
 		@Override
-		public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
-			return peer.download(name, offset, length);
+		public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+			return peer.download(name, offset, limit);
 		}
 
 		@Override

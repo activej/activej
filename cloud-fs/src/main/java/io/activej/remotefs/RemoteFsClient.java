@@ -21,7 +21,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
@@ -42,10 +41,15 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.remotefs.RemoteFsUtils.KNOWN_ERRORS;
+import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
+import static io.activej.remotefs.RemoteFsUtils.ID_TO_ERROR;
 import static io.activej.remotefs.RemoteFsUtils.nullTerminatedJson;
 
 /**
@@ -56,7 +60,6 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 
 	public static final StacklessException INVALID_MESSAGE = new StacklessException(RemoteFsClient.class, "Invalid or unexpected message received");
 	public static final StacklessException TOO_MUCH_DATA = new StacklessException(RemoteFsClient.class, "Received more bytes than expected");
-	public static final StacklessException UNEXPECTED_END_OF_STREAM = new StacklessException(RemoteFsClient.class, "Unexpected end of stream");
 	public static final StacklessException UNKNOWN_SERVER_ERROR = new StacklessException(RemoteFsClient.class, "Unknown server error occurred");
 
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
@@ -73,10 +76,15 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	private final PromiseStats uploadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats copyAllPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats moveAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats getMetadataPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deletePromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	//endregion
 
 	// region creators
@@ -107,28 +115,17 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 				.then(messaging ->
 						messaging.send(new Upload(filename))
 								.then(messaging::receive)
-								.then(msg -> {
-									if (!(msg instanceof UploadAck)) {
-										return handleInvalidResponse(msg);
-									}
-									if (!((UploadAck) msg).isOk()) {
-										return Promise.of(ChannelConsumers.<ByteBuf>recycling());
-									}
-									return Promise.of(messaging.sendBinaryStream()
-											.withAcknowledgement(ack -> ack
-													.then(messaging::receive)
-													.then(msg2 -> {
-														messaging.close();
-														return msg2 instanceof UploadFinished ?
-																Promise.complete() :
-																handleInvalidResponse(msg2);
-													})
-													.whenException(e -> {
-														messaging.closeEx(e);
-														logger.warn("Cancelled while trying to upload file {} : {}", filename, this, e);
-													})
-													.whenComplete(uploadFinishPromise.recordStats())));
-								})
+								.then(msg -> cast(msg, UploadAck.class))
+								.then(() -> Promise.of(messaging.sendBinaryStream()
+										.withAcknowledgement(ack -> ack
+												.then(messaging::receive)
+												.whenResult(messaging::close)
+												.then(msg -> cast(msg, UploadFinished.class).toVoid())
+												.whenException(e -> {
+													messaging.closeEx(e);
+													logger.warn("Cancelled while trying to upload file {} : {}", filename, this, e);
+												})
+												.whenComplete(uploadFinishPromise.recordStats()))))
 								.whenException(e -> {
 									messaging.closeEx(e);
 									logger.warn("Error while trying to upload file {} : {}", filename, this, e);
@@ -138,16 +135,20 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
+	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+		checkArgument(offset >= 0, "Data offset must be greater than or equal to zero");
+		checkArgument(limit >= 0, "Data limit must be greater than or equal to zero");
+
 		return connect(address)
 				.then(messaging ->
-						messaging.send(new Download(name, offset, length))
+						messaging.send(new Download(name, offset, limit))
 								.then(messaging::receive)
+								.then(msg -> cast(msg, DownloadSize.class))
 								.then(msg -> {
-									if (!(msg instanceof DownloadSize)) {
-										return handleInvalidResponse(msg);
+									long receivingSize = msg.getSize();
+									if (receivingSize > limit){
+										return Promise.ofException(TOO_MUCH_DATA);
 									}
-									long receivingSize = ((DownloadSize) msg).getSize();
 
 									logger.trace("download size for file {} is {}: {}", name, receivingSize, this);
 
@@ -156,32 +157,25 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 											.peek(buf -> size.inc(buf.readRemaining()))
 											.withEndOfStream(eos -> eos
 													.then(messaging::sendEndOfStream)
-													.then(result -> {
+													.then(() -> {
 														if (size.get() == receivingSize) {
-															return Promise.of(result);
+															return Promise.complete();
 														}
-														logger.error("invalid stream size for file {}" +
-																" (offset {}, length {})," +
-																" expected: {} actual: {}",
-																name, offset, length, receivingSize, size.get());
-														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM : TOO_MUCH_DATA);
+														logger.error("invalid stream size for file " + name +
+																" (offset " + offset + ", limit " + limit + ")," +
+																" expected: " + receivingSize +
+																" actual: " + size.get());
+														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM_EXCEPTION : TOO_MUCH_DATA);
 													})
 													.whenComplete(downloadFinishPromise.recordStats())
 													.whenResult(messaging::close)));
 								})
 								.whenException(e -> {
 									messaging.closeEx(e);
-									logger.warn("error trying to download file {} (offset={}, length={}) : {}", name, offset, length, this, e);
+									logger.warn("error trying to download file {} (offset={}, limit={}) : {}", name, offset, limit, this, e);
 								}))
-				.whenComplete(toLogger(logger, "download", name, offset, length, this))
+				.whenComplete(toLogger(logger, "download", name, offset, limit, this))
 				.whenComplete(downloadStartPromise.recordStats());
-	}
-
-	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return simpleCommand(new Move(name, target), MoveFinished.class, $ -> (Void) null)
-				.whenComplete(toLogger(logger, "move", name, target, this))
-				.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
@@ -192,6 +186,31 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
+	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		if (sourceToTarget.isEmpty()) return Promise.complete();
+
+		return simpleCommand(new CopyAll(sourceToTarget), CopyAllFinished.class, $ -> (Void) null)
+				.whenComplete(toLogger(logger, "copyAll", toLimitedString(sourceToTarget, 50), this))
+				.whenComplete(copyAllPromise.recordStats());
+	}
+
+	@Override
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+		return simpleCommand(new Move(name, target), MoveFinished.class, $ -> (Void) null)
+				.whenComplete(toLogger(logger, "move", name, target, this))
+				.whenComplete(movePromise.recordStats());
+	}
+
+	@Override
+	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		if (sourceToTarget.isEmpty()) return Promise.complete();
+
+		return simpleCommand(new MoveAll(sourceToTarget), MoveAllFinished.class, $ -> (Void) null)
+				.whenComplete(toLogger(logger, "moveAll", toLimitedString(sourceToTarget, 50), this))
+				.whenComplete(moveAllPromise.recordStats());
+	}
+
+	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		return simpleCommand(new Delete(name), DeleteFinished.class, $ -> (Void) null)
 				.whenComplete(toLogger(logger, "delete", name, this))
@@ -199,10 +218,33 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
+	public Promise<Void> deleteAll(Set<String> toDelete) {
+		if (toDelete.isEmpty()) return Promise.complete();
+
+		return simpleCommand(new DeleteAll(toDelete), DeleteAllFinished.class, $ -> (Void) null)
+				.whenComplete(toLogger(logger, "deleteAll", toLimitedString(toDelete, 100), this))
+				.whenComplete(deleteAllPromise.recordStats());
+	}
+
+	@Override
 	public Promise<List<FileMetadata>> list(@NotNull String glob) {
 		return simpleCommand(new RemoteFsCommands.List(glob), ListFinished.class, ListFinished::getFiles)
 				.whenComplete(toLogger(logger, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
+	}
+
+	@Override
+	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
+		return simpleCommand(new GetMetadata(name), GetMetadataFinished.class, GetMetadataFinished::getMetadata)
+				.whenComplete(toLogger(logger, "getMetadata", name, this))
+				.whenComplete(getMetadataPromise.recordStats());
+	}
+
+	@Override
+	public Promise<Void> ping() {
+		return simpleCommand(new Ping(), PingFinished.class, $ -> (Void) null)
+				.whenComplete(toLogger(logger, "ping", this))
+				.whenComplete(pingPromise.recordStats());
 	}
 
 	private Promise<MessagingWithBinaryStreaming<FsResponse, FsCommand>> connect(InetSocketAddress address) {
@@ -213,14 +255,13 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 				.whenComplete(connectPromise.recordStats());
 	}
 
-	private <T> Promise<T> handleInvalidResponse(@Nullable FsResponse msg) {
-		if (msg == null) {
-			logger.warn("{}: Received unexpected end of stream", this);
-			return Promise.ofException(UNEXPECTED_END_OF_STREAM);
+	private static <T extends FsResponse> Promise<T> cast(FsResponse msg, Class<T> expectedClass) {
+		if (expectedClass == msg.getClass()) {
+			return Promise.of(expectedClass.cast(msg));
 		}
 		if (msg instanceof ServerError) {
 			int code = ((ServerError) msg).getCode();
-			Throwable error = code >= 1 && code <= KNOWN_ERRORS.size() ? KNOWN_ERRORS.get(code - 1) : UNKNOWN_SERVER_ERROR;
+			Throwable error = ID_TO_ERROR.getOrDefault(code, UNKNOWN_SERVER_ERROR);
 			return Promise.ofException(error);
 		}
 		return Promise.ofException(INVALID_MESSAGE);
@@ -231,13 +272,9 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 				.then(messaging ->
 						messaging.send(command)
 								.then(messaging::receive)
-								.then(msg -> {
-									messaging.close();
-									if (msg != null && msg.getClass() == responseType) {
-										return Promise.of(answerExtractor.apply(responseType.cast(msg)));
-									}
-									return handleInvalidResponse(msg);
-								})
+								.whenResult(messaging::close)
+								.then(msg -> cast(msg, responseType))
+								.map(answerExtractor)
 								.whenException(e -> {
 									messaging.closeEx(e);
 									logger.warn("Error while processing command {} : {}", command, this, e);
@@ -288,13 +325,23 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@JmxAttribute
+	public PromiseStats getCopyPromise() {
+		return copyPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getCopyAllPromise() {
+		return copyAllPromise;
+	}
+
+	@JmxAttribute
 	public PromiseStats getMovePromise() {
 		return movePromise;
 	}
 
 	@JmxAttribute
-	public PromiseStats getCopyPromise() {
-		return copyPromise;
+	public PromiseStats getMoveAllPromise() {
+		return moveAllPromise;
 	}
 
 	@JmxAttribute
@@ -303,8 +350,23 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@JmxAttribute
+	public PromiseStats getGetMetadataPromise() {
+		return getMetadataPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getPingPromise() {
+		return pingPromise;
+	}
+
+	@JmxAttribute
 	public PromiseStats getDeletePromise() {
 		return deletePromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getDeleteAllPromise() {
+		return deleteAllPromise;
 	}
 	//endregion
 }

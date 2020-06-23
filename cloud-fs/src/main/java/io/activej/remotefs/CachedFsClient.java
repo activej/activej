@@ -30,11 +30,9 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.activej.common.Preconditions.checkArgument;
 
@@ -119,61 +117,51 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	 *
 	 * @param name   name of the file to be downloaded
 	 * @param offset from which byte to download the file
-	 * @param length how much bytes of the file do download
+	 * @param limit  how much bytes of the file do download at most
 	 * @return promise for stream supplier of byte buffers
 	 */
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
+	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		checkArgument(offset >= 0, "Data offset must be greater than or equal to zero");
-		checkArgument(length >= -1, "Data length must be either -1 or greater than or equal to zero");
+		checkArgument(limit >= 0, "Data limit must be greater than or equal to zero");
 
-		return cacheClient.download(name, offset, length)
+		return cacheClient.download(name, offset, limit)
 				.thenEx((cacheSupplier, e) -> {
 					if (e == null) {
 						updateCacheStats(name);
 						return Promise.of(cacheSupplier);
 					}
-					if (offset != 0) {
-						return mainClient.download(name, offset, length);
+					if (offset > 0) {
+						return mainClient.download(name, offset, limit);
 					}
 					return mainClient.getMetadata(name)
 							.then(mainMetadata -> {
 								if (mainMetadata == null) {
 									return Promise.ofException(FILE_NOT_FOUND);
 								}
-								return downloadToCache(name, length, mainMetadata.getSize());
-							});
-				});
-	}
-
-	private Promise<ChannelSupplier<ByteBuf>> downloadToCache(String fileName, long length, long sizeInMain) {
-		return mainClient.download(fileName, 0, length)
-				.then(supplier -> {
-					if (length != -1 && length < sizeInMain ||
-							downloadingNowSize + sizeInMain > cacheSizeLimit.toLong() || sizeInMain > cacheSizeLimit.toLong() * (1 - LOAD_FACTOR)) {
-						return Promise.of(supplier);
-					}
-					downloadingNowSize += sizeInMain;
-
-					return ensureSpace()
-							.map($ -> {
-								ChannelSplitter<ByteBuf> splitter = ChannelSplitter.create(supplier);
-								splitter.addOutput()
-										.set(ChannelConsumer.ofPromise(cacheClient.upload(fileName))
-												.peek(buf -> totalCacheSize += buf.readRemaining()));
-								return splitter.addOutput().getSupplier()
-										.withEndOfStream(eos -> eos
-												.both(splitter.getProcessCompletion())
-												.whenResult(() -> updateCacheStats(fileName))
-												.whenException(this::updateTotalSize)
-												.whenComplete(() -> downloadingNowSize -= sizeInMain));
+								return downloadToCache(name, limit, mainMetadata.getSize());
 							});
 				});
 	}
 
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return mainClient.move(name, target);
+		return mainClient.move(name, target)
+				.then(() -> cacheClient.delete(name))
+				.whenResult(() -> {
+					cacheStats.remove(name);
+					updateTotalSize();
+				});
+	}
+
+	@Override
+	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		return mainClient.moveAll(sourceToTarget)
+				.then(() -> cacheClient.deleteAll(sourceToTarget.keySet()))
+				.whenResult(() -> {
+					sourceToTarget.keySet().forEach(cacheStats::remove);
+					updateTotalSize();
+				});
 	}
 
 	@Override
@@ -182,8 +170,8 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	}
 
 	@Override
-	public Promise<Void> moveDir(@NotNull String name, @NotNull String target) {
-		return mainClient.moveDir(name, target);
+	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		return mainClient.copyAll(sourceToTarget);
 	}
 
 	/**
@@ -198,6 +186,19 @@ public final class CachedFsClient implements FsClient, EventloopService {
 				.map(lists -> FileMetadata.flatten(lists.stream()));
 	}
 
+	@Override
+	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
+		return cacheClient.getMetadata(name)
+				.then(cachedMetadata -> cachedMetadata == null ?
+						mainClient.getMetadata(name) :
+						Promise.of(cachedMetadata));
+	}
+
+	@Override
+	public Promise<Void> ping() {
+		return Promises.all(cacheClient.ping(), mainClient.ping());
+	}
+
 	/**
 	 * Deletes file both on server and on cache client
 	 *
@@ -205,81 +206,26 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	 */
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
-		cacheStats.remove(name);
-		return Promises.all(cacheClient.delete(name), mainClient.delete(name));
+		return Promises.all(cacheClient.delete(name), mainClient.delete(name))
+				.whenResult(() -> {
+					cacheStats.remove(name);
+					updateTotalSize();
+				});
+	}
+
+	@Override
+	public Promise<Void> deleteAll(Set<String> toDelete) {
+		return Promises.all(cacheClient.deleteAll(toDelete), mainClient.deleteAll(toDelete))
+				.whenResult(() -> {
+					toDelete.forEach(cacheStats::remove);
+					updateTotalSize();
+				});
 	}
 
 	@NotNull
 	@Override
 	public Promise<Void> stop() {
 		return ensureSpace();
-	}
-
-	private void updateCacheStats(String fileName) {
-		cacheStats.compute(fileName, ($, cacheStat) -> {
-			if (cacheStat == null) return new CacheStat(now.currentTimeMillis());
-			cacheStat.numberOfHits++;
-			cacheStat.lastHitTimestamp = now.currentTimeMillis();
-			return cacheStat;
-		});
-	}
-
-	private Promise<Void> ensureSpace() {
-		return ensureSpace.get();
-	}
-
-	@NotNull
-	private Promise<Void> doEnsureSpace() {
-		if (totalCacheSize + downloadingNowSize <= cacheSizeLimit.toLong()) {
-			return Promise.complete();
-		}
-		RefLong size = new RefLong(0);
-		double limit = cacheSizeLimit.toLong() * LOAD_FACTOR;
-		return cacheClient.list("**")
-				.map(list -> list
-						.stream()
-						.map(metadata -> {
-							CacheStat cacheStat = cacheStats.get(metadata.getName());
-							return cacheStat == null ?
-									new FullCacheStat(metadata, 0, 0) :
-									new FullCacheStat(metadata, cacheStat.numberOfHits, cacheStat.lastHitTimestamp);
-						})
-						.sorted(comparator.reversed())
-						.filter(fullCacheStat -> size.inc(fullCacheStat.getFileMetadata().getSize()) > limit))
-				.then(filesToDelete -> Promises.all(filesToDelete
-						.map(fullCacheStat -> cacheClient
-								.delete(fullCacheStat.getFileMetadata().getName())
-								.whenResult(() -> {
-									totalCacheSize -= fullCacheStat.getFileMetadata().getSize();
-									cacheStats.remove(fullCacheStat.getFileMetadata().getName());
-								}))));
-	}
-
-	private Promise<Void> updateTotalSize() {
-		return updateTotalSize.get();
-	}
-
-	private Promise<Void> doUpdateTotalSize() {
-		return getTotalCacheSize()
-				.whenResult(size -> totalCacheSize = size.toLong())
-				.toVoid();
-	}
-
-	private static final class CacheStat {
-		private long numberOfHits = 1;
-		private long lastHitTimestamp;
-
-		private CacheStat(long lastHitTimestamp) {
-			this.lastHitTimestamp = lastHitTimestamp;
-		}
-
-		@Override
-		public String toString() {
-			return "CacheStat{" +
-					"numberOfHits=" + numberOfHits +
-					", lastHitTimestamp=" + lastHitTimestamp +
-					'}';
-		}
 	}
 
 	/**
@@ -354,5 +300,97 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	public String toString() {
 		return "CachedFsClient{mainClient=" + mainClient + ", cacheClient=" + cacheClient
 				+ ", cacheSizeLimit = " + cacheSizeLimit.format() + '}';
+	}
+
+	private Promise<ChannelSupplier<ByteBuf>> downloadToCache(String fileName, long limit, long sizeInMain) {
+		return mainClient.download(fileName, 0, limit)
+				.then(supplier -> {
+					if (limit < sizeInMain ||
+							downloadingNowSize + sizeInMain > cacheSizeLimit.toLong() || sizeInMain > cacheSizeLimit.toLong() * (1 - LOAD_FACTOR)) {
+						return Promise.of(supplier);
+					}
+					downloadingNowSize += sizeInMain;
+
+					return ensureSpace()
+							.map($ -> {
+								ChannelSplitter<ByteBuf> splitter = ChannelSplitter.create(supplier);
+								splitter.addOutput()
+										.set(ChannelConsumer.ofPromise(cacheClient.upload(fileName))
+												.peek(buf -> totalCacheSize += buf.readRemaining()));
+								return splitter.addOutput().getSupplier()
+										.withEndOfStream(eos -> eos
+												.both(splitter.getProcessCompletion())
+												.whenResult(() -> updateCacheStats(fileName))
+												.whenException(this::updateTotalSize)
+												.whenComplete(() -> downloadingNowSize -= sizeInMain));
+							});
+				});
+	}
+
+	private void updateCacheStats(String fileName) {
+		cacheStats.compute(fileName, ($, cacheStat) -> {
+			if (cacheStat == null) return new CacheStat(now.currentTimeMillis());
+			cacheStat.numberOfHits++;
+			cacheStat.lastHitTimestamp = now.currentTimeMillis();
+			return cacheStat;
+		});
+	}
+
+	private Promise<Void> ensureSpace() {
+		return ensureSpace.get();
+	}
+
+	@NotNull
+	private Promise<Void> doEnsureSpace() {
+		if (totalCacheSize + downloadingNowSize <= cacheSizeLimit.toLong()) {
+			return Promise.complete();
+		}
+		RefLong size = new RefLong(0);
+		double limit = cacheSizeLimit.toLong() * LOAD_FACTOR;
+		return cacheClient.list("**")
+				.map(list -> list
+						.stream()
+						.map(metadata -> {
+							CacheStat cacheStat = cacheStats.get(metadata.getName());
+							return cacheStat == null ?
+									new FullCacheStat(metadata, 0, 0) :
+									new FullCacheStat(metadata, cacheStat.numberOfHits, cacheStat.lastHitTimestamp);
+						})
+						.sorted(comparator.reversed())
+						.filter(fullCacheStat -> size.inc(fullCacheStat.getFileMetadata().getSize()) > limit))
+				.then(filesToDelete -> Promises.all(filesToDelete
+						.map(fullCacheStat -> cacheClient
+								.delete(fullCacheStat.getFileMetadata().getName())
+								.whenResult(() -> {
+									totalCacheSize -= fullCacheStat.getFileMetadata().getSize();
+									cacheStats.remove(fullCacheStat.getFileMetadata().getName());
+								}))));
+	}
+
+	private Promise<Void> updateTotalSize() {
+		return updateTotalSize.get();
+	}
+
+	private Promise<Void> doUpdateTotalSize() {
+		return getTotalCacheSize()
+				.whenResult(size -> totalCacheSize = size.toLong())
+				.toVoid();
+	}
+
+	private static final class CacheStat {
+		private long numberOfHits = 1;
+		private long lastHitTimestamp;
+
+		private CacheStat(long lastHitTimestamp) {
+			this.lastHitTimestamp = lastHitTimestamp;
+		}
+
+		@Override
+		public String toString() {
+			return "CacheStat{" +
+					"numberOfHits=" + numberOfHits +
+					", lastHitTimestamp=" + lastHitTimestamp +
+					'}';
+		}
 	}
 }

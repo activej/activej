@@ -17,8 +17,6 @@
 package io.activej.remotefs;
 
 import io.activej.common.exception.StacklessException;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.RecyclingChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
@@ -41,8 +39,10 @@ import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.remotefs.FsClient.BAD_RANGE;
 import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
-import static io.activej.remotefs.RemoteFsUtils.*;
+import static io.activej.remotefs.RemoteFsUtils.ERROR_TO_ID;
+import static io.activej.remotefs.RemoteFsUtils.nullTerminatedJson;
 
 /**
  * An implementation of {@link AbstractServer} for RemoteFs.
@@ -61,10 +61,15 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	private final PromiseStats handleRequestPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats copyAllPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats moveAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats getMetadataPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deletePromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
 	private RemoteFsServer(Eventloop eventloop, FsClient client) {
@@ -91,11 +96,6 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()
 				.then(msg -> {
-					if (msg == null) {
-						logger.warn("unexpected end of stream: {}", this);
-						messaging.close();
-						return Promise.complete();
-					}
 					MessagingHandler<FsCommand> handler = handlers.get(msg.getClass());
 					if (handler == null) {
 						logger.warn("received a message with no associated handler, type: {}", msg.getClass());
@@ -106,7 +106,7 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 				.whenComplete(handleRequestPromise.recordStats())
 				.whenException(e -> {
 					logger.warn("got an error while handling message : {}", this, e);
-					messaging.send(new ServerError(getErrorCode(e)))
+					messaging.send(new ServerError(ERROR_TO_ID.getOrDefault(e, 0)))
 							.then(messaging::sendEndOfStream)
 							.whenResult(messaging::close);
 				});
@@ -116,13 +116,8 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 		onMessage(Upload.class, (messaging, msg) -> {
 			String name = msg.getName();
 			return client.upload(name)
-					.then(uploader -> {
-						if (uploader instanceof RecyclingChannelConsumer) {
-							return messaging.send(new UploadAck(false));
-						}
-						return messaging.send(new UploadAck(true))
-								.then(() -> messaging.receiveBinaryStream().streamTo(uploader));
-					})
+					.then(uploader -> messaging.send(new UploadAck())
+							.then(() -> messaging.receiveBinaryStream().streamTo(uploader)))
 					.then(() -> messaging.send(new UploadFinished()))
 					.then(messaging::sendEndOfStream)
 					.whenResult(messaging::close)
@@ -133,31 +128,37 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 
 		onMessage(Download.class, (messaging, msg) -> {
 			String name = msg.getName();
+			long offset = msg.getOffset();
+			long limit = msg.getLimit();
+
+			if (offset < 0 || limit < 0) {
+				return Promise.ofException(BAD_RANGE);
+			}
 			return client.getMetadata(name)
 					.then(meta -> {
 						if (meta == null) {
 							return Promise.ofException(FILE_NOT_FOUND);
 						}
-						long size = meta.getSize();
-						long offset = msg.getOffset();
-						long length = msg.getLength();
 
-						checkRange(size, offset, length);
+						long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));
 
-						long fixedLength = length == -1 ? size - offset : length;
-
-						return messaging.send(new DownloadSize(fixedLength))
-								.then(() ->
-										ChannelSupplier.ofPromise(client.download(name, offset, fixedLength))
-												.streamTo(messaging.sendBinaryStream()))
-								.whenComplete(toLogger(logger, "sending data", meta, offset, fixedLength, this));
+						return client.download(name, offset, fixedLimit)
+								.then(supplier -> messaging.send(new DownloadSize(fixedLimit))
+										.whenException(supplier::closeEx)
+										.then(() -> supplier.streamTo(messaging.sendBinaryStream())))
+								.whenComplete(toLogger(logger, "sending data", meta, offset, fixedLimit, this));
 					})
 					.whenComplete(downloadPromise.recordStats());
 		});
-		onMessage(Move.class, simpleHandler(msg -> client.move(msg.getName(), msg.getTarget()), $ -> new MoveFinished(), movePromise));
 		onMessage(Copy.class, simpleHandler(msg -> client.copy(msg.getName(), msg.getTarget()), $ -> new CopyFinished(), copyPromise));
+		onMessage(CopyAll.class, simpleHandler(msg -> client.copyAll(msg.getSourceToTarget()), $ -> new CopyAllFinished(), copyAllPromise));
+		onMessage(Move.class, simpleHandler(msg -> client.move(msg.getName(), msg.getTarget()), $ -> new MoveFinished(), movePromise));
+		onMessage(MoveAll.class, simpleHandler(msg -> client.moveAll(msg.getSourceToTarget()), $ -> new MoveAllFinished(), moveAllPromise));
 		onMessage(Delete.class, simpleHandler(msg -> client.delete(msg.getName()), $ -> new DeleteFinished(), deletePromise));
+		onMessage(DeleteAll.class, simpleHandler(msg -> client.deleteAll(msg.getFilesToDelete()), $ -> new DeleteAllFinished(), deleteAllPromise));
 		onMessage(List.class, simpleHandler(msg -> client.list(msg.getGlob()), ListFinished::new, listPromise));
+		onMessage(GetMetadata.class, simpleHandler(msg -> client.getMetadata(msg.getName()), GetMetadataFinished::new, getMetadataPromise));
+		onMessage(Ping.class, simpleHandler(msg -> client.ping(), $ -> new PingFinished(), pingPromise));
 	}
 
 	private <T extends FsCommand, R> MessagingHandler<T> simpleHandler(Function<T, Promise<R>> action, Function<R, FsResponse> response, PromiseStats stats) {
@@ -194,18 +195,48 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	}
 
 	@JmxAttribute
-	public PromiseStats getMovePromise() {
-		return movePromise;
-	}
-
-	@JmxAttribute
 	public PromiseStats getListPromise() {
 		return listPromise;
 	}
 
 	@JmxAttribute
+	public PromiseStats getGetMetadataPromise() {
+		return getMetadataPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getPingPromise() {
+		return pingPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getCopyPromise() {
+		return copyPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getCopyAllPromise() {
+		return copyAllPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getMovePromise() {
+		return movePromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getMoveAllPromise() {
+		return moveAllPromise;
+	}
+
+	@JmxAttribute
 	public PromiseStats getDeletePromise() {
 		return deletePromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getDeleteAllPromise() {
+		return deleteAllPromise;
 	}
 
 	@JmxAttribute

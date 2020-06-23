@@ -22,11 +22,18 @@ import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 final class FilterFsClient implements FsClient {
 	private final FsClient parent;
@@ -46,27 +53,31 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length) {
+	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		if (!predicate.test(name)) {
 			return Promise.ofException(FILE_NOT_FOUND);
 		}
-		return parent.download(name, offset, length);
-	}
-
-	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
-		if (!predicate.test(name) || !predicate.test(target)) {
-			return Promise.complete();
-		}
-		return parent.move(name, target);
+		return parent.download(name, offset, limit);
 	}
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		if (!predicate.test(name) || !predicate.test(target)) {
-			return Promise.complete();
-		}
-		return parent.copy(name, target);
+		return filteringOp(name, target, parent::copy);
+	}
+
+	@Override
+	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		return filteringOp(sourceToTarget, parent::copyAll);
+	}
+
+	@Override
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+		return filteringOp(name, target, parent::move);
+	}
+
+	@Override
+	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		return filteringOp(sourceToTarget, parent::moveAll);
 	}
 
 	@Override
@@ -75,6 +86,14 @@ final class FilterFsClient implements FsClient {
 				.map(list -> list.stream()
 						.filter(meta -> predicate.test(meta.getName()))
 						.collect(toList()));
+	}
+
+	@Override
+	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
+		if (!predicate.test(name)) {
+			return Promise.of(null);
+		}
+		return parent.getMetadata(name);
 	}
 
 	@Override
@@ -88,5 +107,36 @@ final class FilterFsClient implements FsClient {
 			return Promise.complete();
 		}
 		return parent.delete(name);
+	}
+
+	@Override
+	public Promise<Void> deleteAll(Set<String> toDelete) {
+		return parent.deleteAll(toDelete.stream()
+				.filter(predicate)
+				.collect(toSet()));
+	}
+
+	private Promise<Void> filteringOp(String source, String target, BiFunction<String, String, Promise<Void>> original) {
+		if (!predicate.test(source)) {
+			return Promise.ofException(FILE_NOT_FOUND);
+		}
+		if (!predicate.test(target)) {
+			return Promise.complete();
+		}
+		return original.apply(source, target);
+	}
+
+	private Promise<Void> filteringOp(Map<String, String> sourceToTarget, Function<Map<String, String>, Promise<Void>> original) {
+		Map<String, String> renamed = new LinkedHashMap<>();
+		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
+			if (!predicate.test(entry.getKey())) {
+				return Promise.ofException(FILE_NOT_FOUND);
+			}
+			if (!predicate.test(entry.getValue())) {
+				return Promise.complete();
+			}
+			renamed.put(entry.getKey(), entry.getValue());
+		}
+		return original.apply(renamed);
 	}
 }

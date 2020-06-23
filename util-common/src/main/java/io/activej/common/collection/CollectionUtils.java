@@ -120,8 +120,21 @@ public class CollectionUtils {
 	public static <T> String toLimitedString(Collection<T> collection, int limit) {
 		return collection.stream()
 				.limit(limit)
-				.map(Object::toString)
+				.map(element -> element == collection ? "(this Collection)" : element.toString())
 				.collect(joining(",", "[", collection.size() <= limit ? "]" : ", ..and " + (collection.size() - limit) + " more]"));
+	}
+
+	public static <K, V> String toLimitedString(Map<K, V> map, int limit) {
+		return map.entrySet().stream()
+				.limit(limit)
+				.map(element -> {
+					K key = element.getKey();
+					V value = element.getValue();
+					String keyString = key == map ? "(this Map)" : key.toString();
+					String valueString = value == map ? "(this Map)" : value.toString();
+					return keyString + '=' + valueString;
+				})
+				.collect(joining(",", "{", map.size() <= limit ? "}" : ", ..and " + (map.size() - limit) + " more}"));
 	}
 
 	private static final Iterator<Object> EMPTY_ITERATOR = new Iterator<Object>() {

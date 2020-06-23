@@ -19,6 +19,7 @@ package io.activej.remotefs;
 import io.activej.codec.CodecSubtype;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredCodecs;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,43 +33,38 @@ public final class RemoteFsResponses {
 			FileMetadata::getTimestamp, LONG_CODEC);
 
 	static final StructuredCodec<FsResponse> CODEC = CodecSubtype.<FsResponse>create()
-			.with(UploadAck.class, object(UploadAck::new, "ok", UploadAck::isOk, BOOLEAN_CODEC))
+			.with(UploadAck.class, object(UploadAck::new))
 			.with(UploadFinished.class, object(UploadFinished::new))
 			.with(DownloadSize.class, object(DownloadSize::new, "size", DownloadSize::getSize, LONG_CODEC))
 			.with(MoveFinished.class, object(MoveFinished::new))
+			.with(MoveAllFinished.class, object(MoveAllFinished::new))
 			.with(CopyFinished.class, object(CopyFinished::new))
+			.with(CopyAllFinished.class, object(CopyAllFinished::new))
 			.with(DeleteFinished.class, object(DeleteFinished::new))
+			.with(DeleteAllFinished.class, object(DeleteAllFinished::new))
 			.with(ListFinished.class, object(ListFinished::new, "files", ListFinished::getFiles, ofList(FILE_META_CODEC)))
+			.with(GetMetadataFinished.class, object(GetMetadataFinished::new, "metadata", GetMetadataFinished::getMetadata, FILE_META_CODEC.nullable()))
+			.with(PingFinished.class, object(PingFinished::new))
 			.with(ServerError.class, object(ServerError::new, "code", ServerError::getCode, INT_CODEC));
 
 	public abstract static class FsResponse {
 	}
 
-	public static class UploadAck extends FsResponse {
-		private final boolean ok;
-
-		public UploadAck(boolean ok) {
-			this.ok = ok;
-		}
-
-		public boolean isOk() {
-			return ok;
-		}
-
+	public static final class UploadAck extends FsResponse {
 		@Override
 		public String toString() {
-			return "UploadAck{od=" + ok + '}';
+			return "UploadAck{}";
 		}
 	}
 
-	public static class UploadFinished extends FsResponse {
+	public static final class UploadFinished extends FsResponse {
 		@Override
 		public String toString() {
 			return "UploadFinished{}";
 		}
 	}
 
-	public static class DownloadSize extends FsResponse {
+	public static final class DownloadSize extends FsResponse {
 		private final long size;
 
 		public DownloadSize(long size) {
@@ -85,27 +81,35 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	public static class MoveFinished extends FsResponse {
-		public MoveFinished() {
-		}
-
-		@Override
-		public String toString() {
-			return "MoveFinished{}";
-		}
-	}
-
-	public static class CopyFinished extends FsResponse {
-		public CopyFinished() {
-		}
-
+	public static final class CopyFinished extends FsResponse {
 		@Override
 		public String toString() {
 			return "CopyFinished{}";
 		}
 	}
 
-	public static class ListFinished extends FsResponse {
+	public static final class CopyAllFinished extends FsResponse {
+		@Override
+		public String toString() {
+			return "CopyAllFinished{}";
+		}
+	}
+
+	public static final class MoveFinished extends FsResponse {
+		@Override
+		public String toString() {
+			return "MoveFinished{}";
+		}
+	}
+
+	public static final class MoveAllFinished extends FsResponse {
+		@Override
+		public String toString() {
+			return "MoveAllFinished{}";
+		}
+	}
+
+	public static final class ListFinished extends FsResponse {
 		private final List<FileMetadata> files;
 
 		public ListFinished(List<FileMetadata> files) {
@@ -122,17 +126,21 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	public static class DeleteFinished extends FsResponse {
-		public DeleteFinished() {
-		}
-
+	public static final class DeleteFinished extends FsResponse {
 		@Override
 		public String toString() {
 			return "DeleteFinished{}";
 		}
 	}
 
-	public static class ServerError extends FsResponse {
+	public static final class DeleteAllFinished extends FsResponse {
+		@Override
+		public String toString() {
+			return "DeleteAllFinished{}";
+		}
+	}
+
+	public static final class ServerError extends FsResponse {
 		private final int code;
 
 		public ServerError(int code) {
@@ -146,6 +154,32 @@ public final class RemoteFsResponses {
 		@Override
 		public String toString() {
 			return "ServerError{code=" + code + '}';
+		}
+	}
+
+	public static final class GetMetadataFinished extends FsResponse {
+		@Nullable
+		private final FileMetadata metadata;
+
+		public GetMetadataFinished(@Nullable FileMetadata metadata) {
+			this.metadata = metadata;
+		}
+
+		@Nullable
+		public FileMetadata getMetadata() {
+			return metadata;
+		}
+
+		@Override
+		public String toString() {
+			return "GetMetadataFinished{metadata=" + metadata + '}';
+		}
+	}
+
+	public static final class PingFinished extends FsResponse {
+		@Override
+		public String toString() {
+			return "PingFinished{}";
 		}
 	}
 }

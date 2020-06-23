@@ -315,14 +315,6 @@ public final class TestLocalFsClient {
 	}
 
 	@Test
-	public void testMoveDirAtomicSpecialization() {
-		await(client.moveDir("2", "3"));
-
-		assertTrue(Files.isDirectory(storagePath.resolve("3")));
-		assertFalse(Files.exists(storagePath.resolve("2")));
-	}
-
-	@Test
 	public void testOverwritingDirAsFile() {
 		await(ChannelSupplier.of(ByteBufStrings.wrapUtf8("test")).streamTo(client.upload("newdir/a.txt")));
 		await(client.delete("newdir/a.txt"));

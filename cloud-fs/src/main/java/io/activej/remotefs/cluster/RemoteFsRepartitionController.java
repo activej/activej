@@ -189,7 +189,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	private Promise<Boolean> repartitionFile(FileMetadata meta) {
 		Set<Object> partitionIds = new HashSet<>(clients.keySet());
 		partitionIds.add(localPartitionId); // ensure local partition could also be selected
-		List<Object> selected = serverSelector.selectFrom(meta.getName(), partitionIds, replicationCount);
+		List<Object> selected = serverSelector.selectFrom(meta.getName(), partitionIds).subList(0, replicationCount);
 
 		return getPartitionsThatNeedOurFile(meta, selected)
 				.then(uploadTargets -> {

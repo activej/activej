@@ -26,7 +26,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -34,15 +36,13 @@ import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.remotefs.RemoteFsUtils.escapeGlob;
 
 /**
- * This interface represents a simple filesystem client with upload, download, move, delete and list operations.
+ * This interface represents a simple filesystem client with upload, download, copy, delete and list operations.
  */
 public interface FsClient {
 	StacklessException FILE_NOT_FOUND = new StacklessException(FsClient.class, "File not found");
-	StacklessException FILE_EXISTS = new StacklessException(FsClient.class, "File already exists");
+	StacklessException FILE_EXISTS = new StacklessException(FsClient.class, "Prefix of path corresponds to an existing file");
 	StacklessException BAD_PATH = new StacklessException(FsClient.class, "Given file name points to file outside root");
-	StacklessException OFFSET_TOO_BIG = new StacklessException(FsClient.class, "Offset exceeds the actual file size");
-	StacklessException LENGTH_TOO_BIG = new StacklessException(FsClient.class, "Length with offset exceeds the actual file size");
-	StacklessException BAD_RANGE = new StacklessException(FsClient.class, "Given offset or length don't make sense");
+	StacklessException BAD_RANGE = new StacklessException(FsClient.class, "Given offset or limit doesn't make sense");
 	StacklessException IS_DIRECTORY = new StacklessException(FsClient.class, "Operated file is a directory");
 
 	/**
@@ -60,48 +60,34 @@ public interface FsClient {
 
 	/**
 	 * Returns a supplier of bytebufs which are read (or received) from the file.
-	 * If file does not exist, or specified range goes beyond it's size,
-	 * an error will be returned from the server.
+	 * If file does not exist an error will be returned from the server.
 	 * <p>
-	 * Length can be set to -1 to download all available data.
+	 * Length can be set to {@code Long.MAX_VALUE} to download all available data.
 	 *
 	 * @param name   name of the file to be downloaded
 	 * @param offset from which byte to download the file
-	 * @param length how much bytes of the file do download
+	 * @param limit  how much bytes of the file to download at most
 	 * @return promise for stream supplier of byte buffers
-	 * @see #download(String, long)
 	 * @see #download(String)
 	 */
-	Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long length);
+	Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit);
 
 	// region download shortcuts
-
-	/**
-	 * Shortcut for downloading the whole file from given offset.
-	 *
-	 * @return stream supplier of byte buffers
-	 * @see #download(String, long, long)
-	 * @see #download(String)
-	 */
-	default Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset) {
-		return download(name, offset, -1);
-	}
 
 	/**
 	 * Shortcut for downloading the whole available file.
 	 *
 	 * @param name name of the file to be downloaded
 	 * @return stream supplier of byte buffers
-	 * @see #download(String, long)
 	 * @see #download(String, long, long)
 	 */
 	default Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name) {
-		return download(name, 0, -1);
+		return download(name, 0, Long.MAX_VALUE);
 	}
 	// endregion
 
 	/**
-	 * Deletes given file.
+	 * Tries to delete given file. The deletion of file is not guaranteed.
 	 *
 	 * @param name name of the file to be deleted
 	 * @return marker promise that completes when deletion completes
@@ -109,39 +95,82 @@ public interface FsClient {
 	Promise<Void> delete(@NotNull String name);
 
 	/**
+	 * Tries to delete specified files. Basically, calls {@link #delete} for each file.
+	 * A best effort will be made to delete all files, but some files may remain intact.
+	 * <p>
+	 * If error occurs while deleting any of the files, result promise is completed exceptionally.
+	 * Always completes successfully if empty set is passed as an argument.
+	 * <p>
+	 * Implementations should override this method with optimized version if possible.
+	 *
+	 * @param toDelete set of files to be deleted
+	 */
+	default Promise<Void> deleteAll(Set<String> toDelete) {
+		return Promises.all(toDelete.stream().map(this::delete));
+	}
+
+	/**
 	 * Duplicates a file
 	 *
 	 * @param name   file to be copied
-	 * @param target new file name
+	 * @param target file name of copy
 	 */
-
 	default Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return download(name).then(supplier -> supplier.streamTo(upload(target)));
 	}
 
 	/**
-	 * Moves (renames) a file from one name to another.
-	 * Equivalent to copying a file to new location and
-	 * then deleting the original file.
+	 * Duplicates files from source locations to target locations.
+	 * Basically, calls {@link #copy} for each pair of source file and target file.
+	 * Source to target mapping is passed as a map where keys correspond to source files
+	 * and values correspond to target files.
+	 * <p>
+	 * If error occurs while copying any of the files, result promise is completed exceptionally.
+	 * Always completes successfully if empty map is passed as an argument.
+	 * <p>
+	 * Implementations should override this method with optimized version if possible.
+	 *
+	 * @param sourceToTarget source files to target files mapping
+	 */
+	default Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		return Promises.all(sourceToTarget.entrySet().stream()
+				.map(entry -> copy(entry.getKey(), entry.getValue())));
+	}
+
+	/**
+	 * Moves file from one location to another. Basically, copies the file and then tries to remove the original file.
+	 * As {@link #delete} does not guarantee that file will actually be deleted, so does this method.
+	 * <p>
+	 * <b>This method is non-idempotent</b>
 	 *
 	 * @param name   file to be moved
 	 * @param target new file name
 	 */
-
 	default Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return copy(name, target)
-				.then(() -> name.equals(target) ? Promise.complete() : delete(name));
+		return download(name)
+				.then(supplier -> supplier.streamTo(upload(target)))
+				.then(() -> delete(name));
 	}
 
-	default Promise<Void> moveDir(@NotNull String name, @NotNull String target) {
-		String finalName = name.endsWith("/") ? name : name + '/';
-		String finalTarget = target.endsWith("/") ? target : target + '/';
-		return list(finalName + "**")
-				.then(list -> Promises.all(list.stream()
-						.map(meta -> {
-							String filename = meta.getName();
-							return move(filename, finalTarget + filename.substring(finalName.length()));
-						})));
+	/**
+	 * Moves files from source locations to target locations.
+	 * Basically, calls {@link #move} for each pair of source file and target file.
+	 * As {@link #delete} does not guarantee that file will actually be deleted, so does this method.
+	 * Source to target mapping is passed as a map where keys correspond to source files
+	 * and values correspond to target files.
+	 * <p>
+	 * If error occurs while moving any of the files, result promise is completed exceptionally.
+	 * Always completes successfully if empty map is passed as an argument.
+	 * <p>
+	 * Implementations should override this method with optimized version if possible.
+	 * <p>
+	 * <b>This method is non-idempotent</b>
+	 *
+	 * @param sourceToTarget source files to target files mapping
+	 */
+	default Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		return Promises.all(sourceToTarget.entrySet().stream()
+				.map(entry -> move(entry.getKey(), entry.getValue())));
 	}
 
 	/**
@@ -184,7 +213,7 @@ public interface FsClient {
 	}
 
 	default FsClient transform(@NotNull Function<String, Optional<String>> into, @NotNull Function<String, Optional<String>> from) {
-		return new TransformFsClient(this, into, from, $ -> Optional.of("**"));
+		return transform(into, from, $ -> Optional.empty());
 	}
 
 	// similar to 'chroot'
