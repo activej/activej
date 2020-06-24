@@ -457,7 +457,7 @@ public final class PromisesTest {
 	public void reduceWithLazyIterator() {
 		Exception e = new Exception();
 
-		for (int maxCalls = 1; maxCalls < 4; maxCalls++) {
+		for (int maxCalls = 2; maxCalls < 5; maxCalls++) {
 			int finalMaxCalls = maxCalls;
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.of(2), it ->
 					assertEquals(asList(1, 2), await(reduce(it, finalMaxCalls, new ArrayList<Integer>(), ArrayList::add, o -> o))));
@@ -496,7 +496,7 @@ public final class PromisesTest {
 			}
 		};
 
-		for (int maxCalls = 1; maxCalls < 4; maxCalls++) {
+		for (int maxCalls = 2; maxCalls < 5; maxCalls++) {
 			int finalMaxCalls = maxCalls;
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.of(2), it ->
 					assertEquals(asList(1, 2), await(reduceEx(it, $ -> finalMaxCalls, new ArrayList<>(), consumer, Try::of, $ -> {}))));

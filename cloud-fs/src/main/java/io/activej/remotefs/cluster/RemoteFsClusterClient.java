@@ -23,6 +23,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
+import io.activej.common.exception.UncheckedException;
+import io.activej.common.ref.RefInt;
+import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelSplitter;
@@ -42,13 +45,18 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
+import static io.activej.promise.Promises.asPromises;
 import static io.activej.remotefs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -76,6 +84,10 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats getMetadataPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats copyAllPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats moveAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deletePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
@@ -189,27 +201,16 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename) {
-		class ConsumerWithId {
-			final Object id;
-			final ChannelConsumer<ByteBuf> consumer;
-
-			ConsumerWithId(Object id, ChannelConsumer<ByteBuf> consumer) {
-				this.id = id;
-				this.consumer = consumer;
-			}
-		}
 		return checkNotDead()
-				.then(() -> Promises.toList(serverSelector.selectFrom(filename, aliveClients.keySet())
-						.stream()
-						.limit(replicationCount)
-						.map(id -> aliveClients.get(id).upload(filename)
-								.thenEx(wrapDeath(id))
-								.map(consumer -> new ConsumerWithId(id,
+				.then(() -> collect(serverSelector.selectFrom(filename, aliveClients.keySet()),
+						(id, fsClient) -> fsClient.upload(filename)
+								.map(consumer -> new Container<>(id,
 										consumer.withAcknowledgement(ack ->
-												ack.whenException(e -> markIfDead(id, e)))))
-								.toTry())))
+												ack.whenException(e -> markIfDead(id, e))))),
+						Try::of,
+						container -> container.value.close()))
 				.then(tries -> {
-					List<ConsumerWithId> successes = tries.stream()
+					List<Container<ChannelConsumer<ByteBuf>>> successes = tries.stream()
 							.filter(Try::isSuccess)
 							.map(Try::get)
 							.collect(toList());
@@ -221,19 +222,21 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 					ChannelSplitter<ByteBuf> splitter = ChannelSplitter.<ByteBuf>create().lenient();
 
 					Promise<List<Try<Void>>> uploadResults = Promises.toList(successes.stream()
-							.map(consumerWithId -> getAcknowledgement(fn ->
+							.map(container -> getAcknowledgement(fn ->
 									splitter.addOutput()
-											.set(consumerWithId.consumer.withAcknowledgement(fn)))
+											.set(container.value.withAcknowledgement(fn)))
 									.toTry()));
 
 					if (logger.isTraceEnabled()) {
-						logger.trace("uploading file {} to {}, {}", filename, successes.stream().map(s -> s.id.toString()).collect(joining(", ", "[", "]")), this);
+						logger.trace("uploading file {} to {}, {}", filename, successes.stream()
+								.map(container -> container.id.toString())
+								.collect(joining(", ", "[", "]")), this);
 					}
 
 					ChannelConsumer<ByteBuf> consumer = splitter.getInput().getConsumer();
 
 					// check number of uploads only here, so even if there were less connections
-					// than replicationCount, they will still upload
+					// than replicationCount, they would still upload
 					return Promise.of(consumer.withAcknowledgement(ack -> ack
 							.then(() -> uploadResults)
 							.then(ackTries -> {
@@ -258,37 +261,106 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		return checkNotDead()
-				.then(() -> Promises.firstSuccessful(serverSelector.selectFrom(name, aliveClients.keySet())
-						.stream()
+				.then(() -> getBestIds(name))
+				.then(ids -> Promises.firstSuccessful(serverSelector.selectFrom(name, ids).stream()
 						.map(id -> AsyncSupplier.cast(() -> {
 							FsClient client = aliveClients.get(id);
 							if (client == null) { // marked as dead already by somebody
-								return Promise.ofException(new StacklessException(RemoteFsClusterClient.class, "Client " + id + " is not alive"));
+								return ofDeadClient(id);
 							}
 							logger.trace("downloading file {} from {}", name, id);
 							return client.download(name, offset, limit)
-									.whenException(e -> logger.warn("Failed to connect to server with key " + id + " to download file " + name, e))
+									.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
 									.thenEx(wrapDeath(id))
 									.map(supplier -> supplier
 											.withEndOfStream(eos -> eos
 													.whenException(e -> markIfDead(id, e))
 													.whenComplete(downloadFinishPromise.recordStats())));
-						}))))
-				.thenEx((v, e) -> e == null ?
-						Promise.of(v) :
-						ofFailure("Could not download file '" + name + "' from any server", emptyList()))
+						})))
+						.thenEx((v, e) -> e == null ?
+								Promise.of(v) :
+								ofFailure("Could not download file '" + name + "' from any server", emptyList())))
 				.whenComplete(downloadStartPromise.recordStats());
 	}
 
 	@Override
+	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+		return checkNotDead()
+				.then(() -> getBestIds(name))
+				.then(bestIds -> collect(
+						serverSelector.selectFrom(name, bestIds), (id, client) -> client.copy(name, target),
+						tries -> Try.ofException(failedTries("Could not copy file '" + name + "' to '" + target + "' on enough partitions", tries)),
+						$ -> {}))
+				.toVoid()
+				.whenComplete(copyPromise.recordStats());
+	}
+
+	@Override
+	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		return checkNotDead()
+				.then(() -> {
+					Map<Object, Map<String, String>> subMaps = new HashMap<>();
+					return Promises.all(sourceToTarget.entrySet()
+							.stream()
+							.map(entry -> getBestIds(entry.getKey())
+									.whenResult(ids -> ids
+											.forEach(id -> subMaps
+													.computeIfAbsent(entry.getKey(), $ -> new HashMap<>())
+													.put(entry.getKey(), entry.getValue())))))
+							.map($ -> subMaps);
+				})
+				.then(subMaps -> {
+					Map<String, RefInt> successCounters = keysToMap(sourceToTarget.keySet(), $ -> new RefInt(0));
+
+					return checkNotDead()
+							.then(() -> Promises.toList(subMaps.entrySet().stream()
+									.map(entry -> {
+												FsClient client = aliveClients.get(entry.getKey());
+												if (client == null) { // marked as dead already by somebody
+													return ofDeadClient(entry.getKey());
+												}
+												return client.copyAll(entry.getValue())
+														.whenResult(() -> entry.getValue().keySet().stream()
+																.map(successCounters::get)
+																.forEach(RefInt::inc))
+														.thenEx(wrapDeath(entry.getKey()))
+														.toTry();
+											}
+									)))
+							.then(tries -> {
+								if (successCounters.values().stream()
+										.map(RefInt::get)
+										.anyMatch(successes -> successes < replicationCount)) {
+									return ofFailure("Could not copy files '" +
+											toLimitedString(sourceToTarget, 50) + "' on enough partitions", tries);
+								}
+								return Promise.complete();
+							});
+				})
+				.whenComplete(copyAllPromise.recordStats());
+	}
+
+	@Override
+	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+		return FsClient.super.move(name, target)
+				.whenComplete(movePromise.recordStats());
+	}
+
+	@Override
+	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		return FsClient.super.moveAll(sourceToTarget)
+				.whenComplete(moveAllPromise.recordStats());
+	}
+
+	@Override
 	public Promise<Void> delete(@NotNull String name) {
-		return atLeastForOne(client -> client.delete(name))
+		return forEachAlive(client -> client.delete(name))
 				.whenComplete(deletePromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
-		return atLeastForOne(client -> client.deleteAll(toDelete))
+		return forEachAlive(client -> client.deleteAll(toDelete))
 				.whenComplete(deleteAllPromise.recordStats());
 	}
 
@@ -300,26 +372,39 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 								.map(entry -> entry.getValue().list(glob)
 										.thenEx(wrapDeath(entry.getKey()))
 										.toTry())))
-				.then(tries -> checkNotDead()
-						.map($ -> FileMetadata.flatten(tries.stream().filter(Try::isSuccess).map(Try::get))))
+				.then(this::checkStillNotDead)
+				.map(tries -> FileMetadata.flatten(tries.stream().filter(Try::isSuccess).map(Try::get)))
 				.whenComplete(listPromise.recordStats());
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
 		return checkNotDead()
-				.then(() -> Promises.firstSuccessful(serverSelector.selectFrom(name, aliveClients.keySet())
+				.then(() -> Promises.toList(serverSelector.selectFrom(name, aliveClients.keySet())
 						.stream()
-						.map(id -> AsyncSupplier.cast(() -> {
+						.map(id -> {
 							FsClient client = aliveClients.get(id);
 							if (client == null) { // marked as dead already by somebody
-								return Promise.ofException(new StacklessException(RemoteFsClusterClient.class, "Client " + id + " is not alive"));
+								return ofDeadClient(id);
 							}
-							return client.getMetadata(name);
-						}))))
-				.thenEx((v, e) -> e == null ?
-						Promise.of(v) :
-						ofFailure("Could not retrieve metadata for file '" + name + "' from any server", emptyList()))
+							return client.getMetadata(name).toTry();
+						})))
+				.then(this::checkStillNotDead)
+				.then(tries -> {
+					List<FileMetadata> successes = tries.stream()
+							.filter(Try::isSuccess)
+							.map(Try::get)
+							.collect(toList());
+
+					if (successes.isEmpty()) {
+						return ofFailure("Could not retrieve metadata for file '" + name + "' from any server", tries);
+					}
+
+					return Promise.of(successes.stream()
+							.filter(Objects::nonNull)
+							.max(comparing(FileMetadata::getSize))
+							.orElse(null));
+				})
 				.whenComplete(getMetadataPromise.recordStats());
 	}
 
@@ -377,18 +462,12 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 								})));
 	}
 
-	private Promise<Void> atLeastForOne(Function<FsClient, Promise<Void>> action) {
-		return Promises.toList(
-				aliveClients.entrySet().stream()
+	private Promise<Void> forEachAlive(Function<FsClient, Promise<Void>> action) {
+		return checkNotDead()
+				.then(() -> Promises.all(aliveClients.entrySet().stream()
 						.map(entry -> action.apply(entry.getValue())
 								.thenEx(wrapDeath(entry.getKey()))
-								.toTry()))
-				.then(tries -> {
-					if (tries.stream().anyMatch(Try::isSuccess)) { // connected at least to somebody
-						return Promise.complete();
-					}
-					return ofFailure("Couldn't delete on any partition", tries);
-				});
+								.toTry())));
 	}
 
 	private void markAlive(Object partitionId) {
@@ -400,13 +479,21 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	// shortcut for creating single Exception from list of possibly failed tries
-	private static <T, U> Promise<T> ofFailure(String message, List<Try<U>> tries) {
+	private static <T> Throwable failedTries(String message, List<Try<T>> tries) {
 		StacklessException exception = new StacklessException(RemoteFsClusterClient.class, message);
 		tries.stream()
 				.map(Try::getExceptionOrNull)
 				.filter(Objects::nonNull)
 				.forEach(exception::addSuppressed);
-		return Promise.ofException(exception);
+		return exception;
+	}
+
+	private static <T, U> Promise<T> ofFailure(String message, List<Try<U>> tries) {
+		return Promise.ofException(failedTries(message, tries));
+	}
+
+	private static <T> Promise<T> ofDeadClient(Object id) {
+		return Promise.ofException(new StacklessException(RemoteFsClusterClient.class, "Client '" + id + "' is not alive"));
 	}
 
 	private void markIfDead(Object partitionId, Throwable e) {
@@ -427,12 +514,93 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		};
 	}
 
-	private Promise<Void> checkNotDead() {
+	private <T> Promise<List<Try<T>>> checkStillNotDead(List<Try<T>> tries) {
 		if (deadClients.size() >= replicationCount) {
 			return ofFailure("There are more dead partitions than replication count(" +
-					deadClients.size() + " dead, replication count is " + replicationCount + "), aborting", emptyList());
+					deadClients.size() + " dead, replication count is " + replicationCount + "), aborting", tries);
 		}
-		return Promise.complete();
+		return Promise.of(tries);
+	}
+
+	private Promise<Void> checkNotDead() {
+		return checkStillNotDead(emptyList()).toVoid();
+	}
+
+	private <T> Promise<List<Try<T>>> collect(List<Object> ids, BiFunction<Object, FsClient, Promise<T>> action,
+			Function<List<Try<T>>, Try<List<Try<T>>>> finisher, Consumer<T> cleanUp) {
+		RefInt successCount = new RefInt(0);
+		return Promises.reduceEx(asPromises(ids
+						.stream()
+						.map(id -> AsyncSupplier.cast(() -> {
+							FsClient fsClient = aliveClients.get(id);
+							if (fsClient == null) {  // marked as dead already by somebody
+								return ofDeadClient(id);
+							}
+							return action.apply(id, fsClient)
+									.thenEx(wrapDeath(id))
+									.toTry();
+						}))),
+				$ -> Math.max(0, replicationCount - successCount.get()),
+				new ArrayList<>(),
+				(result, tryOfTry) -> {
+					Try<T> aTry = tryOfTry.get();
+					result.add(aTry);
+					aTry.ifSuccess($ -> successCount.inc());
+					return successCount.get() < replicationCount ? null : Try.of(result);
+				},
+				finisher,
+				aTry -> aTry.ifSuccess(cleanUp));
+	}
+
+	private Promise<Set<Object>> getBestIds(@NotNull String name) {
+		return Promises.toList(aliveClients.entrySet().stream()
+				.map(entry -> {
+					Object partitionId = entry.getKey();
+					return entry.getValue().getMetadata(name)                         //   ↓ use null's as file non-existence indicators
+							.map(res -> res != null ? new Container<>(partitionId, res) : null)
+							.thenEx(wrapDeath(partitionId))
+							.toTry();
+				}))
+				.then(this::checkStillNotDead)
+				.map(tries -> {
+
+					RefLong bestSize = new RefLong(-1);
+					Set<Object> bestIds = tries.stream()
+							.filter(Try::isSuccess)
+							.map(Try::get)
+							.filter(Objects::nonNull)
+							.collect(HashSet::new,
+									(result, container) -> {
+										long size = container.value.getSize();
+
+										if (size == bestSize.get()) {
+											result.add(container.id);
+										} else if (size > bestSize.get()) {
+											result.clear();
+											result.add(container.id);
+											bestSize.set(size);
+										}
+									},
+									($1, $2) -> {
+										throw new AssertionError();
+									});
+
+					if (bestIds.isEmpty()) {
+						throw new UncheckedException(failedTries("File not found: " + name, tries));
+					}
+
+					return bestIds;
+				});
+	}
+
+	private static class Container<T> {
+		final Object id;
+		final T value;
+
+		Container(Object id, T value) {
+			this.id = id;
+			this.value = value;
+		}
 	}
 
 	// region JMX
@@ -508,6 +676,26 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@JmxAttribute
 	public PromiseStats getDeleteAllPromise() {
 		return deleteAllPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getCopyPromise() {
+		return copyPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getCopyAllPromise() {
+		return copyAllPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getMovePromise() {
+		return movePromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getMoveAllPromise() {
+		return moveAllPromise;
 	}
 	// endregion
 }

@@ -671,7 +671,6 @@ public final class TestLocalFsClientInvariants {
 				"file", "newFile",
 				"directory", "newDirectory"
 		)))));
-		assertFilesAreSame();
 	}
 
 	@Test
@@ -680,8 +679,6 @@ public final class TestLocalFsClientInvariants {
 				"file", "newFile",
 				"nonexistent", "newFile2"
 		)))));
-
-		assertFilesAreSame();
 	}
 
 	@Test
@@ -690,8 +687,6 @@ public final class TestLocalFsClientInvariants {
 				"file", "newFile",
 				"", "newRoot"
 		)))));
-
-		assertFilesAreSame();
 	}
 
 	@Test
@@ -700,7 +695,6 @@ public final class TestLocalFsClientInvariants {
 				"file", "newFile",
 				"file2", ""
 		)))));
-		assertFilesAreSame();
 	}
 
 	@Test
@@ -709,7 +703,6 @@ public final class TestLocalFsClientInvariants {
 				"file", "newFile",
 				"file2", "../new"
 		)))));
-		assertFilesAreSame();
 	}
 
 	@Test
@@ -718,7 +711,6 @@ public final class TestLocalFsClientInvariants {
 				"file", "newFile",
 				"../new", "newFile2"
 		)))));
-		assertFilesAreSame();
 	}
 
 	@Test

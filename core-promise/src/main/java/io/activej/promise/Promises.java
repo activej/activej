@@ -1371,7 +1371,7 @@ public final class Promises {
 			A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
 			SettablePromise<R> cb) {
 		calls.inc();
-		while (promises.hasNext() && calls.get() <= maxCalls + 1) {
+		while (promises.hasNext() && calls.get() <= maxCalls) {
 			Promise<T> promise = promises.next();
 			if (cb.isComplete()) return;
 			if (promise.isComplete()) {
@@ -1462,7 +1462,7 @@ public final class Promises {
 			A accumulator, BiFunction<A, Try<T>, Try<R>> consumer, Function<A, @NotNull Try<R>> finisher, @Nullable Consumer<T> recycler,
 			SettablePromise<R> cb) {
 		calls.inc();
-		while (promises.hasNext() && calls.get() <= maxCalls.applyAsInt(accumulator) + 1) {
+		while (promises.hasNext() && calls.get() <= maxCalls.applyAsInt(accumulator)) {
 			Promise<T> promise = promises.next();
 			if (cb.isComplete()) return;
 			if (promise.isComplete()) {

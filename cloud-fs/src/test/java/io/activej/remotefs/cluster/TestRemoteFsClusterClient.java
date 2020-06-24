@@ -2,6 +2,7 @@ package io.activej.remotefs.cluster;
 
 import io.activej.async.function.AsyncConsumer;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -196,4 +197,47 @@ public final class TestRemoteFsClusterClient {
 		assertThat(exception, instanceOf(StacklessException.class));
 		assertThat(exception.getMessage(), containsString(fileName));
 	}
+
+	@Test
+	public void testCopy() throws IOException {
+		int numOfServers = 5;
+		String source = "the_file.txt";
+		String target = "new_file.txt";
+		String content = "test content of the file";
+
+		List<Path> paths = Arrays.stream(serverStorages).collect(toList());
+		Collections.shuffle(paths);
+
+		for (Path path : paths.subList(0, numOfServers)) {
+			Files.write(path.resolve(source), content.getBytes(UTF_8));
+		}
+
+		ByteBuf result = await(client.copy(source, target)
+				.then(() -> client.download(target).then(supplier -> supplier.toCollector(ByteBufQueue.collector())))
+				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+
+		assertEquals(content, result.asString(UTF_8));
+	}
+
+	@Test
+	public void testCopyNotEnoughPartitions() throws IOException {
+		int numOfServers = 3;
+		String source = "the_file.txt";
+		String target = "new_file.txt";
+		String content = "test content of the file";
+
+		List<Path> paths = Arrays.stream(serverStorages).collect(toList());
+		Collections.shuffle(paths);
+
+		for (Path path : paths.subList(0, numOfServers)) {
+			Files.write(path.resolve(source), content.getBytes(UTF_8));
+		}
+
+		Throwable exception = awaitException(client.copy(source, target)
+				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+
+		assertThat(exception, instanceOf(StacklessException.class));
+		assertThat(exception.getMessage(), containsString("Could not copy"));
+	}
+
 }

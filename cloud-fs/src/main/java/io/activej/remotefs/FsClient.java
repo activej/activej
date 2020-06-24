@@ -147,15 +147,14 @@ public interface FsClient {
 	 * @param target new file name
 	 */
 	default Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return download(name)
-				.then(supplier -> supplier.streamTo(upload(target)))
+		return copy(name, target)
 				.then(() -> delete(name));
 	}
 
 	/**
 	 * Moves files from source locations to target locations.
-	 * Basically, calls {@link #move} for each pair of source file and target file.
-	 * As {@link #delete} does not guarantee that file will actually be deleted, so does this method.
+	 * Basically, calls {@link #copyAll} with given map and then calls {@link #deleteAll} with source files.
+	 * As {@link #deleteAll)} does not guarantee that files will actually be deleted, so does this method.
 	 * Source to target mapping is passed as a map where keys correspond to source files
 	 * and values correspond to target files.
 	 * <p>
@@ -169,8 +168,8 @@ public interface FsClient {
 	 * @param sourceToTarget source files to target files mapping
 	 */
 	default Promise<Void> moveAll(Map<String, String> sourceToTarget) {
-		return Promises.all(sourceToTarget.entrySet().stream()
-				.map(entry -> move(entry.getKey(), entry.getValue())));
+		return copyAll(sourceToTarget)
+				.then(() -> deleteAll(sourceToTarget.keySet()));
 	}
 
 	/**
