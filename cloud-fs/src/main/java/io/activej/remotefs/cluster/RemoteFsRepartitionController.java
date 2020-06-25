@@ -22,6 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Check;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
+import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelSplitter;
@@ -35,7 +36,6 @@ import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.remotefs.FileMetadata;
 import io.activej.remotefs.FsClient;
-import io.activej.remotefs.LocalFsClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -45,7 +45,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static io.activej.async.function.AsyncSuppliers.reuse;
@@ -59,20 +60,20 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	private static final Logger logger = LoggerFactory.getLogger(RemoteFsRepartitionController.class);
 	private static final boolean CHECK = Check.isEnabled(RemoteFsRepartitionController.class);
 
-	private final Eventloop eventloop;
 	private final Object localPartitionId;
-	private final RemoteFsClusterClient cluster;
 	private final FsClient localStorage;
-	private final ServerSelector serverSelector;
-	private final Map<Object, FsClient> clients;
-	private final int replicationCount;
+	private final FsPartitions partitions;
+	private final AsyncSupplier<Void> repartition = reuse(this::doRepartition);
 
 	private String glob = "**";
 	private String negativeGlob = "";
+	private int replicationCount = 1;
+
 
 	private int allFiles = 0;
 	private int ensuredFiles = 0;
 	private int failedFiles = 0;
+	private boolean isRepartitioning;
 
 	@Nullable
 	private SettablePromise<Void> closeCallback;
@@ -80,25 +81,15 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	private final PromiseStats repartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats singleFileRepartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 
-	private RemoteFsRepartitionController(Eventloop eventloop, Object localPartitionId, RemoteFsClusterClient cluster,
-			FsClient localStorage, ServerSelector serverSelector, Map<Object, FsClient> clients,
-			int replicationCount) {
-		this.eventloop = eventloop;
+	private RemoteFsRepartitionController(Object localPartitionId, FsClient localStorage, FsPartitions partitions) {
 		this.localPartitionId = localPartitionId;
-		this.cluster = cluster;
 		this.localStorage = localStorage;
-		this.serverSelector = serverSelector;
-		this.clients = clients;
-		this.replicationCount = replicationCount;
+		this.partitions = partitions;
 	}
 
-	public static RemoteFsRepartitionController create(Object localPartitionId, RemoteFsClusterClient cluster) {
-		FsClient local = cluster.getClients().get(localPartitionId);
-
-		checkState(local instanceof LocalFsClient, "Local partition should be actually local and be an instance of LocalFsClient");
-
-		return new RemoteFsRepartitionController(cluster.getEventloop(), localPartitionId, cluster, local,
-				cluster.getServerSelector(), cluster.getAliveClients(), cluster.getReplicationCount());
+	public static RemoteFsRepartitionController create(Object localPartitionId, FsPartitions partitions) {
+		FsClient local = partitions.getClients().get(localPartitionId);
+		return new RemoteFsRepartitionController(localPartitionId, local, partitions);
 	}
 
 	public RemoteFsRepartitionController withGlob(@NotNull String glob) {
@@ -111,22 +102,31 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		return this;
 	}
 
+	public RemoteFsRepartitionController withReplicationCount(int replicationCount) {
+		this.replicationCount = replicationCount;
+		return this;
+	}
+
 	@NotNull
 	@Override
 	public Eventloop getEventloop() {
-		return eventloop;
+		return partitions.getEventloop();
 	}
 
 	public Object getLocalPartitionId() {
 		return localPartitionId;
 	}
 
-	public RemoteFsClusterClient getCluster() {
-		return cluster;
-	}
-
 	public FsClient getLocalStorage() {
 		return localStorage;
+	}
+
+	public FsPartitions getPartitions() {
+		return partitions;
+	}
+
+	public int getReplicationCount() {
+		return replicationCount;
 	}
 
 	@NotNull
@@ -134,13 +134,10 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		return repartition.get();
 	}
 
-	private final AsyncSupplier<Void> repartition = reuse(this::doRepartition);
-	private boolean isRepartitioning;
-
 	@NotNull
 	private Promise<Void> doRepartition() {
 		if (CHECK)
-			checkState(eventloop.inEventloopThread(), "Should be called from eventloop thread");
+			checkState(partitions.getEventloop().inEventloopThread(), "Should be called from eventloop thread");
 
 		isRepartitioning = true;
 		return localStorage.list(glob)
@@ -187,10 +184,8 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	}
 
 	private Promise<Boolean> repartitionFile(FileMetadata meta) {
-		Set<Object> partitionIds = new HashSet<>(clients.keySet());
-		partitionIds.add(localPartitionId); // ensure local partition could also be selected
-		List<Object> selected = serverSelector.selectFrom(meta.getName(), partitionIds).subList(0, replicationCount);
-
+		partitions.markAlive(localPartitionId); // ensure local partition could also be selected
+		List<Object> selected = partitions.select(meta.getName()).subList(0, replicationCount);
 		return getPartitionsThatNeedOurFile(meta, selected)
 				.then(uploadTargets -> {
 					if (uploadTargets == null) { // null return means failure
@@ -205,8 +200,8 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 									return true;
 								});
 					}
-					if (uploadTargets.size() == 1 && uploadTargets.get(0) == localStorage) { // everybody had the file AND
-						logger.info("handled file {} (ensured on {})", meta, selected);      // we don't delete the local copy
+					if (uploadTargets.size() == 1 && uploadTargets.get(0) == localPartitionId) { // everybody had the file AND
+						logger.info("handled file {} (ensured on {})", meta, selected);          // we don't delete the local copy
 						return Promise.of(true);
 					}
 
@@ -217,24 +212,25 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 					ChannelSplitter<ByteBuf> splitter = ChannelSplitter.<ByteBuf>create()
 							.withInput(ChannelSupplier.ofPromise(localStorage.download(name)));
 
-					// recycle original non-slice buffer
 					return Promises.toList(uploadTargets.stream() // upload file to target partitions
+							.filter(partitionId -> partitionId != localPartitionId) // just skip it here
 							.map(partitionId -> {
-								if (partitionId == localPartitionId) {
-									return Promise.of(Try.of(null)); // just skip it here
-								}
 								// upload file to this partition
+								FsClient client = partitions.get(partitionId);
+								if (client == null) {
+									return Promise.ofException(new StacklessException(RemoteFsRepartitionController.class, "Client '" + partitionId + "' is not alive"));
+								}
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
-												.set(ChannelConsumer.ofPromise(clients.get(partitionId).upload(name))
+												.set(ChannelConsumer.ofPromise(client.upload(name))
 														.withAcknowledgement(fn)))
 										.whenException(e -> {
 											logger.warn("failed uploading to partition {}", partitionId, e);
-											cluster.markDead(partitionId, e);
+											partitions.markDead(partitionId, e);
 										})
-										.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
-										.toTry();
-							}))
+										.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId));
+							})
+							.map(Promise::toTry))
 							.then(tries -> {
 								if (!tries.stream().allMatch(Try::isSuccess)) { // if anybody failed uploading then we skip this file
 									logger.warn("failed uploading file {}, skipping", meta);
@@ -265,16 +261,16 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						uploadTargets.add(partitionId); // add it to targets so in repartitionFile we know not to delete local file
 						return Promise.of(Try.of(null));  // and skip other logic
 					}
-					return clients.get(partitionId)
-							.list(fileToUpload.getName()) // checking file existence and size on particular partition
-							.whenComplete((list, e) -> {
+					return partitions.get(partitionId)
+							.getMetadata(fileToUpload.getName()) // checking file existence and size on particular partition
+							.whenComplete((meta, e) -> {
 								if (e != null) {
 									logger.warn("failed connecting to partition {}", partitionId, e);
-									cluster.markDead(partitionId, e);
+									partitions.markDead(partitionId, e);
 									return;
 								}
 								// ↓ when there is no file or it is worse than ours
-								if (list.isEmpty() || FileMetadata.COMPARATOR.compare(list.get(0), fileToUpload) < 0) {
+								if (meta == null || meta.getSize() < fileToUpload.getSize()) {
 									uploadTargets.add(partitionId);
 								}
 							})

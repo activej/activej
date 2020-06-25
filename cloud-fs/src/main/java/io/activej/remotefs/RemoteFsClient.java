@@ -146,7 +146,7 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 								.then(msg -> cast(msg, DownloadSize.class))
 								.then(msg -> {
 									long receivingSize = msg.getSize();
-									if (receivingSize > limit){
+									if (receivingSize > limit) {
 										return Promise.ofException(TOO_MUCH_DATA);
 									}
 
@@ -284,7 +284,7 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		return Promise.complete();
+		return ping();
 	}
 
 	@NotNull

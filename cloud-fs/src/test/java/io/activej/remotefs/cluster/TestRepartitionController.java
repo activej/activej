@@ -49,7 +49,7 @@ public final class TestRepartitionController {
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
 	private Path localStorage;
-	private RemoteFsClusterClient cluster;
+	private FsPartitions partitions;
 	private RemoteFsRepartitionController controller;
 	private EventloopTaskScheduler scheduler;
 
@@ -86,13 +86,13 @@ public final class TestRepartitionController {
 			servers.add(server);
 		}
 
-		cluster = RemoteFsClusterClient.create(eventloop, clients)
-				.withReplicationCount(3)
+		partitions = FsPartitions.create(eventloop, clients)
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
-		controller = RemoteFsRepartitionController.create(localPartitionId, cluster);
+		controller = RemoteFsRepartitionController.create(localPartitionId, partitions)
+				.withReplicationCount(3);
 
-		scheduler = EventloopTaskScheduler.create(eventloop, () -> cluster.checkDeadPartitions())
+		scheduler = EventloopTaskScheduler.create(eventloop, partitions::checkDeadPartitions)
 				.withInterval(Duration.ofMillis(1000));
 
 		scheduler.start();
@@ -144,7 +144,7 @@ public final class TestRepartitionController {
 					scheduler.stop();
 					double ms = (System.nanoTime() - start2) / 1e6;
 					System.out.println(String.format("Done repartitioning in %.2f ms", ms));
-					Promises.toList(cluster.getAliveClients().values().stream().map(fsClient -> fsClient.list("**").toTry()))
+					Promises.toList(partitions.getAliveClients().values().stream().map(fsClient -> fsClient.list("**").toTry()))
 							.map(lss -> lss.stream().mapToLong(ls -> {
 								List<FileMetadata> mss = ls.getOrNull();
 								return mss == null ? 0 : mss.stream().mapToLong(FileMetadata::getSize).sum();

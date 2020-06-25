@@ -20,8 +20,7 @@ import java.util.Random;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.test.TestUtils.getFreePort;
 
-@Ignore
-public final class RemoteFsClusterLauncherTest {
+public final class RepartitionControllerLauncherTest {
 	private static final int serverNumber = getFreePort();
 
 	@ClassRule
@@ -32,7 +31,7 @@ public final class RemoteFsClusterLauncherTest {
 
 	@Test
 	public void testInjector() {
-		new RemoteFsClusterLauncher() {}.testInjector();
+		new RepartitionControllerLauncher() {}.testInjector();
 	}
 
 	@Test
@@ -61,7 +60,7 @@ public final class RemoteFsClusterLauncherTest {
 		createFiles(Paths.get("storages/local"), 1000, 10 * 1024, 100 * 1024);
 		System.out.println("Created local files in " + ((System.nanoTime() - start) / 1e6) + " ms");
 
-		new RemoteFsClusterLauncher() {
+		new RepartitionControllerLauncher() {
 			@Override
 			protected Module getOverrideModule() {
 				return new AbstractModule() {

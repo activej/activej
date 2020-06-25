@@ -21,6 +21,7 @@ import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.remotefs.RemoteFsClient;
 import io.activej.remotefs.RemoteFsServer;
+import io.activej.remotefs.cluster.FsPartitions;
 import io.activej.remotefs.cluster.RemoteFsClusterClient;
 import io.activej.remotefs.cluster.RemoteFsRepartitionController;
 
@@ -42,18 +43,22 @@ public final class Initializers {
 	public static Initializer<RemoteFsRepartitionController> ofRepartitionController(Config config) {
 		return controller -> controller
 				.withGlob(config.get("glob", "**"))
-				.withNegativeGlob(config.get("negativeGlob", ""));
+				.withNegativeGlob(config.get("negativeGlob", ""))
+				.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 	}
 
-	public static Initializer<RemoteFsClusterClient> ofRemoteFsCluster(Eventloop eventloop, Config config) {
-		return cluster -> {
+	public static Initializer<FsPartitions> ofFsPartitions(Eventloop eventloop, Config config) {
+		return fsPartitions -> {
 			Map<String, Config> partitions = config.getChild("partitions").getChildren();
 			checkState(!partitions.isEmpty(), "Cluster could not operate without partitions, config had none");
 			for (Map.Entry<String, Config> connection : partitions.entrySet()) {
-				cluster.withPartition(connection.getKey(), RemoteFsClient.create(eventloop, connection.getValue().get(ofInetSocketAddress(), THIS)));
+				fsPartitions.withPartition(connection.getKey(), RemoteFsClient.create(eventloop, connection.getValue().get(ofInetSocketAddress(), THIS)));
 			}
-			cluster.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 		};
+	}
+
+	public static Initializer<RemoteFsClusterClient> ofRemoteFsCluster(Config config) {
+		return cluster -> cluster.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 	}
 
 }
