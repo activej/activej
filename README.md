@@ -3,7 +3,7 @@
 
 ## Introduction
 
-ActiveJ is a full-featured alternative web and big data Java platform built from the ground up. No overhead of intermediate abstractions, 
+[ActiveJ](https://activej.io) is a full-featured alternative web and big data Java platform built from the ground up. No overhead of intermediate abstractions, 
 legacy standards, and third-party libraries make the platform minimalistic, streamlined and lightning-fast!
 
 ## Quick start
@@ -35,7 +35,7 @@ public final class HttpHelloWorldExample extends HttpServerLauncher {
 - *This example cold start time is 0.65 sec.*
 - *This example uses [ActiveInject](https://inject.activej.io) DI library which is 5.5 times faster than Guice and 100s times faster than Spring.*
 
-To learn more about ActiveJ, please visit [the website](https://activej.io) or follow our 5-minute getting-started 
+To learn more about ActiveJ, please visit https://activej.io or follow our 5-minute getting-started 
 [guide](https://activej.io/tutorials/getting-started). 
 
 ## Repository Structure
