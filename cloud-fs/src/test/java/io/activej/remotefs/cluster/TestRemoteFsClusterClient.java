@@ -11,11 +11,13 @@ import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.remotefs.FileMetadata;
 import io.activej.remotefs.FsClient;
 import io.activej.remotefs.RemoteFsClient;
 import io.activej.remotefs.RemoteFsServer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.jetbrains.annotations.Nullable;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -27,9 +29,11 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -335,7 +339,7 @@ public final class TestRemoteFsClusterClient {
 
 		Throwable exception = awaitException(client.copyAll(sourceToTarget)
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
-		assertTrue(exception.getMessage().startsWith("File not found: nonexistent.txt"));
+		assertTrue(exception.getMessage().startsWith("Could not find all files"));
 	}
 
 	@Test
@@ -402,7 +406,72 @@ public final class TestRemoteFsClusterClient {
 
 		Throwable exception = awaitException(client.copyAll(sourceToTarget)
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
-		assertTrue(exception.getMessage().startsWith("File not found: nonexistent.txt"));
+		assertTrue(exception.getMessage().startsWith("Could not find all files:"));
+	}
+
+	@Test
+	public void testInspectAll() throws IOException {
+		List<String> names = IntStream.range(0, 10)
+				.mapToObj(i -> "the_file_" + i + ".txt")
+				.collect(toList());
+		String contentPrefix = "test content of the file ";
+		List<Path> paths = new ArrayList<>(serverStorages);
+
+		for (String name : names) {
+			Collections.shuffle(paths); // writing each source to random partitions
+
+			String content = contentPrefix + name;
+			for (Path path : paths.subList(0, ThreadLocalRandom.current().nextInt(3) + 1)) {
+				Files.write(path.resolve(name), content.getBytes(UTF_8));
+			}
+		}
+
+		Map<String, @Nullable FileMetadata> result = await(client.inspectAll(names)
+				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+
+		assertEquals(names.size(), result.size());
+		for (String name : names) {
+			FileMetadata metadata = result.get(name);
+			assertNotNull(metadata);
+			assertEquals(name, metadata.getName());
+		}
+	}
+
+	@Test
+	public void testInspectAllWithMissingFiles() throws IOException {
+		List<String> existingNames = IntStream.range(0, 10)
+				.mapToObj(i -> "the_file_" + i + ".txt")
+				.collect(toList());
+		String contentPrefix = "test content of the file ";
+		List<Path> paths = new ArrayList<>(serverStorages);
+
+		for (String name : existingNames) {
+			Collections.shuffle(paths); // writing each source to random partitions
+
+			String content = contentPrefix + name;
+			for (Path path : paths.subList(0, ThreadLocalRandom.current().nextInt(3) + 1)) {
+				Files.write(path.resolve(name), content.getBytes(UTF_8));
+			}
+		}
+
+		List<String> nonExistingNames = IntStream.range(0, 10)
+				.mapToObj(i -> "nonexistent_" + i + ".txt")
+				.collect(toList());
+
+		Map<String, @Nullable FileMetadata> result = await(client.inspectAll(concat(existingNames, nonExistingNames))
+				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+
+		assertEquals(existingNames.size() + nonExistingNames.size(), result.size());
+		for (String name : existingNames) {
+			FileMetadata metadata = result.get(name);
+			assertNotNull(metadata);
+			assertEquals(name, metadata.getName());
+		}
+
+		for (String name : nonExistingNames) {
+			assertTrue(result.containsKey(name));
+			assertNull(result.get(name));
+		}
 	}
 
 	private void doTestCopyAll(int numberOfFiles) throws IOException {

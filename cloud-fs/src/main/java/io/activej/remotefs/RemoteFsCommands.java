@@ -51,8 +51,10 @@ public final class RemoteFsCommands {
 					"toDelete", DeleteAll::getFilesToDelete, ofSet(STRING_CODEC)))
 			.with(List.class, object(List::new,
 					"glob", List::getGlob, STRING_CODEC))
-			.with(GetMetadata.class, object(GetMetadata::new,
-					"name", GetMetadata::getName, STRING_CODEC))
+			.with(Inspect.class, object(Inspect::new,
+					"name", Inspect::getName, STRING_CODEC))
+			.with(InspectAll.class, object(InspectAll::new,
+					"names", InspectAll::getNames, ofList(STRING_CODEC)))
 			.with(Ping.class, object(Ping::new));
 
 	public abstract static class FsCommand {
@@ -235,10 +237,10 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	public static final class GetMetadata extends FsCommand {
+	public static final class Inspect extends FsCommand {
 		private final String name;
 
-		public GetMetadata(String name) {
+		public Inspect(String name) {
 			this.name = name;
 		}
 
@@ -248,7 +250,24 @@ public final class RemoteFsCommands {
 
 		@Override
 		public String toString() {
-			return "GetMetadata{name='" + name + "'}";
+			return "Inspect{name='" + name + "'}";
+		}
+	}
+
+	public static final class InspectAll extends FsCommand {
+		private final java.util.List<String> names;
+
+		public InspectAll(java.util.List<String> names) {
+			this.names = names;
+		}
+
+		public java.util.List<String> getNames() {
+			return names;
+		}
+
+		@Override
+		public String toString() {
+			return "InspectAll{names='" + toLimitedString(names, 100) + "'}";
 		}
 	}
 

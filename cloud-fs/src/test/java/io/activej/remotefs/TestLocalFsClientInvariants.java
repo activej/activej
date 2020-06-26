@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static io.activej.common.collection.CollectionUtils.map;
@@ -224,10 +225,10 @@ public final class TestLocalFsClientInvariants {
 	@Test
 	public void moveUpdatesTimestamp() {
 		both(client -> {
-			FileMetadata oldMeta = await(client.getMetadata("file"));
+			FileMetadata oldMeta = await(client.inspect("file"));
 			await(Promises.delay(10));
 			await(client.move("file", "newFile"));
-			FileMetadata newMeta = await(client.getMetadata("newFile"));
+			FileMetadata newMeta = await(client.inspect("newFile"));
 
 			assertEquals(oldMeta.getSize(), newMeta.getSize());
 			assertTrue(newMeta.getTimestamp() > oldMeta.getTimestamp());
@@ -323,10 +324,10 @@ public final class TestLocalFsClientInvariants {
 	@Test
 	public void copyUpdatesTimestamp() {
 		both(client -> {
-			FileMetadata oldMeta = await(client.getMetadata("file"));
+			FileMetadata oldMeta = await(client.inspect("file"));
 			await(Promises.delay(10));
 			await(client.copy("file", "newFile"));
-			FileMetadata newMeta = await(client.getMetadata("newFile"));
+			FileMetadata newMeta = await(client.inspect("newFile"));
 
 			assertEquals(oldMeta.getSize(), newMeta.getSize());
 			assertTrue(newMeta.getTimestamp() > oldMeta.getTimestamp());
@@ -568,8 +569,8 @@ public final class TestLocalFsClientInvariants {
 	@Test
 	public void copyAllUpdatesTimestamps() {
 		both(client -> {
-			FileMetadata oldMeta1 = await(client.getMetadata("file"));
-			FileMetadata oldMeta2 = await(client.getMetadata("file2"));
+			FileMetadata oldMeta1 = await(client.inspect("file"));
+			FileMetadata oldMeta2 = await(client.inspect("file2"));
 
 			await(Promises.delay(10));
 
@@ -578,8 +579,8 @@ public final class TestLocalFsClientInvariants {
 					"file2", "newFile2"
 			)));
 
-			FileMetadata newMeta1 = await(client.getMetadata("newFile"));
-			FileMetadata newMeta2 = await(client.getMetadata("newFile2"));
+			FileMetadata newMeta1 = await(client.inspect("newFile"));
+			FileMetadata newMeta2 = await(client.inspect("newFile2"));
 
 			assertEquals(oldMeta1.getSize(), newMeta1.getSize());
 			assertEquals(oldMeta2.getSize(), newMeta2.getSize());
@@ -726,8 +727,8 @@ public final class TestLocalFsClientInvariants {
 	@Test
 	public void moveAllUpdatesTimestamps() {
 		both(client -> {
-			FileMetadata oldMeta1 = await(client.getMetadata("file"));
-			FileMetadata oldMeta2 = await(client.getMetadata("file2"));
+			FileMetadata oldMeta1 = await(client.inspect("file"));
+			FileMetadata oldMeta2 = await(client.inspect("file2"));
 
 			await(Promises.delay(10));
 
@@ -736,8 +737,8 @@ public final class TestLocalFsClientInvariants {
 					"file2", "newFile2"
 			)));
 
-			FileMetadata newMeta1 = await(client.getMetadata("newFile"));
-			FileMetadata newMeta2 = await(client.getMetadata("newFile2"));
+			FileMetadata newMeta1 = await(client.inspect("newFile"));
+			FileMetadata newMeta2 = await(client.inspect("newFile2"));
 
 			assertEquals(oldMeta1.getSize(), newMeta1.getSize());
 			assertEquals(oldMeta2.getSize(), newMeta2.getSize());
@@ -749,6 +750,60 @@ public final class TestLocalFsClientInvariants {
 		assertFilesAreSame();
 	}
 	//endregion
+
+
+	@Test
+	public void inspectAllEmpty() {
+		both(client -> {
+			Map<String, FileMetadata> result = await(client.inspectAll(emptyList()));
+			assertTrue(result.isEmpty());
+		});
+	}
+
+	@Test
+	public void inspectAllSingle() {
+		both(client -> {
+			Map<String, FileMetadata> result = await(client.inspectAll(singletonList("file")));
+			assertEquals(1, result.size());
+			assertEquals("file", result.get("file").getName());
+		});
+	}
+
+	@Test
+	public void inspectAllMultiple() {
+		both(client -> {
+			Map<String, FileMetadata> result = await(client.inspectAll(asList("file", "file2")));
+			assertEquals(2, result.size());
+			assertEquals("file", result.get("file").getName());
+			assertEquals("file2", result.get("file2").getName());
+		});
+	}
+
+	@Test
+	public void inspectAllMultipleWithMissing() {
+		both(client -> {
+			Map<String, FileMetadata> result = await(client.inspectAll(asList("file", "nonexistent")));
+			assertEquals(2, result.size());
+			assertEquals("file", result.get("file").getName());
+
+			assertTrue(result.containsKey("nonexistent"));
+			assertNull(result.get("nonexistent"));
+		});
+	}
+
+	@Test
+	public void inspectAllWithAllMissing() {
+		both(client -> {
+			Map<String, FileMetadata> result = await(client.inspectAll(asList("nonexistent", "nonexistent2")));
+			assertEquals(2, result.size());
+
+			assertTrue(result.containsKey("nonexistent"));
+			assertNull(result.get("nonexistent"));
+
+			assertTrue(result.containsKey("nonexistent2"));
+			assertNull(result.get("nonexistent2"));
+		});
+	}
 
 	// region helpers
 	private void assertFileEquals(String first, String second) {

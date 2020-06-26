@@ -24,16 +24,14 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.util.stream.Collectors.*;
 
 final class FilterFsClient implements FsClient {
 	private final FsClient parent;
@@ -89,11 +87,25 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
 		if (!predicate.test(name)) {
 			return Promise.of(null);
 		}
-		return parent.getMetadata(name);
+		return parent.inspect(name);
+	}
+
+	@Override
+	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+		Map<Boolean, List<String>> partitioned = names.stream().collect(partitioningBy(predicate));
+		List<String> query = partitioned.get(TRUE);
+		return (query.isEmpty() ?
+				Promise.of(Collections.<String, FileMetadata>emptyMap()) :
+				parent.inspectAll(query))
+				.map(inspected -> {
+					Map<String, FileMetadata> result = new HashMap<>(inspected);
+					partitioned.get(FALSE).forEach(name -> result.put(name, null));
+					return result;
+				});
 	}
 
 	@Override

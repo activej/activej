@@ -97,6 +97,8 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	private final PromiseStats downloadBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats inspectPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats inspectAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -238,8 +240,26 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
-		return execute(() -> toFileMetadata(resolve(name)));
+	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+		return execute(() -> toFileMetadata(resolve(name)))
+				.whenComplete(toLogger(logger, TRACE, "inspect", name, this))
+				.whenComplete(inspectPromise.recordStats());
+	}
+
+	@Override
+	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+		if (names.isEmpty()) return Promise.of(emptyMap());
+
+		return execute(
+				() -> {
+					Map<String, FileMetadata> result = new HashMap<>();
+					for (String name : names) {
+						result.put(name, toFileMetadata(resolve(name)));
+					}
+					return result;
+				})
+				.whenComplete(toLogger(logger, TRACE, "inspectAll", names, this))
+				.whenComplete(inspectAllPromise.recordStats());
 	}
 
 	@Override
@@ -309,7 +329,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	private void doCopy(Map<String, String> sourceToTargetMap) throws StacklessException, IOException {
-		for (Map.Entry<String, String> entry :  sourceToTargetMap.entrySet()) {
+		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
 			Path path = resolve(entry.getKey());
 			Path targetPath = resolve(entry.getValue());
 
@@ -430,13 +450,12 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	@Nullable
 	private FileMetadata toFileMetadata(Path path) {
 		try {
-			if (!Files.exists(path)) return null;
-			if (Files.isDirectory(path)) throw IS_DIRECTORY;
+			if (!Files.isRegularFile(path)) return null;
 
 			String filename = toRemoteName.apply(storage.relativize(path).toString());
 			long timestamp = Files.getLastModifiedTime(path).toMillis();
 			return FileMetadata.of(filename, Files.size(path), timestamp);
-		} catch (StacklessException | IOException e) {
+		} catch (IOException e) {
 			throw new UncheckedException(e);
 		}
 	}
@@ -499,7 +518,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 					return CONTINUE;
 				}
 				Path relative = dir.relativize(subdir);
-				for (int i = 0; i < relative.getNameCount(); i++) {
+				for (int i = 0; i < Math.min(relative.getNameCount(), matchers.length); i++) {
 					PathMatcher matcher = matchers[i];
 					if (matcher == null) {
 						return CONTINUE;
@@ -575,6 +594,16 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	@JmxAttribute
 	public PromiseStats getListPromise() {
 		return listPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getInspectPromise() {
+		return inspectPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getInspectAllPromise() {
+		return inspectAllPromise;
 	}
 
 	@JmxAttribute

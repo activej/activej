@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.activej.codec.StructuredCodecs.*;
+import static io.activej.common.collection.CollectionUtils.toLimitedString;
 
 public final class RemoteFsResponses {
 	public static final StructuredCodec<FileMetadata> FILE_META_CODEC = StructuredCodecs.tuple(FileMetadata::parse,
@@ -43,7 +44,8 @@ public final class RemoteFsResponses {
 			.with(DeleteFinished.class, object(DeleteFinished::new))
 			.with(DeleteAllFinished.class, object(DeleteAllFinished::new))
 			.with(ListFinished.class, object(ListFinished::new, "files", ListFinished::getFiles, ofList(FILE_META_CODEC)))
-			.with(GetMetadataFinished.class, object(GetMetadataFinished::new, "metadata", GetMetadataFinished::getMetadata, FILE_META_CODEC.nullable()))
+			.with(InspectFinished.class, object(InspectFinished::new, "metadata", InspectFinished::getMetadata, FILE_META_CODEC.nullable()))
+			.with(InspectAllFinished.class, object(InspectAllFinished::new, "metadataList", InspectAllFinished::getMetadataList, ofList(FILE_META_CODEC)))
 			.with(PingFinished.class, object(PingFinished::new))
 			.with(ServerError.class, object(ServerError::new, "code", ServerError::getCode, INT_CODEC));
 
@@ -157,11 +159,11 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	public static final class GetMetadataFinished extends FsResponse {
+	public static final class InspectFinished extends FsResponse {
 		@Nullable
 		private final FileMetadata metadata;
 
-		public GetMetadataFinished(@Nullable FileMetadata metadata) {
+		public InspectFinished(@Nullable FileMetadata metadata) {
 			this.metadata = metadata;
 		}
 
@@ -172,7 +174,25 @@ public final class RemoteFsResponses {
 
 		@Override
 		public String toString() {
-			return "GetMetadataFinished{metadata=" + metadata + '}';
+			return "InspectFinished{metadata=" + metadata + '}';
+		}
+	}
+
+	public static final class InspectAllFinished extends FsResponse {
+		private final List<FileMetadata> metadataList;
+
+		public InspectAllFinished(List<FileMetadata> metadataList) {
+			this.metadataList = metadataList;
+		}
+
+		@Nullable
+		public List<FileMetadata> getMetadataList() {
+			return metadataList;
+		}
+
+		@Override
+		public String toString() {
+			return "InspectAllFinished{metadataList=" + toLimitedString(metadataList, 100) + '}';
 		}
 	}
 

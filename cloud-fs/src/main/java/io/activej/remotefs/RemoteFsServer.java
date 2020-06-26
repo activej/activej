@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
@@ -43,6 +44,7 @@ import static io.activej.remotefs.FsClient.BAD_RANGE;
 import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
 import static io.activej.remotefs.RemoteFsUtils.ERROR_TO_ID;
 import static io.activej.remotefs.RemoteFsUtils.nullTerminatedJson;
+import static java.util.stream.Collectors.toList;
 
 /**
  * An implementation of {@link AbstractServer} for RemoteFs.
@@ -66,7 +68,8 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats moveAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats getMetadataPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats inspectPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats inspectAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deletePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -134,7 +137,7 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 			if (offset < 0 || limit < 0) {
 				return Promise.ofException(BAD_RANGE);
 			}
-			return client.getMetadata(name)
+			return client.inspect(name)
 					.then(meta -> {
 						if (meta == null) {
 							return Promise.ofException(FILE_NOT_FOUND);
@@ -157,7 +160,13 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 		onMessage(Delete.class, simpleHandler(msg -> client.delete(msg.getName()), $ -> new DeleteFinished(), deletePromise));
 		onMessage(DeleteAll.class, simpleHandler(msg -> client.deleteAll(msg.getFilesToDelete()), $ -> new DeleteAllFinished(), deleteAllPromise));
 		onMessage(List.class, simpleHandler(msg -> client.list(msg.getGlob()), ListFinished::new, listPromise));
-		onMessage(GetMetadata.class, simpleHandler(msg -> client.getMetadata(msg.getName()), GetMetadataFinished::new, getMetadataPromise));
+		onMessage(Inspect.class, simpleHandler(msg -> client.inspect(msg.getName()), InspectFinished::new, inspectPromise));
+		onMessage(InspectAll.class,
+				simpleHandler(msg -> client.inspectAll(msg.getNames()),
+						map -> new InspectAllFinished(map.values().stream()
+								.filter(Objects::nonNull)
+								.collect(toList())),
+						inspectAllPromise));
 		onMessage(Ping.class, simpleHandler(msg -> client.ping(), $ -> new PingFinished(), pingPromise));
 	}
 
@@ -200,8 +209,13 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	}
 
 	@JmxAttribute
-	public PromiseStats getGetMetadataPromise() {
-		return getMetadataPromise;
+	public PromiseStats getInspectPromise() {
+		return inspectPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getInspectAllPromise() {
+		return inspectAllPromise;
 	}
 
 	@JmxAttribute

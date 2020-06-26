@@ -262,7 +262,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						return Promise.of(Try.of(null));  // and skip other logic
 					}
 					return partitions.get(partitionId)
-							.getMetadata(fileToUpload.getName()) // checking file existence and size on particular partition
+							.inspect(fileToUpload.getName()) // checking file existence and size on particular partition
 							.whenComplete((meta, e) -> {
 								if (e != null) {
 									logger.warn("failed connecting to partition {}", partitionId, e);

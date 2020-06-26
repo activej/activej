@@ -224,7 +224,7 @@ public final class FsIntegrationTest {
 		String file = "no_file.txt";
 
 		FileMetadata metadata = await(client.delete(file)
-				.then(() -> client.getMetadata(file))
+				.then(() -> client.inspect(file))
 				.whenComplete(server::close));
 		assertNull(metadata);
 	}

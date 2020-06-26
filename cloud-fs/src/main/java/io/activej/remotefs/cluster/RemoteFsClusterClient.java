@@ -52,6 +52,7 @@ import static io.activej.common.collection.CollectionUtils.keysToMap;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.promise.Promises.asPromises;
+import static io.activej.remotefs.FileMetadata.getMoreCompleteFile;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
@@ -74,7 +75,8 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	private final PromiseStats downloadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats getMetadataPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats inspectPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats inspectAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -209,17 +211,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
 		return checkNotDead()
-				.then(() -> {
-					Map<Object, Map<String, String>> subMaps = new HashMap<>();
-					return Promises.all(sourceToTarget.entrySet()
-							.stream()
-							.map(entry -> getBestIds(entry.getKey())
-									.whenResult(ids -> ids
-											.forEach(id -> subMaps
-													.computeIfAbsent(id, $ -> new HashMap<>())
-													.put(entry.getKey(), entry.getValue())))))
-							.map($ -> subMaps);
-				})
+				.then(() -> getSubMaps(sourceToTarget))
 				.then(subMaps -> {
 					Map<String, RefInt> successCounters = keysToMap(sourceToTarget.keySet(), $ -> new RefInt(0));
 
@@ -288,18 +280,12 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
 		return checkNotDead()
 				.then(() -> Promises.toList(partitions.select(name)
 						.stream()
-						.map(id -> {
-							FsClient client = partitions.get(id);
-							if (client == null) { // marked as dead already by somebody
-								return RemoteFsClusterClient.<FileMetadata>ofDeadClient(id);
-							}
-							return client.getMetadata(name);
-						})
-						.map(Promise::toTry)))
+						.map(partitions::get)
+						.map(client -> client.inspect(name).toTry())))
 				.then(this::checkStillNotDead)
 				.then(tries -> {
 					List<FileMetadata> successes = tries.stream()
@@ -316,7 +302,38 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 							.max(comparing(FileMetadata::getSize))
 							.orElse(null));
 				})
-				.whenComplete(getMetadataPromise.recordStats());
+				.whenComplete(inspectPromise.recordStats());
+	}
+
+	@Override
+	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+		return checkNotDead()
+				.then(() -> Promises.toList(partitions.getAliveClients().values()
+						.stream()
+						.map(client -> client.inspectAll(names).toTry())))
+				.then(this::checkStillNotDead)
+				.then(tries -> {
+					List<Map<String, FileMetadata>> successes = tries.stream()
+							.filter(Try::isSuccess)
+							.map(Try::get)
+							.collect(toList());
+
+					if (successes.isEmpty()) {
+						return ofFailure("Could not retrieve metadata for files " + toLimitedString(names, 100) + "' from any server", tries);
+					}
+
+					return Promise.of(successes.stream()
+							.flatMap(map -> map.entrySet().stream())
+							.<Map<String, FileMetadata>>collect(HashMap::new,
+									(newMap, entry) -> {
+										String key = entry.getKey();
+										newMap.put(key, getMoreCompleteFile(newMap.get(key), entry.getValue()));
+									},
+									($1, $2) -> {
+										throw new AssertionError();
+									}));
+				})
+				.whenComplete(inspectAllPromise.recordStats());
 	}
 
 	@Override
@@ -430,7 +447,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promises.toList(partitions.getAliveClients().entrySet().stream()
 				.map(entry -> {
 					Object partitionId = entry.getKey();
-					return entry.getValue().getMetadata(name)                         //   ↓ use null's as file non-existence indicators
+					return entry.getValue().inspect(name)                         //   ↓ use null's as file non-existence indicators
 							.map(res -> res != null ? new Container<>(partitionId, res) : null)
 							.thenEx(wrapDeath(partitionId))
 							.toTry();
@@ -466,6 +483,58 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 					return bestIds;
 				});
 	}
+
+	private Promise<Map<Object, Map<String, String>>> getSubMaps(@NotNull Map<String, String> names) {
+		return Promises.toList(partitions.getAliveClients().entrySet().stream()
+				.map(entry -> {
+					Object partitionId = entry.getKey();
+					return entry.getValue().inspectAll(new ArrayList<>(names.keySet()))
+							.map(res -> new Container<>(partitionId, res))
+							.thenEx(wrapDeath(partitionId))
+							.toTry();
+				}))
+				.then(this::checkStillNotDead)
+				.map(tries -> {
+
+					Map<String, RefLong> bestSizes = keysToMap(names.keySet(), $ -> new RefLong(-1));
+					Map<Object, Map<String, String>> subMaps = tries.stream()
+							.filter(Try::isSuccess)
+							.map(Try::get)
+							.collect(HashMap::new,
+									(result, container) -> {
+										for (Map.Entry<String, FileMetadata> entry : container.value.entrySet()) {
+											if (entry.getValue() == null) {
+												continue;
+											}
+											long size = entry.getValue().getSize();
+
+											RefLong bestSize = bestSizes.get(entry.getKey());
+											if (size < bestSize.get()) {
+												continue;
+											} else if (size > bestSize.get()) {
+												result.values().forEach(map -> map.remove(entry.getKey()));
+												bestSize.set(size);
+											}
+											result.computeIfAbsent(container.id, $ -> new HashMap<>())
+													.put(entry.getKey(), names.get(entry.getKey()));
+										}
+									},
+									($1, $2) -> {
+										throw new AssertionError();
+									});
+
+					long collectedNames = subMaps.values().stream()
+							.flatMap(map -> map.keySet().stream())
+							.distinct()
+							.count();
+					if (collectedNames < names.size()) {
+						throw new UncheckedException(failedTries("Could not find all files: " + toLimitedString(names.keySet(), 100), tries));
+					}
+
+					return subMaps;
+				});
+	}
+
 
 	private static class Container<T> {
 		final Object id;
@@ -538,8 +607,13 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@JmxAttribute
-	public PromiseStats getGetMetadataPromise() {
-		return getMetadataPromise;
+	public PromiseStats getInspectPromise() {
+		return inspectPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getInspectAllPromise() {
+		return inspectAllPromise;
 	}
 
 	@JmxAttribute

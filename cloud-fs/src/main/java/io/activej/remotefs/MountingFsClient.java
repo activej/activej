@@ -72,8 +72,20 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
-		return findMount(name).getMetadata(name);
+	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+		return findMount(name).inspect(name);
+	}
+
+	@Override
+	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+		Map<String, FileMetadata> result = new HashMap<>();
+		return Promises.all(names.stream()
+				.collect(groupingBy(this::findMount))
+				.entrySet().stream()
+				.map(entry -> entry.getKey()
+						.inspectAll(entry.getValue())
+						.whenResult(result::putAll)))
+				.map($ -> result);
 	}
 
 	@Override
@@ -142,11 +154,9 @@ final class MountingFsClient implements FsClient {
 						.computeIfAbsent(first, $ -> new HashMap<>())
 						.put(source, target);
 			} else {
-				movePromises.add(() -> {
-					return first.download(source)
-							.then(supplier -> supplier.streamTo(second.upload(target)))
-							.then(() -> first.delete(target));
-				});
+				movePromises.add(() -> first.download(source)
+						.then(supplier -> supplier.streamTo(second.upload(target)))
+						.then(() -> deleteSource ? first.delete(target) : Promise.complete()));
 			}
 		}
 		for (Map.Entry<FsClient, Map<String, String>> entry : groupedBySameClient.entrySet()) {

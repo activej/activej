@@ -51,6 +51,8 @@ import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.remotefs.RemoteFsUtils.ID_TO_ERROR;
 import static io.activej.remotefs.RemoteFsUtils.nullTerminatedJson;
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * An implementation of {@link FsClient} which connects to a single {@link RemoteFsServer} and communicates with it.
@@ -81,7 +83,8 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats moveAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats getMetadataPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats inspectPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats inspectAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deletePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -234,10 +237,25 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> getMetadata(@NotNull String name) {
-		return simpleCommand(new GetMetadata(name), GetMetadataFinished.class, GetMetadataFinished::getMetadata)
-				.whenComplete(toLogger(logger, "getMetadata", name, this))
-				.whenComplete(getMetadataPromise.recordStats());
+	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+		return simpleCommand(new Inspect(name), InspectFinished.class, InspectFinished::getMetadata)
+				.whenComplete(toLogger(logger, "inspect", name, this))
+				.whenComplete(inspectPromise.recordStats());
+	}
+
+	@Override
+	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+		if (names.isEmpty()) return Promise.of(emptyMap());
+
+		return simpleCommand(new InspectAll(names), InspectAllFinished.class,
+				response -> {
+					Map<String, FileMetadata> result = response.getMetadataList().stream()
+							.collect(toMap(FileMetadata::getName, Function.identity()));
+					names.forEach(name -> result.putIfAbsent(name, null));
+					return result;
+				})
+				.whenComplete(toLogger(logger, "inspectAll", toLimitedString(names, 100), this))
+				.whenComplete(inspectAllPromise.recordStats());
 	}
 
 	@Override
@@ -350,8 +368,13 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@JmxAttribute
-	public PromiseStats getGetMetadataPromise() {
-		return getMetadataPromise;
+	public PromiseStats getInspectPromise() {
+		return inspectPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getInspectAllPromise() {
+		return inspectAllPromise;
 	}
 
 	@JmxAttribute
