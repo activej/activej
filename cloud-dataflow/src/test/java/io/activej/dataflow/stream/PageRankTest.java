@@ -23,6 +23,9 @@ import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import io.activej.dataflow.dsl.AST;
+import io.activej.dataflow.dsl.DslParser;
+import io.activej.dataflow.dsl.EvaluationContext;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -34,6 +37,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static io.activej.dataflow.dsl.DslParser.defaultExpressions;
 import static io.activej.codec.StructuredCodecs.object;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
@@ -323,6 +327,87 @@ public class PageRankTest {
 		DatasetConsumerOfId<Rank> consumerNode = consumerOfId(pageRanks, "result");
 
 		consumerNode.channels(DataflowContext.of(graph));
+
+		await(graph.execute()
+				.whenComplete(assertComplete($ -> {
+					server1.close();
+					server2.close();
+				})));
+
+		List<Rank> result = new ArrayList<>();
+		result.addAll(result1.getList());
+		result.addAll(result2.getList());
+		result.sort(Comparator.comparingLong(rank -> rank.pageId));
+
+		assertEquals(asList(new Rank(1, 1.7861), new Rank(2, 0.6069), new Rank(3, 0.6069)), result);
+	}
+
+	@Test
+	public void testQL() throws Exception {
+		InetSocketAddress address1 = getFreeListenAddress();
+		InetSocketAddress address2 = getFreeListenAddress();
+
+		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.bind(new Key<StructuredCodec<PageKeyFunction>>() {}).toInstance(object(PageKeyFunction::new))
+				.bind(new Key<StructuredCodec<RankKeyFunction>>() {}).toInstance(object(RankKeyFunction::new))
+				.bind(new Key<StructuredCodec<RankAccumulatorKeyFunction>>() {}).toInstance(object(RankAccumulatorKeyFunction::new))
+				.bind(new Key<StructuredCodec<LongComparator>>() {}).toInstance(object(LongComparator::new))
+				.bind(new Key<StructuredCodec<PageToRankFunction>>() {}).toInstance(object(PageToRankFunction::new))
+				.bind(new Key<StructuredCodec<RankAccumulatorReducer>>() {}).toInstance(object(RankAccumulatorReducer::new))
+				.bind(new Key<StructuredCodec<PageRankJoiner>>() {}).toInstance(object(PageRankJoiner::new))
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.build();
+
+		StreamConsumerToList<Rank> result1 = StreamConsumerToList.create();
+
+		Module serverModule1 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(asList(
+						new Page(1, new long[]{1, 2, 3}),
+						new Page(3, new long[]{1})))
+				.bind(datasetId("result")).toInstance(result1)
+
+				.build();
+
+		StreamConsumerToList<Rank> result2 = StreamConsumerToList.create();
+		Module serverModule2 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(singletonList(
+						new Page(2, new long[]{1})))
+				.bind(datasetId("result")).toInstance(result2)
+
+				.build();
+
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+
+		server1.listen();
+		server2.listen();
+
+		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+
+		AST.Query query = DslParser.create(defaultExpressions()).parse(
+				"USE \"io.activej.dataflow.stream.PageRankTest$\"\n" +
+						"\n" +
+						"pages = DATASET \"items\" TYPE \"Page\"\n" +
+						"pages = CAST SORT pages BY \"PageKeyFunction\"\n" +
+						"pages = REPARTITION SORT pages\n" +
+						"ranks = MAP pages BY \"PageToRankFunction\"\n" +
+						"ranks = CAST SORT ranks BY \"RankKeyFunction\"\n" +
+						"\n" +
+						"REPEAT 10 TIMES\n" +
+						"    updates = JOIN pages AND ranks WITH \"PageRankJoiner\" RESULT \"Rank\" BY \"RankKeyFunction\"\n" +
+						"    ranks = SORT REDUCE REPARTITION REDUCE updates TYPE \"Rank\"\n" +
+						"                 WITH \"RankAccumulatorReducer\"\n" +
+						"                 BY \"RankKeyFunction\"\n" +
+						"                 ACCUMULATING BY \"RankAccumulator\"\n" +
+						"                 EXTRACTING BY \"RankAccumulatorKeyFunction\"\n" +
+						"    ranks = CAST SORT ranks BY \"RankKeyFunction\"\n" +
+						"END\n" +
+						"\n" +
+						"WRITE ranks INTO \"result\"\n"
+		);
+		query.evaluate(new EvaluationContext(DataflowContext.of(graph)));
 
 		await(graph.execute()
 				.whenComplete(assertComplete($ -> {

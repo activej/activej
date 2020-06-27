@@ -36,6 +36,9 @@ import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import io.activej.dataflow.dsl.AST;
+import io.activej.dataflow.dsl.DslParser;
+import io.activej.dataflow.dsl.EvaluationContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -53,6 +56,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static io.activej.dataflow.dsl.DslParser.defaultExpressions;
 import static io.activej.codec.StructuredCodec.ofObject;
 import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.dataflow.dataset.Datasets.*;
@@ -522,5 +526,76 @@ public final class DataflowTest {
 			current = next;
 		}
 		return true;
+	}
+
+	@Test
+	public void testFilterQL() throws Exception {
+		InetSocketAddress address1 = getFreeListenAddress();
+		InetSocketAddress address2 = getFreeListenAddress();
+
+		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.build();
+
+		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
+		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
+
+		Module serverModule1 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(asList(
+						new TestItem(6),
+						new TestItem(4),
+						new TestItem(2),
+						new TestItem(3),
+						new TestItem(1)))
+				.bind(datasetId("result")).toInstance(result1)
+				.build();
+
+		Module serverModule2 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(asList(
+						new TestItem(7),
+						new TestItem(7),
+						new TestItem(8),
+						new TestItem(2),
+						new TestItem(5)))
+				.bind(datasetId("result")).toInstance(result2)
+				.build();
+
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+
+		server1.listen();
+		server2.listen();
+
+		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+
+		AST.Query query = DslParser.create(defaultExpressions()).parse(
+				"USE \"io.activej.dataflow.stream.DataflowTest$\"\n" +
+						"\n" +
+						"-- this is a comment\n" +
+						"\n" +
+						"items = DATASET \"items\" TYPE \"TestItem\"\n" +
+						"filtered = FILTER items WITH (.value % 2 == 0)\n" +
+						"sorted = LOCAL SORT filtered BY \"TestKeyFunction\"\n" +
+						"                             COMPARING WITH \"TestComparator\"\n" +
+						"\n" +
+						"WRITE sorted INTO \"result\"\n"
+		);
+
+		System.out.println(query);
+
+		query.evaluate(new EvaluationContext(DataflowContext.of(graph)));
+
+		System.out.println(graph.toGraphViz());
+
+		await(graph.execute()
+				.whenComplete(assertComplete($ -> {
+					server1.close();
+					server2.close();
+				})));
+
+		assertEquals(asList(new TestItem(2), new TestItem(4), new TestItem(6)), result1.getList());
+		assertEquals(asList(new TestItem(2), new TestItem(8)), result2.getList());
 	}
 }

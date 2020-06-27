@@ -247,19 +247,19 @@ public class Expressions {
 	 * @param predicateDefs list of the predicate
 	 * @return new instance of the PredicateDefOr
 	 */
-	public static ExpressionBooleanOr or(List<Expression> predicateDefs) {
+	public static Expression or(List<Expression> predicateDefs) {
 		return new ExpressionBooleanOr(predicateDefs);
 	}
 
-	public static ExpressionBooleanOr or(Stream<Expression> predicateDefs) {
+	public static Expression or(Stream<Expression> predicateDefs) {
 		return or(predicateDefs.collect(toList()));
 	}
 
-	public static ExpressionBooleanOr or(Expression... predicateDefs) {
+	public static Expression or(Expression... predicateDefs) {
 		return or(asList(predicateDefs));
 	}
 
-	public static ExpressionBooleanOr or(Expression predicate1, Expression predicate2) {
+	public static Expression or(Expression predicate1, Expression predicate2) {
 		return or(asList(predicate1, predicate2));
 	}
 
@@ -479,7 +479,7 @@ public class Expressions {
 	 * @param fields fields for constructor
 	 * @return new instance of the ExpressionConstructor
 	 */
-	public static ExpressionConstructor constructor(Class<?> type, Expression... fields) {
+	public static Expression constructor(Class<?> type, Expression... fields) {
 		return new ExpressionConstructor(type, asList(fields));
 	}
 
