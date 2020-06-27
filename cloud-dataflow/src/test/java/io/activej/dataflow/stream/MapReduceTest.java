@@ -105,7 +105,6 @@ public class MapReduceTest {
 
 		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
 				.bind(new Key<StructuredCodec<StringKeyFunction>>() {}).toInstance(ofObject(StringKeyFunction::new))
-				.bind(new Key<StructuredCodec<StringComparator>>() {}).toInstance(ofObject(StringComparator::new))
 				.bind(new Key<StructuredCodec<StringMapFunction>>() {}).toInstance(ofObject(StringMapFunction::new))
 				.bind(new Key<StructuredCodec<StringReducer>>() {}).toInstance(ofObject(StringReducer::new))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
@@ -140,7 +139,7 @@ public class MapReduceTest {
 		Dataset<String> items = datasetOfId("items", String.class);
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), StringCount.class);
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
-				new StringReducer(), String.class, new StringKeyFunction(), new StringComparator());
+				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
 		Collector<StringCount> collector = new Collector<>(reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
@@ -191,13 +190,6 @@ public class MapReduceTest {
 		@Override
 		public String apply(StringCount stringCount) {
 			return stringCount.s;
-		}
-	}
-
-	public static class StringComparator implements Comparator<String> {
-		@Override
-		public int compare(String s1, String s2) {
-			return s1.compareTo(s2);
 		}
 	}
 }

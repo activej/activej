@@ -296,7 +296,7 @@ public class PageRankTest {
 	@Test
 	@Ignore
 	public void runDebugServer() throws Exception {
-		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
+		Injector env = Injector.of(createModule(new Partition(new InetSocketAddress(9000)), new Partition(new InetSocketAddress(9001))));
 		env.getInstance(AsyncHttpServer.class).withListenPort(8080).listen();
 		await();
 	}
