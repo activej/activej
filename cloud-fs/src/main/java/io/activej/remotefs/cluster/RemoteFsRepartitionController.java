@@ -23,6 +23,8 @@ import io.activej.common.Check;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
+import io.activej.common.exception.UncheckedException;
+import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelSplitter;
@@ -45,9 +47,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
@@ -55,25 +57,36 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Preconditions.checkState;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.remotefs.RemoteFsUtils.isWildcard;
+import static java.util.Collections.*;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 public final class RemoteFsRepartitionController implements WithInitializer<RemoteFsRepartitionController>, EventloopJmxBeanEx, EventloopService {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteFsRepartitionController.class);
 	private static final boolean CHECK = Check.isEnabled(RemoteFsRepartitionController.class);
+
+	private static final Duration DEFAULT_PLAN_RECALCULATION_INTERVAL = Duration.ofMinutes(1);
 
 	private final Object localPartitionId;
 	private final FsClient localStorage;
 	private final FsPartitions partitions;
 	private final AsyncSupplier<Void> repartition = reuse(this::doRepartition);
 
-	private String glob = "**";
-	private String negativeGlob = "";
-	private int replicationCount = 1;
+	private final List<String> processedFiles = new ArrayList<>();
 
+	private String glob = "**";
+	private Predicate<FileMetadata> negativeGlobPredicate = $ -> true;
+	private int replicationCount = 1;
+	private long planRecalculationInterval = DEFAULT_PLAN_RECALCULATION_INTERVAL.toMillis();
+	private Iterator<String> repartitionPlan;
 
 	private int allFiles = 0;
 	private int ensuredFiles = 0;
 	private int failedFiles = 0;
 	private boolean isRepartitioning;
+
+	private Set<Object> lastAliveClientIds = emptySet();
+	private long lastPlanRecalculation;
 
 	@Nullable
 	private SettablePromise<Void> closeCallback;
@@ -98,12 +111,25 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	}
 
 	public RemoteFsRepartitionController withNegativeGlob(@NotNull String negativeGlob) {
-		this.negativeGlob = negativeGlob;
+		if (negativeGlob.isEmpty()) {
+			return this;
+		}
+		if (!isWildcard(negativeGlob)) {
+			this.negativeGlobPredicate = file -> !file.getName().equals(negativeGlob);
+		} else {
+			PathMatcher negativeMatcher = FileSystems.getDefault().getPathMatcher("glob:" + negativeGlob);
+			this.negativeGlobPredicate = file -> !negativeMatcher.matches(Paths.get(file.getName()));
+		}
 		return this;
 	}
 
 	public RemoteFsRepartitionController withReplicationCount(int replicationCount) {
 		this.replicationCount = replicationCount;
+		return this;
+	}
+
+	public RemoteFsRepartitionController withPlanRecalculationInterval(Duration planRecalculationInterval) {
+		this.planRecalculationInterval = planRecalculationInterval.toMillis();
 		return this;
 	}
 
@@ -140,23 +166,37 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 			checkState(partitions.getEventloop().inEventloopThread(), "Should be called from eventloop thread");
 
 		isRepartitioning = true;
-		return localStorage.list(glob)
-				.then(list -> {
-					allFiles = list.size();
-					return Promises.sequence( // just handling all local files sequentially
-							filterNot(list.stream(), negativeGlob)
-									.map(meta ->
-											() -> repartitionFile(meta)
+		processedFiles.clear();
+		return recalculatePlan()
+				.then(() -> Promises.until((Void) null,
+						$ -> recalculatePlanIfNeeded()
+								.then(() -> {
+											if (!repartitionPlan.hasNext()) {
+												return Promise.complete();
+											}
+
+											String name = repartitionPlan.next();
+											return localStorage.inspect(name)
+													.then(meta -> {
+														if (meta == null) {
+															logger.warn("File '{}' that should be repartitioned has been deleted", name);
+															return Promise.of(false);
+														}
+														return repartitionFile(meta);
+													})
 													.whenComplete(singleFileRepartitionPromiseStats.recordStats())
 													.then((Boolean success) -> {
+														processedFiles.add(name);
 														if (success) {
 															ensuredFiles++;
 														} else {
 															failedFiles++;
 														}
 														return Promise.complete();
-													})));
-				})
+													});
+										}
+								),
+						$ -> !repartitionPlan.hasNext()))
 				.whenComplete(() -> isRepartitioning = false)
 				.whenComplete(repartitionPromiseStats.recordStats())
 				.thenEx(($, e) -> {
@@ -172,19 +212,75 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 				});
 	}
 
-	private Stream<FileMetadata> filterNot(Stream<FileMetadata> stream, String glob) {
-		if (glob.isEmpty()) {
-			return stream;
+	private Promise<Void> recalculatePlanIfNeeded() {
+		if (updateLastAliveClientIds()) {
+			return recalculatePlan();
 		}
-		if (!isWildcard(glob)) {
-			return stream.filter(file -> !file.getName().equals(negativeGlob));
+		if (getEventloop().currentTimeMillis() - lastPlanRecalculation > planRecalculationInterval) {
+			return recalculatePlan();
 		}
-		PathMatcher negativeMatcher = FileSystems.getDefault().getPathMatcher("glob:" + negativeGlob);
-		return stream.filter(file -> !negativeMatcher.matches(Paths.get(file.getName())));
+		return Promise.complete();
+	}
+
+	private Promise<Void> recalculatePlan() {
+		return localStorage.list(glob)
+				.then(list -> {
+					checkEnoughAlivePartitions();
+
+					allFiles = list.size();
+
+					List<FileMetadata> filteredList = list.stream()
+							.filter(negativeGlobPredicate)
+							.filter(metadata -> !processedFiles.contains(metadata.getName()))
+							.collect(toList());
+
+					Map<Object, List<String>> groupedById = new HashMap<>();
+					for (FileMetadata metadata : filteredList) {
+						String name = metadata.getName();
+						List<Object> selected = partitions.select(name).subList(0, replicationCount);
+						selected.remove(localPartitionId); // skip local partition if present
+						for (Object id : selected) {
+							groupedById.computeIfAbsent(id, $ -> new ArrayList<>()).add(name);
+						}
+					}
+
+					return Promises.reduce(
+							groupedById.entrySet().stream()
+									.map(entry -> partitions.get(entry.getKey()).inspectAll(entry.getValue())
+											.whenException(e -> partitions.markDead(entry.getKey(), e)))
+									.iterator(),
+							Integer.MAX_VALUE,
+							filteredList.stream()
+									.map(InspectionResults::new)
+									.collect(toMap(inspectionResults -> inspectionResults.localMetadata.getName(), Function.identity())),
+							(result, metas) -> metas.forEach((name, metadata) -> result.get(name).remoteMetadata.add(metadata)),
+							Map::values)
+							.whenResult(results -> {
+								repartitionPlan = results.stream()
+										.peek(this::filterInspectionResults)
+										.sorted()
+										.filter(InspectionResults::shouldBeProcessed)
+										.map(InspectionResults::getName)
+										.iterator();
+
+								lastPlanRecalculation = getEventloop().currentTimeMillis();
+								updateLastAliveClientIds();
+							})
+							.thenEx((v, e) -> {
+								if (e == null) {
+									return Promise.complete();
+								} else {
+									logger.warn("Failed to recalculate repartition plan, retrying in 1 second", e);
+									return Promises.delay(Duration.ofSeconds(1))
+											.then(this::recalculatePlan);
+								}
+							});
+				});
 	}
 
 	private Promise<Boolean> repartitionFile(FileMetadata meta) {
 		partitions.markAlive(localPartitionId); // ensure local partition could also be selected
+		checkEnoughAlivePartitions();
 		List<Object> selected = partitions.select(meta.getName()).subList(0, replicationCount);
 		return getPartitionsThatNeedOurFile(meta, selected)
 				.then(uploadTargets -> {
@@ -200,7 +296,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 									return true;
 								});
 					}
-					if (uploadTargets.size() == 1 && uploadTargets.get(0) == localPartitionId) { // everybody had the file AND
+					if (uploadTargets.size() == 1 && uploadTargets.get(0).equals(localPartitionId)) { // everybody had the file AND
 						logger.info("handled file {} (ensured on {})", meta, selected);          // we don't delete the local copy
 						return Promise.of(true);
 					}
@@ -213,20 +309,30 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 							.withInput(ChannelSupplier.ofPromise(localStorage.download(name)));
 
 					return Promises.toList(uploadTargets.stream() // upload file to target partitions
-							.filter(partitionId -> partitionId != localPartitionId) // just skip it here
+							.filter(partitionId -> !partitionId.equals(localPartitionId)) // just skip it here
 							.map(partitionId -> {
 								// upload file to this partition
 								FsClient client = partitions.get(partitionId);
 								if (client == null) {
 									return Promise.ofException(new StacklessException(RemoteFsRepartitionController.class, "Client '" + partitionId + "' is not alive"));
 								}
+								Ref<Throwable> uploadError = new Ref<>();
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
 												.set(ChannelConsumer.ofPromise(client.upload(name))
-														.withAcknowledgement(fn)))
-										.whenException(e -> {
-											logger.warn("failed uploading to partition {}", partitionId, e);
-											partitions.markDead(partitionId, e);
+														.withAcknowledgement(ack -> ack
+																.thenEx(($, e) -> {
+																	if (e != null && uploadError.get() == null) {
+																		uploadError.set(e);
+																		logger.warn("failed uploading to partition {}", partitionId, e);
+																		partitions.markDead(partitionId, e);
+																	}
+																	// returning complete promise so that other uploads would not fail
+																	return fn.apply(Promise.complete());
+																}))))
+										.then(() -> {
+											Throwable error = uploadError.get();
+											return error == null ? Promise.complete() : Promise.ofException(error);
 										})
 										.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId));
 							})
@@ -254,35 +360,86 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	}
 
 	private Promise<List<Object>> getPartitionsThatNeedOurFile(FileMetadata fileToUpload, List<Object> selected) {
-		List<Object> uploadTargets = new ArrayList<>();
-		return Promises.toList(selected.stream()
-				.map(partitionId -> {
-					if (partitionId == localPartitionId) {
-						uploadTargets.add(partitionId); // add it to targets so in repartitionFile we know not to delete local file
-						return Promise.of(Try.of(null));  // and skip other logic
-					}
-					return partitions.get(partitionId)
-							.inspect(fileToUpload.getName()) // checking file existence and size on particular partition
-							.whenComplete((meta, e) -> {
-								if (e != null) {
-									logger.warn("failed connecting to partition {}", partitionId, e);
-									partitions.markDead(partitionId, e);
-									return;
-								}
-								// ↓ when there is no file or it is worse than ours
-								if (meta == null || meta.getSize() < fileToUpload.getSize()) {
-									uploadTargets.add(partitionId);
-								}
-							})
-							.toTry();
-				}))
-				.then(tries -> {
+		InspectionResults inspectionResults = new InspectionResults(fileToUpload);
+		List<Object> ids = new ArrayList<>(selected);
+		boolean belongsToLocal = ids.remove(localPartitionId);
+		return Promises.toList(ids.stream()
+				.map(partitionId -> partitions.get(partitionId)
+						.inspect(fileToUpload.getName()) // checking file existence and size on particular partition
+						.whenComplete((meta, e) -> {
+							if (e != null) {
+								logger.warn("failed connecting to partition {}", partitionId, e);
+								partitions.markDead(partitionId, e);
+								return;
+							}
+							inspectionResults.remoteMetadata.add(meta);
+						})
+						.toTry()))
+				.map(tries -> {
 					if (!tries.stream().allMatch(Try::isSuccess)) { // any of list calls failed
 						logger.warn("failed figuring out partitions for file {}, skipping", fileToUpload);
-						return Promise.of(null); // using null to mark failure without exceptions
+						return null; // using null to mark failure without exceptions
 					}
-					return Promise.of(uploadTargets);
+
+					filterInspectionResults(inspectionResults);
+
+					if (inspectionResults.shouldBeUploaded()) {
+						List<Object> uploadTargets = new ArrayList<>();
+						for (int i = 0; i < inspectionResults.remoteMetadata.size(); i++) {
+							if (inspectionResults.remoteMetadata.get(i) == null) {
+								uploadTargets.add(ids.get(i));
+							}
+						}
+						if (belongsToLocal) {
+							// file belongs to local partition
+							// adding to upload targets so that it is not deleted later
+							uploadTargets.add(localPartitionId);
+						}
+						return uploadTargets;
+					}
+					if (inspectionResults.shouldBeDeleted()) {
+						return emptyList();
+					}
+					return singletonList(localPartitionId);
 				});
+	}
+
+	private void filterInspectionResults(InspectionResults inspectionResults) {
+		long localSize = inspectionResults.localMetadata.getSize();
+		long maxSize = inspectionResults.remoteMetadata.stream()
+				.filter(Objects::nonNull)
+				.mapToLong(FileMetadata::getSize)
+				.max().orElse(0);
+
+		if (localSize < maxSize) {
+			inspectionResults.localMetadata = null;
+		} else {
+			maxSize = localSize;
+		}
+		for (int i = 0; i < inspectionResults.remoteMetadata.size(); i++) {
+			FileMetadata metadata = inspectionResults.remoteMetadata.get(i);
+			if (metadata != null && metadata.getSize() < maxSize) {
+				inspectionResults.remoteMetadata.set(i, null);
+			}
+		}
+	}
+
+	/**
+	 * @return {@code true} if ids were updated, {@code false} otherwise
+	 */
+	private boolean updateLastAliveClientIds() {
+		Set<Object> aliveClientIds = new HashSet<>(partitions.getAliveClients().keySet());
+		if (lastAliveClientIds.equals(aliveClientIds)) {
+			return false;
+		}
+		lastAliveClientIds = aliveClientIds;
+		return true;
+	}
+
+	private void checkEnoughAlivePartitions() {
+		if (partitions.getAliveClients().size() < replicationCount) {
+			throw new UncheckedException(new StacklessException(RemoteFsRepartitionController.class, "Not enough alive partitions"));
+		}
 	}
 
 	@NotNull
@@ -335,4 +492,55 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		return failedFiles;
 	}
 	// endregion
+
+	private static final Comparator<InspectionResults> INSPECTION_RESULTS_COMPARATOR =
+			Comparator.<InspectionResults>comparingLong(inspectionResults -> inspectionResults.remoteMetadata.stream()
+					.filter(Objects::isNull)
+					.count() +
+					(inspectionResults.localMetadata == null ? 0 : 1))
+					.thenComparingLong(inspectionResults -> inspectionResults.remoteMetadata.stream()
+							.filter(Objects::nonNull)
+							.findAny().orElse(inspectionResults.localMetadata)
+							.getSize());
+
+	private final class InspectionResults implements Comparable<InspectionResults> {
+		@Nullable
+		FileMetadata localMetadata;
+		final List<@Nullable FileMetadata> remoteMetadata = new ArrayList<>();
+
+		private InspectionResults(@NotNull FileMetadata localMetadata) {
+			this.localMetadata = localMetadata;
+		}
+
+		String getName() {
+			return remoteMetadata.stream()
+					.filter(Objects::nonNull)
+					.findAny()
+					.orElse(localMetadata)
+					.getName();
+		}
+
+		boolean shouldBeProcessed() {
+			return shouldBeUploaded() || shouldBeDeleted();
+		}
+
+		// file should be uploaded if local file is the most complete file
+		// and there are remote partitions that do not have this file or have not a full version
+		boolean shouldBeUploaded() {
+			return localMetadata != null &&
+					remoteMetadata.stream().anyMatch(Objects::isNull);
+		}
+
+		// (local) file should be deleted in case all of the remote partitions have a better
+		// version of a file
+		boolean shouldBeDeleted() {
+			return remoteMetadata.size() == replicationCount &&
+					remoteMetadata.stream().noneMatch(Objects::isNull);
+		}
+
+		@Override
+		public int compareTo(@NotNull RemoteFsRepartitionController.InspectionResults o) {
+			return INSPECTION_RESULTS_COMPARATOR.compare(this, o);
+		}
+	}
 }

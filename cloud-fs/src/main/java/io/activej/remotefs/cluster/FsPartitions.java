@@ -85,14 +85,23 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 		return this;
 	}
 
+	/**
+	 * Returns an unmodifiable view of all clients
+	 */
 	public Map<Object, FsClient> getClients() {
 		return clientsView;
 	}
 
+	/**
+	 * Returns an unmodifiable view of alive clients
+	 */
 	public Map<Object, FsClient> getAliveClients() {
 		return aliveClientsView;
 	}
 
+	/**
+	 * Returns an unmodifiable view of dead clients
+	 */
 	public Map<Object, FsClient> getDeadClients() {
 		return deadClientsView;
 	}

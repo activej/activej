@@ -75,6 +75,27 @@ public final class PromisesTest {
 	}
 
 	@Test
+	public void toListPreservesOrder() {
+		List<Integer> list = await(toList(asList(
+				delay(20)
+						.map($ -> 1)
+						.whenResult(() -> System.out.println("First promise finished")),
+				delay(10)
+						.map($ -> 2)
+						.whenResult(() -> System.out.println("Second promise finished")),
+				Promise.of(3)
+						.whenResult(() -> System.out.println("Third promise finished")),
+				delay(30)
+						.map($ -> 3)
+						.whenResult(() -> System.out.println("Fourth promise finished")))));
+
+		assertEquals(4, list.size());
+		for (int i = 0; i < 3; i++) {
+			assertEquals(Integer.valueOf(i + 1), list.get(i));
+		}
+	}
+
+	@Test
 	public void toArrayEmptyTest() {
 		Object[] array = await(toArray(Object.class));
 		assertEquals(0, array.length);
@@ -483,6 +504,7 @@ public final class PromisesTest {
 		Exception e = new Exception();
 		BiFunction<List<Integer>, Try<Integer>, Try<List<Integer>>> consumer = new BiFunction<List<Integer>, Try<Integer>, Try<List<Integer>>>() {
 			int calls = 2;
+
 			@Override
 			public Try<List<Integer>> apply(List<Integer> integers, Try<Integer> integerTry) {
 				if (integerTry.isSuccess()) {

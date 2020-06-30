@@ -27,7 +27,7 @@ import static org.slf4j.event.Level.WARN;
 @Ignore("takes forever, only for manual testing")
 @LoggerConfig(WARN)
 @LoggerConfig(packageOf = RemoteFsServer.class, value = TRACE)
-public final class TestRepartitionController {
+public final class RepartitionControllerStressTest {
 	private static final int CLIENT_SERVER_PAIRS = 10;
 
 	private final Path[] serverStorages = new Path[CLIENT_SERVER_PAIRS];
