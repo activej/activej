@@ -20,9 +20,9 @@ import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;
 import io.activej.dataflow.node.NodeUpload;
-import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
+import io.activej.inject.Key;
 import io.activej.inject.ResourceLocator;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -98,6 +98,10 @@ public final class Task {
 		return environment.getInstance(cls);
 	}
 
+	public <T> T get(Key<T> key) {
+		return environment.getInstance(key);
+	}
+
 	public <T> void bindChannel(StreamId streamId, StreamConsumer<T> consumer) {
 		checkState(!consumers.containsKey(streamId), "Already bound");
 		checkState(currentNodeAcks != null, "Must bind streams only from createAndBind");
@@ -122,11 +126,6 @@ public final class Task {
 				StreamConsumer<Object> consumer = (StreamConsumer<Object>) consumers.get(streamId);
 				checkNotNull(supplier, "Supplier not found for %s, consumer %s", streamId, consumer);
 				checkNotNull(consumer, "Consumer not found for %s, supplier %s", streamId, supplier);
-
-				// TODO: remove this debug output after fixing the ISE when posting page rank test for the second time
-				if (consumer instanceof AbstractStreamConsumer && ((AbstractStreamConsumer<Object>) consumer).isStarted()) {
-					System.out.println(streamId + ", " + supplier + ", " + consumer);
-				}
 
 				return supplier.streamTo(consumer);
 			} catch (Exception e) {
@@ -172,6 +171,7 @@ public final class Task {
 		return finished;
 	}
 
+	@Nullable
 	public Throwable getError() {
 		return error;
 	}

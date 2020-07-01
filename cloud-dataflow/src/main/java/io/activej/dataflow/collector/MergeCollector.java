@@ -56,8 +56,9 @@ public class MergeCollector<K, T> {
 		List<StreamId> inputStreamIds = input.channels(context);
 
 		StreamMerger<K, T> merger = StreamMerger.create(keyFunction, keyComparator, distinct);
+		int index = context.generateNodeIndex();
 		for (StreamId streamId : inputStreamIds) {
-			NodeUpload<T> nodeUpload = new NodeUpload<>(context.generateNodeIndex(), input.valueType(), streamId);
+			NodeUpload<T> nodeUpload = new NodeUpload<>(index, input.valueType(), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
 			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.valueType());

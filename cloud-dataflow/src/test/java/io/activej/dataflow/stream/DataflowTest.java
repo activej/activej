@@ -7,7 +7,6 @@ import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowResponse;
-import io.activej.dataflow.command.DataflowResponseResult;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -19,6 +18,7 @@ import io.activej.dataflow.http.DataflowDebugServlet;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.inject.DataflowModule;
+import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
@@ -28,7 +28,6 @@ import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
-import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
@@ -78,15 +77,18 @@ public final class DataflowTest {
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private ExecutorService executor;
+	private ExecutorService sortingExecutor;
 
 	@Before
 	public void setUp() {
 		executor = Executors.newSingleThreadExecutor();
+		sortingExecutor = Executors.newSingleThreadExecutor();
 	}
 
 	@After
 	public void tearDown() {
 		executor.shutdownNow();
+		sortingExecutor.shutdownNow();
 	}
 
 	@Test
@@ -95,7 +97,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
@@ -147,7 +149,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2))).build();
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2))).build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
@@ -217,7 +219,7 @@ public final class DataflowTest {
 		Partition partition2 = new Partition(address2);
 		Partition partition3 = new Partition(address3);
 
-		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(partition1, partition2, partition3))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partition1, partition2, partition3))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -307,7 +309,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -366,7 +368,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -465,9 +467,10 @@ public final class DataflowTest {
 		}
 	}
 
-	static ModuleBuilder createCommon(Executor executor, Path secondaryPath, List<Partition> graphPartitions) {
+	static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, Path secondaryPath, List<Partition> graphPartitions) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
+				.bind(Executor.class).qualified(SortingExecutor.class).toInstance(sortingExecutor)
 				.bind(Executor.class).toInstance(executor)
 				.bind(Eventloop.class).toInstance(Eventloop.getCurrentEventloop())
 				.scan(new Object() {
@@ -493,8 +496,8 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					AsyncHttpServer debugServer(Eventloop eventloop, AsyncHttpClient client, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, Injector env) {
-						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(graphPartitions, client, executor, codec, env));
+					AsyncHttpServer debugServer(Eventloop eventloop, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, Injector env) {
+						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(graphPartitions, executor, codec, env));
 					}
 				})
 				.bind(new Key<StructuredCodec<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))

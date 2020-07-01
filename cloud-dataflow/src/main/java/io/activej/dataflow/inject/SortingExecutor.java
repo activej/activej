@@ -14,25 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.command;
+package io.activej.dataflow.inject;
 
-import org.jetbrains.annotations.Nullable;
+import io.activej.inject.annotation.QualifierAnnotation;
 
-public final class DataflowCommandGetTasks extends DataflowCommand {
-	@Nullable
-	private final Long taskId;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-	public DataflowCommandGetTasks(@Nullable Long taskId) {
-		this.taskId = taskId;
-	}
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-	@Nullable
-	public Long getTaskId() {
-		return taskId;
-	}
-
-	@Override
-	public String toString() {
-		return "DataflowCommandGetTasks{taskId=" + taskId + '}';
-	}
+@QualifierAnnotation
+@Target({FIELD, PARAMETER, METHOD})
+@Retention(RUNTIME)
+public @interface SortingExecutor {
 }

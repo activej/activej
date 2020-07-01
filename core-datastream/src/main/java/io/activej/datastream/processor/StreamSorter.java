@@ -35,8 +35,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Represent {@link StreamTransformer} which receives data and saves it in
- * collection, when it
- * receive end of stream it sorts it and streams to destination.
+ * collection, when it receives end of stream it sorts it and streams to destination.
  *
  * @param <K> type of keys
  * @param <T> type of objects

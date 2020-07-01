@@ -54,7 +54,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 	private final AsyncServlet servlet;
 	private final ByteBufsCodec<DataflowResponse, DataflowCommand> codec;
 
-	public DataflowDebugServlet(List<Partition> partitions, AsyncHttpClient httpClient, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, ResourceLocator env) {
+	public DataflowDebugServlet(List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, ResourceLocator env) {
 		this.codec = codec;
 
 		StructuredCodec<ReducedTaskData> reducedTaskDataCodec = env.getInstance(codec(ReducedTaskData.class));
@@ -85,7 +85,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 													.withJson(JsonUtils.toJson(taskListCodec, tasks));
 										}))
 						.map(GET, "/tasks/:taskID", request ->
-								getId(request, "taskID").then(id ->
+								getTaskId(request).then(id ->
 										Promises.toList(partitions.stream().map(p -> getTask(p.getAddress(), id)).collect(toList()))
 												.map(localStats -> {
 													List<@Nullable TaskStatus> statuses = Arrays.asList(new TaskStatus[localStats.size()]);
@@ -117,7 +117,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 													return ok200().withJson(JsonUtils.toJson(reducedTaskDataCodec, taskData));
 												})))
 						.map(GET, "/tasks/:taskID/:index", request ->
-								getId(request, "taskID").then(id -> {
+								getTaskId(request).then(id -> {
 									String indexParam = request.getPathParameter("index");
 									Partition partition;
 									try {
@@ -145,8 +145,8 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		return reducer.reduce(stats);
 	}
 
-	private static Promise<Long> getId(HttpRequest request, String paramName) {
-		String param = request.getPathParameter(paramName);
+	private static Promise<Long> getTaskId(HttpRequest request) {
+		String param = request.getPathParameter("taskID");
 		try {
 			return Promise.of(Long.parseLong(param));
 		} catch (NumberFormatException e) {

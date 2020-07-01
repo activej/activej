@@ -8,17 +8,16 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.node.NodeSort;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamJoin.InnerJoiner;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
+import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
-import io.activej.http.AsyncHttpServer;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
@@ -56,15 +55,18 @@ public class PageRankTest {
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private ExecutorService executor;
+	private ExecutorService sortingExecutor;
 
 	@Before
 	public void setUp() {
-		NodeSort.setSortingExecutor(executor = Executors.newCachedThreadPool());
+		executor = Executors.newCachedThreadPool();
+		sortingExecutor = Executors.newCachedThreadPool();
 	}
 
 	@After
 	public void tearDown() {
 		executor.shutdownNow();
+		sortingExecutor.shutdownNow();
 	}
 
 	public static class Page {
@@ -225,7 +227,7 @@ public class PageRankTest {
 	}
 
 	private Module createModule(Partition... partitions) throws Exception {
-		return createCommon(executor, temporaryFolder.newFolder().toPath(), asList(partitions))
+		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partitions))
 				.bind(new Key<StructuredCodec<PageKeyFunction>>() {}).toInstance(object(PageKeyFunction::new))
 				.bind(new Key<StructuredCodec<RankKeyFunction>>() {}).toInstance(object(RankKeyFunction::new))
 				.bind(new Key<StructuredCodec<RankAccumulatorKeyFunction>>() {}).toInstance(object(RankAccumulatorKeyFunction::new))
@@ -296,7 +298,7 @@ public class PageRankTest {
 	@Test
 	@Ignore
 	public void runDebugServer() throws Exception {
-		Injector env = Injector.of(createModule(new Partition(new InetSocketAddress(9000)), new Partition(new InetSocketAddress(9001))));
+		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
 		env.getInstance(AsyncHttpServer.class).withListenPort(8080).listen();
 		await();
 	}

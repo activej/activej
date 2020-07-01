@@ -30,6 +30,7 @@ import io.activej.datastream.processor.StreamReducers.Reducer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 public class DatasetUtils {
 
@@ -51,14 +52,18 @@ public class DatasetUtils {
 		}
 
 		int reducerIndex = context.generateNodeIndex();
-		for (Partition partition : partitions) {
+		int[] downloadIndexes = generateIndexes(context, sharders.size());
+		int[] uploadIndexes = generateIndexes(context, partitions.size());
+		for (int i = 0; i < partitions.size(); i++) {
+			Partition partition = partitions.get(i);
 			NodeReduce<K, O, A> nodeReduce = new NodeReduce<>(reducerIndex, input.keyComparator());
 			graph.addNode(partition, nodeReduce);
 
-			for (NodeShard<K, I> sharder : sharders) {
+			for (int j = 0; j < sharders.size(); j++) {
+				NodeShard<K, I> sharder = sharders.get(j);
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
-				StreamId reducerInput = forwardChannel(context, input.valueType(), sharderOutput, partition);
+				StreamId reducerInput = forwardChannel(context, input.valueType(), sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
 				nodeReduce.addInput(reducerInput, keyFunction, reducer);
 			}
 
@@ -74,22 +79,26 @@ public class DatasetUtils {
 	}
 
 	public static <T> StreamId forwardChannel(DataflowContext context, Class<T> type,
-	                                          StreamId sourceStreamId, Partition targetPartition) {
+			StreamId sourceStreamId, Partition targetPartition, int uploadIndex, int downloadIndex) {
 		Partition sourcePartition = context.getGraph().getPartition(sourceStreamId);
-		return forwardChannel(context, type, sourcePartition, targetPartition, sourceStreamId);
+		return forwardChannel(context, type, sourcePartition, targetPartition, sourceStreamId, uploadIndex, downloadIndex);
 	}
 
 	private static <T> StreamId forwardChannel(DataflowContext context, Class<T> type,
-	                                           Partition sourcePartition, Partition targetPartition,
-	                                           StreamId sourceStreamId) {
+			Partition sourcePartition, Partition targetPartition,
+			StreamId sourceStreamId, int uploadIndex, int downloadIndex) {
 //		if (sourcePartition == targetPartition) {
 //			return sourceStreamId;
 //		}
 		DataflowGraph graph = context.getGraph();
-		NodeUpload<T> nodeUpload = new NodeUpload<>(context.generateNodeIndex(), type, sourceStreamId);
-		NodeDownload<T> nodeDownload = new NodeDownload<>(context.generateNodeIndex(), type, sourcePartition.getAddress(), sourceStreamId);
+		NodeUpload<T> nodeUpload = new NodeUpload<>(uploadIndex, type, sourceStreamId);
+		NodeDownload<T> nodeDownload = new NodeDownload<>(downloadIndex, type, sourcePartition.getAddress(), sourceStreamId);
 		graph.addNode(sourcePartition, nodeUpload);
 		graph.addNode(targetPartition, nodeDownload);
 		return nodeDownload.getOutput();
+	}
+
+	public static int[] generateIndexes(DataflowContext context, int size) {
+		return IntStream.generate(context::generateNodeIndex).limit(size).toArray();
 	}
 }

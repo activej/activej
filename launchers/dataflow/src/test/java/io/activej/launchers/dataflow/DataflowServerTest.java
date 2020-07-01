@@ -7,7 +7,6 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowResponse;
-import io.activej.dataflow.command.DataflowResponseResult;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
@@ -73,6 +72,7 @@ public class DataflowServerTest {
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private ExecutorService executor;
+	private ExecutorService sortingExecutor;
 
 	private static final int PORT_1 = getFreePort();
 	private static final int PORT_2 = getFreePort();
@@ -83,11 +83,13 @@ public class DataflowServerTest {
 	@Before
 	public void setUp() {
 		executor = Executors.newSingleThreadExecutor();
+		sortingExecutor = Executors.newSingleThreadExecutor();
 	}
 
 	@After
 	public void tearDown() {
 		executor.shutdownNow();
+		sortingExecutor.shutdownNow();
 		serverLauncher1.shutdown();
 		serverLauncher2.shutdown();
 	}

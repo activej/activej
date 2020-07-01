@@ -21,7 +21,6 @@ import io.activej.common.tuple.Tuple2;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.StreamId;
 
-import javax.xml.crypto.Data;
 import java.util.*;
 
 import static java.util.Collections.emptyList;

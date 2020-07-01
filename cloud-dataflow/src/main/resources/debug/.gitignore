@@ -1,3 +1,6 @@
-bundle.*
-*.js
-*.js.map
+
+!.gitignore
+!index.html
+!global.css
+
+*

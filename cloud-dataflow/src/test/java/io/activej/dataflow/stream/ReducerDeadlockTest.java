@@ -47,15 +47,18 @@ public class ReducerDeadlockTest {
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private ExecutorService executor;
+	private ExecutorService sortingExecutor;
 
 	@Before
 	public void setUp() {
 		executor = Executors.newSingleThreadExecutor();
+		sortingExecutor = Executors.newSingleThreadExecutor();
 	}
 
 	@After
 	public void tearDown() {
 		executor.shutdownNow();
+		sortingExecutor.shutdownNow();
 	}
 
 	@Test
@@ -64,7 +67,7 @@ public class ReducerDeadlockTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();

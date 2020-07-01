@@ -4,7 +4,7 @@ import dto.StringCount;
 import dto.StringCountReducer;
 import io.activej.config.Config;
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
@@ -17,11 +17,10 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.launchers.dataflow.DataflowClientLauncher;
 
-import java.util.Comparator;
-
 import static io.activej.codec.StructuredCodec.ofObject;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.inject.CodecsModule.codec;
+import static java.util.Comparator.naturalOrder;
 
 /**
  * This launcher posts a simple Map-Reduce task to a cluster of Dataflow nodes
@@ -30,7 +29,6 @@ import static io.activej.dataflow.inject.CodecsModule.codec;
  * These servers must provide a dataset of strings with "items" as its id.
  */
 public final class PostTask extends DataflowClientLauncher {
-	public static final String PROPERTIES_FILE = "dataflow-client.properties";
 
 	@Inject
 	DataflowClient client;
@@ -57,7 +55,7 @@ public final class PostTask extends DataflowClientLauncher {
 	}
 
 	@Override
-	protected void run() throws Exception {
+	protected void run() throws InterruptedException {
 		eventloop.execute(() -> {
 			StringCountReducer reducer = new StringCountReducer();
 			ExtractStringFunction keyFunction = new ExtractStringFunction();
@@ -66,13 +64,13 @@ public final class PostTask extends DataflowClientLauncher {
 
 			Dataset<StringCount> mappedItems = map(items, new CreateStringCountFunction(), StringCount.class);
 
-			LocallySortedDataset<String, StringCount> locallySorted = localSort(mappedItems, String.class, keyFunction, Comparator.naturalOrder());
+			LocallySortedDataset<String, StringCount> locallySorted = localSort(mappedItems, String.class, keyFunction, naturalOrder());
 
 			LocallySortedDataset<String, StringCount> locallyReduced = localReduce(locallySorted, reducer.inputToAccumulator(), StringCount.class, keyFunction);
 
 			Dataset<StringCount> reducedItems = repartitionReduce(locallyReduced, reducer.accumulatorToOutput(), StringCount.class);
 
-			Collector<StringCount> collector = new Collector<>(reducedItems, client);
+			MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems,client, keyFunction, naturalOrder(), false);
 
 			StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 
@@ -84,11 +82,12 @@ public final class PostTask extends DataflowClientLauncher {
 			System.out.println(graph.toGraphViz());
 
 			graph.execute().both(resultSupplier.streamTo(resultConsumer))
-					.whenComplete(() -> {
+					.whenException(Throwable::printStackTrace)
+					.whenResult(() -> {
 						System.out.println("Top 100 words:");
 						resultConsumer.getList().stream().limit(100).forEach(System.out::println);
-						shutdown();
-					});
+					})
+					.whenComplete(this::shutdown);
 		});
 
 		awaitShutdown();

@@ -18,18 +18,18 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.StreamSorterStorage;
+import io.activej.inject.Key;
 import io.activej.promise.Promise;
 
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static java.util.Collections.singletonList;
-import static java.util.Collections.sort;
 
 /**
  * Represents a node, which performs sorting of a data stream, based on key function and key comparator.
@@ -51,12 +51,6 @@ public final class NodeSort<K, T> extends AbstractNode {
 
 	private final StreamId input;
 	private final StreamId output;
-
-	private static Executor sortingExecutor = Runnable::run;
-
-	public static void setSortingExecutor(Executor executor) {
-		sortingExecutor = executor;
-	}
 
 	public NodeSort(int index, Class<T> type, Function<T, K> keyFunction, Comparator<K> keyComparator,
 			boolean deduplicate, int itemsInMemorySize, StreamId input) {
@@ -87,10 +81,11 @@ public final class NodeSort<K, T> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
+		Executor executor = task.get(Key.of(Executor.class, SortingExecutor.class));
 		StreamSorterStorageFactory storageFactory = task.get(StreamSorterStorageFactory.class);
 		StreamSorterStorage<T> storage = storageFactory.create(type, task, task.getExecutionPromise());
 		StreamSorter<K, T> streamSorter = StreamSorter.create(storage, keyFunction, keyComparator, deduplicate, itemsInMemorySize)
-				.withSortingExecutor(sortingExecutor);
+				.withSortingExecutor(executor);
 		task.bindChannel(input, streamSorter.getInput());
 		task.export(output, streamSorter.getOutput());
 	}

@@ -39,6 +39,6 @@ public final class DataflowCommandExecute extends DataflowCommand {
 
 	@Override
 	public String toString() {
-		return "DatagraphCommandExecute{nodeStats=" + nodes + '}';
+		return "DataflowCommandExecute{nodes" + nodes + '}';
 	}
 }

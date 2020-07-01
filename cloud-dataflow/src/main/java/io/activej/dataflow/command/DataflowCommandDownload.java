@@ -31,6 +31,6 @@ public final class DataflowCommandDownload extends DataflowCommand {
 
 	@Override
 	public String toString() {
-		return "DatagraphCommandDownload{streamId=" + streamId + '}';
+		return "DataflowCommandDownload{streamId=" + streamId + '}';
 	}
 }

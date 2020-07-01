@@ -156,7 +156,7 @@ public final class DataflowClient {
 				StreamDataAcceptor<T> dataAcceptor = getDataAcceptor();
 				assert dataAcceptor != null;
 				input.resume(item -> {
-					if (count++ == 1 || count % 1_000 == 0) {
+					if (++count == 1 || count % 1_000 == 0) {
 						logger.info("Received {} items from stream {}({}): {}", count, streamId, address, item);
 					}
 					dataAcceptor.accept(item);

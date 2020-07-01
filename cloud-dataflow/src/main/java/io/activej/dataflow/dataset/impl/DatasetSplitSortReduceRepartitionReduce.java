@@ -34,6 +34,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
+import static io.activej.dataflow.dataset.DatasetUtils.generateIndexes;
 import static java.util.Collections.singletonList;
 
 public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends Dataset<O> {
@@ -69,21 +70,30 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 		int nonce = context.getNonce();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 		List<NodeShard<K, I>> sharders = new ArrayList<>();
+		int shardIndex = context.generateNodeIndex();
 		for (StreamId inputStreamId : input.channels(context.withoutFixedNonce())) {
 			Partition partition = graph.getPartition(inputStreamId);
-			NodeShard<K, I> sharder = new NodeShard<>(context.generateNodeIndex(), inputKeyFunction, inputStreamId, nonce);
+			NodeShard<K, I> sharder = new NodeShard<>(shardIndex, inputKeyFunction, inputStreamId, nonce);
 			graph.addNode(partition, sharder);
 			sharders.add(sharder);
 		}
 
-		for (Partition partition : graph.getAvailablePartitions()) {
-			NodeReduce<K, O, A> nodeReduce = new NodeReduce<>(context.generateNodeIndex(), keyComparator);
+		int reduceIndex = context.generateNodeIndex();
+		List<Partition> partitions = graph.getAvailablePartitions();
+		int[] uploadIndexes = generateIndexes(context, sharders.size());
+		int[] downloadIndexes = generateIndexes(context, partitions.size());
+		for (int i = 0; i < partitions.size(); i++) {
+			Partition partition = partitions.get(i);
+			NodeReduce<K, O, A> nodeReduce = new NodeReduce<>(reduceIndex, keyComparator);
 			graph.addNode(partition, nodeReduce);
 
-			for (NodeShard<K, I> sharder : sharders) {
+			int sortIndex = context.generateNodeIndex();
+			int simpleReduceIndex = context.generateNodeIndex();
+			for (int j = 0; j < sharders.size(); j++) {
+				NodeShard<K, I> sharder = sharders.get(j);
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
-				StreamId reducerInput = sortReduceForward(context, sharderOutput, partition);
+				StreamId reducerInput = sortReduceForward(context, sharderOutput, partition, sortIndex, simpleReduceIndex, uploadIndexes[i], downloadIndexes[j]);
 				nodeReduce.addInput(reducerInput, accumulatorKeyFunction, reducer.accumulatorToOutput());
 			}
 
@@ -93,18 +103,18 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 		return outputStreamIds;
 	}
 
-	private StreamId sortReduceForward(DataflowContext context, StreamId sourceStreamId, Partition targetPartition) {
+	private StreamId sortReduceForward(DataflowContext context, StreamId sourceStreamId, Partition targetPartition, int sortIndex, int simpleReduceIndex, int uploadIndex, int downloadIndex) {
 		DataflowGraph graph = context.getGraph();
 		Partition sourcePartition = graph.getPartition(sourceStreamId);
 
-		NodeSort<K, I> nodeSort = new NodeSort<>(context.generateNodeIndex(), input.valueType(), inputKeyFunction, keyComparator, false, sortBufferSize, sourceStreamId);
+		NodeSort<K, I> nodeSort = new NodeSort<>(sortIndex, input.valueType(), inputKeyFunction, keyComparator, false, sortBufferSize, sourceStreamId);
 		graph.addNode(sourcePartition, nodeSort);
 
-		NodeReduceSimple<K, I, A, A> nodeReduce = new NodeReduceSimple<>(context.generateNodeIndex(), inputKeyFunction, keyComparator, reducer.inputToAccumulator());
+		NodeReduceSimple<K, I, A, A> nodeReduce = new NodeReduceSimple<>(simpleReduceIndex, inputKeyFunction, keyComparator, reducer.inputToAccumulator());
 		nodeReduce.addInput(nodeSort.getOutput());
 		graph.addNode(sourcePartition, nodeReduce);
 
-		return DatasetUtils.forwardChannel(context, accumulatorType, nodeReduce.getOutput(), targetPartition);
+		return DatasetUtils.forwardChannel(context, accumulatorType, nodeReduce.getOutput(), targetPartition, uploadIndex, downloadIndex);
 	}
 
 	@Override

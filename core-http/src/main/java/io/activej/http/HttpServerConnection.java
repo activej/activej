@@ -334,7 +334,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	private void writeException(Throwable e) {
- 		writeHttpResponse(server.formatHttpError(e));
+		writeHttpResponse(server.formatHttpError(e));
 	}
 
 	@Override

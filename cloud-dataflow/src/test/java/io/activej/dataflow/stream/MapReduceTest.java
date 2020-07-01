@@ -3,7 +3,7 @@ package io.activej.dataflow.stream;
 import io.activej.codec.StructuredCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
-import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
@@ -42,6 +42,7 @@ import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.naturalOrder;
 import static org.junit.Assert.assertEquals;
 
 public class MapReduceTest {
@@ -56,15 +57,18 @@ public class MapReduceTest {
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private ExecutorService executor;
+	private ExecutorService sortingExecutor;
 
 	@Before
 	public void setUp() {
 		executor = Executors.newSingleThreadExecutor();
+		sortingExecutor = Executors.newSingleThreadExecutor();
 	}
 
 	@After
 	public void tearDown() {
 		executor.shutdownNow();
+		sortingExecutor.shutdownNow();
 	}
 
 	public static class StringCount {
@@ -103,7 +107,7 @@ public class MapReduceTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
 				.bind(new Key<StructuredCodec<StringKeyFunction>>() {}).toInstance(ofObject(StringKeyFunction::new))
 				.bind(new Key<StructuredCodec<StringMapFunction>>() {}).toInstance(ofObject(StringMapFunction::new))
 				.bind(new Key<StructuredCodec<StringReducer>>() {}).toInstance(ofObject(StringReducer::new))
@@ -140,7 +144,7 @@ public class MapReduceTest {
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), StringCount.class);
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
-		Collector<StringCount> collector = new Collector<>(reducedItems, client);
+		MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems,client, new StringKeyFunction(), naturalOrder(), false);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
 
