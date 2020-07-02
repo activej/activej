@@ -49,6 +49,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.regex.PatternSyntaxException;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -436,7 +437,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 		// common route
 		List<Path> list = new ArrayList<>();
-		PathMatcher matcher = storage.getFileSystem().getPathMatcher("glob:" + subglob);
+		PathMatcher matcher = getPathMatcher(storage.getFileSystem(), subglob);
 
 		walkFiles(subfolder, subglob, path -> {
 			if (matcher.matches(subfolder.relativize(path))) {
@@ -466,11 +467,11 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		void accept(Path path) throws IOException;
 	}
 
-	private void walkFiles(Path dir, Walker walker) throws IOException {
+	private void walkFiles(Path dir, Walker walker) throws IOException, StacklessException {
 		walkFiles(dir, null, walker);
 	}
 
-	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException {
+	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException, StacklessException {
 		if (!Files.isDirectory(dir)) {
 			return;
 		}
@@ -495,14 +496,14 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		FileSystem fs = dir.getFileSystem();
 
 		PathMatcher[] matchers = new PathMatcher[parts.length];
-		matchers[0] = fs.getPathMatcher("glob:" + parts[0]);
+		matchers[0] = getPathMatcher(fs, parts[0]);
 
 		for (int i = 1; i < parts.length; i++) {
 			String part = parts[i];
 			if (part.contains("**")) {
 				break;
 			}
-			matchers[i] = fs.getPathMatcher("glob:" + part);
+			matchers[i] = getPathMatcher(fs, part);
 		}
 
 		Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
@@ -568,6 +569,14 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 				throw (IOException) e;
 			});
 		};
+	}
+
+	private PathMatcher getPathMatcher(FileSystem fileSystem, String glob) throws StacklessException {
+		try {
+			return fileSystem.getPathMatcher("glob:" + glob);
+		} catch (PatternSyntaxException | UnsupportedOperationException e) {
+			throw MALFORMED_GLOB;
+		}
 	}
 
 	//region JMX

@@ -42,6 +42,7 @@ public interface FsClient {
 	StacklessException BAD_PATH = new StacklessException(FsClient.class, "Given file name points to file outside root");
 	StacklessException BAD_RANGE = new StacklessException(FsClient.class, "Given offset or limit doesn't make sense");
 	StacklessException IS_DIRECTORY = new StacklessException(FsClient.class, "Operated file is a directory");
+	StacklessException MALFORMED_GLOB = new StacklessException(FsClient.class, "Malformed glob pattern");
 
 	/**
 	 * Returns a consumer of bytebufs which are written (or sent) to the file.

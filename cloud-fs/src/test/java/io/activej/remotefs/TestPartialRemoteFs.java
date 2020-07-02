@@ -23,6 +23,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.remotefs.FsClient.MALFORMED_GLOB;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
@@ -130,5 +132,13 @@ public final class TestPartialRemoteFs {
 				.whenComplete(server::close));
 
 		assertTrue(result.asString(UTF_8).isEmpty());
+	}
+
+	@Test
+	public void malformedGlob() {
+		Throwable exception = awaitException(client.list("[")
+				.whenComplete(server::close));
+
+		assertSame(MALFORMED_GLOB, exception);
 	}
 }

@@ -32,6 +32,7 @@ import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
+import static io.activej.remotefs.FsClient.MALFORMED_GLOB;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
@@ -327,5 +328,11 @@ public final class TestLocalFsClient {
 	@Test
 	public void testDeleteEmpty() {
 		await(client.delete(""));
+	}
+
+	@Test
+	public void testListMalformedGlob() {
+		Throwable exception = awaitException(client.list("["));
+		assertSame(MALFORMED_GLOB, exception);
 	}
 }
