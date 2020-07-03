@@ -176,7 +176,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 											}
 
 											String name = repartitionPlan.next();
-											return localStorage.inspect(name)
+											return localStorage.info(name)
 													.then(meta -> {
 														if (meta == null) {
 															logger.warn("File '{}' that should be repartitioned has been deleted", name);
@@ -246,21 +246,21 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 
 					return Promises.reduce(
 							groupedById.entrySet().stream()
-									.map(entry -> partitions.get(entry.getKey()).inspectAll(entry.getValue())
+									.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
 											.whenException(e -> partitions.markDead(entry.getKey(), e)))
 									.iterator(),
 							Integer.MAX_VALUE,
 							filteredList.stream()
-									.map(InspectionResults::new)
-									.collect(toMap(inspectionResults -> inspectionResults.localMetadata.getName(), Function.identity())),
+									.map(InfoResults::new)
+									.collect(toMap(infoResults -> infoResults.localMetadata.getName(), Function.identity())),
 							(result, metas) -> metas.forEach((name, metadata) -> result.get(name).remoteMetadata.add(metadata)),
 							Map::values)
 							.whenResult(results -> {
 								repartitionPlan = results.stream()
 										.peek(this::filterInspectionResults)
 										.sorted()
-										.filter(InspectionResults::shouldBeProcessed)
-										.map(InspectionResults::getName)
+										.filter(InfoResults::shouldBeProcessed)
+										.map(InfoResults::getName)
 										.iterator();
 
 								lastPlanRecalculation = getEventloop().currentTimeMillis();
@@ -360,19 +360,19 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	}
 
 	private Promise<List<Object>> getPartitionsThatNeedOurFile(FileMetadata fileToUpload, List<Object> selected) {
-		InspectionResults inspectionResults = new InspectionResults(fileToUpload);
+		InfoResults infoResults = new InfoResults(fileToUpload);
 		List<Object> ids = new ArrayList<>(selected);
 		boolean belongsToLocal = ids.remove(localPartitionId);
 		return Promises.toList(ids.stream()
 				.map(partitionId -> partitions.get(partitionId)
-						.inspect(fileToUpload.getName()) // checking file existence and size on particular partition
+						.info(fileToUpload.getName()) // checking file existence and size on particular partition
 						.whenComplete((meta, e) -> {
 							if (e != null) {
 								logger.warn("failed connecting to partition {}", partitionId, e);
 								partitions.markDead(partitionId, e);
 								return;
 							}
-							inspectionResults.remoteMetadata.add(meta);
+							infoResults.remoteMetadata.add(meta);
 						})
 						.toTry()))
 				.map(tries -> {
@@ -381,12 +381,12 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						return null; // using null to mark failure without exceptions
 					}
 
-					filterInspectionResults(inspectionResults);
+					filterInspectionResults(infoResults);
 
-					if (inspectionResults.shouldBeUploaded()) {
+					if (infoResults.shouldBeUploaded()) {
 						List<Object> uploadTargets = new ArrayList<>();
-						for (int i = 0; i < inspectionResults.remoteMetadata.size(); i++) {
-							if (inspectionResults.remoteMetadata.get(i) == null) {
+						for (int i = 0; i < infoResults.remoteMetadata.size(); i++) {
+							if (infoResults.remoteMetadata.get(i) == null) {
 								uploadTargets.add(ids.get(i));
 							}
 						}
@@ -397,29 +397,29 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						}
 						return uploadTargets;
 					}
-					if (inspectionResults.shouldBeDeleted()) {
+					if (infoResults.shouldBeDeleted()) {
 						return emptyList();
 					}
 					return singletonList(localPartitionId);
 				});
 	}
 
-	private void filterInspectionResults(InspectionResults inspectionResults) {
-		long localSize = inspectionResults.localMetadata.getSize();
-		long maxSize = inspectionResults.remoteMetadata.stream()
+	private void filterInspectionResults(InfoResults infoResults) {
+		long localSize = infoResults.localMetadata.getSize();
+		long maxSize = infoResults.remoteMetadata.stream()
 				.filter(Objects::nonNull)
 				.mapToLong(FileMetadata::getSize)
 				.max().orElse(0);
 
 		if (localSize < maxSize) {
-			inspectionResults.localMetadata = null;
+			infoResults.localMetadata = null;
 		} else {
 			maxSize = localSize;
 		}
-		for (int i = 0; i < inspectionResults.remoteMetadata.size(); i++) {
-			FileMetadata metadata = inspectionResults.remoteMetadata.get(i);
+		for (int i = 0; i < infoResults.remoteMetadata.size(); i++) {
+			FileMetadata metadata = infoResults.remoteMetadata.get(i);
 			if (metadata != null && metadata.getSize() < maxSize) {
-				inspectionResults.remoteMetadata.set(i, null);
+				infoResults.remoteMetadata.set(i, null);
 			}
 		}
 	}
@@ -493,22 +493,22 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	}
 	// endregion
 
-	private static final Comparator<InspectionResults> INSPECTION_RESULTS_COMPARATOR =
-			Comparator.<InspectionResults>comparingLong(inspectionResults -> inspectionResults.remoteMetadata.stream()
+	private static final Comparator<InfoResults> INSPECTION_RESULTS_COMPARATOR =
+			Comparator.<InfoResults>comparingLong(infoResults -> infoResults.remoteMetadata.stream()
 					.filter(Objects::isNull)
 					.count() +
-					(inspectionResults.localMetadata == null ? 0 : 1))
-					.thenComparingLong(inspectionResults -> inspectionResults.remoteMetadata.stream()
+					(infoResults.localMetadata == null ? 0 : 1))
+					.thenComparingLong(infoResults -> infoResults.remoteMetadata.stream()
 							.filter(Objects::nonNull)
-							.findAny().orElse(inspectionResults.localMetadata)
+							.findAny().orElse(infoResults.localMetadata)
 							.getSize());
 
-	private final class InspectionResults implements Comparable<InspectionResults> {
+	private final class InfoResults implements Comparable<InfoResults> {
 		@Nullable
 		FileMetadata localMetadata;
 		final List<@Nullable FileMetadata> remoteMetadata = new ArrayList<>();
 
-		private InspectionResults(@NotNull FileMetadata localMetadata) {
+		private InfoResults(@NotNull FileMetadata localMetadata) {
 			this.localMetadata = localMetadata;
 		}
 
@@ -539,7 +539,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		}
 
 		@Override
-		public int compareTo(@NotNull RemoteFsRepartitionController.InspectionResults o) {
+		public int compareTo(@NotNull RemoteFsRepartitionController.InfoResults o) {
 			return INSPECTION_RESULTS_COMPARATOR.compare(this, o);
 		}
 	}

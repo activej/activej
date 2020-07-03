@@ -426,7 +426,7 @@ public final class TestRemoteFsClusterClient {
 			}
 		}
 
-		Map<String, @Nullable FileMetadata> result = await(client.inspectAll(names)
+		Map<String, @Nullable FileMetadata> result = await(client.infoAll(names)
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
 		assertEquals(names.size(), result.size());
@@ -458,7 +458,7 @@ public final class TestRemoteFsClusterClient {
 				.mapToObj(i -> "nonexistent_" + i + ".txt")
 				.collect(toList());
 
-		Map<String, @Nullable FileMetadata> result = await(client.inspectAll(concat(existingNames, nonExistingNames))
+		Map<String, @Nullable FileMetadata> result = await(client.infoAll(concat(existingNames, nonExistingNames))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
 		assertEquals(existingNames.size() + nonExistingNames.size(), result.size());

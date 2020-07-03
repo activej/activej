@@ -134,7 +134,7 @@ public final class CachedFsClient implements FsClient, EventloopService {
 					if (offset > 0) {
 						return mainClient.download(name, offset, limit);
 					}
-					return mainClient.inspect(name)
+					return mainClient.info(name)
 							.then(mainMetadata -> {
 								if (mainMetadata == null) {
 									return Promise.ofException(FILE_NOT_FOUND);
@@ -187,18 +187,18 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
-		return cacheClient.inspect(name)
+	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+		return cacheClient.info(name)
 				.then(cachedMetadata -> cachedMetadata == null ?
-						mainClient.inspect(name) :
+						mainClient.info(name) :
 						Promise.of(cachedMetadata));
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
 		Map<String, FileMetadata> result = new HashMap<>();
 
-		return cacheClient.inspectAll(names)
+		return cacheClient.infoAll(names)
 				.then(map -> {
 					List<String> mainQuery = new ArrayList<>();
 					for (Map.Entry<String, FileMetadata> entry : result.entrySet()) {
@@ -210,7 +210,7 @@ public final class CachedFsClient implements FsClient, EventloopService {
 					}
 					return mainQuery.isEmpty() ?
 							Promise.of(Collections.<String, FileMetadata>emptyMap()) :
-							mainClient.inspectAll(mainQuery);
+							mainClient.infoAll(mainQuery);
 				})
 				.whenResult(result::putAll)
 				.map($ -> result);

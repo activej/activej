@@ -83,8 +83,8 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats moveAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats inspectPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats inspectAllPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats infoPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats infoAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deletePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -237,14 +237,14 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return simpleCommand(new Inspect(name), InspectFinished.class, InspectFinished::getMetadata)
-				.whenComplete(toLogger(logger, "inspect", name, this))
-				.whenComplete(inspectPromise.recordStats());
+				.whenComplete(toLogger(logger, "info", name, this))
+				.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		return simpleCommand(new InspectAll(names), InspectAllFinished.class,
@@ -254,8 +254,8 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 					names.forEach(name -> result.putIfAbsent(name, null));
 					return result;
 				})
-				.whenComplete(toLogger(logger, "inspectAll", toLimitedString(names, 100), this))
-				.whenComplete(inspectAllPromise.recordStats());
+				.whenComplete(toLogger(logger, "infoAll", toLimitedString(names, 100), this))
+				.whenComplete(infoAllPromise.recordStats());
 	}
 
 	@Override
@@ -368,13 +368,13 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@JmxAttribute
-	public PromiseStats getInspectPromise() {
-		return inspectPromise;
+	public PromiseStats getInfoPromise() {
+		return infoPromise;
 	}
 
 	@JmxAttribute
-	public PromiseStats getInspectAllPromise() {
-		return inspectAllPromise;
+	public PromiseStats getInfoAllPromise() {
+		return infoAllPromise;
 	}
 
 	@JmxAttribute

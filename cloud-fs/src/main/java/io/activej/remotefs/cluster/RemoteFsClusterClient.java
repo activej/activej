@@ -75,8 +75,8 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	private final PromiseStats downloadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats inspectPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats inspectAllPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats infoPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats infoAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -280,12 +280,12 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return checkNotDead()
 				.then(() -> Promises.toList(partitions.select(name)
 						.stream()
 						.map(partitions::get)
-						.map(client -> client.inspect(name).toTry())))
+						.map(client -> client.info(name).toTry())))
 				.then(this::checkStillNotDead)
 				.then(tries -> {
 					List<FileMetadata> successes = tries.stream()
@@ -302,15 +302,15 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 							.max(comparing(FileMetadata::getSize))
 							.orElse(null));
 				})
-				.whenComplete(inspectPromise.recordStats());
+				.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
 		return checkNotDead()
 				.then(() -> Promises.toList(partitions.getAliveClients().values()
 						.stream()
-						.map(client -> client.inspectAll(names).toTry())))
+						.map(client -> client.infoAll(names).toTry())))
 				.then(this::checkStillNotDead)
 				.then(tries -> {
 					List<Map<String, FileMetadata>> successes = tries.stream()
@@ -333,7 +333,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 										throw new AssertionError();
 									}));
 				})
-				.whenComplete(inspectAllPromise.recordStats());
+				.whenComplete(infoAllPromise.recordStats());
 	}
 
 	@Override
@@ -447,7 +447,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promises.toList(partitions.getAliveClients().entrySet().stream()
 				.map(entry -> {
 					Object partitionId = entry.getKey();
-					return entry.getValue().inspect(name)                         //   ↓ use null's as file non-existence indicators
+					return entry.getValue().info(name)                         //   ↓ use null's as file non-existence indicators
 							.map(res -> res != null ? new Container<>(partitionId, res) : null)
 							.thenEx(wrapDeath(partitionId))
 							.toTry();
@@ -488,7 +488,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promises.toList(partitions.getAliveClients().entrySet().stream()
 				.map(entry -> {
 					Object partitionId = entry.getKey();
-					return entry.getValue().inspectAll(new ArrayList<>(names.keySet()))
+					return entry.getValue().infoAll(new ArrayList<>(names.keySet()))
 							.map(res -> new Container<>(partitionId, res))
 							.thenEx(wrapDeath(partitionId))
 							.toTry();
@@ -607,13 +607,13 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@JmxAttribute
-	public PromiseStats getInspectPromise() {
-		return inspectPromise;
+	public PromiseStats getInfoPromise() {
+		return infoPromise;
 	}
 
 	@JmxAttribute
-	public PromiseStats getInspectAllPromise() {
-		return inspectAllPromise;
+	public PromiseStats getInfoAllPromise() {
+		return infoAllPromise;
 	}
 
 	@JmxAttribute

@@ -88,13 +88,13 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
-		return peer.inspect(name);
+	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+		return peer.info(name);
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
-		return peer.inspectAll(names);
+	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+		return peer.infoAll(names);
 	}
 
 	@Override

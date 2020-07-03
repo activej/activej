@@ -72,18 +72,18 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
-		return findMount(name).inspect(name);
+	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+		return findMount(name).info(name);
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
 				.collect(groupingBy(this::findMount))
 				.entrySet().stream()
 				.map(entry -> entry.getKey()
-						.inspectAll(entry.getValue())
+						.infoAll(entry.getValue())
 						.whenResult(result::putAll)))
 				.map($ -> result);
 	}

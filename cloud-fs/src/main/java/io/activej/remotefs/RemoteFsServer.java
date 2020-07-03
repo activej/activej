@@ -68,8 +68,8 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats moveAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats inspectPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats inspectAllPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats infoPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats infoAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deletePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -137,7 +137,7 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 			if (offset < 0 || limit < 0) {
 				return Promise.ofException(BAD_RANGE);
 			}
-			return client.inspect(name)
+			return client.info(name)
 					.then(meta -> {
 						if (meta == null) {
 							return Promise.ofException(FILE_NOT_FOUND);
@@ -160,13 +160,13 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 		onMessage(Delete.class, simpleHandler(msg -> client.delete(msg.getName()), $ -> new DeleteFinished(), deletePromise));
 		onMessage(DeleteAll.class, simpleHandler(msg -> client.deleteAll(msg.getFilesToDelete()), $ -> new DeleteAllFinished(), deleteAllPromise));
 		onMessage(List.class, simpleHandler(msg -> client.list(msg.getGlob()), ListFinished::new, listPromise));
-		onMessage(Inspect.class, simpleHandler(msg -> client.inspect(msg.getName()), InspectFinished::new, inspectPromise));
+		onMessage(Inspect.class, simpleHandler(msg -> client.info(msg.getName()), InspectFinished::new, infoPromise));
 		onMessage(InspectAll.class,
-				simpleHandler(msg -> client.inspectAll(msg.getNames()),
+				simpleHandler(msg -> client.infoAll(msg.getNames()),
 						map -> new InspectAllFinished(map.values().stream()
 								.filter(Objects::nonNull)
 								.collect(toList())),
-						inspectAllPromise));
+						infoAllPromise));
 		onMessage(Ping.class, simpleHandler(msg -> client.ping(), $ -> new PingFinished(), pingPromise));
 	}
 
@@ -209,13 +209,13 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	}
 
 	@JmxAttribute
-	public PromiseStats getInspectPromise() {
-		return inspectPromise;
+	public PromiseStats getInfoPromise() {
+		return infoPromise;
 	}
 
 	@JmxAttribute
-	public PromiseStats getInspectAllPromise() {
-		return inspectAllPromise;
+	public PromiseStats getInfoAllPromise() {
+		return infoAllPromise;
 	}
 
 	@JmxAttribute

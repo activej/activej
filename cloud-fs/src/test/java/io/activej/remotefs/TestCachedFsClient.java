@@ -190,19 +190,19 @@ public final class TestCachedFsClient {
 	public void testGetMetadata() throws IOException {
 		Files.write(serverStorage.resolve("newFile.txt"), "Initial data\n".getBytes(), StandardOpenOption.CREATE_NEW);
 
-		FileMetadata oldMetadata = await(cacheRemote.inspect("newFile.txt"));
+		FileMetadata oldMetadata = await(cacheRemote.info("newFile.txt"));
 		assertNotNull("oldMetadata == null", oldMetadata);
 
 		Files.write(serverStorage.resolve("newFile.txt"), "Appended data\n".getBytes(), StandardOpenOption.APPEND);
 
-		FileMetadata newMetadata = checkNotNull(await(cacheRemote.inspect("newFile.txt")));
+		FileMetadata newMetadata = checkNotNull(await(cacheRemote.info("newFile.txt")));
 
 		assertTrue("New metadata is not greater than old one", newMetadata.getSize() > oldMetadata.getSize());
 	}
 
 	@Test
 	public void testGetMetadataOfNonExistingFile() {
-		FileMetadata metadata = await(cacheRemote.inspect("nonExisting.txt"));
+		FileMetadata metadata = await(cacheRemote.info("nonExisting.txt"));
 
 		assertNull(metadata);
 	}

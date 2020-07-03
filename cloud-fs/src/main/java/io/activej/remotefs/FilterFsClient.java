@@ -87,22 +87,22 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		if (!predicate.test(name)) {
 			return Promise.of(null);
 		}
-		return parent.inspect(name);
+		return parent.info(name);
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
 		Map<Boolean, List<String>> partitioned = names.stream().collect(partitioningBy(predicate));
 		List<String> query = partitioned.get(TRUE);
 		return (query.isEmpty() ?
 				Promise.of(Collections.<String, FileMetadata>emptyMap()) :
-				parent.inspectAll(query))
-				.map(inspected -> {
-					Map<String, FileMetadata> result = new HashMap<>(inspected);
+				parent.infoAll(query))
+				.map(metadata -> {
+					Map<String, FileMetadata> result = new HashMap<>(metadata);
 					partitioned.get(FALSE).forEach(name -> result.put(name, null));
 					return result;
 				});

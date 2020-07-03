@@ -98,8 +98,8 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	private final PromiseStats downloadBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats inspectPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats inspectAllPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats infoPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats infoAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -241,14 +241,14 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return execute(() -> toFileMetadata(resolve(name)))
-				.whenComplete(toLogger(logger, TRACE, "inspect", name, this))
-				.whenComplete(inspectPromise.recordStats());
+				.whenComplete(toLogger(logger, TRACE, "info", name, this))
+				.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		return execute(
@@ -259,8 +259,8 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 					}
 					return result;
 				})
-				.whenComplete(toLogger(logger, TRACE, "inspectAll", names, this))
-				.whenComplete(inspectAllPromise.recordStats());
+				.whenComplete(toLogger(logger, TRACE, "infoAll", names, this))
+				.whenComplete(infoAllPromise.recordStats());
 	}
 
 	@Override
@@ -606,13 +606,13 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	@JmxAttribute
-	public PromiseStats getInspectPromise() {
-		return inspectPromise;
+	public PromiseStats getInfoPromise() {
+		return infoPromise;
 	}
 
 	@JmxAttribute
-	public PromiseStats getInspectAllPromise() {
-		return inspectAllPromise;
+	public PromiseStats getInfoAllPromise() {
+		return infoAllPromise;
 	}
 
 	@JmxAttribute

@@ -322,7 +322,7 @@ public final class TestLocalFsClient {
 
 		assertTrue(await(client.list("**")).stream().noneMatch(metadata -> metadata.getName().contains("newdir")));
 		await(ChannelSupplier.of(ByteBufStrings.wrapUtf8("test")).streamTo(client.upload("newdir")));
-		assertNotNull(await(client.inspect("newdir")));
+		assertNotNull(await(client.info("newdir")));
 	}
 
 	@Test

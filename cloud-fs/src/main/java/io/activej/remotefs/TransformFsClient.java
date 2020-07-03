@@ -92,9 +92,9 @@ final class TransformFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return into.apply(name)
-				.map(transformedName -> parent.inspect(transformedName)
+				.map(transformedName -> parent.info(transformedName)
 						.map(meta -> {
 							if (meta == null) {
 								return null;
@@ -107,7 +107,7 @@ final class TransformFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
 		Map<String, FileMetadata> result = new HashMap<>();
 		List<String> transformed = names.stream()
 				.map(name -> into.apply(name)
@@ -119,7 +119,7 @@ final class TransformFsClient implements FsClient {
 				.collect(toList());
 		return transformed.isEmpty() ?
 				Promise.of(result) :
-				parent.inspectAll(transformed)
+				parent.infoAll(transformed)
 						.whenResult(map -> map.forEach((key, value) -> {
 							FileMetadata metadata = null;
 							if (value != null) {

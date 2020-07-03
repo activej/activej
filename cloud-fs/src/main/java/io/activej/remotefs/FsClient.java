@@ -191,7 +191,7 @@ public interface FsClient {
 	 * @param name name of a file to fetch its metadata.
 	 * @return promise of file description or <code>null</code>
 	 */
-	default Promise<@Nullable FileMetadata> inspect(@NotNull String name) {
+	default Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return list(escapeGlob(name))
 				.map(list -> list.isEmpty() ? null : list.get(0));
 	}
@@ -203,12 +203,12 @@ public interface FsClient {
 	 * @return map of filenames to their corresponding {@link FileMetadata metadata}.
 	 * If there is no such file, a value is <code>null</code>
 	 */
-	default Promise<Map<String, @Nullable FileMetadata>> inspectAll(@NotNull List<String> names) {
+	default Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
-				.map(name -> inspect(name)
+				.map(name -> info(name)
 						.whenResult(metadata -> result.put(name, metadata))))
 				.map($ -> result);
 	}
