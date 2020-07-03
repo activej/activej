@@ -3,8 +3,10 @@
 
 ## Introduction
 
-[ActiveJ](https://activej.io) is a full-featured alternative web and big data Java platform built from the ground up. No overhead of intermediate abstractions, 
-legacy standards, and third-party libraries make the platform minimalistic, streamlined and lightning-fast!
+[ActiveJ](https://activej.io) is a full-featured alternative Java platform built from the ground up as a replacement of Spring, 
+Spark, Quarkus, Micronauts, and other solutions. It is minimalistic, boilerplate-free, and incomparably faster, which is proven by benchmarks.
+ActiveJ has minimum third-party dependencies, yet features full stack of technologies with efficient async programming model and powerful 
+DI library [ActiveInject](https://inject.activej.io)
 
 ## Quick start
 
@@ -39,13 +41,12 @@ To learn more about ActiveJ, please visit https://activej.io or follow our 5-min
 [guide](https://activej.io/tutorials/getting-started). 
 
 ## Repository Structure
-This repository contains ActiveJ platform components along with helper Active libraries:
-* [ActiveCodegen](https://codegen.activej.io) - `core-codegen` module;
-* [ActiveCRDT](https://crdt.activej.io) - `cloud-crdt` module;
-* [ActiveFS](https://fs.activej.io) - `cloud-fs` module;
+This repository contains [ActiveJ](https://activej.io) platform components along with helper ActiveJ libraries:
 * [ActiveInject](https://inject.activej.io) - `core-inject` module;
-* [ActiveRPC](https://rpc.activej.io) - `cloud-rpc` module;
 * [ActiveSerializer](https://serializer.activej.io) - `core-serializer` module;
+* [ActiveCodegen](https://codegen.activej.io) - `core-codegen` module;
 * [ActiveSpecializer](https://specializer.activej.io) - `core-specializer` module.
+* [ActiveRPC](https://rpc.activej.io) - `cloud-rpc` module;
+* [ActiveFS](https://fs.activej.io) - `cloud-fs` module;
 
-You can find examples for ActiveJ and all the Active libraries in [`examples`](https://github.com/activej/activej/tree/master/examples) module.
+You can find examples of using ActiveJ platform and all the ActiveJ libraries in [`examples`](https://github.com/activej/activej/tree/master/examples) module.
