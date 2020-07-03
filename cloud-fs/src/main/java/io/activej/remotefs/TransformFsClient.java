@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
+import io.activej.remotefs.util.RemoteFsUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

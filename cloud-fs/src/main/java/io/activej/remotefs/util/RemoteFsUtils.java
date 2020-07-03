@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-package io.activej.remotefs;
+package io.activej.remotefs.util;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.codec.StructuredCodec;
+import io.activej.codec.StructuredDecoder;
 import io.activej.codec.json.JsonUtils;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.promise.Promise;
 
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.remotefs.FsClient.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.unmodifiableMap;
@@ -98,7 +103,7 @@ public final class RemoteFsUtils {
 		return str -> matcher.matches(Paths.get(str));
 	}
 
-	static <I, O> ByteBufsCodec<I, O> nullTerminatedJson(StructuredCodec<I> in, StructuredCodec<O> out) {
+	public static <I, O> ByteBufsCodec<I, O> nullTerminatedJson(StructuredCodec<I> in, StructuredCodec<O> out) {
 		return ByteBufsCodec
 				.ofDelimiter(
 						ByteBufsDecoder.ofNullTerminatedBytes(),
@@ -112,4 +117,13 @@ public final class RemoteFsUtils {
 						item -> JsonUtils.toJsonBuf(out, item));
 	}
 
+	public static <T> Function<ByteBuf, Promise<T>> parseBody(StructuredDecoder<T> decoder) {
+		return body -> {
+			try {
+				return Promise.of(fromJson(decoder, body.getString(UTF_8)));
+			} catch (ParseException e) {
+				return Promise.ofException(e);
+			}
+		};
+	}
 }

@@ -30,7 +30,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.common.collection.CollectionUtils.map;
-import static io.activej.remotefs.RemoteFsUtils.escapeGlob;
+import static io.activej.remotefs.util.RemoteFsUtils.escapeGlob;
 import static java.util.Collections.emptyMap;
 
 /**

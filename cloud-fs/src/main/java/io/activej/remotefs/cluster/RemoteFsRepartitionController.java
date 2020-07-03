@@ -56,7 +56,7 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Preconditions.checkState;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
-import static io.activej.remotefs.RemoteFsUtils.isWildcard;
+import static io.activej.remotefs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;

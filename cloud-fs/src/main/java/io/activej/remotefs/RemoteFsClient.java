@@ -49,8 +49,8 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
-import static io.activej.remotefs.RemoteFsUtils.ID_TO_ERROR;
-import static io.activej.remotefs.RemoteFsUtils.nullTerminatedJson;
+import static io.activej.remotefs.util.RemoteFsUtils.ID_TO_ERROR;
+import static io.activej.remotefs.util.RemoteFsUtils.nullTerminatedJson;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 

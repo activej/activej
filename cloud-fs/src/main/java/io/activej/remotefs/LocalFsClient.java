@@ -56,7 +56,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
-import static io.activej.remotefs.RemoteFsUtils.isWildcard;
+import static io.activej.remotefs.util.RemoteFsUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;

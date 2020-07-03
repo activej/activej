@@ -18,7 +18,6 @@ package io.activej.remotefs;
 
 import io.activej.codec.CodecSubtype;
 import io.activej.codec.StructuredCodec;
-import io.activej.codec.StructuredCodecs;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -26,13 +25,9 @@ import java.util.List;
 
 import static io.activej.codec.StructuredCodecs.*;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.remotefs.util.Codecs.FILE_META_CODEC;
 
 public final class RemoteFsResponses {
-	public static final StructuredCodec<FileMetadata> FILE_META_CODEC = StructuredCodecs.tuple(FileMetadata::parse,
-			FileMetadata::getName, STRING_CODEC,
-			FileMetadata::getSize, LONG_CODEC,
-			FileMetadata::getTimestamp, LONG_CODEC);
-
 	static final StructuredCodec<FsResponse> CODEC = CodecSubtype.<FsResponse>create()
 			.with(UploadAck.class, object(UploadAck::new))
 			.with(UploadFinished.class, object(UploadFinished::new))

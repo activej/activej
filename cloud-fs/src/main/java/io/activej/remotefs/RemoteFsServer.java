@@ -42,8 +42,8 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.remotefs.FsClient.BAD_RANGE;
 import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
-import static io.activej.remotefs.RemoteFsUtils.ERROR_TO_ID;
-import static io.activej.remotefs.RemoteFsUtils.nullTerminatedJson;
+import static io.activej.remotefs.util.RemoteFsUtils.ERROR_TO_ID;
+import static io.activej.remotefs.util.RemoteFsUtils.nullTerminatedJson;
 import static java.util.stream.Collectors.toList;
 
 /**

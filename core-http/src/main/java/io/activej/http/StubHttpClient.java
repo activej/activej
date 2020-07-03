@@ -16,7 +16,9 @@
 
 package io.activej.http;
 
+import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
+import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 
@@ -37,7 +39,6 @@ public final class StubHttpClient implements IAsyncHttpClient {
 		return new StubHttpClient(servlet);
 	}
 
-	// this piece of error formatting is stolen directly from HttpServerConnection
 	@Override
 	public Promise<HttpResponse> request(HttpRequest request) {
 		Promise<HttpResponse> servletResult;
@@ -49,7 +50,15 @@ public final class StubHttpClient implements IAsyncHttpClient {
 		return servletResult.thenEx((res, e) -> {
 			request.recycle();
 			if (e == null) {
-				Eventloop.getCurrentEventloop().post(wrapContext(res, res::recycle));
+				ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
+				Eventloop eventloop = Eventloop.getCurrentEventloop();
+				if (bodyStream != null){
+					res.setBodyStream(bodyStream
+							.withEndOfStream(eos -> eos
+									.whenComplete(() -> eventloop.post(res::recycle))));
+				} else {
+					eventloop.post(wrapContext(res, res::recycle));
+				}
 				return Promise.of(res);
 			} else {
 				return Promise.ofException(e);
