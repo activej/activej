@@ -23,7 +23,6 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.http.*;
 import io.activej.http.MultipartParser.MultipartDataHandler;
 import io.activej.promise.Promise;
-import io.activej.promise.SettablePromise;
 import io.activej.remotefs.FsClient;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,6 +34,7 @@ import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
+import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
@@ -55,17 +55,21 @@ public final class RemoteFsServlet {
 
 	public static RoutingServlet create(FsClient client, boolean inline) {
 		return RoutingServlet.create()
-				.map(POST, "/" + UPLOAD + "/*", request -> client.upload(decodePath(request))
-						.mapEx(errorHandler(consumer -> {
-							SettablePromise<UploadAcknowledgement> ackPromise = new SettablePromise<>();
-							request.getBodyStream().streamTo(consumer)
-									.whenException(e -> ackPromise.set(UploadAcknowledgement.ofErrorCode(ERROR_TO_ID.get(e))))
-									.whenResult(() -> ackPromise.set(UploadAcknowledgement.ok()));
-							return HttpResponse.ok200()
+				.map(POST, "/" + UPLOAD + "/*", request -> {
+					String contentLength = request.getHeader(CONTENT_LENGTH);
+					Long size = contentLength == null ? null : Long.valueOf(contentLength);
+					return (size == null ?
+							client.upload(decodePath(request)) :
+							client.upload(decodePath(request), size))
+							.mapEx(errorHandler(consumer -> HttpResponse.ok200()
 									.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-									.withBodyStream(ChannelSupplier.ofPromise(ackPromise
-											.map(ack -> ChannelSupplier.of(toJsonBuf(UploadAcknowledgement.CODEC, ack)))));
-						})))
+									.withBodyStream(ChannelSupplier.ofPromise(request.getBodyStream()
+											.streamTo(consumer)
+											.mapEx(($, e) -> e == null ?
+													UploadAcknowledgement.ok() :
+													UploadAcknowledgement.ofErrorCode(ERROR_TO_ID.getOrDefault(e, 0)))
+											.map(ack -> ChannelSupplier.of(toJsonBuf(UploadAcknowledgement.CODEC, ack)))))));
+				})
 				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(client::upload))
 						.mapEx(errorHandler()))
 				.map(GET, "/" + DOWNLOAD + "/*", request -> {
@@ -79,7 +83,6 @@ public final class RemoteFsServlet {
 					return client.download(name, offset, limit)
 							.mapEx(errorHandler(supplier -> HttpResponse.ok200()
 									.withBodyStream(supplier)));
-
 				})
 				.map(GET, "/" + LIST, request -> {
 					String glob = request.getQueryParameter("glob");
@@ -174,7 +177,7 @@ public final class RemoteFsServlet {
 		}
 		try {
 			long val = Long.parseLong(value);
-			if (val < 0){
+			if (val < 0) {
 				throw new NumberFormatException();
 			}
 			return val;

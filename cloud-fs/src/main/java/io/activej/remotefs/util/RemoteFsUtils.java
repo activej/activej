@@ -22,8 +22,11 @@ import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.json.JsonUtils;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.common.ref.RefLong;
+import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.promise.Promise;
 
 import java.nio.file.FileSystems;
@@ -36,6 +39,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static io.activej.codec.json.JsonUtils.fromJson;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.remotefs.FsClient.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.unmodifiableMap;
@@ -126,4 +131,27 @@ public final class RemoteFsUtils {
 			}
 		};
 	}
+
+	public static ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> ofFixedSize(long size) {
+		return consumer -> {
+			RefLong total = new RefLong(size);
+			return consumer
+					.<ByteBuf>mapAsync(byteBuf -> {
+						long left = total.dec(byteBuf.readRemaining());
+						if (left < 0) {
+							byteBuf.recycle();
+							return Promise.ofException(UNEXPECTED_DATA_EXCEPTION);
+						}
+						return Promise.of(byteBuf);
+					})
+					.withAcknowledgement(ack -> ack
+							.then(() -> {
+								if (total.get() > 0) {
+									return Promise.ofException(UNEXPECTED_END_OF_STREAM_EXCEPTION);
+								}
+								return Promise.complete();
+							}));
+		};
+	}
+
 }

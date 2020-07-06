@@ -8,13 +8,16 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.AsyncHttpClient;
+import io.activej.http.AsyncHttpServer;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.remotefs.FileMetadata;
 import io.activej.remotefs.FsClient;
-import io.activej.remotefs.RemoteFsClient;
-import io.activej.remotefs.RemoteFsServer;
+import io.activej.remotefs.LocalFsClient;
+import io.activej.remotefs.http.HttpFsClient;
+import io.activej.remotefs.http.RemoteFsServlet;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +25,6 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,7 +61,7 @@ public final class TestRemoteFsClusterClient {
 
 	private final List<Path> serverStorages = new ArrayList<>();
 
-	private List<RemoteFsServer> servers;
+	private List<AsyncHttpServer> servers;
 	private Path clientStorage;
 	private FsPartitions partitions;
 	private RemoteFsClusterClient client;
@@ -75,24 +77,27 @@ public final class TestRemoteFsClusterClient {
 		Map<Object, FsClient> clients = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-			InetSocketAddress address = new InetSocketAddress("localhost", 5600 + i);
+			int port = 5600 + i;
 
-			clients.put("server_" + i, RemoteFsClient.create(eventloop, address));
+			clients.put("server_" + i, HttpFsClient.create("http://localhost:" + port, httpClient));
 
 			Path path = Paths.get(tmpFolder.newFolder("storage_" + i).toURI());
 			serverStorages.add(path);
 			Files.createDirectories(path);
 
-			RemoteFsServer server = RemoteFsServer.create(eventloop, executor, path).withListenAddress(address);
+			LocalFsClient localClient = LocalFsClient.create(eventloop, executor, path);
+			AsyncHttpServer server = AsyncHttpServer.create(eventloop, RemoteFsServlet.create(localClient))
+					.withListenPort(port);
 			server.listen();
 			servers.add(server);
 		}
 
-		clients.put("dead_one", RemoteFsClient.create(eventloop, new InetSocketAddress("localhost", 5555)));
-		clients.put("dead_two", RemoteFsClient.create(eventloop, new InetSocketAddress("localhost", 5556)));
-		clients.put("dead_three", RemoteFsClient.create(eventloop, new InetSocketAddress("localhost", 5557)));
+		clients.put("dead_one", HttpFsClient.create("http://localhost:" + 5555, httpClient));
+		clients.put("dead_two", HttpFsClient.create("http://localhost:" + 5556, httpClient));
+		clients.put("dead_three", HttpFsClient.create("http://localhost:" + 5557, httpClient));
 
 		partitions = FsPartitions.create(eventloop, clients);
 		client = RemoteFsClusterClient.create(partitions);

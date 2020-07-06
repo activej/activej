@@ -24,13 +24,14 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 public final class FileUploadExample extends Launcher {
 	private static final int SERVER_PORT = 6732;
 	private static final String FILE_NAME = "example.txt";
+	private static final String EXAMPLE_TEXT = "example text";
 
 	private Path clientFile;
 
 	@Override
 	protected void onInit(Injector injector) throws Exception {
 		clientFile = Files.createTempFile("example", ".txt");
-		Files.write(clientFile, "example text".getBytes());
+		Files.write(clientFile, EXAMPLE_TEXT.getBytes());
 	}
 
 	@Inject
@@ -61,7 +62,7 @@ public final class FileUploadExample extends Launcher {
 		CompletableFuture<Void> future = eventloop.submit(() ->
 				// consumer result here is a marker of it being successfully uploaded
 				ChannelFileReader.open(executor, clientFile)
-						.then(cfr -> cfr.streamTo(client.upload(FILE_NAME)))
+						.then(cfr -> cfr.streamTo(client.upload(FILE_NAME, EXAMPLE_TEXT.length())))
 						.whenResult(() -> System.out.printf("%nFile '%s' successfully uploaded%n%n", FILE_NAME))
 		);
 		future.get();

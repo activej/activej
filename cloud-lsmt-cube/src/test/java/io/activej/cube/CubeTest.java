@@ -6,11 +6,13 @@ import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.AsyncHttpClient;
+import io.activej.http.AsyncHttpServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.remotefs.LocalFsClient;
-import io.activej.remotefs.RemoteFsClient;
-import io.activej.remotefs.RemoteFsServer;
+import io.activej.remotefs.http.HttpFsClient;
+import io.activej.remotefs.http.RemoteFsServlet;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -20,7 +22,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -100,7 +101,7 @@ public final class CubeTest {
 	}
 
 	@Test
-	public void testQuery1() throws QueryException {
+	public void testQuery1() {
 		List<DataItemResult> expected = singletonList(new DataItemResult(1, 3, 10, 30, 20));
 
 		await(
@@ -117,19 +118,22 @@ public final class CubeTest {
 		assertEquals(expected, list);
 	}
 
-	private RemoteFsServer startServer(Executor executor, Path serverStorage) throws IOException {
-		RemoteFsServer fileServer = RemoteFsServer.create(Eventloop.getCurrentEventloop(), executor, serverStorage)
+	private AsyncHttpServer startServer(Executor executor, Path serverStorage) throws IOException {
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		LocalFsClient fsClient = LocalFsClient.create(eventloop, executor, serverStorage);
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, RemoteFsServlet.create(fsClient))
 				.withListenPort(LISTEN_PORT);
-		fileServer.listen();
-		return fileServer;
+		server.listen();
+		return server;
 	}
 
 	@Test
 	public void testRemoteFsAggregationStorage() throws Exception {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
-		RemoteFsServer remoteFsServer1 = startServer(executor, serverStorage);
-		RemoteFsClient storage = RemoteFsClient.create(Eventloop.getCurrentEventloop(), new InetSocketAddress("localhost", LISTEN_PORT));
+		AsyncHttpServer server1 = startServer(executor, serverStorage);
+		AsyncHttpClient httpClient = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
+		HttpFsClient storage = HttpFsClient.create("http://localhost:" + LISTEN_PORT, httpClient);
 		AggregationChunkStorage<Long> chunkStorage = RemoteFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
@@ -138,22 +142,22 @@ public final class CubeTest {
 		await(
 				Promises.all(consume(cube, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
 						consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
-						.whenComplete(remoteFsServer1::close)
+						.whenComplete(server1::close)
 		);
-		RemoteFsServer remoteFsServer2 = startServer(executor, serverStorage);
+		AsyncHttpServer server2 = startServer(executor, serverStorage);
 
 		List<DataItemResult> list = await(cube.queryRawStream(
 				asList("key1", "key2"), asList("metric1", "metric2", "metric3"),
 				and(eq("key1", 1), eq("key2", 3)),
 				DataItemResult.class, classLoader)
 				.toList()
-				.whenComplete(remoteFsServer2::close));
+				.whenComplete(server2::close));
 
 		assertEquals(expected, list);
 	}
 
 	@Test
-	public void testOrdering() throws QueryException {
+	public void testOrdering() {
 		List<DataItemResult> expected = asList(
 				new DataItemResult(1, 2, 30, 37, 42), // metric2 =  37
 				new DataItemResult(1, 3, 44, 43, 5),  // metric2 =  43
@@ -175,7 +179,7 @@ public final class CubeTest {
 	}
 
 	@Test
-	public void testMultipleOrdering() throws QueryException {
+	public void testMultipleOrdering() {
 		List<DataItemResult> expected = asList(
 				new DataItemResult(1, 3, 30, 25, 0),  // metric1 = 30, metric2 = 25
 				new DataItemResult(1, 4, 40, 10, 0),  // metric1 = 40, metric2 = 10
@@ -203,7 +207,7 @@ public final class CubeTest {
 	}
 
 	@Test
-	public void testBetweenPredicate() throws QueryException {
+	public void testBetweenPredicate() {
 		List<DataItemResult> expected = asList(
 				new DataItemResult(5, 77, 0, 88, 98),
 				new DataItemResult(5, 99, 40, 36, 0),
@@ -232,7 +236,7 @@ public final class CubeTest {
 	}
 
 	@Test
-	public void testBetweenTransformation() throws QueryException {
+	public void testBetweenTransformation() {
 		cube = newSophisticatedCube(executor, classLoader, chunkStorage);
 
 		List<DataItemResult3> expected = singletonList(new DataItemResult3(5, 77, 50, 20, 56, 0, 88, 98));
@@ -259,7 +263,7 @@ public final class CubeTest {
 	}
 
 	@Test
-	public void testGrouping() throws QueryException {
+	public void testGrouping() {
 		List<DataItemResult2> expected = asList(
 				new DataItemResult2(1, 150, 230, 75),
 				new DataItemResult2(2, 25, 45, 0),
@@ -282,7 +286,7 @@ public final class CubeTest {
 	}
 
 	@Test
-	public void testQuery2() throws QueryException {
+	public void testQuery2() {
 		List<DataItemResult> expected = singletonList(new DataItemResult(1, 3, 10, 30, 20));
 
 		await(
@@ -301,7 +305,7 @@ public final class CubeTest {
 	}
 
 	@Test
-	public void testConsolidate() throws QueryException {
+	public void testConsolidate() {
 		List<DataItemResult> expected = singletonList(new DataItemResult(1, 4, 0, 30, 60));
 
 		await(

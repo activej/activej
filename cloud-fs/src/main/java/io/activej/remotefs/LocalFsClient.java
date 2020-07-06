@@ -24,6 +24,7 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
@@ -56,12 +57,13 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.remotefs.util.RemoteFsUtils.isWildcard;
+import static io.activej.remotefs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.toList;
@@ -76,6 +78,9 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 	public static final String FILE_SEPARATOR = String.valueOf(FILE_SEPARATOR_CHAR);
 
+	public static final String SYSTEM_DIR = ".system";
+	public static final String TEMP_DIR = "temp";
+
 	private static final Function<String, String> toLocalName = File.separatorChar == FILE_SEPARATOR_CHAR ?
 			Function.identity() :
 			s -> s.replace(FILE_SEPARATOR_CHAR, File.separatorChar);
@@ -86,6 +91,8 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 	private final Eventloop eventloop;
 	private final Path storage;
+	private final Path systemDir;
+	private final Path tempDir;
 	private final Executor executor;
 
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
@@ -113,6 +120,8 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		this.eventloop = eventloop;
 		this.executor = executor;
 		this.storage = storage;
+		this.systemDir = storage.resolve(SYSTEM_DIR);
+		this.tempDir = systemDir.resolve(TEMP_DIR);
 
 		now = eventloop;
 	}
@@ -132,20 +141,14 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return execute(
-				() -> {
-					Path path = resolve(name);
-					Files.createDirectories(path.getParent());
-					return FileChannel.open(path, CREATE, WRITE);
-				})
-				.map(channel -> ChannelFileWriter.create(executor, channel)
-						.withAcknowledgement(ack -> ack
-								.thenEx(translateKnownErrors(name))
-								.whenComplete(uploadFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "uploadComplete", name, this))))
-				.thenEx(translateKnownErrors(name))
-				.whenComplete(uploadBeginPromise.recordStats())
+		return doUpload(name, identity())
 				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
+	}
+
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+		return doUpload(name, ofFixedSize(size))
+				.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
 	}
 
 	@Override
@@ -287,13 +290,16 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		return execute((BlockingRunnable) () -> Files.createDirectories(storage));
+		return execute(() -> {
+			Files.createDirectories(storage);
+			clearTempDir();
+		});
 	}
 
 	@NotNull
 	@Override
 	public Promise<Void> stop() {
-		return Promise.complete();
+		return execute(this::clearTempDir);
 	}
 
 	@Override
@@ -313,12 +319,27 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		}
 	}
 
+	private void clearTempDir() throws IOException {
+		if (!Files.isDirectory(tempDir)) {
+			return;
+		}
+		//noinspection ResultOfMethodCallIgnored
+		Files.walk(tempDir)
+				.sorted(Comparator.reverseOrder())
+				.map(Path::toFile)
+				.forEach(File::delete);
+	}
+
 	private Path resolve(String name) throws StacklessException {
 		Path path = storage.resolve(toLocalName.apply(name)).normalize();
-		if (!path.startsWith(storage)) {
+		if (!path.startsWith(storage) || path.startsWith(systemDir)) {
 			throw BAD_PATH;
 		}
 		return path;
+	}
+
+	private Path resolveTemp(String name) {
+		return tempDir.resolve(toLocalName.apply(name)).normalize();
 	}
 
 	private Promise<Path> resolveAsync(String name) {
@@ -329,56 +350,88 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		}
 	}
 
-	private void doCopy(Map<String, String> sourceToTargetMap) throws StacklessException, IOException {
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
+		Path tempPath = resolveTemp(name);
+		return execute(
+				() -> {
+					Path path = resolve(name);
+					FileChannel channel = ensureParent(tempPath, () -> FileChannel.open(tempPath, CREATE_NEW, WRITE));
+					if (Files.exists(path)) {
+						deleteEmptyParents(tempPath);
+						throw Files.isDirectory(path) ? IS_DIRECTORY : FILE_EXISTS;
+					}
+					return channel;
+				})
+				.map(channel -> ChannelFileWriter.create(executor, channel)
+						.transformWith(transformer)
+						.withAcknowledgement(ack -> ack
+								.then(() -> execute(() -> doMove(tempPath, resolve(name))))
+								.thenEx(translateKnownErrors(name))
+								.whenException(() -> execute(() -> deleteEmptyParents(tempPath)))
+								.whenComplete(uploadFinishPromise.recordStats())
+								.whenComplete(toLogger(logger, TRACE, "uploadComplete", name, this))))
+				.thenEx(translateKnownErrors(name))
+				.whenComplete(uploadBeginPromise.recordStats());
+	}
+
+	private void doCopy(Map<String, String> sourceToTargetMap) throws Exception {
 		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
 			Path path = resolve(entry.getKey());
 			Path targetPath = resolve(entry.getValue());
 
 			if (!Files.exists(path)) throw FILE_NOT_FOUND;
-			if (Files.isDirectory(path) || Files.isDirectory(targetPath)) throw IS_DIRECTORY;
+			if (Files.exists(targetPath)) throw Files.isDirectory(targetPath) ? IS_DIRECTORY : FILE_EXISTS;
+			if (Files.isDirectory(path)) throw IS_DIRECTORY;
 
 			if (path.equals(targetPath)) {
 				touch(path);
 				continue;
 			}
 
-			Files.createDirectories(targetPath.getParent());
-
-			try {
-				// try to create a hardlink
-				Files.createLink(targetPath, path);
-				touch(targetPath);
-			} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
-				// if couldn't, then just actually copy it, replacing existing since contents should be the same
-				Files.copy(path, targetPath, REPLACE_EXISTING);
-			}
+			ensureParent(targetPath, () -> {
+				try {
+					// try to create a hardlink
+					Files.createLink(targetPath, path);
+					touch(targetPath);
+				} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
+					// if couldn't, then just actually copy it, replacing existing since contents should be the same
+					Files.copy(path, targetPath);
+				}
+				return null;
+			});
 		}
 	}
 
-	private void doMove(Map<String, String> sourceToTargetMap) throws StacklessException, IOException {
+	private void doMove(Map<String, String> sourceToTargetMap) throws Exception {
 		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
 			Path path = resolve(entry.getKey());
 			Path targetPath = resolve(entry.getValue());
 
 			if (!Files.exists(path)) throw FILE_NOT_FOUND;
-			if (Files.isDirectory(path) || Files.isDirectory(targetPath)) throw IS_DIRECTORY;
+			if (Files.exists(targetPath)) throw Files.isDirectory(targetPath) ? IS_DIRECTORY : FILE_EXISTS;
+			if (Files.isDirectory(path)) throw IS_DIRECTORY;
 
 			if (path.equals(targetPath)) {
 				Files.deleteIfExists(path);
 				continue;
 			}
 
-			Files.createDirectories(targetPath.getParent());
+			doMove(path, targetPath);
+		}
+	}
 
+	private void doMove(Path path, Path targetPath) throws Exception {
+		ensureParent(targetPath, () -> {
 			try {
-				Files.move(path, targetPath, ATOMIC_MOVE, REPLACE_EXISTING);
+				Files.move(path, targetPath, ATOMIC_MOVE);
 				touch(targetPath);
 			} catch (AtomicMoveNotSupportedException e) {
-				Files.move(path, targetPath, REPLACE_EXISTING);
+				Files.move(path, targetPath);
 			}
+			return null;
+		});
 
-			deleteEmptyParents(path.getParent());
-		}
+		deleteEmptyParents(path.getParent());
 	}
 
 	private void doDelete(Set<String> toDelete) throws StacklessException, IOException {
@@ -395,6 +448,21 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 			}
 
 			deleteEmptyParents(path.getParent());
+		}
+	}
+
+	private <V> V ensureParent(Path path, BlockingCallable<V> afterCreation) throws Exception {
+		Path parent = path.getParent();
+		while (true) {
+			Files.createDirectories(parent);
+			try {
+				return afterCreation.call();
+			} catch (NoSuchFileException e) {
+				if (path.toString().equals(e.getFile())) {
+					continue;
+				}
+				throw e;
+			}
 		}
 	}
 
@@ -472,12 +540,21 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException, StacklessException {
-		if (!Files.isDirectory(dir)) {
+		if (!Files.isDirectory(dir) || dir.startsWith(systemDir)) {
 			return;
 		}
 		String[] parts;
 		if (glob == null || (parts = glob.split(FILE_SEPARATOR))[0].contains("**")) {
 			Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+					if (dir.startsWith(systemDir)) {
+						return SKIP_SUBTREE;
+					}
+					return CONTINUE;
+				}
+
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					walker.accept(file);

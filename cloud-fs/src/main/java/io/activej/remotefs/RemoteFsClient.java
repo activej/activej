@@ -49,8 +49,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
-import static io.activej.remotefs.util.RemoteFsUtils.ID_TO_ERROR;
-import static io.activej.remotefs.util.RemoteFsUtils.nullTerminatedJson;
+import static io.activej.remotefs.util.RemoteFsUtils.*;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 
@@ -113,28 +112,34 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+		throw new UnsupportedOperationException("Streaming upload is not allowed");
+	}
+
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 		return connect(address)
 				.then(messaging ->
-						messaging.send(new Upload(filename))
+						messaging.send(new Upload(name, size))
 								.then(messaging::receive)
 								.then(msg -> cast(msg, UploadAck.class))
 								.then(() -> Promise.of(messaging.sendBinaryStream()
+										.transformWith(ofFixedSize(size))
 										.withAcknowledgement(ack -> ack
 												.then(messaging::receive)
 												.whenResult(messaging::close)
 												.then(msg -> cast(msg, UploadFinished.class).toVoid())
 												.whenException(e -> {
 													messaging.closeEx(e);
-													logger.warn("Cancelled while trying to upload file {} : {}", filename, this, e);
+													logger.warn("Cancelled while trying to upload file {}: {}", name, this, e);
 												})
 												.whenComplete(uploadFinishPromise.recordStats()))))
 								.whenException(e -> {
 									messaging.closeEx(e);
-									logger.warn("Error while trying to upload file {} : {}", filename, this, e);
+									logger.warn("Error while trying to upload file {}: {}", name, this, e);
 								}))
-				.whenComplete(toLogger(logger, "upload", filename, this))
-				.whenComplete(uploadStartPromise.recordStats());
+				.whenComplete(uploadStartPromise.recordStats())
+				.whenComplete(toLogger(logger, "upload", name, size, this));
 	}
 
 	@Override

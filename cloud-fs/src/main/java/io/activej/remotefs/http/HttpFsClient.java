@@ -40,10 +40,12 @@ import java.util.function.Function;
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static io.activej.remotefs.http.FsCommand.*;
 import static io.activej.remotefs.http.UploadAcknowledgement.Status.OK;
 import static io.activej.remotefs.util.Codecs.*;
 import static io.activej.remotefs.util.RemoteFsUtils.ID_TO_ERROR;
+import static io.activej.remotefs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class HttpFsClient implements FsClient {
@@ -62,32 +64,13 @@ public final class HttpFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename) {
-		SettablePromise<ChannelConsumer<ByteBuf>> channelPromise = new SettablePromise<>();
-		SettablePromise<HttpResponse> responsePromise = new SettablePromise<>();
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+		return doUpload(name, null);
+	}
 
-		UrlBuilder urlBuilder = UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename);
-
-		client.request(
-				HttpRequest.post(url + urlBuilder.build())
-						.withBodyStream(ChannelSupplier.ofPromise(responsePromise
-								.map(response -> {
-									ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
-									channelPromise.trySet(buffer.getConsumer()
-											.withAcknowledgement(ack -> ack.both(response.loadBody()
-													.then(parseBody(UploadAcknowledgement.CODEC))
-													.then(HttpFsClient::failOnException)
-													.whenException(e -> {
-														channelPromise.trySetException(e);
-														buffer.closeEx(e);
-													}))));
-									return buffer.getSupplier();
-								}))))
-				.then(HttpFsClient::checkResponse)
-				.whenException(channelPromise::trySetException)
-				.whenComplete(responsePromise::trySet);
-
-		return channelPromise;
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+		return doUpload(name, size);
 	}
 
 	@Override
@@ -264,18 +247,48 @@ public final class HttpFsClient implements FsClient {
 		};
 	}
 
-	public static Promise<Void> failOnException(UploadAcknowledgement ack) {
+	@NotNull
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String filename, @Nullable Long size) {
+		SettablePromise<ChannelConsumer<ByteBuf>> channelPromise = new SettablePromise<>();
+		SettablePromise<HttpResponse> responsePromise = new SettablePromise<>();
+
+		UrlBuilder urlBuilder = UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename);
+
+		HttpRequest request = HttpRequest.post(url + urlBuilder.build());
+		if (size != null) {
+			request.addHeader(CONTENT_LENGTH, String.valueOf(size));
+		}
+		client.request(request
+				.withBodyStream(ChannelSupplier.ofPromise(responsePromise
+						.map(response -> {
+							ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
+							ChannelConsumer<ByteBuf> consumer = buffer.getConsumer();
+							if (size != null) {
+								consumer = consumer.transformWith(ofFixedSize(size));
+							}
+							channelPromise.trySet(consumer
+									.withAcknowledgement(ack -> ack.both(response.loadBody()
+											.then(parseBody(UploadAcknowledgement.CODEC))
+											.then(HttpFsClient::failOnException)
+											.whenException(e -> {
+												channelPromise.trySetException(e);
+												buffer.closeEx(e);
+											}))));
+							return buffer.getSupplier();
+						}))))
+				.then(HttpFsClient::checkResponse)
+				.whenException(channelPromise::trySetException)
+				.whenComplete(responsePromise::trySet);
+
+		return channelPromise;
+	}
+
+	private static Promise<Void> failOnException(UploadAcknowledgement ack) {
 		if (ack.getStatus() == OK) {
 			return Promise.complete();
 		}
 		Integer errorCode = ack.getErrorCode();
-		if (errorCode != null) {
-			Throwable exception = ID_TO_ERROR.get(errorCode);
-			if (exception != null) {
-				return Promise.ofException(exception);
-			}
-		}
-		return Promise.ofException(UNKNOWN_SERVER_ERROR);
+		return Promise.ofException(ID_TO_ERROR.getOrDefault(errorCode, UNKNOWN_SERVER_ERROR));
 	}
 
 }

@@ -30,7 +30,8 @@ public final class RemoteFsCommands {
 
 	static final StructuredCodec<FsCommand> CODEC = CodecSubtype.<FsCommand>create()
 			.with(Upload.class, object(Upload::new,
-					"name", Upload::getName, STRING_CODEC))
+					"name", Upload::getName, STRING_CODEC,
+					"size", Upload::getSize, LONG_CODEC))
 			.with(Download.class, object(Download::new,
 					"name", Download::getName, STRING_CODEC,
 					"offset", Download::getOffset, LONG_CODEC,
@@ -62,18 +63,24 @@ public final class RemoteFsCommands {
 
 	public static final class Upload extends FsCommand {
 		private final String name;
+		private final long size;
 
-		public Upload(String name) {
+		public Upload(String name, long size) {
 			this.name = name;
+			this.size = size;
 		}
 
 		public String getName() {
 			return name;
 		}
 
+		public Long getSize() {
+			return size;
+		}
+
 		@Override
 		public String toString() {
-			return "Upload{name='" + name + '}';
+			return "Upload{name='" + name + "', size=" + size + '}';
 		}
 	}
 

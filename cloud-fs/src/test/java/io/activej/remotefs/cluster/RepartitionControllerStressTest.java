@@ -21,6 +21,9 @@ import java.util.concurrent.Executors;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.remotefs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.test.TestUtils.assertComplete;
+import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
@@ -128,11 +131,13 @@ public final class RepartitionControllerStressTest {
 		long start = System.nanoTime();
 
 		int delta = maxSize - minSize;
-		Random rng = new Random(7L);
+		Random rng = new Random();
+		Map<Integer, Integer> hashes = new HashMap<>();
 		for (int i = 0; i < n; i++) {
 			byte[] data = new byte[minSize + (delta <= 0 ? 0 : rng.nextInt(delta))];
 			rng.nextBytes(data);
 			Files.write(localStorage.resolve("file_" + i + ".txt"), data);
+			hashes.put(i, Arrays.hashCode(data));
 		}
 
 		System.out.println("Created local files in " + ((System.nanoTime() - start) / 1e6) + " ms");
@@ -156,6 +161,21 @@ public final class RepartitionControllerStressTest {
 								servers.forEach(AbstractServer::close);
 							}));
 				})));
+
+		List<Path> storages = Arrays.stream(serverStorages).collect(toList());
+		storages.add(localStorage);
+		for (int i = 0; i < n; i++) {
+			List<Integer> hashCodes = new ArrayList<>();
+			for (Path storage : storages) {
+				Path path = storage.resolve("file_" + i + ".txt");
+				if (Files.exists(path)) {
+					hashCodes.add(Arrays.hashCode(Files.readAllBytes(path)));
+				}
+			}
+			assertEquals(controller.getReplicationCount(), hashCodes.size());
+			Integer hash = hashes.get(i);
+			assertTrue(hashCodes.stream().allMatch(integer -> integer.equals(hash)));
+		}
 	}
 
 	@Test

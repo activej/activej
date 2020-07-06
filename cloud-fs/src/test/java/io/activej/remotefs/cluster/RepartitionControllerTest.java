@@ -1,7 +1,6 @@
 package io.activej.remotefs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
@@ -30,6 +29,7 @@ import java.util.concurrent.Executors;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.remotefs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
+import static io.activej.remotefs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
@@ -88,18 +88,9 @@ public final class RepartitionControllerTest {
 		RemoteFsServer failingServer = RemoteFsServer.create(eventloop,
 				new ForwardingFsClient(peer) {
 					@Override
-					public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-						RefInt total = new RefInt(0);
+					public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 						return super.upload(name)
-								.map(consumer -> consumer.mapAsync(buf -> {
-									total.inc(buf.readRemaining());
-									if (total.get() > 5 * 1024 * 1024) {
-										// file after 5 MB
-										buf.recycle();
-										return Promise.ofException(new Exception());
-									}
-									return Promise.of(buf);
-								}));
+								.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
 					}
 				})
 				.withListenAddress(failingPartitionAddress);
@@ -123,7 +114,7 @@ public final class RepartitionControllerTest {
 
 		assertEquals(fileSize, Files.size(localStorage.resolve("file")));
 		assertEquals(fileSize, Files.size(regularPath.resolve("file")));
-		assertTrue(Files.size(failingPath.resolve("file")) < fileSize);
+		assertFalse(Files.exists(failingPath.resolve("file")));
 	}
 
 }

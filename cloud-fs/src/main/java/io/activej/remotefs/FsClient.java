@@ -38,7 +38,7 @@ import static java.util.Collections.emptyMap;
  */
 public interface FsClient {
 	StacklessException FILE_NOT_FOUND = new StacklessException(FsClient.class, "File not found");
-	StacklessException FILE_EXISTS = new StacklessException(FsClient.class, "Prefix of path corresponds to an existing file");
+	StacklessException FILE_EXISTS = new StacklessException(FsClient.class, "File already exists");
 	StacklessException BAD_PATH = new StacklessException(FsClient.class, "Given file name points to file outside root");
 	StacklessException BAD_RANGE = new StacklessException(FsClient.class, "Given offset or limit doesn't make sense");
 	StacklessException IS_DIRECTORY = new StacklessException(FsClient.class, "Operated file is a directory");
@@ -56,6 +56,8 @@ public interface FsClient {
 	 * @return promise for stream consumer of byte buffers
 	 */
 	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name);
+
+	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size);
 
 	/**
 	 * Returns a supplier of bytebufs which are read (or received) from the file.

@@ -29,6 +29,7 @@ import io.activej.csp.process.ChannelSplitter;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.remotefs.http.HttpFsClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +41,7 @@ import static io.activej.common.Preconditions.checkArgument;
  * Represents a cached filesystem client which is an implementation of {@link FsClient}.
  * Cached filesystem client works on top of two {@link FsClient}s.
  * First is main client, which is potentially slow, but contains necessary data. Typically it's a {@link RemoteFsClient}
- * which connects to a remote server.
+ * or {@link HttpFsClient} which connects to a remote server.
  * It is backed up by second one, which acts as a cache client, typically it is a local filesystem client ({@link LocalFsClient})
  * Cache replacement policy is defined by supplying a {@link Comparator} of {@link FullCacheStat}.
  */
@@ -110,6 +111,11 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		return mainClient.upload(name);
+	}
+
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+		return mainClient.upload(name, size);
 	}
 
 	/**
@@ -324,14 +330,14 @@ public final class CachedFsClient implements FsClient, EventloopService {
 				+ ", cacheSizeLimit = " + cacheSizeLimit.format() + '}';
 	}
 
-	private Promise<ChannelSupplier<ByteBuf>> downloadToCache(String fileName, long limit, long sizeInMain) {
+	private Promise<ChannelSupplier<ByteBuf>> downloadToCache(String fileName, long limit, long size) {
 		return mainClient.download(fileName, 0, limit)
 				.then(supplier -> {
-					if (limit < sizeInMain ||
-							downloadingNowSize + sizeInMain > cacheSizeLimit.toLong() || sizeInMain > cacheSizeLimit.toLong() * (1 - LOAD_FACTOR)) {
+					if (limit < size ||
+							downloadingNowSize + size > cacheSizeLimit.toLong() || size > cacheSizeLimit.toLong() * (1 - LOAD_FACTOR)) {
 						return Promise.of(supplier);
 					}
-					downloadingNowSize += sizeInMain;
+					downloadingNowSize += size;
 
 					return ensureSpace()
 							.map($ -> {
@@ -344,7 +350,7 @@ public final class CachedFsClient implements FsClient, EventloopService {
 												.both(splitter.getProcessCompletion())
 												.whenResult(() -> updateCacheStats(fileName))
 												.whenException(this::updateTotalSize)
-												.whenComplete(() -> downloadingNowSize -= sizeInMain));
+												.whenComplete(() -> downloadingNowSize -= size));
 							});
 				});
 	}

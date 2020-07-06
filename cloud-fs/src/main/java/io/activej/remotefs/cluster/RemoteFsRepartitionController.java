@@ -253,7 +253,6 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 							Map::values)
 							.whenResult(results -> {
 								repartitionPlan = results.stream()
-										.peek(this::filterInspectionResults)
 										.sorted()
 										.filter(InfoResults::shouldBeProcessed)
 										.map(InfoResults::getName)
@@ -315,7 +314,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 								Ref<Throwable> uploadError = new Ref<>();
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
-												.set(ChannelConsumer.ofPromise(client.upload(name))
+												.set(ChannelConsumer.ofPromise(client.upload(name, meta.getSize()))
 														.withAcknowledgement(ack -> ack
 																.thenEx(($, e) -> {
 																	if (e != null && uploadError.get() == null) {
@@ -377,8 +376,6 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						return null; // using null to mark failure without exceptions
 					}
 
-					filterInspectionResults(infoResults);
-
 					if (infoResults.shouldBeUploaded()) {
 						List<Object> uploadTargets = new ArrayList<>();
 						for (int i = 0; i < infoResults.remoteMetadata.size(); i++) {
@@ -398,26 +395,6 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 					}
 					return singletonList(localPartitionId);
 				});
-	}
-
-	private void filterInspectionResults(InfoResults infoResults) {
-		long localSize = infoResults.localMetadata.getSize();
-		long maxSize = infoResults.remoteMetadata.stream()
-				.filter(Objects::nonNull)
-				.mapToLong(FileMetadata::getSize)
-				.max().orElse(0);
-
-		if (localSize < maxSize) {
-			infoResults.localMetadata = null;
-		} else {
-			maxSize = localSize;
-		}
-		for (int i = 0; i < infoResults.remoteMetadata.size(); i++) {
-			FileMetadata metadata = infoResults.remoteMetadata.get(i);
-			if (metadata != null && metadata.getSize() < maxSize) {
-				infoResults.remoteMetadata.set(i, null);
-			}
-		}
 	}
 
 	/**

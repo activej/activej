@@ -82,7 +82,7 @@ public abstract class RepartitionControllerLauncher extends RemoteFsServerLaunch
 		clients.put(config.get("remotefs.repartition.localPartitionId"), localServer.getClient());
 		return FsPartitions.create(eventloop, clients)
 				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER))
-				.withInitializer(ofFsPartitions(eventloop, config.getChild("remotefs.cluster")));
+				.withInitializer(ofFsPartitions(config.getChild("remotefs.cluster")));
 	}
 
 	public static void main(String[] args) throws Exception {

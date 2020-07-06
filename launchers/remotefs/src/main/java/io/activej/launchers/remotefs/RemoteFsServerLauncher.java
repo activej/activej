@@ -51,8 +51,7 @@ public abstract class RemoteFsServerLauncher extends Launcher {
 	}
 
 	@Provides
-	RemoteFsServer remoteFsServer(Eventloop eventloop, Executor executor,
-			Config config) {
+	RemoteFsServer remoteFsServer(Eventloop eventloop, Executor executor, Config config) {
 		return RemoteFsServer.create(eventloop, executor, config.get(ofPath(), "remotefs.path"))
 				.withInitializer(ofRemoteFsServer(config.getChild("remotefs")));
 

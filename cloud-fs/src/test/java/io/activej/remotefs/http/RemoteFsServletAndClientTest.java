@@ -2,7 +2,10 @@ package io.activej.remotefs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.ExpectedException;
+import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.csp.ChannelSuppliers;
 import io.activej.http.AsyncServlet;
 import io.activej.http.StubHttpClient;
 import io.activej.remotefs.FileMetadata;
@@ -25,6 +28,8 @@ import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -85,6 +90,55 @@ public final class RemoteFsServletAndClientTest {
 
 		assertEquals(1, strings.size());
 		assertEquals(content, strings.get(0));
+	}
+
+	@Test
+	public void uploadIncompleteFile() {
+		String filename = "incomplete.txt";
+		Path path = storage.resolve(filename);
+		assertFalse(Files.exists(path));
+
+		ExpectedException expectedException = new ExpectedException();
+		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename));
+
+		Throwable exception = awaitException(ChannelSuppliers.concat(
+				ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
+				ChannelSupplier.ofException(expectedException))
+				.streamTo(consumer));
+
+		assertSame(expectedException, exception);
+
+		assertFalse(Files.exists(path));
+	}
+
+	@Test
+	public void uploadLessThanSpecified() {
+		String filename = "incomplete.txt";
+		Path path = storage.resolve(filename);
+		assertFalse(Files.exists(path));
+
+		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
+
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
+
+		assertEquals(UNEXPECTED_END_OF_STREAM_EXCEPTION, exception);
+
+		assertFalse(Files.exists(path));
+	}
+
+	@Test
+	public void uploadMoreThanSpecified() {
+		String filename = "incomplete.txt";
+		Path path = storage.resolve(filename);
+		assertFalse(Files.exists(path));
+
+		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
+
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
+
+		assertEquals(UNEXPECTED_DATA_EXCEPTION, exception);
+
+		assertFalse(Files.exists(path));
 	}
 
 	@Test

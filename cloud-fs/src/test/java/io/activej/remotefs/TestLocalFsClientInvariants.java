@@ -190,7 +190,7 @@ public final class TestLocalFsClientInvariants {
 
 	@Test
 	public void moveSelfFiles() {
-		both(client -> await(client.move("file2", "file2")));
+		both(client -> assertEquals(FILE_EXISTS, awaitException(client.move("file2", "file2"))));
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file2")))));
 		assertFilesAreSame();
@@ -277,7 +277,10 @@ public final class TestLocalFsClientInvariants {
 
 	@Test
 	public void copyToFileInsideDirectoryAsAFile() {
-		both(client -> assertEquals(FILE_EXISTS, awaitException(client.copy("file2", "file/newFile"))));
+		both(client -> {
+			Throwable file2 = awaitException(client.copy("file2", "file/newFile"));
+			assertEquals(FILE_EXISTS, file2);
+		});
 		assertFilesAreSame();
 	}
 
@@ -302,7 +305,7 @@ public final class TestLocalFsClientInvariants {
 	@Test
 	public void copySelf() throws IOException {
 		byte[] bytes = Files.readAllBytes(firstPath.resolve("file2"));
-		both(client -> await(client.copy("file2", "file2")));
+		both(client -> assertEquals(FILE_EXISTS, awaitException(client.copy("file2", "file2"))));
 		assertFilesAreSame();
 		assertArrayEquals(bytes, Files.readAllBytes(firstPath.resolve("file2")));
 	}
@@ -336,16 +339,11 @@ public final class TestLocalFsClientInvariants {
 	}
 
 	@Test
-	public void copyIsIdempotent() {
+	public void copyIsNotIdempotent() {
 		both(client -> {
 			await(client.copy("file", "newFile"));
-			await(client.copy("file", "newFile"));
-			await(client.copy("file", "newFile"));
-			await(client.copy("file", "newFile"));
-			await(client.copy("file", "newFile"));
-			await(client.copy("file", "newFile"));
+			assertSame(FILE_EXISTS, awaitException(client.copy("file", "newFile")));
 		});
-		assertFileEquals("file", "newFile");
 		assertFilesAreSame();
 	}
 	// endregion
@@ -551,14 +549,10 @@ public final class TestLocalFsClientInvariants {
 	}
 
 	@Test
-	public void copyAllIsIdempotent() {
+	public void copyAllIsNotIdempotent() {
 		both(client -> {
 			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
-			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
-			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
-			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
-			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
-			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
+			assertEquals(FILE_EXISTS, awaitException(client.copyAll(map("file", "newFile", "file2", "newFile2"))));
 		});
 
 		assertFileEquals("file", "newFile");
@@ -911,6 +905,11 @@ public final class TestLocalFsClientInvariants {
 		@Override
 		public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 			return peer.upload(name);
+		}
+
+		@Override
+		public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+			return peer.upload(name, size);
 		}
 
 		@Override

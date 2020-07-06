@@ -19,18 +19,19 @@ package io.activej.launchers.remotefs;
 import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.AsyncHttpClient;
 import io.activej.remotefs.RemoteFsClient;
 import io.activej.remotefs.RemoteFsServer;
 import io.activej.remotefs.cluster.FsPartitions;
 import io.activej.remotefs.cluster.RemoteFsClusterClient;
 import io.activej.remotefs.cluster.RemoteFsRepartitionController;
+import io.activej.remotefs.http.HttpFsClient;
 
 import java.util.Map;
 
 import static io.activej.common.Preconditions.checkState;
 import static io.activej.config.Config.THIS;
-import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
-import static io.activej.config.converter.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 
 public final class Initializers {
@@ -47,13 +48,23 @@ public final class Initializers {
 				.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 	}
 
-	public static Initializer<FsPartitions> ofFsPartitions(Eventloop eventloop, Config config) {
+	public static Initializer<FsPartitions> ofFsPartitions(Config config) {
 		return fsPartitions -> {
-			Map<String, Config> partitions = config.getChild("partitions").getChildren();
-			checkState(!partitions.isEmpty(), "Cluster could not operate without partitions, config had none");
-			for (Map.Entry<String, Config> connection : partitions.entrySet()) {
-				fsPartitions.withPartition(connection.getKey(), RemoteFsClient.create(eventloop, connection.getValue().get(ofInetSocketAddress(), THIS)));
+			Map<String, Config> tcpPartitions = config.getChild("partitions").getChild("tcp").getChildren();
+			Eventloop eventloop = fsPartitions.getEventloop();
+			for (Map.Entry<String, Config> connection : tcpPartitions.entrySet()) {
+				RemoteFsClient client = RemoteFsClient.create(eventloop,
+						connection.getValue().get(ofInetSocketAddress(), THIS));
+				fsPartitions.withPartition(connection.getKey(), client);
 			}
+			Map<String, Config> httpPartitions = config.getChild("partitions").getChild("http").getChildren();
+			for (Map.Entry<String, Config> connection : httpPartitions.entrySet()) {
+				AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop);
+				HttpFsClient client = HttpFsClient.create(connection.getValue().get(ofString(), THIS), httpClient);
+				fsPartitions.withPartition(connection.getKey(), client);
+			}
+			checkState(!tcpPartitions.isEmpty() || !httpPartitions.isEmpty(),
+					"Cluster could not operate without partitions, config had none");
 		};
 	}
 

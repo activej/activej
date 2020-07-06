@@ -33,11 +33,12 @@ import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.remotefs.FsClient.BAD_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.containsString;
@@ -87,12 +88,42 @@ public final class FsIntegrationTest {
 	}
 
 	@Test
+	public void uploadLessThanSpecified() {
+		String filename = "incomplete.txt";
+		Path path = storage.resolve(filename);
+		assertFalse(Files.exists(path));
+
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data"))
+				.streamTo(client.upload(filename, 10))
+				.whenComplete(server::close));
+
+		assertEquals(UNEXPECTED_END_OF_STREAM_EXCEPTION, exception);
+
+		assertFalse(Files.exists(path));
+	}
+
+	@Test
+	public void uploadMoreThanSpecified() {
+		String filename = "incomplete.txt";
+		Path path = storage.resolve(filename);
+		assertFalse(Files.exists(path));
+
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data"))
+				.streamTo(client.upload(filename, 10))
+				.whenComplete(server::close));
+
+		assertEquals(UNEXPECTED_DATA_EXCEPTION, exception);
+
+		assertFalse(Files.exists(path));
+	}
+
+	@Test
 	public void testUploadMultiple() throws IOException {
 		int files = 10;
 
 		await(Promises.all(IntStream.range(0, 10)
 				.mapToObj(i -> ChannelSupplier.of(ByteBuf.wrapForReading(CONTENT))
-						.streamTo(ChannelConsumer.ofPromise(client.upload("file" + i)))))
+						.streamTo(ChannelConsumer.ofPromise(client.upload("file" + i, CONTENT.length)))))
 				.whenComplete(server::close));
 
 		for (int i = 0; i < files; i++) {
@@ -138,15 +169,14 @@ public final class FsIntegrationTest {
 				ChannelSupplier.ofException(new StacklessException(FsIntegrationTest.class, "Test exception")),
 				ChannelSupplier.of(wrapUtf8("Test4")));
 
-		Throwable exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(client.upload(resultFile)))
+		Throwable exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(client.upload(resultFile, Long.MAX_VALUE)))
 				.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(StacklessException.class));
 		assertThat(exception.getMessage(), containsString("Test exception"));
 
 		ByteBufQueue queue = new ByteBufQueue();
-		queue.addAll(asList(wrapUtf8("Test1 Test2 Test3"), ByteBuf.wrapForReading(BIG_FILE)));
-		assertArrayEquals(queue.takeRemaining().asArray(), Files.readAllBytes(storage.resolve(resultFile)));
+		assertFalse(Files.exists(storage.resolve(resultFile)));
 	}
 
 	private Promise<ByteBuf> download(String file) {
@@ -284,7 +314,7 @@ public final class FsIntegrationTest {
 	}
 
 	private Promise<Void> upload(String resultFile, byte[] bytes) {
-		return client.upload(resultFile)
+		return client.upload(resultFile, bytes.length)
 				.then(ChannelSupplier.of(ByteBuf.wrapForReading(bytes))::streamTo);
 	}
 }

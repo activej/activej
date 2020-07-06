@@ -16,7 +16,6 @@
 
 package io.activej.remotefs.cluster;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.api.WithInitializer;
@@ -24,7 +23,6 @@ import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.ref.RefInt;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelSplitter;
@@ -51,10 +49,10 @@ import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.collection.CollectionUtils.keysToMap;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
-import static io.activej.promise.Promises.asPromises;
-import static io.activej.remotefs.FileMetadata.getMoreCompleteFile;
+import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
+import static io.activej.remotefs.util.RemoteFsUtils.ofFixedSize;
 import static java.util.Collections.emptyList;
-import static java.util.Comparator.comparing;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -113,83 +111,29 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	// endregion
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String filename) {
-		return checkNotDead()
-				.then(() -> collect(partitions.select(filename),
-						(id, fsClient) -> fsClient.upload(filename)
-								.map(consumer -> new Container<>(id,
-										consumer.withAcknowledgement(ack ->
-												ack.whenException(e -> markIfDead(id, e))))),
-						Try::of,
-						container -> container.value.close()))
-				.then(tries -> {
-					List<Container<ChannelConsumer<ByteBuf>>> successes = tries.stream()
-							.filter(Try::isSuccess)
-							.map(Try::get)
-							.collect(toList());
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+		return doUpload(name, null);
+	}
 
-					if (successes.isEmpty()) {
-						return ofFailure("Couldn't connect to any partition to upload file " + filename, tries);
-					}
-
-					ChannelSplitter<ByteBuf> splitter = ChannelSplitter.<ByteBuf>create().lenient();
-
-					Promise<List<Try<Void>>> uploadResults = Promises.toList(successes.stream()
-							.map(container -> getAcknowledgement(fn ->
-									splitter.addOutput()
-											.set(container.value.withAcknowledgement(fn)))
-									.toTry()));
-
-					if (logger.isTraceEnabled()) {
-						logger.trace("uploading file {} to {}, {}", filename, successes.stream()
-								.map(container -> container.id.toString())
-								.collect(joining(", ", "[", "]")), this);
-					}
-
-					ChannelConsumer<ByteBuf> consumer = splitter.getInput().getConsumer();
-
-					// check number of uploads only here, so even if there were less connections
-					// than replicationCount, they would still upload
-					return Promise.of(consumer.withAcknowledgement(ack -> ack
-							.then(() -> uploadResults)
-							.then(ackTries -> {
-								long successCount = ackTries.stream().filter(Try::isSuccess).count();
-								// check number of uploads only here, so even if there were less connections
-								// than replicationCount, they will still upload
-								if (ackTries.size() < replicationCount) {
-									return ofFailure("Didn't connect to enough partitions uploading " +
-											filename + ", only " + successCount + " finished uploads", ackTries);
-								}
-								if (successCount < replicationCount) {
-									return ofFailure("Couldn't finish uploading file " +
-											filename + ", only " + successCount + " acknowledgements received", ackTries);
-								}
-								return Promise.complete();
-							})
-							.whenComplete(uploadFinishPromise.recordStats())));
-				})
-				.whenComplete(uploadStartPromise.recordStats());
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+		return doUpload(name, size);
 	}
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		return checkNotDead()
-				.then(() -> getBestIds(name))
-				.then(ids -> Promises.firstSuccessful(ids.stream()
-						.map(id -> AsyncSupplier.cast(() -> {
-							FsClient client = partitions.get(id);
-							if (client == null) { // marked as dead already by somebody
-								return ofDeadClient(id);
-							}
+				.then(() -> Promises.firstSuccessful(partitions.select(name).stream()
+						.map(id -> call(id, client -> {
 							logger.trace("downloading file {} from {}", name, id);
 							return client.download(name, offset, limit)
 									.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
-									.thenEx(wrapDeath(id))
 									.map(supplier -> supplier
 											.withEndOfStream(eos -> eos
-													.whenException(e -> markIfDead(id, e))
+													.thenEx(wrapDeath(id))
 													.whenComplete(downloadFinishPromise.recordStats())));
-						})))
+						}))
+						.iterator())
 						.thenEx((v, e) -> e == null ?
 								Promise.of(v) :
 								ofFailure("Could not download file '" + name + "' from any server", emptyList())))
@@ -199,12 +143,11 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return checkNotDead()
-				.then(() -> getBestIds(name))
-				.then(bestIds -> collect(
-						bestIds, (id, client) -> client.copy(name, target),
+				.then(() -> collect(name,
+						(id, client) -> client.copy(name, target),
 						tries -> Try.ofException(failedTries("Could not copy file '" + name + "' to '" + target + "' on enough partitions", tries)),
 						$ -> {}))
-				.toVoid()
+				.then(this::checkNotDead)
 				.whenComplete(copyPromise.recordStats());
 	}
 
@@ -217,17 +160,11 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 
 					return checkNotDead()
 							.then(() -> Promises.toList(subMaps.entrySet().stream()
-									.map(entry -> {
-										FsClient client = partitions.get(entry.getKey());
-										if (client == null) { // marked as dead already by somebody
-											return ofDeadClient(entry.getKey());
-										}
-										return client.copyAll(entry.getValue())
-												.whenResult(() -> entry.getValue().keySet().stream()
-														.map(successCounters::get)
-														.forEach(RefInt::inc))
-												.thenEx(wrapDeath(entry.getKey()));
-									})
+									.map(entry -> call(entry.getKey(),
+											client -> client.copyAll(entry.getValue())
+													.whenResult(() -> entry.getValue().keySet().stream()
+															.map(successCounters::get)
+															.forEach(RefInt::inc))))
 									.map(Promise::toTry)))
 							.then(tries -> {
 								if (successCounters.values().stream()
@@ -282,57 +219,41 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return checkNotDead()
-				.then(() -> Promises.toList(partitions.select(name)
-						.stream()
-						.map(partitions::get)
-						.map(client -> client.info(name).toTry())))
-				.then(this::checkStillNotDead)
-				.then(tries -> {
-					List<FileMetadata> successes = tries.stream()
-							.filter(Try::isSuccess)
-							.map(Try::get)
-							.collect(toList());
-
-					if (successes.isEmpty()) {
-						return ofFailure("Could not retrieve metadata for file '" + name + "' from any server", tries);
-					}
-
-					return Promise.of(successes.stream()
-							.filter(Objects::nonNull)
-							.max(comparing(FileMetadata::getSize))
-							.orElse(null));
-				})
+				.then(() -> Promises.first((metadata, e) -> metadata != null,
+						partitions.select(name)
+								.stream()
+								.map(id -> call(id, client -> client.info(name)))
+								.iterator()))
+				.thenEx((meta, e) -> checkStillNotDead(meta))
 				.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+		if (names.isEmpty()) return Promise.of(emptyMap());
+
 		return checkNotDead()
-				.then(() -> Promises.toList(partitions.getAliveClients().values()
-						.stream()
-						.map(client -> client.infoAll(names).toTry())))
+				.then(() -> Promise.<Map<String, @Nullable FileMetadata>>ofCallback(cb -> {
+					Map<String, @Nullable FileMetadata> result = keysToMap(names.stream(), $ -> null);
+					Promises.all(partitions.getAliveClients().entrySet()
+							.stream()
+							.map(entry -> entry.getValue().infoAll(names)
+									.whenResult(map -> {
+										if (cb.isComplete()) return;
+										map.forEach((name, metadata) -> {
+											if (metadata != null) {
+												result.put(name, metadata);
+											}
+										});
+										if (result.values().stream().allMatch(Objects::nonNull)) {
+											cb.trySet(result);
+										}
+									})
+									.thenEx(wrapDeath(entry.getKey()))
+									.toTry()))
+							.whenResult(() -> cb.trySet(result));
+				}))
 				.then(this::checkStillNotDead)
-				.then(tries -> {
-					List<Map<String, FileMetadata>> successes = tries.stream()
-							.filter(Try::isSuccess)
-							.map(Try::get)
-							.collect(toList());
-
-					if (successes.isEmpty()) {
-						return ofFailure("Could not retrieve metadata for files " + toLimitedString(names, 100) + "' from any server", tries);
-					}
-
-					return Promise.of(successes.stream()
-							.flatMap(map -> map.entrySet().stream())
-							.<Map<String, FileMetadata>>collect(HashMap::new,
-									(newMap, entry) -> {
-										String key = entry.getKey();
-										newMap.put(key, getMoreCompleteFile(newMap.get(key), entry.getValue()));
-									},
-									($1, $2) -> {
-										throw new AssertionError();
-									}));
-				})
 				.whenComplete(infoAllPromise.recordStats());
 	}
 
@@ -380,10 +301,6 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promise.ofException(failedTries(message, tries));
 	}
 
-	private static <T> Promise<T> ofDeadClient(Object id) {
-		return Promise.ofException(new StacklessException(RemoteFsClusterClient.class, "Client '" + id + "' is not alive"));
-	}
-
 	private void markIfDead(Object partitionId, Throwable e) {
 		// marking as dead only on lower level connection and other I/O exceptions,
 		// stackless exceptions are the ones actually received with an ServerError response (so the node is obviously not dead)
@@ -411,26 +328,85 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return Promise.of(tries);
 	}
 
+	private <T> Promise<T> checkStillNotDead(T value) {
+		return checkStillNotDead(emptyList())
+				.map($ -> value);
+	}
+
 	private Promise<Void> checkNotDead() {
 		return checkStillNotDead(emptyList()).toVoid();
 	}
 
-	private <T> Promise<List<Try<T>>> collect(Collection<Object> ids, BiFunction<Object, FsClient, Promise<T>> action,
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, @Nullable Long size) {
+		return checkNotDead()
+				.then(() -> collect(name,
+						(id, client) -> (size == null ?
+								client.upload(name) :
+								client.upload(name, size))
+								.map(consumer -> new Container<>(id,
+										consumer.withAcknowledgement(ack ->
+												ack.thenEx(wrapDeath(id))))),
+						Try::of,
+						container -> container.value.close()))
+				.then(tries -> {
+					List<Container<ChannelConsumer<ByteBuf>>> successes = tries.stream()
+							.filter(Try::isSuccess)
+							.map(Try::get)
+							.collect(toList());
+
+					if (successes.isEmpty()) {
+						return ofFailure("Couldn't connect to any partition to upload file " + name, tries);
+					}
+
+					ChannelSplitter<ByteBuf> splitter = ChannelSplitter.<ByteBuf>create().lenient();
+
+					Promise<List<Try<Void>>> uploadResults = Promises.toList(successes.stream()
+							.map(container -> getAcknowledgement(fn ->
+									splitter.addOutput()
+											.set(container.value.withAcknowledgement(fn)))
+									.toTry()));
+
+					if (logger.isTraceEnabled()) {
+						logger.trace("uploading file {} to {}, {}", name, successes.stream()
+								.map(container -> container.id.toString())
+								.collect(joining(", ", "[", "]")), this);
+					}
+
+					ChannelConsumer<ByteBuf> consumer = splitter.getInput().getConsumer();
+
+					// check number of uploads only here, so even if there were less connections
+					// than replicationCount, they would still upload
+					return Promise.of(consumer
+							.transformWith(size == null ? identity() : ofFixedSize(size))
+							.withAcknowledgement(ack -> ack
+									.then(() -> uploadResults)
+									.then(ackTries -> {
+										long successCount = ackTries.stream().filter(Try::isSuccess).count();
+										// check number of uploads only here, so even if there were less connections
+										// than replicationCount, they will still upload
+										if (ackTries.size() < replicationCount) {
+											return ofFailure("Didn't connect to enough partitions uploading " +
+													name + ", only " + successCount + " finished uploads", ackTries);
+										}
+										if (successCount < replicationCount) {
+											return ofFailure("Couldn't finish uploading file " +
+													name + ", only " + successCount + " acknowledgements received", ackTries);
+										}
+										return Promise.complete();
+									})
+									.whenComplete(uploadFinishPromise.recordStats())));
+				})
+				.whenComplete(uploadStartPromise.recordStats());
+	}
+
+	private <T> Promise<List<Try<T>>> collect(String name, BiFunction<Object, FsClient, Promise<T>> action,
 			Function<List<Try<T>>, Try<List<Try<T>>>> finisher, Consumer<T> cleanUp) {
 		RefInt successCount = new RefInt(0);
-		return Promises.reduceEx(asPromises(ids
+		return Promises.reduceEx(partitions.select(name)
 						.stream()
-						.map(id -> AsyncSupplier.cast(
-								() -> {
-									FsClient fsClient = partitions.get(id);
-									if (fsClient == null) {  // marked as dead already by somebody
-										return ofDeadClient(id);
-									}
-									return action.apply(id, fsClient)
-											.thenEx(wrapDeath(id));
-								})
-								.toTry()
-						)),
+						.map(id -> call(id, action))
+						.map(Promise::toTry)
+						.iterator(),
 				$ -> Math.max(0, replicationCount - successCount.get()),
 				new ArrayList<>(),
 				(result, tryOfTry) -> {
@@ -443,45 +419,17 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 				aTry -> aTry.ifSuccess(cleanUp));
 	}
 
-	private Promise<Set<Object>> getBestIds(@NotNull String name) {
-		return Promises.toList(partitions.getAliveClients().entrySet().stream()
-				.map(entry -> {
-					Object partitionId = entry.getKey();
-					return entry.getValue().info(name)                         //   ↓ use null's as file non-existence indicators
-							.map(res -> res != null ? new Container<>(partitionId, res) : null)
-							.thenEx(wrapDeath(partitionId))
-							.toTry();
-				}))
-				.then(this::checkStillNotDead)
-				.map(tries -> {
+	private <T> Promise<T> call(Object id, Function<FsClient, Promise<T>> action) {
+		return call(id, ($, client) -> action.apply(client));
+	}
 
-					RefLong bestSize = new RefLong(-1);
-					Set<Object> bestIds = tries.stream()
-							.filter(Try::isSuccess)
-							.map(Try::get)
-							.filter(Objects::nonNull)
-							.collect(HashSet::new,
-									(result, container) -> {
-										long size = container.value.getSize();
-
-										if (size == bestSize.get()) {
-											result.add(container.id);
-										} else if (size > bestSize.get()) {
-											result.clear();
-											result.add(container.id);
-											bestSize.set(size);
-										}
-									},
-									($1, $2) -> {
-										throw new AssertionError();
-									});
-
-					if (bestIds.isEmpty()) {
-						throw new UncheckedException(failedTries("File not found: " + name, tries));
-					}
-
-					return bestIds;
-				});
+	private <T> Promise<T> call(Object id, BiFunction<Object, FsClient, Promise<T>> action) {
+		FsClient fsClient = partitions.get(id);
+		if (fsClient == null) {  // marked as dead already by somebody
+			return Promise.ofException(new StacklessException(RemoteFsClusterClient.class, "Client '" + id + "' is not alive"));
+		}
+		return action.apply(id, fsClient)
+				.thenEx(wrapDeath(id));
 	}
 
 	private Promise<Map<Object, Map<String, String>>> getSubMaps(@NotNull Map<String, String> names) {
@@ -495,8 +443,6 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 				}))
 				.then(this::checkStillNotDead)
 				.map(tries -> {
-
-					Map<String, RefLong> bestSizes = keysToMap(names.keySet(), $ -> new RefLong(-1));
 					Map<Object, Map<String, String>> subMaps = tries.stream()
 							.filter(Try::isSuccess)
 							.map(Try::get)
@@ -506,17 +452,9 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 											if (entry.getValue() == null) {
 												continue;
 											}
-											long size = entry.getValue().getSize();
 
-											RefLong bestSize = bestSizes.get(entry.getKey());
-											if (size < bestSize.get()) {
-												continue;
-											} else if (size > bestSize.get()) {
-												result.values().forEach(map -> map.remove(entry.getKey()));
-												bestSize.set(size);
-											}
 											result.computeIfAbsent(container.id, $ -> new HashMap<>())
-													.put(entry.getKey(), names.get(entry.getKey()));
+													.computeIfAbsent(entry.getKey(), $ -> names.get(entry.getKey()));
 										}
 									},
 									($1, $2) -> {

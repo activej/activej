@@ -33,6 +33,8 @@ import io.activej.datastream.processor.StreamMerger;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.AsyncHttpClient;
+import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Named;
@@ -44,14 +46,13 @@ import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.remotefs.FsClient;
-import io.activej.remotefs.RemoteFsClient;
-import io.activej.remotefs.RemoteFsServer;
+import io.activej.remotefs.LocalFsClient;
+import io.activej.remotefs.http.HttpFsClient;
+import io.activej.remotefs.http.RemoteFsServlet;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -92,9 +93,12 @@ public final class PartitionedStreamTest {
 	@ClassRule
 	public static ByteBufRule byteBufRule = new ByteBufRule();
 
+	@Rule
+	public TemporaryFolder tempDir = new TemporaryFolder();
+
 	private Eventloop serverEventloop;
-	private List<RemoteFsServer> sourceFsServers;
-	private List<RemoteFsServer> targetFsServers;
+	private List<AsyncHttpServer> sourceFsServers;
+	private List<AsyncHttpServer> targetFsServers;
 	private List<DataflowServer> dataflowServers;
 
 	@Before
@@ -251,7 +255,7 @@ public final class PartitionedStreamTest {
 
 		Set<String> allTargetItems = new HashSet<>();
 		for (int i = 0; i < targetFsServers.size(); i++) {
-			FsClient client = targetFsServers.get(i).getClient();
+			FsClient client = createClient(Eventloop.getCurrentEventloop(), targetFsServers.get(i));
 			List<String> items = new ArrayList<>();
 			await(client.download(TARGET_FILENAME)
 					.then(supplier -> supplier.transformWith(new CSVDecoder())
@@ -266,7 +270,7 @@ public final class PartitionedStreamTest {
 		}
 
 		Set<String> sourceFiltered = await(Promises.toList(sourceFsServers.stream()
-				.map(RemoteFsServer::getClient)
+				.map(server -> createClient(Eventloop.getCurrentEventloop(), server))
 				.map(client -> client.download(SOURCE_FILENAME)
 						.then(supplier -> supplier
 								.transformWith(new CSVDecoder())
@@ -343,17 +347,18 @@ public final class PartitionedStreamTest {
 					@DatasetId("data target")
 					PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<FsClient> fsClients) {
 						return (partitionIndex, maxPartitions) -> {
-							StreamSplitter<String, String> splitter = StreamSplitter.create((item, acceptors) -> {
-								acceptors[item.hashCode() % acceptors.length].accept(item);
-							});
+							StreamSplitter<String, String> splitter = StreamSplitter.create((item, acceptors) ->
+									acceptors[item.hashCode() % acceptors.length].accept(item));
 
+							List<Promise<Void>> uploads = new ArrayList<>();
 							for (int i = partitionIndex; i < fsClients.size(); i += maxPartitions) {
-								splitter.newOutput()
+								uploads.add(splitter.newOutput()
 										.streamTo(ChannelConsumer.ofPromise(fsClients.get(i).upload(TARGET_FILENAME))
-												.transformWith(new CSVEncoder()));
+												.transformWith(new CSVEncoder())));
 							}
 
-							return splitter.getInput();
+							return splitter.getInput()
+									.withAcknowledgement(ack -> ack.both(Promises.all(uploads)));
 						};
 					}
 
@@ -394,11 +399,15 @@ public final class PartitionedStreamTest {
 	// endregion
 
 	// region helpers
-	private static List<FsClient> createClients(Eventloop eventloop, List<RemoteFsServer> servers) {
+	private static List<FsClient> createClients(Eventloop eventloop, List<AsyncHttpServer> servers) {
 		return servers.stream()
-				.flatMap(remoteFsServer -> remoteFsServer.getListenAddresses().stream())
-				.map(inetSocketAddress -> RemoteFsClient.create(eventloop, inetSocketAddress))
+				.map(server -> createClient(eventloop, server))
 				.collect(Collectors.toList());
+	}
+
+	private static FsClient createClient(Eventloop eventloop, AsyncHttpServer server){
+		int port = server.getListenAddresses().get(0).getPort();
+		return HttpFsClient.create("http://localhost:" + port, AsyncHttpClient.create(eventloop));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {
@@ -433,7 +442,7 @@ public final class PartitionedStreamTest {
 		}
 	}
 
-	private Map<Partition, List<String>> collectToMap(boolean sorted) throws IOException {
+	private Map<Partition, List<String>> collectToMap(boolean sorted) {
 		Injector injector = Injector.of(createClientModule());
 		StructuredCodec<Node> nodeCodec = injector.getInstance(new Key<StructuredCodec<Node>>() {}.qualified(Subtypes.class));
 		DataflowClient client = injector.getInstance(DataflowClient.class);
@@ -466,28 +475,30 @@ public final class PartitionedStreamTest {
 		dataflowServers.addAll(launchDataflowServers(nDataflowServers));
 	}
 
-	private List<RemoteFsServer> launchSourceFsServers(int nServers, boolean sorted) throws IOException {
-		List<RemoteFsServer> servers = new ArrayList<>();
+	private List<AsyncHttpServer> launchSourceFsServers(int nServers, boolean sorted) throws IOException {
+		List<AsyncHttpServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
-			Path tmp = Files.createTempDirectory("source_server_" + i + "_");
+			Path tmp = tempDir.newFolder("source_server_" + i + "_").toPath();
 			writeDataFile(tmp, i, sorted);
-			RemoteFsServer server = RemoteFsServer.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			LocalFsClient fsClient = LocalFsClient.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, RemoteFsServlet.create(fsClient));
 			servers.add(server);
 		}
-		for (RemoteFsServer server : servers) {
+		for (AsyncHttpServer server : servers) {
 			listen(server.withListenPort(getFreePort()));
 		}
 		return servers;
 	}
 
-	private List<RemoteFsServer> launchTargetFsServers(int nServers) throws IOException {
-		List<RemoteFsServer> servers = new ArrayList<>();
+	private List<AsyncHttpServer> launchTargetFsServers(int nServers) throws IOException {
+		List<AsyncHttpServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
-			Path tmp = Files.createTempDirectory("target_server_" + i + "_");
-			RemoteFsServer server = RemoteFsServer.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
+			LocalFsClient fsClient = LocalFsClient.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, RemoteFsServlet.create(fsClient));
 			servers.add(server);
 		}
-		for (RemoteFsServer server : servers) {
+		for (AsyncHttpServer server : servers) {
 			listen(server.withListenPort(getFreePort()));
 		}
 		return servers;

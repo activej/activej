@@ -202,7 +202,7 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 		return Promises.all(chunkIds.stream()
 				.map(this::toPath)
 				.map(path -> client.copy(path, backupDirPrefix + path)))
-				.then(() -> client.upload(backupDirPrefix + SUCCESSFUL_BACKUP_FILE))
+				.then(() -> client.upload(backupDirPrefix + SUCCESSFUL_BACKUP_FILE, 0))
 				.then(ChannelConsumer::acceptEndOfStream)
 				.whenComplete(promiseBackup.recordStats())
 				.toVoid();

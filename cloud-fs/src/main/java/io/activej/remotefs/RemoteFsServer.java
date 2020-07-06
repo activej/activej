@@ -42,8 +42,7 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.remotefs.FsClient.BAD_RANGE;
 import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
-import static io.activej.remotefs.util.RemoteFsUtils.ERROR_TO_ID;
-import static io.activej.remotefs.util.RemoteFsUtils.nullTerminatedJson;
+import static io.activej.remotefs.util.RemoteFsUtils.*;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -118,15 +117,16 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	private void addHandlers() {
 		onMessage(Upload.class, (messaging, msg) -> {
 			String name = msg.getName();
-			return client.upload(name)
+			long size = msg.getSize();
+			return client.upload(name, size)
+					.map(uploader -> uploader.transformWith(ofFixedSize(size)))
 					.then(uploader -> messaging.send(new UploadAck())
 							.then(() -> messaging.receiveBinaryStream().streamTo(uploader)))
 					.then(() -> messaging.send(new UploadFinished()))
 					.then(messaging::sendEndOfStream)
 					.whenResult(messaging::close)
 					.whenComplete(uploadPromise.recordStats())
-					.whenComplete(toLogger(logger, TRACE, "receiving data", msg, this))
-					.toVoid();
+					.whenComplete(toLogger(logger, TRACE, "receiving data", msg, this));
 		});
 
 		onMessage(Download.class, (messaging, msg) -> {

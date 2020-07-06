@@ -1,17 +1,14 @@
 package io.activej.remotefs;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
-import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.MemSize;
+import io.activej.common.exception.ExpectedException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.promise.Promise;
-import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -23,16 +20,17 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
-import static io.activej.remotefs.FsClient.MALFORMED_GLOB;
+import static io.activej.remotefs.FsClient.*;
+import static io.activej.remotefs.LocalFsClient.SYSTEM_DIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
@@ -113,125 +111,52 @@ public final class TestLocalFsClient {
 	}
 
 	@Test
-	public void testConcurrentUpload() {
-		String file = "concurrent.txt";
+	public void uploadIncompleteFile() {
+		String filename = "incomplete.txt";
+		Path path = storagePath.resolve(filename);
+		assertFalse(Files.exists(path));
 
-		await(
-				delayed(() -> delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))),
+		ExpectedException expectedException = new ExpectedException();
+		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename));
 
-				delayed(() -> delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))),
+		Throwable exception = awaitException(ChannelSuppliers.concat(
+				ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
+				ChannelSupplier.ofException(expectedException))
+				.streamTo(consumer));
 
-				delayed(() -> delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))),
+		assertSame(expectedException, exception);
 
-				delayed(() -> delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file)))),
-
-				delayed(() -> delayed(Arrays.asList(
-						ByteBuf.wrapForReading("Concurrent data - 1\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 3\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 4\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 5\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 6\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 7\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 8\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data - 9\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data #2\n".getBytes()),
-						ByteBuf.wrapForReading("Concurrent data + new line\n".getBytes())))
-						.streamTo(ChannelConsumer.ofPromise(client.upload(file))))
-		);
-
-		String expected = "Concurrent data - 1\n" +
-				"Concurrent data - 2\n" +
-				"Concurrent data - 3\n" +
-				"Concurrent data - 4\n" +
-				"Concurrent data - 5\n" +
-				"Concurrent data - 6\n" +
-				"Concurrent data - 7\n" +
-				"Concurrent data - 8\n" +
-				"Concurrent data - 9\n" +
-				"Concurrent data #2\n" +
-				"Concurrent data #2\n" +
-				"Concurrent data #2\n" +
-				"Concurrent data #2\n" +
-				"Concurrent data + new line\n";
-
-		String actual = await(ChannelSupplier.ofPromise(client.download(file))
-				.toCollector(ByteBufQueue.collector())
-				.map(buf -> buf.asString(UTF_8)));
-
-		assertEquals(expected, actual);
+		assertFalse(Files.exists(path));
 	}
 
-	private ChannelSupplier<ByteBuf> delayed(List<ByteBuf> list) {
-		return ChannelSupplier.ofIterable(list)
-				.mapAsync(byteBuf -> Promises.delay(ThreadLocalRandom.current().nextInt(20) + 10, byteBuf));
+	@Test
+	public void uploadLessThanSpecified() {
+		String filename = "incomplete.txt";
+		Path path = storagePath.resolve(filename);
+		assertFalse(Files.exists(path));
+
+		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
+
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
+
+		assertEquals(UNEXPECTED_END_OF_STREAM_EXCEPTION, exception);
+
+		assertFalse(Files.exists(path));
 	}
 
-	private <T> Promise<T> delayed(AsyncSupplier<T> supplier) {
-		return Promises.delay(ThreadLocalRandom.current().nextInt(20) + 10, supplier.get());
+	@Test
+	public void uploadMoreThanSpecified() {
+		String filename = "incomplete.txt";
+		Path path = storagePath.resolve(filename);
+		assertFalse(Files.exists(path));
+
+		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
+
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
+
+		assertEquals(UNEXPECTED_DATA_EXCEPTION, exception);
+
+		assertFalse(Files.exists(path));
 	}
 
 	@Test
@@ -301,11 +226,9 @@ public final class TestLocalFsClient {
 	}
 
 	@Test
-	public void testMoveIntoExisting() throws IOException {
-		byte[] expected = Files.readAllBytes(storagePath.resolve("1/b.txt"));
-		await(client.move("1/b.txt", "1/a.txt"));
-
-		assertArrayEquals(expected, Files.readAllBytes(storagePath.resolve("1/a.txt")));
+	public void testMoveIntoExisting() {
+		Throwable exception = awaitException(client.move("1/b.txt", "1/a.txt"));
+		assertSame(FILE_EXISTS, exception);
 	}
 
 	@Test
@@ -317,11 +240,11 @@ public final class TestLocalFsClient {
 
 	@Test
 	public void testOverwritingDirAsFile() {
-		await(ChannelSupplier.of(ByteBufStrings.wrapUtf8("test")).streamTo(client.upload("newdir/a.txt")));
+		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("newdir/a.txt")));
 		await(client.delete("newdir/a.txt"));
 
 		assertTrue(await(client.list("**")).stream().noneMatch(metadata -> metadata.getName().contains("newdir")));
-		await(ChannelSupplier.of(ByteBufStrings.wrapUtf8("test")).streamTo(client.upload("newdir")));
+		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("newdir")));
 		assertNotNull(await(client.info("newdir")));
 	}
 
@@ -334,5 +257,21 @@ public final class TestLocalFsClient {
 	public void testListMalformedGlob() {
 		Throwable exception = awaitException(client.list("["));
 		assertSame(MALFORMED_GLOB, exception);
+	}
+
+	@Test
+	public void systemFilesAreNotListed() throws IOException {
+		List<FileMetadata> before = await(client.list("**"));
+
+		Path systemDir = storagePath.resolve(SYSTEM_DIR);
+		Files.createDirectories(systemDir);
+		Files.write(systemDir.resolve("systemFile.txt"), "test data".getBytes());
+		Path folder = systemDir.resolve("folder");
+		Files.createDirectories(folder);
+		Files.write(folder.resolve("systemFile2.txt"), "test data".getBytes());
+
+		List<FileMetadata> after = await(client.list("**"));
+
+		assertEquals(before, after);
 	}
 }

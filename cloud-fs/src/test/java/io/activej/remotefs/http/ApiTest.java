@@ -189,6 +189,15 @@ public final class ApiTest {
 			}
 
 			@Override
+			public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+				List<String> received = new ArrayList<>();
+				return Promise.of(ChannelConsumer.<String>ofConsumer(received::add)
+						.<ByteBuf>map(byteBuf -> byteBuf.asString(UTF_8))
+						.withAcknowledgement(ack -> ack
+								.then(result -> resultOf(result, name, size, received))));
+			}
+
+			@Override
 			public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 				return Promise.of(ChannelSupplier.ofIterable(data)
 						.map(ByteBufStrings::wrapUtf8)
