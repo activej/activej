@@ -18,7 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
-import io.activej.async.process.AsyncCollector;
+import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
@@ -44,7 +44,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	private final Class<T> recordClass;
 	private final Function<T, K> keyFunction;
 	private final Aggregate<T, Object> aggregate;
-	private final AsyncCollector<List<AggregationChunk>> chunksCollector;
+	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 	private final int chunkSize;
 
@@ -63,12 +63,12 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 		this.aggregate = aggregate;
 		this.chunkSize = chunkSize;
 		this.aggregation = aggregation;
-		this.chunksCollector = AsyncCollector.create(new ArrayList<>());
+		this.chunksAccumulator = AsyncAccumulator.create(new ArrayList<>());
 		this.classLoader = classLoader;
 	}
 
 	public Promise<List<AggregationChunk>> getResult() {
-		return chunksCollector.get();
+		return chunksAccumulator.get();
 	}
 
 	@Override
@@ -117,15 +117,15 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 		AggregationChunker<C, T> chunker = AggregationChunker.create(aggregation, measures, recordClass,
 				partitionPredicate, storage, classLoader, chunkSize);
 
-		chunksCollector.addPromise(
+		chunksAccumulator.addPromise(
 				supplier.streamTo(chunker)
-						.then(chunker::getResult),
-				List::addAll)
-				.whenResult(this::suspendOrResume);
+						.then(chunker::getResult)
+						.whenResult(this::suspendOrResume),
+				List::addAll);
 	}
 
 	private void suspendOrResume() {
-		if (chunksCollector.getActivePromises() > 2) {
+		if (chunksAccumulator.getActivePromises() > 2) {
 			logger.trace("Suspend group reduce: {}", this);
 			suspend();
 		} else {
@@ -137,14 +137,14 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	@Override
 	protected void onEndOfStream() {
 		doFlush();
-		chunksCollector.run().get().toVoid()
+		chunksAccumulator.run().get().toVoid()
 				.whenResult(this::acknowledge)
 				.whenException(this::closeEx);
 	}
 
 	@Override
 	protected void onError(Throwable e) {
-		chunksCollector.closeEx(e);
+		chunksAccumulator.closeEx(e);
 	}
 
 	// jmx

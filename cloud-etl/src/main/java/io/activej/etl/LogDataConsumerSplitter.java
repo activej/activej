@@ -16,7 +16,7 @@
 
 package io.activej.etl;
 
-import io.activej.async.process.AsyncCollector;
+import io.activej.async.AsyncAccumulator;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamSplitter;
@@ -51,7 +51,7 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 
 	@Override
 	public StreamConsumerWithResult<T, List<D>> consume() {
-		AsyncCollector<List<D>> diffsCollector = AsyncCollector.create(new ArrayList<>());
+		AsyncAccumulator<List<D>> diffsAccumulator = AsyncAccumulator.create(new ArrayList<>());
 
 		Context ctx = new Context();
 		createSplitter(ctx);
@@ -64,12 +64,12 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 		checkState(!ctx.logDataConsumers.isEmpty());
 
 		for (LogDataConsumer<?, D> logDataConsumer : ctx.logDataConsumers) {
-			diffsCollector.addPromise(
+			diffsAccumulator.addPromise(
 					splitter.newOutput().streamTo(((LogDataConsumer<Object, D>) logDataConsumer).consume()),
 					List::addAll);
 		}
 
-		return StreamConsumerWithResult.of(splitter.getInput(), diffsCollector.run().get());
+		return StreamConsumerWithResult.of(splitter.getInput(), diffsAccumulator.run().get());
 	}
 
 	protected abstract StreamDataAcceptor<T> createSplitter(@NotNull Context ctx);

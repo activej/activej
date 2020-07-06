@@ -16,6 +16,7 @@
 
 package io.activej.promise;
 
+import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.AsyncTimeoutException;
@@ -1362,46 +1363,24 @@ public final class Promises {
 			A accumulator,
 			@NotNull BiConsumer<A, T> consumer,
 			@NotNull Function<A, R> finisher) {
-		return Promise.ofCallback(cb ->
-				reduceImpl(promises, maxCalls, new RefInt(0),
-						accumulator, consumer, finisher, cb));
+		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
+		for (int i = 0; promises.hasNext() && i < maxCalls; i++) {
+			reduceImpl(asyncAccumulator, promises, consumer);
+		}
+		return asyncAccumulator.run().map(finisher);
 	}
 
-	private static <T, A, R> void reduceImpl(Iterator<Promise<T>> promises, int maxCalls, RefInt calls,
-			A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
-			SettablePromise<R> cb) {
-		calls.inc();
-		while (promises.hasNext() && calls.get() <= maxCalls) {
+	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, Iterator<Promise<T>> promises, BiConsumer<A, T> consumer) {
+		while (promises.hasNext()) {
 			Promise<T> promise = promises.next();
-			if (cb.isComplete()) return;
 			if (promise.isComplete()) {
-				if (promise.isResult()) {
-					consumer.accept(accumulator, promise.getResult());
-					continue;
-				} else {
-					cb.setException(promise.getException());
-					return;
-				}
+				asyncAccumulator.addPromise(promise, consumer);
+			} else {
+				asyncAccumulator.addPromise(
+						promise.whenResult(() -> reduceImpl(asyncAccumulator, promises, consumer)),
+						consumer);
+				break;
 			}
-			calls.inc();
-			promise.whenComplete((v, e) -> {
-				calls.dec();
-				if (cb.isComplete()) {
-					return;
-				}
-				if (e == null) {
-					consumer.accept(accumulator, v);
-					reduceImpl(promises, maxCalls, calls,
-							accumulator, consumer, finisher, cb);
-				} else {
-					cb.setException(e);
-				}
-			});
-		}
-		calls.dec();
-		if (calls.get() == 0) {
-			R result = finisher.apply(accumulator);
-			cb.set(result);
 		}
 	}
 

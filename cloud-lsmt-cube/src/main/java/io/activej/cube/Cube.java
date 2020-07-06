@@ -22,8 +22,8 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.process.AsyncCollector;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
@@ -504,7 +504,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			}
 		});
 
-		AsyncCollector<Map<String, AggregationDiff>> diffsCollector = AsyncCollector.create(new HashMap<>());
+		AsyncAccumulator<Map<String, AggregationDiff>> diffsAccumulator = AsyncAccumulator.create(new HashMap<>());
 		Map<String, AggregationPredicate> compatibleAggregations = getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
 		if (compatibleAggregations.size() == 0) {
 			throw new IllegalArgumentException(format("No compatible aggregation for " +
@@ -528,9 +528,9 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 						.transformWith(StreamFilter.create(filterPredicate));
 			}
 			Promise<AggregationDiff> consume = output.streamTo(aggregation.consume(inputClass, aggregationKeyFields, aggregationMeasureFields));
-			diffsCollector.addPromise(consume, (accumulator, diff) -> accumulator.put(aggregationId, diff));
+			diffsAccumulator.addPromise(consume, (accumulator, diff) -> accumulator.put(aggregationId, diff));
 		}
-		return StreamConsumerWithResult.of(streamSplitter.getInput(), diffsCollector.run().get().map(CubeDiff::of));
+		return StreamConsumerWithResult.of(streamSplitter.getInput(), diffsAccumulator.run().get().map(CubeDiff::of));
 	}
 
 	Map<String, AggregationPredicate> getCompatibleAggregationsForDataInput(Map<String, String> dimensionFields,

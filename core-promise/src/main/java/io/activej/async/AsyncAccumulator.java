@@ -14,104 +14,107 @@
  * limitations under the License.
  */
 
-package io.activej.async.process;
+package io.activej.async;
 
+import io.activej.async.process.AsyncCloseable;
 import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.BiConsumer;
+
 import static io.activej.common.Preconditions.checkState;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class AsyncCollector<R> implements AsyncCloseable {
-	@FunctionalInterface
-	public interface Accumulator<R, T> {
-		void accumulate(R result, T value) throws UncheckedException;
-	}
-
-	private final SettablePromise<R> resultPromise = new SettablePromise<>();
+public final class AsyncAccumulator<A> implements AsyncCloseable {
+	private final SettablePromise<A> resultPromise = new SettablePromise<>();
 	private boolean started;
 
-	@Nullable
-	private R result;
+	private final A accumulator;
 
 	private int activePromises;
 
-	public AsyncCollector(@Nullable R initialResult) {
-		this.result = initialResult;
+	private AsyncAccumulator(@Nullable A accumulator) {
+		this.accumulator = accumulator;
 	}
 
-	public static <R> AsyncCollector<R> create(@Nullable R initialResult) {
-		return new AsyncCollector<>(initialResult);
+	public static <A> AsyncAccumulator<A> create(@Nullable A accumulator) {
+		return new AsyncAccumulator<>(accumulator);
 	}
 
-	public <T> AsyncCollector<R> withPromise(@NotNull Promise<T> promise, @NotNull Accumulator<R, T> accumulator) {
+	public <T> AsyncAccumulator<A> withPromise(@NotNull Promise<T> promise, @NotNull BiConsumer<A, T> accumulator) {
 		addPromise(promise, accumulator);
 		return this;
 	}
 
-	public AsyncCollector<R> run() {
+	public Promise<A> run() {
 		checkState(!started);
 		this.started = true;
-		if (activePromises == 0 && !resultPromise.isComplete()) {
-			resultPromise.set(result);
-			result = null;
+		if (resultPromise.isComplete()) return resultPromise;
+		if (activePromises == 0) {
+			resultPromise.set(accumulator);
 		}
-		return this;
+		return resultPromise;
 	}
 
-	public AsyncCollector<R> run(@NotNull Promise<Void> runtimePromise) {
-		withPromise(runtimePromise, (result, v) -> {});
+	public Promise<A> run(@NotNull Promise<Void> runtimePromise) {
+		addPromise(runtimePromise, (result, v) -> {});
 		return run();
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> Promise<T> addPromise(@NotNull Promise<T> promise, @NotNull Accumulator<R, T> accumulator) {
-		if (resultPromise.isException()) return (Promise<T>) resultPromise;
-		checkState(!resultPromise.isComplete());
+	public <T> void addPromise(@NotNull Promise<T> promise, @NotNull BiConsumer<A, T> consumer) {
+		if (resultPromise.isComplete()) return;
 		activePromises++;
-		return promise.whenComplete((v, e) -> {
+		promise.whenComplete((v, e) -> {
 			activePromises--;
 			if (resultPromise.isComplete()) return;
 			if (e == null) {
 				try {
-					accumulator.accumulate(result, v);
+					consumer.accept(accumulator, v);
 				} catch (UncheckedException u) {
 					resultPromise.setException(u.getCause());
-					result = null;
 					return;
 				}
 				if (activePromises == 0 && started) {
-					resultPromise.set(result);
+					resultPromise.set(accumulator);
 				}
 			} else {
 				resultPromise.setException(e);
-				result = null;
 			}
 		});
 	}
 
-	public <V> SettablePromise<V> newPromise(@NotNull Accumulator<R, V> accumulator) {
+	public <V> SettablePromise<V> newPromise(@NotNull BiConsumer<A, V> consumer) {
 		SettablePromise<V> resultPromise = new SettablePromise<>();
-		addPromise(resultPromise, accumulator);
+		addPromise(resultPromise, consumer);
 		return resultPromise;
 	}
 
 	@NotNull
-	public Promise<R> get() {
+	public Promise<A> get() {
 		return resultPromise;
+	}
+
+	public A getAccumulator() {
+		return accumulator;
 	}
 
 	public int getActivePromises() {
 		return activePromises;
 	}
 
+	public void complete() {
+		resultPromise.trySet(accumulator);
+	}
+
+	public void complete(A result) {
+		resultPromise.trySet(result);
+	}
+
 	@Override
 	public void closeEx(@NotNull Throwable e) {
-		if (resultPromise.trySetException(e)) {
-			result = null;
-		}
+		resultPromise.trySetException(e);
 	}
 }

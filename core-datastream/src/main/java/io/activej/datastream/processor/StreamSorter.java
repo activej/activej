@@ -16,7 +16,7 @@
 
 package io.activej.datastream.processor;
 
-import io.activej.async.process.AsyncCollector;
+import io.activej.async.AsyncAccumulator;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
@@ -42,7 +42,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 	private static final Logger logger = getLogger(StreamSorter.class);
-	private final AsyncCollector<? extends List<Integer>> temporaryStreamsCollector;
+	private final AsyncAccumulator<? extends List<Integer>> temporaryStreamsAccumulator;
 	private final StreamSorterStorage<T> storage;
 	private final Function<T, K> keyFunction;
 	private final Comparator<K> keyComparator;
@@ -73,7 +73,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 
 		List<Integer> partitionIds = new ArrayList<>();
 		this.output = StreamSupplier.ofPromise(
-				(this.temporaryStreamsCollector = AsyncCollector.create(partitionIds))
+				(this.temporaryStreamsAccumulator = AsyncAccumulator.create(partitionIds))
 						.get()
 						.then(streamIds -> {
 							ArrayList<T> sortedList = input.list;
@@ -175,7 +175,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 			ArrayList<T> sortedList = this.list;
 			list = new ArrayList<>(itemsInMemory);
 
-			temporaryStreamsCollector.addPromise(
+			temporaryStreamsAccumulator.addPromise(
 					Promise.ofBlockingRunnable(sortingExecutor, () -> sortedList.sort(itemComparator))
 							.then($ -> {
 								Iterator<T> iterator = distinct ?
@@ -193,7 +193,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 		}
 
 		private void suspendOrResume() {
-			if (temporaryStreamsCollector.getActivePromises() > 2) {
+			if (temporaryStreamsAccumulator.getActivePromises() > 2) {
 				suspend();
 			} else {
 				resume(this);
@@ -202,7 +202,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 
 		@Override
 		protected void onEndOfStream() {
-			temporaryStreamsCollector.run();
+			temporaryStreamsAccumulator.run();
 			output.getEndOfStream()
 					.whenResult(this::acknowledge)
 					.whenException(this::closeEx);
@@ -210,7 +210,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 
 		@Override
 		protected void onError(Throwable e) {
-			temporaryStreamsCollector.closeEx(e);
+			temporaryStreamsAccumulator.closeEx(e);
 		}
 
 		@Override

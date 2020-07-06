@@ -18,7 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
-import io.activej.async.process.AsyncCollector;
+import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.ForwardingStreamConsumer;
 import io.activej.datastream.StreamConsumer;
@@ -39,7 +39,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 	private final Class<T> recordClass;
 	private final PartitionPredicate<T> partitionPredicate;
 	private final AggregationChunkStorage<C> storage;
-	private final AsyncCollector<? extends List<AggregationChunk>> chunksCollector;
+	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 
 	private final int chunkSize;
@@ -58,11 +58,10 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 		this.partitionPredicate = partitionPredicate;
 		this.storage = storage;
 		this.classLoader = classLoader;
-		(this.chunksCollector = AsyncCollector.create(new ArrayList<>()))
-				.run(switcher.getAcknowledgement());
 		this.chunkSize = chunkSize;
-		chunksCollector.get().whenComplete(result::trySet);
-		getAcknowledgement().whenException(result::trySetException);
+		(this.chunksAccumulator = AsyncAccumulator.create(new ArrayList<>()))
+				.run(getAcknowledgement())
+				.whenComplete(result::trySet);
 	}
 
 	public static <C, T> AggregationChunker<C, T> create(AggregationStructure aggregation, List<String> fields,
@@ -135,11 +134,11 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 				storage.createId()
 						.then(chunkId -> storage.write(aggregation, fields, recordClass, chunkId, classLoader)
 								.map(streamConsumer -> new ChunkWriter(streamConsumer, chunkId, chunkSize, partitionPredicate))
-								.whenResult(chunkWriter -> chunksCollector.addPromise(
+								.whenResult(chunkWriter -> chunksAccumulator.addPromise(
 										chunkWriter.getResult(),
-										(accumulator, newChunk) -> {
+										(chunks, newChunk) -> {
 											if (newChunk != null && newChunk.getCount() != 0) {
-												accumulator.add(newChunk);
+												chunks.add(newChunk);
 											}
 										})))));
 	}

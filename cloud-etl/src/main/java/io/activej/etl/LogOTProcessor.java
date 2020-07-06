@@ -16,8 +16,8 @@
 
 package io.activej.etl;
 
+import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.process.AsyncCollector;
 import io.activej.async.service.EventloopService;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplierWithResult;
@@ -125,7 +125,7 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 	}
 
 	private StreamSupplierWithResult<T, Map<String, LogPositionDiff>> getSupplier() {
-		AsyncCollector<Map<String, LogPositionDiff>> logPositionsCollector = AsyncCollector.create(new HashMap<>());
+		AsyncAccumulator<Map<String, LogPositionDiff>> logPositionsAccumulator = AsyncAccumulator.create(new HashMap<>());
 		StreamUnion<T> streamUnion = StreamUnion.create();
 		for (String partition : partitions) {
 			String logName = logName(partition);
@@ -136,20 +136,20 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 			logger.info("Starting reading '{}' from position {}", logName, logPosition);
 
 			LogPosition logPositionFrom = logPosition;
-			logPositionsCollector.addPromise(
+			logPositionsAccumulator.addPromise(
 					StreamSupplierWithResult.ofPromise(
 							multilog.read(partition, logPosition.getLogFile(), logPosition.getPosition(), null))
 							.streamTo(streamUnion.newInput()),
-					(accumulator, logPositionTo) -> {
+					(logPositions, logPositionTo) -> {
 						if (!logPositionTo.equals(logPositionFrom)) {
-							accumulator.put(logName, new LogPositionDiff(logPositionFrom, logPositionTo));
+							logPositions.put(logName, new LogPositionDiff(logPositionFrom, logPositionTo));
 						}
 					});
 		}
 		return StreamSupplierWithResult.of(
 				streamUnion.getOutput()
 						.transformWith(detailed ? streamStatsDetailed : streamStatsBasic),
-				logPositionsCollector.run().get());
+				logPositionsAccumulator.run().get());
 	}
 
 	private String logName(String partition) {

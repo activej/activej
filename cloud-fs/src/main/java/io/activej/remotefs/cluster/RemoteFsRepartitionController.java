@@ -249,7 +249,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 									.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
 											.whenException(e -> partitions.markDead(entry.getKey(), e)))
 									.iterator(),
-							Integer.MAX_VALUE,
+							groupedById.size(),
 							filteredList.stream()
 									.map(InfoResults::new)
 									.collect(toMap(infoResults -> infoResults.localMetadata.getName(), Function.identity())),
