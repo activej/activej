@@ -17,6 +17,7 @@
 package io.activej.promise;
 
 import io.activej.async.AsyncAccumulator;
+import io.activej.async.AsyncBuffer;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.AsyncTimeoutException;
@@ -1669,72 +1670,14 @@ public final class Promises {
 	@NotNull
 	public static <T, A, R> Function<T, Promise<R>> coalesce(@NotNull Supplier<A> argumentAccumulatorSupplier, @NotNull BiConsumer<A, T> argumentAccumulatorFn,
 			@NotNull Function<A, Promise<R>> fn) {
-		return new CoalesceImpl<>(argumentAccumulatorSupplier, argumentAccumulatorFn, fn);
+		AsyncBuffer<A, R> buffer = new AsyncBuffer<>(fn, argumentAccumulatorSupplier);
+		return v -> {
+			Promise<R> promise = buffer.add(argumentAccumulatorFn, v);
+			if (!buffer.isActive()) {
+				repeat(() -> buffer.flush().map($ -> buffer.isBuffered()));
+			}
+			return promise;
+		};
 	}
 
-	private static class CoalesceImpl<T, R, A> implements Function<T, Promise<R>> {
-		@NotNull
-		private final Supplier<A> argumentAccumulatorSupplier;
-		@NotNull
-		private final BiConsumer<A, T> argumentAccumulatorFn;
-		@NotNull
-		private final Function<A, Promise<R>> fn;
-
-		boolean asyncRunning;
-		@Nullable
-		private SettablePromise<R> nextPromise;
-		private A argumentAccumulator;
-
-		public CoalesceImpl(@NotNull Supplier<A> argumentAccumulatorSupplier, @NotNull BiConsumer<A, T> argumentAccumulatorFn, @NotNull Function<A, Promise<R>> fn) {
-			this.argumentAccumulatorSupplier = argumentAccumulatorSupplier;
-			this.argumentAccumulatorFn = argumentAccumulatorFn;
-			this.fn = fn;
-		}
-
-		@Override
-		public Promise<R> apply(T parameters) {
-			if (!asyncRunning) {
-				assert nextPromise == null && this.argumentAccumulator == null;
-				A argumentAccumulator = argumentAccumulatorSupplier.get();
-				argumentAccumulatorFn.accept(argumentAccumulator, parameters);
-				Promise<R> promise = fn.apply(argumentAccumulator);
-				asyncRunning = true;
-				SettablePromise<R> result = new SettablePromise<>();
-				promise.whenComplete((v, e) -> {
-					result.accept(v, e);
-					asyncRunning = false;
-					processNext();
-				});
-				return result;
-			}
-			if (nextPromise == null) {
-				nextPromise = new SettablePromise<>();
-				this.argumentAccumulator = argumentAccumulatorSupplier.get();
-			}
-			argumentAccumulatorFn.accept(this.argumentAccumulator, parameters);
-			return nextPromise;
-		}
-
-		void processNext() {
-			while (this.nextPromise != null) {
-				SettablePromise<R> nextPromise = this.nextPromise;
-				A argumentAccumulator = this.argumentAccumulator;
-				this.nextPromise = null;
-				this.argumentAccumulator = null;
-				asyncRunning = true;
-				Promise<? extends R> promise = fn.apply(argumentAccumulator);
-				if (promise.isComplete()) {
-					promise.whenComplete(nextPromise);
-					asyncRunning = false;
-					continue;
-				}
-				promise.whenComplete((result, e) -> {
-					nextPromise.accept(result, e);
-					asyncRunning = false;
-					processNext();
-				});
-				break;
-			}
-		}
-	}
 }
