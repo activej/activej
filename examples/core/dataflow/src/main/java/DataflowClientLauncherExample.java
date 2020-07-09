@@ -28,7 +28,7 @@ import static java.util.Comparator.naturalOrder;
  * <p>
  * These servers must provide a dataset of strings with "items" as its id.
  */
-public final class PostTask extends DataflowClientLauncher {
+public final class DataflowClientLauncherExample extends DataflowClientLauncher {
 
 	@Inject
 	DataflowClient client;
@@ -48,9 +48,10 @@ public final class PostTask extends DataflowClientLauncher {
 
 				.bind(StreamSorterStorageFactory.class).toInstance(StreamMergeSorterStorageStub.FACTORY_STUB)
 
-				.bind(Config.class).toInstance(Config.create()
-						.with("dataflow.secondaryBufferPath", Util.createTempDir("dataflow-client-secondary-storage"))
-						.with("dataflow.partitions", String.join(",", args)))
+				.bind(Config.class).toInstance(
+						Config.create()
+								.with("dataflow.secondaryBufferPath", Util.createTempDir("dataflow-client-secondary-storage"))
+								.with("dataflow.partitions", String.join(",", args)))
 				.build();
 	}
 
@@ -70,7 +71,7 @@ public final class PostTask extends DataflowClientLauncher {
 
 			Dataset<StringCount> reducedItems = repartitionReduce(locallyReduced, reducer.accumulatorToOutput(), StringCount.class);
 
-			MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems,client, keyFunction, naturalOrder(), false);
+			MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems, client, keyFunction, naturalOrder(), false);
 
 			StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 
@@ -94,6 +95,6 @@ public final class PostTask extends DataflowClientLauncher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new PostTask().launch(args);
+		new DataflowClientLauncherExample().launch(args);
 	}
 }
