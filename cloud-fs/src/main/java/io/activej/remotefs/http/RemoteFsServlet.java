@@ -90,7 +90,7 @@ public final class RemoteFsServlet {
 					return (client.list(glob))
 							.mapEx(errorHandler(list ->
 									HttpResponse.ok200()
-											.withBody(toJson(FILE_META_LIST_CODEC, list).getBytes(UTF_8))
+											.withBody(toJson(FILE_META_MAP_CODEC, list).getBytes(UTF_8))
 											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))));
 				})
 				.map(GET, "/" + INFO + "/*", request ->
@@ -100,7 +100,7 @@ public final class RemoteFsServlet {
 												.withBody(toJson(FILE_META_CODEC_NULLABLE, meta).getBytes(UTF_8))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)))))
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
-						.then(parseBody(NAMES_CODEC))
+						.then(parseBody(STRINGS_SET_CODEC))
 						.then(client::infoAll)
 						.mapEx(errorHandler(map ->
 								HttpResponse.ok200()
@@ -132,7 +132,7 @@ public final class RemoteFsServlet {
 						client.delete(decodePath(request))
 								.mapEx(errorHandler()))
 				.map(POST, "/" + DELETE_ALL, request -> request.loadBody()
-						.then(parseBody(TO_DELETE_CODEC))
+						.then(parseBody(STRINGS_SET_CODEC))
 						.then(client::deleteAll)
 						.mapEx(errorHandler()));
 	}

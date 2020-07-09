@@ -32,7 +32,6 @@ import io.activej.remotefs.FsClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -94,7 +93,7 @@ public final class HttpFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return client.request(
 				HttpRequest.get(
 						url + UrlBuilder.relative()
@@ -103,7 +102,7 @@ public final class HttpFsClient implements FsClient {
 								.build()))
 				.then(HttpFsClient::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(parseBody(FILE_META_LIST_CODEC));
+				.then(parseBody(FILE_META_MAP_CODEC));
 	}
 
 	@Override
@@ -120,13 +119,13 @@ public final class HttpFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		return client.request(
 				HttpRequest.get(
 						url + UrlBuilder.relative()
 								.appendPathPart(INFO_ALL)
 								.build())
-						.withBody(toJsonBuf(NAMES_CODEC, names)))
+						.withBody(toJsonBuf(STRINGS_SET_CODEC, names)))
 				.then(HttpFsClient::checkResponse)
 				.then(HttpMessage::loadBody)
 				.then(parseBody(FILE_META_MAP_CODEC));
@@ -212,7 +211,7 @@ public final class HttpFsClient implements FsClient {
 						url + UrlBuilder.relative()
 								.appendPathPart(DELETE_ALL)
 								.build())
-						.withBody(toJsonBuf(TO_DELETE_CODEC, toDelete)))
+						.withBody(toJsonBuf(STRINGS_SET_CODEC, toDelete)))
 				.then(HttpFsClient::checkResponse)
 				.toVoid();
 	}

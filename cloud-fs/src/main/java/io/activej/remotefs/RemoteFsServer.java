@@ -34,7 +34,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
@@ -43,7 +42,6 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.remotefs.FsClient.BAD_RANGE;
 import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
 import static io.activej.remotefs.util.RemoteFsUtils.*;
-import static java.util.stream.Collectors.toList;
 
 /**
  * An implementation of {@link AbstractServer} for RemoteFs.
@@ -160,13 +158,8 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 		onMessage(Delete.class, simpleHandler(msg -> client.delete(msg.getName()), $ -> new DeleteFinished(), deletePromise));
 		onMessage(DeleteAll.class, simpleHandler(msg -> client.deleteAll(msg.getFilesToDelete()), $ -> new DeleteAllFinished(), deleteAllPromise));
 		onMessage(List.class, simpleHandler(msg -> client.list(msg.getGlob()), ListFinished::new, listPromise));
-		onMessage(Inspect.class, simpleHandler(msg -> client.info(msg.getName()), InspectFinished::new, infoPromise));
-		onMessage(InspectAll.class,
-				simpleHandler(msg -> client.infoAll(msg.getNames()),
-						map -> new InspectAllFinished(map.values().stream()
-								.filter(Objects::nonNull)
-								.collect(toList())),
-						infoAllPromise));
+		onMessage(Info.class, simpleHandler(msg -> client.info(msg.getName()), InfoFinished::new, infoPromise));
+		onMessage(InfoAll.class, simpleHandler(msg -> client.infoAll(msg.getNames()), InfoAllFinished::new, infoAllPromise));
 		onMessage(Ping.class, simpleHandler(msg -> client.ping(), $ -> new PingFinished(), pingPromise));
 	}
 

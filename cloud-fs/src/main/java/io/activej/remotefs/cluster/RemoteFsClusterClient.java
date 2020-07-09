@@ -130,7 +130,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 									.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
 									.map(supplier -> supplier
 											.withEndOfStream(eos -> eos
-													.thenEx(wrapDeath(id))
+													.thenEx(partitions.wrapDeath(id))
 													.whenComplete(downloadFinishPromise.recordStats())));
 						}))
 						.iterator())
@@ -204,12 +204,12 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return checkNotDead()
 				.then(() -> Promises.toList(
 						partitions.getAliveClients().entrySet().stream()
 								.map(entry -> entry.getValue().list(glob)
-										.thenEx(wrapDeath(entry.getKey()))
+										.thenEx(partitions.wrapDeath(entry.getKey()))
 										.toTry())))
 				.then(this::checkStillNotDead)
 				.map(tries -> FileMetadata.flatten(tries.stream().filter(Try::isSuccess).map(Try::get)))
@@ -229,27 +229,23 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		return checkNotDead()
 				.then(() -> Promise.<Map<String, @Nullable FileMetadata>>ofCallback(cb -> {
-					Map<String, @Nullable FileMetadata> result = keysToMap(names.stream(), $ -> null);
+					Map<String, @Nullable FileMetadata> result = new HashMap<>();
 					Promises.all(partitions.getAliveClients().entrySet()
 							.stream()
 							.map(entry -> entry.getValue().infoAll(names)
 									.whenResult(map -> {
 										if (cb.isComplete()) return;
-										map.forEach((name, metadata) -> {
-											if (metadata != null) {
-												result.put(name, metadata);
-											}
-										});
-										if (result.values().stream().allMatch(Objects::nonNull)) {
+										result.putAll(map);
+										if (result.size() == names.size()) {
 											cb.trySet(result);
 										}
 									})
-									.thenEx(wrapDeath(entry.getKey()))
+									.thenEx(partitions.wrapDeath(entry.getKey()))
 									.toTry()))
 							.whenResult(() -> cb.trySet(result));
 				}))
@@ -283,7 +279,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return checkNotDead()
 				.then(() -> Promises.all(partitions.getAliveClients().entrySet().stream()
 						.map(entry -> action.apply(entry.getValue())
-								.thenEx(wrapDeath(entry.getKey()))
+								.thenEx(partitions.wrapDeath(entry.getKey()))
 								.toTry())));
 	}
 
@@ -299,24 +295,6 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 
 	private static <T, U> Promise<T> ofFailure(String message, List<Try<U>> tries) {
 		return Promise.ofException(failedTries(message, tries));
-	}
-
-	private void markIfDead(Object partitionId, Throwable e) {
-		// marking as dead only on lower level connection and other I/O exceptions,
-		// stackless exceptions are the ones actually received with an ServerError response (so the node is obviously not dead)
-		if (e.getClass() != StacklessException.class) {
-			partitions.markDead(partitionId, e);
-		}
-	}
-
-	private <T> BiFunction<T, Throwable, Promise<T>> wrapDeath(Object partitionId) {
-		return (res, e) -> {
-			if (e == null) {
-				return Promise.of(res);
-			}
-			markIfDead(partitionId, e);
-			return Promise.ofException(new StacklessException(RemoteFsClusterClient.class, "Node failed with exception", e));
-		};
 	}
 
 	private <T> Promise<List<Try<T>>> checkStillNotDead(List<Try<T>> tries) {
@@ -345,7 +323,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 								client.upload(name, size))
 								.map(consumer -> new Container<>(id,
 										consumer.withAcknowledgement(ack ->
-												ack.thenEx(wrapDeath(id))))),
+												ack.thenEx(partitions.wrapDeath(id))))),
 						Try::of,
 						container -> container.value.close()))
 				.then(tries -> {
@@ -429,16 +407,16 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 			return Promise.ofException(new StacklessException(RemoteFsClusterClient.class, "Client '" + id + "' is not alive"));
 		}
 		return action.apply(id, fsClient)
-				.thenEx(wrapDeath(id));
+				.thenEx(partitions.wrapDeath(id));
 	}
 
 	private Promise<Map<Object, Map<String, String>>> getSubMaps(@NotNull Map<String, String> names) {
 		return Promises.toList(partitions.getAliveClients().entrySet().stream()
 				.map(entry -> {
 					Object partitionId = entry.getKey();
-					return entry.getValue().infoAll(new ArrayList<>(names.keySet()))
+					return entry.getValue().infoAll(names.keySet())
 							.map(res -> new Container<>(partitionId, res))
-							.thenEx(wrapDeath(partitionId))
+							.thenEx(partitions.wrapDeath(partitionId))
 							.toTry();
 				}))
 				.then(this::checkStillNotDead)

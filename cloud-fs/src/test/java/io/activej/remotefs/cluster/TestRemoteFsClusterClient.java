@@ -35,7 +35,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static io.activej.common.collection.CollectionUtils.concat;
+import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -174,7 +174,7 @@ public final class TestRemoteFsClusterClient {
 
 	@Test
 	@Ignore("this test uses lots of local sockets (and all of them are in TIME_WAIT state after it for a minute) so HTTP tests after it may fail indefinitely")
-	public void testUploadAlot() throws IOException {
+	public void testUploadALot() throws IOException {
 		String content = "test content of the file";
 		ByteBuf data = ByteBuf.wrapForReading(content.getBytes(UTF_8));
 
@@ -416,9 +416,9 @@ public final class TestRemoteFsClusterClient {
 
 	@Test
 	public void testInspectAll() throws IOException {
-		List<String> names = IntStream.range(0, 10)
+		Set<String> names = IntStream.range(0, 10)
 				.mapToObj(i -> "the_file_" + i + ".txt")
-				.collect(toList());
+				.collect(toSet());
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -438,15 +438,14 @@ public final class TestRemoteFsClusterClient {
 		for (String name : names) {
 			FileMetadata metadata = result.get(name);
 			assertNotNull(metadata);
-			assertEquals(name, metadata.getName());
 		}
 	}
 
 	@Test
 	public void testInspectAllWithMissingFiles() throws IOException {
-		List<String> existingNames = IntStream.range(0, 10)
+		Set<String> existingNames = IntStream.range(0, 10)
 				.mapToObj(i -> "the_file_" + i + ".txt")
-				.collect(toList());
+				.collect(toSet());
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -459,22 +458,21 @@ public final class TestRemoteFsClusterClient {
 			}
 		}
 
-		List<String> nonExistingNames = IntStream.range(0, 10)
+		Set<String> nonExistingNames = IntStream.range(0, 10)
 				.mapToObj(i -> "nonexistent_" + i + ".txt")
-				.collect(toList());
+				.collect(toSet());
 
-		Map<String, @Nullable FileMetadata> result = await(client.infoAll(concat(existingNames, nonExistingNames))
+		Map<String, @Nullable FileMetadata> result = await(client.infoAll(union(existingNames, nonExistingNames))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
-		assertEquals(existingNames.size() + nonExistingNames.size(), result.size());
+		assertEquals(existingNames.size(), result.size());
 		for (String name : existingNames) {
 			FileMetadata metadata = result.get(name);
 			assertNotNull(metadata);
-			assertEquals(name, metadata.getName());
 		}
 
 		for (String name : nonExistingNames) {
-			assertTrue(result.containsKey(name));
+			assertFalse(result.containsKey(name));
 			assertNull(result.get(name));
 		}
 	}

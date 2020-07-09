@@ -25,8 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static io.activej.common.collection.CollectionUtils.map;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -38,6 +37,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
@@ -210,14 +210,14 @@ public final class TestLocalFsClientInvariants {
 
 	@Test
 	public void moveFromEmptyFilename() {
-		List<FileMetadata> before = await(first.list("**"));
+		Map<String, FileMetadata> before = await(first.list("**"));
 		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.move("", "newFile"))));
 		both(client -> assertMetadataEquals(before, await(client.list("**"))));
 	}
 
 	@Test
 	public void moveToEmptyFilename() {
-		List<FileMetadata> before = await(first.list("**"));
+		Map<String, FileMetadata> before = await(first.list("**"));
 		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.move("file", ""))));
 		both(client -> assertMetadataEquals(before, await(client.list("**"))));
 	}
@@ -312,14 +312,14 @@ public final class TestLocalFsClientInvariants {
 
 	@Test
 	public void copyFromEmptyFilename() {
-		List<FileMetadata> before = await(first.list("**"));
+		Map<String, FileMetadata> before = await(first.list("**"));
 		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copy("", "newFile"))));
 		both(client -> assertMetadataEquals(before, await(client.list("**"))));
 	}
 
 	@Test
 	public void copyToEmptyFilename() {
-		List<FileMetadata> before = await(first.list("**"));
+		Map<String, FileMetadata> before = await(first.list("**"));
 		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.copy("file", ""))));
 		both(client -> assertMetadataEquals(before, await(client.list("**"))));
 	}
@@ -749,7 +749,7 @@ public final class TestLocalFsClientInvariants {
 	@Test
 	public void infoAllEmpty() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(emptyList()));
+			Map<String, FileMetadata> result = await(client.infoAll(emptySet()));
 			assertTrue(result.isEmpty());
 		});
 	}
@@ -757,45 +757,35 @@ public final class TestLocalFsClientInvariants {
 	@Test
 	public void infoAllSingle() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(singletonList("file")));
+			Map<String, FileMetadata> result = await(client.infoAll(singleton("file")));
 			assertEquals(1, result.size());
-			assertEquals("file", result.get("file").getName());
+			assertEquals("file", first(result.keySet()));
 		});
 	}
 
 	@Test
 	public void infoAllMultiple() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(asList("file", "file2")));
+			Map<String, FileMetadata> result = await(client.infoAll(set("file", "file2")));
 			assertEquals(2, result.size());
-			assertEquals("file", result.get("file").getName());
-			assertEquals("file2", result.get("file2").getName());
+			assertEquals(set("file", "file2"), result.keySet());
 		});
 	}
 
 	@Test
 	public void infoAllMultipleWithMissing() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(asList("file", "nonexistent")));
-			assertEquals(2, result.size());
-			assertEquals("file", result.get("file").getName());
-
-			assertTrue(result.containsKey("nonexistent"));
-			assertNull(result.get("nonexistent"));
+			Map<String, FileMetadata> result = await(client.infoAll(set("file", "nonexistent")));
+			assertEquals(1, result.size());
+			assertEquals("file", first(result.keySet()));
 		});
 	}
 
 	@Test
 	public void infoAllWithAllMissing() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(asList("nonexistent", "nonexistent2")));
-			assertEquals(2, result.size());
-
-			assertTrue(result.containsKey("nonexistent"));
-			assertNull(result.get("nonexistent"));
-
-			assertTrue(result.containsKey("nonexistent2"));
-			assertNull(result.get("nonexistent2"));
+			Map<String, FileMetadata> result = await(client.infoAll(set("nonexistent", "nonexistent2")));
+			assertEquals(0, result.size());
 		});
 	}
 
@@ -869,14 +859,13 @@ public final class TestLocalFsClientInvariants {
 		}
 	}
 
-	private void assertMetadataEquals(List<FileMetadata> expected, List<FileMetadata> actual) {
+	private void assertMetadataEquals(Map<String, FileMetadata> expected, Map<String, FileMetadata> actual) {
 		assertEquals(removeTimestamp(expected), removeTimestamp(actual));
 	}
 
-	private List<FileMetadata> removeTimestamp(List<FileMetadata> list) {
-		return list.stream()
-				.map(meta -> FileMetadata.of(meta.getName(), meta.getSize(), 0))
-				.collect(toList());
+	private Map<String, FileMetadata> removeTimestamp(Map<String, FileMetadata> map) {
+		return map.entrySet().stream()
+				.collect(toMap(Map.Entry::getKey, e -> FileMetadata.of(e.getValue().getSize(), 0)));
 	}
 
 	private void both(Consumer<FsClient> clientConsumer) {
@@ -923,7 +912,7 @@ public final class TestLocalFsClientInvariants {
 		}
 
 		@Override
-		public Promise<List<FileMetadata>> list(@NotNull String glob) {
+		public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 			return peer.list(glob);
 		}
 	}

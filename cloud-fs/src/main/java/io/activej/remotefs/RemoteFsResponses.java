@@ -21,11 +21,12 @@ import io.activej.codec.StructuredCodec;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 import static io.activej.codec.StructuredCodecs.*;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
-import static io.activej.remotefs.util.Codecs.FILE_META_CODEC;
+import static io.activej.remotefs.util.Codecs.FILE_META_CODEC_NULLABLE;
+import static io.activej.remotefs.util.Codecs.FILE_META_MAP_CODEC;
 
 public final class RemoteFsResponses {
 	static final StructuredCodec<FsResponse> CODEC = CodecSubtype.<FsResponse>create()
@@ -38,9 +39,9 @@ public final class RemoteFsResponses {
 			.with(CopyAllFinished.class, object(CopyAllFinished::new))
 			.with(DeleteFinished.class, object(DeleteFinished::new))
 			.with(DeleteAllFinished.class, object(DeleteAllFinished::new))
-			.with(ListFinished.class, object(ListFinished::new, "files", ListFinished::getFiles, ofList(FILE_META_CODEC)))
-			.with(InspectFinished.class, object(InspectFinished::new, "metadata", InspectFinished::getMetadata, FILE_META_CODEC.nullable()))
-			.with(InspectAllFinished.class, object(InspectAllFinished::new, "metadataList", InspectAllFinished::getMetadataList, ofList(FILE_META_CODEC)))
+			.with(ListFinished.class, object(ListFinished::new, "files", ListFinished::getFiles, FILE_META_MAP_CODEC))
+			.with(InfoFinished.class, object(InfoFinished::new, "metadata", InfoFinished::getMetadata, FILE_META_CODEC_NULLABLE))
+			.with(InfoAllFinished.class, object(InfoAllFinished::new, "metadataMap", InfoAllFinished::getMetadataMap, FILE_META_MAP_CODEC))
 			.with(PingFinished.class, object(PingFinished::new))
 			.with(ServerError.class, object(ServerError::new, "code", ServerError::getCode, INT_CODEC));
 
@@ -107,13 +108,13 @@ public final class RemoteFsResponses {
 	}
 
 	public static final class ListFinished extends FsResponse {
-		private final List<FileMetadata> files;
+		private final Map<String, FileMetadata> files;
 
-		public ListFinished(List<FileMetadata> files) {
-			this.files = Collections.unmodifiableList(files);
+		public ListFinished(Map<String, FileMetadata> files) {
+			this.files = Collections.unmodifiableMap(files);
 		}
 
-		public List<FileMetadata> getFiles() {
+		public Map<String, FileMetadata> getFiles() {
 			return files;
 		}
 
@@ -154,11 +155,11 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	public static final class InspectFinished extends FsResponse {
+	public static final class InfoFinished extends FsResponse {
 		@Nullable
 		private final FileMetadata metadata;
 
-		public InspectFinished(@Nullable FileMetadata metadata) {
+		public InfoFinished(@Nullable FileMetadata metadata) {
 			this.metadata = metadata;
 		}
 
@@ -169,25 +170,25 @@ public final class RemoteFsResponses {
 
 		@Override
 		public String toString() {
-			return "InspectFinished{metadata=" + metadata + '}';
+			return "InfoFinished{metadata=" + metadata + '}';
 		}
 	}
 
-	public static final class InspectAllFinished extends FsResponse {
-		private final List<FileMetadata> metadataList;
+	public static final class InfoAllFinished extends FsResponse {
+		private final Map<String, FileMetadata> metadataMap;
 
-		public InspectAllFinished(List<FileMetadata> metadataList) {
-			this.metadataList = metadataList;
+		public InfoAllFinished(Map<String, FileMetadata> metadataMap) {
+			this.metadataMap = metadataMap;
 		}
 
 		@Nullable
-		public List<FileMetadata> getMetadataList() {
-			return metadataList;
+		public Map<String, FileMetadata> getMetadataMap() {
+			return metadataMap;
 		}
 
 		@Override
 		public String toString() {
-			return "InspectAllFinished{metadataList=" + toLimitedString(metadataList, 100) + '}';
+			return "InfoAllFinished{metadataMap=" + toLimitedString(metadataMap, 50) + '}';
 		}
 	}
 

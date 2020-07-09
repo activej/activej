@@ -23,7 +23,6 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -88,7 +87,7 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return peer.list(glob);
 	}
 
@@ -98,7 +97,7 @@ public abstract class ForwardingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		return peer.infoAll(names);
 	}
 

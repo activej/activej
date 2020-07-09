@@ -71,9 +71,9 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return Promises.toList(Stream.concat(Stream.of(root), mounts.values().stream()).map(f -> f.list(glob)))
-				.map(listOfLists -> FileMetadata.flatten(listOfLists.stream()));
+				.map(listOfMaps -> FileMetadata.flatten(listOfMaps.stream()));
 	}
 
 	@Override
@@ -82,10 +82,10 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
-		Map<String, FileMetadata> result = new HashMap<>();
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+		Map<String, @NotNull FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
-				.collect(groupingBy(this::findMount))
+				.collect(groupingBy(this::findMount, toSet()))
 				.entrySet().stream()
 				.map(entry -> entry.getKey()
 						.infoAll(entry.getValue())

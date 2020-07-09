@@ -178,23 +178,23 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 					StreamReducerSimple<K, CrdtReducingData<K, S>, CrdtData<K, S>, CrdtAccumulator<S>> reducer =
 							StreamReducerSimple.create(x -> x.key, Comparator.naturalOrder(), new CrdtReducer());
 
-					Stream<FileMetadata> stream = f.getValue1().stream();
+					Stream<Map.Entry<String, FileMetadata>> stream = f.getValue1().entrySet().stream();
 
-					Stream<Promise<Void>> files = (timestamp == 0 ? stream : stream.filter(m -> m.getTimestamp() >= timestamp))
-							.map(meta -> ChannelSupplier.ofPromise(client.download(meta.getName()))
+					Stream<Promise<Void>> files = (timestamp == 0 ? stream : stream.filter(e -> e.getValue().getTimestamp() >= timestamp))
+							.map(entry -> ChannelSupplier.ofPromise(client.download(entry.getKey()))
 									.transformWith(ChannelDeserializer.create(serializer))
 									.transformWith(StreamMapper.create(data -> {
 										S partial = function.extract(data.getState(), timestamp);
-										return partial != null ? new CrdtReducingData<>(data.getKey(), partial, meta.getTimestamp()) : null;
+										return partial != null ? new CrdtReducingData<>(data.getKey(), partial, entry.getValue().getTimestamp()) : null;
 									}))
 									.transformWith(StreamFilter.create(Objects::nonNull))
 									.streamTo(reducer.newInput()));
 
-					stream = f.getValue2().stream();
-					Stream<Promise<Void>> tombstones = (timestamp == 0 ? stream : stream.filter(m -> m.getTimestamp() >= timestamp))
-							.map(meta -> ChannelSupplier.ofPromise(tombstoneFolderClient.download(meta.getName()))
+					stream = f.getValue2().entrySet().stream();
+					Stream<Promise<Void>> tombstones = (timestamp == 0 ? stream : stream.filter(e -> e.getValue().getTimestamp() >= timestamp))
+							.map(entry -> ChannelSupplier.ofPromise(tombstoneFolderClient.download(entry.getKey()))
 									.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
-									.transformWith(StreamMapper.create(key -> new CrdtReducingData<>(key, (S) null, meta.getTimestamp())))
+									.transformWith(StreamMapper.create(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
 									.streamTo(reducer.newInput()));
 
 					Promise<Void> process = Promises.all(Stream.concat(files, tombstones));
@@ -236,17 +236,16 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 		return consolidationFolderClient.list("*")
 				.then(list ->
-						Promises.all(list.stream()
-								.filter(meta -> meta.getTimestamp() > barrier)
-								.map(meta -> ChannelSupplier.ofPromise(client.download(meta.getName()))
+						Promises.all(list.entrySet().stream()
+								.filter(entry -> entry.getValue().getTimestamp() > barrier)
+								.map(entry -> ChannelSupplier.ofPromise(client.download(entry.getKey()))
 										.toCollector(ByteBufQueue.collector())
 										.whenResult(byteBuf -> blacklist.addAll(Arrays.asList(byteBuf.asString(UTF_8).split("\n"))))
 										.toVoid())))
 				.then(() -> client.list("*"))
 				.then(list -> {
 					String name = namingStrategy.apply("bin");
-					List<String> files = list.stream()
-							.map(FileMetadata::getName)
+					List<String> files = list.keySet().stream()
 							.filter(fileName -> !blacklist.contains(fileName))
 							.collect(toList());
 					String dump = String.join("\n", files);
@@ -254,6 +253,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 					logger.info("started consolidating into {} from {}", name, files);
 
 					String metafile = namingStrategy.apply("dump");
+					//noinspection Convert2MethodRef
 					return consolidationFolderClient.upload(metafile)
 							.then(consumer ->
 									ChannelSupplier.of(ByteBuf.wrapForReading(dump.getBytes(UTF_8)))
@@ -263,8 +263,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 									.transformWith(ChannelSerializer.create(serializer))
 									.streamTo(ChannelConsumer.ofPromise(client.upload(name))))
 							.then(() -> tombstoneFolderClient.list("*")
-									.map(fileList -> Promises.sequence(fileList.stream()
-											.map(file -> () -> tombstoneFolderClient.delete(file.getName()))))
+									.map(fileMap -> Promises.sequence(fileMap.keySet().stream()
+											.map(filename -> () -> tombstoneFolderClient.delete(filename))))
 							)
 							.then(() -> consolidationFolderClient.delete(metafile))
 							.then(() -> Promises.all(files.stream().map(client::delete)));

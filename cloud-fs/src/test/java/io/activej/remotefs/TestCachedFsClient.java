@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -181,9 +181,9 @@ public final class TestCachedFsClient {
 		// Adding 1 new file, total is 9
 		Files.write(serverStorage.resolve("newFile.txt"), "New data".getBytes());
 
-		List<FileMetadata> list = await(cacheRemote.list("**"));
+		Map<String, FileMetadata> map = await(cacheRemote.list("**"));
 
-		assertEquals(9, list.size());
+		assertEquals(9, map.size());
 	}
 
 	@Test
@@ -282,8 +282,8 @@ public final class TestCachedFsClient {
 		initializeFiles(20, "newTestFile_");
 		downloadFiles(20, 1, "newTestFile_");
 
-		List<FileMetadata> list = await(cache.list("**"));
-		list.forEach(val -> assertTrue(val.getName().startsWith("new")));
+		Map<String, FileMetadata> map = await(cache.list("**"));
+		map.keySet().forEach(name -> assertTrue(name.startsWith("new")));
 	}
 
 	@Test
@@ -299,8 +299,8 @@ public final class TestCachedFsClient {
 		// 10 KB
 		initializeCacheDownloadFiles(2, "newTestFile_");
 
-		List<FileMetadata> list = await(cache.list("**"));
-		assertEquals(1, list.stream().filter(fileMetadata -> fileMetadata.getName().startsWith("new")).count());
+		Map<String, FileMetadata> map = await(cache.list("**"));
+		assertEquals(1, map.keySet().stream().filter(name -> name.startsWith("new")).count());
 	}
 
 	@Test
@@ -319,11 +319,11 @@ public final class TestCachedFsClient {
 		// 1 file
 		initializeCacheDownloadFiles(1, "testFile_");
 
-		List<FileMetadata> list = await(cache.list("**"));
+		Map<String, FileMetadata> map = await(cache.list("**"));
 
-		list.forEach(value -> {
-			System.out.println(value);
-			assertTrue(value.getName().startsWith("test"));
+		map.keySet().forEach(name -> {
+			System.out.println(name);
+			assertTrue(name.startsWith("test"));
 		});
 	}
 
@@ -350,16 +350,16 @@ public final class TestCachedFsClient {
 		// 10 KB
 		initializeCacheDownloadFiles(2, "toDelete");
 
-		List<FileMetadata> listBefore = await(cache.list("**"));
-		assertEquals(4, listBefore.size());
+		Map<String, FileMetadata> mapBefore = await(cache.list("**"));
+		assertEquals(4, mapBefore.size());
 
 		await(cacheRemote.delete("toDelete0"));
 		await(cacheRemote.delete("toDelete1"));
 
-		List<FileMetadata> listAfter = await(cache.list("**"));
+		Map<String, FileMetadata> mapAfter = await(cache.list("**"));
 
-		assertEquals(2, listAfter.size());
-		listAfter.forEach(file -> assertTrue(file.getName().startsWith("test")));
+		assertEquals(2, mapAfter.size());
+		mapAfter.keySet().forEach(name -> assertTrue(name.startsWith("test")));
 	}
 
 	private void initializeCacheFolder() throws IOException {

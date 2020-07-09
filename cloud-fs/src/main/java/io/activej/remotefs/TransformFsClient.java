@@ -17,6 +17,7 @@
 package io.activej.remotefs;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.CollectorsEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
@@ -24,12 +25,12 @@ import io.activej.remotefs.util.RemoteFsUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 final class TransformFsClient implements FsClient {
@@ -93,52 +94,36 @@ final class TransformFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return globInto.apply(glob)
 				.map(transformedGlob -> parent.list(transformedGlob)
-						.map(transformList($ -> true)))
+						.map(transformMap($ -> true)))
 				.orElseGet(() -> parent.list("**")
-						.map(transformList(RemoteFsUtils.getGlobStringPredicate(glob))));
+						.map(transformMap(RemoteFsUtils.getGlobStringPredicate(glob))));
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return into.apply(name)
-				.map(transformedName -> parent.info(transformedName)
-						.map(meta -> {
-							if (meta == null) {
-								return null;
-							}
-							return from.apply(meta.getName())
-									.map(meta::withName)
-									.orElse(null);
-						}))
+				.map(parent::info)
 				.orElse(Promise.of(null));
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		Map<String, FileMetadata> result = new HashMap<>();
-		List<String> transformed = names.stream()
-				.map(name -> into.apply(name)
-						.orElseGet(() -> {
-							result.put(name, null);
-							return null;
-						}))
-				.filter(Objects::nonNull)
-				.collect(toList());
+		Set<String> transformed = names.stream()
+				.map(into)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.collect(toSet());
 		return transformed.isEmpty() ?
 				Promise.of(result) :
 				parent.infoAll(transformed)
-						.whenResult(map -> map.forEach((key, value) -> {
-							FileMetadata metadata = null;
-							if (value != null) {
-								Optional<String> maybeName = from.apply(value.getName());
-								if (maybeName.isPresent()) {
-									metadata = value.withName(maybeName.get());
-								}
-							}
-							result.put(key, metadata);
+						.whenResult(map -> map.forEach((name, meta) -> {
+							Optional<String> maybeName = from.apply(name);
+							assert maybeName.isPresent();
+							result.put(maybeName.get(), meta);
 						}))
 						.map($ -> result);
 	}
@@ -197,12 +182,12 @@ final class TransformFsClient implements FsClient {
 		return action.apply(renamed);
 	}
 
-	private Function<List<FileMetadata>, List<FileMetadata>> transformList(Predicate<String> postPredicate) {
-		return list -> list.stream()
-				.map(meta -> from.apply(meta.getName())
-						.map(meta::withName))
-				.filter(meta -> meta.isPresent() && postPredicate.test(meta.get().getName()))
+	private Function<Map<String, FileMetadata>, Map<String, FileMetadata>> transformMap(Predicate<String> postPredicate) {
+		return map -> map.entrySet().stream()
+				.map(entry -> from.apply(entry.getKey())
+						.map(mappedName -> new SimpleEntry<>(mappedName, entry.getValue())))
+				.filter(entry -> entry.isPresent() && postPredicate.test(entry.get().getKey()))
 				.map(Optional::get)
-				.collect(toList());
+				.collect(CollectorsEx.toMap());
 	}
 }

@@ -18,6 +18,7 @@ package io.activej.remotefs;
 
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.CollectorsEx;
 import io.activej.common.MemSize;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
@@ -50,7 +51,9 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collector;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -66,7 +69,6 @@ import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Collections.*;
-import static java.util.stream.Collectors.toList;
 
 /**
  * An implementation of {@link FsClient} which operates on a real underlying filesystem, no networking involved.
@@ -177,11 +179,18 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return execute(() -> findMatching(glob).stream()
-				.map(this::toFileMetadata)
-				.filter(Objects::nonNull)
-				.collect(toList()))
+				.collect(Collector.of(
+						(Supplier<Map<String, FileMetadata>>) HashMap::new,
+						(map, path) -> {
+							FileMetadata metadata = toFileMetadata(path);
+							if (metadata != null) {
+								map.put(toFileName(path), metadata);
+							}
+						},
+						CollectorsEx.throwingMerger())
+				))
 				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
@@ -251,14 +260,17 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		return execute(
 				() -> {
 					Map<String, FileMetadata> result = new HashMap<>();
 					for (String name : names) {
-						result.put(name, toFileMetadata(resolve(name)));
+						FileMetadata metadata = toFileMetadata(resolve(name));
+						if (metadata != null) {
+							result.put(name, metadata);
+						}
 					}
 					return result;
 				})
@@ -516,14 +528,17 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		return list;
 	}
 
+	private String toFileName(Path path) {
+		return toRemoteName.apply(storage.relativize(path).toString());
+	}
+
 	@Nullable
 	private FileMetadata toFileMetadata(Path path) {
 		try {
 			if (!Files.isRegularFile(path)) return null;
 
-			String filename = toRemoteName.apply(storage.relativize(path).toString());
 			long timestamp = Files.getLastModifiedTime(path).toMillis();
-			return FileMetadata.of(filename, Files.size(path), timestamp);
+			return FileMetadata.of(Files.size(path), timestamp);
 		} catch (IOException e) {
 			throw new UncheckedException(e);
 		}

@@ -24,6 +24,8 @@ import java.util.Set;
 
 import static io.activej.codec.StructuredCodecs.*;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.remotefs.util.Codecs.SOURCE_TO_TARGET_CODEC;
+import static io.activej.remotefs.util.Codecs.STRINGS_SET_CODEC;
 
 @SuppressWarnings("WeakerAccess")
 public final class RemoteFsCommands {
@@ -40,22 +42,22 @@ public final class RemoteFsCommands {
 					"name", Copy::getName, STRING_CODEC,
 					"target", Copy::getTarget, STRING_CODEC))
 			.with(CopyAll.class, object(CopyAll::new,
-					"sourceToTarget", CopyAll::getSourceToTarget, ofMap(STRING_CODEC, STRING_CODEC)))
+					"sourceToTarget", CopyAll::getSourceToTarget, SOURCE_TO_TARGET_CODEC))
 			.with(Move.class, object(Move::new,
 					"name", Move::getName, STRING_CODEC,
 					"target", Move::getTarget, STRING_CODEC))
 			.with(MoveAll.class, object(MoveAll::new,
-					"sourceToTarget", MoveAll::getSourceToTarget, ofMap(STRING_CODEC, STRING_CODEC)))
+					"sourceToTarget", MoveAll::getSourceToTarget, SOURCE_TO_TARGET_CODEC))
 			.with(Delete.class, object(Delete::new,
 					"name", Delete::getName, STRING_CODEC))
 			.with(DeleteAll.class, object(DeleteAll::new,
-					"toDelete", DeleteAll::getFilesToDelete, ofSet(STRING_CODEC)))
+					"toDelete", DeleteAll::getFilesToDelete, STRINGS_SET_CODEC))
 			.with(List.class, object(List::new,
 					"glob", List::getGlob, STRING_CODEC))
-			.with(Inspect.class, object(Inspect::new,
-					"name", Inspect::getName, STRING_CODEC))
-			.with(InspectAll.class, object(InspectAll::new,
-					"names", InspectAll::getNames, ofList(STRING_CODEC)))
+			.with(Info.class, object(Info::new,
+					"name", Info::getName, STRING_CODEC))
+			.with(InfoAll.class, object(InfoAll::new,
+					"names", InfoAll::getNames, STRINGS_SET_CODEC))
 			.with(Ping.class, object(Ping::new));
 
 	public abstract static class FsCommand {
@@ -244,10 +246,10 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	public static final class Inspect extends FsCommand {
+	public static final class Info extends FsCommand {
 		private final String name;
 
-		public Inspect(String name) {
+		public Info(String name) {
 			this.name = name;
 		}
 
@@ -257,24 +259,24 @@ public final class RemoteFsCommands {
 
 		@Override
 		public String toString() {
-			return "Inspect{name='" + name + "'}";
+			return "Info{name='" + name + "'}";
 		}
 	}
 
-	public static final class InspectAll extends FsCommand {
-		private final java.util.List<String> names;
+	public static final class InfoAll extends FsCommand {
+		private final Set<String> names;
 
-		public InspectAll(java.util.List<String> names) {
+		public InfoAll(Set<String> names) {
 			this.names = names;
 		}
 
-		public java.util.List<String> getNames() {
+		public Set<String> getNames() {
 			return names;
 		}
 
 		@Override
 		public String toString() {
-			return "InspectAll{names='" + toLimitedString(names, 100) + "'}";
+			return "InfoAll{names='" + toLimitedString(names, 100) + "'}";
 		}
 	}
 

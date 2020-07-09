@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
@@ -39,7 +40,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
-import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public final class RemoteFsServletAndClientTest {
@@ -76,9 +76,8 @@ public final class RemoteFsServletAndClientTest {
 
 	@Test
 	public void list() {
-		List<FileMetadata> metadata = await(client.list("**"));
-		Set<String> actual = metadata.stream().map(FileMetadata::getName).collect(toSet());
-		assertEquals(initialFiles, actual);
+		Map<String, FileMetadata> metadata = await(client.list("**"));
+		assertEquals(initialFiles, metadata.keySet());
 	}
 
 	@Test
@@ -161,11 +160,6 @@ public final class RemoteFsServletAndClientTest {
 	public void downloadNonExistent() {
 		Throwable exception = awaitException(client.download("nonExistent"));
 		assertSame(FILE_NOT_FOUND, exception);
-	}
-
-	@Test
-	public void info() {
-
 	}
 
 	private void clearDirectory(Path dir) throws IOException {

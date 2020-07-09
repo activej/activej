@@ -17,6 +17,7 @@
 package io.activej.remotefs;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.CollectorsEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
@@ -24,14 +25,17 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.partitioningBy;
+import static java.util.stream.Collectors.toSet;
 
 final class FilterFsClient implements FsClient {
 	private final FsClient parent;
@@ -87,11 +91,11 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return parent.list(glob)
-				.map(list -> list.stream()
-						.filter(meta -> predicate.test(meta.getName()))
-						.collect(toList()));
+				.map(map -> map.entrySet().stream()
+						.filter(entry -> predicate.test(entry.getKey()))
+						.collect(CollectorsEx.toMap()));
 	}
 
 	@Override
@@ -103,17 +107,12 @@ final class FilterFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
-		Map<Boolean, List<String>> partitioned = names.stream().collect(partitioningBy(predicate));
-		List<String> query = partitioned.get(TRUE);
-		return (query.isEmpty() ?
-				Promise.of(Collections.<String, FileMetadata>emptyMap()) :
-				parent.infoAll(query))
-				.map(metadata -> {
-					Map<String, FileMetadata> result = new HashMap<>(metadata);
-					partitioned.get(FALSE).forEach(name -> result.put(name, null));
-					return result;
-				});
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+		Map<Boolean, Set<String>> partitioned = names.stream().collect(partitioningBy(predicate, toSet()));
+		Set<String> query = partitioned.get(TRUE);
+		return query.isEmpty() ?
+				Promise.of(Collections.emptyMap()) :
+				parent.infoAll(query);
 	}
 
 	@Override

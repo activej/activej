@@ -23,10 +23,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
@@ -40,7 +37,6 @@ import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.remotefs.FsClient.BAD_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
-import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
@@ -272,12 +268,10 @@ public final class FsIntegrationTest {
 			Files.write(storage.resolve(filename), CONTENT);
 		}
 
-		List<FileMetadata> metadataList = await(client.list("**")
+		Map<String, FileMetadata> metadataMap = await(client.list("**")
 				.whenComplete(server::close));
 
-		assertEquals(expected, metadataList.stream()
-				.map(FileMetadata::getName)
-				.collect(toSet()));
+		assertEquals(expected, metadataMap.keySet());
 	}
 
 	@Test
@@ -304,13 +298,13 @@ public final class FsIntegrationTest {
 		expected2.add("subsubfolder/file1.txt");
 		expected2.add("subsubfolder/first file.txt");
 
-		Tuple2<List<FileMetadata>, List<FileMetadata>> tuple = await(
+		Tuple2<Map<String, FileMetadata>, Map<String, FileMetadata>> tuple = await(
 				Promises.toTuple(client.subfolder("subfolder1").list("**"), client.subfolder("subfolder2").list("**"))
 						.whenComplete(server::close)
 		);
 
-		assertEquals(expected1, tuple.getValue1().stream().map(FileMetadata::getName).collect(toSet()));
-		assertEquals(expected2, tuple.getValue2().stream().map(FileMetadata::getName).collect(toSet()));
+		assertEquals(expected1, tuple.getValue1().keySet());
+		assertEquals(expected2, tuple.getValue2().keySet());
 	}
 
 	private Promise<Void> upload(String resultFile, byte[] bytes) {

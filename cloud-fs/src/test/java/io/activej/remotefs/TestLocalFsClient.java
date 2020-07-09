@@ -20,7 +20,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
@@ -36,7 +36,6 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
-import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public final class TestLocalFsClient {
@@ -198,9 +197,9 @@ public final class TestLocalFsClient {
 				"2/b/e.txt"
 		);
 
-		List<FileMetadata> actual = await(client.list("**"));
+		Map<String, FileMetadata> actual = await(client.list("**"));
 
-		assertEquals(expected, actual.stream().map(FileMetadata::getName).collect(toSet()));
+		assertEquals(expected, actual.keySet());
 	}
 
 	@Test
@@ -211,9 +210,9 @@ public final class TestLocalFsClient {
 				"2/b/e.txt"
 		);
 
-		List<FileMetadata> actual = await(client.list("2/*/*.txt"));
+		Map<String, FileMetadata> actual = await(client.list("2/*/*.txt"));
 
-		assertEquals(expected, actual.stream().map(FileMetadata::getName).collect(toSet()));
+		assertEquals(expected, actual.keySet());
 	}
 
 	@Test
@@ -243,7 +242,7 @@ public final class TestLocalFsClient {
 		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("newdir/a.txt")));
 		await(client.delete("newdir/a.txt"));
 
-		assertTrue(await(client.list("**")).stream().noneMatch(metadata -> metadata.getName().contains("newdir")));
+		assertTrue(await(client.list("**")).keySet().stream().noneMatch(name -> name.contains("newdir")));
 		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("newdir")));
 		assertNotNull(await(client.info("newdir")));
 	}
@@ -261,7 +260,7 @@ public final class TestLocalFsClient {
 
 	@Test
 	public void systemFilesAreNotListed() throws IOException {
-		List<FileMetadata> before = await(client.list("**"));
+		Map<String, FileMetadata> before = await(client.list("**"));
 
 		Path systemDir = storagePath.resolve(SYSTEM_DIR);
 		Files.createDirectories(systemDir);
@@ -270,7 +269,7 @@ public final class TestLocalFsClient {
 		Files.createDirectories(folder);
 		Files.write(folder.resolve("systemFile2.txt"), "test data".getBytes());
 
-		List<FileMetadata> after = await(client.list("**"));
+		Map<String, FileMetadata> after = await(client.list("**"));
 
 		assertEquals(before, after);
 	}

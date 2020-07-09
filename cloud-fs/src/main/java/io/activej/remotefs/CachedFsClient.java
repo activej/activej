@@ -21,6 +21,7 @@ import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.ref.RefLong;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.csp.ChannelConsumer;
@@ -92,7 +93,7 @@ public final class CachedFsClient implements FsClient, EventloopService {
 
 	public Promise<MemSize> getTotalCacheSize() {
 		return cacheClient.list("**")
-				.then(list -> Promise.of(MemSize.of(list.stream().mapToLong(FileMetadata::getSize).sum())));
+				.then(list -> Promise.of(MemSize.of(list.values().stream().mapToLong(FileMetadata::getSize).sum())));
 	}
 
 	@NotNull
@@ -187,9 +188,9 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	 * @return promise that is a union of the most actual files from cache client and server
 	 */
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return Promises.toList(cacheClient.list(glob), mainClient.list(glob))
-				.map(lists -> FileMetadata.flatten(lists.stream()));
+				.map(maps -> FileMetadata.flatten(maps.stream()));
 	}
 
 	@Override
@@ -201,22 +202,16 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
-		Map<String, FileMetadata> result = new HashMap<>();
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+		Map<String, @NotNull FileMetadata> result = new HashMap<>();
 
 		return cacheClient.infoAll(names)
-				.then(map -> {
-					List<String> mainQuery = new ArrayList<>();
-					for (Map.Entry<String, FileMetadata> entry : result.entrySet()) {
-						if (entry.getValue() != null) {
-							result.put(entry.getKey(), entry.getValue());
-						} else {
-							mainQuery.add(entry.getKey());
-						}
-					}
-					return mainQuery.isEmpty() ?
+				.then(cached -> {
+					result.putAll(cached);
+					Set<String> unknown = CollectionUtils.difference(names, cached.keySet());
+					return unknown.isEmpty() ?
 							Promise.of(Collections.<String, FileMetadata>emptyMap()) :
-							mainClient.infoAll(mainQuery);
+							mainClient.infoAll(unknown);
 				})
 				.whenResult(result::putAll)
 				.map($ -> result);
@@ -261,14 +256,20 @@ public final class CachedFsClient implements FsClient, EventloopService {
 	 * Consists of {@link FileMetadata}, number of successful cache hits and a time of the last cache hit occurrence.
 	 */
 	public static final class FullCacheStat {
+		private final String name;
 		private final FileMetadata fileMetadata;
 		private final long numberOfHits;
 		private final long lastHitTimestamp;
 
-		FullCacheStat(FileMetadata fileMetadata, long numberOfHits, long lastHitTimestamp) {
+		FullCacheStat(String name, FileMetadata fileMetadata, long numberOfHits, long lastHitTimestamp) {
+			this.name = name;
 			this.fileMetadata = fileMetadata;
 			this.numberOfHits = numberOfHits;
 			this.lastHitTimestamp = lastHitTimestamp;
+		}
+
+		public String getName() {
+			return name;
 		}
 
 		public FileMetadata getFileMetadata() {
@@ -376,22 +377,22 @@ public final class CachedFsClient implements FsClient, EventloopService {
 		RefLong size = new RefLong(0);
 		double limit = cacheSizeLimit.toLong() * LOAD_FACTOR;
 		return cacheClient.list("**")
-				.map(list -> list
-						.stream()
-						.map(metadata -> {
-							CacheStat cacheStat = cacheStats.get(metadata.getName());
+				.map(list -> list.entrySet().stream()
+						.map(entry -> {
+							String name = entry.getKey();
+							CacheStat cacheStat = cacheStats.get(name);
 							return cacheStat == null ?
-									new FullCacheStat(metadata, 0, 0) :
-									new FullCacheStat(metadata, cacheStat.numberOfHits, cacheStat.lastHitTimestamp);
+									new FullCacheStat(name, entry.getValue(), 0, 0) :
+									new FullCacheStat(name, entry.getValue(), cacheStat.numberOfHits, cacheStat.lastHitTimestamp);
 						})
 						.sorted(comparator.reversed())
 						.filter(fullCacheStat -> size.inc(fullCacheStat.getFileMetadata().getSize()) > limit))
 				.then(filesToDelete -> Promises.all(filesToDelete
 						.map(fullCacheStat -> cacheClient
-								.delete(fullCacheStat.getFileMetadata().getName())
+								.delete(fullCacheStat.getName())
 								.whenResult(() -> {
 									totalCacheSize -= fullCacheStat.getFileMetadata().getSize();
-									cacheStats.remove(fullCacheStat.getFileMetadata().getName());
+									cacheStats.remove(fullCacheStat.getName());
 								}))));
 	}
 

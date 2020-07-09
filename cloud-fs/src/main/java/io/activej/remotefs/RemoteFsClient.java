@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -51,7 +50,6 @@ import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.remotefs.util.RemoteFsUtils.*;
 import static java.util.Collections.emptyMap;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * An implementation of {@link FsClient} which connects to a single {@link RemoteFsServer} and communicates with it.
@@ -235,7 +233,7 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return simpleCommand(new RemoteFsCommands.List(glob), ListFinished.class, ListFinished::getFiles)
 				.whenComplete(toLogger(logger, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
@@ -243,22 +241,16 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
-		return simpleCommand(new Inspect(name), InspectFinished.class, InspectFinished::getMetadata)
+		return simpleCommand(new Info(name), InfoFinished.class, InfoFinished::getMetadata)
 				.whenComplete(toLogger(logger, "info", name, this))
 				.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
-	public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
-		return simpleCommand(new InspectAll(names), InspectAllFinished.class,
-				response -> {
-					Map<String, FileMetadata> result = response.getMetadataList().stream()
-							.collect(toMap(FileMetadata::getName, Function.identity()));
-					names.forEach(name -> result.putIfAbsent(name, null));
-					return result;
-				})
+		return simpleCommand(new InfoAll(names), InfoAllFinished.class, InfoAllFinished::getMetadataMap)
 				.whenComplete(toLogger(logger, "infoAll", toLimitedString(names, 100), this))
 				.whenComplete(infoAllPromise.recordStats());
 	}

@@ -46,7 +46,6 @@ import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
-import io.activej.remotefs.FileMetadata;
 import io.activej.remotefs.FsClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,6 +55,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -218,28 +218,28 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 		RefInt skipped = new RefInt(0);
 		RefInt deleted = new RefInt(0);
 		return client.list("*" + LOG)
-				.then(list -> Promises.all(list.stream()
-						.filter(file -> {
-							C id = fromPath(file.getName());
+				.then(list -> Promises.all(list.entrySet().stream()
+						.filter(entry -> {
+							C id = fromPath(entry.getKey());
 							if (id == null || preserveChunks.contains(id)) {
 								return false;
 							}
-							long fileTimestamp = file.getTimestamp();
+							long fileTimestamp = entry.getValue().getTimestamp();
 							if (timestamp == -1 || fileTimestamp <= timestamp) {
 								return true;
 							}
-							logger.trace("File {} timestamp {} > {}", file, fileTimestamp, timestamp);
+							logger.trace("File {} timestamp {} > {}", entry, fileTimestamp, timestamp);
 							skipped.inc();
 							return false;
 						})
-						.map(file -> {
+						.map(entry -> {
 							if (logger.isTraceEnabled()) {
-								FileTime lastModifiedTime = FileTime.fromMillis(file.getTimestamp());
-								logger.trace("Delete file: {} with last modifiedTime: {}({} millis)", file.getName(),
+								FileTime lastModifiedTime = FileTime.fromMillis(entry.getValue().getTimestamp());
+								logger.trace("Delete file: {} with last modifiedTime: {}({} millis)", entry.getKey(),
 										lastModifiedTime, lastModifiedTime.toMillis());
 							}
 							deleted.inc();
-							return client.delete(file.getName());
+							return client.delete(entry.getKey());
 						}))
 						.whenResult(() -> {
 							cleanupPreservedFiles = preserveChunks.size();
@@ -254,9 +254,9 @@ public final class RemoteFsChunkStorage<C> implements AggregationChunkStorage<C>
 	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, Predicate<Long> lastModifiedPredicate) {
 		return client.list("*" + LOG)
 				.map(list ->
-						list.stream()
-								.filter(file -> lastModifiedPredicate.test(file.getTimestamp()))
-								.map(FileMetadata::getName)
+						list.entrySet().stream()
+								.filter(entry -> lastModifiedPredicate.test(entry.getValue().getTimestamp()))
+								.map(Map.Entry::getKey)
 								.map(this::fromPath)
 								.filter(Objects::nonNull)
 								.filter(chunkIdPredicate)

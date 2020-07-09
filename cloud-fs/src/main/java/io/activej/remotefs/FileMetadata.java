@@ -20,7 +20,9 @@ import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static io.activej.common.Preconditions.checkArgument;
@@ -33,37 +35,24 @@ public final class FileMetadata {
 			Comparator.comparingLong(FileMetadata::getSize)
 					.thenComparing(FileMetadata::getTimestamp);
 
-	private final String name;
 	private final long size;
 	private final long timestamp;
 
-	private FileMetadata(String name, long size, long timestamp) {
-		this.name = name;
+	private FileMetadata(long size, long timestamp) {
 		this.size = size;
 		this.timestamp = timestamp;
 	}
 
-	public static FileMetadata of(@NotNull String name, long size, long timestamp) {
+	public static FileMetadata of(long size, long timestamp) {
 		checkArgument(size >= 0, "size >= 0");
-		return new FileMetadata(name, size, timestamp);
+		return new FileMetadata(size, timestamp);
 	}
 
-	public static FileMetadata parse(String name, long size, long timestamp) throws ParseException {
-		if (name == null) {
-			throw new ParseException(FileMetadata.class, "Name is null");
-		}
+	public static FileMetadata parse(long size, long timestamp) throws ParseException {
 		if (size < 0) {
 			throw new ParseException(FileMetadata.class, "Size is less than zero");
 		}
-		return new FileMetadata(name, size, timestamp);
-	}
-
-	public FileMetadata withName(String name) {
-		return new FileMetadata(name, size, timestamp);
-	}
-
-	public String getName() {
-		return name;
+		return new FileMetadata(size, timestamp);
 	}
 
 	public long getSize() {
@@ -76,7 +65,7 @@ public final class FileMetadata {
 
 	@Override
 	public String toString() {
-		return name + "(size=" + size + ", timestamp=" + timestamp + ')';
+		return "FileMetadata{size=" + size + ", timestamp=" + timestamp + '}';
 	}
 
 	@Override
@@ -90,14 +79,14 @@ public final class FileMetadata {
 
 		FileMetadata that = (FileMetadata) o;
 
-		return size == that.size && timestamp == that.timestamp && name.equals(that.name);
+		return size == that.size && timestamp == that.timestamp;
 	}
 
 	@Override
 	public int hashCode() {
-		return 29791 * name.hashCode()
-				+ 961 * ((int) (size ^ (size >>> 32)))
-				+ 31 * ((int) (timestamp ^ (timestamp >>> 32)));
+		int result = (int) (size ^ (size >>> 32));
+		result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+		return result;
 	}
 
 	@Nullable
@@ -105,11 +94,11 @@ public final class FileMetadata {
 		return first == null ? second : second == null ? first : COMPARATOR.compare(first, second) > 0 ? first : second;
 	}
 
-	public static List<FileMetadata> flatten(Stream<List<FileMetadata>> streamOfLists) {
-		Map<String, FileMetadata> map = new HashMap<>();
-		streamOfLists
-				.flatMap(List::stream)
-				.forEach(meta -> map.compute(meta.getName(), ($, existing) -> getMoreCompleteFile(existing, meta)));
-		return new ArrayList<>(map.values());
+	public static Map<String, FileMetadata> flatten(Stream<Map<String, @NotNull FileMetadata>> streamOfMaps) {
+		Map<String, FileMetadata> result = new HashMap<>();
+		streamOfMaps
+				.flatMap(map -> map.entrySet().stream())
+				.forEach(entry -> result.compute(entry.getKey(), ($, existing) -> getMoreCompleteFile(existing, entry.getValue())));
+		return result;
 	}
 }

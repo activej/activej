@@ -69,7 +69,7 @@ public final class ApiTest {
 
 	@Test
 	public void infoAll() {
-		List<String> names = asList("file1.txt", "file2.txt", "file3.txt", "file4.txt");
+		Set<String> names = set("file1.txt", "file2.txt", "file3.txt", "file4.txt");
 		doTest(client.infoAll(names), names);
 	}
 
@@ -127,7 +127,7 @@ public final class ApiTest {
 	@Test
 	public void download() {
 		List<String> chunks = new ArrayList<>();
-		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 10 , 20))
+		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 10, 20))
 				.map(buf -> buf.asString(UTF_8))
 				.streamTo(ChannelConsumer.ofConsumer(chunks::add));
 		doTest(uploadPromise, "test", 10L, 20L, chunks);
@@ -154,7 +154,7 @@ public final class ApiTest {
 	@Test
 	public void downloadToTheEndWithOffset() {
 		List<String> chunks = new ArrayList<>();
-		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 10 , Long.MAX_VALUE))
+		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 10, Long.MAX_VALUE))
 				.map(buf -> buf.asString(UTF_8))
 				.streamTo(ChannelConsumer.ofConsumer(chunks::add));
 		doTest(uploadPromise, "test", 10L, Long.MAX_VALUE, chunks);
@@ -211,11 +211,11 @@ public final class ApiTest {
 			}
 
 			@Override
-			public Promise<List<FileMetadata>> list(@NotNull String glob) {
-				return resultOf(asList(
-						FileMetadata.of("test1", 100, 10),
-						FileMetadata.of("test2", 200, 20),
-						FileMetadata.of("test3", 300, 30)
+			public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+				return resultOf(map(
+						"test1", FileMetadata.of(100, 10),
+						"test2", FileMetadata.of(200, 20),
+						"test3", FileMetadata.of(300, 30)
 				), glob);
 			}
 
@@ -246,16 +246,19 @@ public final class ApiTest {
 
 			@Override
 			public Promise<@Nullable FileMetadata> info(@NotNull String name) {
-				FileMetadata result = name.equals("nullable") ? null : FileMetadata.of(name, 100, 200);
+				FileMetadata result = name.equals("nullable") ? null : FileMetadata.of(100, 200);
 				return resultOf(result, name);
 			}
 
 			@Override
-			public Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
-				Map<String, @Nullable FileMetadata> result = new HashMap<>();
+			public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+				Map<String, @NotNull FileMetadata> result = new HashMap<>();
+				Iterator<String> iterator = names.iterator();
 				for (int i = 0; i < names.size(); i++) {
-					String name = names.get(i);
-					result.put(name, i % 2 == 0 ? null : FileMetadata.of(name, i, i * 10));
+					String name = iterator.next();
+					if (i % 2 != 0) {
+						result.put(name, FileMetadata.of(i, i * 10));
+					}
 				}
 				return resultOf(result, names);
 			}

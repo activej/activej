@@ -22,12 +22,12 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 
 /**
  * This fs client simulates a situation in which all paths point outside root
@@ -54,8 +54,8 @@ final class ZeroFsClient implements FsClient {
 	}
 
 	@Override
-	public Promise<List<FileMetadata>> list(@NotNull String glob) {
-		return Promise.of(emptyList());
+	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+		return Promise.of(emptyMap());
 	}
 
 	@Override

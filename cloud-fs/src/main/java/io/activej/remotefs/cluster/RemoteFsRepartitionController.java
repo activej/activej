@@ -20,6 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Check;
+import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
@@ -58,7 +59,6 @@ import static io.activej.common.Preconditions.checkState;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.remotefs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.*;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public final class RemoteFsRepartitionController implements WithInitializer<RemoteFsRepartitionController>, EventloopJmxBeanEx, EventloopService {
@@ -75,7 +75,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	private final List<String> processedFiles = new ArrayList<>();
 
 	private String glob = "**";
-	private Predicate<FileMetadata> negativeGlobPredicate = $ -> true;
+	private Predicate<String> negativeGlobPredicate = $ -> true;
 	private int replicationCount = 1;
 	private long planRecalculationInterval = DEFAULT_PLAN_RECALCULATION_INTERVAL.toMillis();
 	private Iterator<String> repartitionPlan;
@@ -115,10 +115,10 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 			return this;
 		}
 		if (!isWildcard(negativeGlob)) {
-			this.negativeGlobPredicate = file -> !file.getName().equals(negativeGlob);
+			this.negativeGlobPredicate = file -> !file.equals(negativeGlob);
 		} else {
 			PathMatcher negativeMatcher = FileSystems.getDefault().getPathMatcher("glob:" + negativeGlob);
-			this.negativeGlobPredicate = file -> !negativeMatcher.matches(Paths.get(file.getName()));
+			this.negativeGlobPredicate = name -> !negativeMatcher.matches(Paths.get(name));
 		}
 		return this;
 	}
@@ -179,7 +179,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 													logger.warn("File '{}' that should be repartitioned has been deleted", name);
 													return Promise.of(false);
 												}
-												return repartitionFile(meta);
+												return repartitionFile(name, meta);
 											})
 											.whenComplete(singleFileRepartitionPromiseStats.recordStats())
 											.then(b -> {
@@ -220,36 +220,35 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 
 	private Promise<Void> recalculatePlan() {
 		return localStorage.list(glob)
-				.then(list -> {
+				.then(map -> {
 					checkEnoughAlivePartitions();
 
-					allFiles = list.size();
+					allFiles = map.size();
 
-					List<FileMetadata> filteredList = list.stream()
-							.filter(negativeGlobPredicate)
-							.filter(metadata -> !processedFiles.contains(metadata.getName()))
-							.collect(toList());
+					Map<String, FileMetadata> filteredMap = map.entrySet().stream()
+							.filter(entry -> negativeGlobPredicate.test(entry.getKey()))
+							.filter(entr -> !processedFiles.contains(entr.getKey()))
+							.collect(CollectorsEx.toMap());
 
-					Map<Object, List<String>> groupedById = new HashMap<>();
-					for (FileMetadata metadata : filteredList) {
-						String name = metadata.getName();
+					Map<Object, Set<String>> groupedById = new HashMap<>();
+					for (String name : filteredMap.keySet()) {
 						List<Object> selected = partitions.select(name).subList(0, replicationCount);
 						selected.remove(localPartitionId); // skip local partition if present
 						for (Object id : selected) {
-							groupedById.computeIfAbsent(id, $ -> new ArrayList<>()).add(name);
+							groupedById.computeIfAbsent(id, $ -> new HashSet<>()).add(name);
 						}
 					}
 
 					return Promises.reduce(
 							groupedById.entrySet().stream()
 									.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
-											.whenException(e -> partitions.markDead(entry.getKey(), e)))
+											.whenException(e -> partitions.markIfDead(entry.getKey(), e)))
 									.iterator(),
 							groupedById.size(),
-							filteredList.stream()
-									.map(InfoResults::new)
-									.collect(toMap(infoResults -> infoResults.localMetadata.getName(), Function.identity())),
-							(result, metas) -> metas.forEach((name, metadata) -> result.get(name).remoteMetadata.add(metadata)),
+							filteredMap.entrySet().stream()
+									.map(e -> new InfoResults(e.getKey(), e.getValue()))
+									.collect(toMap(InfoResults::getName, Function.identity())),
+							(result, metas) -> filteredMap.keySet().forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
 							Map::values)
 							.whenResult(results -> {
 								repartitionPlan = results.stream()
@@ -273,16 +272,15 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 				});
 	}
 
-	private Promise<Boolean> repartitionFile(FileMetadata meta) {
+	private Promise<Boolean> repartitionFile(String name, FileMetadata meta) {
 		partitions.markAlive(localPartitionId); // ensure local partition could also be selected
 		checkEnoughAlivePartitions();
-		List<Object> selected = partitions.select(meta.getName()).subList(0, replicationCount);
-		return getPartitionsThatNeedOurFile(meta, selected)
+		List<Object> selected = partitions.select(name).subList(0, replicationCount);
+		return getPartitionsThatNeedOurFile(name, meta, selected)
 				.then(uploadTargets -> {
 					if (uploadTargets == null) { // null return means failure
 						return Promise.of(false);
 					}
-					String name = meta.getName();
 					if (uploadTargets.isEmpty()) { // everybody had the file
 						logger.trace("deleting file {} locally", meta);
 						return localStorage.delete(name) // so we delete the copy which does not belong to local partition
@@ -320,7 +318,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 																	if (e != null && uploadError.get() == null) {
 																		uploadError.set(e);
 																		logger.warn("failed uploading to partition {}", partitionId, e);
-																		partitions.markDead(partitionId, e);
+																		partitions.markIfDead(partitionId, e);
 																	}
 																	// returning complete promise so that other uploads would not fail
 																	return fn.apply(Promise.complete());
@@ -354,17 +352,17 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 				.whenComplete(toLogger(logger, TRACE, "repartitionFile", meta));
 	}
 
-	private Promise<List<Object>> getPartitionsThatNeedOurFile(FileMetadata fileToUpload, List<Object> selected) {
-		InfoResults infoResults = new InfoResults(fileToUpload);
+	private Promise<List<Object>> getPartitionsThatNeedOurFile(String name, FileMetadata fileToUpload, List<Object> selected) {
+		InfoResults infoResults = new InfoResults(name, fileToUpload);
 		List<Object> ids = new ArrayList<>(selected);
 		boolean belongsToLocal = ids.remove(localPartitionId);
 		return Promises.toList(ids.stream()
 				.map(partitionId -> partitions.get(partitionId)
-						.info(fileToUpload.getName()) // checking file existence and size on particular partition
+						.info(name) // checking file existence and size on particular partition
 						.whenComplete((meta, e) -> {
 							if (e != null) {
 								logger.warn("failed connecting to partition {}", partitionId, e);
-								partitions.markDead(partitionId, e);
+								partitions.markIfDead(partitionId, e);
 								return;
 							}
 							infoResults.remoteMetadata.add(meta);
@@ -466,7 +464,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 	}
 	// endregion
 
-	private static final Comparator<InfoResults> INSPECTION_RESULTS_COMPARATOR =
+	private static final Comparator<InfoResults> INFO_RESULTS_COMPARATOR =
 			Comparator.<InfoResults>comparingLong(infoResults -> infoResults.remoteMetadata.stream()
 					.filter(Objects::isNull)
 					.count() +
@@ -477,20 +475,18 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 							.getSize());
 
 	private final class InfoResults implements Comparable<InfoResults> {
+		String name;
 		@Nullable
 		FileMetadata localMetadata;
 		final List<@Nullable FileMetadata> remoteMetadata = new ArrayList<>();
 
-		private InfoResults(@NotNull FileMetadata localMetadata) {
+		private InfoResults(@NotNull String name, @NotNull FileMetadata localMetadata) {
+			this.name = name;
 			this.localMetadata = localMetadata;
 		}
 
-		String getName() {
-			return remoteMetadata.stream()
-					.filter(Objects::nonNull)
-					.findAny()
-					.orElse(localMetadata)
-					.getName();
+		public String getName() {
+			return name;
 		}
 
 		boolean shouldBeProcessed() {
@@ -513,7 +509,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 
 		@Override
 		public int compareTo(@NotNull RemoteFsRepartitionController.InfoResults o) {
-			return INSPECTION_RESULTS_COMPARATOR.compare(this, o);
+			return INFO_RESULTS_COMPARATOR.compare(this, o);
 		}
 	}
 }

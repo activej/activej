@@ -35,7 +35,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.remotefs.FileMetadata;
 import io.activej.remotefs.FsClient;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
@@ -123,8 +122,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 		LogPosition startPosition = LogPosition.create(startLogFile, startOffset);
 		return client.list(namingScheme.getListGlob(logPartition))
 				.map(files ->
-						files.stream()
-								.map(FileMetadata::getName)
+						files.keySet().stream()
 								.map(namingScheme::parse)
 								.filter(Objects::nonNull)
 								.filter(partitionAndFile -> partitionAndFile.getLogPartition().equals(logPartition))

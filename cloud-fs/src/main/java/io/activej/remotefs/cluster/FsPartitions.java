@@ -20,6 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
 import io.activej.common.api.WithInitializer;
+import io.activej.common.exception.StacklessException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -33,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.remotefs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
@@ -164,6 +166,24 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 			logger.info("Partition {} is alive again!", partitionId);
 			aliveClients.put(partitionId, client);
 		}
+	}
+
+	public void markIfDead(Object partitionId, Throwable e) {
+		// marking as dead only on lower level connection and other I/O exceptions,
+		// stackless exceptions are the ones actually received with an ServerError response (so the node is obviously not dead)
+		if (e.getClass() != StacklessException.class) {
+			markDead(partitionId, e);
+		}
+	}
+
+	public  <T> BiFunction<T, Throwable, Promise<T>> wrapDeath(Object partitionId) {
+		return (res, e) -> {
+			if (e == null) {
+				return Promise.of(res);
+			}
+			markIfDead(partitionId, e);
+			return Promise.ofException(new StacklessException(RemoteFsClusterClient.class, "Node failed with exception", e));
+		};
 	}
 
 	public List<Object> select(String filename) {

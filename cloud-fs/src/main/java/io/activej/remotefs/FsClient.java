@@ -25,7 +25,10 @@ import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -183,9 +186,9 @@ public interface FsClient {
 	 * <p>
 	 *
 	 * @param glob specified in {@link java.nio.file.FileSystem#getPathMatcher NIO path matcher} documentation for glob patterns
-	 * @return list of {@link FileMetadata file metadata}
+	 * @return map of filenames to {@link FileMetadata file metadata}
 	 */
-	Promise<List<FileMetadata>> list(@NotNull String glob);
+	Promise<Map<String, FileMetadata>> list(@NotNull String glob);
 
 	/**
 	 * Shortcut to get {@link FileMetadata metadata} of a single file.
@@ -195,7 +198,7 @@ public interface FsClient {
 	 */
 	default Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return list(escapeGlob(name))
-				.map(list -> list.isEmpty() ? null : list.get(0));
+				.map(list -> list.get(name));
 	}
 
 	/**
@@ -203,15 +206,19 @@ public interface FsClient {
 	 *
 	 * @param names names of files to fetch metadata for.
 	 * @return map of filenames to their corresponding {@link FileMetadata metadata}.
-	 * If there is no such file, a value is <code>null</code>
+	 * Map contains metadata for existing files only
 	 */
-	default Promise<Map<String, @Nullable FileMetadata>> infoAll(@NotNull List<String> names) {
+	default Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
 				.map(name -> info(name)
-						.whenResult(metadata -> result.put(name, metadata))))
+						.whenResult(metadata -> {
+							if (metadata != null) {
+								result.put(name, metadata);
+							}
+						})))
 				.map($ -> result);
 	}
 

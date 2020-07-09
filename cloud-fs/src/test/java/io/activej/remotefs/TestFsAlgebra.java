@@ -42,7 +42,7 @@ public final class TestFsAlgebra {
 	}
 
 	private void expect(String... realFiles) {
-		assertEquals(Arrays.stream(realFiles).collect(toSet()), await(local.list("**")).stream().map(FileMetadata::getName).collect(toSet()));
+		assertEquals(Arrays.stream(realFiles).collect(toSet()), await(local.list("**")).keySet());
 	}
 
 	@Test

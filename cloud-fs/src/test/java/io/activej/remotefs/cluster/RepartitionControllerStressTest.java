@@ -151,8 +151,8 @@ public final class RepartitionControllerStressTest {
 					System.out.println(String.format("Done repartitioning in %.2f ms", ms));
 					Promises.toList(partitions.getAliveClients().values().stream().map(fsClient -> fsClient.list("**").toTry()))
 							.map(lss -> lss.stream().mapToLong(ls -> {
-								List<FileMetadata> mss = ls.getOrNull();
-								return mss == null ? 0 : mss.stream().mapToLong(FileMetadata::getSize).sum();
+								Map<String, FileMetadata> mss = ls.getOrNull();
+								return mss == null ? 0 : mss.values().stream().mapToLong(FileMetadata::getSize).sum();
 							}).sum())
 							.whenComplete(assertComplete(bytes -> {
 								System.out.println(String.format("%d overall bytes", bytes));
