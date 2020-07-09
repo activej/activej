@@ -16,6 +16,6 @@
 
 package io.activej.promise;
 
-public interface Async<T> {
-	Promise<T> get();
+public interface Promisable<T> {
+	Promise<T> promise();
 }

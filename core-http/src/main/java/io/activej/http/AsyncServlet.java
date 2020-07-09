@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.common.exception.UncheckedException;
-import io.activej.promise.Async;
+import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -32,11 +32,11 @@ import java.util.stream.Stream;
 @FunctionalInterface
 public interface AsyncServlet {
 	@NotNull
-	Async<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException;
+	Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException;
 
 	@NotNull
 	default Promise<HttpResponse> serveAsync(@NotNull HttpRequest request) throws UncheckedException {
-		return serve(request).get();
+		return serve(request).promise();
 	}
 
 	default AsyncServlet then(AsyncServletDecorator decorator) {

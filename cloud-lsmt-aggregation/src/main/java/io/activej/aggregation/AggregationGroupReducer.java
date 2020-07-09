@@ -137,7 +137,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	@Override
 	protected void onEndOfStream() {
 		doFlush();
-		chunksAccumulator.run().get().toVoid()
+		chunksAccumulator.run().promise().toVoid()
 				.whenResult(this::acknowledge)
 				.whenException(this::closeEx);
 	}

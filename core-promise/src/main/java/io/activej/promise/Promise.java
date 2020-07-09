@@ -55,7 +55,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
  *
  * @see CompletionStage
  */
-public interface Promise<T> extends io.activej.promise.Async<T>, AsyncComputation<T> {
+public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * Creates successfully completed {@code Promise}
 	 */
@@ -299,7 +299,7 @@ public interface Promise<T> extends io.activej.promise.Async<T>, AsyncComputatio
 	}
 
 	@Override
-	default Promise<T> get() {
+	default Promise<T> promise() {
 		return this;
 	}
 

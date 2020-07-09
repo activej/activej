@@ -69,7 +69,7 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 					List::addAll);
 		}
 
-		return StreamConsumerWithResult.of(splitter.getInput(), diffsAccumulator.run().get());
+		return StreamConsumerWithResult.of(splitter.getInput(), diffsAccumulator.run().promise());
 	}
 
 	protected abstract StreamDataAcceptor<T> createSplitter(@NotNull Context ctx);

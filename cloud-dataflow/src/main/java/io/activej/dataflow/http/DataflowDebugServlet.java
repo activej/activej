@@ -33,7 +33,7 @@ import io.activej.inject.Key;
 import io.activej.inject.ResourceLocator;
 import io.activej.inject.util.Types;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
-import io.activej.promise.Async;
+import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -192,7 +192,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 
 	@Override
 	@NotNull
-	public Async<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
 		return servlet.serve(request);
 	}
 }

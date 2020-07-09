@@ -62,7 +62,7 @@ public final class LoggableServlet implements AsyncServlet {
 
 	@Override
 	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
-		Promise<HttpResponse> httpResponsePromise = rootServlet.serve(request).get();
+		Promise<HttpResponse> httpResponsePromise = rootServlet.serve(request).promise();
 		if (!httpResponsePromise.isComplete()) {
 			logger.trace(loggerFunction.apply(request, null));
 		}

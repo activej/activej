@@ -21,7 +21,7 @@ import io.activej.common.Check;
 import io.activej.common.api.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSetCookies;
-import io.activej.promise.Async;
+import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,7 +44,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Represents HTTP response for {@link HttpRequest}. After handling {@code HttpResponse} will be recycled so you cannot
  * usi it afterwards.
  */
-public final class HttpResponse extends HttpMessage implements Async<HttpResponse>, WithInitializer<HttpResponse> {
+public final class HttpResponse extends HttpMessage implements Promisable<HttpResponse>, WithInitializer<HttpResponse> {
 	private static final boolean CHECK = Check.isEnabled(HttpResponse.class);
 
 	private static final byte[] HTTP11_BYTES = encodeAscii("HTTP/1.1 ");
@@ -260,7 +260,7 @@ public final class HttpResponse extends HttpMessage implements Async<HttpRespons
 	// endregion
 
 	@Override
-	public Promise<HttpResponse> get() {
+	public Promise<HttpResponse> promise() {
 		return Promise.of(this);
 	}
 

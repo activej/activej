@@ -16,7 +16,7 @@
 
 package io.activej.http;
 
-import io.activej.promise.Async;
+import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 
 /**
@@ -24,7 +24,7 @@ import io.activej.promise.Promise;
  * It is a stackless exception.
  * Please be aware that when a cause is given, its stacktrace is printed too
  */
-public class HttpException extends Exception implements Async<HttpResponse> {
+public class HttpException extends Exception implements Promisable<HttpResponse> {
 	private final int code;
 
 	protected HttpException(int code) {
@@ -83,7 +83,7 @@ public class HttpException extends Exception implements Async<HttpResponse> {
 	}
 
 	@Override
-	public Promise<HttpResponse> get() {
+	public Promise<HttpResponse> promise() {
 		return Promise.ofException(this);
 	}
 

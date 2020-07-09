@@ -149,7 +149,7 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 		return StreamSupplierWithResult.of(
 				streamUnion.getOutput()
 						.transformWith(detailed ? streamStatsDetailed : streamStatsBasic),
-				logPositionsAccumulator.run().get());
+				logPositionsAccumulator.run().promise());
 	}
 
 	private String logName(String partition) {
