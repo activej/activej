@@ -8,10 +8,7 @@ import io.activej.datastream.TestUtils.CountingStreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
@@ -89,6 +86,7 @@ public class StreamSupplierOfAnotherEventloopTest {
 	}
 
 	@Test
+	@Ignore
 	public void testForOutOfMemoryError() throws ExecutionException, InterruptedException {
 		int nItems = 10000;
 		StreamSupplier<byte[]> anotherEventloopSupplier = initWithEventloop(anotherEventloop, () -> StreamSupplier.ofStream(Stream.generate(() -> new byte[1024 * 1024]).limit(nItems)));

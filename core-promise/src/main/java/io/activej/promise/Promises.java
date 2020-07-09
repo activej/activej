@@ -1151,25 +1151,32 @@ public final class Promises {
 	 * until one of the {@code Promise}s completes exceptionally.
 	 */
 	@NotNull
-	public static Promise<Void> repeat(@NotNull Supplier<Promise<Void>> supplier) {
-		return Promise.ofCallback(cb ->
-				repeatImpl(supplier, cb));
+	public static Promise<Void> repeat(@NotNull Supplier<Promise<Boolean>> supplier) {
+		SettablePromise<Void> cb = new SettablePromise<>();
+		repeatImpl(supplier, cb);
+		return cb;
 	}
 
-	private static void repeatImpl(@NotNull Supplier<Promise<Void>> supplier, SettablePromise<Void> cb) {
+	private static void repeatImpl(@NotNull Supplier<Promise<Boolean>> supplier, SettablePromise<Void> cb) {
 		while (true) {
-			Promise<Void> promise = supplier.get();
+			Promise<Boolean> promise = supplier.get();
 			if (promise.isResult()) {
-				continue;
+				if (promise.getResult() == Boolean.TRUE) continue;
+				cb.set(null);
+				break;
 			}
-			promise.whenComplete(($, e) -> {
+			promise.whenComplete((b, e) -> {
 				if (e == null) {
-					repeatImpl(supplier, cb);
+					if (b == Boolean.TRUE) {
+						repeatImpl(supplier, cb);
+					} else {
+						cb.set(null);
+					}
 				} else {
 					cb.setException(e);
 				}
 			});
-			return;
+			break;
 		}
 	}
 

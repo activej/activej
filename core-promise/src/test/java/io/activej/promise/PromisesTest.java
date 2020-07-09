@@ -241,7 +241,7 @@ public final class PromisesTest {
 				return Promise.ofException(exception);
 			}
 			counter.incrementAndGet();
-			return Promise.of(null);
+			return Promise.of(true);
 		}));
 		System.out.println(counter);
 		assertSame(exception, e);

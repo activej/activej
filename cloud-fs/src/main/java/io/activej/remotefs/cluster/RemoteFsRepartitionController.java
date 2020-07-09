@@ -168,35 +168,31 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		isRepartitioning = true;
 		processedFiles.clear();
 		return recalculatePlan()
-				.then(() -> Promises.until((Void) null,
-						$ -> recalculatePlanIfNeeded()
+				.then(() -> Promises.repeat(
+						() -> recalculatePlanIfNeeded()
 								.then(() -> {
-											if (!repartitionPlan.hasNext()) {
-												return Promise.complete();
-											}
-
-											String name = repartitionPlan.next();
+									if (!repartitionPlan.hasNext()) return Promise.of(false);
+									String name = repartitionPlan.next();
 											return localStorage.info(name)
-													.then(meta -> {
-														if (meta == null) {
-															logger.warn("File '{}' that should be repartitioned has been deleted", name);
-															return Promise.of(false);
-														}
-														return repartitionFile(meta);
-													})
-													.whenComplete(singleFileRepartitionPromiseStats.recordStats())
-													.then((Boolean success) -> {
-														processedFiles.add(name);
-														if (success) {
-															ensuredFiles++;
-														} else {
-															failedFiles++;
-														}
-														return Promise.complete();
-													});
-										}
-								),
-						$ -> !repartitionPlan.hasNext()))
+											.then(meta -> {
+												if (meta == null) {
+													logger.warn("File '{}' that should be repartitioned has been deleted", name);
+													return Promise.of(false);
+												}
+												return repartitionFile(meta);
+											})
+											.whenComplete(singleFileRepartitionPromiseStats.recordStats())
+											.then(b -> {
+												processedFiles.add(name);
+												if (b) {
+													ensuredFiles++;
+												} else {
+													failedFiles++;
+												}
+												return Promise.complete();
+											})
+											.map($ -> true);
+								})))
 				.whenComplete(() -> isRepartitioning = false)
 				.whenComplete(repartitionPromiseStats.recordStats())
 				.thenEx(($, e) -> {

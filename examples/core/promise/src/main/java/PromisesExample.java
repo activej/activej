@@ -12,9 +12,9 @@ public final class PromisesExample {
 		Promises.repeat(() -> {
 			System.out.println("This is iteration #" + ++counter);
 			if (counter == 5) {
-				return Promise.ofException(new Exception("Breaking the loop"));
+				return Promise.of(false);
 			}
-			return Promise.complete();
+			return Promise.of(true);
 		});
 		//[END REGION_1]
 		System.out.println();

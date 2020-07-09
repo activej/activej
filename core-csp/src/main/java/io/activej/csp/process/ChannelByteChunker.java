@@ -45,10 +45,9 @@ public final class ChannelByteChunker extends AbstractChannelTransformer<Channel
 	@Override
 	protected Promise<Void> onItem(ByteBuf item) {
 		bufs.add(item);
-		return Promises.loop(
-				null,
-				$ -> bufs.hasRemainingBytes(minChunkSize),
-				$ -> {
+		return Promises.repeat(
+				() -> {
+					if (!bufs.hasRemainingBytes(minChunkSize)) return Promise.of(false);
 					int exactSize = 0;
 					for (int i = 0; i != bufs.remainingBufs(); i++) {
 						exactSize += bufs.peekBuf(i).readRemaining();
@@ -56,7 +55,8 @@ public final class ChannelByteChunker extends AbstractChannelTransformer<Channel
 							break;
 						}
 					}
-					return send(bufs.takeExactSize(min(exactSize, maxChunkSize)));
+					return send(bufs.takeExactSize(min(exactSize, maxChunkSize)))
+							.map($ -> true);
 				});
 	}
 

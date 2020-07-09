@@ -56,7 +56,7 @@ public final class OTAlgorithms {
 	public static final StacklessException GRAPH_EXHAUSTED = new StacklessException(OTAlgorithms.class, "Graph exhausted");
 
 	public static <K, D, R> Promise<R> reduce(OTRepository<K, D> repository, OTSystem<D> system,
-                                              Set<K> heads, GraphReducer<K, D, R> reducer) {
+			Set<K> heads, GraphReducer<K, D, R> reducer) {
 		return toList(heads.stream().map(repository::loadCommit))
 				.then(headCommits -> {
 					PriorityQueue<OTCommit<K, D>> queue = new PriorityQueue<>(reverseOrder(comparingLong(OTCommit::getLevel)));
@@ -155,7 +155,7 @@ public final class OTAlgorithms {
 	}
 
 	public static <K, D, A> Promise<FindResult<K, A>> findParent(OTRepository<K, D> repository, OTSystem<D> system,
-																 Set<K> startNodes, DiffsReducer<A, D> diffsReducer, AsyncPredicate<OTCommit<K, D>> matchPredicate) {
+			Set<K> startNodes, DiffsReducer<A, D> diffsReducer, AsyncPredicate<OTCommit<K, D>> matchPredicate) {
 		return reduce(repository, system, startNodes,
 				new AbstractGraphReducer<K, D, A, FindResult<K, A>>(diffsReducer) {
 					int epoch;
@@ -486,21 +486,24 @@ public final class OTAlgorithms {
 						.then(commits -> {
 							PriorityQueue<OTCommit<K, D>> queue = new PriorityQueue<>(reverseOrder(comparingLong(OTCommit::getLevel)));
 							queue.addAll(commits);
-							return Promises.loop(queue.poll(), Objects::nonNull,
-									commit -> to.hasCommit(commit.getId())
-											.then(b -> {
-												if (b) return Promise.of(queue.poll());
-												return Promises.all(
-														commit.getParents().keySet().stream()
-																.map(parentId -> from.loadCommit(parentId)
-																		.whenResult(parent -> {
-																			if (!queue.contains(parent)) {
-																				queue.add(parent);
-																			}
-																		})))
-														.then(() -> to.push(commit))
-														.map($ -> queue.poll());
-											}));
+							return Promises.repeat(
+									() -> {
+										if (queue.isEmpty()) return Promise.of(false);
+										OTCommit<K, D> commit = queue.poll();
+										return to.hasCommit(commit.getId())
+												.then(b -> b ?
+														Promise.complete() :
+														Promises.all(
+																commit.getParents().keySet().stream()
+																		.map(parentId -> from.loadCommit(parentId)
+																				.whenResult(parent -> {
+																					if (!queue.contains(parent)) {
+																						queue.add(parent);
+																					}
+																				})))
+																.then(() -> to.push(commit)))
+												.map($ -> true);
+									});
 
 						})
 						.then(() -> to.updateHeads(heads, emptySet())));

@@ -32,7 +32,8 @@ public final class PingPongSocketConnection {
 					repeat(() ->
 							bufsSupplier.parse(DECODER)
 									.whenResult(x -> System.out.println(x))
-									.then(() -> socket.write(wrapAscii(RESPONSE_MSG))))
+									.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
+									.map($ -> true))
 							.whenComplete(socket::close);
 				})
 				.withListenAddress(ADDRESS)
