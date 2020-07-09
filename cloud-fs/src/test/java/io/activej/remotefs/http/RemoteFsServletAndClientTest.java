@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
@@ -160,6 +161,48 @@ public final class RemoteFsServletAndClientTest {
 	public void downloadNonExistent() {
 		Throwable exception = awaitException(client.download("nonExistent"));
 		assertSame(FILE_NOT_FOUND, exception);
+	}
+
+	@Test
+	public void testFilesWithNames() {
+		// whitespaces
+		doTestFileWithName("my file");
+		doTestFileWithName("my     file");
+		doTestFileWithName("my file.txt");
+		doTestFileWithName("a/b/my file.txt");
+		doTestFileWithName("a/b/my     file.txt");
+		doTestFileWithName("a/b c/file.txt");
+		doTestFileWithName("a/b     c/file.txt");
+		doTestFileWithName("a/b c/d e f/my file.txt");
+		doTestFileWithName(" my file ");
+		doTestFileWithName(" a / b   c /   d e f / my   file   .   txt");
+
+		// backslashes
+		doTestFileWithName("back\\slash");
+		doTestFileWithName("back\\\\\\\\\\slash");
+		doTestFileWithName("back\\slash.txt");
+		doTestFileWithName("a/b/back\\slash.txt");
+		doTestFileWithName("a\\b/c/file.txt");
+		doTestFileWithName("a\\\\\\\\\\b/c/file.txt");
+		doTestFileWithName("a/b\\c/d\\e\\f/back\\slash.txt");
+		doTestFileWithName("\\back\\slash\\");
+		doTestFileWithName("\\a\\/\\b\\c\\/\\d\\e\\f\\/\\back\\slash\\.\\txt");
+	}
+
+	private void doTestFileWithName(String filename) {
+		String data = "test data";
+		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload(filename)));
+
+		FileMetadata metadata = await(client.info(filename));
+		assertNotNull(metadata);
+
+		Map<String, FileMetadata> map = await(client.list(filename));
+		assertEquals(1, map.size());
+		assertEquals(filename, first(map.keySet()));
+
+		ChannelSupplier<ByteBuf> supplier = await(client.download(filename));
+		ByteBuf buf = await(supplier.toCollector(ByteBufQueue.collector()));
+		assertEquals(data, buf.asString(UTF_8));
 	}
 
 	private void clearDirectory(Path dir) throws IOException {

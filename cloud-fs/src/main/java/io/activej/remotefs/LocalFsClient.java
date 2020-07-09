@@ -665,7 +665,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 
 	private PathMatcher getPathMatcher(FileSystem fileSystem, String glob) throws StacklessException {
 		try {
-			return fileSystem.getPathMatcher("glob:" + glob);
+			return fileSystem.getPathMatcher("glob:" + glob.replace("\\", "\\\\"));
 		} catch (PatternSyntaxException | UnsupportedOperationException e) {
 			throw MALFORMED_GLOB;
 		}
