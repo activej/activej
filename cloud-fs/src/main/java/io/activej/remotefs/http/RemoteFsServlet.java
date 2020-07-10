@@ -17,8 +17,10 @@
 package io.activej.remotefs.http;
 
 
+import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.tuple.Tuple1;
+import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.*;
 import io.activej.http.MultipartParser.MultipartDataHandler;
@@ -34,8 +36,7 @@ import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
-import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
-import static io.activej.http.HttpHeaders.CONTENT_TYPE;
+import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 import static io.activej.remotefs.FsClient.FILE_NOT_FOUND;
@@ -61,17 +62,15 @@ public final class RemoteFsServlet {
 					return (size == null ?
 							client.upload(decodePath(request)) :
 							client.upload(decodePath(request), size))
-							.mapEx(errorHandler(consumer -> HttpResponse.ok200()
-									.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-									.withBodyStream(ChannelSupplier.ofPromise(request.getBodyStream()
-											.streamTo(consumer)
-											.mapEx(($, e) -> e == null ?
-													UploadAcknowledgement.ok() :
-													UploadAcknowledgement.ofErrorCode(ERROR_TO_ID.getOrDefault(e, 0)))
-											.map(ack -> ChannelSupplier.of(toJsonBuf(UploadAcknowledgement.CODEC, ack)))))));
+							.mapEx(acknowledgeUpload(request));
 				})
 				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(client::upload))
 						.mapEx(errorHandler()))
+				.map(POST, "/" + APPEND + "/*", request -> {
+					long offset = getNumberParameterOr(request, "offset", 0);
+					return client.append(decodePath(request), offset)
+							.mapEx(acknowledgeUpload(request));
+				})
 				.map(GET, "/" + DOWNLOAD + "/*", request -> {
 					String name = decodePath(request);
 					String rangeHeader = request.getHeader(HttpHeaders.RANGE);
@@ -82,6 +81,7 @@ public final class RemoteFsServlet {
 					long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
 					return client.download(name, offset, limit)
 							.mapEx(errorHandler(supplier -> HttpResponse.ok200()
+									.withHeader(ACCEPT_RANGES, "bytes")
 									.withBodyStream(supplier)));
 				})
 				.map(GET, "/" + LIST, request -> {
@@ -198,6 +198,17 @@ public final class RemoteFsServlet {
 
 	private static <T> BiFunction<T, Throwable, HttpResponse> errorHandler(Function<T, HttpResponse> successful) {
 		return (res, e) -> e == null ? successful.apply(res) : getErrorResponse(e);
+	}
+
+	private static BiFunction<ChannelConsumer<ByteBuf>, Throwable, HttpResponse> acknowledgeUpload(@NotNull HttpRequest request) {
+		return errorHandler(consumer -> HttpResponse.ok200()
+				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+				.withBodyStream(ChannelSupplier.ofPromise(request.getBodyStream()
+						.streamTo(consumer)
+						.mapEx(($, e) -> e == null ?
+								UploadAcknowledgement.ok() :
+								UploadAcknowledgement.ofErrorCode(ERROR_TO_ID.getOrDefault(e, 0)))
+						.map(ack -> ChannelSupplier.of(toJsonBuf(UploadAcknowledgement.CODEC, ack))))));
 	}
 
 }

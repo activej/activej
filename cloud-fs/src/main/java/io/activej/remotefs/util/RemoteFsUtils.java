@@ -62,6 +62,7 @@ public final class RemoteFsUtils {
 		tempMap.put(6, BAD_RANGE);
 		tempMap.put(7, IS_DIRECTORY);
 		tempMap.put(8, MALFORMED_GLOB);
+		tempMap.put(9, ILLEGAL_OFFSET);
 
 		ID_TO_ERROR = unmodifiableMap(tempMap);
 		ERROR_TO_ID = unmodifiableMap(tempMap.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));

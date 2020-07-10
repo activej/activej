@@ -902,6 +902,11 @@ public final class TestLocalFsClientInvariants {
 		}
 
 		@Override
+		public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+			return peer.append(name, offset);
+		}
+
+		@Override
 		public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 			return peer.download(name, offset, limit);
 		}

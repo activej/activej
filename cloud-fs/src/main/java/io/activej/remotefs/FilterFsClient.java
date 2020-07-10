@@ -19,7 +19,6 @@ package io.activej.remotefs;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.CollectorsEx;
 import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +48,7 @@ final class FilterFsClient implements FsClient {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		if (!predicate.test(name)) {
-			return Promise.of(ChannelConsumers.recycling());
+			return Promise.ofException(BAD_PATH);
 		}
 		return parent.upload(name);
 	}
@@ -57,9 +56,17 @@ final class FilterFsClient implements FsClient {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 		if (!predicate.test(name)) {
-			return Promise.of(ChannelConsumers.recycling());
+			return Promise.ofException(BAD_PATH);
 		}
 		return parent.upload(name);
+	}
+
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		if (!predicate.test(name)) {
+			return Promise.ofException(BAD_PATH);
+		}
+		return parent.append(name, offset);
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import io.activej.http.HttpPathPart;
 
 public enum FsCommand implements HttpPathPart {
 	UPLOAD("upload"),
+	APPEND("append"),
 	DOWNLOAD("download"),
 	LIST("list"),
 	INFO("info"),

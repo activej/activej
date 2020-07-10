@@ -66,6 +66,11 @@ final class MountingFsClient implements FsClient {
 	}
 
 	@Override
+	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		return findMount(name).append(name, offset);
+	}
+
+	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		return findMount(name).download(name, offset, limit);
 	}

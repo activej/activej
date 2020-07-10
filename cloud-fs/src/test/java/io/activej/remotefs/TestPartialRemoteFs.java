@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.remotefs.FsClient.ILLEGAL_OFFSET;
 import static io.activej.remotefs.FsClient.MALFORMED_GLOB;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -127,11 +128,11 @@ public final class TestPartialRemoteFs {
 
 	@Test
 	public void downloadOver() {
-		ByteBuf result = await(ChannelSupplier.ofPromise(client.download(FILE, 123, 123))
+		Throwable exception = awaitException(ChannelSupplier.ofPromise(client.download(FILE, 123, 123))
 				.toCollector(ByteBufQueue.collector())
 				.whenComplete(server::close));
 
-		assertTrue(result.asString(UTF_8).isEmpty());
+		assertSame(ILLEGAL_OFFSET, exception);
 	}
 
 	@Test

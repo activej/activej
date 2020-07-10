@@ -32,6 +32,8 @@ public final class RemoteFsResponses {
 	static final StructuredCodec<FsResponse> CODEC = CodecSubtype.<FsResponse>create()
 			.with(UploadAck.class, object(UploadAck::new))
 			.with(UploadFinished.class, object(UploadFinished::new))
+			.with(AppendAck.class, object(AppendAck::new))
+			.with(AppendFinished.class, object(AppendFinished::new))
 			.with(DownloadSize.class, object(DownloadSize::new, "size", DownloadSize::getSize, LONG_CODEC))
 			.with(MoveFinished.class, object(MoveFinished::new))
 			.with(MoveAllFinished.class, object(MoveAllFinished::new))
@@ -59,6 +61,20 @@ public final class RemoteFsResponses {
 		@Override
 		public String toString() {
 			return "UploadFinished{}";
+		}
+	}
+
+	public static final class AppendAck extends FsResponse {
+		@Override
+		public String toString() {
+			return "AppendAck{}";
+		}
+	}
+
+	public static final class AppendFinished extends FsResponse {
+		@Override
+		public String toString() {
+			return "AppendFinished{}";
 		}
 	}
 

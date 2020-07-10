@@ -65,6 +65,15 @@ final class TransformFsClient implements FsClient {
 	}
 
 	@Override
+	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		Optional<String> transformed = into.apply(name);
+		if (!transformed.isPresent()) {
+			return Promise.ofException(BAD_PATH);
+		}
+		return parent.append(transformed.get(), offset);
+	}
+
+	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {

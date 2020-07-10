@@ -46,6 +46,7 @@ public interface FsClient {
 	StacklessException BAD_RANGE = new StacklessException(FsClient.class, "Given offset or limit doesn't make sense");
 	StacklessException IS_DIRECTORY = new StacklessException(FsClient.class, "Operated file is a directory");
 	StacklessException MALFORMED_GLOB = new StacklessException(FsClient.class, "Malformed glob pattern");
+	StacklessException ILLEGAL_OFFSET = new StacklessException(FsClient.class, "Offset exceeds file size");
 
 	/**
 	 * Returns a consumer of bytebufs which are written (or sent) to the file.
@@ -61,6 +62,8 @@ public interface FsClient {
 	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name);
 
 	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size);
+
+	Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset);
 
 	/**
 	 * Returns a supplier of bytebufs which are read (or received) from the file.

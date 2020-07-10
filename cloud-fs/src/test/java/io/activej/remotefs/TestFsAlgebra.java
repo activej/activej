@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.remotefs.FsClient.BAD_PATH;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
@@ -39,6 +41,11 @@ public final class TestFsAlgebra {
 
 	private void upload(FsClient client, String filename) {
 		await(client.upload(filename).then(ChannelConsumer::acceptEndOfStream));
+	}
+
+	private void uploadFails(FsClient client, String filename, Throwable exception) {
+		Throwable throwable = awaitException(client.upload(filename).then(ChannelConsumer::acceptEndOfStream));
+		assertEquals(exception, throwable);
 	}
 
 	private void expect(String... realFiles) {
@@ -68,7 +75,7 @@ public final class TestFsAlgebra {
 			upload(prefixed, "nonPrefix/test.txt");
 			fail("should've failed");
 		} catch (AssertionError e) {
-			assertSame(FsClient.BAD_PATH, e.getCause());
+			assertSame(BAD_PATH, e.getCause());
 		}
 	}
 
@@ -102,9 +109,9 @@ public final class TestFsAlgebra {
 	public void filterClient() {
 		FsClient filtered = local.filter(s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
 
-		upload(filtered, "test2.txt");
+		uploadFails(filtered, "test2.txt", BAD_PATH);
 		upload(filtered, "test22.txt");
-		upload(filtered, "test22.jpg");
+		uploadFails(filtered, "test22.jpg", BAD_PATH);
 		upload(filtered, "123.txt");
 
 		expect("test22.txt", "123.txt");

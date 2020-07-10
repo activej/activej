@@ -34,6 +34,9 @@ public final class RemoteFsCommands {
 			.with(Upload.class, object(Upload::new,
 					"name", Upload::getName, STRING_CODEC,
 					"size", Upload::getSize, LONG_CODEC))
+			.with(Append.class, object(Append::new,
+					"name", Append::getName, STRING_CODEC,
+					"offset", Append::getOffset, LONG_CODEC))
 			.with(Download.class, object(Download::new,
 					"name", Download::getName, STRING_CODEC,
 					"offset", Download::getOffset, LONG_CODEC,
@@ -83,6 +86,29 @@ public final class RemoteFsCommands {
 		@Override
 		public String toString() {
 			return "Upload{name='" + name + "', size=" + size + '}';
+		}
+	}
+
+	public static final class Append extends FsCommand {
+		private final String name;
+		private final long offset;
+
+		public Append(String name, long offset) {
+			this.name = name;
+			this.offset = offset;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public long getOffset() {
+			return offset;
+		}
+
+		@Override
+		public String toString() {
+			return "Append{name='" + name + "', offset=" + offset + '}';
 		}
 	}
 

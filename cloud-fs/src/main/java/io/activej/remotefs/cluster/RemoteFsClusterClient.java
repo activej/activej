@@ -23,6 +23,7 @@ import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.process.ChannelSplitter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
@@ -67,6 +68,8 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	// region JMX
 	private final PromiseStats uploadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats appendStartPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats appendFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -109,12 +112,17 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return doUpload(name, null);
+		return doUpload(name, client -> client.upload(name), identity(), uploadStartPromise, uploadFinishPromise);
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		return doUpload(name, size);
+		return doUpload(name, client -> client.upload(name, size), ofFixedSize(size), uploadStartPromise, uploadFinishPromise);
+	}
+
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		return doUpload(name, client -> client.append(name, offset), identity(), appendStartPromise, appendFinishPromise);
 	}
 
 	@Override
@@ -285,9 +293,14 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return checkStillNotDead(emptyList()).toVoid();
 	}
 
-	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, @Nullable Long size) {
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(
+			String name,
+			Function<FsClient, Promise<ChannelConsumer<ByteBuf>>> action,
+			ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer,
+			PromiseStats startStats,
+			PromiseStats finishStats) {
 		return checkNotDead()
-				.then(() -> collect(name, size))
+				.then(() -> collect(name, action))
 				.then(tries -> {
 					List<Container<ChannelConsumer<ByteBuf>>> successes = tries.stream()
 							.filter(Try::isSuccess)
@@ -317,7 +330,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 					// check number of uploads only here, so even if there were less connections
 					// than replicationCount, they would still upload
 					return Promise.of(consumer
-							.transformWith(size == null ? identity() : ofFixedSize(size))
+							.transformWith(transformer)
 							.withAcknowledgement(ack -> ack
 									.then(() -> uploadResults)
 									.then(ackTries -> {
@@ -334,20 +347,17 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 										}
 										return Promise.complete();
 									})
-									.whenComplete(uploadFinishPromise.recordStats())));
+									.whenComplete(finishStats.recordStats())));
 				})
-				.whenComplete(uploadStartPromise.recordStats());
+				.whenComplete(startStats.recordStats());
 	}
 
-	private Promise<List<Try<Container<ChannelConsumer<ByteBuf>>>>> collect(String name, @Nullable Long size) {
+	private Promise<List<Try<Container<ChannelConsumer<ByteBuf>>>>> collect(String name, Function<FsClient, Promise<ChannelConsumer<ByteBuf>>> action) {
 		List<Try<Container<ChannelConsumer<ByteBuf>>>> tries = new ArrayList<>();
 		Iterator<Object> idIterator = partitions.select(name).iterator();
 		return Promises.all(Stream.generate(() ->
-				Promises.firstSuccessful(transformIterator(idIterator, id ->
-						call(id, client ->
-								size == null ?
-										client.upload(name) :
-										client.upload(name, size))
+				Promises.firstSuccessful(transformIterator(idIterator,
+						id -> call(id, action)
 								.map(consumer -> new Container<>(id,
 										consumer.withAcknowledgement(ack ->
 												ack.thenEx(partitions.wrapDeath(id)))))
@@ -423,6 +433,16 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@JmxAttribute
 	public PromiseStats getUploadFinishPromise() {
 		return uploadFinishPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getAppendStartPromise() {
+		return appendStartPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getAppendFinishPromise() {
+		return appendFinishPromise;
 	}
 
 	@JmxAttribute

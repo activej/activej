@@ -127,6 +127,17 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 					.whenComplete(toLogger(logger, TRACE, "receiving data", msg, this));
 		});
 
+		onMessage(Append.class, (messaging, msg) -> {
+			String name = msg.getName();
+			long offset = msg.getOffset();
+			return client.append(name, offset)
+					.then(uploader -> messaging.send(new AppendAck())
+							.then(() -> messaging.receiveBinaryStream().streamTo(uploader)))
+					.then(() -> messaging.send(new AppendFinished()))
+					.then(messaging::sendEndOfStream)
+					.whenResult(messaging::close);
+		});
+
 		onMessage(Download.class, (messaging, msg) -> {
 			String name = msg.getName();
 			long offset = msg.getOffset();

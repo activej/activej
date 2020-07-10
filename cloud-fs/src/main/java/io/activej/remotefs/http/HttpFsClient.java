@@ -23,6 +23,7 @@ import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.http.*;
 import io.activej.promise.Promise;
@@ -39,6 +40,7 @@ import java.util.function.Function;
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static io.activej.remotefs.http.FsCommand.*;
 import static io.activej.remotefs.http.UploadAcknowledgement.Status.OK;
@@ -70,6 +72,18 @@ public final class HttpFsClient implements FsClient {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 		return doUpload(name, size);
+	}
+
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		checkArgument(offset >= 0, "Offset cannot be less than 0");
+		UrlBuilder urlBuilder = UrlBuilder.relative()
+				.appendPathPart(APPEND)
+				.appendPath(name);
+		if (offset != 0) {
+			urlBuilder.appendQuery("offset", offset);
+		}
+		return uploadData(HttpRequest.post(url + urlBuilder.build()), identity());
 	}
 
 	@Override
@@ -248,24 +262,26 @@ public final class HttpFsClient implements FsClient {
 
 	@NotNull
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String filename, @Nullable Long size) {
-		SettablePromise<ChannelConsumer<ByteBuf>> channelPromise = new SettablePromise<>();
-		SettablePromise<HttpResponse> responsePromise = new SettablePromise<>();
-
 		UrlBuilder urlBuilder = UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename);
-
 		HttpRequest request = HttpRequest.post(url + urlBuilder.build());
+
 		if (size != null) {
 			request.addHeader(CONTENT_LENGTH, String.valueOf(size));
 		}
+
+		return uploadData(request, size == null ? identity() : ofFixedSize(size));
+	}
+
+	private Promise<ChannelConsumer<ByteBuf>> uploadData(HttpRequest request, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
+		SettablePromise<ChannelConsumer<ByteBuf>> channelPromise = new SettablePromise<>();
+		SettablePromise<HttpResponse> responsePromise = new SettablePromise<>();
 		client.request(request
 				.withBodyStream(ChannelSupplier.ofPromise(responsePromise
 						.map(response -> {
 							ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
 							ChannelConsumer<ByteBuf> consumer = buffer.getConsumer();
-							if (size != null) {
-								consumer = consumer.transformWith(ofFixedSize(size));
-							}
 							channelPromise.trySet(consumer
+									.transformWith(transformer)
 									.withAcknowledgement(ack -> ack.both(response.loadBody()
 											.then(parseBody(UploadAcknowledgement.CODEC))
 											.then(HttpFsClient::failOnException)

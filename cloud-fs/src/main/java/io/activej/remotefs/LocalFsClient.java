@@ -66,8 +66,7 @@ import static io.activej.remotefs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
-import static java.nio.file.StandardOpenOption.WRITE;
+import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.*;
 
 /**
@@ -154,18 +153,45 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	}
 
 	@Override
+	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		checkArgument(offset >= 0, "Offset cannot be less than 0");
+		return execute(
+				() -> {
+					Path path = resolve(name);
+					FileChannel channel;
+					if (offset == 0) {
+						channel = ensureParent(path, () -> FileChannel.open(path, CREATE, WRITE));
+					} else {
+						channel = FileChannel.open(path, WRITE);
+					}
+					if (channel.size() < offset) {
+						throw ILLEGAL_OFFSET;
+					}
+					return channel;
+				})
+				.map(channel -> ChannelFileWriter.create(executor, channel)
+						.withOffset(offset)
+						.withAcknowledgement(ack -> ack
+								.thenEx(translateKnownErrors(name))));
+	}
+
+	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		checkArgument(offset >= 0, "offset < 0");
 		checkArgument(limit >= 0, "limit < 0");
 
 		return resolveAsync(name)
-				.then(path -> {
+				.then(path -> execute(() -> {
 					if (!Files.exists(path)) {
-						return Promise.ofException(FILE_NOT_FOUND);
+						throw FILE_NOT_FOUND;
 					}
-					return ChannelFileReader.open(executor, path);
-				})
-				.map(consumer -> consumer
+					FileChannel channel = FileChannel.open(path, READ);
+					if (channel.size() < offset) {
+						throw ILLEGAL_OFFSET;
+					}
+					return channel;
+				}))
+				.map(channel -> ChannelFileReader.create(executor, channel)
 						.withBufferSize(readerBufferSize)
 						.withOffset(offset)
 						.withLimit(limit)

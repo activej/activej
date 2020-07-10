@@ -141,6 +141,22 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 	}
 
 	@Override
+	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		return connect(address)
+				.then(messaging ->
+						messaging.send(new Append(name, offset))
+								.then(messaging::receive)
+								.then(msg -> cast(msg, AppendAck.class))
+								.then(() -> Promise.of(messaging.sendBinaryStream()
+										.withAcknowledgement(ack -> ack
+												.then(messaging::receive)
+												.whenResult(messaging::close)
+												.then(msg -> cast(msg, AppendFinished.class).toVoid())
+												.whenException(messaging::closeEx))))
+								.whenException(messaging::closeEx));
+	}
+
+	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		checkArgument(offset >= 0, "Data offset must be greater than or equal to zero");
 		checkArgument(limit >= 0, "Data limit must be greater than or equal to zero");

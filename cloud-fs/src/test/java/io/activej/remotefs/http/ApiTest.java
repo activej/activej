@@ -41,6 +41,8 @@ public final class ApiTest {
 			.mapToObj(i -> "chunk" + i + " ")
 			.collect(toList());
 
+	private static final long dataSize = 799;
+
 	private final StubHttpClient stubClient = StubHttpClient.of(getServlet());
 	private final HttpFsClient client = HttpFsClient.create("http://localhost", stubClient);
 
@@ -125,6 +127,22 @@ public final class ApiTest {
 	}
 
 	@Test
+	public void uploadWithSize() {
+		Promise<Void> uploadPromise = ChannelSupplier.ofIterable(data)
+				.map(ByteBufStrings::wrapUtf8)
+				.streamTo(client.upload("test", dataSize));
+		doTest(uploadPromise, "test", dataSize, data);
+	}
+
+	@Test
+	public void append() {
+		Promise<Void> appendPromise = ChannelSupplier.ofIterable(data)
+				.map(ByteBufStrings::wrapUtf8)
+				.streamTo(client.append("test", dataSize / 2));
+		doTest(appendPromise, "test", (long) dataSize / 2, data);
+	}
+
+	@Test
 	public void download() {
 		List<String> chunks = new ArrayList<>();
 		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 10, 20))
@@ -195,6 +213,15 @@ public final class ApiTest {
 						.<ByteBuf>map(byteBuf -> byteBuf.asString(UTF_8))
 						.withAcknowledgement(ack -> ack
 								.then(result -> resultOf(result, name, size, received))));
+			}
+
+			@Override
+			public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+				List<String> received = new ArrayList<>();
+				return Promise.of(ChannelConsumer.<String>ofConsumer(received::add)
+						.<ByteBuf>map(byteBuf -> byteBuf.asString(UTF_8))
+						.withAcknowledgement(ack -> ack
+								.then(result -> resultOf(result, name, offset, received))));
 			}
 
 			@Override

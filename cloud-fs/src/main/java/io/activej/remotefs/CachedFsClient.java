@@ -119,6 +119,11 @@ public final class CachedFsClient implements FsClient, EventloopService {
 		return mainClient.upload(name, size);
 	}
 
+	@Override
+	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		return mainClient.append(name, offset);
+	}
+
 	/**
 	 * Tries to download file either from cache (if present) or from server.
 	 *

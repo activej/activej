@@ -156,7 +156,7 @@ public final class FsIntegrationTest {
 	}
 
 	@Test
-	public void testOnClientExceptionWhileUploading() throws IOException {
+	public void testOnClientExceptionWhileUploading() {
 		String resultFile = "upload_with_exceptions.txt";
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(
@@ -171,7 +171,6 @@ public final class FsIntegrationTest {
 		assertThat(exception, instanceOf(StacklessException.class));
 		assertThat(exception.getMessage(), containsString("Test exception"));
 
-		ByteBufQueue queue = new ByteBufQueue();
 		assertFalse(Files.exists(storage.resolve(resultFile)));
 	}
 
@@ -305,6 +304,25 @@ public final class FsIntegrationTest {
 
 		assertEquals(expected1, tuple.getValue1().keySet());
 		assertEquals(expected2, tuple.getValue2().keySet());
+	}
+
+	@Test
+	public void testAppend() throws IOException {
+		String filename = "file.txt";
+		int offset = 3;
+		String contentString = new String(CONTENT, UTF_8);
+		String toAppend = "appended";
+		String appended = contentString.substring(offset) + toAppend;
+		Files.write(storage.resolve(filename), CONTENT);
+
+		String result = await(ChannelSupplier.of(wrapUtf8(appended))
+				.streamTo(client.append(filename, offset))
+				.then(() -> client.download(filename))
+				.then(supplier -> supplier.toCollector(ByteBufQueue.collector())
+						.map(byteBuf -> byteBuf.asString(UTF_8)))
+				.whenComplete(server::close));
+
+		assertEquals(contentString + toAppend, result);
 	}
 
 	private Promise<Void> upload(String resultFile, byte[] bytes) {
