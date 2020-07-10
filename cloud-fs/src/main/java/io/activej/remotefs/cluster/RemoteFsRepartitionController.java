@@ -26,8 +26,10 @@ import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.ref.Ref;
+import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.csp.process.ChannelByteRanger;
 import io.activej.csp.process.ChannelSplitter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
@@ -58,7 +60,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.remotefs.util.RemoteFsUtils.isWildcard;
-import static java.util.Collections.*;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
 
 public final class RemoteFsRepartitionController implements WithInitializer<RemoteFsRepartitionController>, EventloopJmxBeanEx, EventloopService {
@@ -173,7 +175,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 								.then(() -> {
 									if (!repartitionPlan.hasNext()) return Promise.of(false);
 									String name = repartitionPlan.next();
-											return localStorage.info(name)
+									return localStorage.info(name)
 											.then(meta -> {
 												if (meta == null) {
 													logger.warn("File '{}' that should be repartitioned has been deleted", name);
@@ -252,6 +254,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 							Map::values)
 							.whenResult(results -> {
 								repartitionPlan = results.stream()
+										.peek(this::filterLocalMeta)
 										.sorted()
 										.filter(InfoResults::shouldBeProcessed)
 										.map(InfoResults::getName)
@@ -276,34 +279,41 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		partitions.markAlive(localPartitionId); // ensure local partition could also be selected
 		checkEnoughAlivePartitions();
 		List<Object> selected = partitions.select(name).subList(0, replicationCount);
-		return getPartitionsThatNeedOurFile(name, meta, selected)
-				.then(uploadTargets -> {
-					if (uploadTargets == null) { // null return means failure
+		List<Object> ids = new ArrayList<>(selected);
+		boolean belongsToLocal = ids.remove(localPartitionId);
+		return getInfoResults(name, meta, ids)
+				.then(infoResults -> {
+					if (infoResults == null) { // null return means failure
 						return Promise.of(false);
 					}
-					if (uploadTargets.isEmpty()) { // everybody had the file
+					filterLocalMeta(infoResults);
+					if (infoResults.shouldBeDeleted()) { // everybody had the file
 						logger.trace("deleting file {} locally", meta);
 						return localStorage.delete(name) // so we delete the copy which does not belong to local partition
 								.map($ -> {
-									logger.info("handled file {} (ensured on {})", meta, selected);
+									logger.info("handled file {} (ensured on {})", meta, ids);
 									return true;
 								});
 					}
-					if (uploadTargets.size() == 1 && uploadTargets.get(0).equals(localPartitionId)) { // everybody had the file AND
-						logger.info("handled file {} (ensured on {})", meta, selected);          // we don't delete the local copy
+					if (!infoResults.shouldBeUploaded()) {                                    // everybody had the file AND
+						logger.info("handled file {} (ensured on {})", meta, ids);     // we don't delete the local copy
 						return Promise.of(true);
 					}
 
 					// else we need to upload to at least one non-local partition
 
-					logger.trace("uploading file {} to partitions {}...", meta, uploadTargets);
+					logger.trace("uploading file {} to partitions {}...", meta, infoResults);
 
 					ChannelSplitter<ByteBuf> splitter = ChannelSplitter.<ByteBuf>create()
-							.withInput(ChannelSupplier.ofPromise(localStorage.download(name)));
+							.withInput(ChannelSupplier.ofPromise(localStorage.download(name, 0, meta.getSize())));
 
-					return Promises.toList(uploadTargets.stream() // upload file to target partitions
-							.filter(partitionId -> !partitionId.equals(localPartitionId)) // just skip it here
-							.map(partitionId -> {
+					RefInt idx = new RefInt(0);
+					return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
+							.map(remoteMeta -> {
+								Object partitionId = ids.get(idx.value++);
+								if (remoteMeta != null && remoteMeta.getSize() >= meta.getSize()) {
+									return Promise.of(Try.of(null));
+								}
 								// upload file to this partition
 								FsClient client = partitions.get(partitionId);
 								if (client == null) {
@@ -312,7 +322,10 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 								Ref<Throwable> uploadError = new Ref<>();
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
-												.set(ChannelConsumer.ofPromise(client.upload(name, meta.getSize()))
+												.set(ChannelConsumer.ofPromise(remoteMeta == null ?
+														client.upload(name, meta.getSize()) :
+														client.append(name, remoteMeta.getSize())
+																.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize()))))
 														.withAcknowledgement(ack -> ack
 																.thenEx(($, e) -> {
 																	if (e != null && uploadError.get() == null) {
@@ -336,15 +349,15 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 									return Promise.of(false);
 								}
 
-								if (uploadTargets.contains(localPartitionId)) { // don't delete local if it was marked
-									logger.info("handled file {} (ensured on {}, uploaded to {})", meta, selected, uploadTargets);
+								if (belongsToLocal) { // don't delete local if it was marked
+									logger.info("handled file {} (ensured on {}, uploaded to {})", meta, selected, infoResults);
 									return Promise.of(true);
 								}
 
 								logger.trace("deleting file {} on {}", meta, localPartitionId);
 								return localStorage.delete(name)
 										.map($ -> {
-											logger.info("handled file {} (ensured on {}, uploaded to {})", meta, selected, uploadTargets);
+											logger.info("handled file {} (ensured on {}, uploaded to {})", meta, selected, infoResults);
 											return true;
 										});
 							});
@@ -352,11 +365,9 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 				.whenComplete(toLogger(logger, TRACE, "repartitionFile", meta));
 	}
 
-	private Promise<List<Object>> getPartitionsThatNeedOurFile(String name, FileMetadata fileToUpload, List<Object> selected) {
+	private Promise<InfoResults> getInfoResults(String name, FileMetadata fileToUpload, List<Object> selected) {
 		InfoResults infoResults = new InfoResults(name, fileToUpload);
-		List<Object> ids = new ArrayList<>(selected);
-		boolean belongsToLocal = ids.remove(localPartitionId);
-		return Promises.toList(ids.stream()
+		return Promises.toList(selected.stream()
 				.map(partitionId -> partitions.get(partitionId)
 						.info(name) // checking file existence and size on particular partition
 						.whenComplete((meta, e) -> {
@@ -374,25 +385,20 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						return null; // using null to mark failure without exceptions
 					}
 
-					if (infoResults.shouldBeUploaded()) {
-						List<Object> uploadTargets = new ArrayList<>();
-						for (int i = 0; i < infoResults.remoteMetadata.size(); i++) {
-							if (infoResults.remoteMetadata.get(i) == null) {
-								uploadTargets.add(ids.get(i));
-							}
-						}
-						if (belongsToLocal) {
-							// file belongs to local partition
-							// adding to upload targets so that it is not deleted later
-							uploadTargets.add(localPartitionId);
-						}
-						return uploadTargets;
-					}
-					if (infoResults.shouldBeDeleted()) {
-						return emptyList();
-					}
-					return singletonList(localPartitionId);
+					return infoResults;
 				});
+	}
+
+	private void filterLocalMeta(InfoResults infoResults) {
+		long localSize = infoResults.localMetadata.getSize();
+		long maxSize = infoResults.remoteMetadata.stream()
+				.filter(Objects::nonNull)
+				.mapToLong(FileMetadata::getSize)
+				.max().orElse(0);
+
+		if (localSize < maxSize) {
+			infoResults.localMetadata = null;
+		}
 	}
 
 	/**
@@ -497,14 +503,14 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		// and there are remote partitions that do not have this file or have not a full version
 		boolean shouldBeUploaded() {
 			return localMetadata != null &&
-					remoteMetadata.stream().anyMatch(Objects::isNull);
+					remoteMetadata.stream().anyMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
 		}
 
 		// (local) file should be deleted in case all of the remote partitions have a better
 		// version of a file
 		boolean shouldBeDeleted() {
 			return remoteMetadata.size() == replicationCount &&
-					remoteMetadata.stream().noneMatch(Objects::isNull);
+					remoteMetadata.stream().noneMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
 		}
 
 		@Override
