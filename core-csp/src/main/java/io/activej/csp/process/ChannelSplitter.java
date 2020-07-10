@@ -17,9 +17,6 @@
 package io.activej.csp.process;
 
 import io.activej.common.exception.Exceptions;
-import io.activej.common.exception.StacklessException;
-import io.activej.common.ref.RefBoolean;
-import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -37,7 +34,6 @@ import static io.activej.common.Preconditions.checkState;
 import static io.activej.common.api.Recyclable.tryRecycle;
 import static io.activej.common.api.Sliceable.trySlice;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {
@@ -82,26 +78,9 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 		};
 	}
 
-	public Promise<Void> splitInto(List<ChannelConsumer<T>> consumers, int requiredSuccesses, RefBoolean extraCondition) {
-		RefInt up = new RefInt(consumers.size());
-
-		consumers.forEach(output ->
-				outputs.add(sanitize(output
-						.withAcknowledgement(ack ->
-								ack.whenException(e -> {
-									if (e != null && up.dec() < requiredSuccesses && extraCondition.get()) {
-										closeEx(e);
-									}
-								})))));
-		return startProcess()
-				.then(() -> up.get() >= requiredSuccesses ?
-						Promise.complete() :
-						Promise.ofException(new StacklessException(ChannelSplitter.class, "Not enough successes")));
-	}
-
 	private void tryStart() {
 		if (input != null && outputs.stream().allMatch(Objects::nonNull)) {
-			getCurrentEventloop().post(wrapContext(this, this::startProcess));
+			getCurrentEventloop().post(this::startProcess);
 		}
 	}
 
