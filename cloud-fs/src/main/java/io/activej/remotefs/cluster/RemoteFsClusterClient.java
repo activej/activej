@@ -42,12 +42,11 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.collection.CollectionUtils.keysToMap;
-import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.remotefs.util.RemoteFsUtils.ofFixedSize;
@@ -143,10 +142,13 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return checkNotDead()
-				.then(() -> collect(name,
-						(id, client) -> client.copy(name, target),
-						tries -> Try.ofException(failedTries("Could not copy file '" + name + "' to '" + target + "' on enough partitions", tries)),
-						$ -> {}))
+				.then(() -> collect(name, (id, client) -> client.copy(name, target)))
+				.then(tries -> {
+					if (tries.stream().filter(Try::isSuccess).count() < replicationCount) {
+						return Promise.ofException(failedTries("Could not copy file '" + name + "' to '" + target + "' on enough partitions", tries));
+					}
+					return Promise.complete();
+				})
 				.then(this::checkNotDead)
 				.whenComplete(copyPromise.recordStats());
 	}
@@ -323,9 +325,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 								client.upload(name, size))
 								.map(consumer -> new Container<>(id,
 										consumer.withAcknowledgement(ack ->
-												ack.thenEx(partitions.wrapDeath(id))))),
-						Try::of,
-						container -> container.value.close()))
+												ack.thenEx(partitions.wrapDeath(id)))))))
 				.then(tries -> {
 					List<Container<ChannelConsumer<ByteBuf>>> successes = tries.stream()
 							.filter(Try::isSuccess)
@@ -377,24 +377,16 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 				.whenComplete(uploadStartPromise.recordStats());
 	}
 
-	private <T> Promise<List<Try<T>>> collect(String name, BiFunction<Object, FsClient, Promise<T>> action,
-			Function<List<Try<T>>, Try<List<Try<T>>>> finisher, Consumer<T> cleanUp) {
-		RefInt successCount = new RefInt(0);
-		return Promises.reduceEx(partitions.select(name)
-						.stream()
-						.map(id -> call(id, action))
-						.map(Promise::toTry)
-						.iterator(),
-				$ -> Math.max(0, replicationCount - successCount.get()),
-				new ArrayList<>(),
-				(result, tryOfTry) -> {
-					Try<T> aTry = tryOfTry.get();
-					result.add(aTry);
-					aTry.ifSuccess($ -> successCount.inc());
-					return successCount.get() < replicationCount ? null : Try.of(result);
-				},
-				finisher,
-				aTry -> aTry.ifSuccess(cleanUp));
+	private <T> Promise<List<Try<T>>> collect(String name, BiFunction<Object, FsClient, Promise<T>> action) {
+		List<Try<T>> tries = new ArrayList<>();
+		Iterator<Object> idIterator = partitions.select(name).iterator();
+		return Promises.all(Stream.generate(() ->
+				Promises.firstSuccessful(transformIterator(idIterator,
+						id -> call(id, action)
+								.whenComplete((result, e) -> tries.add(Try.of(result, e)))))
+						.toTry())
+				.limit(replicationCount))
+				.map($ -> tries);
 	}
 
 	private <T> Promise<T> call(Object id, Function<FsClient, Promise<T>> action) {

@@ -19,10 +19,8 @@ package io.activej.promise;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.AsyncBuffer;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.collection.Try;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.StacklessException;
-import io.activej.common.ref.RefInt;
 import io.activej.common.tuple.*;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.schedule.ScheduledRunnable;
@@ -1388,101 +1386,6 @@ public final class Promises {
 						promise.whenResult(() -> reduceImpl(asyncAccumulator, promises, consumer)),
 						consumer);
 				break;
-			}
-		}
-	}
-
-	/**
-	 * Allows to asynchronously reduce {@link Iterator} of {@code Promise}s
-	 * into a {@code Promise} with the help of {@link Collector}. You can
-	 * control the amount of concurrently running {@code promises} and explicitly
-	 * process exceptions and intermediate results.
-	 * <p>
-	 * The main feature of this method is that you can set up {@code consumer}
-	 * for different use cases, for example:
-	 * <ul>
-	 * <li> If one of the {@code promises} completes exceptionally, reduction
-	 * will stop without waiting for all of the {@code promises} to be completed.
-	 * A {@code Promise} with exception will be returned.
-	 * <li> If one of the {@code promises} finishes with needed result, reduction
-	 * will stop without waiting for all of the {@code promises} to be completed.
-	 * <li> If a needed result accumulates before all of the {@code promises} run,
-	 * reduction will stop without waiting for all of the {@code promises} to be completed.
-	 * </ul>
-	 * <p>
-	 * To implement the use cases, you need to set up the provided {@code consumer}'s
-	 * {@link BiFunction#apply(Object, Object)} function. This function will be applied
-	 * to each of the completed {@code promises} and corresponding accumulated result.
-	 * <p>
-	 * When {@code apply} returns {@code null}, nothing happens and reduction continues.
-	 * When {@link Try} with any result or exception is returned, the reduction stops without
-	 * waiting for all of the {@code promises} to be completed and {@code Promise} with
-	 * {@code Try}'s result or exception is returned
-	 * .
-	 *
-	 * @param promises    {@code Iterable} of {@code Promise}s
-	 * @param maxCalls    {@link ToIntFunction} which calculates max amount of concurrently
-	 *                    running {@code Promise}s based on the {@code accumulator} value
-	 * @param accumulator mutable supplier of the result
-	 * @param consumer    a {@link BiConsumer} which folds a result of each of the completed
-	 *                    {@code promises} into accumulator for further processing
-	 * @param finisher    a {@link Function} which performs the final transformation
-	 *                    from the intermediate accumulations
-	 * @param recycler    processes results of those {@code promises} which were
-	 *                    completed after result of the reduction was returned
-	 * @param <T>         type of input elements for this operation
-	 * @param <A>         mutable accumulation type of the operation
-	 * @param <R>         result type of the reduction operation
-	 * @return a {@code Promise} which wraps accumulated result or exception.
-	 */
-	public static <T, A, R> Promise<R> reduceEx(@NotNull Iterator<Promise<T>> promises, @NotNull ToIntFunction<A> maxCalls,
-			A accumulator,
-			@NotNull BiFunction<A, Try<T>, @Nullable Try<R>> consumer,
-			@NotNull Function<A, @NotNull Try<R>> finisher,
-			@Nullable Consumer<T> recycler) {
-		return Promise.ofCallback(cb ->
-				reduceExImpl(promises, maxCalls, new RefInt(0),
-						accumulator, consumer, finisher, recycler, cb));
-	}
-
-	private static <T, A, R> void reduceExImpl(Iterator<Promise<T>> promises, ToIntFunction<A> maxCalls, RefInt calls,
-			A accumulator, BiFunction<A, Try<T>, Try<R>> consumer, Function<A, @NotNull Try<R>> finisher, @Nullable Consumer<T> recycler,
-			SettablePromise<R> cb) {
-		calls.inc();
-		while (promises.hasNext() && calls.get() <= maxCalls.applyAsInt(accumulator)) {
-			Promise<T> promise = promises.next();
-			if (cb.isComplete()) return;
-			if (promise.isComplete()) {
-				@Nullable Try<R> maybeResult = consumer.apply(accumulator, promise.getTry());
-				if (maybeResult != null) {
-					cb.accept(maybeResult.getOrNull(), maybeResult.getExceptionOrNull());
-					return;
-				}
-				continue;
-			}
-			calls.inc();
-			promise.whenComplete((v, e) -> {
-				calls.dec();
-				if (cb.isComplete()) {
-					if (recycler != null) recycler.accept(v);
-					return;
-				}
-				@Nullable Try<R> maybeResult = consumer.apply(accumulator, Try.of(v, e));
-				if (maybeResult != null) {
-					cb.accept(maybeResult.getOrNull(), maybeResult.getExceptionOrNull());
-				} else {
-					reduceExImpl(promises, maxCalls, calls,
-							accumulator, consumer, finisher, recycler, cb);
-				}
-			});
-		}
-		calls.dec();
-		if (calls.get() == 0) {
-			@NotNull Try<R> result = finisher.apply(accumulator);
-			if (result.isSuccess()) {
-				cb.set(result.get());
-			} else {
-				cb.setException(result.getException());
 			}
 		}
 	}
