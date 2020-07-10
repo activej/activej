@@ -101,7 +101,7 @@ public final class ChannelByteCombiner extends AbstractCommunicatingProcess
 
 	@Override
 	protected void doClose(Throwable e) {
-		inputs.forEach(output -> output.closeEx(e));
+		inputs.forEach(input -> input.closeEx(e));
 		output.closeEx(e);
 	}
 }

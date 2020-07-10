@@ -24,6 +24,7 @@ import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
+import io.activej.csp.process.ChannelByteCombiner;
 import io.activej.csp.process.ChannelSplitter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
@@ -127,21 +128,32 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+		ChannelByteCombiner combiner = ChannelByteCombiner.create();
 		return checkNotDead()
-				.then(() -> Promises.firstSuccessful(partitions.select(name).stream()
-						.map(id -> call(id, client -> {
+				.then(() -> Promises.toList(partitions.select(name).stream()
+						.map(id -> {
 							logger.trace("downloading file {} from {}", name, id);
-							return client.download(name, offset, limit)
+							return partitions.get(id).download(name, offset, limit)
+									.thenEx(partitions.wrapDeath(id))
 									.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
 									.map(supplier -> supplier
 											.withEndOfStream(eos -> eos
-													.thenEx(partitions.wrapDeath(id))
-													.whenComplete(downloadFinishPromise.recordStats())));
-						}))
-						.iterator())
-						.thenEx((v, e) -> e == null ?
-								Promise.of(v) :
-								ofFailure("Could not download file '" + name + "' from any server", emptyList())))
+													.thenEx(partitions.wrapDeath(id))))
+									.toTry();
+						})))
+				.then(tries -> {
+					List<ChannelSupplier<ByteBuf>> successes = tries.stream()
+							.filter(Try::isSuccess)
+							.map(Try::get)
+							.collect(toList());
+					if (successes.isEmpty()) {
+						return ofFailure("Could not download file '" + name + "' from any server", tries);
+					}
+					for (ChannelSupplier<ByteBuf> supplier : successes) {
+						combiner.addInput().set(supplier);
+					}
+					return Promise.of(combiner.getOutput().getSupplier());
+				})
 				.whenComplete(downloadStartPromise.recordStats());
 	}
 
@@ -352,7 +364,10 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 				.whenComplete(startStats.recordStats());
 	}
 
-	private Promise<List<Try<Container<ChannelConsumer<ByteBuf>>>>> collect(String name, Function<FsClient, Promise<ChannelConsumer<ByteBuf>>> action) {
+	private Promise<List<Try<Container<ChannelConsumer<ByteBuf>>>>> collect(
+			String name,
+			Function<FsClient, Promise<ChannelConsumer<ByteBuf>>> action
+	) {
 		List<Try<Container<ChannelConsumer<ByteBuf>>>> tries = new ArrayList<>();
 		Iterator<Object> idIterator = partitions.select(name).iterator();
 		return Promises.all(Stream.generate(() ->
