@@ -21,8 +21,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
-import io.activej.common.exception.UncheckedException;
-import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelSplitter;
@@ -46,7 +44,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.collection.CollectionUtils.*;
+import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.remotefs.util.RemoteFsUtils.ofFixedSize;
@@ -141,43 +139,13 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		return checkNotDead()
-				.then(() -> collect(name, (id, client) -> client.copy(name, target)))
-				.then(tries -> {
-					if (tries.stream().filter(Try::isSuccess).count() < replicationCount) {
-						return Promise.ofException(failedTries("Could not copy file '" + name + "' to '" + target + "' on enough partitions", tries));
-					}
-					return Promise.complete();
-				})
-				.then(this::checkNotDead)
+		return FsClient.super.copy(name, target)
 				.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
-		return checkNotDead()
-				.then(() -> getSubMaps(sourceToTarget))
-				.then(subMaps -> {
-					Map<String, RefInt> successCounters = keysToMap(sourceToTarget.keySet(), $ -> new RefInt(0));
-
-					return checkNotDead()
-							.then(() -> Promises.toList(subMaps.entrySet().stream()
-									.map(entry -> call(entry.getKey(),
-											client -> client.copyAll(entry.getValue())
-													.whenResult(() -> entry.getValue().keySet().stream()
-															.map(successCounters::get)
-															.forEach(RefInt::inc))))
-									.map(Promise::toTry)))
-							.then(tries -> {
-								if (successCounters.values().stream()
-										.map(RefInt::get)
-										.anyMatch(successes -> successes < replicationCount)) {
-									return ofFailure("Could not copy files " +
-											toLimitedString(sourceToTarget, 50) + " on enough partitions", tries);
-								}
-								return Promise.complete();
-							});
-				})
+		return FsClient.super.copyAll(sourceToTarget)
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
@@ -319,13 +287,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, @Nullable Long size) {
 		return checkNotDead()
-				.then(() -> collect(name,
-						(id, client) -> (size == null ?
-								client.upload(name) :
-								client.upload(name, size))
-								.map(consumer -> new Container<>(id,
-										consumer.withAcknowledgement(ack ->
-												ack.thenEx(partitions.wrapDeath(id)))))))
+				.then(() -> collect(name, size))
 				.then(tries -> {
 					List<Container<ChannelConsumer<ByteBuf>>> successes = tries.stream()
 							.filter(Try::isSuccess)
@@ -377,12 +339,18 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 				.whenComplete(uploadStartPromise.recordStats());
 	}
 
-	private <T> Promise<List<Try<T>>> collect(String name, BiFunction<Object, FsClient, Promise<T>> action) {
-		List<Try<T>> tries = new ArrayList<>();
+	private Promise<List<Try<Container<ChannelConsumer<ByteBuf>>>>> collect(String name, @Nullable Long size) {
+		List<Try<Container<ChannelConsumer<ByteBuf>>>> tries = new ArrayList<>();
 		Iterator<Object> idIterator = partitions.select(name).iterator();
 		return Promises.all(Stream.generate(() ->
-				Promises.firstSuccessful(transformIterator(idIterator,
-						id -> call(id, action)
+				Promises.firstSuccessful(transformIterator(idIterator, id ->
+						call(id, client ->
+								size == null ?
+										client.upload(name) :
+										client.upload(name, size))
+								.map(consumer -> new Container<>(id,
+										consumer.withAcknowledgement(ack ->
+												ack.thenEx(partitions.wrapDeath(id)))))
 								.whenComplete((result, e) -> tries.add(Try.of(result, e)))))
 						.toTry())
 				.limit(replicationCount))
@@ -401,48 +369,6 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 		return action.apply(id, fsClient)
 				.thenEx(partitions.wrapDeath(id));
 	}
-
-	private Promise<Map<Object, Map<String, String>>> getSubMaps(@NotNull Map<String, String> names) {
-		return Promises.toList(partitions.getAliveClients().entrySet().stream()
-				.map(entry -> {
-					Object partitionId = entry.getKey();
-					return entry.getValue().infoAll(names.keySet())
-							.map(res -> new Container<>(partitionId, res))
-							.thenEx(partitions.wrapDeath(partitionId))
-							.toTry();
-				}))
-				.then(this::checkStillNotDead)
-				.map(tries -> {
-					Map<Object, Map<String, String>> subMaps = tries.stream()
-							.filter(Try::isSuccess)
-							.map(Try::get)
-							.collect(HashMap::new,
-									(result, container) -> {
-										for (Map.Entry<String, FileMetadata> entry : container.value.entrySet()) {
-											if (entry.getValue() == null) {
-												continue;
-											}
-
-											result.computeIfAbsent(container.id, $ -> new HashMap<>())
-													.computeIfAbsent(entry.getKey(), $ -> names.get(entry.getKey()));
-										}
-									},
-									($1, $2) -> {
-										throw new AssertionError();
-									});
-
-					long collectedNames = subMaps.values().stream()
-							.flatMap(map -> map.keySet().stream())
-							.distinct()
-							.count();
-					if (collectedNames < names.size()) {
-						throw new UncheckedException(failedTries("Could not find all files: " + toLimitedString(names.keySet(), 100), tries));
-					}
-
-					return subMaps;
-				});
-	}
-
 
 	private static class Container<T> {
 		final Object id;

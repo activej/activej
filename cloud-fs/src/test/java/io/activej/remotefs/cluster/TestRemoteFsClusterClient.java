@@ -35,6 +35,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static io.activej.common.collection.CollectionUtils.keysToMap;
 import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -263,12 +264,8 @@ public final class TestRemoteFsClusterClient {
 			Files.write(path.resolve(source), content.getBytes(UTF_8));
 		}
 
-		Throwable exception = awaitException(client.copy(source, target)
+		await(client.copy(source, target)
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
-
-		assertThat(exception, instanceOf(StacklessException.class));
-		assertThat(exception.getMessage(), containsString("Could not copy"));
-
 
 		int copies = 0;
 		for (Path path : paths) {
@@ -278,7 +275,7 @@ public final class TestRemoteFsClusterClient {
 			}
 		}
 
-		assertTrue(copies >= 3 && copies < REPLICATION_COUNT);
+		assertEquals(REPLICATION_COUNT, copies);
 	}
 
 	@Test
@@ -318,9 +315,24 @@ public final class TestRemoteFsClusterClient {
 			}
 		}
 
-		Throwable exception = awaitException(client.copyAll(sourceToTarget)
+		await(client.copyAll(sourceToTarget)
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
-		assertTrue(exception.getMessage().matches("^Could not copy files \\{.*} on enough partitions.*"));
+
+		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet(), $ -> 0);
+		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
+			String source = entry.getKey();
+			for (Path path : paths) {
+				Path targetPath = path.resolve(entry.getValue());
+				if (Files.exists(targetPath) &&
+						Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))) {
+					copies.computeIfPresent(source, ($, count) -> ++count);
+				}
+			}
+		}
+
+		for (Integer count : copies.values()) {
+			assertEquals(Integer.valueOf(REPLICATION_COUNT), count);
+		}
 	}
 
 	@Test
@@ -340,11 +352,12 @@ public final class TestRemoteFsClusterClient {
 		}
 
 		// adding non-existent file to mapping
-		sourceToTarget.put("nonexistent.txt", "new_nonexistent.txt");
+		String nonexistent = "nonexistent.txt";
+		sourceToTarget.put(nonexistent, "new_nonexistent.txt");
 
 		Throwable exception = awaitException(client.copyAll(sourceToTarget)
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
-		assertTrue(exception.getMessage().startsWith("Could not find all files"));
+		assertTrue(exception.getMessage().startsWith("Could not download file '" + nonexistent + '\''));
 	}
 
 	@Test
@@ -384,10 +397,24 @@ public final class TestRemoteFsClusterClient {
 			}
 		}
 
-		Throwable exception = awaitException(client.copyAll(sourceToTarget)
+		await(client.moveAll(sourceToTarget)
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
-		assertTrue(exception.getMessage().matches("^Could not copy files \\{.*} on enough partitions.*"));
+		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet(), $ -> 0);
+		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
+			String source = entry.getKey();
+			for (Path path : paths) {
+				Path targetPath = path.resolve(entry.getValue());
+				if (Files.exists(targetPath) &&
+						Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))) {
+					copies.computeIfPresent(source, ($, count) -> ++count);
+				}
+			}
+		}
+
+		for (Integer count : copies.values()) {
+			assertEquals(Integer.valueOf(REPLICATION_COUNT), count);
+		}
 	}
 
 	@Test
@@ -407,11 +434,12 @@ public final class TestRemoteFsClusterClient {
 		}
 
 		// adding non-existent file to mapping
-		sourceToTarget.put("nonexistent.txt", "new_nonexistent.txt");
+		String nonexistent = "nonexistent.txt";
+		sourceToTarget.put(nonexistent, "new_nonexistent.txt");
 
-		Throwable exception = awaitException(client.copyAll(sourceToTarget)
+		Throwable exception = awaitException(client.moveAll(sourceToTarget)
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
-		assertTrue(exception.getMessage().startsWith("Could not find all files:"));
+		assertTrue(exception.getMessage().startsWith("Could not download file '" + nonexistent + '\''));
 	}
 
 	@Test
@@ -539,6 +567,5 @@ public final class TestRemoteFsClusterClient {
 			assertEquals(copies, REPLICATION_COUNT);
 		}
 	}
-
 
 }
