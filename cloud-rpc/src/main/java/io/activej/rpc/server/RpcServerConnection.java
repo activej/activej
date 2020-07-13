@@ -141,10 +141,12 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	@Override
 	public void onSenderReady(@NotNull StreamDataAcceptor<RpcMessage> acceptor) {
 		this.downstreamDataAcceptor = acceptor;
+		stream.receiverResume();
 	}
 
 	@Override
 	public void onSenderSuspended() {
+		stream.receiverSuspend();
 	}
 
 	private void sendError(RpcMessage errorMessage, Object messageData, @Nullable Throwable e) {

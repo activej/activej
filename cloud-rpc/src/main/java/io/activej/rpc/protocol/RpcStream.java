@@ -119,6 +119,14 @@ public final class RpcStream {
 		serializer.getAcknowledgement()
 				.whenException(listener::onSenderError);
 		internalSupplier.streamTo(serializer);
+		internalConsumer.resume(this.listener);
+	}
+
+	public void receiverSuspend() {
+		internalConsumer.suspend();
+	}
+
+	public void receiverResume() {
 		internalConsumer.resume(listener);
 	}
 
