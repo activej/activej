@@ -404,9 +404,11 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 	}
 
 	private ObjectName createObjectName(ProtoObjectName protoObjectName) throws MalformedObjectNameException, ReflectiveOperationException {
-		StringBuilder builder = new StringBuilder(protoObjectName.getPackageName());
+		StringJoiner joiner = new StringJoiner(",", protoObjectName.getPackageName() + ":", "");
 
-		builder.append(":type=").append(protoObjectName.getClassName());
+		if (protoObjectName.getClassName() != null) {
+			joiner.add("type=" + protoObjectName.getClassName());
+		}
 
 		Object qualifier = protoObjectName.getQualifier();
 		if (qualifier != null) {
@@ -424,33 +426,33 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			} else {
 				qualifierString = "qualifier=" + qualifier;
 			}
-			builder.append(',').append(qualifierString);
+			joiner.add(qualifierString);
 		}
 
 		String scope = protoObjectName.getScope();
 		if (scope != null) {
-			builder.append(",scope=").append(scope);
+			joiner.add("scope=" + scope);
 		}
 
 		String workerPoolQualifier = protoObjectName.getWorkerPoolQualifier();
 		if (workerPoolQualifier != null) {
-			builder.append(",workerPool=").append(workerPoolQualifier);
+			joiner.add("workerPool=" + workerPoolQualifier);
 		}
 
 		List<String> genericParameters = protoObjectName.getGenericParameters();
 		if (genericParameters != null) {
 			for (int i = 0; i < genericParameters.size(); i++) {
 				int argId = i + 1;
-				builder.append(",").append(format(GENERIC_PARAM_NAME_FORMAT, argId, genericParameters.get(i)));
+				joiner.add(format(GENERIC_PARAM_NAME_FORMAT, argId, genericParameters.get(i)));
 			}
 		}
 
 		String workerId = protoObjectName.getWorkerId();
 		if (workerId != null) {
-			builder.append(",workerId=").append(workerId);
+			joiner.add("workerId=" + workerId);
 		}
 
-		return new ObjectName(builder.toString());
+		return new ObjectName(joiner.toString());
 	}
 
 	// region jmx
