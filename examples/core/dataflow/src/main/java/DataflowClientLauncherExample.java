@@ -23,11 +23,12 @@ import static io.activej.dataflow.inject.CodecsModule.codec;
 import static java.util.Comparator.naturalOrder;
 
 /**
- * This launcher posts a simple Map-Reduce task to a cluster of Dataflow nodes
- * addresses of which should be specified as program arguments.
+ * This launcher posts a simple Map-Reduce task to a cluster of Dataflow nodes.
+ * You must specify nodes' addresses as program arguments.
  * <p>
- * These servers must provide a dataset of strings with "items" as its id.
+ * These servers must provide a dataset of strings with "items" as their ids.
  */
+//[START REGION_1]
 public final class DataflowClientLauncherExample extends DataflowClientLauncher {
 
 	@Inject
@@ -54,7 +55,9 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 								.with("dataflow.partitions", String.join(",", args)))
 				.build();
 	}
+	//[END REGION_1]
 
+	//[START REGION_2]
 	@Override
 	protected void run() throws InterruptedException {
 		eventloop.execute(() -> {
@@ -97,4 +100,5 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 	public static void main(String[] args) throws Exception {
 		new DataflowClientLauncherExample().launch(args);
 	}
+	//[END REGION_2]
 }

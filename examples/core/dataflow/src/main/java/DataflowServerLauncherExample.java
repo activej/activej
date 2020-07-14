@@ -18,11 +18,12 @@ import static io.activej.dataflow.inject.CodecsModule.codec;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Simplest Dataflow node server launcher, launch it with first argument set to
- * the port that you want it to bind to, otherwise it will default to 9000
+ * Simple Dataflow node server launcher. Launch it with the first argument set to
+ * the port that you want to bind it to, otherwise it will be bound to 9000
  * <p>
- * And the second argument is which resource file to use as the source for the server data.
+ * And the second argument defines which resource file to use as the source for the server data
  */
+//[START EXAMPLE]
 public final class DataflowServerLauncherExample extends DataflowServerLauncher {
 
 	@Override
@@ -55,3 +56,4 @@ public final class DataflowServerLauncherExample extends DataflowServerLauncher 
 		new DataflowServerLauncherExample().launch(args);
 	}
 }
+//[END EXAMPLE]
