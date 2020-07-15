@@ -70,7 +70,7 @@ public final class Utils {
 			}
 		}
 		KeyFunction keyFunction = ClassBuilder.create(classLoader, KeyFunction.class)
-				.withClassKey(recordClass, new HashSet<>(recordDimensions))
+				.withClassKey(recordClass, recordDimensions, Arrays.asList(fullySpecifiedDimensionsArray))
 				.withMethod("extractKey",
 						let(
 								arrayNew(Object[].class, value(recordDimensions.size())),

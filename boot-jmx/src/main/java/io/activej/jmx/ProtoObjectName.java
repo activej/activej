@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class ProtoObjectName {
-	@NotNull
+	@Nullable
 	private final String className;
 	@NotNull
 	private final String packageName;
@@ -38,7 +38,7 @@ public final class ProtoObjectName {
 	@Nullable
 	private final List<String> genericParameters;
 
-	public ProtoObjectName(@NotNull String className, @NotNull String packageName, @Nullable Object qualifier,
+	public ProtoObjectName(@Nullable String className, @NotNull String packageName, @Nullable Object qualifier,
 			@Nullable String scope, @Nullable String workerPoolQualifier, @Nullable String workerId,
 			@Nullable List<String> genericParameters) {
 		this.className = className;
@@ -50,11 +50,11 @@ public final class ProtoObjectName {
 		this.genericParameters = genericParameters;
 	}
 
-	public static ProtoObjectName create(@NotNull String className, @NotNull String packageName) {
+	public static ProtoObjectName create(@Nullable String className, @NotNull String packageName) {
 		return new ProtoObjectName(className, packageName, null, null, null, null, null);
 	}
 
-	public ProtoObjectName withClassName(@NotNull String className) {
+	public ProtoObjectName withClassName(@Nullable String className) {
 		return new ProtoObjectName(className, packageName, qualifier, scope, workerPoolQualifier, workerId, genericParameters);
 	}
 
@@ -84,7 +84,7 @@ public final class ProtoObjectName {
 	}
 
 	// region getters
-	public @NotNull String getClassName() {
+	public @Nullable String getClassName() {
 		return className;
 	}
 

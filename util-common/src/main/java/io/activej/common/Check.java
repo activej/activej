@@ -16,9 +16,6 @@
 
 package io.activej.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * This class is used for determining whether {@link Preconditions} should be enabled or not.
  * It is sometimes useful to disable preconditions checks at runtime environment
@@ -33,25 +30,21 @@ import org.slf4j.LoggerFactory;
  * {@code if (CHECK) Preconditions.checkNotNull(value);}
  * </pre>
  * <p>
- * By default, all checks are <b>enabled</b> (unlike java asserts).
- * To disable all checks you can run application with system property {@code -Dchk=off}
+ * By default, all checks are <b>disabled</b> (like java asserts).
+ * To enable all checks you can run application with system property {@code -Dchk=on}
  * You can enable or disable checks for the whole package (with its subpackages) or for individual classes
  * like so: {@code -Dchk:io.activej.eventloop=on -Dchk:io.activej.promise.Promise=off}.
  */
 public final class Check {
-	private static final Logger logger = LoggerFactory.getLogger(Check.class);
-
 	private static final boolean ENABLED_BY_DEFAULT;
 	private static final String ENV_PREFIX = "chk:";
 
 	static {
 		String enabled = System.getProperty("chk");
 
-		if (enabled == null || enabled.equals("on")) ENABLED_BY_DEFAULT = true;
-		else if (enabled.equals("off")) ENABLED_BY_DEFAULT = false;
+		if (enabled == null || enabled.equals("off")) ENABLED_BY_DEFAULT = false;
+		else if (enabled.equals("on")) ENABLED_BY_DEFAULT = true;
 		else throw new RuntimeException(getErrorMessage(enabled));
-
-		logger.trace("All checks are {} by default", ENABLED_BY_DEFAULT ? "enabled" : "disabled");
 	}
 
 	/**
@@ -79,7 +72,6 @@ public final class Check {
 			else if (property.equals("off")) enabled = false;
 			else throw new RuntimeException(getErrorMessage(property));
 		}
-		logger.trace("Check is {} for class {}", enabled ? "ON" : "OFF", cls);
 		return enabled;
 	}
 

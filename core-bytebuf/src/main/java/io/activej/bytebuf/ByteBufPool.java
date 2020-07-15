@@ -430,6 +430,8 @@ public final class ByteBufPool {
 
 		long getPoolSize();
 
+		long getPoolSizeKB();
+
 		long getTotalSlabMins();
 
 		long getTotalEvicted();
@@ -496,6 +498,11 @@ public final class ByteBufPool {
 				result += slabSize * slabs[i].size();
 			}
 			return result;
+		}
+
+		@Override
+		public long getPoolSizeKB() {
+			return getPoolSize() / 1024;
 		}
 
 		@Override
