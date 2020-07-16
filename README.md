@@ -13,7 +13,7 @@ DI library [ActiveInject](https://inject.activej.io)
 Insert this snippet to your terminal...
 
 ```
-mvn archetype:generate -DarchetypeGroupId=io.activej -DarchetypeArtifactId=archetype-http -DarchetypeVersion=1.0
+mvn archetype:generate -DarchetypeGroupId=io.activej -DarchetypeArtifactId=archetype-http -DarchetypeVersion=1.1
 ```
 
 ... and open the project in your favourite IDE. Then, build the application and run it. Open your browser on [localhost:8080](http://localhost:8080) 
