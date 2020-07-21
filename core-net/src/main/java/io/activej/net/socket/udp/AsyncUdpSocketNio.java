@@ -82,38 +82,6 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		void onSendError(IOException e);
 	}
 
-	public abstract static class ForwardingInspector implements Inspector {
-		protected final @Nullable Inspector next;
-
-		public ForwardingInspector(@Nullable Inspector next) {this.next = next;}
-
-		@Override
-		public void onReceive(UdpPacket packet) {
-			if (next != null) next.onReceive(packet);
-		}
-
-		@Override
-		public void onReceiveError(IOException e) {
-			if (next != null) next.onReceiveError(e);
-		}
-
-		@Override
-		public void onSend(UdpPacket packet) {
-			if (next != null) next.onSend(packet);
-		}
-
-		@Override
-		public void onSendError(IOException e) {
-			if (next != null) next.onSendError(e);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Inspector> @Nullable T lookup(Class<T> type) {
-			return type.isAssignableFrom(this.getClass()) ? (T) this : next != null ? next.lookup(type) : null;
-		}
-	}
-
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
 		private final ValueStats receives;
 		private final EventStats receiveErrors;

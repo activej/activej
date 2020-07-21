@@ -62,23 +62,6 @@ public final class ChannelLZ4Decompressor extends AbstractCommunicatingProcess
 		void onBlock(ChannelLZ4Decompressor self, Header header, ByteBuf inputBuf, ByteBuf outputBuf);
 	}
 
-	public abstract static class ForwardingInspector implements Inspector {
-		protected final @Nullable Inspector next;
-
-		public ForwardingInspector(@Nullable Inspector next) {this.next = next;}
-
-		@Override
-		public void onBlock(ChannelLZ4Decompressor self, Header header, ByteBuf inputBuf, ByteBuf outputBuf) {
-			if (next != null) next.onBlock(self, header, inputBuf, outputBuf);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Inspector> @Nullable T lookup(Class<T> type) {
-			return type.isAssignableFrom(this.getClass()) ? (T) this : next != null ? next.lookup(type) : null;
-		}
-	}
-
 	// region creators
 	private ChannelLZ4Decompressor(LZ4FastDecompressor decompressor, StreamingXXHash32 checksum) {
 		this.decompressor = decompressor;

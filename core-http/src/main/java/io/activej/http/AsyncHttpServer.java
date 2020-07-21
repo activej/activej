@@ -92,38 +92,6 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		void onServletException(HttpRequest request, Throwable e);
 	}
 
-	public abstract static class ForwardingInspector implements Inspector {
-		protected final @Nullable Inspector next;
-
-		public ForwardingInspector(@Nullable Inspector next) {this.next = next;}
-
-		@Override
-		public void onHttpError(InetAddress remoteAddress, Throwable e) {
-			if (next != null) next.onHttpError(remoteAddress, e);
-		}
-
-		@Override
-		public void onHttpRequest(HttpRequest request) {
-			if (next != null) next.onHttpRequest(request);
-		}
-
-		@Override
-		public void onHttpResponse(HttpRequest request, HttpResponse httpResponse) {
-			if (next != null) next.onHttpResponse(request, httpResponse);
-		}
-
-		@Override
-		public void onServletException(HttpRequest request, Throwable e) {
-			if (next != null) next.onServletException(request, e);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Inspector> @Nullable T lookup(Class<T> type) {
-			return type.isAssignableFrom(this.getClass()) ? (T) this : next != null ? next.lookup(type) : null;
-		}
-	}
-
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
 		private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 

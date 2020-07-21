@@ -245,38 +245,6 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		void onDnsQueryExpiration(DnsQuery query);
 	}
 
-	public abstract static class ForwardingInspector implements Inspector {
-		protected final @Nullable Inspector next;
-
-		public ForwardingInspector(@Nullable Inspector next) {this.next = next;}
-
-		@Override
-		public void onDnsQuery(DnsQuery query, ByteBuf payload) {
-			if (next != null) next.onDnsQuery(query, payload);
-		}
-
-		@Override
-		public void onDnsQueryResult(DnsQuery query, DnsResponse result) {
-			if (next != null) next.onDnsQueryResult(query, result);
-		}
-
-		@Override
-		public void onDnsQueryError(DnsQuery query, Throwable e) {
-			if (next != null) next.onDnsQueryError(query, e);
-		}
-
-		@Override
-		public void onDnsQueryExpiration(DnsQuery query) {
-			if (next != null) next.onDnsQueryExpiration(query);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Inspector> @Nullable T lookup(Class<T> type) {
-			return type.isAssignableFrom(this.getClass()) ? (T) this : next != null ? next.lookup(type) : null;
-		}
-	}
-
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
 		private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 

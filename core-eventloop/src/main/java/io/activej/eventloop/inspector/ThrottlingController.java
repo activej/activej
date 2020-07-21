@@ -16,8 +16,8 @@
 
 package io.activej.eventloop.inspector;
 
+import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.ForwardingEventloopInspector;
 import io.activej.eventloop.jmx.EventloopJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -32,7 +32,7 @@ import java.time.Duration;
 import static io.activej.common.Preconditions.checkArgument;
 import static java.lang.Math.pow;
 
-public final class ThrottlingController extends ForwardingEventloopInspector implements EventloopJmxBean, EventloopInspector {
+public final class ThrottlingController implements EventloopJmxBean, EventloopInspector {
 	private static int staticInstanceCounter = 0;
 
 	private final Logger logger = LoggerFactory.getLogger(ThrottlingController.class.getName() + "." + staticInstanceCounter++);
@@ -78,18 +78,12 @@ public final class ThrottlingController extends ForwardingEventloopInspector imp
 	private float throttling;
 
 	// region creators
-	private ThrottlingController(@Nullable EventloopInspector next) {
-		super(next);
+	private ThrottlingController() {
 	}
 
 	@NotNull
 	public static ThrottlingController create() {
-		return create(null);
-	}
-
-	@NotNull
-	public static ThrottlingController create(EventloopInspector next) {
-		return new ThrottlingController(next)
+		return new ThrottlingController()
 				.withTargetTime(TARGET_TIME)
 				.withGcTime(GC_TIME)
 				.withSmoothingWindow(SMOOTHING_WINDOW)
@@ -172,13 +166,43 @@ public final class ThrottlingController extends ForwardingEventloopInspector imp
 	@Override
 	public void onUpdateConcurrentTasksStats(int concurrentTasksSize, long loopTime) {
 		this.concurrentTasksSize = concurrentTasksSize;
-		super.onUpdateConcurrentTasksStats(concurrentTasksSize, loopTime);
+	}
+
+	@Override
+	public void onUpdateScheduledTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw, boolean background) {
+
+	}
+
+	@Override
+	public void onUpdateScheduledTasksStats(int scheduledTasks, long loopTime, boolean background) {
+
+	}
+
+	@Override
+	public void onFatalError(@NotNull Throwable e, @Nullable Object context) {
+
+	}
+
+	@Override
+	public void onScheduledTaskOverdue(int overdue, boolean background) {
+
 	}
 
 	@Override
 	public void onUpdateSelectedKeysStats(int lastSelectedKeys, int invalidKeys, int acceptKeys, int connectKeys, int readKeys, int writeKeys, long loopTime) {
 		this.lastSelectedKeys = lastSelectedKeys;
-		super.onUpdateSelectedKeysStats(lastSelectedKeys, invalidKeys, acceptKeys, connectKeys, readKeys, writeKeys, loopTime);
+	}
+
+	@Override
+	public void onUpdateLocalTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw) {
+	}
+
+	@Override
+	public void onUpdateLocalTasksStats(int localTasks, long loopTime) {
+	}
+
+	@Override
+	public void onUpdateConcurrentTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw) {
 	}
 
 	@Override
@@ -214,8 +238,6 @@ public final class ThrottlingController extends ForwardingEventloopInspector imp
 		}
 
 		infoTotalTimeMillis += businessLogicTime;
-
-		super.onUpdateBusinessLogicTime(taskOrKeyPresent, externalTaskPresent, businessLogicTime);
 	}
 
 	@Override
@@ -239,8 +261,14 @@ public final class ThrottlingController extends ForwardingEventloopInspector imp
 		infoRounds++;
 
 		throttling = (float) newThrottling;
+	}
 
-		super.onUpdateSelectorSelectTime(selectorSelectTime);
+	@Override
+	public void onUpdateSelectorSelectTimeout(long selectorSelectTimeout) {
+	}
+
+	@Override
+	public void onUpdateSelectedKeyDuration(@NotNull Stopwatch sw) {
 	}
 
 	public double getAvgTimePerKeyMillis() {
@@ -373,5 +401,10 @@ public final class ThrottlingController extends ForwardingEventloopInspector imp
 				infoRounds,
 				infoRoundsZeroThrottling,
 				infoRoundsExceededTargetTime);
+	}
+
+	@Override
+	public <T extends EventloopInspector> @Nullable T lookup(Class<T> type) {
+		return null;
 	}
 }

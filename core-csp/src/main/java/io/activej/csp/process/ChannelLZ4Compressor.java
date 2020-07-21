@@ -20,7 +20,10 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.csp.*;
+import io.activej.csp.ChannelConsumer;
+import io.activej.csp.ChannelInput;
+import io.activej.csp.ChannelOutput;
+import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.ValueStats;
@@ -67,23 +70,6 @@ public final class ChannelLZ4Compressor extends AbstractCommunicatingProcess
 
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onBuf(ByteBuf in, ByteBuf out);
-	}
-
-	public abstract static class ForwardingInspector implements Inspector {
-		protected final @Nullable Inspector next;
-
-		public ForwardingInspector(@Nullable Inspector next) {this.next = next;}
-
-		@Override
-		public void onBuf(ByteBuf in, ByteBuf out) {
-			if (next != null) next.onBuf(in, out);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Inspector> @Nullable T lookup(Class<T> type) {
-			return type.isAssignableFrom(this.getClass()) ? (T) this : next != null ? next.lookup(type) : null;
-		}
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {

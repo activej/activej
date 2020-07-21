@@ -133,53 +133,6 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 		void onHttpError(HttpClientConnection connection, boolean keepAliveConnection, Throwable e);
 	}
 
-	public abstract static class ForwardingInspector implements Inspector {
-		protected final @Nullable Inspector next;
-
-		public ForwardingInspector(@Nullable Inspector next) {this.next = next;}
-
-		@Override
-		public void onRequest(HttpRequest request) {
-			if (next != null) next.onRequest(request);
-		}
-
-		@Override
-		public void onResolve(HttpRequest request, DnsResponse dnsResponse) {
-			if (next != null) next.onResolve(request, dnsResponse);
-		}
-
-		@Override
-		public void onResolveError(HttpRequest request, Throwable e) {
-			if (next != null) next.onResolveError(request, e);
-		}
-
-		@Override
-		public void onConnect(HttpRequest request, HttpClientConnection connection) {
-			if (next != null) next.onConnect(request, connection);
-		}
-
-		@Override
-		public void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e) {
-			if (next != null) next.onConnectError(request, address, e);
-		}
-
-		@Override
-		public void onHttpResponse(HttpClientConnection connection, HttpResponse response) {
-			if (next != null) next.onHttpResponse(connection, response);
-		}
-
-		@Override
-		public void onHttpError(HttpClientConnection connection, boolean keepAliveConnection, Throwable e) {
-			if (next != null) next.onHttpError(connection, keepAliveConnection, e);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Inspector> @Nullable T lookup(Class<T> type) {
-			return type.isAssignableFrom(this.getClass()) ? (T) this : next != null ? next.lookup(type) : null;
-		}
-	}
-
 	@SuppressWarnings("WeakerAccess")
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
 		private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);

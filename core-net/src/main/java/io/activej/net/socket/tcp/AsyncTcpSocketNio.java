@@ -107,53 +107,6 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		void onWriteError(IOException e);
 	}
 
-	public abstract static class ForwardingInspector implements Inspector {
-		protected final @Nullable Inspector next;
-
-		public ForwardingInspector(@Nullable Inspector next) {this.next = next;}
-
-		@Override
-		public void onReadTimeout() {
-			if (next != null) next.onReadTimeout();
-		}
-
-		@Override
-		public void onRead(ByteBuf buf) {
-			if (next != null) next.onRead(buf);
-		}
-
-		@Override
-		public void onReadEndOfStream() {
-			if (next != null) next.onReadEndOfStream();
-		}
-
-		@Override
-		public void onReadError(IOException e) {
-			if (next != null) next.onReadError(e);
-		}
-
-		@Override
-		public void onWriteTimeout() {
-			if (next != null) next.onWriteTimeout();
-		}
-
-		@Override
-		public void onWrite(ByteBuf buf, int bytes) {
-			if (next != null) next.onWrite(buf, bytes);
-		}
-
-		@Override
-		public void onWriteError(IOException e) {
-			if (next != null) next.onWriteError(e);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Inspector> @Nullable T lookup(Class<T> type) {
-			return type.isAssignableFrom(this.getClass()) ? (T) this : next != null ? next.lookup(type) : null;
-		}
-	}
-
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
 		public static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
