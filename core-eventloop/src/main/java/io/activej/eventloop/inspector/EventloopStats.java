@@ -16,6 +16,7 @@
 
 package io.activej.eventloop.inspector;
 
+import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
@@ -32,7 +33,7 @@ import static io.activej.eventloop.Eventloop.DEFAULT_SMOOTHING_WINDOW;
 import static io.activej.jmx.stats.JmxHistogram.POWERS_OF_TWO;
 
 @SuppressWarnings("unused")
-public final class EventloopStats implements EventloopInspector {
+public final class EventloopStats extends AbstractInspector<EventloopInspector> implements EventloopInspector {
 	private final EventStats loops;
 	private final ValueStats selectorSelectTimeout;
 	private final ValueStats selectorSelectTime;
@@ -232,12 +233,6 @@ public final class EventloopStats implements EventloopInspector {
 	@JmxAttribute
 	public EventStats getSelectOverdues() {
 		return selectOverdues;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T extends EventloopInspector> @Nullable T lookup(Class<T> type) {
-		return type.isAssignableFrom(this.getClass()) ? (T) this : null;
 	}
 	// endregion
 
