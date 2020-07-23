@@ -27,9 +27,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
-import static io.activej.inject.binding.BindingGenerator.combinedGenerator;
-import static io.activej.inject.binding.BindingTransformer.combinedTransformer;
-import static io.activej.inject.binding.Multibinder.combinedMultibinder;
+import static io.activej.inject.binding.BindingGenerators.combinedGenerator;
+import static io.activej.inject.binding.BindingTransformers.combinedTransformer;
+import static io.activej.inject.binding.Multibinders.combinedMultibinder;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 

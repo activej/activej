@@ -532,7 +532,7 @@ public final class ReflectionUtils {
 				if (isTransient) {
 					setBinder.asTransient();
 				}
-				builder.multibind(setKey, Multibinder.toSet());
+				builder.multibind(setKey, Multibinders.toSet());
 			}
 		}
 

@@ -16,7 +16,7 @@
 
 package io.activej.inject.annotation;
 
-import io.activej.inject.binding.Multibinder;
+import io.activej.inject.binding.Multibinders;
 import io.activej.inject.module.AbstractModule;
 
 import java.lang.annotation.Retention;
@@ -27,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * This is a built-in shortcut for {@link Provides provider method} that provides its result as a singleton set
- * and adds a {@link Multibinder#toSet() set multibinder} for the provided set key to the module.
+ * and adds a {@link Multibinders#toSet() set multibinder} for the provided set key to the module.
  *
  * @see AbstractModule
  */

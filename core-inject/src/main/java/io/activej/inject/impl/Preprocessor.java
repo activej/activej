@@ -51,8 +51,8 @@ public final class Preprocessor {
 	 * While doing so it also recursively tries to generate missing dependency bindings
 	 * using given {@link BindingGenerator generator} and apply given {@link BindingTransformer} to all of them.
 	 *
-	 * @see BindingGenerator#combinedGenerator
-	 * @see BindingTransformer#combinedTransformer
+	 * @see BindingGenerators#combinedGenerator
+	 * @see BindingTransformers#combinedTransformer
 	 */
 	public static Trie<Scope, Map<Key<?>, MarkedBinding<?>>> reduce(
 			Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings,

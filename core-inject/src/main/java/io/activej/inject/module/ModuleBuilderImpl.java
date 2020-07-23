@@ -184,7 +184,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 		completePreviousStep();
 		Key<Set<S>> set = Key.ofType(Types.parameterized(Set.class, setOf.getType()), setOf.getQualifier());
 		addBindingDesc(new BindingDesc(set, binding.mapInstance(Collections::singleton)));
-		multibinders.put(set, Multibinder.toSet());
+		multibinders.put(set, Multibinders.toSet());
 		return this;
 	}
 

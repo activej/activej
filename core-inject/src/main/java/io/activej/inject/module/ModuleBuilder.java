@@ -20,10 +20,7 @@ import io.activej.inject.InstanceInjector;
 import io.activej.inject.InstanceProvider;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.ProvidesIntoSet;
-import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.BindingGenerator;
-import io.activej.inject.binding.BindingTransformer;
-import io.activej.inject.binding.Multibinder;
+import io.activej.inject.binding.*;
 import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -122,7 +119,7 @@ public interface ModuleBuilder {
 	/**
 	 * This is a helper method that provides a functionality similar to {@link ProvidesIntoSet}.
 	 * It binds given binding as a singleton set to a set key made from given key
-	 * and also {@link Multibinder#toSet multibinds} each of such sets together.
+	 * and also {@link Multibinders#toSet multibinds} each of such sets together.
 	 */
 	<S, E extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Binding<E> binding);
 
@@ -158,7 +155,7 @@ public interface ModuleBuilder {
 	}
 
 	default <V> ModuleBuilder multibindToSet(Key<V> key) {
-		return multibind(Key.ofType(Types.parameterized(Set.class, key.getType()), key.getQualifier()), Multibinder.toSet());
+		return multibind(Key.ofType(Types.parameterized(Set.class, key.getType()), key.getQualifier()), Multibinders.toSet());
 	}
 
 	default <K, V> ModuleBuilder multibindToMap(Class<K> keyType, Class<V> valueType) {
@@ -166,7 +163,7 @@ public interface ModuleBuilder {
 	}
 
 	default <K, V> ModuleBuilder multibindToMap(Class<K> keyType, Class<V> valueType, Object qualifier) {
-		return multibind(Key.ofType(Types.parameterized(Map.class, keyType, valueType), qualifier), Multibinder.toMap());
+		return multibind(Key.ofType(Types.parameterized(Map.class, keyType, valueType), qualifier), Multibinders.toMap());
 	}
 
 	Module build();

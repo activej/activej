@@ -28,7 +28,7 @@ import java.util.Set;
  * such as {@link ModuleBuilder0#asTransient transient} or {@link ModuleBuilder0#asEager eager}.
  * <p>
  * Note that one of the bindings itself may still be transient while the type of the set is {@link BindingType#REGULAR COMMON},
- * this case should be handled properly (e.g. {@link Multibinder#toSet toSet()} multibinder is transient if at least one of its peers is transient).
+ * this case should be handled properly (e.g. {@link Multibinders#toSet toSet()} multibinder is transient if at least one of its peers is transient).
  */
 public final class BindingSet<K> {
 	private final Set<Binding<K>> bindings;

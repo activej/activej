@@ -36,13 +36,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.inject.Scope.UNSCOPED;
-import static io.activej.inject.binding.BindingGenerator.REFUSING;
-import static io.activej.inject.binding.BindingGenerator.combinedGenerator;
-import static io.activej.inject.binding.BindingTransformer.IDENTITY;
-import static io.activej.inject.binding.BindingTransformer.combinedTransformer;
+import static io.activej.inject.binding.BindingGenerators.combinedGenerator;
+import static io.activej.inject.binding.BindingGenerators.refusing;
+import static io.activej.inject.binding.BindingTransformers.combinedTransformer;
+import static io.activej.inject.binding.BindingTransformers.identity;
 import static io.activej.inject.binding.BindingType.*;
-import static io.activej.inject.binding.Multibinder.ERROR_ON_DUPLICATE;
-import static io.activej.inject.binding.Multibinder.combinedMultibinder;
+import static io.activej.inject.binding.Multibinders.combinedMultibinder;
+import static io.activej.inject.binding.Multibinders.errorOnDuplicate;
 import static io.activej.inject.impl.CompiledBinding.missingOptionalBinding;
 import static io.activej.inject.util.Utils.getScopeDisplayString;
 import static io.activej.inject.util.Utils.next;
@@ -157,9 +157,9 @@ public final class Injector implements ResourceLocator {
 	public static Injector of(@NotNull Trie<Scope, Map<Key<?>, Binding<?>>> bindings) {
 		return compile(null, UNSCOPED,
 				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> new BindingSet<>(singleton(entry.getValue()), REGULAR)))),
-				ERROR_ON_DUPLICATE,
-				IDENTITY,
-				REFUSING);
+				errorOnDuplicate(),
+				identity(),
+				refusing());
 	}
 
 	/**
@@ -183,9 +183,9 @@ public final class Injector implements ResourceLocator {
 	 *                         used when {@link #enterScope entering scopes}
 	 * @param bindingsMultimap a trie of binding set graph with multiple possible conflicting bindings per key
 	 *                         that are resolved as part of the compilation.
-	 * @param multibinder      a multibinder that is called on every binding conflict (see {@link Multibinder#combinedMultibinder})
-	 * @param transformer      a transformer that is called on every binding once (see {@link BindingTransformer#combinedTransformer})
-	 * @param generator        a generator that is called on every missing binding (see {@link BindingGenerator#combinedGenerator})
+	 * @param multibinder      a multibinder that is called on every binding conflict (see {@link Multibinders#combinedMultibinder})
+	 * @param transformer      a transformer that is called on every binding once (see {@link BindingTransformers#combinedTransformer})
+	 * @param generator        a generator that is called on every missing binding (see {@link BindingGenerators#combinedGenerator})
 	 * @see #enterScope
 	 */
 	public static Injector compile(@Nullable Injector parent,
