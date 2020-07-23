@@ -43,7 +43,7 @@ import static java.util.stream.Collectors.toSet;
  * Also it contains a set of {@link io.activej.inject.module.AbstractModule binding-DSL-like} static factory methods
  * as well as some functional transformations for the ease of creating immutable binding modifications.
  */
-@SuppressWarnings({"unused", "WeakerAccess", "ArraysAsListWithZeroOrOneArgument", "Convert2Lambda"})
+@SuppressWarnings({"unused", "WeakerAccess", "ArraysAsListWithZeroOrOneArgument", "Convert2Lambda", "rawtypes"})
 public final class Binding<T> {
 	private final Set<Dependency> dependencies;
 	private final BindingCompiler<T> compiler;

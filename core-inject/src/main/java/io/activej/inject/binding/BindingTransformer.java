@@ -34,13 +34,10 @@ import static java.util.stream.Collectors.toList;
  */
 @FunctionalInterface
 public interface BindingTransformer<T> {
-	BindingTransformer<?> IDENTITY = (bindings, scope, key, binding) -> binding;
-
 	@NotNull Binding<T> transform(BindingLocator bindings, Scope[] scope, Key<T> key, Binding<T> binding);
 
-	@SuppressWarnings("unchecked")
 	static <T> BindingTransformer<T> identity() {
-		return (BindingTransformer<T>) IDENTITY;
+		return (bindings, scope, key, binding) -> binding;
 	}
 
 	/**

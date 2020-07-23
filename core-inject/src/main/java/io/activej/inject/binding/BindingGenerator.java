@@ -39,16 +39,13 @@ import static java.util.stream.Collectors.toSet;
  */
 @FunctionalInterface
 public interface BindingGenerator<T> {
-	BindingGenerator<Object> REFUSING = (bindings, scope, key) -> null;
-
 	@Nullable Binding<T> generate(BindingLocator bindings, Scope[] scope, Key<T> key);
 
 	/**
 	 * Default generator that never generates anything.
 	 */
-	@SuppressWarnings("unchecked")
 	static <T> BindingGenerator<T> refusing() {
-		return (BindingGenerator<T>) REFUSING;
+		return (bindings, scope, key) -> null;
 	}
 
 	/**

@@ -42,15 +42,12 @@ public interface Multibinder<T> {
 	/**
 	 * Default multibinder that just throws an exception if there is more than one binding per key.
 	 */
-	Multibinder<Object> ERROR_ON_DUPLICATE = (key, bindings) -> {
-		throw new DIException(bindings.getBindings().stream()
-				.map(Utils::getLocation)
-				.collect(joining("\n\t", "Duplicate bindings for key " + key.getDisplayString() + ":\n\t", "\n")));
-	};
-
-	@SuppressWarnings("unchecked")
-	static <T> Multibinder<T> getErrorOnDuplicate() {
-		return (Multibinder<T>) ERROR_ON_DUPLICATE;
+	static <T> Multibinder<T> errorOnDuplicate() {
+		return (key, bindings) -> {
+			throw new DIException(bindings.getBindings().stream()
+					.map(Utils::getLocation)
+					.collect(joining("\n\t", "Duplicate bindings for key " + key.getDisplayString() + ":\n\t", "\n")));
+		};
 	}
 
 	/**
@@ -94,47 +91,42 @@ public interface Multibinder<T> {
 		return ofReducer(($, stream) -> stream.reduce(binaryOperator).get());
 	}
 
-	Multibinder<Set<Object>> TO_SET = ofReducer((key, stream) -> {
-		Set<Object> result = new HashSet<>();
-		stream.forEach(result::addAll);
-		return result;
-	});
-
 	/**
 	 * Multibinder that returns a binding for a merged set of sets provided by all conflicting bindings.
 	 */
-	@SuppressWarnings("unchecked")
 	static <T> Multibinder<Set<T>> toSet() {
-		return (Multibinder) TO_SET;
+		return Multibinder.ofReducer((key, stream) -> {
+			Set<T> result = new HashSet<>();
+			stream.forEach(result::addAll);
+			return result;
+		});
 	}
-
-	Multibinder<Map<Object, Object>> TO_MAP = ofReducer((key, stream) -> {
-		Map<Object, Object> result = new HashMap<>();
-		stream.forEach(map ->
-				map.forEach((k, v) ->
-						result.merge(k, v, ($, $2) -> {
-							throw new DIException("Duplicate key " + k + " while merging maps for key " + key.getDisplayString());
-						})));
-		return result;
-	});
 
 	/**
 	 * Multibinder that returns a binding for a merged map of maps provided by all conflicting bindings.
 	 *
 	 * @throws DIException on map merge conflicts
 	 */
-	@SuppressWarnings("unchecked")
 	static <K, V> Multibinder<Map<K, V>> toMap() {
-		return (Multibinder) TO_MAP;
+		return Multibinder.ofReducer((key, stream) -> {
+			Map<K, V> result = new HashMap<>();
+			stream.forEach(map ->
+					map.forEach((k, v) ->
+							result.merge(k, v, ($, $2) -> {
+								throw new DIException("Duplicate key " + k + " while merging maps for key " + key.getDisplayString());
+							})));
+			return result;
+		});
 	}
 
 	/**
 	 * Combines all multibinders into one by their type and returns universal multibinder for any key from the map, falling back
-	 * to {@link #ERROR_ON_DUPLICATE} when map contains no multibinder for a given key.
+	 * to {@link #errorOnDuplicate()} when map contains no multibinder for a given key.
 	 */
 	@SuppressWarnings("unchecked")
 	static Multibinder<?> combinedMultibinder(Map<Key<?>, Multibinder<?>> multibinders) {
+		Multibinder<Object> errorOnDuplicate = errorOnDuplicate();
 		return (key, bindings) ->
-				((Multibinder<Object>) multibinders.getOrDefault(key, ERROR_ON_DUPLICATE)).multibind(key, bindings);
+				((Multibinder<Object>) multibinders.getOrDefault(key, errorOnDuplicate)).multibind(key, bindings);
 	}
 }

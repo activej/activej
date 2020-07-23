@@ -36,13 +36,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.inject.Scope.UNSCOPED;
-import static io.activej.inject.binding.BindingGenerator.REFUSING;
 import static io.activej.inject.binding.BindingGenerator.combinedGenerator;
-import static io.activej.inject.binding.BindingTransformer.IDENTITY;
+import static io.activej.inject.binding.BindingGenerator.refusing;
 import static io.activej.inject.binding.BindingTransformer.combinedTransformer;
+import static io.activej.inject.binding.BindingTransformer.identity;
 import static io.activej.inject.binding.BindingType.*;
-import static io.activej.inject.binding.Multibinder.ERROR_ON_DUPLICATE;
 import static io.activej.inject.binding.Multibinder.combinedMultibinder;
+import static io.activej.inject.binding.Multibinder.errorOnDuplicate;
 import static io.activej.inject.impl.CompiledBinding.missingOptionalBinding;
 import static io.activej.inject.util.Utils.getScopeDisplayString;
 import static io.activej.inject.util.Utils.next;
@@ -157,9 +157,9 @@ public final class Injector implements ResourceLocator {
 	public static Injector of(@NotNull Trie<Scope, Map<Key<?>, Binding<?>>> bindings) {
 		return compile(null, UNSCOPED,
 				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> new BindingSet<>(singleton(entry.getValue()), REGULAR)))),
-				ERROR_ON_DUPLICATE,
-				IDENTITY,
-				REFUSING);
+				errorOnDuplicate(),
+				identity(),
+				refusing());
 	}
 
 	/**
