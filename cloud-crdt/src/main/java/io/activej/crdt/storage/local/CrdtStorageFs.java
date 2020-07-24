@@ -49,6 +49,7 @@ import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.remotefs.FileMetadata;
 import io.activej.remotefs.FsClient;
+import io.activej.remotefs.FsClients;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -110,14 +111,14 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 			CrdtDataSerializer<K, S> serializer,
 			CrdtFunction<S> function
 	) {
-		return new CrdtStorageFs<>(eventloop, client, client.subfolder(".consolidation"), client.subfolder(".tombstones"), serializer, function);
+		return new CrdtStorageFs<>(eventloop, client, FsClients.subdirectory(client, ".consolidation"), FsClients.subdirectory(client, ".tombstones"), serializer, function);
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageFs<K, S> create(
 			Eventloop eventloop, FsClient client,
 			CrdtDataSerializer<K, S> serializer
 	) {
-		return new CrdtStorageFs<>(eventloop, client, client.subfolder(".consolidation"), client.subfolder(".tombstones"), serializer, CrdtFunction.ofCrdtType());
+		return new CrdtStorageFs<>(eventloop, client, FsClients.subdirectory(client, ".consolidation"), FsClients.subdirectory(client, ".tombstones"), serializer, CrdtFunction.ofCrdtType());
 	}
 
 	public CrdtStorageFs<K, S> withConsolidationMargin(Duration consolidationMargin) {
@@ -130,13 +131,13 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		return this;
 	}
 
-	public CrdtStorageFs<K, S> withConsolidationFolder(String subfolder) {
-		consolidationFolderClient = client.subfolder(subfolder);
+	public CrdtStorageFs<K, S> withConsolidationFolder(String subdirectory) {
+		consolidationFolderClient = FsClients.subdirectory(client, subdirectory);
 		return this;
 	}
 
-	public CrdtStorageFs<K, S> withTombstoneFolder(String subfolder) {
-		tombstoneFolderClient = client.subfolder(subfolder);
+	public CrdtStorageFs<K, S> withTombstoneFolder(String subdirectory) {
+		tombstoneFolderClient = FsClients.subdirectory(client, subdirectory);
 		return this;
 	}
 

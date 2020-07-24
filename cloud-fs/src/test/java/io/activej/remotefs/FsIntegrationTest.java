@@ -274,31 +274,31 @@ public final class FsIntegrationTest {
 	}
 
 	@Test
-	public void testSubfolderClient() throws IOException {
+	public void testSubdirectoryClient() throws IOException {
 		Files.createDirectories(storage.resolve("this/is/not/empty/directory/"));
-		Files.createDirectories(storage.resolve("subfolder1/"));
-		Files.createDirectories(storage.resolve("subfolder2/subsubfolder"));
+		Files.createDirectories(storage.resolve("subdirectory1/"));
+		Files.createDirectories(storage.resolve("subdirectory2/subsubdirectory"));
 		Files.write(storage.resolve("this/is/not/empty/directory/file1.txt"), CONTENT);
 		Files.write(storage.resolve("this/is/not/empty/directory/file1.txt"), CONTENT);
 		Files.write(storage.resolve("file1.txt"), CONTENT);
 		Files.write(storage.resolve("first file.txt"), CONTENT);
-		Files.write(storage.resolve("subfolder1/file1.txt"), CONTENT);
-		Files.write(storage.resolve("subfolder1/first file.txt"), CONTENT);
-		Files.write(storage.resolve("subfolder2/file1.txt"), CONTENT);
-		Files.write(storage.resolve("subfolder2/first file.txt"), CONTENT);
-		Files.write(storage.resolve("subfolder2/subsubfolder/file1.txt"), CONTENT);
-		Files.write(storage.resolve("subfolder2/subsubfolder/first file.txt"), CONTENT);
+		Files.write(storage.resolve("subdirectory1/file1.txt"), CONTENT);
+		Files.write(storage.resolve("subdirectory1/first file.txt"), CONTENT);
+		Files.write(storage.resolve("subdirectory2/file1.txt"), CONTENT);
+		Files.write(storage.resolve("subdirectory2/first file.txt"), CONTENT);
+		Files.write(storage.resolve("subdirectory2/subsubdirectory/file1.txt"), CONTENT);
+		Files.write(storage.resolve("subdirectory2/subsubdirectory/first file.txt"), CONTENT);
 
 		Set<String> expected1 = new HashSet<>();
 		expected1.add("file1.txt");
 		expected1.add("first file.txt");
 
 		Set<String> expected2 = new HashSet<>(expected1);
-		expected2.add("subsubfolder/file1.txt");
-		expected2.add("subsubfolder/first file.txt");
+		expected2.add("subsubdirectory/file1.txt");
+		expected2.add("subsubdirectory/first file.txt");
 
 		Tuple2<Map<String, FileMetadata>, Map<String, FileMetadata>> tuple = await(
-				Promises.toTuple(client.subfolder("subfolder1").list("**"), client.subfolder("subfolder2").list("**"))
+				Promises.toTuple(FsClients.subdirectory(client, "subdirectory1").list("**"), FsClients.subdirectory(client, "subdirectory2").list("**"))
 						.whenComplete(server::close)
 		);
 

@@ -24,10 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 public abstract class ForwardingFsClient implements FsClient {
 	private final FsClient peer;
@@ -109,40 +106,5 @@ public abstract class ForwardingFsClient implements FsClient {
 	@Override
 	public Promise<Void> ping() {
 		return peer.ping();
-	}
-
-	@Override
-	public FsClient transform(@NotNull Function<String, Optional<String>> into, @NotNull Function<String, Optional<String>> from, @NotNull Function<String, Optional<String>> globInto) {
-		return peer.transform(into, from, globInto);
-	}
-
-	@Override
-	public FsClient transform(@NotNull Function<String, Optional<String>> into, @NotNull Function<String, Optional<String>> from) {
-		return peer.transform(into, from);
-	}
-
-	@Override
-	public FsClient addingPrefix(@NotNull String prefix) {
-		return peer.addingPrefix(prefix);
-	}
-
-	@Override
-	public FsClient subfolder(@NotNull String folder) {
-		return peer.subfolder(folder);
-	}
-
-	@Override
-	public FsClient strippingPrefix(@NotNull String prefix) {
-		return peer.strippingPrefix(prefix);
-	}
-
-	@Override
-	public FsClient filter(@NotNull Predicate<String> predicate) {
-		return peer.filter(predicate);
-	}
-
-	@Override
-	public FsClient mount(@NotNull String mountpoint, @NotNull FsClient client) {
-		return peer.mount(mountpoint, client);
 	}
 }

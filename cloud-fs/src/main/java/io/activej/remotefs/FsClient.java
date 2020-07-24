@@ -27,12 +27,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
-import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.remotefs.util.RemoteFsUtils.escapeGlob;
 import static java.util.Collections.emptyMap;
 
@@ -235,56 +231,4 @@ public interface FsClient {
 		return list("").toVoid();
 	}
 
-	static FsClient zero() {
-		return ZeroFsClient.INSTANCE;
-	}
-
-	default FsClient transform(@NotNull Function<String, Optional<String>> into, @NotNull Function<String, Optional<String>> from, @NotNull Function<String, Optional<String>> globInto) {
-		return new TransformFsClient(this, into, from, globInto);
-	}
-
-	default FsClient transform(@NotNull Function<String, Optional<String>> into, @NotNull Function<String, Optional<String>> from) {
-		return transform(into, from, $ -> Optional.empty());
-	}
-
-	// similar to 'chroot'
-	default FsClient addingPrefix(@NotNull String prefix) {
-		if (prefix.length() == 0) {
-			return this;
-		}
-		String escapedPrefix = escapeGlob(prefix);
-		return transform(
-				name -> Optional.of(prefix + name),
-				name -> Optional.ofNullable(name.startsWith(prefix) ? name.substring(prefix.length()) : null),
-				name -> Optional.of(escapedPrefix + name)
-		);
-	}
-
-	// similar to 'cd'
-	default FsClient subfolder(@NotNull String folder) {
-		if (folder.length() == 0) {
-			return this;
-		}
-		return addingPrefix(folder.endsWith("/") ? folder : folder + '/');
-	}
-
-	default FsClient strippingPrefix(@NotNull String prefix) {
-		if (prefix.length() == 0) {
-			return this;
-		}
-		String escapedPrefix = escapeGlob(prefix);
-		return transform(
-				name -> Optional.ofNullable(name.startsWith(prefix) ? name.substring(prefix.length()) : null),
-				name -> Optional.of(prefix + name),
-				name -> Optional.of(name.startsWith(escapedPrefix) ? name.substring(escapedPrefix.length()) : "**")
-		);
-	}
-
-	default FsClient filter(@NotNull Predicate<String> predicate) {
-		return new FilterFsClient(this, predicate);
-	}
-
-	default FsClient mount(@NotNull String mountpoint, @NotNull FsClient client) {
-		return new MountingFsClient(this, map(mountpoint, client.strippingPrefix(mountpoint + '/')));
-	}
 }

@@ -131,13 +131,6 @@ final class MountingFsClient implements FsClient {
 				.map(entry -> entry.getKey().deleteAll(entry.getValue())));
 	}
 
-	@Override
-	public FsClient mount(@NotNull String mountpoint, @NotNull FsClient client) {
-		Map<String, FsClient> map = new HashMap<>(mounts);
-		map.put(mountpoint, client.strippingPrefix(mountpoint + '/'));
-		return new MountingFsClient(root, map);
-	}
-
 	private Promise<Void> transfer(String source, String target, BiFunction<String, String, Function<FsClient, Promise<Void>>> action, boolean deleteSource) {
 		FsClient first = findMount(source);
 		FsClient second = findMount(target);

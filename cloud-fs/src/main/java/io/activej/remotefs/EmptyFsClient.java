@@ -23,19 +23,16 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import static java.util.Collections.emptyMap;
 
 /**
  * This fs client simulates a situation in which all paths point outside root
  */
-final class ZeroFsClient implements FsClient {
-	public static final ZeroFsClient INSTANCE = new ZeroFsClient();
+final class EmptyFsClient implements FsClient {
+	public static final EmptyFsClient INSTANCE = new EmptyFsClient();
 
-	private ZeroFsClient() {
+	private EmptyFsClient() {
 	}
 
 	@Override
@@ -66,20 +63,5 @@ final class ZeroFsClient implements FsClient {
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		return Promise.complete();
-	}
-
-	@Override
-	public FsClient transform(@NotNull Function<String, Optional<String>> into, @NotNull Function<String, Optional<String>> from) {
-		return this;
-	}
-
-	@Override
-	public FsClient strippingPrefix(@NotNull String prefix) {
-		return this;
-	}
-
-	@Override
-	public FsClient filter(@NotNull Predicate<String> predicate) {
-		return this;
 	}
 }

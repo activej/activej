@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.remotefs.FsClient.BAD_PATH;
@@ -21,7 +22,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
-public final class TestFsAlgebra {
+public final class FsClientsTest {
 
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -54,7 +55,7 @@ public final class TestFsAlgebra {
 
 	@Test
 	public void addingPrefix() {
-		FsClient prefixed = local.addingPrefix("prefix/");
+		FsClient prefixed = FsClients.addPrefix(local, "prefix/");
 
 		upload(prefixed, "test.txt");
 		upload(prefixed, "deeper/test.txt");
@@ -64,7 +65,7 @@ public final class TestFsAlgebra {
 
 	@Test
 	public void strippingPrefix() {
-		FsClient prefixed = local.strippingPrefix("prefix/");
+		FsClient prefixed = FsClients.removePrefix(local, "prefix/");
 
 		upload(prefixed, "prefix/test.txt");
 		upload(prefixed, "prefix/deeper/test.txt");
@@ -81,15 +82,15 @@ public final class TestFsAlgebra {
 
 	@Test
 	public void mountingClient() {
-		FsClient root = local.subfolder("root");
-		FsClient first = local.subfolder("first");
-		FsClient second = local.subfolder("second");
-		FsClient third = local.subfolder("third");
+		FsClient root = FsClients.subdirectory(local, "root");
+		FsClient first = FsClients.subdirectory(local, "first");
+		FsClient second = FsClients.subdirectory(local, "second");
+		FsClient third = FsClients.subdirectory(local, "third");
 
-		FsClient mounted = root
-				.mount("hello", first)
-				.mount("test/inner", second)
-				.mount("last", third);
+		FsClient mounted = FsClients.mount(root, map(
+				"hello", first,
+				"test/inner", second,
+				"last", third));
 
 		//   /           ->  /root
 		//   /hello      ->  /first
@@ -107,7 +108,7 @@ public final class TestFsAlgebra {
 
 	@Test
 	public void filterClient() {
-		FsClient filtered = local.filter(s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
+		FsClient filtered = FsClients.filter(local, s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
 
 		uploadFails(filtered, "test2.txt", BAD_PATH);
 		upload(filtered, "test22.txt");

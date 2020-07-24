@@ -160,15 +160,6 @@ final class TransformFsClient implements FsClient {
 				.collect(toSet()));
 	}
 
-	@Override
-	public FsClient transform(@NotNull Function<String, Optional<String>> into, @NotNull Function<String, Optional<String>> from, @NotNull Function<String, Optional<String>> globInto) {
-		return new TransformFsClient(parent,
-				name -> into.apply(name).flatMap(this.into),
-				name -> this.from.apply(name).flatMap(from),
-				name -> globInto.apply(name).flatMap(this.globInto)
-		);
-	}
-
 	private Promise<Void> transfer(String source, String target, BiFunction<String, String, Promise<Void>> action) {
 		Optional<String> transformed = into.apply(source);
 		Optional<String> transformedNew = into.apply(target);

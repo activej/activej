@@ -48,8 +48,8 @@ public interface StaticLoader {
 		return path -> this.load(fn.apply(path));
 	}
 
-	default StaticLoader subfolder(String subfolder) {
-		String folder = subfolder.endsWith("/") ? subfolder : subfolder + '/';
+	default StaticLoader subdirectory(String subdirectory) {
+		String folder = subdirectory.endsWith("/") ? subdirectory : subdirectory + '/';
 		return map(name -> folder + name);
 	}
 

@@ -304,21 +304,6 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 				.whenComplete(infoAllPromise.recordStats());
 	}
 
-	@Override
-	public FsClient subfolder(@NotNull String folder) {
-		if (folder.length() == 0) {
-			return this;
-		}
-		try {
-			LocalFsClient client = new LocalFsClient(eventloop, resolve(folder), executor);
-			client.readerBufferSize = readerBufferSize;
-			return client;
-		} catch (StacklessException e) {
-			// when folder points outside of the storage directory
-			throw new IllegalArgumentException("illegal subfolder: " + folder, e);
-		}
-	}
-
 	@NotNull
 	@Override
 	public Eventloop getEventloop() {
@@ -525,19 +510,19 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 			sb.append(part).append(FILE_SEPARATOR_CHAR);
 		}
 		String subglob = glob.substring(sb.length());
-		Path subfolder = resolve(sb.toString());
+		Path subdirectory = resolve(sb.toString());
 
 		// optimization for listing all files
 		if ("**".equals(subglob)) {
 			List<Path> list = new ArrayList<>();
-			walkFiles(subfolder, list::add);
+			walkFiles(subdirectory, list::add);
 			return list;
 		}
 
 		// optimization for single-file requests
 		if (subglob.isEmpty()) {
-			return Files.isRegularFile(subfolder) ?
-					singletonList(subfolder) :
+			return Files.isRegularFile(subdirectory) ?
+					singletonList(subdirectory) :
 					emptyList();
 		}
 
@@ -545,8 +530,8 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 		List<Path> list = new ArrayList<>();
 		PathMatcher matcher = getPathMatcher(storage.getFileSystem(), subglob);
 
-		walkFiles(subfolder, subglob, path -> {
-			if (matcher.matches(subfolder.relativize(path))) {
+		walkFiles(subdirectory, subglob, path -> {
+			if (matcher.matches(subdirectory.relativize(path))) {
 				list.add(path);
 			}
 		});
