@@ -16,14 +16,9 @@
 
 package io.activej.csp;
 
-import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.promise.Promise;
-
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 @FunctionalInterface
 public interface ChannelInput<T> {
@@ -36,26 +31,6 @@ public interface ChannelInput<T> {
 	default ChannelConsumer<T> getConsumer(ChannelQueue<T> queue) {
 		Promise<Void> extraAcknowledge = set(queue.getSupplier());
 		return queue.getConsumer(extraAcknowledge);
-	}
-
-	default <R> ChannelInput<R> transformWith(ChannelSupplierTransformer<R, ChannelSupplier<T>> fn) {
-		return input -> set(fn.transform(input));
-	}
-
-	default <R> ChannelInput<R> map(Function<? super R, ? extends T> fn) {
-		return input -> set(input.map(fn));
-	}
-
-	default <R> ChannelInput<R> mapAsync(Function<? super R, ? extends Promise<T>> fn) {
-		return input -> set(input.mapAsync(fn));
-	}
-
-	default ChannelInput<T> filter(Predicate<? super T> predicate) {
-		return input -> set(input.filter(predicate));
-	}
-
-	default ChannelInput<T> peek(Consumer<? super T> peek) {
-		return input -> set(input.peek(peek));
 	}
 
 }

@@ -16,7 +16,10 @@
 
 package io.activej.csp.process;
 
-import io.activej.csp.*;
+import io.activej.csp.ChannelConsumer;
+import io.activej.csp.ChannelInput;
+import io.activej.csp.ChannelOutput;
+import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -56,16 +59,12 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 
 	@Override
 	protected void doProcess() {
-		onProcessStart()
-				.whenComplete(($, e) -> {
-					if (e == null) {
-						input.streamTo(ChannelConsumer.of(this::onItem))
-								.then(this::onProcessFinish)
-								.whenResult(this::completeProcess);
-					} else {
-						closeEx(e);
-					}
-				});
+		Promise.complete()
+				.then(this::onProcessStart)
+				.then(() -> input.streamTo(ChannelConsumer.of(this::onItem)))
+				.then(this::onProcessFinish)
+				.whenResult(this::completeProcess)
+				.whenException(this::closeEx);
 	}
 
 	@SuppressWarnings("ConstantConditions")
