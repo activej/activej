@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 public interface JmxHistogram {
 	int[] POWERS_OF_TWO =

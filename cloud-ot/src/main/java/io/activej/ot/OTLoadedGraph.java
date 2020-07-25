@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.firstNonNull;
 import static io.activej.common.Utils.nullToEmpty;
 import static io.activej.common.collection.CollectionUtils.*;

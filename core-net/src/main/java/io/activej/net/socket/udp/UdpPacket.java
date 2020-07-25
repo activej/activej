@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.nullify;
 
 /**

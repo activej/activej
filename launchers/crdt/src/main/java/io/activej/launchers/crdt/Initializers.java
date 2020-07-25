@@ -29,7 +29,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Map;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.config.converter.ConfigConverters.ofDuration;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 

@@ -16,12 +16,12 @@
 
 package io.activej.http;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 final class AddressLinkedList {
-	private static final boolean CHECK = Check.isEnabled(AddressLinkedList.class);
+	private static final boolean CHECK = Checks.isEnabled(AddressLinkedList.class);
 
 	private HttpClientConnection first;
 	private HttpClientConnection last;

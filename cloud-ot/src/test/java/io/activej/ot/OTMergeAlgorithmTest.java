@@ -12,7 +12,7 @@ import org.junit.Test;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.firstNonNull;
 import static io.activej.common.collection.CollectionUtils.list;
 import static io.activej.common.collection.CollectionUtils.set;

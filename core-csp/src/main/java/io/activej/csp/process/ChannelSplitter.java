@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.api.Recyclable.tryRecycle;
 import static io.activej.common.api.Sliceable.trySlice;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;

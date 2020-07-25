@@ -17,7 +17,7 @@
 package io.activej.dns;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -45,7 +45,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.promise.Promises.TIMEOUT_EXCEPTION;
 import static io.activej.promise.Promises.timeout;
 
@@ -55,7 +55,7 @@ import static io.activej.promise.Promises.timeout;
  */
 public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanEx {
 	private final Logger logger = LoggerFactory.getLogger(RemoteAsyncDnsClient.class);
-	private static final boolean CHECK = Check.isEnabled(RemoteAsyncDnsClient.class);
+	private static final boolean CHECK = Checks.isEnabled(RemoteAsyncDnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;

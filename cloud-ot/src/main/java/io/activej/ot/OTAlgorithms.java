@@ -39,8 +39,8 @@ import java.util.function.Predicate;
 
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.CollectorsEx.throwingMerger;
-import static io.activej.common.Preconditions.checkArgument;
 import static io.activej.common.Utils.nullToEmpty;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.ot.reducers.GraphReducer.Result.*;

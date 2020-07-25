@@ -5,7 +5,7 @@ import io.activej.uikernel.*;
 import java.util.*;
 import java.util.function.Predicate;
 
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 @Inject

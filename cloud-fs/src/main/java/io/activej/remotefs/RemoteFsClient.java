@@ -45,7 +45,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.remotefs.util.RemoteFsUtils.*;

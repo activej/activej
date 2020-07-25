@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.CollectorsEx.throwingMerger;
-import static io.activej.common.Preconditions.checkState;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toMap;

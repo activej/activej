@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
 

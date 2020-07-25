@@ -16,17 +16,17 @@
 
 package io.activej.bytebuf;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.parse.ParseException;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 /**
  * This class contains various fast string utilities for {@link ByteBuf ByteBufs} and byte arrays
  */
 public final class ByteBufStrings {
-	private static final boolean CHECK = Check.isEnabled(ByteBufStrings.class);
+	private static final boolean CHECK = Checks.isEnabled(ByteBufStrings.class);
 
 	public static final ParseException READ_PAST_LIMIT = new ParseException(ByteBufStrings.class, "Malformed utf-8 input: Read past end");
 	public static final ParseException READ_PAST_ARRAY_LENGTH = new ParseException(ByteBufStrings.class, "Malformed utf-8 input");

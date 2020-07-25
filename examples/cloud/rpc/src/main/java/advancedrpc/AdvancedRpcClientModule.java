@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.rpc.client.sender.RpcStrategies.*;
 
 public class AdvancedRpcClientModule extends AbstractModule {

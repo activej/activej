@@ -25,7 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileLock;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 public final class FileLocker {
 	private static final Logger logger = LoggerFactory.getLogger(FileLocker.class);

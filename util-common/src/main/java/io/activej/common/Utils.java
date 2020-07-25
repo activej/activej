@@ -33,7 +33,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 import static java.util.Collections.*;
 
 public class Utils {

@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 public final class RpcStrategyTypeDispatching implements RpcStrategy {
 	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy = new HashMap<>();

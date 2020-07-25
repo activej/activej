@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.service.Utils.completedExceptionallyFuture;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 

@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.api.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullToEmpty;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.*;
@@ -51,7 +51,7 @@ import static java.util.Collections.singletonList;
  * creating and configuring an HTTP request.
  */
 public final class HttpRequest extends HttpMessage implements WithInitializer<HttpRequest> {
-	private static final boolean CHECK = Check.isEnabled(HttpRequest.class);
+	private static final boolean CHECK = Checks.isEnabled(HttpRequest.class);
 
 	private static final int LONGEST_HTTP_METHOD_SIZE = 12;
 	private static final byte[] HTTP_1_1 = encodeAscii(" HTTP/1.1");

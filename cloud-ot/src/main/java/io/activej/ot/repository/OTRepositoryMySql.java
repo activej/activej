@@ -47,7 +47,7 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.codec.StructuredCodecs.ofList;
 import static io.activej.codec.json.JsonUtils.indent;
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.loadResource;
 import static io.activej.common.sql.SqlUtils.execute;
 import static io.activej.promise.Promises.retry;

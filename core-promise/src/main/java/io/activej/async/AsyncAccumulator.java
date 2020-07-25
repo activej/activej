@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiConsumer;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class AsyncAccumulator<A> implements AsyncCloseable {

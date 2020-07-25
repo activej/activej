@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 public class RpcStrategyRandomSampling implements RpcStrategy {
 	private final Random random = new Random();

@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static java.net.StandardSocketOptions.SO_RCVBUF;
 import static java.net.StandardSocketOptions.SO_REUSEADDR;
 

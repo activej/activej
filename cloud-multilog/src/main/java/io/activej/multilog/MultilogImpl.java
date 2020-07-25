@@ -18,7 +18,6 @@ package io.activej.multilog;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
-import io.activej.common.Preconditions;
 import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.common.time.Stopwatch;
 import io.activej.csp.process.ChannelLZ4Compressor;
@@ -47,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -219,7 +219,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 	}
 
 	private static void validateLogPartition(@NotNull String logPartition) {
-		Preconditions.checkArgument(!logPartition.contains("-"), "Using dash (-) in log partition name is not allowed");
+		checkArgument(!logPartition.contains("-"), "Using dash (-) in log partition name is not allowed");
 	}
 
 	private static boolean isFileInRange(@NotNull LogFile logFile, @NotNull LogPosition startPosition, @Nullable LogFile endFile) {

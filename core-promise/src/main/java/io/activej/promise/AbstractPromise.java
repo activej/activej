@@ -18,7 +18,7 @@ package io.activej.promise;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
 import org.jetbrains.annotations.Async;
@@ -33,13 +33,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 @SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
 abstract class AbstractPromise<T> implements Promise<T> {
-	private static final boolean CHECK = Check.isEnabled(AbstractPromise.class);
+	private static final boolean CHECK = Checks.isEnabled(AbstractPromise.class);
 
 	private static final Object PROMISE_NOT_SET = new Object();
 	private static final boolean RESET_CALLBACKS = ApplicationSettings.getBoolean(AbstractPromise.class, "resetCallbacks", false);

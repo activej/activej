@@ -25,7 +25,7 @@ import java.net.InetSocketAddress;
 import java.net.URLEncoder;
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class UrlBuilder {

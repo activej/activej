@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.async.service.EventloopService;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -54,8 +54,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.jmx.MBeanFormat.formatListAsMultilineString;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
@@ -72,7 +72,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = getLogger(AsyncHttpClient.class);
-	private static final boolean CHECK = Check.isEnabled(AsyncHttpClient.class);
+	private static final boolean CHECK = Checks.isEnabled(AsyncHttpClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration CONNECT_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpClient.class, "connectTimeout", Duration.ZERO);

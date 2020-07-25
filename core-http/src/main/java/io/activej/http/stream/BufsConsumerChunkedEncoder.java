@@ -27,7 +27,7 @@ import io.activej.csp.process.AbstractCommunicatingProcess;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 /**
  * This is a binary channel transformer, that converts channels of {@link ByteBuf ByteBufs}

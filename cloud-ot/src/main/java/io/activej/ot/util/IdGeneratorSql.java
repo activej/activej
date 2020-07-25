@@ -31,7 +31,7 @@ import java.time.Duration;
 import java.util.concurrent.Executor;
 
 import static io.activej.async.function.AsyncSuppliers.reuse;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.promise.Promises.retry;
 
 public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBeanEx {

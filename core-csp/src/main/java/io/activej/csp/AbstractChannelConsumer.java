@@ -18,16 +18,16 @@ package io.activej.csp;
 
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.api.Recyclable.tryRecycle;
 
 public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable implements ChannelConsumer<T> {
-	protected static final boolean CHECK = Check.isEnabled(AbstractChannelConsumer.class);
+	protected static final boolean CHECK = Checks.isEnabled(AbstractChannelConsumer.class);
 
 	// region creators
 	protected AbstractChannelConsumer() {

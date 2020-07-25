@@ -7,7 +7,7 @@ import io.activej.eventloop.inspector.ThrottlingController;
 
 import java.util.Random;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.test.TestUtils.getFreePort;
 

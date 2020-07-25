@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 
 public final class ChannelByteCombiner extends AbstractCommunicatingProcess

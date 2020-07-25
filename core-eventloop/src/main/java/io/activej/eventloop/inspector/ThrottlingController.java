@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.pow;
 
 public final class ThrottlingController implements EventloopJmxBean, EventloopInspector {

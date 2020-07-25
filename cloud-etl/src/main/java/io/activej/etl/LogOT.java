@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.collection.CollectionUtils.*;
 import static java.util.Collections.singletonList;
 

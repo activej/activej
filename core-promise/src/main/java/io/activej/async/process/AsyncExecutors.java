@@ -28,7 +28,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public class AsyncExecutors {

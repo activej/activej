@@ -16,13 +16,13 @@
 
 package io.activej.csp.queue;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.api.Recyclable.tryRecycle;
 
 /**
@@ -35,7 +35,7 @@ import static io.activej.common.api.Recyclable.tryRecycle;
  * @param <T> type of data passed through the buffer
  */
 public final class ChannelZeroBuffer<T> implements ChannelQueue<T> {
-	private static final boolean CHECK = Check.isEnabled(ChannelZeroBuffer.class);
+	private static final boolean CHECK = Checks.isEnabled(ChannelZeroBuffer.class);
 
 	private Exception exception;
 

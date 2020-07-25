@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings("unchecked")
 public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T, D> {

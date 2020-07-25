@@ -35,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.max;
 
 public final class ChannelLZ4Compressor extends AbstractCommunicatingProcess

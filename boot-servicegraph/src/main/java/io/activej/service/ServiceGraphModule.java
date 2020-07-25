@@ -50,7 +50,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.common.collection.CollectionUtils.intersection;
 import static io.activej.common.reflection.ReflectionUtils.isClassPresent;

@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 /**
  * This is a POJO for holding name, size, timestamp and revision of some file

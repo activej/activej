@@ -16,7 +16,7 @@
 
 package io.activej.net;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.net.socket.tcp.AsyncTcpSocketNio.wrapChannel;
@@ -66,7 +66,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @SuppressWarnings("WeakerAccess, unused")
 public abstract class AbstractServer<Self extends AbstractServer<Self>> implements EventloopServer, WorkerServer, WithInitializer<Self>, EventloopJmxBeanEx {
 	protected Logger logger = getLogger(getClass());
-	private static final boolean CHECK = Check.isEnabled(AbstractServer.class);
+	private static final boolean CHECK = Checks.isEnabled(AbstractServer.class);
 
 	@NotNull
 	protected final Eventloop eventloop;

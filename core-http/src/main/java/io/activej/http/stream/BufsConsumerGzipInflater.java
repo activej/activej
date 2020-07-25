@@ -38,7 +38,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.csp.binary.ByteBufsDecoder.ofFixedSize;
 import static java.lang.Integer.reverseBytes;
 import static java.lang.Math.max;

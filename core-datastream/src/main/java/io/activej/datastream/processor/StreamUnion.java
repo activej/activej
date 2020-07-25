@@ -27,7 +27,7 @@ import io.activej.eventloop.Eventloop;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 /**
  * It is Stream Transformer which unions all input streams and streams it

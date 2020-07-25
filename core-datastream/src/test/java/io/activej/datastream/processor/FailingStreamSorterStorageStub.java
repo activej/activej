@@ -7,7 +7,7 @@ import io.activej.promise.Promise;
 
 import java.util.List;
 
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 
 public final class FailingStreamSorterStorageStub<T> implements StreamSorterStorage<T> {
 	public static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");

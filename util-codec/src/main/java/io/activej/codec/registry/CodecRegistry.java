@@ -32,7 +32,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.codec.StructuredCodecs.*;
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 
 /**
  * A registry which stores codecs by their type and allows dynamic dispatch of them.

@@ -16,7 +16,7 @@
 
 package io.activej.datastream;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -25,14 +25,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 /**
  * This is a helper partial implementation of the {@link StreamSupplier}
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
 public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
-	private final boolean CHECK = Check.isEnabled(getClass());
+	private final boolean CHECK = Checks.isEnabled(getClass());
 
 	public static final StreamDataAcceptor<?> NO_ACCEPTOR = item -> {};
 

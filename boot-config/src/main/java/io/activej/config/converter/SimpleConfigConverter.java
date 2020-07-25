@@ -20,7 +20,7 @@ import io.activej.config.Config;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 
 public abstract class SimpleConfigConverter<T> implements ConfigConverter<T> {
 	@NotNull

@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 /**
  * It is Stream Transformer which divides input stream  into groups with some key

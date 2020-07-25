@@ -32,7 +32,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.nio.file.StandardOpenOption.*;
 
 /**

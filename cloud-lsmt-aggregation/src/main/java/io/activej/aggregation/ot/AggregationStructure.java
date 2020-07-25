@@ -23,7 +23,7 @@ import io.activej.common.api.WithInitializer;
 
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("rawtypes")
 public final class AggregationStructure implements WithInitializer<AggregationStructure> {

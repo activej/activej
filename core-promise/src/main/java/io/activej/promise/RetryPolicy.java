@@ -22,7 +22,7 @@ import io.activej.common.tuple.Tuple2;
 
 import java.time.Duration;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.*;
 
 public interface RetryPolicy<S> {

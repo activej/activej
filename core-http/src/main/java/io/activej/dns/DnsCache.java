@@ -16,7 +16,7 @@
 
 package io.activej.dns;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.dns.protocol.DnsProtocol;
 import io.activej.dns.protocol.DnsQuery;
@@ -35,14 +35,14 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 /**
  * Represents a cache for storing resolved domains during its time to live.
  */
 public final class DnsCache {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
-	private static final boolean CHECK = Check.isEnabled(DnsCache.class);
+	private static final boolean CHECK = Checks.isEnabled(DnsCache.class);
 
 	public static final Duration DEFAULT_TIMED_OUT_EXCEPTION_TTL = Duration.ofSeconds(1);
 	public static final Duration DEFAULT_ERROR_CACHE_EXPIRATION = Duration.ofMinutes(1);

@@ -19,14 +19,14 @@ package io.activej.memcache.server;
 import com.carrotsearch.hppc.IntLongHashMap;
 import com.carrotsearch.hppc.LongLongHashMap;
 import com.carrotsearch.hppc.ObjectLongHashMap;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.jmx.stats.EventStats;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 
 import java.time.Duration;
 import java.util.Arrays;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.StringFormatUtils.formatDuration;
 import static io.activej.common.jmx.MBeanFormat.formatTimestamp;
 import static java.lang.System.currentTimeMillis;
@@ -37,7 +37,7 @@ import static java.lang.System.currentTimeMillis;
  * because it can be rewritten by the new data when it overfills
  */
 public final class RingBuffer implements RingBufferMBean {
-	private static final boolean CHECK = Check.isEnabled(RingBuffer.class);
+	private static final boolean CHECK = Checks.isEnabled(RingBuffer.class);
 
 	/**
 	 * The main class for the caching the byte-arrays

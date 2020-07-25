@@ -29,7 +29,7 @@ import io.activej.remotefs.http.HttpFsClient;
 
 import java.util.Map;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.config.Config.THIS;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;

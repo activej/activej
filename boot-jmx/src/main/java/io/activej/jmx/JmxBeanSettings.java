@@ -21,7 +21,7 @@ import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class JmxBeanSettings {

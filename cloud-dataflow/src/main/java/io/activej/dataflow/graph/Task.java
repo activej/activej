@@ -38,8 +38,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
-import static io.activej.common.Preconditions.checkNotNull;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Checks.checkState;
 import static java.util.stream.Collectors.toList;
 
 /**

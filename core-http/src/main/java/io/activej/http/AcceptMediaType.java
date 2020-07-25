@@ -23,7 +23,7 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.bytebuf.ByteBufStrings.equalsLowerCaseAscii;
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.http.HttpUtils.parseQ;
 import static io.activej.http.HttpUtils.skipSpaces;
 

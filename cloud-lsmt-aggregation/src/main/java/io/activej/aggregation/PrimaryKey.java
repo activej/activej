@@ -16,7 +16,7 @@
 
 package io.activej.aggregation;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
@@ -25,13 +25,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 
 public class PrimaryKey implements Comparable<PrimaryKey> {
-	private static final boolean CHECK = Check.isEnabled(PrimaryKey.class);
+	private static final boolean CHECK = Checks.isEnabled(PrimaryKey.class);
 
 	private final Object[] values;
 

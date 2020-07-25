@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 public final class MemSize implements Comparable<MemSize> {
 	public static final MemSize ZERO = new MemSize(0);

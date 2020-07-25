@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.activej.aggregation.AggregationPredicates.toRangeScan;
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.intersection;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static java.util.Collections.emptyList;

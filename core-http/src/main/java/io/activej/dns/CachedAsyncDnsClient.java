@@ -16,7 +16,7 @@
 
 package io.activej.dns;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.dns.DnsCache.DnsQueryCacheResult;
 import io.activej.dns.protocol.DnsQuery;
 import io.activej.dns.protocol.DnsQueryException;
@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
@@ -45,7 +45,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
  */
 public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanEx {
 	private final Logger logger = LoggerFactory.getLogger(CachedAsyncDnsClient.class);
-	private static final boolean CHECK = Check.isEnabled(CachedAsyncDnsClient.class);
+	private static final boolean CHECK = Checks.isEnabled(CachedAsyncDnsClient.class);
 
 	private final Eventloop eventloop;
 	private final AsyncDnsClient client;

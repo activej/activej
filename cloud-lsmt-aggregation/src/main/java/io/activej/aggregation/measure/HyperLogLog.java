@@ -16,15 +16,15 @@
 
 package io.activej.aggregation.measure;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.HashUtils;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 
 public final class HyperLogLog implements Comparable<HyperLogLog> {
-	private static final boolean CHECK = Check.isEnabled(HyperLogLog.class);
+	private static final boolean CHECK = Checks.isEnabled(HyperLogLog.class);
 
 	private final byte[] registers;
 

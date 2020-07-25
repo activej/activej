@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.*;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 public final class Either<L, R> {
 	@Nullable

@@ -24,7 +24,7 @@ import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 public abstract class AbstractChannelTransformer<S extends AbstractChannelTransformer<S, I, O>, I, O>
 		extends AbstractCommunicatingProcess

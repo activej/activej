@@ -38,7 +38,7 @@ import java.util.function.Function;
 
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static io.activej.remotefs.http.FsCommand.*;
 import static io.activej.remotefs.http.UploadAcknowledgement.Status.OK;

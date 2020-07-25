@@ -26,7 +26,7 @@ import io.activej.csp.dsl.WithBinaryChannelInput;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 /**
  * This is a binary channel transformer, that converts channels of {@link ByteBuf ByteBufs}

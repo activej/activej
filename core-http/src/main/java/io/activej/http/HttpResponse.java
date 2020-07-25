@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.api.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSetCookies;
@@ -32,8 +32,8 @@ import java.util.Map;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.putPositiveInt;
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.http.ContentTypes.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.*;
@@ -45,7 +45,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * usi it afterwards.
  */
 public final class HttpResponse extends HttpMessage implements Promisable<HttpResponse>, WithInitializer<HttpResponse> {
-	private static final boolean CHECK = Check.isEnabled(HttpResponse.class);
+	private static final boolean CHECK = Checks.isEnabled(HttpResponse.class);
 
 	private static final byte[] HTTP11_BYTES = encodeAscii("HTTP/1.1 ");
 	private static final byte[] CODE_ERROR_BYTES = encodeAscii(" Error");

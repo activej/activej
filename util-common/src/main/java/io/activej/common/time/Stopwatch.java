@@ -18,7 +18,7 @@ package io.activej.common.time;
 
 import java.util.concurrent.TimeUnit;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static java.util.concurrent.TimeUnit.*;
 
 public final class Stopwatch {

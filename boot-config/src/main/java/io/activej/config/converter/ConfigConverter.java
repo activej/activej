@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 public interface ConfigConverter<T> {
 	T get(Config config, @Nullable T defaultValue);

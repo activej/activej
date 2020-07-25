@@ -36,7 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 /**
  * Represents a cached filesystem client which is an implementation of {@link FsClient}.

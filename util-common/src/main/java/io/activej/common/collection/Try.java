@@ -28,8 +28,8 @@ import java.util.concurrent.Callable;
 import java.util.function.*;
 import java.util.stream.Collector;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 
 public final class Try<T> {
 	private final T result;

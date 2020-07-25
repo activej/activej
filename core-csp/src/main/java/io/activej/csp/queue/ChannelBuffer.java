@@ -16,13 +16,13 @@
 
 package io.activej.csp.queue;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.api.Recyclable.tryRecycle;
 import static java.lang.Integer.numberOfLeadingZeros;
 import static java.lang.Math.max;
@@ -35,7 +35,7 @@ import static java.lang.Math.max;
  * @param <T> the type of values that are stored in the buffer
  */
 public final class ChannelBuffer<T> implements ChannelQueue<T> {
-	private static final boolean CHECK = Check.isEnabled(ChannelBuffer.class);
+	private static final boolean CHECK = Checks.isEnabled(ChannelBuffer.class);
 
 	private Exception exception;
 

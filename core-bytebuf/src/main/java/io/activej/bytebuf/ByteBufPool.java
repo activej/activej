@@ -25,7 +25,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.lang.Integer.numberOfLeadingZeros;
 import static java.lang.Math.max;
 import static java.lang.System.currentTimeMillis;

@@ -1,6 +1,6 @@
 package io.activej.ot.utils;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 public class TestSet implements TestOp {
 	private final int prev;

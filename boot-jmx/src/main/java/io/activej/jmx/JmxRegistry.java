@@ -32,7 +32,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.StringFormatUtils.formatDuration;
 import static io.activej.common.StringFormatUtils.parseDuration;
 import static io.activej.common.reflection.ReflectionUtils.getAnnotationString;

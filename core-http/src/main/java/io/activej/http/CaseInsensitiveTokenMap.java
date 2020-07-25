@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Array;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 /**
  * This is a case-insensitive token registry used as permanent header value cache.

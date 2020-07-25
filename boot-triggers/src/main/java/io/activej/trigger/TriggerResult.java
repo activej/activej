@@ -24,7 +24,7 @@ import java.time.Instant;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.jmx.MBeanFormat.formatExceptionMultiline;
 
 public final class TriggerResult {

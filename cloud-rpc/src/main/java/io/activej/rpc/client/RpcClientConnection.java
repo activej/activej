@@ -18,7 +18,7 @@ package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.time.Stopwatch;
 import io.activej.datastream.StreamDataAcceptor;
@@ -38,7 +38,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.rpc.client.IRpcClient.RPC_OVERLOAD_EXCEPTION;
 import static io.activej.rpc.client.IRpcClient.RPC_TIMEOUT_EXCEPTION;
@@ -46,7 +46,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public final class RpcClientConnection implements RpcStream.Listener, RpcSender, JmxRefreshable {
 	private static final Logger logger = getLogger(RpcClientConnection.class);
-	private static final boolean CHECK = Check.isEnabled(RpcClientConnection.class);
+	private static final boolean CHECK = Checks.isEnabled(RpcClientConnection.class);
 
 	private static final int BUCKET_CAPACITY = ApplicationSettings.getInt(RpcClientConnection.class, "bucketCapacity", 16);
 

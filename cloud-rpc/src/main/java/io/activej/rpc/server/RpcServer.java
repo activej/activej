@@ -43,8 +43,8 @@ import java.net.InetAddress;
 import java.time.Duration;
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static java.util.Arrays.asList;
 
 /**

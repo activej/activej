@@ -23,7 +23,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.map;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;

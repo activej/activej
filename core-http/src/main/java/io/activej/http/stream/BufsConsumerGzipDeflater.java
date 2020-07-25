@@ -31,8 +31,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 
 /**
  * This is a binary channel transformer, that converts channels of {@link ByteBuf ByteBufs}

@@ -19,7 +19,7 @@ package io.activej.remotefs.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
@@ -55,7 +55,7 @@ import java.util.function.Predicate;
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.remotefs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.*;
@@ -63,7 +63,7 @@ import static java.util.stream.Collectors.toMap;
 
 public final class RemoteFsRepartitionController implements WithInitializer<RemoteFsRepartitionController>, EventloopJmxBeanEx, EventloopService {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteFsRepartitionController.class);
-	private static final boolean CHECK = Check.isEnabled(RemoteFsRepartitionController.class);
+	private static final boolean CHECK = Checks.isEnabled(RemoteFsRepartitionController.class);
 
 	private static final Duration DEFAULT_PLAN_RECALCULATION_INTERVAL = Duration.ofMinutes(1);
 

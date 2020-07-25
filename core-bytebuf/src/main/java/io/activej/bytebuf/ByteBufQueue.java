@@ -17,7 +17,7 @@
 package io.activej.bytebuf;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.api.Recyclable;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.InvalidSizeException;
@@ -29,8 +29,8 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.stream.Collector;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.collection.CollectionUtils.emptyIterator;
 import static java.lang.System.arraycopy;
 
@@ -44,7 +44,7 @@ import static java.lang.System.arraycopy;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class ByteBufQueue implements Recyclable {
-	private static final boolean CHECK = Check.isEnabled(ByteBufQueue.class);
+	private static final boolean CHECK = Checks.isEnabled(ByteBufQueue.class);
 
 	private static final int DEFAULT_CAPACITY = 8;
 	/**

@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.api.ParserFunction;
 import io.activej.common.api.Recyclable;
@@ -37,7 +37,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.csp.ChannelConsumers.recycling;
 import static java.util.Collections.emptySet;
 
@@ -46,7 +46,7 @@ import static java.util.Collections.emptySet;
  */
 @SuppressWarnings({"unused", "WeakerAccess", "PointlessBitwiseExpression"})
 public abstract class HttpMessage {
-	private static final boolean CHECK = Check.isEnabled(HttpMessage.class);
+	private static final boolean CHECK = Checks.isEnabled(HttpMessage.class);
 
 	/**
 	 * This flag means that the body of this message should not be streamed

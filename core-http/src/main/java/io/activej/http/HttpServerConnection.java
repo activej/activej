@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
@@ -34,7 +34,7 @@ import java.net.InetAddress;
 import java.util.Arrays;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
@@ -46,7 +46,7 @@ import static io.activej.http.HttpMethod.*;
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
 final class HttpServerConnection extends AbstractHttpConnection {
-	private static final boolean CHECK = Check.isEnabled(HttpServerConnection.class);
+	private static final boolean CHECK = Checks.isEnabled(HttpServerConnection.class);
 
 	private static final int HEADERS_SLOTS = 256;
 	private static final int MAX_PROBINGS = 2;

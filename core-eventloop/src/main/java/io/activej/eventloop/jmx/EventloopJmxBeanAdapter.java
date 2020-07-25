@@ -27,7 +27,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.activej.common.Preconditions.*;
+import static io.activej.common.Checks.*;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh {

@@ -32,8 +32,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.StringFormatUtils.formatDuration;
 import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.common.collection.CollectionUtils.difference;

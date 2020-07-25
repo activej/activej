@@ -23,7 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.config.Config.concatPath;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;

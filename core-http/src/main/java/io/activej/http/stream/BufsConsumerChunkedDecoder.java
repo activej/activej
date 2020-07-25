@@ -31,7 +31,7 @@ import io.activej.promise.Promise;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.csp.binary.ByteBufsDecoder.assertBytes;
 import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
 import static java.lang.Math.min;

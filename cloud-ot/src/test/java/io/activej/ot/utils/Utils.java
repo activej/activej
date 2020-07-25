@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.ot.TransformResult.*;

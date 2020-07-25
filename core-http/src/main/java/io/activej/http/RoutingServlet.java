@@ -28,7 +28,7 @@ import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 /**
  * This servlet allows to build complex servlet trees, routing requests between them by the HTTP paths.

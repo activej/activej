@@ -19,7 +19,7 @@ package io.activej.net.socket.tcp;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -44,15 +44,15 @@ import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.MemSize.kilobytes;
-import static io.activej.common.Preconditions.checkState;
 import static io.activej.common.Utils.nullify;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 @SuppressWarnings("WeakerAccess")
 public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventHandler {
-	private static final boolean CHECK = Check.isEnabled(AsyncTcpSocketNio.class);
+	private static final boolean CHECK = Checks.isEnabled(AsyncTcpSocketNio.class);
 
 	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(AsyncTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
 

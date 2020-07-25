@@ -18,7 +18,7 @@ package io.activej.common.time;
 
 import java.time.Instant;
 
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkNotNull;
 
 /**
  * Gives access to current time in milliseconds

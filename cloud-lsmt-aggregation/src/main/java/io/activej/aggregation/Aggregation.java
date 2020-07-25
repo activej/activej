@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.arg;
 import static io.activej.codegen.expression.Expressions.cast;
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullToSupplier;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;

@@ -18,15 +18,15 @@ package io.activej.csp;
 
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 
 public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable implements ChannelSupplier<T> {
-	protected static final boolean CHECK = Check.isEnabled(AbstractChannelSupplier.class);
+	protected static final boolean CHECK = Checks.isEnabled(AbstractChannelSupplier.class);
 
 	// region creators
 	protected AbstractChannelSupplier() {

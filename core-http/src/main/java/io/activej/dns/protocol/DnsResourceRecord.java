@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetAddress;
 import java.util.Arrays;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 /**
  * Represents a resolved domain (of A or AAAA type)

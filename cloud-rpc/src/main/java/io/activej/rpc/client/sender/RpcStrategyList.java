@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 

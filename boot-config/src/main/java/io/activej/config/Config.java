@@ -37,7 +37,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullToDefault;
 import static io.activej.common.Utils.nullToException;
 import static java.util.Collections.*;

@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 public final class SimpleThreadFactory implements ThreadFactory, WithInitializer<SimpleThreadFactory> {
 	public static final String NAME_PATTERN = "{}";

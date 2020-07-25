@@ -45,8 +45,8 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkNotNull;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.nullToDefault;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.reflection.ReflectionUtils.*;

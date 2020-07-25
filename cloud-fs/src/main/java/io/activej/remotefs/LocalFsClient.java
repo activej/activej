@@ -57,7 +57,7 @@ import java.util.stream.Collector;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;

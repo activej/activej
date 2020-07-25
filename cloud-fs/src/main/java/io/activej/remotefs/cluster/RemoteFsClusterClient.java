@@ -43,7 +43,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;

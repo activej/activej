@@ -16,7 +16,7 @@
 
 package io.activej.bytebuf;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.Utils;
 import io.activej.common.api.Recyclable;
 import io.activej.common.api.Sliceable;
@@ -26,8 +26,8 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static java.lang.Math.min;
 
 /**
@@ -46,7 +46,7 @@ import static java.lang.Math.min;
 
 @SuppressWarnings({"WeakerAccess", "DefaultAnnotationParam", "unused"})
 public class ByteBuf implements Recyclable, Sliceable<ByteBuf>, AutoCloseable {
-	private static final boolean CHECK = Check.isEnabled(ByteBuf.class);
+	private static final boolean CHECK = Checks.isEnabled(ByteBuf.class);
 
 	static final boolean CHECK_RECYCLE = ByteBufPool.REGISTRY || CHECK;
 

@@ -16,16 +16,16 @@
 
 package io.activej.crdt.primitives;
 
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.max;
 
 public final class GCounterInt implements CrdtMergable<GCounterInt> {
-	private static final boolean CHECK = Check.isEnabled(GCounterInt.class);
+	private static final boolean CHECK = Checks.isEnabled(GCounterInt.class);
 
 	public static final BinarySerializer<GCounterInt> SERIALIZER = new Serializer();
 

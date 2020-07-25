@@ -18,7 +18,7 @@ package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
 import io.activej.async.service.EventloopService;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.StacklessException;
@@ -57,7 +57,6 @@ import java.util.*;
 import java.util.concurrent.Executor;
 
 import static io.activej.async.callback.Callback.toAnotherEventloop;
-import static io.activej.common.Preconditions.*;
 import static io.activej.common.Utils.nullToSupplier;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
@@ -81,7 +80,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcServer
  */
 public final class RpcClient implements IRpcClient, EventloopService, WithInitializer<RpcClient>, EventloopJmxBeanEx {
-	private static final boolean CHECK = Check.isEnabled(RpcClient.class);
+	private static final boolean CHECK = Checks.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
@@ -185,7 +184,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	 * message types
 	 */
 	public RpcClient withMessageTypes(List<Class<?>> messageTypes) {
-		checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
+		Checks.checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
 		this.messageTypes = messageTypes;
 		return this;
 	}
@@ -303,10 +302,10 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
-		checkNotNull(messageTypes, "Message types must be specified");
+		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		Checks.checkNotNull(messageTypes, "Message types must be specified");
 
-		checkState(stopPromise == null);
+		Checks.checkState(stopPromise == null);
 
 		serializer = serializerBuilder.withSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes).build(RpcMessage.class);
 
@@ -325,7 +324,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	@NotNull
 	@Override
 	public Promise<Void> stop() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (stopPromise != null) return stopPromise;
 
 		stopPromise = new SettablePromise<>();
@@ -413,7 +412,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	 */
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (timeout > 0) {
 			requestSender.sendRequest(request, timeout, cb);
 		} else {
@@ -423,7 +422,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		requestSender.sendRequest(request, cb);
 	}
 
@@ -435,7 +434,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		return new IRpcClient() {
 			@Override
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-				if (CHECK) checkState(anotherEventloop.inEventloopThread(), "Not in eventloop thread");
+				if (CHECK) Checks.checkState(anotherEventloop.inEventloopThread(), "Not in eventloop thread");
 				if (timeout > 0) {
 					eventloop.execute(wrapContext(requestSender, () ->
 							requestSender.sendRequest(request, timeout, toAnotherEventloop(anotherEventloop, cb))));

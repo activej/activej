@@ -17,18 +17,18 @@
 package io.activej.datastream.processor;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.datastream.*;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static java.lang.Integer.numberOfLeadingZeros;
 
 /**
  * A stream transformer that changes each item according to given function.
  */
 public final class StreamBuffer<T> implements StreamTransformer<T, T> {
-	private static final boolean CHECK = Check.isEnabled(StreamBuffer.class);
+	private static final boolean CHECK = Checks.isEnabled(StreamBuffer.class);
 	private static final boolean NULLIFY_ON_TAKE_OUT = ApplicationSettings.getBoolean(StreamBuffer.class, "nullifyOnTakeOut", true);
 
 	private final Input input;

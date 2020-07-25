@@ -18,7 +18,7 @@ package io.activej.eventloop;
 
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.StacklessException;
@@ -61,8 +61,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static io.activej.common.Preconditions.checkArgument;
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullToSupplier;
 import static io.activej.eventloop.util.Utils.tryToOptimizeSelector;
 import static java.util.Collections.emptyIterator;
@@ -86,7 +86,7 @@ import static java.util.Collections.emptyIterator;
  */
 public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, WithInitializer<Eventloop>, EventloopJmxBeanEx {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
-	private static final boolean CHECK = Check.isEnabled(Eventloop.class);
+	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
 
 	public static final boolean JIGSAW_DETECTED;
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);

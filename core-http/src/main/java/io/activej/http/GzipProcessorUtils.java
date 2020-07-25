@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.Check;
+import io.activej.common.Checks;
 import io.activej.common.collection.ConcurrentStack;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
@@ -29,13 +29,13 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-import static io.activej.common.Preconditions.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 
 /**
  * This class contains various utils for the DEFLATE algorithm.
  */
 public final class GzipProcessorUtils {
-	private static final boolean CHECK = Check.isEnabled(GzipProcessorUtils.class);
+	private static final boolean CHECK = Checks.isEnabled(GzipProcessorUtils.class);
 
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, 0};

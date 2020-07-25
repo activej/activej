@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static io.activej.common.Preconditions.checkState;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.collection.CollectionUtils.first;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
