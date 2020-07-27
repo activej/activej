@@ -412,14 +412,7 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 			}
 
 			ensureParent(targetPath, () -> {
-				try {
-					// try to create a hardlink
-					Files.createLink(targetPath, path);
-					touch(targetPath);
-				} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
-					// if couldn't, then just actually copy it, replacing existing since contents should be the same
-					Files.copy(path, targetPath);
-				}
+				Files.copy(path, targetPath);
 				return null;
 			});
 		}
