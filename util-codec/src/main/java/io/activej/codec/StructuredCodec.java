@@ -17,7 +17,6 @@
 package io.activej.codec;
 
 import io.activej.common.api.ParserFunction;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,18 +59,7 @@ public interface StructuredCodec<T> extends StructuredEncoder<T>, StructuredDeco
 	}
 
 	default StructuredCodec<@Nullable T> nullable() {
-		return new StructuredCodec<T>() {
-			@Nullable
-			@Override
-			public T decode(StructuredInput in) throws ParseException {
-				return in.readNullable(StructuredCodec.this);
-			}
-
-			@Override
-			public void encode(StructuredOutput out, T item) {
-				out.writeNullable(StructuredCodec.this, item);
-			}
-		};
+		return StructuredCodecs.ofNullable(this);
 	}
 
 	default StructuredCodec<List<T>> ofList() {
@@ -79,23 +67,7 @@ public interface StructuredCodec<T> extends StructuredEncoder<T>, StructuredDeco
 	}
 
 	default <R> StructuredCodec<R> transform(ParserFunction<T, R> reader, Function<R, T> writer) {
-		return new StructuredCodec<R>() {
-			@Override
-			public void encode(StructuredOutput out, R value) {
-				T result = writer.apply(value);
-				StructuredCodec.this.encode(out, result);
-			}
-
-			@Override
-			public R decode(StructuredInput in) throws ParseException {
-				T result = StructuredCodec.this.decode(in);
-				try {
-					return reader.parse(result);
-				} catch (UncheckedException u) {
-					throw u.propagate(ParseException.class);
-				}
-			}
-		};
+		return StructuredCodecs.transform(this, reader, writer);
 	}
 
 }

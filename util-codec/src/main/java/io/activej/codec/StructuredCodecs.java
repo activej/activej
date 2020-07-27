@@ -16,8 +16,11 @@
 
 package io.activej.codec;
 
+import io.activej.common.api.ParserFunction;
+import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.tuple.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -271,6 +274,42 @@ public final class StructuredCodecs {
 			}
 		};
 	}
+
+	public static <T> StructuredCodec<@Nullable T> ofNullable(StructuredCodec<T> codec) {
+		return new StructuredCodec<T>() {
+			@Nullable
+			@Override
+			public T decode(StructuredInput in) throws ParseException {
+				return in.readNullable(codec);
+			}
+
+			@Override
+			public void encode(StructuredOutput out, T item) {
+				out.writeNullable(codec, item);
+			}
+		};
+	}
+
+	public static <T, R> StructuredCodec<R> transform(StructuredCodec<T> codec, ParserFunction<T, R> reader, Function<R, T> writer) {
+		return new StructuredCodec<R>() {
+			@Override
+			public void encode(StructuredOutput out, R value) {
+				T result = writer.apply(value);
+				codec.encode(out, result);
+			}
+
+			@Override
+			public R decode(StructuredInput in) throws ParseException {
+				T result = codec.decode(in);
+				try {
+					return reader.parse(result);
+				} catch (UncheckedException u) {
+					throw u.propagate(ParseException.class);
+				}
+			}
+		};
+	}
+
 
 	/**
 	 * Combinator codec that writes/reads a list of T with given codec for T

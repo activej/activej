@@ -48,6 +48,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
+import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.remotefs.util.RemoteFsUtils.*;
 import static java.util.Collections.emptyMap;
 
@@ -111,18 +112,27 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		throw new UnsupportedOperationException("Streaming upload is not allowed");
+		return doUpload(name, null)
+				.whenComplete(uploadStartPromise.recordStats())
+				.whenComplete(toLogger(logger, "upload", name, this));
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+		return doUpload(name, size)
+				.whenComplete(uploadStartPromise.recordStats())
+				.whenComplete(toLogger(logger, "upload", name, size, this));
+	}
+
+	@NotNull
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String name, @Nullable Long size) {
 		return connect(address)
 				.then(messaging ->
 						messaging.send(new Upload(name, size))
 								.then(messaging::receive)
 								.then(msg -> cast(msg, UploadAck.class))
 								.then(() -> Promise.of(messaging.sendBinaryStream()
-										.transformWith(ofFixedSize(size))
+										.transformWith(size == null ? identity() : ofFixedSize(size))
 										.withAcknowledgement(ack -> ack
 												.then(messaging::receive)
 												.whenResult(messaging::close)
@@ -135,9 +145,7 @@ public final class RemoteFsClient implements FsClient, EventloopService, Eventlo
 								.whenException(e -> {
 									messaging.closeEx(e);
 									logger.warn("Error while trying to upload file {}: {}", name, this, e);
-								}))
-				.whenComplete(uploadStartPromise.recordStats())
-				.whenComplete(toLogger(logger, "upload", name, size, this));
+								}));
 	}
 
 	@Override

@@ -115,9 +115,9 @@ public final class RemoteFsServer extends AbstractServer<RemoteFsServer> {
 	private void addHandlers() {
 		onMessage(Upload.class, (messaging, msg) -> {
 			String name = msg.getName();
-			long size = msg.getSize();
-			return client.upload(name, size)
-					.map(uploader -> uploader.transformWith(ofFixedSize(size)))
+			Long size = msg.getSize();
+			return (size == null ? client.upload(name) : client.upload(name, size))
+					.map(uploader -> size == null ? uploader : uploader.transformWith(ofFixedSize(size)))
 					.then(uploader -> messaging.send(new UploadAck())
 							.then(() -> messaging.receiveBinaryStream().streamTo(uploader)))
 					.then(() -> messaging.send(new UploadFinished()))
