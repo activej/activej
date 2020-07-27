@@ -254,7 +254,6 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 							Map::values)
 							.whenResult(results -> {
 								repartitionPlan = results.stream()
-										.peek(this::filterLocalMeta)
 										.sorted()
 										.filter(InfoResults::shouldBeProcessed)
 										.map(InfoResults::getName)
@@ -286,7 +285,6 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 					if (infoResults == null) { // null return means failure
 						return Promise.of(false);
 					}
-					filterLocalMeta(infoResults);
 					if (infoResults.shouldBeDeleted()) { // everybody had the file
 						logger.trace("deleting file {} locally", meta);
 						return localStorage.delete(name) // so we delete the copy which does not belong to local partition
@@ -295,7 +293,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 									return true;
 								});
 					}
-					if (!infoResults.shouldBeUploaded()) {                                    // everybody had the file AND
+					if (!infoResults.shouldBeUploaded()) {                             // everybody had the file AND
 						logger.info("handled file {} (ensured on {})", meta, ids);     // we don't delete the local copy
 						return Promise.of(true);
 					}
@@ -304,8 +302,14 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 
 					logger.trace("uploading file {} to partitions {}...", meta, infoResults);
 
+					//noinspection OptionalGetWithoutIsPresent
+					long offset = infoResults.remoteMetadata.stream()
+							.mapToLong(metadata -> metadata == null ? 0 : metadata.getSize())
+							.min()
+							.getAsLong();
+
 					ChannelSplitter<ByteBuf> splitter = ChannelSplitter.<ByteBuf>create()
-							.withInput(ChannelSupplier.ofPromise(localStorage.download(name, 0, meta.getSize())));
+							.withInput(ChannelSupplier.ofPromise(localStorage.download(name, offset, meta.getSize())));
 
 					RefInt idx = new RefInt(0);
 					return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
@@ -325,7 +329,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 												.set(ChannelConsumer.ofPromise(remoteMeta == null ?
 														client.upload(name, meta.getSize()) :
 														client.append(name, remoteMeta.getSize())
-																.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize()))))
+																.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
 														.withAcknowledgement(ack -> ack
 																.thenEx(($, e) -> {
 																	if (e != null && uploadError.get() == null) {
@@ -380,25 +384,13 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 						})
 						.toTry()))
 				.map(tries -> {
-					if (!tries.stream().allMatch(Try::isSuccess)) { // any of list calls failed
+					if (!tries.stream().allMatch(Try::isSuccess)) { // any of info calls failed
 						logger.warn("failed figuring out partitions for file {}, skipping", fileToUpload);
 						return null; // using null to mark failure without exceptions
 					}
 
 					return infoResults;
 				});
-	}
-
-	private void filterLocalMeta(InfoResults infoResults) {
-		long localSize = infoResults.localMetadata.getSize();
-		long maxSize = infoResults.remoteMetadata.stream()
-				.filter(Objects::nonNull)
-				.mapToLong(FileMetadata::getSize)
-				.max().orElse(0);
-
-		if (localSize < maxSize) {
-			infoResults.localMetadata = null;
-		}
 	}
 
 	/**
@@ -474,7 +466,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 			Comparator.<InfoResults>comparingLong(infoResults -> infoResults.remoteMetadata.stream()
 					.filter(Objects::isNull)
 					.count() +
-					(infoResults.localMetadata == null ? 0 : 1))
+					(infoResults.isLocalMetaTheBest() ? 1 : 0))
 					.thenComparingLong(infoResults -> infoResults.remoteMetadata.stream()
 							.filter(Objects::nonNull)
 							.findAny().orElse(infoResults.localMetadata)
@@ -482,7 +474,6 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 
 	private final class InfoResults implements Comparable<InfoResults> {
 		String name;
-		@Nullable
 		FileMetadata localMetadata;
 		final List<@Nullable FileMetadata> remoteMetadata = new ArrayList<>();
 
@@ -502,7 +493,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		// file should be uploaded if local file is the most complete file
 		// and there are remote partitions that do not have this file or have not a full version
 		boolean shouldBeUploaded() {
-			return localMetadata != null &&
+			return isLocalMetaTheBest() &&
 					remoteMetadata.stream().anyMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
 		}
 
@@ -511,6 +502,15 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 		boolean shouldBeDeleted() {
 			return remoteMetadata.size() == replicationCount &&
 					remoteMetadata.stream().noneMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
+		}
+
+		boolean isLocalMetaTheBest() {
+			long maxSize = remoteMetadata.stream()
+					.filter(Objects::nonNull)
+					.mapToLong(FileMetadata::getSize)
+					.max().orElse(0);
+
+			return localMetadata.getSize() >= maxSize;
 		}
 
 		@Override
