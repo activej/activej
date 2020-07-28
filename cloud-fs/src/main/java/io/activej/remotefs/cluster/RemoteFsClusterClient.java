@@ -39,7 +39,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -275,29 +278,17 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 			PromiseStats finishStats) {
 		return checkNotDead()
 				.then(() -> collect(name, action))
-				.then(tries -> {
-					List<Container<ChannelConsumer<ByteBuf>>> successes = tries.stream()
-							.filter(Try::isSuccess)
-							.map(Try::get)
-							.collect(toList());
-
-					if (successes.size() < uploadTargets) {
-						successes.forEach(container -> container.value.close());
-						return ofFailure("Didn't connect to enough partitions uploading " +
-								name + ", only " + successes.size() + " finished uploads");
-					}
-
+				.then(containers -> {
 					ChannelByteSplitter splitter = ChannelByteSplitter.create(replicationCount);
-					for (Container<ChannelConsumer<ByteBuf>> container : successes) {
+					for (Container<ChannelConsumer<ByteBuf>> container : containers) {
 						splitter.addOutput().set(container.value);
 					}
 
 					if (logger.isTraceEnabled()) {
-						logger.trace("uploading file {} to {}, {}", name, successes.stream()
+						logger.trace("uploading file {} to {}, {}", name, containers.stream()
 								.map(container -> container.id.toString())
 								.collect(joining(", ", "[", "]")), this);
 					}
-
 
 					return Promise.of(splitter.getInput().getConsumer()
 							.transformWith(transformer))
@@ -306,22 +297,25 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 				.whenComplete(startStats.recordStats());
 	}
 
-	private Promise<List<Try<Container<ChannelConsumer<ByteBuf>>>>> collect(
+	private Promise<List<Container<ChannelConsumer<ByteBuf>>>> collect(
 			String name,
 			Function<FsClient, Promise<ChannelConsumer<ByteBuf>>> action
 	) {
-		List<Try<Container<ChannelConsumer<ByteBuf>>>> tries = new ArrayList<>();
 		Iterator<Object> idIterator = partitions.select(name).iterator();
-		return Promises.all(Stream.generate(() ->
-				Promises.firstSuccessful(transformIterator(idIterator,
-						id -> call(id, action)
-								.map(consumer -> new Container<>(id,
-										consumer.withAcknowledgement(ack ->
-												ack.thenEx(partitions.wrapDeath(id)))))
-								.whenComplete((result, e) -> tries.add(Try.of(result, e)))))
-						.toTry())
-				.limit(uploadTargets))
-				.map($ -> tries);
+		return Promises.toList(
+				Stream.generate(() ->
+						Promises.firstSuccessful(transformIterator(idIterator,
+								id -> call(id, action)
+										.map(consumer -> new Container<>(id,
+												consumer.withAcknowledgement(ack ->
+														ack.thenEx(partitions.wrapDeath(id))))))))
+						.limit(uploadTargets))
+				.thenEx((containers, e) -> {
+					if (e != null) {
+						return ofFailure("Didn't connect to enough partitions to upload '" + name + '\'');
+					}
+					return Promise.of(containers);
+				});
 	}
 
 	private <T> Promise<T> call(Object id, Function<FsClient, Promise<T>> action) {
