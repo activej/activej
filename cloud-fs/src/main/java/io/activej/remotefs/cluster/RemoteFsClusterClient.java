@@ -25,8 +25,6 @@ import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
-import io.activej.csp.process.ChannelByteCombiner;
-import io.activej.csp.process.ChannelSplitter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -48,8 +46,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
-import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.remotefs.util.RemoteFsUtils.ofFixedSize;
 import static java.util.Collections.emptyMap;
@@ -66,6 +64,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	private final FsPartitions partitions;
 
 	private int replicationCount = 1;
+	private int uploadTargets = 1;
 
 	// region JMX
 	private final PromiseStats uploadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -98,8 +97,23 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	 * Sets the replication count that determines how many copies of the file should persist over the cluster.
 	 */
 	public RemoteFsClusterClient withReplicationCount(int replicationCount) {
-		checkArgument(1 <= replicationCount && replicationCount <= partitions.getClients().size(), "Replication count cannot be less than one or more than number of clients");
+		checkArgument(1 <= replicationCount && replicationCount <= partitions.getClients().size(),
+				"Replication count cannot be less than one or more than number of clients");
 		this.replicationCount = replicationCount;
+		this.uploadTargets = replicationCount;
+		return this;
+	}
+
+	/**
+	 * Sets the replication count as well as number of upload targets that determines the number of server where file will be uploaded.
+	 */
+	public RemoteFsClusterClient withReplicationCount(int replicationCount, int uploadTargets) {
+		checkArgument(1 <= replicationCount && replicationCount <= partitions.getClients().size(),
+				"Replication count cannot be less than one or more than number of clients");
+		checkArgument(replicationCount <= uploadTargets,
+				"Number of upload targets cannot be less than one or more than number of clients");
+		this.replicationCount = uploadTargets;
+		this.uploadTargets = uploadTargets;
 		return this;
 	}
 	// endregion
@@ -221,6 +235,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@NotNull
 	@Override
 	public Promise<Void> start() {
+		checkState(uploadTargets >= replicationCount, "Number of upload targets is less than replication count");
 		return ping();
 	}
 
@@ -266,17 +281,16 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 							.map(Try::get)
 							.collect(toList());
 
-					if (successes.isEmpty()) {
-						return ofFailure("Couldn't connect to any partition to upload file " + name);
+					if (successes.size() < uploadTargets) {
+						successes.forEach(container -> container.value.close());
+						return ofFailure("Didn't connect to enough partitions uploading " +
+								name + ", only " + successes.size() + " finished uploads");
 					}
 
-					ChannelSplitter<ByteBuf> splitter = ChannelSplitter.<ByteBuf>create().lenient();
-
-					Promise<List<Try<Void>>> uploadResults = Promises.toList(successes.stream()
-							.map(container -> getAcknowledgement(fn ->
-									splitter.addOutput()
-											.set(container.value.withAcknowledgement(fn)))
-									.toTry()));
+					ChannelByteSplitter splitter = ChannelByteSplitter.create(replicationCount);
+					for (Container<ChannelConsumer<ByteBuf>> container : successes) {
+						splitter.addOutput().set(container.value);
+					}
 
 					if (logger.isTraceEnabled()) {
 						logger.trace("uploading file {} to {}, {}", name, successes.stream()
@@ -284,29 +298,10 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 								.collect(joining(", ", "[", "]")), this);
 					}
 
-					ChannelConsumer<ByteBuf> consumer = splitter.getInput().getConsumer();
 
-					// check number of uploads only here, so even if there were less connections
-					// than replicationCount, they would still upload
-					return Promise.of(consumer
-							.transformWith(transformer)
-							.withAcknowledgement(ack -> ack
-									.then(() -> uploadResults)
-									.then(ackTries -> {
-										long successCount = ackTries.stream().filter(Try::isSuccess).count();
-										// check number of uploads only here, so even if there were less connections
-										// than replicationCount, they will still upload
-										if (ackTries.size() < replicationCount) {
-											return ofFailure("Didn't connect to enough partitions uploading " +
-													name + ", only " + successCount + " finished uploads");
-										}
-										if (successCount < replicationCount) {
-											return ofFailure("Couldn't finish uploading file " +
-													name + ", only " + successCount + " acknowledgements received");
-										}
-										return Promise.complete();
-									})
-									.whenComplete(finishStats.recordStats())));
+					return Promise.of(splitter.getInput().getConsumer()
+							.transformWith(transformer))
+							.whenComplete(finishStats.recordStats());
 				})
 				.whenComplete(startStats.recordStats());
 	}
@@ -325,7 +320,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 												ack.thenEx(partitions.wrapDeath(id)))))
 								.whenComplete((result, e) -> tries.add(Try.of(result, e)))))
 						.toTry())
-				.limit(replicationCount))
+				.limit(uploadTargets))
 				.map($ -> tries);
 	}
 
@@ -381,6 +376,11 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 	@JmxAttribute
 	public int getReplicationCount() {
 		return replicationCount;
+	}
+
+	@JmxAttribute
+	public int getUploadTargets() {
+		return uploadTargets;
 	}
 
 	@JmxAttribute

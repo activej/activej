@@ -65,4 +65,9 @@ public final class ChannelByteChunker extends AbstractChannelTransformer<Channel
 		return (bufs.hasRemaining() ? send(bufs.takeRemaining()) : Promise.complete())
 				.then(this::sendEndOfStream);
 	}
+
+	@Override
+	protected void onCleanup() {
+		bufs.recycle();
+	}
 }

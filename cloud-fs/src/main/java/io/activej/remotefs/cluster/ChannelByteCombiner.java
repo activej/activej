@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process;
+package io.activej.remotefs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ref.RefLong;
@@ -24,6 +24,7 @@ import io.activej.csp.ChannelOutput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelInputs;
 import io.activej.csp.dsl.WithChannelOutput;
+import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -34,13 +35,14 @@ import java.util.Objects;
 import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 
-public final class ChannelByteCombiner extends AbstractCommunicatingProcess
+final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		implements WithChannelInputs<ByteBuf>, WithChannelOutput<ChannelByteCombiner, ByteBuf> {
 
 	private final List<ChannelSupplier<ByteBuf>> inputs = new ArrayList<>();
 	private ChannelConsumer<ByteBuf> output;
 
 	private long outputOffset;
+	private long errorCount;
 
 	private ChannelByteCombiner() {
 	}
@@ -77,6 +79,7 @@ public final class ChannelByteCombiner extends AbstractCommunicatingProcess
 	@Override
 	protected void doProcess() {
 		Promises.all(inputs.stream().map(this::doProcessInput))
+				.whenException(output::closeEx)
 				.then($ -> output.acceptEndOfStream())
 				.whenComplete(this::completeProcess);
 	}
@@ -85,6 +88,15 @@ public final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		RefLong inputOffset = new RefLong(0);
 		return Promises.repeat(
 				() -> input.get()
+						.thenEx((buf, e) -> {
+							if (e == null) {
+								return Promise.of(buf);
+							}
+							if (++errorCount == inputs.size()) {
+								return Promise.ofException(e);
+							}
+							return Promise.of(null);
+						})
 						.then(buf -> {
 							if (buf == null) return Promise.of(false);
 							int toSkip = (int) Math.min(outputOffset - inputOffset.value, buf.readRemaining());

@@ -199,7 +199,8 @@ public final class TestRemoteFsClusterClient {
 
 	@Test
 	public void testNotEnoughUploads() {
-		client.withReplicationCount(partitions.getClients().size()); // max possible replication
+		int allClientsSize = partitions.getClients().size();
+		client.withReplicationCount(allClientsSize);
 
 		Throwable exception = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8))).streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded.txt")))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));

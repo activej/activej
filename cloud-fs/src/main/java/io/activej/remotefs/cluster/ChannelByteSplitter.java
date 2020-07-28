@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process;
+package io.activej.remotefs.cluster;
 
+import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelInput;
 import io.activej.csp.dsl.WithChannelOutputs;
+import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
 import java.util.ArrayList;
@@ -29,32 +32,25 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.api.Recyclable.tryRecycle;
-import static io.activej.common.api.Sliceable.trySlice;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 
-public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
-		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {
-	private ChannelSupplier<T> input;
-	private final List<ChannelConsumer<T>> outputs = new ArrayList<>();
+final class ChannelByteSplitter extends AbstractCommunicatingProcess
+		implements WithChannelInput<ChannelByteSplitter, ByteBuf>, WithChannelOutputs<ByteBuf> {
+	private final List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
+	private final int requiredSuccesses;
 
-	private ChannelSplitter() {
+	private ChannelSupplier<ByteBuf> input;
+
+	private ChannelByteSplitter(int requiredSuccesses) {
+		this.requiredSuccesses = requiredSuccesses;
 	}
 
-	public static <T> ChannelSplitter<T> create() {
-		return new ChannelSplitter<>();
-	}
-
-	public static <T> ChannelSplitter<T> create(ChannelSupplier<T> input) {
-		return new ChannelSplitter<T>().withInput(input);
-	}
-
-	public boolean hasOutputs() {
-		return !outputs.isEmpty();
+	public static ChannelByteSplitter create(int requiredSuccesses) {
+		return new ChannelByteSplitter(requiredSuccesses);
 	}
 
 	@Override
-	public ChannelInput<T> getInput() {
+	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
 			checkState(!isProcessStarted(), "Can't configure splitter while it is running");
 			this.input = sanitize(input);
@@ -64,11 +60,11 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 	}
 
 	@Override
-	public ChannelOutput<T> addOutput() {
+	public ChannelOutput<ByteBuf> addOutput() {
 		int index = outputs.size();
 		outputs.add(null);
 		return output -> {
-			outputs.set(index, sanitize(output));
+			outputs.set(index, output);
 			tryStart();
 		};
 	}
@@ -90,19 +86,32 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 		if (isProcessComplete()) {
 			return;
 		}
+		List<ChannelConsumer<ByteBuf>> failed = new ArrayList<>();
 		input.get()
-				.whenComplete((item, e) -> {
+				.whenComplete((buf, e) -> {
 					if (e == null) {
-						if (item != null) {
-							Promises.all(outputs.stream().map(output -> output.accept(trySlice(item))))
-									.whenComplete(($, e2) -> {
-										if (e2 == null) {
+						if (buf != null) {
+							Promises.all(outputs.stream()
+									.map(output -> output.accept(buf.slice())
+											.thenEx(($, e1) -> {
+												if (e1 == null) {
+													return Promise.of(null);
+												}
+												failed.add(output);
+												if (outputs.size() - failed.size() < requiredSuccesses) {
+													return Promise.ofException(e1);
+												}
+												return Promise.of(null);
+											})))
+									.whenComplete(($, e1) -> {
+										outputs.removeAll(failed);
+										if (e1 == null) {
 											doProcess();
 										} else {
-											closeEx(e2);
+											closeEx(e1);
 										}
 									});
-							tryRecycle(item);
+							buf.recycle();
 						} else {
 							Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
 									.whenComplete(($, e1) -> completeProcessEx(e1));

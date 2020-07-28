@@ -18,19 +18,16 @@ package io.activej.remotefs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
-import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteRanger;
-import io.activej.csp.process.ChannelSplitter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -308,7 +305,7 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 							.min()
 							.getAsLong();
 
-					ChannelSplitter<ByteBuf> splitter = ChannelSplitter.<ByteBuf>create()
+					ChannelByteSplitter splitter = ChannelByteSplitter.create(1)
 							.withInput(ChannelSupplier.ofPromise(localStorage.download(name, offset, meta.getSize())));
 
 					RefInt idx = new RefInt(0);
@@ -323,7 +320,6 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 								if (client == null) {
 									return Promise.ofException(new StacklessException(RemoteFsRepartitionController.class, "Client '" + partitionId + "' is not alive"));
 								}
-								Ref<Throwable> uploadError = new Ref<>();
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
 												.set(ChannelConsumer.ofPromise(remoteMeta == null ?
@@ -332,18 +328,13 @@ public final class RemoteFsRepartitionController implements WithInitializer<Remo
 																.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
 														.withAcknowledgement(ack -> ack
 																.thenEx(($, e) -> {
-																	if (e != null && uploadError.get() == null) {
-																		uploadError.set(e);
+																	if (e != null) {
 																		logger.warn("failed uploading to partition {}", partitionId, e);
 																		partitions.markIfDead(partitionId, e);
 																	}
 																	// returning complete promise so that other uploads would not fail
 																	return fn.apply(Promise.complete());
 																}))))
-										.then(() -> {
-											Throwable error = uploadError.get();
-											return error == null ? Promise.complete() : Promise.ofException(error);
-										})
 										.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId));
 							})
 							.map(Promise::toTry))
