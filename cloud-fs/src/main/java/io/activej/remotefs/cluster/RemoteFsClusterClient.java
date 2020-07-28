@@ -146,7 +146,6 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
-		ChannelByteCombiner combiner = ChannelByteCombiner.create();
 		return broadcast(
 				(id, client) -> {
 					logger.trace("downloading file {} from {}", name, id);
@@ -161,6 +160,7 @@ public final class RemoteFsClusterClient implements FsClient, WithInitializer<Re
 					if (suppliers.isEmpty()) {
 						return ofFailure("Could not download file '" + name + "' from any server");
 					}
+					ChannelByteCombiner combiner = ChannelByteCombiner.create();
 					for (ChannelSupplier<ByteBuf> supplier : suppliers) {
 						combiner.addInput().set(supplier);
 					}

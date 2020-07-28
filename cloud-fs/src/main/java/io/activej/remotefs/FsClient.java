@@ -33,7 +33,7 @@ import static io.activej.remotefs.util.RemoteFsUtils.escapeGlob;
 import static java.util.Collections.emptyMap;
 
 /**
- * This interface represents a simple filesystem client with upload, download, copy, delete and list operations.
+ * This interface represents a simple filesystem client with upload, append, download, copy, move, delete, info and list operations.
  */
 public interface FsClient {
 	StacklessException FILE_NOT_FOUND = new StacklessException(FsClient.class, "File not found");

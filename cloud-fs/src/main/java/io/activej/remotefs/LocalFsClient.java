@@ -313,16 +313,13 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		return execute(() -> {
-			Files.createDirectories(storage);
-			clearTempDir();
-		});
+		return execute((BlockingRunnable) () -> Files.createDirectories(storage));
 	}
 
 	@NotNull
 	@Override
 	public Promise<Void> stop() {
-		return execute(this::clearTempDir);
+		return Promise.complete();
 	}
 
 	@Override
@@ -340,17 +337,6 @@ public final class LocalFsClient implements FsClient, EventloopService, Eventloo
 				return;
 			}
 		}
-	}
-
-	private void clearTempDir() throws IOException {
-		if (!Files.isDirectory(tempDir)) {
-			return;
-		}
-		//noinspection ResultOfMethodCallIgnored
-		Files.walk(tempDir)
-				.sorted(Comparator.reverseOrder())
-				.map(Path::toFile)
-				.forEach(File::delete);
 	}
 
 	private Path resolve(String name) throws StacklessException {
