@@ -75,7 +75,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 
 	@Provides
 	WorkerPool workerPool(WorkerPools workerPools, Config config) {
-		return workerPools.createPool(config.get(ofInteger(), "workers", 4));
+		return workerPools.createPool(config.get(ofInteger(), "workers", WORKERS));
 	}
 
 	@Provides
