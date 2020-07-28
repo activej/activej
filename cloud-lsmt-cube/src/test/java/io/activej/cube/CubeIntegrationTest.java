@@ -1,8 +1,8 @@
 package io.activej.cube;
 
+import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.ChunkIdCodec;
-import io.activej.aggregation.RemoteFsChunkStorage;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
@@ -11,6 +11,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.*;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.LocalActiveFs;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTCommit;
@@ -18,7 +19,6 @@ import io.activej.ot.OTStateManager;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplinkImpl;
-import io.activej.remotefs.LocalFsClient;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -73,7 +73,7 @@ public class CubeIntegrationTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		RemoteFsChunkStorage<Long> aggregationChunkStorage = RemoteFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalFsClient.create(eventloop, executor, aggregationsDir));
+		ActiveFsChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
@@ -106,7 +106,7 @@ public class CubeIntegrationTest {
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
 
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
-				LocalFsClient.create(eventloop, executor, logsDir),
+				LocalActiveFs.create(eventloop, executor, logsDir),
 				SerializerBuilder.create(classLoader).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

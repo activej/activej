@@ -20,12 +20,12 @@ import io.activej.config.Config;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.LocalActiveFs;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
-import io.activej.remotefs.FsClient;
-import io.activej.remotefs.LocalFsClient;
 
 import java.util.concurrent.Executor;
 
@@ -58,8 +58,8 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, TimestampCon
 			}
 
 			@Provides
-			FsClient fsClient(Eventloop eventloop, Executor executor, Config config) {
-				return LocalFsClient.create(eventloop, executor, config.get(ofPath(), "crdt.local.path"));
+			ActiveFs fs(Eventloop eventloop, Executor executor, Config config) {
+				return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "crdt.local.path"));
 			}
 		};
 	}

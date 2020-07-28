@@ -1,8 +1,8 @@
 package io.activej.cube.service;
 
+import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
-import io.activej.aggregation.RemoteFsChunkStorage;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.Cube;
 import io.activej.cube.IdGeneratorStub;
@@ -14,10 +14,10 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.LocalActiveFs;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
-import io.activej.remotefs.LocalFsClient;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -67,7 +67,7 @@ public class CubeCleanerControllerTest {
 		eventloop = Eventloop.getCurrentEventloop();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		aggregationChunkStorage = RemoteFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalFsClient.create(eventloop, executor, aggregationsDir));
+		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
@@ -88,7 +88,7 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(eventloop,
-				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (RemoteFsChunkStorage<Long>) aggregationChunkStorage)
+				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofMillis(0))
 				.withExtraSnapshotsCount(1000);
 
@@ -101,7 +101,7 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(eventloop,
-				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (RemoteFsChunkStorage<Long>) aggregationChunkStorage)
+				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofSeconds(10));
 
 		await(cleanerController.cleanup());

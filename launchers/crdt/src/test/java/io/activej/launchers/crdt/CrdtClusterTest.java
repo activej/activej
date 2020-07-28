@@ -10,6 +10,8 @@ import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.LocalActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.inject.annotation.Provides;
@@ -17,8 +19,6 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
-import io.activej.remotefs.FsClient;
-import io.activej.remotefs.LocalFsClient;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -100,8 +100,8 @@ public final class CrdtClusterTest {
 				}
 
 				@Provides
-				FsClient fsClient(Eventloop eventloop, Executor executor, Config config) {
-					return LocalFsClient.create(eventloop, executor, config.get(ofPath(), "crdt.local.path"));
+				ActiveFs fs(Eventloop eventloop, Executor executor, Config config) {
+					return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "crdt.local.path"));
 				}
 			};
 		}

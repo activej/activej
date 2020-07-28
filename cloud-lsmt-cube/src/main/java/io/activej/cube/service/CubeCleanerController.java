@@ -16,7 +16,7 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.RemoteFsChunkStorage;
+import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.async.callback.Callback;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.collection.CollectionUtils;
@@ -64,7 +64,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 
 	private final OTSystem<D> otSystem;
 	private final OTRepositoryEx<K, D> repository;
-	private final RemoteFsChunkStorage<C> chunksStorage;
+	private final ActiveFsChunkStorage<C> chunksStorage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
 
@@ -82,7 +82,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 			CubeDiffScheme<D> cubeDiffScheme,
 			OTRepositoryEx<K, D> repository,
 			OTSystem<D> otSystem,
-			RemoteFsChunkStorage<C> chunksStorage) {
+			ActiveFsChunkStorage<C> chunksStorage) {
 		this.eventloop = eventloop;
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
@@ -94,7 +94,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 			CubeDiffScheme<D> cubeDiffScheme,
 			OTRepositoryEx<K, D> repository,
 			OTSystem<D> otSystem,
-			RemoteFsChunkStorage<C> storage) {
+			ActiveFsChunkStorage<C> storage) {
 		return new CubeCleanerController<>(eventloop, cubeDiffScheme, repository, otSystem, storage);
 	}
 

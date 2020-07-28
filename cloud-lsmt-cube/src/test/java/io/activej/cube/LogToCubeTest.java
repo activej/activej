@@ -1,8 +1,8 @@
 package io.activej.cube;
 
+import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
-import io.activej.aggregation.RemoteFsChunkStorage;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
@@ -13,6 +13,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.*;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.LocalActiveFs;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTCommit;
@@ -20,7 +21,6 @@ import io.activej.ot.OTStateManager;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplinkImpl;
-import io.activej.remotefs.LocalFsClient;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -69,7 +69,7 @@ public final class LogToCubeTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		AggregationChunkStorage<Long> aggregationChunkStorage = RemoteFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalFsClient.create(eventloop, executor, aggregationsDir));
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
@@ -91,7 +91,7 @@ public final class LogToCubeTest {
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
 
 		Multilog<TestPubRequest> multilog = MultilogImpl.create(eventloop,
-				LocalFsClient.create(eventloop, executor, logsDir),
+				LocalActiveFs.create(eventloop, executor, logsDir),
 				SerializerBuilder.create(classLoader).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

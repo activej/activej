@@ -9,7 +9,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.remotefs.LocalFsClient;
+import io.activej.fs.LocalActiveFs;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -92,7 +92,7 @@ public class CustomFieldsTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
 		Path path = temporaryFolder.newFolder().toPath();
-		AggregationChunkStorage<Long> aggregationChunkStorage = RemoteFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalFsClient.create(eventloop, executor, path));
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, path));
 
 		AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
 				.withKey("siteId", FieldTypes.ofInt())

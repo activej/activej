@@ -22,13 +22,13 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.fs.ActiveFs;
 import io.activej.promise.Promise;
-import io.activej.remotefs.FsClient;
 import org.jetbrains.annotations.Nullable;
 
 final class LogStreamChunker extends AbstractCommunicatingProcess implements ChannelInput<ByteBuf> {
 	private final CurrentTimeProvider currentTimeProvider;
-	private final FsClient client;
+	private final ActiveFs fs;
 	private final LogNamingScheme namingScheme;
 	private final String logPartition;
 
@@ -38,9 +38,9 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 
 	private LogFile currentChunk;
 
-	public LogStreamChunker(CurrentTimeProvider currentTimeProvider, FsClient client, LogNamingScheme namingScheme, String logPartition) {
+	public LogStreamChunker(CurrentTimeProvider currentTimeProvider, ActiveFs fs, LogNamingScheme namingScheme, String logPartition) {
 		this.currentTimeProvider = currentTimeProvider;
-		this.client = client;
+		this.fs = fs;
 		this.namingScheme = namingScheme;
 		this.logPartition = logPartition;
 	}
@@ -78,7 +78,7 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 		return flush()
 				.then(() -> {
 					this.currentChunk = (currentChunk == null) ? newChunkName : new LogFile(newChunkName.getName(), 0);
-					return client.append(namingScheme.path(logPartition, currentChunk), 0)
+					return fs.append(namingScheme.path(logPartition, currentChunk), 0)
 							.thenEx(this::sanitize)
 							.whenResult(newConsumer ->
 									this.currentConsumer = sanitize(newConsumer))

@@ -21,13 +21,13 @@ import io.activej.config.ConfigModule;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.LocalActiveFs;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.remotefs.LocalFsClient;
 import io.activej.service.ServiceGraphModule;
 import io.activej.trigger.TriggersModule;
 
@@ -58,8 +58,8 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	}
 
 	@Provides
-	LocalFsClient localFsClient(Eventloop eventloop, ExecutorService executor, Config config) {
-		return LocalFsClient.create(eventloop, executor, config.get(ofPath(), "crdt.localPath"));
+	LocalActiveFs localFsClient(Eventloop eventloop, ExecutorService executor, Config config) {
+		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "crdt.localPath"));
 	}
 
 	@Provides
@@ -90,7 +90,7 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 		}
 
 		@Provides
-		CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, LocalFsClient localFsClient, CrdtDescriptor<K, S> descriptor, Config config) {
+		CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, LocalActiveFs localFsClient, CrdtDescriptor<K, S> descriptor, Config config) {
 			return CrdtStorageFs.create(eventloop, localFsClient, descriptor.getSerializer(), descriptor.getCrdtFunction())
 					.withInitializer(ofFsCrdtClient(config.getChild("crdt.files")));
 		}

@@ -42,14 +42,13 @@ import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.FileMetadata;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
-import io.activej.remotefs.FileMetadata;
-import io.activej.remotefs.FsClient;
-import io.activej.remotefs.FsClients;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -60,6 +59,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static io.activej.fs.ActiveFsAdapters.subdirectory;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 
@@ -68,15 +68,15 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
 
 	private final Eventloop eventloop;
-	private final FsClient client;
+	private final ActiveFs fs;
 	private final CrdtFunction<S> function;
 	private final CrdtDataSerializer<K, S> serializer;
 
 	private Function<String, String> namingStrategy = ext -> UUID.randomUUID().toString() + "." + ext;
 	private Duration consolidationMargin = Duration.ofMinutes(30);
 
-	private FsClient consolidationFolderClient;
-	private FsClient tombstoneFolderClient;
+	private ActiveFs consolidationFolderFs;
+	private ActiveFs tombstoneFolderFs;
 	private CrdtFilter<S> filter = $ -> true;
 
 	// region JMX
@@ -95,30 +95,30 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	// region creators
 	private CrdtStorageFs(
 			Eventloop eventloop,
-			FsClient client,
-			FsClient consolidationFolderClient, FsClient tombstoneFolderClient, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function
+			ActiveFs fs,
+			ActiveFs consolidationFolderFs, ActiveFs tombstoneFolderFs, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function
 	) {
 		this.eventloop = eventloop;
-		this.client = client;
+		this.fs = fs;
 		this.function = function;
 		this.serializer = serializer;
-		this.consolidationFolderClient = consolidationFolderClient;
-		this.tombstoneFolderClient = tombstoneFolderClient;
+		this.consolidationFolderFs = consolidationFolderFs;
+		this.tombstoneFolderFs = tombstoneFolderFs;
 	}
 
 	public static <K extends Comparable<K>, S> CrdtStorageFs<K, S> create(
-			Eventloop eventloop, FsClient client,
+			Eventloop eventloop, ActiveFs fs,
 			CrdtDataSerializer<K, S> serializer,
 			CrdtFunction<S> function
 	) {
-		return new CrdtStorageFs<>(eventloop, client, FsClients.subdirectory(client, ".consolidation"), FsClients.subdirectory(client, ".tombstones"), serializer, function);
+		return new CrdtStorageFs<>(eventloop, fs, subdirectory(fs, ".consolidation"), subdirectory(fs, ".tombstones"), serializer, function);
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageFs<K, S> create(
-			Eventloop eventloop, FsClient client,
+			Eventloop eventloop, ActiveFs fs,
 			CrdtDataSerializer<K, S> serializer
 	) {
-		return new CrdtStorageFs<>(eventloop, client, FsClients.subdirectory(client, ".consolidation"), FsClients.subdirectory(client, ".tombstones"), serializer, CrdtFunction.ofCrdtType());
+		return new CrdtStorageFs<>(eventloop, fs, subdirectory(fs, ".consolidation"), subdirectory(fs, ".tombstones"), serializer, CrdtFunction.ofCrdtType());
 	}
 
 	public CrdtStorageFs<K, S> withConsolidationMargin(Duration consolidationMargin) {
@@ -132,17 +132,17 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	}
 
 	public CrdtStorageFs<K, S> withConsolidationFolder(String subdirectory) {
-		consolidationFolderClient = FsClients.subdirectory(client, subdirectory);
+		consolidationFolderFs = subdirectory(fs, subdirectory);
 		return this;
 	}
 
 	public CrdtStorageFs<K, S> withTombstoneFolder(String subdirectory) {
-		tombstoneFolderClient = FsClients.subdirectory(client, subdirectory);
+		tombstoneFolderFs = subdirectory(fs, subdirectory);
 		return this;
 	}
 
-	public CrdtStorageFs<K, S> withConsolidationFolderClient(FsClient consolidationFolderClient) {
-		this.consolidationFolderClient = consolidationFolderClient;
+	public CrdtStorageFs<K, S> withConsolidationFolderClient(ActiveFs consolidationFolderFs) {
+		this.consolidationFolderFs = consolidationFolderFs;
 		return this;
 	}
 
@@ -151,8 +151,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		return this;
 	}
 
-	public CrdtStorageFs<K, S> withTombstoneFolderClient(FsClient tombstoneFolderClient) {
-		this.tombstoneFolderClient = tombstoneFolderClient;
+	public CrdtStorageFs<K, S> withTombstoneFolderClient(ActiveFs tombstoneFolderFs) {
+		this.tombstoneFolderFs = tombstoneFolderFs;
 		return this;
 	}
 	// endregion
@@ -165,7 +165,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		return client.upload(namingStrategy.apply("bin"))
+		return fs.upload(namingStrategy.apply("bin"))
 				.map(consumer -> StreamConsumer.ofSupplier(supplier -> supplier
 						.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 						.transformWith(ChannelSerializer.create(serializer))
@@ -174,7 +174,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		return Promises.toTuple(client.list("*"), tombstoneFolderClient.list("*"))
+		return Promises.toTuple(fs.list("*"), tombstoneFolderFs.list("*"))
 				.map(f -> {
 					StreamReducerSimple<K, CrdtReducingData<K, S>, CrdtData<K, S>, CrdtAccumulator<S>> reducer =
 							StreamReducerSimple.create(x -> x.key, Comparator.naturalOrder(), new CrdtReducer());
@@ -182,7 +182,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 					Stream<Map.Entry<String, FileMetadata>> stream = f.getValue1().entrySet().stream();
 
 					Stream<Promise<Void>> files = (timestamp == 0 ? stream : stream.filter(e -> e.getValue().getTimestamp() >= timestamp))
-							.map(entry -> ChannelSupplier.ofPromise(client.download(entry.getKey()))
+							.map(entry -> ChannelSupplier.ofPromise(fs.download(entry.getKey()))
 									.transformWith(ChannelDeserializer.create(serializer))
 									.transformWith(StreamMapper.create(data -> {
 										S partial = function.extract(data.getState(), timestamp);
@@ -193,7 +193,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 					stream = f.getValue2().entrySet().stream();
 					Stream<Promise<Void>> tombstones = (timestamp == 0 ? stream : stream.filter(e -> e.getValue().getTimestamp() >= timestamp))
-							.map(entry -> ChannelSupplier.ofPromise(tombstoneFolderClient.download(entry.getKey()))
+							.map(entry -> ChannelSupplier.ofPromise(tombstoneFolderFs.download(entry.getKey()))
 									.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
 									.transformWith(StreamMapper.create(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
 									.streamTo(reducer.newInput()));
@@ -207,7 +207,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
-		return tombstoneFolderClient.upload(namingStrategy.apply("tomb"))
+		return tombstoneFolderFs.upload(namingStrategy.apply("tomb"))
 				.map(consumer -> StreamConsumer.ofSupplier(supplier -> supplier
 						.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 						.transformWith(ChannelSerializer.create(serializer.getKeySerializer()))
@@ -216,7 +216,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	@Override
 	public Promise<Void> ping() {
-		return client.ping();
+		return fs.ping();
 	}
 
 	@NotNull
@@ -235,15 +235,15 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		long barrier = eventloop.currentInstant().minus(consolidationMargin).toEpochMilli();
 		Set<String> blacklist = new HashSet<>();
 
-		return consolidationFolderClient.list("*")
+		return consolidationFolderFs.list("*")
 				.then(list ->
 						Promises.all(list.entrySet().stream()
 								.filter(entry -> entry.getValue().getTimestamp() > barrier)
-								.map(entry -> ChannelSupplier.ofPromise(client.download(entry.getKey()))
+								.map(entry -> ChannelSupplier.ofPromise(fs.download(entry.getKey()))
 										.toCollector(ByteBufQueue.collector())
 										.whenResult(byteBuf -> blacklist.addAll(Arrays.asList(byteBuf.asString(UTF_8).split("\n"))))
 										.toVoid())))
-				.then(() -> client.list("*"))
+				.then(() -> fs.list("*"))
 				.then(list -> {
 					String name = namingStrategy.apply("bin");
 					List<String> files = list.keySet().stream()
@@ -255,20 +255,20 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 					String metafile = namingStrategy.apply("dump");
 					//noinspection Convert2MethodRef
-					return consolidationFolderClient.upload(metafile)
+					return consolidationFolderFs.upload(metafile)
 							.then(consumer ->
 									ChannelSupplier.of(ByteBuf.wrapForReading(dump.getBytes(UTF_8)))
 											.streamTo(consumer))
 							.then(() -> download())
 							.then(producer -> producer
 									.transformWith(ChannelSerializer.create(serializer))
-									.streamTo(ChannelConsumer.ofPromise(client.upload(name))))
-							.then(() -> tombstoneFolderClient.list("*")
+									.streamTo(ChannelConsumer.ofPromise(fs.upload(name))))
+							.then(() -> tombstoneFolderFs.list("*")
 									.map(fileMap -> Promises.sequence(fileMap.keySet().stream()
-											.map(filename -> () -> tombstoneFolderClient.delete(filename))))
+											.map(filename -> () -> tombstoneFolderFs.delete(filename))))
 							)
-							.then(() -> consolidationFolderClient.delete(metafile))
-							.then(() -> Promises.all(files.stream().map(client::delete)));
+							.then(() -> consolidationFolderFs.delete(metafile))
+							.then(() -> Promises.all(files.stream().map(fs::delete)));
 				})
 				.whenComplete(consolidationStats.recordStats());
 	}

@@ -21,13 +21,13 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
+import io.activej.fs.ActiveFsServer;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.remotefs.RemoteFsServer;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.Executor;
@@ -41,7 +41,7 @@ public abstract class RemoteFsServerLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "remotefs-server.properties";
 
 	@Inject
-	RemoteFsServer remoteFsServer;
+	ActiveFsServer activeFsServer;
 
 	@Provides
 	public Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
@@ -51,8 +51,8 @@ public abstract class RemoteFsServerLauncher extends Launcher {
 	}
 
 	@Provides
-	RemoteFsServer remoteFsServer(Eventloop eventloop, Executor executor, Config config) {
-		return RemoteFsServer.create(eventloop, executor, config.get(ofPath(), "remotefs.path"))
+	ActiveFsServer remoteFsServer(Eventloop eventloop, Executor executor, Config config) {
+		return ActiveFsServer.create(eventloop, executor, config.get(ofPath(), "remotefs.path"))
 				.withInitializer(ofRemoteFsServer(config.getChild("remotefs")));
 
 	}

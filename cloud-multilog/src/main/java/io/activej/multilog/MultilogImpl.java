@@ -32,9 +32,9 @@ import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.fs.ActiveFs;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.remotefs.FsClient;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +57,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
 	private final Eventloop eventloop;
-	private final FsClient client;
+	private final ActiveFs fs;
 	private final LogNamingScheme namingScheme;
 	private final BinarySerializer<T> serializer;
 
@@ -70,17 +70,17 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 	private final StreamStatsDetailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
 	private final StreamStatsDetailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
 
-	private MultilogImpl(Eventloop eventloop, FsClient client, BinarySerializer<T> serializer,
+	private MultilogImpl(Eventloop eventloop, ActiveFs fs, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		this.eventloop = eventloop;
-		this.client = client;
+		this.fs = fs;
 		this.serializer = serializer;
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> MultilogImpl<T> create(Eventloop eventloop, FsClient client,
+	public static <T> MultilogImpl<T> create(Eventloop eventloop, ActiveFs fs,
 			BinarySerializer<T> serializer, LogNamingScheme namingScheme) {
-		return new MultilogImpl<>(eventloop, client, serializer, namingScheme);
+		return new MultilogImpl<>(eventloop, fs, serializer, namingScheme);
 	}
 
 	public MultilogImpl<T> withBufferSize(int bufferSize) {
@@ -111,7 +111,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 						.transformWith(ChannelLZ4Compressor.createFastCompressor())
 						.transformWith(streamWrites.register(logPartition))
 						.transformWith(streamWriteStats)
-						.bindTo(new LogStreamChunker(eventloop, client, namingScheme, logPartition))));
+						.bindTo(new LogStreamChunker(eventloop, fs, namingScheme, logPartition))));
 	}
 
 	@Override
@@ -120,7 +120,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 			@Nullable LogFile endLogFile) {
 		validateLogPartition(logPartition);
 		LogPosition startPosition = LogPosition.create(startLogFile, startOffset);
-		return client.list(namingScheme.getListGlob(logPartition))
+		return fs.list(namingScheme.getListGlob(logPartition))
 				.map(files ->
 						files.keySet().stream()
 								.map(namingScheme::parse)
@@ -172,7 +172,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 					logger.trace("Read log file `{}` from: {}", currentLogFile, position);
 
 				return StreamSupplier.ofPromise(
-						client.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
+						fs.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
 								.map(fileStream -> {
 									inputStreamPosition = 0L;
 									sw.reset().start();
@@ -205,11 +205,11 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 			private void log(Throwable e) {
 				if (e == null && logger.isTraceEnabled()) {
 					logger.trace("Finish log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
-							client, namingScheme.path(logPartition, currentPosition.getLogFile()),
+							fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
 							sw, inputStreamPosition, inputStreamPosition / Math.max(sw.elapsed(SECONDS), 1));
 				} else if (e != null && logger.isErrorEnabled()) {
 					logger.error("Error on log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
-							client, namingScheme.path(logPartition, currentPosition.getLogFile()),
+							fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
 							sw, inputStreamPosition, inputStreamPosition / Math.max(sw.elapsed(SECONDS), 1), e);
 				}
 			}

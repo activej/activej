@@ -1,12 +1,12 @@
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.RemoteActiveFs;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
-import io.activej.remotefs.RemoteFsClient;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
@@ -35,7 +35,7 @@ public final class FileDownloadExample extends Launcher {
 	}
 
 	@Inject
-	private RemoteFsClient client;
+	private RemoteActiveFs client;
 
 	@Inject
 	private Eventloop eventloop;
@@ -46,8 +46,8 @@ public final class FileDownloadExample extends Launcher {
 	}
 
 	@Provides
-	RemoteFsClient remoteFsClient(Eventloop eventloop) {
-		return RemoteFsClient.create(eventloop, new InetSocketAddress(SERVER_PORT));
+	RemoteActiveFs remoteFsClient(Eventloop eventloop) {
+		return RemoteActiveFs.create(eventloop, new InetSocketAddress(SERVER_PORT));
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.remotefs.LocalFsClient;
+import io.activej.fs.LocalActiveFs;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
@@ -82,7 +82,7 @@ public class CrdtStorageAPITest {
 						"FsCrdtClient",
 						(ICrdtClientFactory<String, TimestampContainer<Integer>>) (executor, testFolder, crdtFunction) -> {
 							Eventloop eventloop = Eventloop.getCurrentEventloop();
-							return CrdtStorageFs.create(eventloop, LocalFsClient.create(eventloop, executor, testFolder), serializer, crdtFunction);
+							return CrdtStorageFs.create(eventloop, LocalActiveFs.create(eventloop, executor, testFolder), serializer, crdtFunction);
 						}
 				},
 				new Object[]{

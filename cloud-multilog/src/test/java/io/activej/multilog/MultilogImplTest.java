@@ -5,7 +5,7 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.eventloop.Eventloop;
-import io.activej.remotefs.LocalFsClient;
+import io.activej.fs.LocalActiveFs;
 import io.activej.serializer.BinarySerializers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -36,7 +36,7 @@ public class MultilogImplTest {
 	public void testConsumer() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		Multilog<String> multilog = MultilogImpl.create(eventloop,
-				LocalFsClient.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath()),
+				LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath()),
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";

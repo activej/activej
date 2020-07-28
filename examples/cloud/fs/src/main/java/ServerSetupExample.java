@@ -10,7 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * This example demonstrates configuring and launching RemoteFsServer.
+ * This example demonstrates configuring and launching ActiveFsServer.
  */
 //[START EXAMPLE]
 public class ServerSetupExample extends RemoteFsServerLauncher {

@@ -19,13 +19,13 @@ package io.activej.launchers.remotefs;
 import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFsServer;
+import io.activej.fs.RemoteActiveFs;
+import io.activej.fs.cluster.ClusterActiveFs;
+import io.activej.fs.cluster.ClusterRepartitionController;
+import io.activej.fs.cluster.FsPartitions;
+import io.activej.fs.http.HttpActiveFs;
 import io.activej.http.AsyncHttpClient;
-import io.activej.remotefs.RemoteFsClient;
-import io.activej.remotefs.RemoteFsServer;
-import io.activej.remotefs.cluster.FsPartitions;
-import io.activej.remotefs.cluster.RemoteFsClusterClient;
-import io.activej.remotefs.cluster.RemoteFsRepartitionController;
-import io.activej.remotefs.http.HttpFsClient;
 
 import java.util.Map;
 
@@ -36,12 +36,12 @@ import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 
 public final class Initializers {
 
-	public static Initializer<RemoteFsServer> ofRemoteFsServer(Config config) {
+	public static Initializer<ActiveFsServer> ofRemoteFsServer(Config config) {
 		return server -> server
 				.withInitializer(ofAbstractServer(config));
 	}
 
-	public static Initializer<RemoteFsRepartitionController> ofRepartitionController(Config config) {
+	public static Initializer<ClusterRepartitionController> ofRepartitionController(Config config) {
 		return controller -> controller
 				.withGlob(config.get("glob", "**"))
 				.withNegativeGlob(config.get("negativeGlob", ""))
@@ -53,14 +53,14 @@ public final class Initializers {
 			Map<String, Config> tcpPartitions = config.getChild("partitions").getChild("tcp").getChildren();
 			Eventloop eventloop = fsPartitions.getEventloop();
 			for (Map.Entry<String, Config> connection : tcpPartitions.entrySet()) {
-				RemoteFsClient client = RemoteFsClient.create(eventloop,
+				RemoteActiveFs client = RemoteActiveFs.create(eventloop,
 						connection.getValue().get(ofInetSocketAddress(), THIS));
 				fsPartitions.withPartition(connection.getKey(), client);
 			}
 			Map<String, Config> httpPartitions = config.getChild("partitions").getChild("http").getChildren();
 			for (Map.Entry<String, Config> connection : httpPartitions.entrySet()) {
 				AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop);
-				HttpFsClient client = HttpFsClient.create(connection.getValue().get(ofString(), THIS), httpClient);
+				HttpActiveFs client = HttpActiveFs.create(connection.getValue().get(ofString(), THIS), httpClient);
 				fsPartitions.withPartition(connection.getKey(), client);
 			}
 			checkState(!tcpPartitions.isEmpty() || !httpPartitions.isEmpty(),
@@ -68,7 +68,7 @@ public final class Initializers {
 		};
 	}
 
-	public static Initializer<RemoteFsClusterClient> ofRemoteFsCluster(Config config) {
+	public static Initializer<ClusterActiveFs> ofRemoteFsCluster(Config config) {
 		return cluster -> cluster.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 	}
 

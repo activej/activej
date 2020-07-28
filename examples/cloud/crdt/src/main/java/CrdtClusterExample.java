@@ -7,10 +7,10 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.LocalActiveFs;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.remotefs.FsClient;
-import io.activej.remotefs.LocalFsClient;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,7 +38,7 @@ public final class CrdtClusterExample {
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
 			Path storage = Files.createTempDirectory("storage_"+ id);
-			FsClient fs = LocalFsClient.create(eventloop, executor, storage);
+			ActiveFs fs = LocalActiveFs.create(eventloop, executor, storage);
 			clients.put(id, CrdtStorageFs.create(eventloop, fs, SERIALIZER));
 		}
 

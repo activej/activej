@@ -33,6 +33,10 @@ import io.activej.datastream.processor.StreamMerger;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.LocalActiveFs;
+import io.activej.fs.http.ActiveFsServlet;
+import io.activej.fs.http.HttpActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
@@ -45,10 +49,6 @@ import io.activej.inject.module.Modules;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.remotefs.FsClient;
-import io.activej.remotefs.LocalFsClient;
-import io.activej.remotefs.http.HttpFsClient;
-import io.activej.remotefs.http.RemoteFsServlet;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
@@ -255,9 +255,9 @@ public final class PartitionedStreamTest {
 
 		Set<String> allTargetItems = new HashSet<>();
 		for (int i = 0; i < targetFsServers.size(); i++) {
-			FsClient client = createClient(Eventloop.getCurrentEventloop(), targetFsServers.get(i));
+			ActiveFs fs = createClient(Eventloop.getCurrentEventloop(), targetFsServers.get(i));
 			List<String> items = new ArrayList<>();
-			await(client.download(TARGET_FILENAME)
+			await(fs.download(TARGET_FILENAME)
 					.then(supplier -> supplier.transformWith(new CSVDecoder())
 							.streamTo(StreamConsumerToList.create(items))));
 			for (String item : items) {
@@ -304,23 +304,23 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@Named("source")
-					List<FsClient> sourceFsClients(Eventloop eventloop) {
+					List<ActiveFs> sourceFss(Eventloop eventloop) {
 						return createClients(eventloop, sourceFsServers);
 					}
 
 					@Provides
 					@Named("target")
-					List<FsClient> targetFsClients(Eventloop eventloop) {
+					List<ActiveFs> targetFss(Eventloop eventloop) {
 						return createClients(eventloop, targetFsServers);
 					}
 
 					@Provides
 					@DatasetId("data source")
-					PartitionedStreamSupplierFactory<String> data(@Named("source") List<FsClient> fsClients) {
+					PartitionedStreamSupplierFactory<String> data(@Named("source") List<ActiveFs> activeFss) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamUnion<String> union = StreamUnion.create();
-							for (int i = partitionIndex; i < fsClients.size(); i += maxPartitions) {
-								ChannelSupplier.ofPromise(fsClients.get(i).download(SOURCE_FILENAME))
+							for (int i = partitionIndex; i < activeFss.size(); i += maxPartitions) {
+								ChannelSupplier.ofPromise(activeFss.get(i).download(SOURCE_FILENAME))
 										.transformWith(new CSVDecoder())
 										.streamTo(union.newInput());
 							}
@@ -330,12 +330,12 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@DatasetId("sorted data source")
-					PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<FsClient> fsClients) {
+					PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<ActiveFs> activeFss) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamMerger<Integer, String> merger = StreamMerger.create(KEY_FUNCTION, Integer::compareTo, false);
 
-							for (int i = partitionIndex; i < fsClients.size(); i += maxPartitions) {
-								ChannelSupplier.ofPromise(fsClients.get(i).download(SOURCE_FILENAME))
+							for (int i = partitionIndex; i < activeFss.size(); i += maxPartitions) {
+								ChannelSupplier.ofPromise(activeFss.get(i).download(SOURCE_FILENAME))
 										.transformWith(new CSVDecoder())
 										.streamTo(merger.newInput());
 							}
@@ -345,15 +345,15 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@DatasetId("data target")
-					PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<FsClient> fsClients) {
+					PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<ActiveFs> activeFss) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamSplitter<String, String> splitter = StreamSplitter.create((item, acceptors) ->
 									acceptors[item.hashCode() % acceptors.length].accept(item));
 
 							List<Promise<Void>> uploads = new ArrayList<>();
-							for (int i = partitionIndex; i < fsClients.size(); i += maxPartitions) {
+							for (int i = partitionIndex; i < activeFss.size(); i += maxPartitions) {
 								uploads.add(splitter.newOutput()
-										.streamTo(ChannelConsumer.ofPromise(fsClients.get(i).upload(TARGET_FILENAME))
+										.streamTo(ChannelConsumer.ofPromise(activeFss.get(i).upload(TARGET_FILENAME))
 												.transformWith(new CSVEncoder())));
 							}
 
@@ -399,15 +399,15 @@ public final class PartitionedStreamTest {
 	// endregion
 
 	// region helpers
-	private static List<FsClient> createClients(Eventloop eventloop, List<AsyncHttpServer> servers) {
+	private static List<ActiveFs> createClients(Eventloop eventloop, List<AsyncHttpServer> servers) {
 		return servers.stream()
 				.map(server -> createClient(eventloop, server))
 				.collect(Collectors.toList());
 	}
 
-	private static FsClient createClient(Eventloop eventloop, AsyncHttpServer server){
+	private static ActiveFs createClient(Eventloop eventloop, AsyncHttpServer server){
 		int port = server.getListenAddresses().get(0).getPort();
-		return HttpFsClient.create("http://localhost:" + port, AsyncHttpClient.create(eventloop));
+		return HttpActiveFs.create("http://localhost:" + port, AsyncHttpClient.create(eventloop));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {
@@ -480,8 +480,8 @@ public final class PartitionedStreamTest {
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("source_server_" + i + "_").toPath();
 			writeDataFile(tmp, i, sorted);
-			LocalFsClient fsClient = LocalFsClient.create(serverEventloop, newSingleThreadExecutor(), tmp);
-			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, RemoteFsServlet.create(fsClient));
+			LocalActiveFs fsClient = LocalActiveFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(fsClient));
 			servers.add(server);
 		}
 		for (AsyncHttpServer server : servers) {
@@ -494,8 +494,8 @@ public final class PartitionedStreamTest {
 		List<AsyncHttpServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
-			LocalFsClient fsClient = LocalFsClient.create(serverEventloop, newSingleThreadExecutor(), tmp);
-			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, RemoteFsServlet.create(fsClient));
+			LocalActiveFs fsClient = LocalActiveFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(fsClient));
 			servers.add(server);
 		}
 		for (AsyncHttpServer server : servers) {

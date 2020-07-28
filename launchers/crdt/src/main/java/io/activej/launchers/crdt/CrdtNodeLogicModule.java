@@ -25,11 +25,11 @@ import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.QualifierAnnotation;
 import io.activej.inject.module.AbstractModule;
-import io.activej.remotefs.FsClient;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.ElementType;
@@ -73,8 +73,8 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, Config config, FsClient fsClient, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorageFs.create(eventloop, fsClient, descriptor.getSerializer(), descriptor.getCrdtFunction())
+	CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, Config config, ActiveFs activeFs, CrdtDescriptor<K, S> descriptor) {
+		return CrdtStorageFs.create(eventloop, activeFs, descriptor.getSerializer(), descriptor.getCrdtFunction())
 				.withInitializer(ofFsCrdtClient(config));
 	}
 

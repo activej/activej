@@ -3,9 +3,9 @@ package io.activej.launchers.crdt;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.LocalActiveFs;
 import io.activej.inject.annotation.Provides;
-import io.activej.remotefs.FsClient;
-import io.activej.remotefs.LocalFsClient;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -35,8 +35,8 @@ public class CrdtNodeLauncherTest {
 					}
 
 					@Provides
-					FsClient fsClient() {
-						return LocalFsClient.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
+					ActiveFs fs() {
+						return LocalActiveFs.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
 					}
 				};
 			}

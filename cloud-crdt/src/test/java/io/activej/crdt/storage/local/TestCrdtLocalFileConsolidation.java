@@ -7,7 +7,7 @@ import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.remotefs.LocalFsClient;
+import io.activej.fs.LocalActiveFs;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -27,7 +27,7 @@ import static io.activej.serializer.BinarySerializers.*;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public final class TestCrdtLocalFileConsolidation {
-	private LocalFsClient fsClient;
+	private LocalActiveFs fsClient;
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -40,7 +40,7 @@ public final class TestCrdtLocalFileConsolidation {
 
 	@Before
 	public void setup() throws IOException {
-		fsClient = LocalFsClient.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), temporaryFolder.newFolder().toPath());
+		fsClient = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), temporaryFolder.newFolder().toPath());
 	}
 
 	private Set<Integer> union(Set<Integer> first, Set<Integer> second) {

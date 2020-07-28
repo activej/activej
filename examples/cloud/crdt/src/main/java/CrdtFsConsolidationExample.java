@@ -6,9 +6,9 @@ import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.LocalActiveFs;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.remotefs.LocalFsClient;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,7 +38,7 @@ public final class CrdtFsConsolidationExample {
 		//[START REGION_1]
 		// create our storage dir and an fs client which operates on that dir
 		Path storage = Files.createTempDirectory("storage");
-		LocalFsClient fsClient = LocalFsClient.create(eventloop, executor, storage);
+		LocalActiveFs fsClient = LocalActiveFs.create(eventloop, executor, storage);
 
 		// our item is a set of integers, so we create a CRDT function for it
 		// also each CRDT item needs to have a timestamp, so we wrap the sets

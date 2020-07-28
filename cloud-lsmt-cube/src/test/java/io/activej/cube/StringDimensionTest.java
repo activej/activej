@@ -1,8 +1,8 @@
 package io.activej.cube;
 
+import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
-import io.activej.aggregation.RemoteFsChunkStorage;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.bean.DataItemResultString;
 import io.activej.cube.bean.DataItemString1;
@@ -11,7 +11,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.remotefs.LocalFsClient;
+import io.activej.fs.LocalActiveFs;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -52,7 +52,7 @@ public class StringDimensionTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		AggregationChunkStorage<Long> aggregationChunkStorage = RemoteFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalFsClient.create(eventloop, executor, aggregationsDir));
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("key1", ofString())
 				.withDimension("key2", ofInt())

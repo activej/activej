@@ -19,30 +19,30 @@ package io.activej.launchers.remotefs;
 import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.ActiveFsServer;
+import io.activej.fs.cluster.ClusterRepartitionController;
+import io.activej.fs.cluster.FsPartitions;
+import io.activej.fs.cluster.ServerSelector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
-import io.activej.remotefs.FsClient;
-import io.activej.remotefs.RemoteFsServer;
-import io.activej.remotefs.cluster.FsPartitions;
-import io.activej.remotefs.cluster.RemoteFsRepartitionController;
-import io.activej.remotefs.cluster.ServerSelector;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.common.Utils.nullToDefault;
+import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
 import static io.activej.launchers.remotefs.Initializers.ofFsPartitions;
 import static io.activej.launchers.remotefs.Initializers.ofRepartitionController;
-import static io.activej.remotefs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 
 public abstract class RepartitionControllerLauncher extends RemoteFsServerLauncher {
 
 	@Inject
-    RemoteFsRepartitionController controller;
+	ClusterRepartitionController controller;
 
 	@Inject
 	@Named("repartition")
@@ -54,7 +54,7 @@ public abstract class RepartitionControllerLauncher extends RemoteFsServerLaunch
 
 	@Provides
 	@Named("repartition")
-	EventloopTaskScheduler eventloopTaskScheduler(Config config, RemoteFsRepartitionController controller) {
+	EventloopTaskScheduler eventloopTaskScheduler(Config config, ClusterRepartitionController controller) {
 		return EventloopTaskScheduler.create(controller.getEventloop(), controller::repartition)
 				.withInitializer(ofEventloopTaskScheduler(config.getChild("scheduler.repartition")));
 	}
@@ -67,20 +67,20 @@ public abstract class RepartitionControllerLauncher extends RemoteFsServerLaunch
 	}
 
 	@Provides
-	RemoteFsRepartitionController repartitionController(Config config,
-			RemoteFsServer localServer, FsPartitions partitions) {
+	ClusterRepartitionController repartitionController(Config config,
+			ActiveFsServer localServer, FsPartitions partitions) {
 		String localPartitionId = config.get("remotefs.repartition.localPartitionId");
-		return RemoteFsRepartitionController.create(localPartitionId, partitions)
+		return ClusterRepartitionController.create(localPartitionId, partitions)
 				.withInitializer(ofRepartitionController(config.getChild("remotefs.repartition")));
 	}
 
 	@Provides
 	FsPartitions fsPartitions(Config config,
-			RemoteFsServer localServer, Eventloop eventloop,
+			ActiveFsServer localServer, Eventloop eventloop,
 			@Optional ServerSelector serverSelector) {
-		Map<Object, FsClient> clients = new HashMap<>();
-		clients.put(config.get("remotefs.repartition.localPartitionId"), localServer.getClient());
-		return FsPartitions.create(eventloop, clients)
+		Map<Object, ActiveFs> partitions = new HashMap<>();
+		partitions.put(config.get("remotefs.repartition.localPartitionId"), localServer.getFs());
+		return FsPartitions.create(eventloop, partitions)
 				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER))
 				.withInitializer(ofFsPartitions(config.getChild("remotefs.cluster")));
 	}

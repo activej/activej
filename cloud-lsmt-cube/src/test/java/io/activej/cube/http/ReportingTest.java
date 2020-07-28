@@ -16,6 +16,7 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.*;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.LocalActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.multilog.Multilog;
@@ -25,7 +26,6 @@ import io.activej.ot.OTStateManager;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplinkImpl;
-import io.activej.remotefs.LocalFsClient;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.EventloopRule;
@@ -271,7 +271,7 @@ public final class ReportingTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		AggregationChunkStorage<Long> aggregationChunkStorage = RemoteFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalFsClient.create(eventloop, executor, aggregationsDir));
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
 		cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(classLoader, 5))
 				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
@@ -309,7 +309,7 @@ public final class ReportingTest {
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
 
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
-				LocalFsClient.create(eventloop, executor, temporaryFolder.getRoot().toPath()),
+				LocalActiveFs.create(eventloop, executor, temporaryFolder.getRoot().toPath()),
 				SerializerBuilder.create(classLoader).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
