@@ -319,7 +319,10 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		return execute((BlockingRunnable) () -> Files.createDirectories(storage));
+		return execute(() -> {
+			Files.createDirectories(storage);
+			clearTempDir();
+		});
 	}
 
 	@NotNull
@@ -343,6 +346,17 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				return;
 			}
 		}
+	}
+
+	private void clearTempDir() throws IOException {
+		if (!Files.isDirectory(tempDir)) {
+			return;
+		}
+		//noinspection ResultOfMethodCallIgnored
+		Files.walk(tempDir)
+				.sorted(Comparator.reverseOrder())
+				.map(Path::toFile)
+				.forEach(File::delete);
 	}
 
 	private Path resolve(String name) throws StacklessException {
