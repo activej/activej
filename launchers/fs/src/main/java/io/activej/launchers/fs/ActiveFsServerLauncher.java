@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.launchers.remotefs;
+package io.activej.launchers.fs;
 
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
@@ -34,11 +34,11 @@ import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.inject.module.Modules.combine;
+import static io.activej.launchers.fs.Initializers.ofActiveFsServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
-import static io.activej.launchers.remotefs.Initializers.ofRemoteFsServer;
 
-public abstract class RemoteFsServerLauncher extends Launcher {
-	public static final String PROPERTIES_FILE = "remotefs-server.properties";
+public abstract class ActiveFsServerLauncher extends Launcher {
+	public static final String PROPERTIES_FILE = "activefs-server.properties";
 
 	@Inject
 	ActiveFsServer activeFsServer;
@@ -51,15 +51,15 @@ public abstract class RemoteFsServerLauncher extends Launcher {
 	}
 
 	@Provides
-	ActiveFsServer remoteFsServer(Eventloop eventloop, Executor executor, Config config) {
-		return ActiveFsServer.create(eventloop, executor, config.get(ofPath(), "remotefs.path"))
-				.withInitializer(ofRemoteFsServer(config.getChild("remotefs")));
+	ActiveFsServer activeFsServer(Eventloop eventloop, Executor executor, Config config) {
+		return ActiveFsServer.create(eventloop, executor, config.get(ofPath(), "activefs.path"))
+				.withInitializer(ofActiveFsServer(config.getChild("activefs")));
 
 	}
 
 	@Provides
 	Executor executor(Config config) {
-		return ConfigConverters.getExecutor(config.getChild("remotefs.executor"));
+		return ConfigConverters.getExecutor(config.getChild("activefs.executor"));
 	}
 
 	@Provides
@@ -84,7 +84,7 @@ public abstract class RemoteFsServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Launcher launcher = new RemoteFsServerLauncher() {};
+		Launcher launcher = new ActiveFsServerLauncher() {};
 		launcher.launch(args);
 	}
 }

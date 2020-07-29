@@ -9,7 +9,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activej-launchers-remotefs</artifactId>
+  <artifactId>activej-launchers-fs</artifactId>
 
   <name>Launchers : FS</name>
 
@@ -34,7 +34,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>io.activej.launchers.remotefs</Automatic-Module-Name>
+              <Automatic-Module-Name>io.activej.launchers.fs</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

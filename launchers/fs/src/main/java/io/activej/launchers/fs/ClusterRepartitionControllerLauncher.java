@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.launchers.remotefs;
+package io.activej.launchers.fs;
 
 import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.config.Config;
@@ -35,11 +35,11 @@ import java.util.Map;
 
 import static io.activej.common.Utils.nullToDefault;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
+import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
+import static io.activej.launchers.fs.Initializers.ofFsPartitions;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
-import static io.activej.launchers.remotefs.Initializers.ofFsPartitions;
-import static io.activej.launchers.remotefs.Initializers.ofRepartitionController;
 
-public abstract class RepartitionControllerLauncher extends RemoteFsServerLauncher {
+public abstract class ClusterRepartitionControllerLauncher extends ActiveFsServerLauncher {
 
 	@Inject
 	ClusterRepartitionController controller;
@@ -69,9 +69,9 @@ public abstract class RepartitionControllerLauncher extends RemoteFsServerLaunch
 	@Provides
 	ClusterRepartitionController repartitionController(Config config,
 			ActiveFsServer localServer, FsPartitions partitions) {
-		String localPartitionId = config.get("remotefs.repartition.localPartitionId");
+		String localPartitionId = config.get("activefs.repartition.localPartitionId");
 		return ClusterRepartitionController.create(localPartitionId, partitions)
-				.withInitializer(ofRepartitionController(config.getChild("remotefs.repartition")));
+				.withInitializer(ofClusterRepartitionController(config.getChild("activefs.repartition")));
 	}
 
 	@Provides
@@ -79,14 +79,14 @@ public abstract class RepartitionControllerLauncher extends RemoteFsServerLaunch
 			ActiveFsServer localServer, Eventloop eventloop,
 			@Optional ServerSelector serverSelector) {
 		Map<Object, ActiveFs> partitions = new HashMap<>();
-		partitions.put(config.get("remotefs.repartition.localPartitionId"), localServer.getFs());
+		partitions.put(config.get("activefs.repartition.localPartitionId"), localServer.getFs());
 		return FsPartitions.create(eventloop, partitions)
 				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER))
-				.withInitializer(ofFsPartitions(config.getChild("remotefs.cluster")));
+				.withInitializer(ofFsPartitions(config.getChild("activefs.cluster")));
 	}
 
 	public static void main(String[] args) throws Exception {
-		Launcher launcher = new RepartitionControllerLauncher() {};
+		Launcher launcher = new ClusterRepartitionControllerLauncher() {};
 		launcher.launch(args);
 	}
 }

@@ -1,4 +1,4 @@
-package io.activej.launchers.remotefs;
+package io.activej.launchers.fs;
 
 import io.activej.config.Config;
 import io.activej.inject.annotation.Provides;
@@ -20,7 +20,7 @@ import java.util.Random;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.test.TestUtils.getFreePort;
 
-public final class RepartitionControllerLauncherTest {
+public final class ClusterRepartitionControllerLauncherTest {
 	private static final int serverNumber = getFreePort();
 
 	@ClassRule
@@ -31,21 +31,21 @@ public final class RepartitionControllerLauncherTest {
 
 	@Test
 	public void testInjector() {
-		new RepartitionControllerLauncher() {}.testInjector();
+		new ClusterRepartitionControllerLauncher() {}.testInjector();
 	}
 
 	@Test
 	@Ignore("startup point for the testing launcher override")
 	public void launchServer() throws Exception {
-		new RemoteFsServerLauncher() {
+		new ActiveFsServerLauncher() {
 			@Override
 			protected Module getOverrideModule() {
 				return new AbstractModule() {
 					@Provides
 					Config config() {
 						return Config.create()
-								.with("remotefs.path", Config.ofValue("storages/server_" + serverNumber))
-								.with("remotefs.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(serverNumber)));
+								.with("activefs.path", Config.ofValue("storages/server_" + serverNumber))
+								.with("activefs.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(serverNumber)));
 					}
 				};
 			}
@@ -60,7 +60,7 @@ public final class RepartitionControllerLauncherTest {
 		createFiles(Paths.get("storages/local"), 1000, 10 * 1024, 100 * 1024);
 		System.out.println("Created local files in " + ((System.nanoTime() - start) / 1e6) + " ms");
 
-		new RepartitionControllerLauncher() {
+		new ClusterRepartitionControllerLauncher() {
 			@Override
 			protected Module getOverrideModule() {
 				return new AbstractModule() {

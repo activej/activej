@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.launchers.remotefs;
+package io.activej.launchers.fs;
 
 import io.activej.common.api.Initializer;
 import io.activej.config.Config;
@@ -36,12 +36,12 @@ import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 
 public final class Initializers {
 
-	public static Initializer<ActiveFsServer> ofRemoteFsServer(Config config) {
+	public static Initializer<ActiveFsServer> ofActiveFsServer(Config config) {
 		return server -> server
 				.withInitializer(ofAbstractServer(config));
 	}
 
-	public static Initializer<ClusterRepartitionController> ofRepartitionController(Config config) {
+	public static Initializer<ClusterRepartitionController> ofClusterRepartitionController(Config config) {
 		return controller -> controller
 				.withGlob(config.get("glob", "**"))
 				.withNegativeGlob(config.get("negativeGlob", ""))

@@ -4,7 +4,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
-import io.activej.launchers.remotefs.RemoteFsServerLauncher;
+import io.activej.launchers.fs.ActiveFsServerLauncher;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,7 +13,7 @@ import java.nio.file.Path;
  * This example demonstrates configuring and launching ActiveFsServer.
  */
 //[START EXAMPLE]
-public class ServerSetupExample extends RemoteFsServerLauncher {
+public class ServerSetupExample extends ActiveFsServerLauncher {
 	private Path storage;
 
 	@Override
