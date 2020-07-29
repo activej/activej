@@ -23,6 +23,7 @@ import io.activej.common.MemSize;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
+import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -66,6 +67,7 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.*;
 
@@ -320,8 +322,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> start() {
 		return execute(() -> {
-			Files.createDirectories(storage);
 			clearTempDir();
+			Files.createDirectories(tempDir);
 		});
 	}
 
@@ -337,7 +339,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private void deleteEmptyParents(Path parent) {
-		while (!parent.equals(storage)) {
+		while (!parent.equals(storage) && !parent.equals(tempDir)) {
 			try {
 				Files.deleteIfExists(parent);
 				parent = parent.getParent();
@@ -367,10 +369,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return path;
 	}
 
-	private Path resolveTemp(String name) {
-		return tempDir.resolve(toLocalName.apply(name)).normalize();
-	}
-
 	private Promise<Path> resolveAsync(String name) {
 		try {
 			return Promise.of(resolve(name));
@@ -380,23 +378,20 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
-		Path tempPath = resolveTemp(name);
 		return execute(
 				() -> {
-					Path path = resolve(name);
-					FileChannel channel = ensureParent(tempPath, () -> FileChannel.open(tempPath, CREATE_NEW, WRITE));
-					if (Files.exists(path)) {
-						deleteEmptyParents(tempPath);
-						throw Files.isDirectory(path) ? IS_DIRECTORY : FILE_EXISTS;
+					if (Files.isDirectory(resolve(name))){
+						throw IS_DIRECTORY;
 					}
-					return channel;
+					Path tempPath = Files.createTempFile(tempDir, "", "");
+					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
-				.map(channel -> ChannelFileWriter.create(executor, channel)
+				.map(pathAndChannel -> ChannelFileWriter.create(executor, pathAndChannel.getValue2())
 						.transformWith(transformer)
 						.withAcknowledgement(ack -> ack
-								.then(() -> execute(() -> doMove(tempPath, resolve(name))))
+								.then(() -> execute(() -> doMove(pathAndChannel.getValue1(), resolve(name))))
 								.thenEx(translateKnownErrors(name))
-								.whenException(() -> execute(() -> deleteEmptyParents(tempPath)))
+								.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
 								.whenComplete(uploadFinishPromise.recordStats())
 								.whenComplete(toLogger(logger, TRACE, "uploadComplete", name, this))))
 				.thenEx(translateKnownErrors(name))
@@ -409,8 +404,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			Path targetPath = resolve(entry.getValue());
 
 			if (!Files.exists(path)) throw FILE_NOT_FOUND;
-			if (Files.exists(targetPath)) throw Files.isDirectory(targetPath) ? IS_DIRECTORY : FILE_EXISTS;
-			if (Files.isDirectory(path)) throw IS_DIRECTORY;
+			if (Files.isDirectory(path) || Files.isDirectory(targetPath)) throw IS_DIRECTORY;
 
 			if (path.equals(targetPath)) {
 				touch(path);
@@ -424,10 +418,10 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						touch(targetPath);
 					} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
 						// if couldn't, then just actually copy it
-						Files.copy(path, targetPath);
+						Files.copy(path, targetPath, REPLACE_EXISTING);
 					}
 				} else {
-					Files.copy(path, targetPath);
+					Files.copy(path, targetPath, REPLACE_EXISTING);
 				}
 				return null;
 			});
@@ -440,8 +434,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			Path targetPath = resolve(entry.getValue());
 
 			if (!Files.exists(path)) throw FILE_NOT_FOUND;
-			if (Files.exists(targetPath)) throw Files.isDirectory(targetPath) ? IS_DIRECTORY : FILE_EXISTS;
-			if (Files.isDirectory(path)) throw IS_DIRECTORY;
+			if (Files.isDirectory(path) || Files.isDirectory(targetPath)) throw IS_DIRECTORY;
 
 			if (path.equals(targetPath)) {
 				Files.deleteIfExists(path);
@@ -458,7 +451,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				Files.move(path, targetPath, ATOMIC_MOVE);
 				touch(targetPath);
 			} catch (AtomicMoveNotSupportedException e) {
-				Files.move(path, targetPath);
+				Files.move(path, targetPath, REPLACE_EXISTING);
 			}
 			return null;
 		});

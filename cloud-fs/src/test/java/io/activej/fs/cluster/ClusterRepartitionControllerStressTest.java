@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
+import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
 import static java.util.stream.Collectors.toList;
@@ -88,7 +89,9 @@ public final class ClusterRepartitionControllerStressTest {
 
 			partitions.put("server_" + i, RemoteActiveFs.create(eventloop, address));
 
-			ActiveFsServer server = ActiveFsServer.create(eventloop, executor, serverStorages[i]).withListenAddress(address);
+			initTempDir(serverStorages[i]);
+			LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, serverStorages[i]);
+			ActiveFsServer server = ActiveFsServer.create(eventloop, localFs).withListenAddress(address);
 			server.listen();
 			servers.add(server);
 		}
@@ -152,15 +155,15 @@ public final class ClusterRepartitionControllerStressTest {
 				.whenComplete(assertComplete($ -> {
 					scheduler.stop();
 					double ms = (System.nanoTime() - start2) / 1e6;
-					System.out.println(String.format("Done repartitioning in %.2f ms", ms));
+					System.out.printf("Done repartitioning in %.2f ms%n", ms);
 					Promises.toList(partitions.getAlivePartitions().values().stream().map(fsClient -> fsClient.list("**").toTry()))
 							.map(lss -> lss.stream().mapToLong(ls -> {
 								Map<String, FileMetadata> mss = ls.getOrNull();
 								return mss == null ? 0 : mss.values().stream().mapToLong(FileMetadata::getSize).sum();
 							}).sum())
 							.whenComplete(assertComplete(bytes -> {
-								System.out.println(String.format("%d overall bytes", bytes));
-								System.out.println(String.format("Average speed was %.2f mbit/second", bytes / (1 << 17) * (1000 / ms)));
+								System.out.printf("%d overall bytes%n", bytes);
+								System.out.printf("Average speed was %.2f mbit/second%n", bytes / (1 << 17) * (1000 / ms));
 								finished = true;
 								servers.forEach(AbstractServer::close);
 							}));

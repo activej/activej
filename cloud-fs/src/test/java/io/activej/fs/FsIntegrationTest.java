@@ -35,6 +35,7 @@ import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.fs.ActiveFs.BAD_PATH;
+import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -70,7 +71,9 @@ public final class FsIntegrationTest {
 		Executor executor = newCachedThreadPool();
 
 		storage = temporaryFolder.newFolder("server_storage").toPath();
-		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), executor, storage).withListenAddress(address);
+		initTempDir(storage);
+		LocalActiveFs localFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, storage);
+		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenAddress(address);
 		server.listen();
 		fs = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), address);
 	}

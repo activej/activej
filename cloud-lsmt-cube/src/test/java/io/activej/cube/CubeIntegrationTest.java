@@ -42,6 +42,7 @@ import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.TestUtils.runProcessLogs;
+import static io.activej.fs.LocalActiveFs.SYSTEM_DIR;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
@@ -73,7 +74,9 @@ public class CubeIntegrationTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		ActiveFsChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		await(fs.start());
+		ActiveFsChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
@@ -105,8 +108,10 @@ public class CubeIntegrationTest {
 		OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
 
+		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
+		await(localFs.start());
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
-				LocalActiveFs.create(eventloop, executor, logsDir),
+				localFs,
 				SerializerBuilder.create(classLoader).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
@@ -182,10 +187,10 @@ public class CubeIntegrationTest {
 		assertEquals(map, queryResult.stream().collect(toMap(r -> r.date, r -> r.clicks)));
 
 		// Check files in aggregations directory
-		Set<String> actualChunkFileNames = new TreeSet<>();
-		for (File file : aggregationsDir.toFile().listFiles()) {
-			actualChunkFileNames.add(file.getName());
-		}
+		Set<String> actualChunkFileNames = Arrays.stream(aggregationsDir.toFile().listFiles())
+				.map(File::getName)
+				.filter(s -> !s.startsWith(SYSTEM_DIR))
+				.collect(toSet());
 		assertEquals(concat(Stream.of("backups"), cube.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
 				actualChunkFileNames);
 	}

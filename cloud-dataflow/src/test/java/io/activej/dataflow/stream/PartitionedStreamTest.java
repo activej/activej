@@ -481,6 +481,7 @@ public final class PartitionedStreamTest {
 			Path tmp = tempDir.newFolder("source_server_" + i + "_").toPath();
 			writeDataFile(tmp, i, sorted);
 			LocalActiveFs fsClient = LocalActiveFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			await(fsClient.start());
 			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(fsClient));
 			servers.add(server);
 		}
@@ -495,6 +496,7 @@ public final class PartitionedStreamTest {
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
 			LocalActiveFs fsClient = LocalActiveFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			await(fsClient.start());
 			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(fsClient));
 			servers.add(server);
 		}

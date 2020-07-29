@@ -64,8 +64,9 @@ public final class CubeTest {
 
 	@Before
 	public void setUp() throws Exception {
-		LocalActiveFs storage = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
-		chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
+		LocalActiveFs fs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
+		await(fs.start());
+		chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
 		cube = newCube(executor, classLoader, chunkStorage);
 	}
 
@@ -120,8 +121,9 @@ public final class CubeTest {
 
 	private AsyncHttpServer startServer(Executor executor, Path serverStorage) throws IOException {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		LocalActiveFs fsClient = LocalActiveFs.create(eventloop, executor, serverStorage);
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop, ActiveFsServlet.create(fsClient))
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, serverStorage);
+		await(fs.start());
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, ActiveFsServlet.create(fs))
 				.withListenPort(LISTEN_PORT);
 		server.listen();
 		return server;
@@ -417,6 +419,7 @@ public final class CubeTest {
 		Executor executor = newSingleThreadExecutor();
 
 		LocalActiveFs storage = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
+		await(storage.start());
 		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
@@ -432,6 +435,7 @@ public final class CubeTest {
 		Executor executor = newSingleThreadExecutor();
 
 		LocalActiveFs storage = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
+		await(storage.start());
 		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 

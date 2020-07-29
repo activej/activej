@@ -26,6 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.fs.ActiveFs.ILLEGAL_OFFSET;
 import static io.activej.fs.ActiveFs.MALFORMED_GLOB;
+import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -61,7 +62,9 @@ public final class TestPartialRemoteFs {
 
 		serverStorage = tempFolder.newFolder().toPath();
 		clientStorage = tempFolder.newFolder().toPath();
-		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), executor, serverStorage).withListenAddress(ADDRESS);
+		LocalActiveFs localFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, serverStorage);
+		initTempDir(serverStorage);
+		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenAddress(ADDRESS);
 		server.listen();
 		client = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), ADDRESS);
 

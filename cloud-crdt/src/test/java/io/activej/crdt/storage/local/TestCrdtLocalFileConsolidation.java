@@ -41,6 +41,7 @@ public final class TestCrdtLocalFileConsolidation {
 	@Before
 	public void setup() throws IOException {
 		fsClient = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), temporaryFolder.newFolder().toPath());
+		await(fsClient.start());
 	}
 
 	private Set<Integer> union(Set<Integer> first, Set<Integer> second) {

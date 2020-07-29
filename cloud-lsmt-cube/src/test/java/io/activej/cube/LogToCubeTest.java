@@ -69,7 +69,9 @@ public final class LogToCubeTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		await(fs.start());
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
@@ -90,8 +92,10 @@ public final class LogToCubeTest {
 		OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
 
+		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
+		await(localFs.start());
 		Multilog<TestPubRequest> multilog = MultilogImpl.create(eventloop,
-				LocalActiveFs.create(eventloop, executor, logsDir),
+				localFs,
 				SerializerBuilder.create(classLoader).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

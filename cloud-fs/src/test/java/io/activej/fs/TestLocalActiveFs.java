@@ -28,8 +28,10 @@ import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
-import static io.activej.fs.ActiveFs.*;
+import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
+import static io.activej.fs.ActiveFs.MALFORMED_GLOB;
 import static io.activej.fs.LocalActiveFs.SYSTEM_DIR;
+import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -97,6 +99,7 @@ public final class TestLocalActiveFs {
 		}
 
 		client = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), storagePath);
+		initTempDir(storagePath);
 	}
 
 	@Test
@@ -226,9 +229,12 @@ public final class TestLocalActiveFs {
 	}
 
 	@Test
-	public void testMoveIntoExisting() {
-		Throwable exception = awaitException(client.move("1/b.txt", "1/a.txt"));
-		assertSame(FILE_EXISTS, exception);
+	public void testMoveIntoExisting() throws IOException {
+		byte[] expected = Files.readAllBytes(storagePath.resolve("1/b.txt"));
+		await(client.move("1/b.txt", "1/a.txt"));
+
+		assertArrayEquals(expected, Files.readAllBytes(storagePath.resolve("1/a.txt")));
+		assertFalse(Files.exists(storagePath.resolve("1/b.txt")));
 	}
 
 	@Test

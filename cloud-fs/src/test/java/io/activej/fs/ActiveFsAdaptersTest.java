@@ -11,11 +11,13 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.fs.ActiveFs.BAD_PATH;
+import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -37,7 +39,9 @@ public final class ActiveFsAdaptersTest {
 
 	@Before
 	public void setup() throws IOException {
-		local = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), temporaryFolder.newFolder("test").toPath());
+		Path path = temporaryFolder.newFolder("test").toPath();
+		initTempDir(path);
+		local = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), path);
 	}
 
 	private void upload(ActiveFs fs, String filename) {

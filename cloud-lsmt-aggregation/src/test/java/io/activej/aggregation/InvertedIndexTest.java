@@ -86,7 +86,9 @@ public class InvertedIndexTest {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		Path path = temporaryFolder.newFolder().toPath();
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, path));
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, path);
+		await(fs.start());
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
 
 		AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
 				.withKey("word", ofString())

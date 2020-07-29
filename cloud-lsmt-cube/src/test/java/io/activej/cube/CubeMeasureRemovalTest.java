@@ -91,17 +91,23 @@ public class CubeMeasureRemovalTest {
 		executor = Executors.newCachedThreadPool();
 		classLoader = DefiningClassLoader.create();
 		dataSource = dataSource("test.properties");
-		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		await(fs.start());
+		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(classLoader).build(LogItem.class);
+		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
+		await(localFs.start());
 		multilog = MultilogImpl.create(eventloop,
-				LocalActiveFs.create(eventloop, executor, logsDir),
+				localFs,
 				serializer,
 				NAME_PARTITION_REMAINDER_SEQ);
 	}
 
 	@Test
 	public void test() throws Exception {
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		await(fs.start());
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
@@ -129,8 +135,10 @@ public class CubeMeasureRemovalTest {
 				otSystem, LogDiffCodec.create(CubeDiffCodec.create(cube)));
 		initializeRepository(repository);
 
+		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
+		await(localFs.start());
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
-				LocalActiveFs.create(eventloop, executor, logsDir),
+				localFs,
 				SerializerBuilder.create(classLoader).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

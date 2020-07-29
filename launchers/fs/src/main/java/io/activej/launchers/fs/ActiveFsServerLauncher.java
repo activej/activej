@@ -21,6 +21,8 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Optional;
@@ -51,10 +53,14 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 	}
 
 	@Provides
-	ActiveFsServer activeFsServer(Eventloop eventloop, Executor executor, Config config) {
-		return ActiveFsServer.create(eventloop, executor, config.get(ofPath(), "activefs.path"))
+	ActiveFsServer activeFsServer(Eventloop eventloop, ActiveFs activeFs, Config config) {
+		return ActiveFsServer.create(eventloop, activeFs)
 				.withInitializer(ofActiveFsServer(config.getChild("activefs")));
+	}
 
+	@Provides
+	ActiveFs localActivefs(Eventloop eventloop, Executor executor, Config config){
+		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "activefs.path"));
 	}
 
 	@Provides

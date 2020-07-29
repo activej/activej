@@ -20,7 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -28,6 +27,7 @@ import java.util.function.Consumer;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.fs.ActiveFs.*;
+import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -75,6 +75,9 @@ public final class TestLocalActiveFsInvariants {
 		first = LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), firstPath);
 		second = new DefaultActiveFs(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), secondPath));
 
+		initTempDir(firstPath);
+		initTempDir(secondPath);
+
 		initializeDirs(asList(
 				"file",
 				"file2",
@@ -86,9 +89,6 @@ public final class TestLocalActiveFsInvariants {
 
 	private void initializeDirs(List<String> paths) {
 		try {
-			clearDirectory(firstPath);
-			clearDirectory(secondPath);
-
 			for (String path : paths) {
 				Path file = firstPath.resolve(path);
 				Files.createDirectories(file.getParent());
@@ -190,7 +190,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void moveSelfFiles() {
-		both(client -> assertEquals(FILE_EXISTS, awaitException(client.move("file2", "file2"))));
+		both(client -> await(client.move("file2", "file2")));
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file2")))));
 		assertFilesAreSame();
@@ -305,7 +305,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void copySelf() throws IOException {
 		byte[] bytes = Files.readAllBytes(firstPath.resolve("file2"));
-		both(client -> assertEquals(FILE_EXISTS, awaitException(client.copy("file2", "file2"))));
+		both(client -> await(client.copy("file2", "file2")));
 		assertFilesAreSame();
 		assertArrayEquals(bytes, Files.readAllBytes(firstPath.resolve("file2")));
 	}
@@ -339,11 +339,12 @@ public final class TestLocalActiveFsInvariants {
 	}
 
 	@Test
-	public void copyIsNotIdempotent() {
+	public void copyIsIdempotent() {
 		both(client -> {
 			await(client.copy("file", "newFile"));
-			assertSame(FILE_EXISTS, awaitException(client.copy("file", "newFile")));
+			await(client.copy("file", "newFile"));
 		});
+		assertFileEquals("file", "newFile");
 		assertFilesAreSame();
 	}
 	// endregion
@@ -549,10 +550,10 @@ public final class TestLocalActiveFsInvariants {
 	}
 
 	@Test
-	public void copyAllIsNotIdempotent() {
+	public void copyAllIsIdempotent() {
 		both(client -> {
 			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
-			assertEquals(FILE_EXISTS, awaitException(client.copyAll(map("file", "newFile", "file2", "newFile2"))));
+			await(client.copyAll(map("file", "newFile", "file2", "newFile2")));
 		});
 
 		assertFileEquals("file", "newFile");
@@ -847,15 +848,6 @@ public final class TestLocalActiveFsInvariants {
 			}
 		} catch (IOException e) {
 			throw new AssertionError(e);
-		}
-	}
-
-	private void clearDirectory(Path dir) throws IOException {
-		for (Iterator<Path> iterator = Files.list(dir).iterator(); iterator.hasNext(); ) {
-			Path file = iterator.next();
-			if (Files.isDirectory(file))
-				clearDirectory(file);
-			Files.delete(file);
 		}
 	}
 

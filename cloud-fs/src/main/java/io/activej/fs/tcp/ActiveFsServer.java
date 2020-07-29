@@ -22,7 +22,6 @@ import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.RemoteFsCommands.*;
 import io.activej.fs.tcp.RemoteFsResponses.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -32,11 +31,9 @@ import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 
 import java.net.InetAddress;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
@@ -78,10 +75,6 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 		super(eventloop);
 		this.fs = fs;
 		addHandlers();
-	}
-
-	public static ActiveFsServer create(Eventloop eventloop, Executor executor, Path storage) {
-		return new ActiveFsServer(eventloop, LocalActiveFs.create(eventloop, executor, storage));
 	}
 
 	public static ActiveFsServer create(Eventloop eventloop, ActiveFs fs) {

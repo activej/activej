@@ -271,7 +271,9 @@ public final class ReportingTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		await(fs.start());
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
 		cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(classLoader, 5))
 				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
@@ -308,8 +310,10 @@ public final class ReportingTest {
 		OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
 
+		LocalActiveFs activeFs = LocalActiveFs.create(eventloop, executor, temporaryFolder.getRoot().toPath());
+		await(activeFs.start());
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
-				LocalActiveFs.create(eventloop, executor, temporaryFolder.getRoot().toPath()),
+				activeFs,
 				SerializerBuilder.create(classLoader).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
