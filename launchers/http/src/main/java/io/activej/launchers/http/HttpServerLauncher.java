@@ -47,7 +47,17 @@ import static io.activej.launchers.initializers.Initializers.ofHttpServer;
  * @see Launcher
  */
 public abstract class HttpServerLauncher extends Launcher {
-	public static final String PROPERTIES_FILE = "http-server.properties";
+	public int getPort() {
+		return 8080;
+	}
+	
+	public String getPropertiesFile() {
+		return getProtocol() + "-server.properties";
+	}
+
+	public String getProtocol() {
+		return "http";
+	}
 
 	@Inject
 	AsyncHttpServer httpServer;
@@ -62,14 +72,14 @@ public abstract class HttpServerLauncher extends Launcher {
 	@Provides
 	AsyncHttpServer server(Eventloop eventloop, AsyncServlet rootServlet, Config config) {
 		return AsyncHttpServer.create(eventloop, rootServlet)
-				.withInitializer(ofHttpServer(config.getChild("http")));
+				.withInitializer(ofHttpServer(config.getChild(getProtocol())));
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(8080)))
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+				.with(getProtocol() + ".listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(getPort())))
+				.overrideWith(ofClassPathProperties(getPropertiesFile(), true))
 				.overrideWith(ofSystemProperties("config"));
 	}
 
@@ -93,7 +103,10 @@ public abstract class HttpServerLauncher extends Launcher {
 
 	@Override
 	protected void run() throws Exception {
-		logger.info("HTTP Server is now available at {}", String.join(", ", httpServer.getHttpAddresses()));
+		logger.info(getProtocol().toUpperCase() + " Server is now available at {}", String.join(", ", Stream.concat(
+				primaryServer.getListenAddresses().stream().map(address -> "http://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"),
+				primaryServer.getSslListenAddresses().stream().map(address -> "https://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"))
+				.collect(joining(" ")));
 		awaitShutdown();
 	}
 
