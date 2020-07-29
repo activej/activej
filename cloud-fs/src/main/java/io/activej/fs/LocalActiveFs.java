@@ -94,6 +94,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private final Executor executor;
 
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
+	private boolean hardlinkOnCopy = false;
 
 	CurrentTimeProvider now;
 
@@ -133,6 +134,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	 */
 	public LocalActiveFs withReaderBufferSize(MemSize size) {
 		readerBufferSize = size;
+		return this;
+	}
+
+	/**
+	 * If set to {@code true}, an attempt to create a hard link will be made when copying files
+	 */
+	public LocalActiveFs withHardLinkOnCopy(boolean hardLinkOnCopy) {
+		this.hardlinkOnCopy = hardLinkOnCopy;
 		return this;
 	}
 	// endregion
@@ -395,7 +404,17 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			}
 
 			ensureParent(targetPath, () -> {
-				Files.copy(path, targetPath);
+				if (hardlinkOnCopy) {
+					try {
+						Files.createLink(targetPath, path);
+						touch(targetPath);
+					} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
+						// if couldn't, then just actually copy it
+						Files.copy(path, targetPath);
+					}
+				} else {
+					Files.copy(path, targetPath);
+				}
 				return null;
 			});
 		}

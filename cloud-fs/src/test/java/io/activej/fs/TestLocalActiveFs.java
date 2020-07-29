@@ -290,4 +290,23 @@ public final class TestLocalActiveFs {
 		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
 		assertEquals("testsecond", await(await(client.download("second")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
 	}
+
+	@Test
+	public void copyWithHardLinksDoesNotCreateNewFile() {
+		client.withHardLinkOnCopy(true);
+
+		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("first")));
+		await(client.copy("first", "second"));
+
+		await(ChannelSupplier.of(wrapUtf8("first")).streamTo(client.append("first", 4)));
+
+		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+		assertEquals("testfirst", await(await(client.download("second")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+
+		await(ChannelSupplier.of(wrapUtf8("second")).streamTo(client.append("second", 9)));
+
+		assertEquals("testfirstsecond", await(await(client.download("first")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+		assertEquals("testfirstsecond", await(await(client.download("second")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+	}
+
 }
