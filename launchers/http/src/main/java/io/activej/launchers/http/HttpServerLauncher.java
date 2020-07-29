@@ -52,7 +52,7 @@ public abstract class HttpServerLauncher extends Launcher {
 	}
 	
 	public String getPropertiesFile() {
-		return getProtocol() + "-server.properties";
+		return getProtocol().name().toLowerCase() + "-server.properties";
 	}
 
 	public String getProtocol() {
@@ -72,7 +72,7 @@ public abstract class HttpServerLauncher extends Launcher {
 	@Provides
 	AsyncHttpServer server(Eventloop eventloop, AsyncServlet rootServlet, Config config) {
 		return AsyncHttpServer.create(eventloop, rootServlet)
-				.withInitializer(ofHttpServer(config.getChild(getProtocol())));
+				.withInitializer(ofHttpServer(config.getChild(getProtocol().name().toLowerCase())));
 	}
 
 	@Provides
@@ -103,7 +103,7 @@ public abstract class HttpServerLauncher extends Launcher {
 
 	@Override
 	protected void run() throws Exception {
-		logger.info(getProtocol().toUpperCase() + " Server is now available at {}", String.join(", ", Stream.concat(
+		logger.info(getProtocol().name().toUpperCase() + " Server is now available at {}", String.join(", ", Stream.concat(
 				primaryServer.getListenAddresses().stream().map(address -> "http://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"),
 				primaryServer.getSslListenAddresses().stream().map(address -> "https://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"))
 				.collect(joining(" ")));
