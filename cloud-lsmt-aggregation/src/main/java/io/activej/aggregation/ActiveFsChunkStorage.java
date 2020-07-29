@@ -24,7 +24,7 @@ import io.activej.common.MemSize;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.RefInt;
-import io.activej.csp.ChannelConsumer;
+import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.csp.process.ChannelLZ4Compressor;
 import io.activej.csp.process.ChannelLZ4Decompressor;
@@ -45,7 +45,6 @@ import io.activej.jmx.stats.StatsUtils;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
-import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,15 +58,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static io.activej.aggregation.util.Utils.createBinarySerializer;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
@@ -76,7 +76,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
-	public static final String DEFAULT_BACKUP_FOLDER_NAME = "backups";
+	public static final String DEFAULT_BACKUP_PATH = "backups";
 	public static final String SUCCESSFUL_BACKUP_FILE = "_0_SUCCESSFUL_BACKUP";
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
@@ -86,7 +86,9 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	private final IdGenerator<C> idGenerator;
 
 	private final ActiveFs fs;
-	private String backupDir = DEFAULT_BACKUP_FOLDER_NAME;
+	private String chunksPath = "";
+	private String tempPath = "";
+	private String backupPath = DEFAULT_BACKUP_PATH;
 
 	private MemSize bufferSize = DEFAULT_BUFFER_SIZE;
 
@@ -140,8 +142,18 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 		return this;
 	}
 
-	public ActiveFsChunkStorage<C> withBackupPath(String backupDir) {
-		this.backupDir = backupDir;
+	public ActiveFsChunkStorage<C> withChunksPath(String path) {
+		this.chunksPath = path;
+		return this;
+	}
+
+	public ActiveFsChunkStorage<C> withTempPath(String path) {
+		this.tempPath = path;
+		return this;
+	}
+
+	public ActiveFsChunkStorage<C> withBackupPath(String path) {
+		this.backupPath = path;
 		return this;
 	}
 
@@ -197,13 +209,9 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	}
 
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
-		String backupDirPrefix = backupDir + ActiveFs.SEPARATOR + backupId + ActiveFs.SEPARATOR;
-
-		return Promises.all(chunkIds.stream()
-				.map(this::toPath)
-				.map(path -> fs.copy(path, backupDirPrefix + path)))
-				.then(() -> fs.upload(backupDirPrefix + SUCCESSFUL_BACKUP_FILE, 0))
-				.then(ChannelConsumer::acceptEndOfStream)
+		return fs.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
+				.then(() -> ChannelSupplier.<ByteBuf>of().streamTo(
+						fs.upload(toBackupPath(backupId, null), 0)))
 				.whenComplete(promiseBackup.recordStats())
 				.toVoid();
 	}
@@ -217,42 +225,47 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 
 		RefInt skipped = new RefInt(0);
 		RefInt deleted = new RefInt(0);
-		return fs.list("*" + LOG)
-				.then(list -> Promises.all(list.entrySet().stream()
-						.filter(entry -> {
-							C id = fromPath(entry.getKey());
-							if (id == null || preserveChunks.contains(id)) {
+		return fs.list(toDir(chunksPath) + "*" + LOG)
+				.then(list -> {
+					Set<String> toDelete = list.entrySet().stream()
+							.filter(entry -> {
+								C id = fromPath(entry.getKey());
+								if (id == null || preserveChunks.contains(id)) {
+									return false;
+								}
+								long fileTimestamp = entry.getValue().getTimestamp();
+								if (timestamp == -1 || fileTimestamp <= timestamp) {
+									return true;
+								}
+								logger.trace("File {} timestamp {} > {}", entry, fileTimestamp, timestamp);
+								skipped.inc();
 								return false;
-							}
-							long fileTimestamp = entry.getValue().getTimestamp();
-							if (timestamp == -1 || fileTimestamp <= timestamp) {
-								return true;
-							}
-							logger.trace("File {} timestamp {} > {}", entry, fileTimestamp, timestamp);
-							skipped.inc();
-							return false;
-						})
-						.map(entry -> {
-							if (logger.isTraceEnabled()) {
-								FileTime lastModifiedTime = FileTime.fromMillis(entry.getValue().getTimestamp());
-								logger.trace("Delete file: {} with last modifiedTime: {}({} millis)", entry.getKey(),
-										lastModifiedTime, lastModifiedTime.toMillis());
-							}
-							deleted.inc();
-							return fs.delete(entry.getKey());
-						}))
-						.whenResult(() -> {
-							cleanupPreservedFiles = preserveChunks.size();
-							cleanupDeletedFiles = deleted.get();
-							cleanupDeletedFilesTotal += deleted.get();
-							cleanupSkippedFiles = skipped.get();
-							cleanupSkippedFilesTotal += skipped.get();
-						}))
+							})
+							.peek(entry -> {
+								if (logger.isTraceEnabled()) {
+									FileTime lastModifiedTime = FileTime.fromMillis(entry.getValue().getTimestamp());
+									logger.trace("Delete file: {} with last modifiedTime: {}({} millis)", entry.getKey(),
+											lastModifiedTime, lastModifiedTime.toMillis());
+								}
+								deleted.inc();
+							})
+							.map(Map.Entry::getKey)
+							.collect(toSet());
+					if (toDelete.isEmpty()) return Promise.complete();
+					return fs.deleteAll(toDelete);
+				})
+				.whenResult(() -> {
+					cleanupPreservedFiles = preserveChunks.size();
+					cleanupDeletedFiles = deleted.get();
+					cleanupDeletedFilesTotal += deleted.get();
+					cleanupSkippedFiles = skipped.get();
+					cleanupSkippedFilesTotal += skipped.get();
+				})
 				.whenComplete(promiseCleanup.recordStats());
 	}
 
 	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, Predicate<Long> lastModifiedPredicate) {
-		return fs.list("*" + LOG)
+		return fs.list(toDir(chunksPath) + "*" + LOG)
 				.map(list ->
 						list.entrySet().stream()
 								.filter(entry -> lastModifiedPredicate.test(entry.getValue().getTimestamp()))
@@ -260,7 +273,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 								.map(this::fromPath)
 								.filter(Objects::nonNull)
 								.filter(chunkIdPredicate)
-								.collect(Collectors.toSet()))
+								.collect(toSet()))
 				.whenComplete(promiseList.recordStats());
 	}
 
@@ -276,17 +289,28 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	}
 
 	private String toPath(C chunkId) {
-		return chunkIdCodec.toFileName(chunkId) + LOG;
+		return toDir(chunksPath) + chunkIdCodec.toFileName(chunkId) + LOG;
 	}
 
 	private String toTempPath(C chunkId) {
-		return chunkIdCodec.toFileName(chunkId) + TEMP_LOG;
+		return toDir(tempPath) + chunkIdCodec.toFileName(chunkId) + TEMP_LOG;
+	}
+
+	private String toBackupPath(String backupId, @Nullable C chunkId) {
+		return toDir(backupPath) + backupId + ActiveFs.SEPARATOR +
+				(chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
+	}
+
+	private String toDir(String path) {
+		return path.isEmpty() || path.endsWith(ActiveFs.SEPARATOR) ? path : path + ActiveFs.SEPARATOR;
 	}
 
 	@Nullable
 	private C fromPath(String path) {
+		String chunksDir = toDir(chunksPath);
+		checkArgument(path.startsWith(chunksDir));
 		try {
-			return chunkIdCodec.fromFileName(path.substring(0, path.length() - LOG.length()));
+			return chunkIdCodec.fromFileName(path.substring(chunksDir.length(), path.length() - LOG.length()));
 		} catch (ParseException e) {
 			chunkNameWarnings.recordException(e);
 			logger.warn("Invalid chunk filename: {}", path);
