@@ -63,8 +63,8 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 		return getProtocol() + "-server.properties";
 	}
 	
-	public String getProtocol() {
-		return "http";
+	public Protocols getProtocol() {
+		return Protocols.HTTP;
 	}
 	
 	@Inject
@@ -92,14 +92,14 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	PrimaryServer primaryServer(Eventloop primaryEventloop, WorkerPool.Instances<AsyncHttpServer> workerServers, Config config) {
 		return PrimaryServer.create(primaryEventloop, workerServers.getList())
-				.withInitializer(ofPrimaryServer(config.getChild(getProtocol())));
+				.withInitializer(ofPrimaryServer(config.getChild(getProtocol(),name().toLowerCase())));
 	}
 
 	@Provides
 	@Worker
 	AsyncHttpServer workerServer(Eventloop eventloop, AsyncServlet servlet, Config config) {
 		return AsyncHttpServer.create(eventloop, servlet)
-				.withInitializer(ofHttpWorker(config.getChild(getProtocol())));
+				.withInitializer(ofHttpWorker(config.getChild(getProtocol().name().toLowerCase())));
 	}
 
 	@Provides
@@ -130,7 +130,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 
 	@Override
 	protected void run() throws Exception {
-		logger.info(getProtocol().toUpperCase() + " Server is listening on {}", Stream.concat(
+		logger.info(getProtocol().name().toUpperCase() + " Server is listening on {}", Stream.concat(
 				primaryServer.getListenAddresses().stream().map(address -> "http://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"),
 				primaryServer.getSslListenAddresses().stream().map(address -> "https://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"))
 				.collect(joining(" ")));
