@@ -68,8 +68,19 @@ public final class Initializers {
 		};
 	}
 
-	public static Initializer<ClusterActiveFs> ofRemoteFsCluster(Config config) {
-		return cluster -> cluster.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
+	public static Initializer<ClusterActiveFs> ofClusterActiveFs(Config config) {
+		return cluster -> {
+			Integer replicationCount = config.get(ofInteger(), "replicationCount", null);
+			if (replicationCount != null) {
+				cluster.withReplicationCount(replicationCount);
+			} else {
+				cluster.withPersistenceOptions(
+						config.get(ofInteger(), "deadPartitionsThreshold", 0),
+						config.get(ofInteger(), "uploadTargetsMin", 1),
+						config.get(ofInteger(), "uploadTargetsMax", 1)
+				);
+			}
+		};
 	}
 
 }

@@ -31,6 +31,7 @@ import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
@@ -47,7 +48,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkState;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
@@ -64,8 +64,21 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 
 	private final FsPartitions partitions;
 
-	private int replicationCount = 1;
-	private int uploadTargets = 1;
+	/**
+	 * Maximum allowed number of dead partitions, if there are more dead partitions than this number,
+	 * the cluster is considered malformed.
+	 */
+	private int deadPartitionsThreshold = 0;
+
+	/**
+	 * Minimum number of uploads that have to succeed in order for upload to be considered successful.
+	 */
+	private int uploadTargetsMin = 1;
+
+	/**
+	 * Initial number of uploads that are initiated.
+	 */
+	private int uploadTargetsMax = 1;
 
 	// region JMX
 	private final PromiseStats uploadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -99,22 +112,28 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	 */
 	public ClusterActiveFs withReplicationCount(int replicationCount) {
 		checkArgument(1 <= replicationCount && replicationCount <= partitions.getPartitions().size(),
-				"Replication count cannot be less than one or more than number of partitions");
-		this.replicationCount = replicationCount;
-		this.uploadTargets = replicationCount;
+				"Replication count cannot be less than one or greater than number of partitions");
+		this.deadPartitionsThreshold = replicationCount - 1;
+		this.uploadTargetsMin = replicationCount;
+		this.uploadTargetsMax = replicationCount;
 		return this;
 	}
 
 	/**
 	 * Sets the replication count as well as number of upload targets that determines the number of server where file will be uploaded.
 	 */
-	public ClusterActiveFs withReplicationCount(int replicationCount, int uploadTargets) {
-		checkArgument(1 <= replicationCount && replicationCount <= partitions.getPartitions().size(),
-				"Replication count cannot be less than one or more than number of clients");
-		checkArgument(replicationCount <= uploadTargets,
-				"Number of upload targets cannot be less than one or more than number of clients");
-		this.replicationCount = uploadTargets;
-		this.uploadTargets = uploadTargets;
+	public ClusterActiveFs withPersistenceOptions(int deadPartitionsThreshold, int uploadTargetsMin, int uploadTargetsMax) {
+		checkArgument(0 <= deadPartitionsThreshold && deadPartitionsThreshold < partitions.getPartitions().size(),
+				"Dead partitions threshold cannot be less than zero or greater than number of partitions");
+		checkArgument(0 <= uploadTargetsMin,
+				"Minimum number of upload targets should not be less than zero");
+		checkArgument(0 < uploadTargetsMax && uploadTargetsMin <= uploadTargetsMax && uploadTargetsMax <= partitions.getPartitions().size(),
+				"Maximum number of upload targets should be greatert than zero, " +
+						"should not be less than minimum number of upload targets and" +
+						"should not exceed total number of partitions");
+		this.deadPartitionsThreshold = deadPartitionsThreshold;
+		this.uploadTargetsMin = uploadTargetsMin;
+		this.uploadTargetsMax = uploadTargetsMax;
 		return this;
 	}
 	// endregion
@@ -236,7 +255,6 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		checkState(uploadTargets >= replicationCount, "Number of upload targets is less than replication count");
 		return ping();
 	}
 
@@ -257,9 +275,9 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 
 	private <T> Promise<T> checkStillNotDead(T value) {
 		Map<Object, ActiveFs> deadPartitions = partitions.getDeadPartitions();
-		if (deadPartitions.size() >= replicationCount) {
-			return ofFailure("There are more dead partitions than replication count(" +
-					deadPartitions.size() + " dead, replication count is " + replicationCount + "), aborting");
+		if (deadPartitions.size() > deadPartitionsThreshold) {
+			return ofFailure("There are more dead partitions than allowed(" +
+					deadPartitions.size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting");
 		}
 		return Promise.of(value);
 	}
@@ -277,7 +295,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		return checkNotDead()
 				.then(() -> collect(name, action))
 				.then(containers -> {
-					ChannelByteSplitter splitter = ChannelByteSplitter.create(replicationCount);
+					ChannelByteSplitter splitter = ChannelByteSplitter.create(uploadTargetsMin);
 					for (Container<ChannelConsumer<ByteBuf>> container : containers) {
 						splitter.addOutput().set(container.value);
 					}
@@ -316,7 +334,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 										.map(consumer -> new Container<>(id,
 												consumer.withAcknowledgement(ack ->
 														ack.thenEx(partitions.wrapDeath(id))))))))
-						.limit(uploadTargets))
+						.limit(uploadTargetsMax))
 				.thenEx((containers, e) -> {
 					if (e != null) {
 						consumers.forEach(AsyncCloseable::close);
@@ -377,18 +395,38 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 
 	// region JMX
 	@JmxAttribute
-	public int getReplicationCount() {
-		return replicationCount;
+	public int getDeadPartitionsThreshold() {
+		return deadPartitionsThreshold;
 	}
 
 	@JmxAttribute
-	public int getUploadTargets() {
-		return uploadTargets;
+	public int getUploadTargetsMin() {
+		return uploadTargetsMin;
 	}
 
 	@JmxAttribute
+	public int getUploadTargetsMax() {
+		return uploadTargetsMax;
+	}
+
+	@JmxOperation
 	public void setReplicationCount(int replicationCount) {
 		withReplicationCount(replicationCount);
+	}
+
+	@JmxAttribute
+	public void setDeadPartitionsThreshold(int deadPartitionsThreshold) {
+		withPersistenceOptions(deadPartitionsThreshold, uploadTargetsMin, uploadTargetsMax);
+	}
+
+	@JmxAttribute
+	public void setUploadTargetsMin(int uploadTargetsMin) {
+		withPersistenceOptions(deadPartitionsThreshold, uploadTargetsMin, uploadTargetsMax);
+	}
+
+	@JmxAttribute
+	public void setUploadTargetsMax(int uploadTargetsMax) {
+		withPersistenceOptions(deadPartitionsThreshold, uploadTargetsMin, uploadTargetsMax);
 	}
 
 	@JmxAttribute

@@ -193,7 +193,7 @@ public final class TestClusterActiveFs {
 					replicasCount++;
 				}
 			}
-			assertEquals(client.getReplicationCount(), replicasCount);
+			assertEquals(client.getUploadTargetsMin(), replicasCount);
 		}
 	}
 
