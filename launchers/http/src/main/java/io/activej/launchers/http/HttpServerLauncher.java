@@ -55,8 +55,8 @@ public abstract class HttpServerLauncher extends Launcher {
 		return getProtocol().name().toLowerCase() + "-server.properties";
 	}
 
-	public String getProtocol() {
-		return "http";
+	public Protocols getProtocol() {
+		return Protocols.HTTP;
 	}
 
 	@Inject
