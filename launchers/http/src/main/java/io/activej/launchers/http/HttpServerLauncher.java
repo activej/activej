@@ -78,7 +78,7 @@ public abstract class HttpServerLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with(getProtocol() + ".listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(getPort())))
+				.with(getProtocol().name().toLowerCase() + ".listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(getPort())))
 				.overrideWith(ofClassPathProperties(getPropertiesFile(), true))
 				.overrideWith(ofSystemProperties("config"));
 	}
