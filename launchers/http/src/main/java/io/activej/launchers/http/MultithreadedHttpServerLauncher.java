@@ -60,7 +60,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	}
 	
 	public String getPropertiesFile() {
-		return getProtocol() + "-server.properties";
+		return getProtocol().name().toLowerCase() + "-server.properties";
 	}
 	
 	public Protocols getProtocol() {
@@ -105,7 +105,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with(getProtocol() + ".listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(getPort())))
+				.with(getProtocol().name().toLowerCase() + ".listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(getPort())))
 				.with("workers", "" + getWorkers())
 				.overrideWith(ofClassPathProperties(getPropertiesFile(), true))
 				.overrideWith(ofSystemProperties("config"));
