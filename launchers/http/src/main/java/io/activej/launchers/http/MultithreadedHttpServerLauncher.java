@@ -92,7 +92,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	PrimaryServer primaryServer(Eventloop primaryEventloop, WorkerPool.Instances<AsyncHttpServer> workerServers, Config config) {
 		return PrimaryServer.create(primaryEventloop, workerServers.getList())
-				.withInitializer(ofPrimaryServer(config.getChild(getProtocol(),name().toLowerCase())));
+				.withInitializer(ofPrimaryServer(config.getChild(getProtocol().name().toLowerCase())));
 	}
 
 	@Provides
