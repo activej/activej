@@ -51,11 +51,22 @@ import static java.util.stream.Collectors.joining;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class MultithreadedHttpServerLauncher extends Launcher {
-	public static final int PORT = 8080;
-	public static final int WORKERS = 4;
-
-	public static final String PROPERTIES_FILE = "http-server.properties";
-
+	public int getPort() {
+		return 8080;
+	}
+	
+	public int getWorkers() {
+		return 4;
+	}
+	
+	public String getPropertiesFile() {
+		return getProtocol() + "-server.properties";
+	}
+	
+	public String getProtocol() {
+		return "http";
+	}
+	
 	@Inject
 	PrimaryServer primaryServer;
 
@@ -75,28 +86,28 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 
 	@Provides
 	WorkerPool workerPool(WorkerPools workerPools, Config config) {
-		return workerPools.createPool(config.get(ofInteger(), "workers", WORKERS));
+		return workerPools.createPool(config.get(ofInteger(), "workers", getWorkers()));
 	}
 
 	@Provides
 	PrimaryServer primaryServer(Eventloop primaryEventloop, WorkerPool.Instances<AsyncHttpServer> workerServers, Config config) {
 		return PrimaryServer.create(primaryEventloop, workerServers.getList())
-				.withInitializer(ofPrimaryServer(config.getChild("http")));
+				.withInitializer(ofPrimaryServer(config.getChild(getProtocol())));
 	}
 
 	@Provides
 	@Worker
 	AsyncHttpServer workerServer(Eventloop eventloop, AsyncServlet servlet, Config config) {
 		return AsyncHttpServer.create(eventloop, servlet)
-				.withInitializer(ofHttpWorker(config.getChild("http")));
+				.withInitializer(ofHttpWorker(config.getChild(getProtocol())));
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(PORT)))
-				.with("workers", "" + WORKERS)
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+				.with(getProtocol() + ".listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(getPort())))
+				.with("workers", "" + getWorkers())
+				.overrideWith(ofClassPathProperties(getPropertiesFile(), true))
 				.overrideWith(ofSystemProperties("config"));
 	}
 
