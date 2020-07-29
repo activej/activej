@@ -36,6 +36,8 @@ import static java.util.Collections.emptyMap;
  * This interface represents a simple filesystem with upload, append, download, copy, move, delete, info and list operations.
  */
 public interface ActiveFs {
+	String SEPARATOR = "/";
+
 	StacklessException FILE_NOT_FOUND = new StacklessException(ActiveFs.class, "File not found");
 	StacklessException FILE_EXISTS = new StacklessException(ActiveFs.class, "File already exists");
 	StacklessException BAD_PATH = new StacklessException(ActiveFs.class, "Given file name points to file outside root");

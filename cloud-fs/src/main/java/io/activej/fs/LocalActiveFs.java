@@ -75,20 +75,17 @@ import static java.util.Collections.*;
 public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
-	public static final char FILE_SEPARATOR_CHAR = '/';
-
-	public static final String FILE_SEPARATOR = String.valueOf(FILE_SEPARATOR_CHAR);
-
 	public static final String SYSTEM_DIR = ".system";
 	public static final String TEMP_DIR = "temp";
 
-	private static final Function<String, String> toLocalName = File.separatorChar == FILE_SEPARATOR_CHAR ?
+	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
+	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
 			Function.identity() :
-			s -> s.replace(FILE_SEPARATOR_CHAR, File.separatorChar);
+			s -> s.replace(SEPARATOR_CHAR, File.separatorChar);
 
-	private static final Function<String, String> toRemoteName = File.separatorChar == FILE_SEPARATOR_CHAR ?
+	private static final Function<String, String> toRemoteName = File.separatorChar == SEPARATOR_CHAR ?
 			Function.identity() :
-			s -> s.replace(File.separatorChar, FILE_SEPARATOR_CHAR);
+			s -> s.replace(File.separatorChar, SEPARATOR_CHAR);
 
 	private final Eventloop eventloop;
 	private final Path storage;
@@ -480,13 +477,13 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 		// get strict prefix folder from the glob
 		StringBuilder sb = new StringBuilder();
-		String[] split = glob.split(FILE_SEPARATOR);
+		String[] split = glob.split(SEPARATOR);
 		for (int i = 0; i < split.length - 1; i++) {
 			String part = split[i];
 			if (isWildcard(part)) {
 				break;
 			}
-			sb.append(part).append(FILE_SEPARATOR_CHAR);
+			sb.append(part).append(SEPARATOR);
 		}
 		String subglob = glob.substring(sb.length());
 		Path subdirectory = resolve(sb.toString());
@@ -549,7 +546,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			return;
 		}
 		String[] parts;
-		if (glob == null || (parts = glob.split(FILE_SEPARATOR))[0].contains("**")) {
+		if (glob == null || (parts = glob.split(SEPARATOR))[0].contains("**")) {
 			Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
 
 				@Override

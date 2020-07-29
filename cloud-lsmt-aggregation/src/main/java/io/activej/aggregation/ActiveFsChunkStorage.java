@@ -197,7 +197,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	}
 
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
-		String backupDirPrefix = backupDir + '/' + backupId + '/';
+		String backupDirPrefix = backupDir + ActiveFs.SEPARATOR + backupId + ActiveFs.SEPARATOR;
 
 		return Promises.all(chunkIds.stream()
 				.map(this::toPath)
