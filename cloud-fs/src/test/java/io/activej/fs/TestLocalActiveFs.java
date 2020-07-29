@@ -30,7 +30,7 @@ import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPT
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
 import static io.activej.fs.ActiveFs.MALFORMED_GLOB;
-import static io.activej.fs.LocalActiveFs.SYSTEM_DIR;
+import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -266,13 +266,13 @@ public final class TestLocalActiveFs {
 	}
 
 	@Test
-	public void systemFilesAreNotListed() throws IOException {
+	public void tempFilesAreNotListed() throws IOException {
 		Map<String, FileMetadata> before = await(client.list("**"));
 
-		Path systemDir = storagePath.resolve(SYSTEM_DIR);
-		Files.createDirectories(systemDir);
-		Files.write(systemDir.resolve("systemFile.txt"), "test data".getBytes());
-		Path folder = systemDir.resolve("folder");
+		Path tempDir = storagePath.resolve(DEFAULT_TEMP_DIR);
+		Files.createDirectories(tempDir);
+		Files.write(tempDir.resolve("systemFile.txt"), "test data".getBytes());
+		Path folder = tempDir.resolve("folder");
 		Files.createDirectories(folder);
 		Files.write(folder.resolve("systemFile2.txt"), "test data".getBytes());
 

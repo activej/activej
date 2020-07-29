@@ -42,7 +42,6 @@ import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.TestUtils.runProcessLogs;
-import static io.activej.fs.LocalActiveFs.SYSTEM_DIR;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
@@ -74,7 +73,8 @@ public class CubeIntegrationTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir)
+				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		ActiveFsChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
@@ -189,7 +189,6 @@ public class CubeIntegrationTest {
 		// Check files in aggregations directory
 		Set<String> actualChunkFileNames = Arrays.stream(aggregationsDir.toFile().listFiles())
 				.map(File::getName)
-				.filter(s -> !s.startsWith(SYSTEM_DIR))
 				.collect(toSet());
 		assertEquals(concat(Stream.of("backups"), cube.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
 				actualChunkFileNames);

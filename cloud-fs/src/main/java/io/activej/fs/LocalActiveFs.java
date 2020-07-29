@@ -77,8 +77,7 @@ import static java.util.Collections.*;
 public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
-	public static final String SYSTEM_DIR = ".system";
-	public static final String TEMP_DIR = "temp";
+	public static final String DEFAULT_TEMP_DIR = ".temp";
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -91,12 +90,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private final Eventloop eventloop;
 	private final Path storage;
-	private final Path systemDir;
-	private final Path tempDir;
 	private final Executor executor;
 
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
 	private boolean hardlinkOnCopy = false;
+	private Path tempDir;
 
 	CurrentTimeProvider now;
 
@@ -121,8 +119,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		this.eventloop = eventloop;
 		this.executor = executor;
 		this.storage = storage;
-		this.systemDir = storage.resolve(SYSTEM_DIR);
-		this.tempDir = systemDir.resolve(TEMP_DIR);
+		this.tempDir = storage.resolve(DEFAULT_TEMP_DIR);
 
 		now = eventloop;
 	}
@@ -144,6 +141,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	 */
 	public LocalActiveFs withHardLinkOnCopy(boolean hardLinkOnCopy) {
 		this.hardlinkOnCopy = hardLinkOnCopy;
+		return this;
+	}
+
+	/**
+	 * Sets a temporary directory for files to be stored while uploading.
+	 */
+	public LocalActiveFs withTempDir(Path tempDir) {
+		this.tempDir = tempDir;
 		return this;
 	}
 	// endregion
@@ -324,6 +329,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return execute(() -> {
 			clearTempDir();
 			Files.createDirectories(tempDir);
+			if (!tempDir.startsWith(storage)) {
+				Files.createDirectories(storage);
+			}
 		});
 	}
 
@@ -363,7 +371,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private Path resolve(String name) throws StacklessException {
 		Path path = storage.resolve(toLocalName.apply(name)).normalize();
-		if (!path.startsWith(storage) || path.startsWith(systemDir)) {
+		if (!path.startsWith(storage)) {
 			throw BAD_PATH;
 		}
 		return path;
@@ -380,7 +388,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
 				() -> {
-					if (Files.isDirectory(resolve(name))){
+					if (Files.isDirectory(resolve(name))) {
 						throw IS_DIRECTORY;
 					}
 					Path tempPath = Files.createTempFile(tempDir, "", "");
@@ -568,7 +576,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException, StacklessException {
-		if (!Files.isDirectory(dir) || dir.startsWith(systemDir)) {
+		if (!Files.isDirectory(dir) || dir.startsWith(tempDir)) {
 			return;
 		}
 		String[] parts;
@@ -577,7 +585,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 				@Override
 				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-					if (dir.startsWith(systemDir)) {
+					if (dir.startsWith(tempDir)) {
 						return SKIP_SUBTREE;
 					}
 					return CONTINUE;
