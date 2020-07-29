@@ -2,7 +2,11 @@ package io.activej.fs.cluster;
 
 import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.*;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.FileMetadata;
+import io.activej.fs.LocalActiveFs;
+import io.activej.fs.tcp.ActiveFsServer;
+import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promises;
 import io.activej.test.rules.*;
@@ -30,7 +34,7 @@ import static org.slf4j.event.Level.WARN;
 @Ignore("takes forever, only for manual testing")
 @LoggerConfig(WARN)
 @LoggerConfig(packageOf = ActiveFsServer.class, value = TRACE)
-public final class RepartitionControllerStressTest {
+public final class ClusterRepartitionControllerStressTest {
 	private static final int CLIENT_SERVER_PAIRS = 10;
 
 	private final Path[] serverStorages = new Path[CLIENT_SERVER_PAIRS];

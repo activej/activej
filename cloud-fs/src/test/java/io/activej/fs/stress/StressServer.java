@@ -3,7 +3,7 @@ package io.activej.fs.stress;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFsServer;
+import io.activej.fs.tcp.ActiveFsServer;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;

@@ -21,7 +21,7 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.fs.ActiveFsServer;
+import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;

@@ -42,7 +42,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
 
-public final class TestLocalFsClientInvariants {
+public final class TestLocalActiveFsInvariants {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 

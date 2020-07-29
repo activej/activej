@@ -47,7 +47,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
-public final class TestRemoteFsClusterClient {
+public final class TestClusterActiveFs {
 	public static final int CLIENT_SERVER_PAIRS = 10;
 	public static final int REPLICATION_COUNT = 4;
 

@@ -3,7 +3,11 @@ package io.activej.fs.cluster;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.*;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.ForwardingActiveFs;
+import io.activej.fs.LocalActiveFs;
+import io.activej.fs.tcp.ActiveFsServer;
+import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ActivePromisesRule;
@@ -34,7 +38,7 @@ import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
-public final class RepartitionControllerTest {
+public final class ClusterRepartitionControllerTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 

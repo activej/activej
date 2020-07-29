@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package io.activej.fs;
+package io.activej.fs.tcp;
 
 import io.activej.common.exception.StacklessException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.RemoteFsCommands.*;
-import io.activej.fs.RemoteFsResponses.*;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.LocalActiveFs;
+import io.activej.fs.tcp.RemoteFsCommands.*;
+import io.activej.fs.tcp.RemoteFsResponses.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;

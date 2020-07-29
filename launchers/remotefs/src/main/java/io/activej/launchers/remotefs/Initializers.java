@@ -19,12 +19,12 @@ package io.activej.launchers.remotefs;
 import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFsServer;
-import io.activej.fs.RemoteActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.FsPartitions;
 import io.activej.fs.http.HttpActiveFs;
+import io.activej.fs.tcp.ActiveFsServer;
+import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
 
 import java.util.Map;

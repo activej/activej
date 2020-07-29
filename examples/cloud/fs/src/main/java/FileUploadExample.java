@@ -1,6 +1,6 @@
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.RemoteActiveFs;
+import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;

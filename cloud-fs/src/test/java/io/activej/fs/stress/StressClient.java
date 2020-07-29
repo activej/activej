@@ -7,7 +7,7 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.RemoteActiveFs;
+import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Serialize;

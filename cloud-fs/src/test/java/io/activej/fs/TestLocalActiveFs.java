@@ -39,7 +39,7 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.junit.Assert.*;
 
-public final class TestLocalFsClient {
+public final class TestLocalActiveFs {
 	private static final MemSize BUFFER_SIZE = MemSize.of(2);
 
 	@ClassRule

@@ -42,7 +42,7 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.junit.Assert.*;
 
-public final class RemoteFsServletAndClientTest {
+public final class ActiveFsServletAndClientTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 

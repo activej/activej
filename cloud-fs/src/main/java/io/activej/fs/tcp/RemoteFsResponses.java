@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package io.activej.fs;
+package io.activej.fs.tcp;
 
 import io.activej.codec.CodecSubtype;
 import io.activej.codec.StructuredCodec;
+import io.activej.fs.FileMetadata;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;

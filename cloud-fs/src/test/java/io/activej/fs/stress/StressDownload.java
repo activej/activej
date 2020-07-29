@@ -3,7 +3,7 @@ package io.activej.fs.stress;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.RemoteActiveFs;
+import io.activej.fs.tcp.RemoteActiveFs;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
