@@ -22,6 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
+import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -39,10 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -302,16 +300,27 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 			Function<ActiveFs, Promise<ChannelConsumer<ByteBuf>>> action
 	) {
 		Iterator<Object> idIterator = partitions.select(name).iterator();
+		Set<ChannelConsumer<ByteBuf>> consumers = new HashSet<>();
+		RefBoolean failed = new RefBoolean(false);
 		return Promises.toList(
 				Stream.generate(() ->
 						Promises.firstSuccessful(transformIterator(idIterator,
 								id -> call(id, action)
+										.whenResult(consumer -> {
+											if (failed.get()) {
+												consumer.close();
+											} else {
+												consumers.add(consumer);
+											}
+										})
 										.map(consumer -> new Container<>(id,
 												consumer.withAcknowledgement(ack ->
 														ack.thenEx(partitions.wrapDeath(id))))))))
 						.limit(uploadTargets))
 				.thenEx((containers, e) -> {
 					if (e != null) {
+						consumers.forEach(AsyncCloseable::close);
+						failed.set(true);
 						return ofFailure("Didn't connect to enough partitions to upload '" + name + '\'');
 					}
 					return Promise.of(containers);
