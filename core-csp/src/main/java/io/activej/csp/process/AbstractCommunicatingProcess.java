@@ -54,22 +54,22 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	protected void afterProcess(@Nullable Throwable e) {
 	}
 
-	public boolean isProcessStarted() {
+	public final boolean isProcessStarted() {
 		return processStarted;
 	}
 
-	public boolean isProcessComplete() {
+	public final boolean isProcessComplete() {
 		return processComplete;
 	}
 
-	protected void completeProcess() {
+	protected final void completeProcess() {
 		completeProcessEx(null);
 	}
 
-	protected void completeProcessEx(@Nullable Throwable e) {
+	protected final void completeProcessEx(@Nullable Throwable e) {
 		if (isProcessComplete()) return;
-		processComplete = true;
 		if (e == null) {
+			processComplete = true; // setting flag here only, as closeEx() method sets it on its own
 			processCompletion.trySet(null);
 			afterProcess(null);
 		} else {
@@ -79,7 +79,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 
 	@NotNull
 	@Override
-	public Promise<Void> getProcessCompletion() {
+	public final Promise<Void> getProcessCompletion() {
 		return processCompletion;
 	}
 

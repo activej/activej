@@ -39,7 +39,7 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 		return exception;
 	}
 
-	public void setCloseable(@Nullable AsyncCloseable closeable) {
+	public final void setCloseable(@Nullable AsyncCloseable closeable) {
 		this.closeable = closeable;
 	}
 
