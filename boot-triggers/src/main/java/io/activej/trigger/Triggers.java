@@ -251,37 +251,37 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 	}
 
 	@JmxAttribute
-	public String getMultilineResultsDebug() {
+	public synchronized String getMultilineResultsDebug() {
 		return formatListAsMultilineString(getResultsBySeverity(Severity.DEBUG));
 	}
 
 	@JmxAttribute
-	public String getMultilineResultsInformation() {
+	public synchronized String getMultilineResultsInformation() {
 		return formatListAsMultilineString(getResultsBySeverity(Severity.INFORMATION));
 	}
 
 	@JmxAttribute
-	public String getMultilineResultsWarning() {
+	public synchronized String getMultilineResultsWarning() {
 		return formatListAsMultilineString(getResultsBySeverity(Severity.WARNING));
 	}
 
 	@JmxAttribute
-	public String getMultilineResultsAverage() {
+	public synchronized String getMultilineResultsAverage() {
 		return formatListAsMultilineString(getResultsBySeverity(Severity.AVERAGE));
 	}
 
 	@JmxAttribute
-	public String getMultilineResultsHigh() {
+	public synchronized String getMultilineResultsHigh() {
 		return formatListAsMultilineString(getResultsBySeverity(Severity.HIGH));
 	}
 
 	@JmxAttribute
-	public String getMultilineResultsDisaster() {
+	public synchronized String getMultilineResultsDisaster() {
 		return formatListAsMultilineString(getResultsBySeverity(Severity.DISASTER));
 	}
 
 	@JmxAttribute
-	public String getMultilineResults() {
+	public synchronized String getMultilineResults() {
 		return formatListAsMultilineString(getResults());
 	}
 

@@ -1,5 +1,6 @@
 package io.activej.trigger;
 
+import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.eventloop.Eventloop;
@@ -8,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -247,6 +249,37 @@ public class TriggersTest {
 		assertEquals(1, results.size());
 		assertEquals(currentTimestamp, results.get(0).getTriggerResult().getTimestamp());
 		assertEquals(currentTimestamp + 20000, results.get(0).getTriggerResult().getValue());
+	}
+
+	@Test
+	public void testConcurrentAccess() throws InterruptedException {
+		triggers.now = CurrentTimeProvider.ofTimeSequence(100, Triggers.CACHE_TIMEOUT.toMillis() * 2);
+		int nThreads = 10;
+		List<Thread> threads = new ArrayList<>(nThreads);
+		Ref<Throwable> throwableRef = new Ref<>();
+		for (int i = 0; i < nThreads; i++) {
+			threads.add(new Thread(() -> {
+				try {
+					for (int j = 0; j < 1_000; j++) {
+						if (throwableRef.get() != null) {
+							break;
+						}
+						triggers.getMultilineResultsHigh();
+					}
+				} catch (Throwable e) {
+					throwableRef.set(e);
+				}
+			}));
+		}
+
+		threads.forEach(Thread::start);
+		for (Thread thread : threads) {
+			thread.join();
+		}
+		Throwable error = throwableRef.get();
+		if (error != null) {
+			throw new AssertionError(error);
+		}
 	}
 
 	private long increaseTimestampAndGet() {
