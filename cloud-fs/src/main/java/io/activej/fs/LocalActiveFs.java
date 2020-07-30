@@ -77,7 +77,7 @@ import static java.util.Collections.*;
 public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
-	public static final String DEFAULT_TEMP_DIR = ".temp";
+	public static final String DEFAULT_TEMP_DIR = ".upload";
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -445,7 +445,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			if (Files.isDirectory(path) || Files.isDirectory(targetPath)) throw IS_DIRECTORY;
 
 			if (path.equals(targetPath)) {
-				Files.deleteIfExists(path);
+				touch(path);
 				continue;
 			}
 

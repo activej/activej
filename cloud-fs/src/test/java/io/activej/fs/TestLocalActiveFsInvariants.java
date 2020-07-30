@@ -744,8 +744,42 @@ public final class TestLocalActiveFsInvariants {
 
 		assertFilesAreSame();
 	}
-	//endregion
 
+	@Test
+	public void moveAllWithSelfExistent() throws IOException {
+		byte[] bytesBefore1 = Files.readAllBytes(firstPath.resolve("file"));
+		byte[] bytesBefore2 = Files.readAllBytes(firstPath.resolve("file2"));
+
+		both(client -> await(client.moveAll(map(
+				"file", "file",
+				"file2", "newFile2"
+		))));
+
+		bothPaths(path -> {
+			assertThat(listPaths(path), not(contains(Paths.get("file2"))));
+			assertArrayEquals(bytesBefore1, Files.readAllBytes(path.resolve("file")));
+			assertArrayEquals(bytesBefore2, Files.readAllBytes(path.resolve("newFile2")));
+		});
+
+		assertFilesAreSame();
+	}
+
+	@Test
+	public void moveAllWithSelfNonExistent() {
+		both(client -> assertEquals(FILE_NOT_FOUND, awaitException(client.moveAll(map(
+				"file", "newFile",
+				"nonexistent", "nonexistent"
+		)))));
+	}
+
+	@Test
+	public void moveAllWithSelfDirectory() {
+		both(client -> assertEquals(IS_DIRECTORY, awaitException(client.moveAll(map(
+				"file", "newFile",
+				"directory", "directory"
+		)))));
+	}
+	//endregion
 
 	@Test
 	public void infoAllEmpty() {

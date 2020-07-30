@@ -31,6 +31,7 @@ import java.util.Set;
 
 import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * This interface represents a simple filesystem with upload, append, download, copy, move, delete, info and list operations.
@@ -155,7 +156,7 @@ public interface ActiveFs {
 	 */
 	default Promise<Void> move(@NotNull String name, @NotNull String target) {
 		return copy(name, target)
-				.then(() -> delete(name));
+				.then(() -> name.equals(target) ? Promise.complete() : delete(name));
 	}
 
 	/**
@@ -178,7 +179,10 @@ public interface ActiveFs {
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return copyAll(sourceToTarget)
-				.then(() -> deleteAll(sourceToTarget.keySet()));
+				.then(() -> deleteAll(sourceToTarget.entrySet().stream()
+						.filter(entry -> !entry.getKey().equals(entry.getValue()))
+						.map(Map.Entry::getKey)
+						.collect(toSet())));
 	}
 
 	/**
