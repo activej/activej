@@ -17,9 +17,10 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.fs.exception.FsIOException;
+import io.activej.fs.exception.FsStateException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -39,13 +40,15 @@ import static java.util.stream.Collectors.toSet;
 public interface ActiveFs {
 	String SEPARATOR = "/";
 
-	StacklessException FILE_NOT_FOUND = new StacklessException(ActiveFs.class, "File not found");
-	StacklessException FILE_EXISTS = new StacklessException(ActiveFs.class, "File already exists");
-	StacklessException BAD_PATH = new StacklessException(ActiveFs.class, "Given file name points to file outside root");
-	StacklessException BAD_RANGE = new StacklessException(ActiveFs.class, "Given offset or limit doesn't make sense");
-	StacklessException IS_DIRECTORY = new StacklessException(ActiveFs.class, "Operated file is a directory");
-	StacklessException MALFORMED_GLOB = new StacklessException(ActiveFs.class, "Malformed glob pattern");
-	StacklessException ILLEGAL_OFFSET = new StacklessException(ActiveFs.class, "Offset exceeds file size");
+	FsStateException FILE_NOT_FOUND = new FsStateException(ActiveFs.class, "File not found");
+	FsStateException IS_DIRECTORY = new FsStateException(ActiveFs.class, "Operated file is a directory");
+	FsStateException ILLEGAL_OFFSET = new FsStateException(ActiveFs.class, "Offset exceeds file size");
+	FsStateException MALFORMED_GLOB = new FsStateException(ActiveFs.class, "Malformed glob pattern");
+	FsStateException FORBIDDEN_PATH = new FsStateException(ActiveFs.class, "Forbidden path");
+	FsStateException PATH_CONTAINS_FILE = new FsStateException(ActiveFs.class, "Path contains existing file as its part");
+
+	FsIOException UNEXPECTED_DATA = new FsIOException(ActiveFs.class, "Received more data than expected");
+	FsIOException UNEXPECTED_END_OF_STREAM = new FsIOException(ActiveFs.class, "Received less data than expected");
 
 	/**
 	 * Returns a consumer of bytebufs which are written (or sent) to the file.

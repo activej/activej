@@ -3,7 +3,6 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncConsumer;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
@@ -11,6 +10,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
+import io.activej.fs.exception.FsException;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
 import io.activej.http.AsyncHttpClient;
@@ -207,7 +207,7 @@ public final class TestClusterActiveFs {
 		Throwable exception = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8))).streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded.txt")))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
-		assertThat(exception, instanceOf(StacklessException.class));
+		assertThat(exception, instanceOf(FsException.class));
 		assertThat(exception.getMessage(), containsString("Didn't connect to enough partitions"));
 	}
 
@@ -219,7 +219,7 @@ public final class TestClusterActiveFs {
 				.streamTo(ChannelConsumer.of(AsyncConsumer.of(ByteBuf::recycle)))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
-		assertThat(exception, instanceOf(StacklessException.class));
+		assertThat(exception, instanceOf(FsException.class));
 		assertThat(exception.getMessage(), containsString(fileName));
 	}
 

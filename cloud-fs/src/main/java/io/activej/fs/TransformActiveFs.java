@@ -50,7 +50,7 @@ final class TransformActiveFs implements ActiveFs {
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {
-			return Promise.ofException(BAD_PATH);
+			return Promise.ofException(FORBIDDEN_PATH);
 		}
 		return parent.upload(transformed.get());
 	}
@@ -59,7 +59,7 @@ final class TransformActiveFs implements ActiveFs {
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {
-			return Promise.ofException(BAD_PATH);
+			return Promise.ofException(FORBIDDEN_PATH);
 		}
 		return parent.upload(transformed.get(), size);
 	}
@@ -68,7 +68,7 @@ final class TransformActiveFs implements ActiveFs {
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {
-			return Promise.ofException(BAD_PATH);
+			return Promise.ofException(FORBIDDEN_PATH);
 		}
 		return parent.append(transformed.get(), offset);
 	}
@@ -164,7 +164,7 @@ final class TransformActiveFs implements ActiveFs {
 		Optional<String> transformed = into.apply(source);
 		Optional<String> transformedNew = into.apply(target);
 		if (!transformed.isPresent() || !transformedNew.isPresent()) {
-			return Promise.ofException(BAD_PATH);
+			return Promise.ofException(FORBIDDEN_PATH);
 		}
 		return action.apply(transformed.get(), transformedNew.get());
 	}
@@ -175,7 +175,7 @@ final class TransformActiveFs implements ActiveFs {
 			Optional<String> transformed = into.apply(entry.getKey());
 			Optional<String> transformedNew = into.apply(entry.getValue());
 			if (!transformed.isPresent() || !transformedNew.isPresent()) {
-				return Promise.ofException(BAD_PATH);
+				return Promise.ofException(FORBIDDEN_PATH);
 			}
 			renamed.put(transformed.get(), transformedNew.get());
 		}

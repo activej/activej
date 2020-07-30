@@ -39,8 +39,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static io.activej.codec.json.JsonUtils.fromJson;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.fs.ActiveFs.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.unmodifiableMap;
@@ -57,12 +55,13 @@ public final class RemoteFsUtils {
 		Map<Integer, Throwable> tempMap = new HashMap<>();
 
 		tempMap.put(1, FILE_NOT_FOUND);
-		tempMap.put(2, FILE_EXISTS);
-		tempMap.put(3, BAD_PATH);
-		tempMap.put(6, BAD_RANGE);
-		tempMap.put(7, IS_DIRECTORY);
-		tempMap.put(8, MALFORMED_GLOB);
-		tempMap.put(9, ILLEGAL_OFFSET);
+		tempMap.put(2, IS_DIRECTORY);
+		tempMap.put(3, ILLEGAL_OFFSET);
+		tempMap.put(4, MALFORMED_GLOB);
+		tempMap.put(5, FORBIDDEN_PATH);
+		tempMap.put(6, PATH_CONTAINS_FILE);
+		tempMap.put(7, UNEXPECTED_DATA);
+		tempMap.put(8, UNEXPECTED_END_OF_STREAM);
 
 		ID_TO_ERROR = unmodifiableMap(tempMap);
 		ERROR_TO_ID = unmodifiableMap(tempMap.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
@@ -141,14 +140,14 @@ public final class RemoteFsUtils {
 						long left = total.dec(byteBuf.readRemaining());
 						if (left < 0) {
 							byteBuf.recycle();
-							return Promise.ofException(UNEXPECTED_DATA_EXCEPTION);
+							return Promise.ofException(UNEXPECTED_DATA);
 						}
 						return Promise.of(byteBuf);
 					})
 					.withAcknowledgement(ack -> ack
 							.then(() -> {
 								if (total.get() > 0) {
-									return Promise.ofException(UNEXPECTED_END_OF_STREAM_EXCEPTION);
+									return Promise.ofException(UNEXPECTED_END_OF_STREAM);
 								}
 								return Promise.complete();
 							}));

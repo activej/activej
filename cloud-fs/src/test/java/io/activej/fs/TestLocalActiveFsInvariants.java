@@ -155,7 +155,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveToFileInsideDirectoryAsAFile() {
 		List<Path> before = listPaths(firstPath);
-		both(client -> assertSame(FILE_EXISTS, awaitException(client.move("file2", "file/newFile"))));
+		both(client -> assertSame(PATH_CONTAINS_FILE, awaitException(client.move("file2", "file/newFile"))));
 
 		assertFilesAreSame();
 		assertEquals(before, listPaths(firstPath));
@@ -279,7 +279,7 @@ public final class TestLocalActiveFsInvariants {
 	public void copyToFileInsideDirectoryAsAFile() {
 		both(client -> {
 			Throwable file2 = awaitException(client.copy("file2", "file/newFile"));
-			assertEquals(FILE_EXISTS, file2);
+			assertEquals(PATH_CONTAINS_FILE, file2);
 		});
 		assertFilesAreSame();
 	}
@@ -415,7 +415,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void deleteAllWithFileOutsideRoot() {
-		both(client -> assertEquals(BAD_PATH, awaitException(client.deleteAll(set("file", "..")))));
+		both(client -> assertEquals(FORBIDDEN_PATH, awaitException(client.deleteAll(set("file", "..")))));
 		assertFilesAreSame();
 	}
 
@@ -533,7 +533,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void copyAllToFileOutsideRoot() {
-		both(client -> assertEquals(BAD_PATH, awaitException(client.copyAll(map(
+		both(client -> assertEquals(FORBIDDEN_PATH, awaitException(client.copyAll(map(
 				"file", "newFile",
 				"file2", "../new"
 		)))));
@@ -542,7 +542,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void copyAllFromFileOutsideRoot() {
-		both(client -> assertEquals(BAD_PATH, awaitException(client.copyAll(map(
+		both(client -> assertEquals(FORBIDDEN_PATH, awaitException(client.copyAll(map(
 				"file", "newFile",
 				"../new", "newFile2"
 		)))));
@@ -695,7 +695,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void moveAllToFileOutsideRoot() {
-		both(client -> assertEquals(BAD_PATH, awaitException(client.moveAll(map(
+		both(client -> assertEquals(FORBIDDEN_PATH, awaitException(client.moveAll(map(
 				"file", "newFile",
 				"file2", "../new"
 		)))));
@@ -703,7 +703,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void moveAllFromFileOutsideRoot() {
-		both(client -> assertEquals(BAD_PATH, awaitException(client.moveAll(map(
+		both(client -> assertEquals(FORBIDDEN_PATH, awaitException(client.moveAll(map(
 				"file", "newFile",
 				"../new", "newFile2"
 		)))));

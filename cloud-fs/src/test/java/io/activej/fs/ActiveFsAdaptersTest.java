@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static io.activej.common.collection.CollectionUtils.map;
-import static io.activej.fs.ActiveFs.BAD_PATH;
+import static io.activej.fs.ActiveFs.FORBIDDEN_PATH;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -80,7 +80,7 @@ public final class ActiveFsAdaptersTest {
 			upload(prefixed, "nonPrefix/test.txt");
 			fail("should've failed");
 		} catch (AssertionError e) {
-			assertSame(BAD_PATH, e.getCause());
+			assertSame(FORBIDDEN_PATH, e.getCause());
 		}
 	}
 
@@ -114,9 +114,9 @@ public final class ActiveFsAdaptersTest {
 	public void filterClient() {
 		ActiveFs filtered = ActiveFsAdapters.filter(local, s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
 
-		uploadFails(filtered, "test2.txt", BAD_PATH);
+		uploadFails(filtered, "test2.txt", FORBIDDEN_PATH);
 		upload(filtered, "test22.txt");
-		uploadFails(filtered, "test22.jpg", BAD_PATH);
+		uploadFails(filtered, "test22.jpg", FORBIDDEN_PATH);
 		upload(filtered, "123.txt");
 
 		expect("test22.txt", "123.txt");

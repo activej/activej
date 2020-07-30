@@ -19,7 +19,6 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codec.StructuredDecoder;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -27,6 +26,7 @@ import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.exception.FsIOException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -50,7 +50,7 @@ import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class HttpActiveFs implements ActiveFs {
-	public static final StacklessException UNKNOWN_SERVER_ERROR = new StacklessException(HttpActiveFs.class, "Unknown server error occurred");
+	public static final FsIOException UNKNOWN_SERVER_ERROR = new FsIOException(HttpActiveFs.class, "Unknown server error occurred");
 
 	private final IAsyncHttpClient client;
 	private final String url;

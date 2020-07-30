@@ -16,12 +16,12 @@
 
 package io.activej.fs.tcp;
 
-import io.activej.common.exception.StacklessException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
+import io.activej.fs.exception.FsIOException;
 import io.activej.fs.tcp.RemoteFsCommands.*;
 import io.activej.fs.tcp.RemoteFsResponses.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -38,7 +38,6 @@ import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.fs.ActiveFs.BAD_RANGE;
 import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
 import static io.activej.fs.util.RemoteFsUtils.*;
 
@@ -50,7 +49,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private static final ByteBufsCodec<FsCommand, FsResponse> SERIALIZER =
 			nullTerminatedJson(RemoteFsCommands.CODEC, RemoteFsResponses.CODEC);
 
-	public static final StacklessException NO_HANDLER_FOR_MESSAGE = new StacklessException(ActiveFsServer.class, "No handler for received message type");
+	public static final FsIOException NO_HANDLER_FOR_MESSAGE = new FsIOException(ActiveFsServer.class, "No handler for received message type");
 
 	private final Map<Class<?>, MessagingHandler<FsCommand>> handlers = new HashMap<>();
 	private final ActiveFs fs;
@@ -137,10 +136,6 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 			String name = msg.getName();
 			long offset = msg.getOffset();
 			long limit = msg.getLimit();
-
-			if (offset < 0 || limit < 0) {
-				return Promise.ofException(BAD_RANGE);
-			}
 			return fs.info(name)
 					.then(meta -> {
 						if (meta == null) {

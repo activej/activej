@@ -2,13 +2,14 @@ package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.exception.FsException;
+import io.activej.fs.exception.FsIOException;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.promise.Promise;
@@ -32,9 +33,7 @@ import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
-import static io.activej.fs.ActiveFs.BAD_PATH;
+import static io.activej.fs.ActiveFs.*;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -98,7 +97,7 @@ public final class FsIntegrationTest {
 				.streamTo(fs.upload(filename, 10))
 				.whenComplete(server::close));
 
-		assertEquals(UNEXPECTED_END_OF_STREAM_EXCEPTION, exception);
+		assertSame(UNEXPECTED_END_OF_STREAM, exception);
 
 		assertFalse(Files.exists(path));
 	}
@@ -113,7 +112,7 @@ public final class FsIntegrationTest {
 				.streamTo(fs.upload(filename, 10))
 				.whenComplete(server::close));
 
-		assertEquals(UNEXPECTED_DATA_EXCEPTION, exception);
+		assertSame(UNEXPECTED_DATA, exception);
 
 		assertFalse(Files.exists(path));
 	}
@@ -157,7 +156,7 @@ public final class FsIntegrationTest {
 		Throwable exception = awaitException(upload("../../nonlocal/../file.txt", CONTENT)
 				.whenComplete(server::close));
 
-		assertSame(BAD_PATH, exception);
+		assertSame(FORBIDDEN_PATH, exception);
 	}
 
 	@Test
@@ -167,13 +166,13 @@ public final class FsIntegrationTest {
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(
 				ChannelSupplier.of(wrapUtf8("Test1"), wrapUtf8(" Test2"), wrapUtf8(" Test3")).async(),
 				ChannelSupplier.of(ByteBuf.wrapForReading(BIG_FILE)),
-				ChannelSupplier.ofException(new StacklessException(FsIntegrationTest.class, "Test exception")),
+				ChannelSupplier.ofException(new FsIOException(FsIntegrationTest.class, "Test exception")),
 				ChannelSupplier.of(wrapUtf8("Test4")));
 
 		Throwable exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(fs.upload(resultFile, Long.MAX_VALUE)))
 				.whenComplete(server::close));
 
-		assertThat(exception, instanceOf(StacklessException.class));
+		assertThat(exception, instanceOf(FsException.class));
 		assertThat(exception.getMessage(), containsString("Test exception"));
 
 		assertFalse(Files.exists(storage.resolve(resultFile)));
@@ -213,7 +212,7 @@ public final class FsIntegrationTest {
 				.streamTo(ChannelConsumer.of($ -> Promise.complete()))
 				.whenComplete(server::close));
 
-		assertThat(exception, instanceOf(StacklessException.class));
+		assertThat(exception, instanceOf(FsException.class));
 		assertThat(exception.getMessage(), containsString("File not found"));
 	}
 

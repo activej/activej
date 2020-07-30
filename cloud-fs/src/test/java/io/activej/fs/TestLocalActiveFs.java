@@ -26,10 +26,7 @@ import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
-import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
-import static io.activej.fs.ActiveFs.MALFORMED_GLOB;
+import static io.activej.fs.ActiveFs.*;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
@@ -142,7 +139,7 @@ public final class TestLocalActiveFs {
 
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
 
-		assertEquals(UNEXPECTED_END_OF_STREAM_EXCEPTION, exception);
+		assertSame(UNEXPECTED_END_OF_STREAM, exception);
 
 		assertFalse(Files.exists(path));
 	}
@@ -157,7 +154,7 @@ public final class TestLocalActiveFs {
 
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
 
-		assertEquals(UNEXPECTED_DATA_EXCEPTION, exception);
+		assertSame(UNEXPECTED_DATA, exception);
 
 		assertFalse(Files.exists(path));
 	}

@@ -361,11 +361,11 @@ public abstract class AbstractHttpConnection {
 									readQueue.add(buf);
 									return Promise.complete();
 								} else {
-									return Promise.<Void>ofException(INCOMPLETE_MESSAGE);
+									return Promise.ofException(INCOMPLETE_MESSAGE);
 								}
 							} else {
 								closeWithError(e);
-								return Promise.<Void>ofException(e);
+								return Promise.ofException(e);
 							}
 						}),
 				Promise::complete,

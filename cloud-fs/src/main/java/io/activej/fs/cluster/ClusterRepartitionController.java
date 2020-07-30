@@ -22,7 +22,6 @@ import io.activej.common.Checks;
 import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
@@ -32,6 +31,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.exception.FsIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
@@ -56,6 +56,7 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
+import static io.activej.fs.ActiveFs.PATH_CONTAINS_FILE;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
@@ -318,14 +319,20 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								// upload file to this partition
 								ActiveFs fs = partitions.get(partitionId);
 								if (fs == null) {
-									return Promise.ofException(new StacklessException(ClusterRepartitionController.class, "File system '" + partitionId + "' is not alive"));
+									return Promise.ofException(new FsIOException(ClusterRepartitionController.class, "File system '" + partitionId + "' is not alive"));
 								}
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
-												.set(ChannelConsumer.ofPromise(remoteMeta == null ?
-														fs.upload(name, meta.getSize()) :
-														fs.append(name, remoteMeta.getSize())
-																.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
+												.set(ChannelConsumer.ofPromise(Promise.complete()
+														.then(() -> remoteMeta == null ?
+																fs.upload(name, meta.getSize()) :
+																fs.append(name, remoteMeta.getSize())
+																		.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
+														.whenException(e -> {
+															if (e == PATH_CONTAINS_FILE) {
+																logger.error("Cluster contains files with clashing paths", e);
+															}
+														}))
 														.withAcknowledgement(ack -> ack
 																.thenEx(($, e) -> {
 																	if (e != null) {
@@ -398,7 +405,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private void checkEnoughAlivePartitions() {
 		if (partitions.getAlivePartitions().size() < replicationCount) {
-			throw new UncheckedException(new StacklessException(ClusterRepartitionController.class, "Not enough alive partitions"));
+			throw new UncheckedException(new FsIOException(ClusterRepartitionController.class, "Not enough alive partitions"));
 		}
 	}
 

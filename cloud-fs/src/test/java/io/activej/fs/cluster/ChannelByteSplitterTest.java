@@ -24,8 +24,8 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.joining;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.*;
 
 public final class ChannelByteSplitterTest {
 	@ClassRule
@@ -138,10 +138,10 @@ public final class ChannelByteSplitterTest {
 		}
 		Throwable throwable = awaitException(splitter.getProcessCompletion());
 
-		assertSame(EXPECTED_EXCEPTION, throwable);
+		assertThat(throwable.getMessage(), containsString("Not enough successes"));
 		assertEquals(6, outputs.size());
 		for (ChannelConsumer<ByteBuf> output : outputs) {
-			assertEquals(EXPECTED_EXCEPTION, ((AbstractChannelConsumer<ByteBuf>) output).getException());
+			assertThat(((AbstractChannelConsumer<ByteBuf>) output).getException().getMessage(), containsString("Not enough successes"));
 		}
 	}
 

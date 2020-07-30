@@ -24,6 +24,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelInput;
 import io.activej.csp.dsl.WithChannelOutputs;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.fs.exception.FsException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -108,7 +109,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 										if (e1 == null) {
 											doProcess();
 										} else {
-											closeEx(e1);
+											closeEx(new FsException(ChannelByteSplitter.class, "Not enough successes"));
 										}
 									});
 							buf.recycle();

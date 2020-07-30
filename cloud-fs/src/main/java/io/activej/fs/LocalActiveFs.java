@@ -20,7 +20,6 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.CollectorsEx;
 import io.activej.common.MemSize;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
@@ -31,6 +30,8 @@ import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.fs.exception.FsException;
+import io.activej.fs.exception.FsIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.Promise.BlockingCallable;
@@ -55,6 +56,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -101,6 +103,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	//region JMX
 	private final PromiseStats uploadBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats appendBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats appendFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats listPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -182,10 +186,15 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					}
 					return channel;
 				})
+				.thenEx(translateKnownErrors(name))
+				.whenComplete(appendBeginPromise.recordStats())
 				.map(channel -> ChannelFileWriter.create(executor, channel)
 						.withOffset(offset)
 						.withAcknowledgement(ack -> ack
-								.thenEx(translateKnownErrors(name))));
+								.thenEx(translateKnownErrors(name))
+								.whenComplete(appendFinishPromise.recordStats())
+								.whenComplete(toLogger(logger, TRACE, "appendComplete", name, offset, this))))
+				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
 	}
 
 	@Override
@@ -230,6 +239,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						},
 						CollectorsEx.throwingMerger())
 				))
+				.thenEx(translateKnownErrors())
 				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
@@ -273,6 +283,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		return execute(() -> doDelete(singleton(name)))
+				.thenEx(translateKnownErrors(name))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
 	}
@@ -282,6 +293,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		if (toDelete.isEmpty()) return Promise.complete();
 
 		return execute(() -> doDelete(toDelete))
+				.thenEx(translateKnownErrors())
 				.whenComplete(toLogger(logger, TRACE, "deleteAll", toDelete, this))
 				.whenComplete(deleteAllPromise.recordStats());
 	}
@@ -362,17 +374,18 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		if (!Files.isDirectory(tempDir)) {
 			return;
 		}
-		//noinspection ResultOfMethodCallIgnored
-		Files.walk(tempDir)
-				.sorted(Comparator.reverseOrder())
-				.map(Path::toFile)
-				.forEach(File::delete);
+		try (Stream<Path> paths = Files.walk(tempDir)) {
+			//noinspection ResultOfMethodCallIgnored
+			paths.sorted(Comparator.reverseOrder())
+					.map(Path::toFile)
+					.forEach(File::delete);
+		}
 	}
 
-	private Path resolve(String name) throws StacklessException {
+	private Path resolve(String name) throws FsException {
 		Path path = storage.resolve(toLocalName.apply(name)).normalize();
 		if (!path.startsWith(storage)) {
-			throw BAD_PATH;
+			throw FORBIDDEN_PATH;
 		}
 		return path;
 	}
@@ -380,7 +393,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private Promise<Path> resolveAsync(String name) {
 		try {
 			return Promise.of(resolve(name));
-		} catch (StacklessException e) {
+		} catch (FsException e) {
 			return Promise.ofException(e);
 		}
 	}
@@ -467,7 +480,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		deleteEmptyParents(path.getParent());
 	}
 
-	private void doDelete(Set<String> toDelete) throws StacklessException, IOException {
+	private void doDelete(Set<String> toDelete) throws FsException, IOException {
 		for (String name : toDelete) {
 			Path path = resolve(name);
 
@@ -503,7 +516,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		Files.setLastModifiedTime(path, FileTime.fromMillis(now.currentTimeMillis()));
 	}
 
-	private Collection<Path> findMatching(String glob) throws IOException, StacklessException {
+	private Collection<Path> findMatching(String glob) throws IOException, FsException {
 		// optimization for 'ping' empty list requests
 		if (glob.isEmpty()) {
 			return emptyList();
@@ -561,7 +574,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			long timestamp = Files.getLastModifiedTime(path).toMillis();
 			return FileMetadata.of(Files.size(path), timestamp);
 		} catch (IOException e) {
-			throw new UncheckedException(e);
+			throw new UncheckedException(new FsIOException(LocalActiveFs.class, "Failed to retrieve metadata", e));
 		}
 	}
 
@@ -571,11 +584,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		void accept(Path path) throws IOException;
 	}
 
-	private void walkFiles(Path dir, Walker walker) throws IOException, StacklessException {
+	private void walkFiles(Path dir, Walker walker) throws IOException, FsException {
 		walkFiles(dir, null, walker);
 	}
 
-	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException, StacklessException {
+	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException, FsException {
 		if (!Files.isDirectory(dir) || dir.startsWith(tempDir)) {
 			return;
 		}
@@ -666,25 +679,27 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> translateKnownErrors(@Nullable String name) {
 		return (v, e) -> {
-			if (!(e instanceof IOException)) {
+			if (e == null || e instanceof FsException) {
 				return Promise.of(v, e);
 			} else if (e instanceof FileAlreadyExistsException) {
 				return execute(() -> {
 					if (name != null && Files.isDirectory(resolve(name))) throw IS_DIRECTORY;
-					throw FILE_EXISTS;
+					throw PATH_CONTAINS_FILE;
 				});
 			} else if (e instanceof NoSuchFileException) {
 				return Promise.ofException(FILE_NOT_FOUND);
 			}
-			// e is IOException
 			return execute(() -> {
 				if (name != null && Files.isDirectory(resolve(name))) throw IS_DIRECTORY;
-				throw (IOException) e;
+				if (e instanceof IOException) {
+					throw new FsIOException(LocalActiveFs.class, (IOException) e);
+				}
+				throw new FsIOException(ActiveFs.class, "Unknown error", e);
 			});
 		};
 	}
 
-	private PathMatcher getPathMatcher(FileSystem fileSystem, String glob) throws StacklessException {
+	private PathMatcher getPathMatcher(FileSystem fileSystem, String glob) throws FsException {
 		try {
 			return fileSystem.getPathMatcher("glob:" + glob);
 		} catch (PatternSyntaxException | UnsupportedOperationException e) {
@@ -700,6 +715,16 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@JmxAttribute
 	public PromiseStats getUploadFinishPromise() {
+		return uploadFinishPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getAppendBeginPromise() {
+		return uploadBeginPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getAppendFinishPromise() {
 		return uploadFinishPromise;
 	}
 

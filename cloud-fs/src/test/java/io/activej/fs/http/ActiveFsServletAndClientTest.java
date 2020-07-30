@@ -22,18 +22,14 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.fs.ActiveFs.BAD_PATH;
-import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
+import static io.activej.fs.ActiveFs.*;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -122,7 +118,7 @@ public final class ActiveFsServletAndClientTest {
 
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
 
-		assertEquals(UNEXPECTED_END_OF_STREAM_EXCEPTION, exception);
+		assertSame(UNEXPECTED_END_OF_STREAM, exception);
 
 		assertFalse(Files.exists(path));
 	}
@@ -137,7 +133,7 @@ public final class ActiveFsServletAndClientTest {
 
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
 
-		assertEquals(UNEXPECTED_DATA_EXCEPTION, exception);
+		assertSame(UNEXPECTED_DATA, exception);
 
 		assertFalse(Files.exists(path));
 	}
@@ -145,7 +141,7 @@ public final class ActiveFsServletAndClientTest {
 	@Test
 	public void uploadIllegalPath() {
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("test")).streamTo(fs.upload("../outside")));
-		assertSame(BAD_PATH, exception);
+		assertSame(FORBIDDEN_PATH, exception);
 	}
 
 	@Test
@@ -162,15 +158,6 @@ public final class ActiveFsServletAndClientTest {
 	public void downloadNonExistent() {
 		Throwable exception = awaitException(fs.download("nonExistent"));
 		assertSame(FILE_NOT_FOUND, exception);
-	}
-
-	private void clearDirectory(Path dir) throws IOException {
-		for (Iterator<Path> iterator = Files.list(dir).iterator(); iterator.hasNext(); ) {
-			Path file = iterator.next();
-			if (Files.isDirectory(file))
-				clearDirectory(file);
-			Files.delete(file);
-		}
 	}
 
 	private void initializeDirs() {

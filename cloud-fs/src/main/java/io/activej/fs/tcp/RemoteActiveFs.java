@@ -18,7 +18,6 @@ package io.activej.fs.tcp;
 
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -29,6 +28,7 @@ import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.exception.FsIOException;
 import io.activej.fs.tcp.RemoteFsCommands.*;
 import io.activej.fs.tcp.RemoteFsResponses.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -49,7 +49,6 @@ import java.util.function.Function;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.*;
 import static java.util.Collections.emptyMap;
@@ -60,9 +59,8 @@ import static java.util.Collections.emptyMap;
 public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
-	public static final StacklessException INVALID_MESSAGE = new StacklessException(RemoteActiveFs.class, "Invalid or unexpected message received");
-	public static final StacklessException TOO_MUCH_DATA = new StacklessException(RemoteActiveFs.class, "Received more bytes than expected");
-	public static final StacklessException UNKNOWN_SERVER_ERROR = new StacklessException(RemoteActiveFs.class, "Unknown server error occurred");
+	public static final FsIOException INVALID_MESSAGE = new FsIOException(RemoteActiveFs.class, "Invalid or unexpected message received");
+	public static final FsIOException UNKNOWN_SERVER_ERROR = new FsIOException(RemoteActiveFs.class, "Unknown server error occurred");
 
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
 			nullTerminatedJson(RemoteFsResponses.CODEC, RemoteFsCommands.CODEC);
@@ -179,7 +177,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 								.then(msg -> {
 									long receivingSize = msg.getSize();
 									if (receivingSize > limit) {
-										return Promise.ofException(TOO_MUCH_DATA);
+										return Promise.ofException(UNEXPECTED_DATA);
 									}
 
 									logger.trace("download size for file {} is {}: {}", name, receivingSize, this);
@@ -197,7 +195,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 																" (offset " + offset + ", limit " + limit + ")," +
 																" expected: " + receivingSize +
 																" actual: " + size.get());
-														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM_EXCEPTION : TOO_MUCH_DATA);
+														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM : UNEXPECTED_DATA);
 													})
 													.whenComplete(downloadFinishPromise.recordStats())
 													.whenResult(messaging::close)));
