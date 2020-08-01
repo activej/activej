@@ -46,6 +46,7 @@ import static io.activej.serializer.util.Utils.of;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.newSetFromMap;
 
 /**
  * Scans fields of classes for serialization.
@@ -171,6 +172,7 @@ public final class SerializerBuilder {
 
 		builder.setSerializer(ByteBuffer.class, new SerializerDefByteBuffer());
 
+		builder.setAnnotationHandler(SerializeReference.class, SerializeReferenceEx.class, new SerializeReferenceHandler());
 		builder.setAnnotationHandler(SerializerClass.class, SerializerClassEx.class, new SerializerClassHandler());
 		builder.setAnnotationHandler(SerializeFixedSize.class, SerializeFixedSizeEx.class, new SerializeFixedSizeHandler());
 		builder.setAnnotationHandler(SerializeVarLength.class, SerializeVarLengthEx.class, new SerializeVarLengthHandler());
@@ -812,9 +814,11 @@ public final class SerializerBuilder {
 		}
 
 		Set<Integer> collectedVersions = new HashSet<>();
+		Set<SerializerDef> visited = newSetFromMap(new IdentityHashMap<>());
 		SerializerDef.Visitor visitor = new SerializerDef.Visitor() {
 			@Override
 			public void visit(String serializerId, SerializerDef serializer) {
+				if (!visited.add(serializer)) return;
 				collectedVersions.addAll(serializer.getVersions());
 				serializer.accept(this);
 			}

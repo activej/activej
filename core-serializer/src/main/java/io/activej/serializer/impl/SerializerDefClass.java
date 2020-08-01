@@ -210,7 +210,6 @@ public final class SerializerDefClass implements SerializerDef {
 	public void accept(Visitor visitor) {
 		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 			visitor.visit(entry.getKey(), entry.getValue().serializer);
-
 		}
 	}
 
