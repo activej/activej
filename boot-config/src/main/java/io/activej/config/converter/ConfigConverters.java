@@ -471,6 +471,9 @@ public final class ConfigConverters {
 								SocketSettings::withTcpNoDelay,
 								config.get(ofBoolean(), "tcpNoDelay",
 										defaultValue.hasTcpNoDelay() ? defaultValue.getTcpNoDelay() : null)))
+						.andThen(applyIfNotNull(SocketSettings::withLingerTimeout,
+								config.get(ofDuration(), "lingerTimeout",
+										defaultValue.hasLingerTimeout() ? defaultValue.getLingerTimeout() : null)))
 						.andThen(applyIfNotNull(
 								SocketSettings::withImplReadTimeout,
 								config.get(ofDuration(), "implReadTimeout",

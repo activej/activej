@@ -112,40 +112,40 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return doUpload(name, null)
+		return connectForStreaming(address)
+				.then(messaging -> doUpload(messaging, name, null))
 				.whenComplete(uploadStartPromise.recordStats())
 				.whenComplete(toLogger(logger, "upload", name, this));
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		return doUpload(name, size)
+		return connect(address)
+				.then(messaging -> doUpload(messaging, name, size))
 				.whenComplete(uploadStartPromise.recordStats())
 				.whenComplete(toLogger(logger, "upload", name, size, this));
 	}
 
 	@NotNull
-	private Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String name, @Nullable Long size) {
-		return connect(address)
-				.then(messaging ->
-						messaging.send(new Upload(name, size))
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(MessagingWithBinaryStreaming<FsResponse, FsCommand> messaging, @NotNull String name, @Nullable Long size) {
+		return messaging.send(new Upload(name, size))
+				.then(messaging::receive)
+				.then(msg -> cast(msg, UploadAck.class))
+				.then(() -> Promise.of(messaging.sendBinaryStream()
+						.transformWith(size == null ? identity() : ofFixedSize(size))
+						.withAcknowledgement(ack -> ack
 								.then(messaging::receive)
-								.then(msg -> cast(msg, UploadAck.class))
-								.then(() -> Promise.of(messaging.sendBinaryStream()
-										.transformWith(size == null ? identity() : ofFixedSize(size))
-										.withAcknowledgement(ack -> ack
-												.then(messaging::receive)
-												.whenResult(messaging::close)
-												.then(msg -> cast(msg, UploadFinished.class).toVoid())
-												.whenException(e -> {
-													messaging.closeEx(e);
-													logger.warn("Cancelled while trying to upload file {}: {}", name, this, e);
-												})
-												.whenComplete(uploadFinishPromise.recordStats()))))
+								.whenResult(messaging::close)
+								.then(msg -> cast(msg, UploadFinished.class).toVoid())
 								.whenException(e -> {
 									messaging.closeEx(e);
-									logger.warn("Error while trying to upload file {}: {}", name, this, e);
-								}));
+									logger.warn("Cancelled while trying to upload file {}: {}", name, this, e);
+								})
+								.whenComplete(uploadFinishPromise.recordStats()))))
+				.whenException(e -> {
+					messaging.closeEx(e);
+					logger.warn("Error while trying to upload file {}: {}", name, this, e);
+				});
 	}
 
 	@Override
@@ -287,6 +287,14 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	}
 
 	private Promise<MessagingWithBinaryStreaming<FsResponse, FsCommand>> connect(InetSocketAddress address) {
+		return doConnect(address, socketSettings);
+	}
+
+	private Promise<MessagingWithBinaryStreaming<FsResponse, FsCommand>> connectForStreaming(InetSocketAddress address) {
+		return doConnect(address, socketSettings.withLingerTimeout(Duration.ZERO));
+	}
+
+	private Promise<MessagingWithBinaryStreaming<FsResponse, FsCommand>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
 		return AsyncTcpSocketNio.connect(address, 0, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))

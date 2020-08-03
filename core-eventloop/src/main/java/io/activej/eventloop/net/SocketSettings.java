@@ -18,6 +18,7 @@ package io.activej.eventloop.net;
 
 import io.activej.common.MemSize;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
@@ -43,9 +44,10 @@ public final class SocketSettings {
 	private final int implReadTimeout;
 	private final int implWriteTimeout;
 	private final int implReadBufferSize;
+	private final int lingerTimeout;
 
 	// region builders
-	private SocketSettings(int sendBufferSize, int receiveBufferSize, byte keepAlive, byte reuseAddress, byte tcpNoDelay, int implReadTimeout, int implWriteTimeout, int implReadBufferSize) {
+	private SocketSettings(int sendBufferSize, int receiveBufferSize, byte keepAlive, byte reuseAddress, byte tcpNoDelay, int implReadTimeout, int implWriteTimeout, int implReadBufferSize, int lingerTimeout) {
 		this.sendBufferSize = sendBufferSize;
 		this.receiveBufferSize = receiveBufferSize;
 		this.keepAlive = keepAlive;
@@ -54,10 +56,11 @@ public final class SocketSettings {
 		this.implReadTimeout = implReadTimeout;
 		this.implWriteTimeout = implWriteTimeout;
 		this.implReadBufferSize = implReadBufferSize;
+		this.lingerTimeout = lingerTimeout;
 	}
 
 	public static SocketSettings create() {
-		return new SocketSettings(0, 0, DEF_BOOL, DEF_BOOL, DEF_BOOL, 0, 0, 0);
+		return new SocketSettings(0, 0, DEF_BOOL, DEF_BOOL, DEF_BOOL, 0, 0, 0, -1);
 	}
 
 	/**
@@ -68,39 +71,43 @@ public final class SocketSettings {
 	 * @return default socket settings
 	 */
 	public static SocketSettings createDefault() {
-		return new SocketSettings(0, 0, DEF_BOOL, DEF_BOOL, TRUE, 0, 0, 0);
+		return new SocketSettings(0, 0, DEF_BOOL, DEF_BOOL, TRUE, 0, 0, 0, -1);
 	}
 
 	public SocketSettings withSendBufferSize(@NotNull MemSize sendBufferSize) {
-		return new SocketSettings(sendBufferSize.toInt(), receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize);
+		return new SocketSettings(sendBufferSize.toInt(), receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
 	public SocketSettings withReceiveBufferSize(@NotNull MemSize receiveBufferSize) {
-		return new SocketSettings(sendBufferSize, receiveBufferSize.toInt(), keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize);
+		return new SocketSettings(sendBufferSize, receiveBufferSize.toInt(), keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
 	public SocketSettings withKeepAlive(boolean keepAlive) {
-		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive ? TRUE : FALSE, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize);
+		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive ? TRUE : FALSE, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
 	public SocketSettings withReuseAddress(boolean reuseAddress) {
-		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress ? TRUE : FALSE, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize);
+		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress ? TRUE : FALSE, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
 	public SocketSettings withTcpNoDelay(boolean tcpNoDelay) {
-		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay ? TRUE : FALSE, implReadTimeout, implWriteTimeout, implReadBufferSize);
+		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay ? TRUE : FALSE, implReadTimeout, implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
 	public SocketSettings withImplReadTimeout(@NotNull Duration implReadTimeout) {
-		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, (int) implReadTimeout.toMillis(), implWriteTimeout, implReadBufferSize);
+		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, (int) implReadTimeout.toMillis(), implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
 	public SocketSettings withImplWriteTimeout(@NotNull Duration implWriteTimeout) {
-		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, (int) implWriteTimeout.toMillis(), implReadBufferSize);
+		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, (int) implWriteTimeout.toMillis(), implReadBufferSize, lingerTimeout);
 	}
 
 	public SocketSettings withImplReadBufferSize(@NotNull MemSize implReadBufferSize) {
-		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize.toInt());
+		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize.toInt(), lingerTimeout);
+	}
+
+	public SocketSettings withLingerTimeout(Duration lingerTimeout) {
+		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize, (int) (lingerTimeout.toMillis() / 1000));
 	}
 
 	// endregion
@@ -120,6 +127,9 @@ public final class SocketSettings {
 		}
 		if (tcpNoDelay != DEF_BOOL) {
 			channel.setOption(TCP_NODELAY, tcpNoDelay != FALSE);
+		}
+		if (lingerTimeout != -1){
+			channel.setOption(SO_LINGER, lingerTimeout);
 		}
 	}
 
@@ -220,4 +230,17 @@ public final class SocketSettings {
 		return implReadBufferSize;
 	}
 
+	public boolean hasLingerTimeout() {
+		return lingerTimeout != -1;
+	}
+
+	@Nullable
+	public Duration getLingerTimeout() {
+		return lingerTimeout == -1 ? null : Duration.ofSeconds(lingerTimeout);
+	}
+
+	public int getLingerTimeoutSeconds() {
+		checkState(hasLingerTimeout(), "No 'linger timeout' setting is present");
+		return implReadBufferSize;
+	}
 }
