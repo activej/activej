@@ -29,10 +29,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
-import static io.activej.serializer.SerializerDef.StaticEncoders.*;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Collections.singletonList;
@@ -251,8 +250,7 @@ public final class SerializerDefClass implements SerializerDef {
 	public Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return fields.size() <= 1 ?
 				encoder(staticEncoders, buf, pos, value, version, compatibilityLevel) :
-				staticEncoders.define(encodeType, buf, pos, value,
-						encoder(staticEncoders, BUF, POS, VALUE, version, compatibilityLevel));
+				staticEncoders.define(this, encodeType, buf, pos, value, version, compatibilityLevel);
 	}
 
 	@Override
@@ -284,17 +282,16 @@ public final class SerializerDefClass implements SerializerDef {
 	public Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return fields.size() <= 1 ?
 				decoder(staticDecoders, in, version, compatibilityLevel) :
-				staticDecoders.define(getDecodeType(), in,
-						decoder(staticDecoders, IN, version, compatibilityLevel));
+				staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression decoderEx(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Function<Expression, Expression> extraInitializer) {
 		if (decodeType.isInterface()) {
 			return deserializeInterface(staticDecoders, in, version, compatibilityLevel);
 		}
 		if (constructor == null && factory == null && setters.isEmpty()) {
-			return deserializeClassSimple(staticDecoders, in, version, compatibilityLevel);
+			return deserializeClassSimple(staticDecoders, in, version, compatibilityLevel, extraInitializer);
 		}
 
 		return let(Utils.of(() -> {
@@ -319,6 +316,7 @@ public final class SerializerDefClass implements SerializerDef {
 									callConstructor(decodeType, map, version) :
 									callFactory(map, version),
 							instance -> sequence(list -> {
+								list.add(extraInitializer.apply(instance));
 								for (Map.Entry<Method, List<String>> entry : setters.entrySet()) {
 									Method method = entry.getKey();
 									boolean found = false;
@@ -361,6 +359,11 @@ public final class SerializerDefClass implements SerializerDef {
 							}));
 
 				});
+	}
+
+	@Override
+	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		return decoderEx(staticDecoders, in, version, compatibilityLevel, value -> sequence());
 	}
 
 	private Expression callFactory(Map<String, Expression> map, int version) {
@@ -437,11 +440,12 @@ public final class SerializerDefClass implements SerializerDef {
 	}
 
 	private Expression deserializeClassSimple(StaticDecoders staticDecoders, Expression in,
-			int version, CompatibilityLevel compatibilityLevel) {
+			int version, CompatibilityLevel compatibilityLevel, Function<Expression, Expression> extraInitializer) {
 		return let(
 				constructor(decodeType),
 				instance ->
 						sequence(expressions -> {
+							expressions.add(extraInitializer.apply(instance));
 							for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 								FieldDef fieldDef = entry.getValue();
 								if (!fieldDef.hasVersion(version)) continue;

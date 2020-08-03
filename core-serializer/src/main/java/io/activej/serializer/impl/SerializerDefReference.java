@@ -25,10 +25,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Set;
+import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
-import static io.activej.serializer.SerializerDef.StaticEncoders.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 import static java.util.Collections.emptySet;
 
@@ -72,14 +71,12 @@ public final class SerializerDefReference implements SerializerDef {
 
 	@Override
 	public final Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return staticEncoders.define(getEncodeType(), buf, pos, value,
-				encoder(staticEncoders, BUF, POS, VALUE, version, compatibilityLevel));
+		return staticEncoders.define(this, getEncodeType(), buf, pos, value, version, compatibilityLevel);
 	}
 
 	@Override
 	public final Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return staticDecoders.define(getDecodeType(), in,
-				decoder(staticDecoders, IN, version, compatibilityLevel));
+		return staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
 	}
 
 	@Override
@@ -99,11 +96,22 @@ public final class SerializerDefReference implements SerializerDef {
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), HashMap.class),
 				map -> let(readVarInt(in),
-						index -> ifThenElse(cmpEq(index, value(0)),
-								let(serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel),
-										value -> sequence(
-												call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), value),
-												value)),
-								cast(call(map, "get", cast(index, Integer.class)), serializer.getDecodeType()))));
+						index -> {
+							Function<Expression, Expression> extraInitializer = new Function<Expression, Expression>() {
+								boolean initialized;
+								@Override
+								public Expression apply(Expression value) {
+									if (initialized) return sequence();
+									initialized = true;
+									return call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), value);
+								}
+							};
+							return ifThenElse(cmpEq(index, value(0)),
+									let(serializer.decoderEx(staticDecoders, in, version, compatibilityLevel, extraInitializer),
+											value -> sequence(
+													extraInitializer.apply(value),
+													value)),
+									cast(call(map, "get", cast(index, Integer.class)), serializer.getDecodeType()));
+						}));
 	}
 }

@@ -25,8 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
-import static io.activej.serializer.SerializerDef.StaticEncoders.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 import static java.util.Collections.emptySet;
 
@@ -80,8 +78,7 @@ public final class SerializerDefArray implements SerializerDefWithNullable, Seri
 		if (type.getComponentType() == Byte.TYPE) {
 			return encoder(staticEncoders, buf, pos, value, version, compatibilityLevel);
 		} else {
-			return staticEncoders.define(type, buf, pos, value,
-					encoder(staticEncoders, BUF, POS, VALUE, version, compatibilityLevel));
+			return staticEncoders.define(this, type, buf, pos, value, version, compatibilityLevel);
 		}
 	}
 
@@ -128,8 +125,7 @@ public final class SerializerDefArray implements SerializerDefWithNullable, Seri
 		if (type.getComponentType() == Byte.TYPE) {
 			return decoder(staticDecoders, in, version, compatibilityLevel);
 		} else {
-			return staticDecoders.define(getDecodeType(), in,
-					decoder(staticDecoders, IN, version, compatibilityLevel));
+			return staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
 		}
 	}
 

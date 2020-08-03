@@ -21,6 +21,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 
 import java.util.Set;
+import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.arg;
 
@@ -57,7 +58,7 @@ public interface SerializerDef {
 		Variable POS = arg(1);
 		Variable VALUE = arg(2);
 
-		Expression define(Class<?> valueClazz, Expression buf, Variable pos, Expression value, Expression method);
+		Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel);
 	}
 
 	/**
@@ -79,7 +80,7 @@ public interface SerializerDef {
 	interface StaticDecoders {
 		Variable IN = arg(0);
 
-		Expression define(Class<?> valueClazz, Expression in, Expression method);
+		Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression in, int version, CompatibilityLevel compatibilityLevel);
 
 		<T> ClassBuilder<T> buildClass(Class<T> type);
 	}
@@ -97,4 +98,9 @@ public interface SerializerDef {
 	}
 
 	Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel);
+
+	default Expression decoderEx(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel,
+			Function<Expression, Expression> extraInitializer) {
+		return decoder(staticDecoders, in, version, compatibilityLevel);
+	}
 }

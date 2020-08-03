@@ -25,8 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.SerializerDef.StaticDecoders.IN;
-import static io.activej.serializer.SerializerDef.StaticEncoders.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.of;
@@ -77,8 +75,7 @@ public final class SerializerDefSubclass implements SerializerDefWithNullable {
 
 	@Override
 	public Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return staticEncoders.define(dataType, buf, pos, value,
-				encoder(staticEncoders, BUF, POS, VALUE, version, compatibilityLevel));
+		return staticEncoders.define(this, dataType, buf, pos, value, version, compatibilityLevel);
 	}
 
 	@Override
@@ -111,9 +108,7 @@ public final class SerializerDefSubclass implements SerializerDefWithNullable {
 
 	@Override
 	public Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return staticDecoders.define(getDecodeType(), in,
-				decoder(staticDecoders, IN, version, compatibilityLevel));
-
+		return staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
 	}
 
 	@Override
