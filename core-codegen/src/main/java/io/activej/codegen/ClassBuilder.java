@@ -198,7 +198,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		staticMethods.put(new Method(methodName, getType(returnClass), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
 	}
 
-	public ClassBuilder<T> withStaticField(String fieldName, Class<?> type, Object value) {
+	public <F> ClassBuilder<T> withStaticField(String fieldName, Class<F> type, F value) {
 		this.staticFields.put(fieldName, type);
 		this.staticConstants.put(fieldName, value);
 		return this;

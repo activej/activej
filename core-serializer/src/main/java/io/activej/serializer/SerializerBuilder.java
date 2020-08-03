@@ -816,11 +816,15 @@ public final class SerializerBuilder {
 		}
 
 		Set<Integer> collectedVersions = new HashSet<>();
+		Map<Object, Expression> encoderInitializers = new HashMap<>();
+		Map<Object, Expression> decoderInitializers = new HashMap<>();
 		Set<SerializerDef> visited = newSetFromMap(new IdentityHashMap<>());
 		SerializerDef.Visitor visitor = new SerializerDef.Visitor() {
 			@Override
 			public void visit(String serializerId, SerializerDef serializer) {
 				if (!visited.add(serializer)) return;
+				encoderInitializers.putAll(serializer.getEncoderInitializer());
+				decoderInitializers.putAll(serializer.getDecoderInitializer());
 				collectedVersions.addAll(serializer.getVersions());
 				serializer.accept(this);
 			}
@@ -836,27 +840,29 @@ public final class SerializerBuilder {
 				Integer.valueOf(serializeVersion) :
 				getLatestVersion(versions);
 
-		defineEncoders(classBuilder, serializer, currentVersion);
+		defineEncoders(classBuilder, serializer, currentVersion, new ArrayList<>(encoderInitializers.values()));
 
-		defineDecoders(classBuilder, serializer, allVersions);
+		defineDecoders(classBuilder, serializer, allVersions, new ArrayList<>(decoderInitializers.values()));
 
 		return classBuilder.buildClassAndCreateNewInstance();
 	}
 
-	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer currentVersion) {
+	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer currentVersion, List<Expression> encoderInitializers) {
 		StaticEncoders staticEncoders = staticEncoders(classBuilder);
 
-		classBuilder.withMethod("encode", int.class, asList(byte[].class, int.class, Object.class),
+		classBuilder.withMethod("encode", int.class, asList(byte[].class, int.class, Object.class), sequence(
+				sequence(encoderInitializers),
 				let(cast(arg(2), serializer.getEncodeType()), data ->
-						encoderImpl(classBuilder, serializer, currentVersion, staticEncoders, arg(0), arg(1), data)));
+						encoderImpl(classBuilder, serializer, currentVersion, staticEncoders, arg(0), arg(1), data))));
 
-		classBuilder.withMethod("encode", void.class, asList(BinaryOutput.class, Object.class),
+		classBuilder.withMethod("encode", void.class, asList(BinaryOutput.class, Object.class), sequence(
+				sequence(encoderInitializers),
 				let(call(arg(0), "array"), buf ->
 						let(call(arg(0), "pos"), pos ->
 								let(cast(arg(1), serializer.getEncodeType()), data ->
 										sequence(
 												encoderImpl(classBuilder, serializer, currentVersion, staticEncoders, buf, pos, data),
-												call(arg(0), "pos", pos))))));
+												call(arg(0), "pos", pos)))))));
 	}
 
 	private Expression encoderImpl(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer currentVersion, StaticEncoders staticEncoders, Expression buf, Variable pos, Expression data) {
@@ -873,16 +879,18 @@ public final class SerializerBuilder {
 				pos);
 	}
 
-	private void defineDecoders(ClassBuilder<?> classBuilder, SerializerDef serializer, List<Integer> allVersions) {
+	private void defineDecoders(ClassBuilder<?> classBuilder, SerializerDef serializer, List<Integer> allVersions, List<Expression> decoderInitializers) {
 		StaticDecoders staticDecoders = staticDecoders(classBuilder);
 
 		Integer latestVersion = getLatestVersion(allVersions);
-		classBuilder.withMethod("decode", Object.class, asList(BinaryInput.class),
-				decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, arg(0)));
+		classBuilder.withMethod("decode", Object.class, asList(BinaryInput.class), sequence(
+				sequence(decoderInitializers),
+				decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, arg(0))));
 
-		classBuilder.withMethod("decode", Object.class, asList(byte[].class, int.class),
+		classBuilder.withMethod("decode", Object.class, asList(byte[].class, int.class), sequence(
+				sequence(decoderInitializers),
 				let(constructor(BinaryInput.class, arg(0), arg(1)), in ->
-						decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, in)));
+						decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, in))));
 
 		classBuilder.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),

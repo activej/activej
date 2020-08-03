@@ -20,6 +20,8 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -48,6 +50,14 @@ public interface SerializerDef {
 	 * @return type of object which will be serialized
 	 */
 	Class<?> getEncodeType();
+
+	default Map<Object, Expression> getEncoderInitializer() {
+		return Collections.emptyMap();
+	}
+
+	default Map<Object, Expression> getDecoderInitializer() {
+		return Collections.emptyMap();
+	}
 
 	default Class<?> getDecodeType() {
 		return getEncodeType();

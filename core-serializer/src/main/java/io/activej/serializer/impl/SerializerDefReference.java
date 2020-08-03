@@ -24,12 +24,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonMap;
 
 public final class SerializerDefReference implements SerializerDef {
 	public static final ThreadLocal<IdentityHashMap<Object, Integer>> MAP_ENCODE = ThreadLocal.withInitial(IdentityHashMap::new);
@@ -39,19 +41,6 @@ public final class SerializerDefReference implements SerializerDef {
 
 	public SerializerDefReference(@NotNull SerializerDef serializer) {
 		this.serializer = serializer;
-	}
-
-	public static void reset() {
-		resetEncoder();
-		resetDecoder();
-	}
-
-	public static void resetEncoder() {
-		MAP_ENCODE.get().clear();
-	}
-
-	public static void resetDecoder() {
-		MAP_DECODE.get().clear();
 	}
 
 	@Override
@@ -67,6 +56,18 @@ public final class SerializerDefReference implements SerializerDef {
 	@Override
 	public Class<?> getEncodeType() {
 		return serializer.getEncodeType();
+	}
+
+	@Override
+	public Map<Object, Expression> getEncoderInitializer() {
+		return singletonMap(SerializerDefReference.class,
+				call(cast(call(staticField(SerializerDefReference.class, "MAP_ENCODE"), "get"), IdentityHashMap.class), "clear"));
+	}
+
+	@Override
+	public Map<Object, Expression> getDecoderInitializer() {
+		return singletonMap(SerializerDefReference.class,
+				call(cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), HashMap.class), "clear"));
 	}
 
 	@Override
