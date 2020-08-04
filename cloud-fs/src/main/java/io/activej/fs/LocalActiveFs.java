@@ -75,6 +75,10 @@ import static java.util.Collections.*;
 
 /**
  * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
+ * <p>
+ * Only permits file operations to be made within a specified storage path.
+ * <p>
+ * This implementation does not define new limitations, other than those defined in {@link ActiveFs} interface.
  */
 public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
@@ -339,6 +343,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> start() {
 		return execute(() -> {
+			deleteEmptyDirectories();
 			clearTempDir();
 			Files.createDirectories(tempDir);
 			if (!tempDir.startsWith(storage)) {
@@ -368,6 +373,22 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				return;
 			}
 		}
+	}
+
+	private void deleteEmptyDirectories() throws IOException {
+		Files.walkFileTree(storage, new SimpleFileVisitor<Path>() {
+			@Override
+			public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+				if (e != null) throw e;
+				if (!dir.equals(storage)) {
+					try {
+						Files.deleteIfExists(dir);
+					} catch (DirectoryNotEmptyException ignored) {
+					}
+				}
+				return CONTINUE;
+			}
+		});
 	}
 
 	private void clearTempDir() throws IOException {

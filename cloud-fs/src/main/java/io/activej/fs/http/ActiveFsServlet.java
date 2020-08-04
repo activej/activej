@@ -48,6 +48,17 @@ import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+/**
+ * An HTTP servlet that exposes exposes some given {@link ActiveFs}.
+ * <p>
+ * Servlet is fully compatible with {@link HttpActiveFs} client.
+ * <p>
+ * It also defines additional endpoints that can be useful for accessing via web browser,
+ * such as uploading multiple files using <i>multipart/form-data</i> content type
+ * and downloading a file using range requests.
+ * <p>
+ * This server may  be launched as a publicly available server.
+ */
 public final class ActiveFsServlet {
 	private ActiveFsServlet() {
 	}

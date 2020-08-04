@@ -54,7 +54,12 @@ import static io.activej.fs.util.RemoteFsUtils.*;
 import static java.util.Collections.emptyMap;
 
 /**
- * An implementation of {@link ActiveFs} which connects to a single {@link ActiveFsServer} and communicates with it.
+ * A client to the remote {@link ActiveFsServer}.
+ * All client/server communication is done via TCP.
+ * <p>
+ * <b>This client should only be used on private networks.</b>
+ * <p>
+ * Inherits all of the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
  */
 public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);

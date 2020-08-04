@@ -310,7 +310,7 @@ public final class ReportingTest {
 		OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
 
-		LocalActiveFs activeFs = LocalActiveFs.create(eventloop, executor, temporaryFolder.getRoot().toPath());
+		LocalActiveFs activeFs = LocalActiveFs.create(eventloop, executor, temporaryFolder.newFolder().toPath());
 		await(activeFs.start());
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
 				activeFs,

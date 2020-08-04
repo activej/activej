@@ -42,8 +42,10 @@ import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
 import static io.activej.fs.util.RemoteFsUtils.*;
 
 /**
- * An implementation of {@link AbstractServer} for RemoteFs.
- * It exposes some given {@link ActiveFs} to the Internet in pair with {@link RemoteActiveFs}
+ * An implementation of {@link AbstractServer} that works with {@link RemoteActiveFs} client.
+ * It exposes some given {@link ActiveFs} via TCP.
+ * <p>
+ * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>
  */
 public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private static final ByteBufsCodec<FsCommand, FsResponse> SERIALIZER =

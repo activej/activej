@@ -33,6 +33,11 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 
+/**
+ * A file system that allows to mount several {@link ActiveFs} implementations to correspond to different filenames.
+ * <p>
+ * Inherits the most strict limitations of all the mounted file systems implementations and root file system.
+ */
 final class MountingActiveFs implements ActiveFs {
 	private final ActiveFs root;
 	private final Map<String, ActiveFs> mounts;

@@ -58,8 +58,17 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 /**
- * An implementation of {@link ActiveFs} which operates on a map of other partitions as a cluster.
+ * An implementation of {@link ActiveFs} which operates on other partitions as a cluster.
  * Contains some redundancy and fail-safety capabilities.
+ * <p>
+ * This implementation inherits the most strict limitations of all the file systems in cluster,
+ * as well as defines several limitations over those specified in {@link ActiveFs} interface:
+ * <ul>
+ *     <li>Uploaded files should be immutable</li>
+ *     <li>Deletion of files is not guaranteed</li>
+ *     <li>Based on previous limitation, moving a file also does not guarantees that source file will be deleted</li>
+ *     <li>Paths should not contain existing filenames as part of the path</li>
+ * </ul>
  */
 public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterActiveFs>, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterActiveFs.class);

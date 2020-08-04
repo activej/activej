@@ -21,6 +21,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,6 +37,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 
 public final class TestLocalActiveFs {
@@ -310,6 +312,53 @@ public final class TestLocalActiveFs {
 
 		assertEquals("testfirstsecond", await(await(client.download("first")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
 		assertEquals("testfirstsecond", await(await(client.download("second")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+	}
+
+	@Test
+	public void testConcurrentAppends() {
+		String filename = "test";
+
+		// Creating file
+		await(client.upload(filename).then(ChannelConsumer::acceptEndOfStream));
+
+		ChannelConsumer<ByteBuf> firstAppender = await(client.append(filename, 0));
+		ChannelConsumer<ByteBuf> secondAppender = await(client.append(filename, 0));
+
+		for (int i = 0; i < 100; i++) {
+			await(firstAppender.accept(wrapUtf8("first\n")));
+			await(secondAppender.accept(wrapUtf8("second\n")));
+		}
+
+		String fileContents = await(client.download(filename)
+				.then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+
+		assertTrue(fileContents.contains("first"));
+		assertTrue(fileContents.contains("second"));
+	}
+
+	@Test
+	public void testEmptyDirectoryCleanupOnStart() throws IOException {
+		Path dirPath = storagePath.resolve("dir");
+		Path innerDir1Path = dirPath.resolve("innerDir1");
+		Path innerDir2Path = dirPath.resolve("innerDir2");
+		Path innerDir1FilePath = innerDir1Path.resolve("file");
+		Path innerInnerDirPath = innerDir2Path.resolve("innerInnerDir");
+
+		Files.createDirectories(dirPath);
+		Files.createDirectories(innerDir1Path);
+		Files.createFile(innerDir1FilePath);
+		Files.createDirectories(innerDir2Path);
+		Files.createDirectories(innerInnerDirPath);
+
+		await(client.start());
+
+		List<Path> paths = Files.list(storagePath).collect(toList());
+		assertTrue(paths.contains(dirPath));
+
+		List<Path> dirPaths = Files.list(dirPath).collect(toList());
+		assertEquals(1, dirPaths.size());
+		assertEquals(innerDir1Path, dirPaths.get(0));
+		assertEquals(innerDir1FilePath, Files.list(innerDir1Path).collect(toList()).get(0));
 	}
 
 }

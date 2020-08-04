@@ -26,6 +26,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * An implementation of {@link ActiveFs} that forwards all of the calls to the underlying {@link ActiveFs}.
+ * May be suitable for creating decorators that override certain behaviour of file system.
+ * <p>
+ * Inherits all of the limitations of underlying {@link ActiveFs}
+ */
 public abstract class ForwardingActiveFs implements ActiveFs {
 	private final ActiveFs peer;
 

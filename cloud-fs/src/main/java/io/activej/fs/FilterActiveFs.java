@@ -36,6 +36,11 @@ import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toSet;
 
+/**
+ * A file system that can be configured to forbid certain paths and filenames.
+ * <p>
+ * Inherits all of the limitations of parent {@link ActiveFs}
+ */
 final class FilterActiveFs implements ActiveFs {
 	private final ActiveFs parent;
 	private final Predicate<String> predicate;

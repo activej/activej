@@ -50,6 +50,12 @@ import static io.activej.http.AbstractHttpConnection.INCOMPLETE_MESSAGE;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+/**
+ * A client to the remote server with {@link ActiveFsServlet}.
+ * This client can be used to connect to publicly available servers.
+ * <p>
+ * Inherits all of the limitations of {@link ActiveFs} implementation located on server.
+ */
 public final class HttpActiveFs implements ActiveFs {
 	public static final FsIOException UNKNOWN_SERVER_ERROR = new FsIOException(HttpActiveFs.class, "Unknown server error occurred");
 

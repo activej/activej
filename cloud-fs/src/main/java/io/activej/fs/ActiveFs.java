@@ -35,7 +35,15 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toSet;
 
 /**
- * This interface represents a simple filesystem with upload, append, download, copy, move, delete, info and list operations.
+ * This interface represents a simple filesystem with basic upload, append, download, copy, move, delete, info and list operations,
+ * as well as with compound operations that operate on group of files.
+ * <p>
+ * There is no notion of a "directory", only files can be operated on.
+ * <p>
+ * <b>All of the paths in this file system are separated by forward slash.</b>
+ * <p>
+ * Most operations are executed in the same manner as would be expected from a regular file system,
+ * however, some implementations may have certain limitations.
  */
 public interface ActiveFs {
 	String SEPARATOR = "/";
@@ -56,22 +64,73 @@ public interface ActiveFs {
 	 * So, outer promise might fail on connection try, end-of-stream promise
 	 * might fail while uploading and result promise might fail when closing.
 	 * <p>
-	 * Note that this method expects that you're uploading immutable files.
+	 * This method accepts files of arbitrary size.
+	 * However, uploaded files appear in file system only after upload has finished successfully,
+	 * e.g. {@code null} has been consumed.
+	 * If an error occurs during upload, no file will be created.
+	 * <p>
+	 * So, the uploaded file either exists and is complete or does not exists due to some error.
+	 * <p>
+	 * Concurrent uploads to the same filename are allowed. If there are multiple concurrent uploads in progress, the last
+	 * to successfully complete would win, e.g. would overwrite results of other uploads.
+	 * <p>
+	 * It is possible to overwrite existing files.
 	 *
 	 * @param name name of the file to upload
 	 * @return promise for stream consumer of byte buffers
 	 */
 	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name);
 
+	/**
+	 * Returns a consumer of bytebufs which are written (or sent) to the file.
+	 * <p>
+	 * So, outer promise might fail on connection try, end-of-stream promise
+	 * might fail while uploading and result promise might fail when closing.
+	 * <p>
+	 * This method accepts files of predefined size.
+	 * If there were received more or less bytes than specified, file is considered malformed,
+	 * and such file would not be created.
+	 * If an error occurs during upload, no file will be created.
+	 * <p>
+	 * So, the uploaded file either exists and its size is equal to {@code size} parameter or does not exists due to some error.
+	 * <p>
+	 * Concurrent uploads to the same filename are allowed. If there are multiple concurrent uploads in progress, the last
+	 * to successfully complete would win, e.g. would overwrite results of other uploads.
+	 * <p>
+	 * It is possible to overwrite existing files.
+	 * @param name name of the file to upload
+	 * @return promise for stream consumer of byte buffers
+	 */
 	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size);
 
+	/**
+	 * Returns a consumer of bytebufs which are appended to an existing file.
+	 * <p>
+	 * If the file does not exist and specified {@code offset} is 0, the new file will be created
+	 * and data will be appended to the beginning of the file.
+	 * <p>
+	 * If an error occurs while append is in progress, all made changes will be preserved in file.
+	 * <p>
+	 * It makes possible to overwrite file contents starting from specific {@code offset}.
+	 * If {@code offset} is greater than file size, the promise will complete with {@link #ILLEGAL_OFFSET} exception.
+	 * <p>
+	 * Appends modify file upon each received bytebuf, hence it is possible to download still-appending file.
+	 * <p>
+	 * Concurrent appends to the same filename are allowed. If there are multiple concurrent appends in progress,
+	 * they may overwrite each others changes.
+	 *
+	 * @param name name of the file to upload
+	 * @return promise for stream consumer of byte buffers
+	 */
 	Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset);
 
 	/**
 	 * Returns a supplier of bytebufs which are read (or received) from the file.
-	 * If file does not exist an error will be returned from the server.
+	 * er.If the file does not exist, an error will be returned from the server.
 	 * <p>
-	 * Length can be set to {@code Long.MAX_VALUE} to download all available data.
+	 * Limit can be set to {@code Long.MAX_VALUE} to download all available data.
+	 * <p>
+	 * If the file is being appended, it is possible to download still-appending e.g. inconsistent file.
 	 *
 	 * @param name   name of the file to be downloaded
 	 * @param offset from which byte to download the file
@@ -96,7 +155,8 @@ public interface ActiveFs {
 	// endregion
 
 	/**
-	 * Tries to delete given file. The deletion of file is not guaranteed.
+	 * Deletes given file. The deletion of file is not guaranteed.
+	 * If the file does not exist, result promise completes successfully.
 	 *
 	 * @param name name of the file to be deleted
 	 * @return marker promise that completes when deletion completes
@@ -105,7 +165,6 @@ public interface ActiveFs {
 
 	/**
 	 * Tries to delete specified files. Basically, calls {@link #delete} for each file.
-	 * A best effort will be made to delete all files, but some files may remain intact.
 	 * <p>
 	 * If error occurs while deleting any of the files, result promise is completed exceptionally.
 	 * Always completes successfully if empty set is passed as an argument.
@@ -150,7 +209,6 @@ public interface ActiveFs {
 
 	/**
 	 * Moves file from one location to another. Basically, copies the file and then tries to remove the original file.
-	 * As {@link #delete} does not guarantee that file will actually be deleted, so does this method.
 	 * <p>
 	 * <b>This method is non-idempotent</b>
 	 *
@@ -165,7 +223,6 @@ public interface ActiveFs {
 	/**
 	 * Moves files from source locations to target locations.
 	 * Basically, calls {@link #copyAll} with given map and then calls {@link #deleteAll} with source files.
-	 * As {@link #deleteAll)} does not guarantee that files will actually be deleted, so does this method.
 	 * Source to target mapping is passed as a map where keys correspond to source files
 	 * and values correspond to target files.
 	 * <p>
@@ -233,8 +290,8 @@ public interface ActiveFs {
 	/**
 	 * Send a ping request.
 	 * <p>
-	 * Used to check availability of the fs
-	 * (is server up in case of remote implementation, for example).
+	 * This method is suitable for checking availability of the file system
+	 * (whether server is up in case of remote implementation, for example).
 	 */
 	default Promise<Void> ping() {
 		return list("").toVoid();
