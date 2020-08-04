@@ -16,6 +16,7 @@
 
 package io.activej.fs.cluster;
 
+import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
@@ -37,6 +38,8 @@ import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 
 final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelByteSplitter, ByteBuf>, WithChannelOutputs<ByteBuf> {
+	public static final FsException NOT_ENOUGH_SUCCESSES = new FsException(ChannelByteSplitter.class, "Not enough successes");
+
 	private final List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
 	private final int requiredSuccesses;
 
@@ -109,7 +112,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 										if (e1 == null) {
 											doProcess();
 										} else {
-											closeEx(new FsException(ChannelByteSplitter.class, "Not enough successes"));
+											closeEx(NOT_ENOUGH_SUCCESSES);
 										}
 									});
 							buf.recycle();
@@ -126,6 +129,9 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 	@Override
 	protected void doClose(Throwable e) {
 		input.closeEx(e);
-		outputs.forEach(output -> output.closeEx(e));
+
+		// not passing the exception to all the outputs,
+		// so that they wouldn't be marked dead
+		outputs.forEach(AsyncCloseable::close);
 	}
 }

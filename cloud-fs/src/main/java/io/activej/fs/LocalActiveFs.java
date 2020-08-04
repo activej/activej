@@ -692,9 +692,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			return execute(() -> {
 				if (name != null && Files.isDirectory(resolve(name))) throw IS_DIRECTORY;
 				if (e instanceof IOException) {
-					throw new FsIOException(LocalActiveFs.class, (IOException) e);
+					throw new FsIOException(LocalActiveFs.class, e);
 				}
-				throw new FsIOException(ActiveFs.class, "Unknown error", e);
+				throw new FsIOException(LocalActiveFs.class, "Unknown error", e);
 			});
 		};
 	}

@@ -13,6 +13,7 @@ import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.net.AbstractServer;
+import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -99,10 +100,13 @@ public final class TestClusterDeadPartitionCheck {
 							}
 
 							@Override
-							public void closeServer(AbstractServer<?> server) throws IOException {
+							public void closeServer(AbstractServer<?> server) {
 								server.close();
 								for (SelectionKey key : server.getEventloop().getSelector().keys()) {
-									key.channel().close();
+									Object attachment = key.attachment();
+									if (attachment instanceof AsyncTcpSocketNio) {
+										((AsyncTcpSocketNio) attachment).close();
+									}
 								}
 							}
 
@@ -233,8 +237,7 @@ public final class TestClusterDeadPartitionCheck {
 									setAliveNodes(toBeAlive.toArray(new Integer[0]));
 								}
 							})
-							.streamTo(consumer)
-							.whenComplete(() -> System.out.println(Eventloop.getCurrentEventloop().getSelector().keys()));
+							.streamTo(consumer);
 				}));
 
 		assertThat(exception, instanceOf(FsException.class));

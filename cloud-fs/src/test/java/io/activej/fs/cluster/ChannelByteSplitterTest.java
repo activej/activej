@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -81,7 +82,7 @@ public final class ChannelByteSplitterTest {
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 		for (ChannelConsumer<ByteBuf> output : outputs) {
-			assertEquals(EXPECTED_EXCEPTION, ((AbstractChannelConsumer<ByteBuf>) output).getException());
+			assertEquals(CLOSE_EXCEPTION, ((AbstractChannelConsumer<ByteBuf>) output).getException());
 		}
 	}
 
@@ -141,7 +142,7 @@ public final class ChannelByteSplitterTest {
 		assertThat(throwable.getMessage(), containsString("Not enough successes"));
 		assertEquals(6, outputs.size());
 		for (ChannelConsumer<ByteBuf> output : outputs) {
-			assertThat(((AbstractChannelConsumer<ByteBuf>) output).getException().getMessage(), containsString("Not enough successes"));
+			assertSame(CLOSE_EXCEPTION, ((AbstractChannelConsumer<ByteBuf>) output).getException());
 		}
 	}
 

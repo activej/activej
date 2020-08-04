@@ -46,6 +46,7 @@ import static io.activej.fs.http.UploadAcknowledgement.Status.OK;
 import static io.activej.fs.util.Codecs.*;
 import static io.activej.fs.util.RemoteFsUtils.ID_TO_ERROR;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
+import static io.activej.http.AbstractHttpConnection.INCOMPLETE_MESSAGE;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -103,7 +104,7 @@ public final class HttpActiveFs implements ActiveFs {
 						url + urlBuilder
 								.build()))
 				.then(HttpActiveFs::checkResponse)
-				.map(HttpMessage::getBodyStream);
+				.map(response -> wrapIncompleteMessages(response.getBodyStream()));
 	}
 
 	@Override
@@ -304,6 +305,13 @@ public final class HttpActiveFs implements ActiveFs {
 		}
 		Integer errorCode = ack.getErrorCode();
 		return Promise.ofException(ID_TO_ERROR.getOrDefault(errorCode, UNKNOWN_SERVER_ERROR));
+	}
+
+	private static ChannelSupplier<ByteBuf> wrapIncompleteMessages(ChannelSupplier<ByteBuf> supplier) {
+		return supplier.withEndOfStream(eos -> eos
+				.thenEx((v, e) -> e == INCOMPLETE_MESSAGE ?
+						Promise.ofException(UNEXPECTED_END_OF_STREAM) :
+						Promise.of(v, e)));
 	}
 
 }

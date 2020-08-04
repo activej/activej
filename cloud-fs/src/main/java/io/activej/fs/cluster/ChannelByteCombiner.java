@@ -16,6 +16,7 @@
 
 package io.activej.fs.cluster;
 
+import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
@@ -113,7 +114,10 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 
 	@Override
 	protected void doClose(Throwable e) {
-		inputs.forEach(input -> input.closeEx(e));
+		// not passing the exception to all the outputs,
+		// so that they wouldn't be marked dead
+		inputs.forEach(AsyncCloseable::close);
+
 		output.closeEx(e);
 	}
 }
