@@ -80,7 +80,7 @@ public final class ChannelFileBufferTest {
 		assertNotNull(res);
 		assertEquals("this is a string for testing", res.asString(US_ASCII));
 
-		cfq.put(wrapAscii("this should not be appended because the take will be completed immediately"));
+		await(cfq.put(wrapAscii("this should not be appended because the take will be completed immediately")));
 
 		cfq.close();
 	}
