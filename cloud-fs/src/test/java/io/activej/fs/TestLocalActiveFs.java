@@ -21,9 +21,12 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
@@ -37,7 +40,6 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
-import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 
 public final class TestLocalActiveFs {
@@ -337,28 +339,94 @@ public final class TestLocalActiveFs {
 	}
 
 	@Test
-	public void testEmptyDirectoryCleanupOnStart() throws IOException {
-		Path dirPath = storagePath.resolve("dir");
-		Path innerDir1Path = dirPath.resolve("innerDir1");
-		Path innerDir2Path = dirPath.resolve("innerDir2");
-		Path innerDir1FilePath = innerDir1Path.resolve("file");
-		Path innerInnerDirPath = innerDir2Path.resolve("innerInnerDir");
+	public void testEmptyDirectoryCleanupOnUpload() {
+		List<Path> emptyDirs = createEmptyDirectories();
+		String data = "test";
+		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
 
-		Files.createDirectories(dirPath);
-		Files.createDirectories(innerDir1Path);
-		Files.createFile(innerDir1FilePath);
-		Files.createDirectories(innerDir2Path);
-		Files.createDirectories(innerInnerDirPath);
+		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+		assertEquals(data, result);
+		for (Path emptyDir : emptyDirs) {
+			assertFalse(Files.isDirectory(emptyDir));
+		}
+	}
 
-		await(client.start());
+	@Test
+	public void testEmptyDirectoryCleanupOnAppend() {
+		List<Path> emptyDirs = createEmptyDirectories();
+		String data = "test";
+		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.append("empty", 0)));
 
-		List<Path> paths = Files.list(storagePath).collect(toList());
-		assertTrue(paths.contains(dirPath));
+		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+		assertEquals(data, result);
+		for (Path emptyDir : emptyDirs) {
+			assertFalse(Files.isDirectory(emptyDir));
+		}
+	}
 
-		List<Path> dirPaths = Files.list(dirPath).collect(toList());
-		assertEquals(1, dirPaths.size());
-		assertEquals(innerDir1Path, dirPaths.get(0));
-		assertEquals(innerDir1FilePath, Files.list(innerDir1Path).collect(toList()).get(0));
+	@Test
+	public void testEmptyDirectoryCleanupOnMove() {
+		List<Path> emptyDirs = createEmptyDirectories();
+		String data = "test";
+		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("source")));
+		await(client.move("source", "empty"));
+
+		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+		assertEquals(data, result);
+		for (Path emptyDir : emptyDirs) {
+			assertFalse(Files.isDirectory(emptyDir));
+		}
+	}
+
+	@Test
+	public void testEmptyDirectoryCleanupOnCopy() {
+		List<Path> emptyDirs = createEmptyDirectories();
+		String data = "test";
+		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("source")));
+		await(client.copy("source", "empty"));
+
+		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+		assertEquals(data, result);
+		for (Path emptyDir : emptyDirs) {
+			assertFalse(Files.isDirectory(emptyDir));
+		}
+	}
+
+	@Test
+	public void testEmptyDirectoryCleanupWithOneFile() throws IOException {
+		List<Path> emptyDirs = createEmptyDirectories();
+		Path randomPath = emptyDirs.get(ThreadLocalRandom.current().nextInt(emptyDirs.size()));
+		Files.createFile(randomPath.resolve("file"));
+		String data = "test";
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
+		assertEquals(IS_DIRECTORY, exception);
+	}
+
+	private List<Path> createEmptyDirectories() {
+		List<Path> result = new ArrayList<>();
+		Path root = storagePath.resolve(Paths.get("empty"));
+		result.add(root);
+		ThreadLocalRandom random = ThreadLocalRandom.current();
+		for (int i1 = 0; i1 < random.nextInt(10); i1++) {
+			Path empty1 = root.resolve(Paths.get("empty_" + i1));
+			result.add(empty1);
+			for (int i2 = 0; i2 < random.nextInt(10); i2++) {
+				Path empty2 = empty1.resolve(Paths.get("empty_" + i2));
+				result.add(empty2);
+				for (int i3 = 0; i3 < random.nextInt(10); i3++) {
+					Path empty3 = empty2.resolve(Paths.get("empty_" + i3));
+					result.add(empty3);
+				}
+			}
+		}
+		for (Path path : result) {
+			try {
+				Files.createDirectories(path);
+			} catch (IOException e) {
+				throw new AssertionError(e);
+			}
+		}
+		return result;
 	}
 
 }

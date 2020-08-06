@@ -32,6 +32,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
+import io.activej.fs.exception.FsStateException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.Promise.BlockingCallable;
@@ -72,6 +73,7 @@ import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.*;
+import static java.util.Comparator.reverseOrder;
 
 /**
  * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
@@ -181,6 +183,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					Path path = resolve(name);
 					FileChannel channel;
 					if (offset == 0) {
+						deleteIfEmptyDir(path);
 						channel = ensureParent(path, () -> FileChannel.open(path, CREATE, WRITE));
 					} else {
 						channel = FileChannel.open(path, WRITE);
@@ -343,7 +346,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> start() {
 		return execute(() -> {
-			deleteEmptyDirectories();
 			clearTempDir();
 			Files.createDirectories(tempDir);
 			if (!tempDir.startsWith(storage)) {
@@ -375,20 +377,25 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	private void deleteEmptyDirectories() throws IOException {
-		Files.walkFileTree(storage, new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-				if (e != null) throw e;
-				if (!dir.equals(storage)) {
-					try {
-						Files.deleteIfExists(dir);
-					} catch (DirectoryNotEmptyException ignored) {
-					}
+	private void deleteIfEmptyDir(Path target) throws IOException, FsStateException {
+		if (!Files.isDirectory(target)) {
+			return;
+		}
+		try (Stream<Path> paths = Files.walk(target)) {
+			Iterator<Path> iterator = paths.sorted(reverseOrder()).iterator();
+			while (iterator.hasNext()) {
+				Path path = iterator.next();
+				if (Files.isRegularFile(path)) {
+					// regular file inside target directory
+					throw IS_DIRECTORY;
 				}
-				return CONTINUE;
+				try {
+					Files.deleteIfExists(path);
+				} catch (DirectoryNotEmptyException e) {
+					throw IS_DIRECTORY;
+				}
 			}
-		});
+		}
 	}
 
 	private void clearTempDir() throws IOException {
@@ -397,7 +404,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 		try (Stream<Path> paths = Files.walk(tempDir)) {
 			//noinspection ResultOfMethodCallIgnored
-			paths.sorted(Comparator.reverseOrder())
+			paths.sorted(reverseOrder())
 					.map(Path::toFile)
 					.forEach(File::delete);
 		}
@@ -422,9 +429,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
 				() -> {
-					if (Files.isDirectory(resolve(name))) {
-						throw IS_DIRECTORY;
-					}
+					deleteIfEmptyDir(resolve(name));
 					Path tempPath = Files.createTempFile(tempDir, "", "");
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
@@ -445,8 +450,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			Path path = resolve(entry.getKey());
 			Path targetPath = resolve(entry.getValue());
 
+			deleteIfEmptyDir(path);
 			if (!Files.exists(path)) throw FILE_NOT_FOUND;
-			if (Files.isDirectory(path) || Files.isDirectory(targetPath)) throw IS_DIRECTORY;
+			deleteIfEmptyDir(targetPath);
 
 			if (path.equals(targetPath)) {
 				touch(path);
@@ -475,8 +481,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			Path path = resolve(entry.getKey());
 			Path targetPath = resolve(entry.getValue());
 
+			deleteIfEmptyDir(path);
 			if (!Files.exists(path)) throw FILE_NOT_FOUND;
-			if (Files.isDirectory(path) || Files.isDirectory(targetPath)) throw IS_DIRECTORY;
+			deleteIfEmptyDir(targetPath);
 
 			if (path.equals(targetPath)) {
 				touch(path);
