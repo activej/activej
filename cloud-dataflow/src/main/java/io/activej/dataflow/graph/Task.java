@@ -113,7 +113,7 @@ public final class Task {
 		checkState(!suppliers.containsKey(streamId), "Already exported");
 		checkState(currentNodeAcks != null, "Must bind streams only from createAndBind");
 		suppliers.put(streamId, supplier);
-		currentNodeAcks.add(supplier.getEndOfStream());
+		currentNodeAcks.add(supplier.getAcknowledgement());
 	}
 
 	@SuppressWarnings("unchecked")

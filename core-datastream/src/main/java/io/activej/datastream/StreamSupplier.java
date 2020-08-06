@@ -52,6 +52,8 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 */
 	Promise<Void> streamTo(@NotNull StreamConsumer<T> consumer);
 
+	Promise<Void> getAcknowledgement();
+
 	/**
 	 * A shortcut for {@link #streamTo(StreamConsumer)} that uses a promise of a stream.
 	 */
@@ -72,15 +74,15 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	Promise<Void> getEndOfStream();
 
 	default boolean isComplete() {
-		return getEndOfStream().isComplete();
+		return getAcknowledgement().isComplete();
 	}
 
 	default boolean isResult() {
-		return getEndOfStream().isResult();
+		return getAcknowledgement().isResult();
 	}
 
 	default boolean isException() {
-		return getEndOfStream().isException();
+		return getAcknowledgement().isException();
 	}
 
 	/**

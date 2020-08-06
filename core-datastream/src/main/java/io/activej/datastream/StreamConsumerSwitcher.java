@@ -16,7 +16,13 @@
 
 package io.activej.datastream;
 
+import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import static io.activej.common.Checks.checkState;
 
 /**
  * A consumer that wraps around another consumer that can be hot swapped with some other consumer.
@@ -25,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
 	private InternalSupplier internalSupplier = new InternalSupplier();
+	private final Set<InternalSupplier> pendingAcknowledgements = new HashSet<>();
 
 	private StreamConsumerSwitcher() {
 	}
@@ -36,23 +43,24 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
 		return new StreamConsumerSwitcher<>();
 	}
 
-	public void switchTo(@NotNull StreamConsumer<T> consumer) {
+	public Promise<Void> switchTo(@NotNull StreamConsumer<T> consumer) {
+		checkState(!isComplete());
+		checkState(!isEndOfStream());
+		assert this.internalSupplier != null;
+
 		InternalSupplier internalSupplierOld = this.internalSupplier;
 		InternalSupplier internalSupplierNew = new InternalSupplier();
 
-		if (getAcknowledgement().isException()) {
-			internalSupplierNew.closeEx(getAcknowledgement().getException());
-		} else if (isEndOfStream()) {
-			internalSupplierNew.sendEndOfStream();
-		} else {
-			this.internalSupplier = internalSupplierNew;
-		}
-
+		this.internalSupplier = internalSupplierNew;
 		internalSupplierNew.streamTo(consumer);
 
-		if (internalSupplierOld != null) {
-			internalSupplierOld.sendEndOfStream();
-		}
+		internalSupplierOld.sendEndOfStream();
+
+		return internalSupplierNew.getAcknowledgement();
+	}
+
+	public int getPendingAcknowledgements() {
+		return pendingAcknowledgements.size();
 	}
 
 	@Override
@@ -63,20 +71,28 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
 	@Override
 	protected void onEndOfStream() {
 		internalSupplier.sendEndOfStream();
-		acknowledge();
 	}
 
 	@Override
 	protected void onError(Throwable e) {
 		internalSupplier.closeEx(e);
+		for (InternalSupplier pendingAcknowledgement : pendingAcknowledgements) {
+			pendingAcknowledgement.getConsumer().closeEx(e);
+		}
 	}
 
 	@Override
 	protected void onCleanup() {
 		internalSupplier = null;
+		pendingAcknowledgements.clear();
 	}
 
-	private final class InternalSupplier extends AbstractStreamSupplier<T> {
+	private class InternalSupplier extends AbstractStreamSupplier<T> {
+		@Override
+		protected void onStarted() {
+			pendingAcknowledgements.add(this);
+		}
+
 		@Override
 		protected void onResumed() {
 			if (StreamConsumerSwitcher.this.internalSupplier == this) {
@@ -93,16 +109,15 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
 
 		@Override
 		protected void onAcknowledge() {
-			if (StreamConsumerSwitcher.this.internalSupplier == this) {
+			pendingAcknowledgements.remove(this);
+			if (pendingAcknowledgements.isEmpty()) {
 				StreamConsumerSwitcher.this.acknowledge();
 			}
 		}
 
 		@Override
 		protected void onError(Throwable e) {
-			if (StreamConsumerSwitcher.this.internalSupplier == this) {
-				StreamConsumerSwitcher.this.closeEx(e);
-			}
+			StreamConsumerSwitcher.this.closeEx(e);
 		}
 	}
 }

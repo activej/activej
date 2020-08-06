@@ -87,7 +87,7 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 		dataAcceptors = Arrays.copyOf(dataAcceptors, outputs.size());
 		input.getAcknowledgement()
 				.whenException(e -> outputs.forEach(output -> output.closeEx(e)));
-		Promises.all(outputs.stream().map(Output::getEndOfStream))
+		Promises.all(outputs.stream().map(Output::getAcknowledgement))
 				.whenResult(input::acknowledge)
 				.whenException(input::closeEx);
 		sync();

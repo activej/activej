@@ -71,7 +71,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
 			this.input = input;
-			return getEndOfStream();
+			return getAcknowledgement();
 		};
 	}
 

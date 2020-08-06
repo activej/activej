@@ -29,8 +29,7 @@ import static io.activej.aggregation.util.Utils.singlePartition;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertComplete;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class AggregationChunkerTest {
@@ -250,9 +249,11 @@ public final class AggregationChunkerTest {
 
 		awaitException(supplier.streamTo(chunker));
 
-		for (int i = 0; i < listConsumers.size() - 1; i++) {
+		assertTrue(listConsumers.size() > 1);
+		for (int i = 0; i < listConsumers.size() - 2; i++) {
 			assertEndOfStream(listConsumers.get(i));
 		}
+		assertClosedWithError(listConsumers.get(listConsumers.size() - 2));
 		assertClosedWithError(listConsumers.get(listConsumers.size() - 1));
 	}
 }

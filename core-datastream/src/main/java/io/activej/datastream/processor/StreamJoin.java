@@ -164,7 +164,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 		@Override
 		protected void onEndOfStream() {
 			output.join();
-			output.getEndOfStream()
+			output.getAcknowledgement()
 					.whenResult(this::acknowledge)
 					.whenException(this::closeEx);
 		}

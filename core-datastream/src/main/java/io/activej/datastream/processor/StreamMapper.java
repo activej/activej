@@ -34,7 +34,7 @@ public final class StreamMapper<I, O> implements StreamTransformer<I, O> {
 		this.output = new Output();
 		input.getAcknowledgement()
 				.whenException(output::closeEx);
-		output.getEndOfStream()
+		output.getAcknowledgement()
 				.whenResult(input::acknowledge)
 				.whenException(input::closeEx);
 	}

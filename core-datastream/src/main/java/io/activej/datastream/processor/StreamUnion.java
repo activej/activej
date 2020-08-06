@@ -66,7 +66,7 @@ public final class StreamUnion<T> implements HasStreamOutput<T>, HasStreamInputs
 		inputs.add(input);
 		input.getAcknowledgement()
 				.whenException(output::closeEx);
-		output.getEndOfStream()
+		output.getAcknowledgement()
 				.whenResult(input::acknowledge)
 				.whenException(input::closeEx);
 		return input;

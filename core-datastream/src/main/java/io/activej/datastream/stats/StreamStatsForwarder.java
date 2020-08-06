@@ -34,7 +34,7 @@ public class StreamStatsForwarder<T> implements StreamTransformer<T, T> {
 		this.output = new Output();
 		input.getAcknowledgement()
 				.whenException(output::closeEx);
-		output.getEndOfStream()
+		output.getAcknowledgement()
 				.whenResult(input::acknowledge)
 				.whenException(input::closeEx);
 	}

@@ -42,9 +42,9 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 
 	{
 		if (eventloop.inEventloopThread()){
-			eventloop.post(this::tryInitialize);
+			eventloop.post(this::ensureInitialized);
 		} else {
-			eventloop.execute(this::tryInitialize);
+			eventloop.execute(this::ensureInitialized);
 		}
 	}
 
@@ -52,7 +52,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	public final void consume(@NotNull StreamSupplier<T> streamSupplier) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		checkState(!isStarted());
-		tryInitialize();
+		ensureInitialized();
 		if (acknowledgement.isComplete()) return;
 		this.supplier = streamSupplier;
 		if (!streamSupplier.isException()) {
@@ -128,9 +128,9 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	 */
 	public final void acknowledge() {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySet(null)) {
-			tryInitialize();
 			cleanup();
 		}
 	}
@@ -148,9 +148,9 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	@Override
 	public final void closeEx(@NotNull Throwable e) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySetException(e)) {
-			tryInitialize();
 			onError(e);
 			cleanup();
 		}
@@ -165,7 +165,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	/**
 	 * Initializes this consumer by calling {@link #onInit()} only if it has not already been initialized.
 	 */
-	private void tryInitialize() {
+	private void ensureInitialized() {
 		if (!initialized) {
 			initialized = true;
 			onInit();

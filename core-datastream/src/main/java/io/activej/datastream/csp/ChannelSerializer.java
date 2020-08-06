@@ -222,9 +222,10 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			if (isEndOfStream()) {
 				flushing = true;
 				Promise.complete()
-						.then(() -> (explicitEndOfStream ?
-								output.accept(ByteBuf.wrapForReading(new byte[]{0})) :
-								Promise.complete()))
+						.then(() ->
+								explicitEndOfStream ?
+										output.accept(ByteBuf.wrapForReading(new byte[]{0})) :
+										Promise.complete())
 						.then(output::acceptEndOfStream)
 						.whenResult(this::acknowledge);
 			} else {

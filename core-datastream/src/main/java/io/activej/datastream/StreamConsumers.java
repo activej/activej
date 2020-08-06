@@ -111,6 +111,7 @@ final class StreamConsumers {
 			this.promise = promise;
 		}
 
+		@SuppressWarnings("Convert2MethodRef") // Doesn't compile on Java 8
 		@Override
 		protected void onInit() {
 			promise
@@ -225,7 +226,7 @@ final class StreamConsumers {
 		}
 
 		@Override
-		protected void onComplete() {
+		protected void onCleanup() {
 			accumulator = null;
 		}
 

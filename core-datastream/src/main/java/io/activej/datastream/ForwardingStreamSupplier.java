@@ -36,6 +36,11 @@ public abstract class ForwardingStreamSupplier<T> implements StreamSupplier<T> {
 	}
 
 	@Override
+	public Promise<Void> getAcknowledgement() {
+		return supplier.getAcknowledgement();
+	}
+
+	@Override
 	public void updateDataAcceptor() {
 		supplier.updateDataAcceptor();
 	}

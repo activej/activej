@@ -50,6 +50,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	private boolean endOfStreamRequest;
 	private final SettablePromise<Void> endOfStream = new SettablePromise<>();
+	private final SettablePromise<Void> acknowledgement = new SettablePromise<>();
 
 	@Nullable
 	private SettablePromise<Void> flushPromise;
@@ -59,9 +60,9 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	{
 		dataAcceptorSafe = buffer::addLast;
 		if (eventloop.inEventloopThread()){
-			eventloop.post(this::tryInitialize);
+			eventloop.post(this::ensureInitialized);
 		} else {
-			eventloop.execute(this::tryInitialize);
+			eventloop.execute(this::ensureInitialized);
 		}
 	}
 
@@ -69,11 +70,11 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	public final Promise<Void> streamTo(@NotNull StreamConsumer<T> consumer) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		checkState(!isStarted());
+		ensureInitialized();
 		this.consumer = consumer;
 		consumer.getAcknowledgement()
 				.whenResult(this::acknowledge)
 				.whenException(this::closeEx);
-		tryInitialize();
 		if (!isEndOfStream()) {
 			onStarted();
 		}
@@ -81,7 +82,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 		this.dataAcceptor = (StreamDataAcceptor<T>) NO_ACCEPTOR;
 		consumer.consume(this);
 		updateDataAcceptor();
-		return consumer.getAcknowledgement();
+		return acknowledgement;
 	}
 
 	/**
@@ -193,7 +194,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	/**
 	 * Initializes this supplier by calling {@link #onInit()} only if it has not already been initialized.
 	 */
-	private void tryInitialize() {
+	private void ensureInitialized() {
 		if (!initialized) {
 			initialized = true;
 			onInit();
@@ -241,7 +242,6 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 			flushPromise.set(null);
 		}
 		endOfStream.set(null);
-		cleanup();
 	}
 
 	/**
@@ -284,17 +284,26 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	}
 
 	private void acknowledge() {
-		tryInitialize();
-		onAcknowledge();
-		close();
+		ensureInitialized();
+		if (acknowledgement.trySet(null)) {
+			onAcknowledge();
+			close();
+			cleanup();
+		}
 	}
 
 	protected void onAcknowledge() {
 	}
 
 	@Override
+	public final Promise<Void> getAcknowledgement() {
+		return acknowledgement;
+	}
+
+	@Override
 	public final void closeEx(@NotNull Throwable e) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		ensureInitialized();
 		endOfStreamRequest = true;
 		dataAcceptor = null;
 		//noinspection unchecked
@@ -302,8 +311,8 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 		if (flushPromise != null) {
 			flushPromise.trySetException(e);
 		}
-		if (endOfStream.trySetException(e)) {
-			tryInitialize();
+		endOfStream.trySetException(e);
+		if (acknowledgement.trySetException(e)) {
 			onError(e);
 			cleanup();
 		}
@@ -319,7 +328,6 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 		onComplete();
 		eventloop.post(this::onCleanup);
 		buffer.clear();
-		endOfStream.resetCallbacks();
 		if (flushPromise != null) {
 			flushPromise.resetCallbacks();
 		}

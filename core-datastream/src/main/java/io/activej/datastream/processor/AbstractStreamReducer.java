@@ -153,7 +153,7 @@ public abstract class AbstractStreamReducer<K, O, A> implements HasStreamInputs,
 				streamsAwaiting--;
 			}
 			output.reduce();
-			output.getEndOfStream()
+			output.getAcknowledgement()
 					.whenComplete(this::acknowledge)
 					.whenException(this::closeEx);
 		}

@@ -114,7 +114,7 @@ public class StreamConsumerSwitcherTest {
 		assertSame(expectedException, exception);
 		assertClosedWithError(expectedException, streamSupplier, switcher);
 
-		assertEndOfStream(consumer1);
+//		assertClosedWithError(consumer1);
 		assertEquals(asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer1.getList());
 
 		assertClosedWithError(expectedException, consumerClosed);
@@ -134,12 +134,6 @@ public class StreamConsumerSwitcherTest {
 		assertEndOfStream(consumer);
 
 		assertEquals(asList(1, 2, 3, 4), consumer.getList());
-
-		StreamConsumerToList<Integer> newConsumer = StreamConsumerToList.create();
-		switcher.switchTo(newConsumer);
-
-		assertEndOfStream(newConsumer);
-		assertTrue(newConsumer.getList().isEmpty());
 	}
 
 	@Test
@@ -152,11 +146,6 @@ public class StreamConsumerSwitcherTest {
 		assertSame(expectedException, awaitException(StreamSupplier.of(1, 2, 3, 4).streamTo(switcher)));
 
 		assertClosedWithError(expectedException, switcher);
-
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
-		switcher.switchTo(consumer);
-		assertClosedWithError(expectedException, consumer);
-		assertTrue(consumer.getList().isEmpty());
 	}
 
 	@Test
@@ -172,9 +161,6 @@ public class StreamConsumerSwitcherTest {
 		assertEndOfStream(consumer);
 
 		assertEquals(asList(1, 2, 3, 4), consumer.getList());
-
-		StreamConsumerToList<Integer> newConsumer = StreamConsumerToList.create();
-		switcher.switchTo(newConsumer);
 	}
 
 	@Test

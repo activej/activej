@@ -36,7 +36,7 @@ public final class StreamFilter<T> implements StreamTransformer<T, T> {
 
 		input.getAcknowledgement()
 				.whenException(output::closeEx);
-		output.getEndOfStream()
+		output.getAcknowledgement()
 				.whenResult(input::acknowledge)
 				.whenException(input::closeEx);
 	}

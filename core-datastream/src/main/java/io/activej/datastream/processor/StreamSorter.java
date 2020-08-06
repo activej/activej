@@ -97,7 +97,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 										return streamMerger.getOutput();
 									});
 						}));
-		this.output.getEndOfStream()
+		this.output.getAcknowledgement()
 				.whenComplete(() -> {
 					if (!partitionIds.isEmpty()) storage.cleanup(partitionIds);
 				});
@@ -203,7 +203,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 		@Override
 		protected void onEndOfStream() {
 			temporaryStreamsAccumulator.run();
-			output.getEndOfStream()
+			output.getAcknowledgement()
 					.whenResult(this::acknowledge)
 					.whenException(this::closeEx);
 		}

@@ -53,7 +53,6 @@ import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.launchers.dataflow.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -196,11 +195,8 @@ public class DataflowServerTest {
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create(result);
 
-		resultSupplier.streamTo(resultConsumer).whenComplete(assertComplete());
-
-		return graph.execute()
-				.whenException(resultConsumer::closeEx)
-				.whenComplete(assertComplete());
+		return graph.execute().both(resultSupplier.streamTo(resultConsumer))
+				.whenException(resultConsumer::closeEx);
 	}
 
 	private Promise<Void> repartitionAndSort() throws IOException {

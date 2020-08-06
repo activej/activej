@@ -115,7 +115,7 @@ public final class StreamSorterTest {
 		);
 
 		assertSame(exception, e);
-		assertEndOfStream(source);
+		assertClosedWithError(source);
 		assertClosedWithError(exception, consumer);
 		assertClosedWithError(exception, sorter);
 	}
@@ -196,7 +196,7 @@ public final class StreamSorterTest {
 			Throwable exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
 			assertClosedWithError(STORAGE_EXCEPTION, sorter);
-			assertEndOfStream(supplier);
+			assertClosedWithError(supplier);
 			assertClosedWithError(STORAGE_EXCEPTION, consumerToList);
 			assertTrue(consumerToList.getList().isEmpty());
 		});
