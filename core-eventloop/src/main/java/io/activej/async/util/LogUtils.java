@@ -18,7 +18,6 @@ package io.activej.async.util;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.CollectionUtils;
-import io.activej.common.exception.StacklessException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -117,7 +116,7 @@ public class LogUtils {
 		return (result, e) -> {
 			if (e == null) {
 				resultLevel.log(logger, () -> resultMsg.apply(result));
-			} else if (!(e instanceof StacklessException) || !((StacklessException) e).isConstant()) {
+			} else {
 				if (errorLevel == null) {
 					if (logger.isErrorEnabled()) {
 						logger.error(errorMsg.apply(e), e);
@@ -125,8 +124,6 @@ public class LogUtils {
 				} else {
 					errorLevel.log(logger, () -> errorMsg.apply(e));
 				}
-			} else {
-				resultLevel.log(logger, () -> errorMsg.apply(e));
 			}
 		};
 	}
