@@ -19,10 +19,10 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.tuple.Tuple1;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
+import io.activej.fs.exception.scalar.FileNotFoundException;
 import io.activej.http.*;
 import io.activej.http.MultipartParser.MultipartDataHandler;
 import io.activej.promise.Promise;
@@ -33,12 +33,9 @@ import java.util.function.Function;
 
 import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
-import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
-import static io.activej.fs.ActiveFs.UNEXPECTED_END_OF_STREAM;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.Codecs.*;
-import static io.activej.fs.util.RemoteFsUtils.ERROR_TO_ID;
-import static io.activej.fs.util.RemoteFsUtils.parseBody;
+import static io.activej.fs.util.RemoteFsUtils.*;
 import static io.activej.http.AbstractHttpConnection.INCOMPLETE_MESSAGE;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
@@ -158,7 +155,7 @@ public final class ActiveFsServlet {
 		return fs.info(name)
 				.then(meta -> {
 					if (meta == null) {
-						return Promise.ofException(FILE_NOT_FOUND);
+						return Promise.ofException(new FileNotFoundException(ActiveFsServlet.class));
 					}
 					return HttpResponse.file(
 							(offset, limit) -> fs.download(name, offset, limit),
@@ -205,7 +202,7 @@ public final class ActiveFsServlet {
 	private static HttpResponse getErrorResponse(Throwable e) {
 		return HttpResponse.ofCode(500)
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBody(toJsonBuf(ERROR_CODE_CODEC, new Tuple1<>(ERROR_TO_ID.getOrDefault(e, 0))));
+				.withBody(toJsonBuf(FS_EXCEPTION_CODEC, castError(e)));
 	}
 
 	private static <T> BiFunction<T, Throwable, HttpResponse> errorHandler() {
@@ -223,7 +220,7 @@ public final class ActiveFsServlet {
 						.streamTo(consumer)
 						.mapEx(($, e) -> e == null ?
 								UploadAcknowledgement.ok() :
-								UploadAcknowledgement.ofErrorCode(ERROR_TO_ID.getOrDefault(e, 0)))
+								UploadAcknowledgement.ofError(castError(e)))
 						.map(ack -> ChannelSupplier.of(toJsonBuf(UploadAcknowledgement.CODEC, ack))))));
 	}
 

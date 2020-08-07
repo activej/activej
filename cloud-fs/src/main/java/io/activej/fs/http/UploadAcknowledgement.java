@@ -18,56 +18,44 @@ package io.activej.fs.http;
 
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredCodecs;
+import io.activej.fs.exception.FsException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.codec.StructuredCodecs.INT_CODEC;
-import static io.activej.codec.StructuredCodecs.ofEnum;
-import static io.activej.fs.http.UploadAcknowledgement.Status.ERROR;
-import static io.activej.fs.http.UploadAcknowledgement.Status.OK;
+import static io.activej.fs.util.Codecs.FS_EXCEPTION_CODEC;
 
 public final class UploadAcknowledgement {
 	public static final StructuredCodec<UploadAcknowledgement> CODEC = StructuredCodecs.object(UploadAcknowledgement::new,
-			"status", UploadAcknowledgement::getStatus, ofEnum(Status.class),
-			"errorCode", UploadAcknowledgement::getErrorCode, INT_CODEC.nullable());
+			"error", UploadAcknowledgement::getError, FS_EXCEPTION_CODEC.nullable());
 
-	@NotNull
-	private final Status status;
 	@Nullable
-	private final Integer errorCode;
+	private final FsException error;
 
-	private UploadAcknowledgement(@NotNull Status status, @Nullable Integer errorCode) {
-		this.status = status;
-		this.errorCode = errorCode;
+	private UploadAcknowledgement(@Nullable FsException error) {
+		this.error = error;
 	}
 
 	static UploadAcknowledgement ok() {
-		return new UploadAcknowledgement(OK, null);
+		return new UploadAcknowledgement(null);
 	}
 
-	static UploadAcknowledgement ofErrorCode(int errorCode) {
-		return new UploadAcknowledgement(ERROR, errorCode);
+	static UploadAcknowledgement ofError(@NotNull FsException error) {
+		return new UploadAcknowledgement(error);
 	}
 
-	@NotNull
-	public Status getStatus() {
-		return status;
+	public boolean isOk() {
+		return error == null;
 	}
 
 	@Nullable
-	public Integer getErrorCode() {
-		return errorCode;
-	}
-
-	public enum Status {
-		OK, ERROR
+	public FsException getError() {
+		return error;
 	}
 
 	@Override
 	public String toString() {
 		return "UploadAcknowledgement{" +
-				"status=" + status +
-				(errorCode == null ? "" : (", errorCode=" + errorCode)) +
+				(error == null ? "" : ("error=" + error)) +
 				'}';
 	}
 }

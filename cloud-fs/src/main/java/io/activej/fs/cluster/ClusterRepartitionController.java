@@ -32,6 +32,7 @@ import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsIOException;
+import io.activej.fs.exception.scalar.PathContainsFileException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
@@ -56,7 +57,6 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.csp.ChannelConsumer.getAcknowledgement;
-import static io.activej.fs.ActiveFs.PATH_CONTAINS_FILE;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
@@ -329,7 +329,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 																fs.append(name, remoteMeta.getSize())
 																		.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
 														.whenException(e -> {
-															if (e == PATH_CONTAINS_FILE) {
+															if (e instanceof PathContainsFileException) {
 																logger.error("Cluster contains files with clashing paths", e);
 															}
 														}))

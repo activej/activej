@@ -19,8 +19,7 @@ package io.activej.fs;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.exception.FsIOException;
-import io.activej.fs.exception.FsStateException;
+import io.activej.fs.exception.scalar.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -28,9 +27,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.collection.CollectionUtils.isBijection;
+import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
+import static io.activej.fs.util.RemoteFsUtils.reduceErrors;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toSet;
 
@@ -47,16 +51,6 @@ import static java.util.stream.Collectors.toSet;
  */
 public interface ActiveFs {
 	String SEPARATOR = "/";
-
-	FsStateException FILE_NOT_FOUND = new FsStateException(ActiveFs.class, "File not found");
-	FsStateException IS_DIRECTORY = new FsStateException(ActiveFs.class, "Operated file is a directory");
-	FsStateException ILLEGAL_OFFSET = new FsStateException(ActiveFs.class, "Offset exceeds file size");
-	FsStateException MALFORMED_GLOB = new FsStateException(ActiveFs.class, "Malformed glob pattern");
-	FsStateException FORBIDDEN_PATH = new FsStateException(ActiveFs.class, "Forbidden path");
-	FsStateException PATH_CONTAINS_FILE = new FsStateException(ActiveFs.class, "Path contains existing file as its part");
-
-	FsIOException UNEXPECTED_DATA = new FsIOException(ActiveFs.class, "Received more data than expected");
-	FsIOException UNEXPECTED_END_OF_STREAM = new FsIOException(ActiveFs.class, "Received less data than expected");
 
 	/**
 	 * Returns a consumer of bytebufs which are written (or sent) to the file.
@@ -98,6 +92,7 @@ public interface ActiveFs {
 	 * to successfully complete would win, e.g. would overwrite results of other uploads.
 	 * <p>
 	 * It is possible to overwrite existing files.
+	 *
 	 * @param name name of the file to upload
 	 * @return promise for stream consumer of byte buffers
 	 */
@@ -112,7 +107,7 @@ public interface ActiveFs {
 	 * If an error occurs while append is in progress, all made changes will be preserved in file.
 	 * <p>
 	 * It makes possible to overwrite file contents starting from specific {@code offset}.
-	 * If {@code offset} is greater than file size, the promise will complete with {@link #ILLEGAL_OFFSET} exception.
+	 * If {@code offset} is greater than file size, the promise will complete with {@link IllegalOffsetException} exception.
 	 * <p>
 	 * Appends modify file upon each received bytebuf, hence it is possible to download still-appending file.
 	 * <p>
@@ -174,7 +169,8 @@ public interface ActiveFs {
 	 * @param toDelete set of files to be deleted
 	 */
 	default Promise<Void> deleteAll(Set<String> toDelete) {
-		return Promises.all(toDelete.stream().map(this::delete));
+		return Promises.toList(toDelete.stream().map(name -> delete(name).toTry()))
+				.then(tries -> reduceErrors(tries, toDelete.iterator()));
 	}
 
 	/**
@@ -201,10 +197,13 @@ public interface ActiveFs {
 	 * @param sourceToTarget source files to target files mapping
 	 */
 	default Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return Promises.all(sourceToTarget.entrySet().stream()
-				.map(entry -> copy(entry.getKey(), entry.getValue())));
+		Set<Entry<String, String>> entrySet = sourceToTarget.entrySet();
+		return Promises.toList(entrySet.stream()
+				.map(entry -> copy(entry.getKey(), entry.getValue()).toTry()))
+				.then(tries -> reduceErrors(tries, transformIterator(entrySet.iterator(), Entry::getKey)));
 	}
 
 	/**
@@ -236,12 +235,13 @@ public interface ActiveFs {
 	 * @param sourceToTarget source files to target files mapping
 	 */
 	default Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return copyAll(sourceToTarget)
 				.then(() -> deleteAll(sourceToTarget.entrySet().stream()
 						.filter(entry -> !entry.getKey().equals(entry.getValue()))
-						.map(Map.Entry::getKey)
+						.map(Entry::getKey)
 						.collect(toSet())));
 	}
 

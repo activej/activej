@@ -18,8 +18,12 @@ package io.activej.fs;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.collection.Try;
+import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.fs.exception.FsBatchException;
+import io.activej.fs.exception.FsScalarException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -30,8 +34,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toSet;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.collection.CollectionUtils.isBijection;
+import static java.util.stream.Collectors.*;
 
 /**
  * A file system that allows to mount several {@link ActiveFs} implementations to correspond to different filenames.
@@ -110,6 +115,9 @@ final class MountingActiveFs implements ActiveFs {
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
+		if (sourceToTarget.isEmpty()) return Promise.complete();
+
 		return transfer(sourceToTarget, ActiveFs::copyAll, false);
 	}
 
@@ -120,6 +128,9 @@ final class MountingActiveFs implements ActiveFs {
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
+		if (sourceToTarget.isEmpty()) return Promise.complete();
+
 		return transfer(sourceToTarget, ActiveFs::moveAll, true);
 	}
 
@@ -148,7 +159,7 @@ final class MountingActiveFs implements ActiveFs {
 	}
 
 	private Promise<Void> transfer(Map<String, String> sourceToTarget, BiFunction<ActiveFs, Map<String, String>, Promise<Void>> action, boolean deleteSource) {
-		List<AsyncSupplier<Void>> movePromises = new ArrayList<>();
+		List<AsyncSupplier<Tuple2<String, Try<Void>>>> movePromises = new ArrayList<>();
 
 		Map<ActiveFs, Map<String, String>> groupedBySameFs = new IdentityHashMap<>();
 
@@ -164,13 +175,37 @@ final class MountingActiveFs implements ActiveFs {
 			} else {
 				movePromises.add(() -> first.download(source)
 						.then(supplier -> supplier.streamTo(second.upload(target)))
-						.then(() -> deleteSource ? first.delete(target) : Promise.complete()));
+						.then(() -> deleteSource ? first.delete(target) : Promise.complete())
+						.toTry()
+						.map(aTry -> new Tuple2<>(source, aTry)));
 			}
 		}
 		for (Map.Entry<ActiveFs, Map<String, String>> entry : groupedBySameFs.entrySet()) {
-			movePromises.add(() -> action.apply(entry.getKey(), entry.getValue()));
+			movePromises.add(() -> action.apply(entry.getKey(), entry.getValue()).toTry().map(aTry -> new Tuple2<>("", aTry)));
 		}
 
-		return Promises.all(Promises.asPromises(movePromises));
+		return Promises.toList(movePromises.stream().map(AsyncSupplier::get))
+				.then(list -> {
+					List<Tuple2<String, Throwable>> exceptions = list.stream()
+							.filter(tuple -> tuple.getValue2().isException())
+							.map(tuple -> new Tuple2<>(tuple.getValue1(), tuple.getValue2().getException()))
+							.collect(toList());
+					if (exceptions.isEmpty()) {
+						return Promise.complete();
+					}
+					Map<String, FsScalarException> scalarExceptions = new HashMap<>();
+					for (Tuple2<String, Throwable> tuple : exceptions) {
+						Throwable exception = tuple.getValue2();
+						if (exception instanceof FsScalarException) {
+							scalarExceptions.put(tuple.getValue1(), (FsScalarException) exception);
+						} else if (exception instanceof FsBatchException) {
+							scalarExceptions.putAll(((FsBatchException) exception).getExceptions());
+						} else {
+							return Promise.ofException(exception);
+						}
+					}
+					return Promise.ofException(new FsBatchException(MountingActiveFs.class, scalarExceptions));
+				});
 	}
+
 }

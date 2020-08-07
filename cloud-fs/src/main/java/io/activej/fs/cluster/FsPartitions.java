@@ -189,7 +189,8 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 			if (e instanceof FsException) {
 				return Promise.ofException(e);
 			}
-			return Promise.ofException(new FsIOException(FsPartitions.class, "Node failed with exception", e));
+			logger.warn("Node failed", e);
+			return Promise.ofException(new FsIOException(FsPartitions.class, "Node failed"));
 		};
 	}
 

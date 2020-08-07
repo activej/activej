@@ -2,6 +2,7 @@ package io.activej.fs;
 
 import io.activej.csp.ChannelConsumer;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -16,12 +17,12 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static io.activej.common.collection.CollectionUtils.map;
-import static io.activej.fs.ActiveFs.FORBIDDEN_PATH;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.toSet;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class ActiveFsAdaptersTest {
@@ -48,9 +49,9 @@ public final class ActiveFsAdaptersTest {
 		await(fs.upload(filename).then(ChannelConsumer::acceptEndOfStream));
 	}
 
-	private void uploadFails(ActiveFs fs, String filename, Throwable exception) {
+	private void uploadForbidden(ActiveFs fs, String filename) {
 		Throwable throwable = awaitException(fs.upload(filename).then(ChannelConsumer::acceptEndOfStream));
-		assertEquals(exception, throwable);
+		assertThat(throwable, instanceOf(ForbiddenPathException.class));
 	}
 
 	private void expect(String... realFiles) {
@@ -80,7 +81,7 @@ public final class ActiveFsAdaptersTest {
 			upload(prefixed, "nonPrefix/test.txt");
 			fail("should've failed");
 		} catch (AssertionError e) {
-			assertSame(FORBIDDEN_PATH, e.getCause());
+			assertThat(e.getCause(), instanceOf(ForbiddenPathException.class));
 		}
 	}
 
@@ -114,9 +115,9 @@ public final class ActiveFsAdaptersTest {
 	public void filterClient() {
 		ActiveFs filtered = ActiveFsAdapters.filter(local, s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
 
-		uploadFails(filtered, "test2.txt", FORBIDDEN_PATH);
+		uploadForbidden(filtered, "test2.txt");
 		upload(filtered, "test22.txt");
-		uploadFails(filtered, "test22.jpg", FORBIDDEN_PATH);
+		uploadForbidden(filtered, "test22.jpg");
 		upload(filtered, "123.txt");
 
 		expect("test22.txt", "123.txt");

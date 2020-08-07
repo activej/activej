@@ -40,11 +40,11 @@ import java.util.function.Function;
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FsCommand.*;
-import static io.activej.fs.http.UploadAcknowledgement.Status.OK;
 import static io.activej.fs.util.Codecs.*;
-import static io.activej.fs.util.RemoteFsUtils.ID_TO_ERROR;
+import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.http.AbstractHttpConnection.INCOMPLETE_MESSAGE;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
@@ -178,6 +178,9 @@ public final class HttpActiveFs implements ActiveFs {
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
+		if (sourceToTarget.isEmpty()) return Promise.complete();
+
 		return client.request(
 				HttpRequest.post(
 						url + UrlBuilder.relative()
@@ -203,6 +206,9 @@ public final class HttpActiveFs implements ActiveFs {
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
+		if (sourceToTarget.isEmpty()) return Promise.complete();
+
 		return client.request(
 				HttpRequest.post(
 						url + UrlBuilder.relative()
@@ -246,8 +252,7 @@ public final class HttpActiveFs implements ActiveFs {
 				return response.loadBody()
 						.then(body -> {
 							try {
-								Integer code = fromJson(ERROR_CODE_CODEC, body.getString(UTF_8)).getValue1();
-								return Promise.ofException(ID_TO_ERROR.getOrDefault(code, HttpException.ofCode(500)));
+								return Promise.ofException(fromJson(FS_EXCEPTION_CODEC, body.getString(UTF_8)));
 							} catch (ParseException ignored) {
 								return Promise.ofException(HttpException.ofCode(500));
 							}
@@ -306,11 +311,10 @@ public final class HttpActiveFs implements ActiveFs {
 	}
 
 	private static Promise<Void> failOnException(UploadAcknowledgement ack) {
-		if (ack.getStatus() == OK) {
+		if (ack.isOk()) {
 			return Promise.complete();
 		}
-		Integer errorCode = ack.getErrorCode();
-		return Promise.ofException(ID_TO_ERROR.getOrDefault(errorCode, UNKNOWN_SERVER_ERROR));
+		return Promise.ofException(ack.getError());
 	}
 
 	private static ChannelSupplier<ByteBuf> wrapIncompleteMessages(ChannelSupplier<ByteBuf> supplier) {

@@ -22,6 +22,7 @@ import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsIOException;
+import io.activej.fs.exception.scalar.FileNotFoundException;
 import io.activej.fs.tcp.RemoteFsCommands.*;
 import io.activej.fs.tcp.RemoteFsResponses.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -38,7 +39,6 @@ import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
 import static io.activej.fs.util.RemoteFsUtils.*;
 
 /**
@@ -102,7 +102,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 				.whenComplete(handleRequestPromise.recordStats())
 				.whenException(e -> {
 					logger.warn("got an error while handling message : {}", this, e);
-					messaging.send(new ServerError(ERROR_TO_ID.getOrDefault(e, 0)))
+					messaging.send(new ServerError(castError(e)))
 							.then(messaging::sendEndOfStream)
 							.whenResult(messaging::close);
 				});
@@ -143,7 +143,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 			return fs.info(name)
 					.then(meta -> {
 						if (meta == null) {
-							return Promise.ofException(FILE_NOT_FOUND);
+							return Promise.ofException(new FileNotFoundException(ActiveFsServer.class));
 						}
 
 						long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));

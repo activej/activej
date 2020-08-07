@@ -10,6 +10,7 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
+import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.promise.Promise;
@@ -33,7 +34,8 @@ import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.fs.ActiveFs.*;
+import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_DATA;
+import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -156,7 +158,7 @@ public final class FsIntegrationTest {
 		Throwable exception = awaitException(upload("../../nonlocal/../file.txt", CONTENT)
 				.whenComplete(server::close));
 
-		assertSame(FORBIDDEN_PATH, exception);
+		assertThat(exception, instanceOf(ForbiddenPathException.class));
 	}
 
 	@Test

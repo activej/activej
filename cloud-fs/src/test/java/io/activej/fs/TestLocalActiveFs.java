@@ -10,6 +10,9 @@ import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.exception.scalar.FileNotFoundException;
+import io.activej.fs.exception.scalar.IsADirectoryException;
+import io.activej.fs.exception.scalar.MalformedGlobException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -30,8 +33,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.fs.ActiveFs.*;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
+import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_DATA;
+import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -40,6 +44,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class TestLocalActiveFs {
@@ -177,7 +182,7 @@ public final class TestLocalActiveFs {
 	public void testDownloadNonExistingFile() {
 		Throwable e = awaitException(client.download("no_file.txt"));
 
-		assertSame(FILE_NOT_FOUND, e);
+		assertThat(e, instanceOf(FileNotFoundException.class));
 	}
 
 	@Test
@@ -242,7 +247,7 @@ public final class TestLocalActiveFs {
 	public void testMoveNothingIntoNothing() {
 		Throwable exception = awaitException(client.move("i_do_not_exist.txt", "neither_am_i.txt"));
 
-		assertEquals(FILE_NOT_FOUND, exception);
+		assertThat(exception, instanceOf(FileNotFoundException.class));
 	}
 
 	@Test
@@ -263,7 +268,7 @@ public final class TestLocalActiveFs {
 	@Test
 	public void testListMalformedGlob() {
 		Throwable exception = awaitException(client.list("["));
-		assertSame(MALFORMED_GLOB, exception);
+		assertThat(exception, instanceOf(MalformedGlobException.class));
 	}
 
 	@Test
@@ -399,7 +404,7 @@ public final class TestLocalActiveFs {
 		Files.createFile(randomPath.resolve("file"));
 		String data = "test";
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
-		assertEquals(IS_DIRECTORY, exception);
+		assertThat(exception, instanceOf(IsADirectoryException.class));
 	}
 
 	private List<Path> createEmptyDirectories() {

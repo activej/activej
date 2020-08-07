@@ -368,4 +368,7 @@ public class CollectionUtils {
 		throw new IllegalArgumentException("Empty iterable");
 	}
 
+	public static boolean isBijection(Map<?, ?> map) {
+		return new HashSet<>(map.values()).size() == map.size();
+	}
 }

@@ -48,6 +48,7 @@ import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.*;
@@ -222,6 +223,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new CopyAll(sourceToTarget), CopyAllFinished.class, $ -> (Void) null)
@@ -238,6 +240,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new MoveAll(sourceToTarget), MoveAllFinished.class, $ -> (Void) null)
@@ -312,9 +315,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 			return Promise.of(expectedClass.cast(msg));
 		}
 		if (msg instanceof ServerError) {
-			int code = ((ServerError) msg).getCode();
-			Throwable error = ID_TO_ERROR.getOrDefault(code, UNKNOWN_SERVER_ERROR);
-			return Promise.ofException(error);
+			return Promise.ofException(((ServerError) msg).getError());
 		}
 		return Promise.ofException(INVALID_MESSAGE);
 	}

@@ -9,6 +9,8 @@ import io.activej.csp.ChannelSuppliers;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
+import io.activej.fs.exception.scalar.FileNotFoundException;
+import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.http.AsyncServlet;
 import io.activej.http.StubHttpClient;
 import io.activej.test.rules.ByteBufRule;
@@ -29,7 +31,8 @@ import java.util.Set;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.fs.ActiveFs.*;
+import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_DATA;
+import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -37,6 +40,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class ActiveFsServletAndClientTest {
@@ -141,7 +145,7 @@ public final class ActiveFsServletAndClientTest {
 	@Test
 	public void uploadIllegalPath() {
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("test")).streamTo(fs.upload("../outside")));
-		assertSame(FORBIDDEN_PATH, exception);
+		assertThat(exception, instanceOf(ForbiddenPathException.class));
 	}
 
 	@Test
@@ -157,7 +161,7 @@ public final class ActiveFsServletAndClientTest {
 	@Test
 	public void downloadNonExistent() {
 		Throwable exception = awaitException(fs.download("nonExistent"));
-		assertSame(FILE_NOT_FOUND, exception);
+		assertThat(exception, instanceOf(FileNotFoundException.class));
 	}
 
 	private void initializeDirs() {

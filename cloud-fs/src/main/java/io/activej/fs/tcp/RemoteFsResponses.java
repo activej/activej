@@ -19,15 +19,16 @@ package io.activej.fs.tcp;
 import io.activej.codec.CodecSubtype;
 import io.activej.codec.StructuredCodec;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.exception.FsException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
 
-import static io.activej.codec.StructuredCodecs.*;
+import static io.activej.codec.StructuredCodecs.LONG_CODEC;
+import static io.activej.codec.StructuredCodecs.object;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
-import static io.activej.fs.util.Codecs.FILE_META_CODEC_NULLABLE;
-import static io.activej.fs.util.Codecs.FILE_META_MAP_CODEC;
+import static io.activej.fs.util.Codecs.*;
 
 public final class RemoteFsResponses {
 	static final StructuredCodec<FsResponse> CODEC = CodecSubtype.<FsResponse>create()
@@ -46,7 +47,7 @@ public final class RemoteFsResponses {
 			.with(InfoFinished.class, object(InfoFinished::new, "metadata", InfoFinished::getMetadata, FILE_META_CODEC_NULLABLE))
 			.with(InfoAllFinished.class, object(InfoAllFinished::new, "metadataMap", InfoAllFinished::getMetadataMap, FILE_META_MAP_CODEC))
 			.with(PingFinished.class, object(PingFinished::new))
-			.with(ServerError.class, object(ServerError::new, "code", ServerError::getCode, INT_CODEC));
+			.with(ServerError.class, object(ServerError::new, "error", ServerError::getError, FS_EXCEPTION_CODEC));
 
 	public abstract static class FsResponse {
 	}
@@ -156,19 +157,19 @@ public final class RemoteFsResponses {
 	}
 
 	public static final class ServerError extends FsResponse {
-		private final int code;
+		private final FsException error;
 
-		public ServerError(int code) {
-			this.code = code;
+		public ServerError(FsException error) {
+			this.error = error;
 		}
 
-		public int getCode() {
-			return code;
+		public FsException getError() {
+			return error;
 		}
 
 		@Override
 		public String toString() {
-			return "ServerError{code=" + code + '}';
+			return "ServerError{error=" + error + '}';
 		}
 	}
 

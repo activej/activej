@@ -6,6 +6,8 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.exception.scalar.IllegalOffsetException;
+import io.activej.fs.exception.scalar.MalformedGlobException;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.test.rules.ByteBufRule;
@@ -24,14 +26,13 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.fs.ActiveFs.ILLEGAL_OFFSET;
-import static io.activej.fs.ActiveFs.MALFORMED_GLOB;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class TestPartialRemoteFs {
@@ -137,7 +138,7 @@ public final class TestPartialRemoteFs {
 				.toCollector(ByteBufQueue.collector())
 				.whenComplete(server::close));
 
-		assertSame(ILLEGAL_OFFSET, exception);
+		assertThat(exception, instanceOf(IllegalOffsetException.class));
 	}
 
 	@Test
@@ -145,6 +146,6 @@ public final class TestPartialRemoteFs {
 		Throwable exception = awaitException(client.list("[")
 				.whenComplete(server::close));
 
-		assertSame(MALFORMED_GLOB, exception);
+		assertThat(exception, instanceOf(MalformedGlobException.class));
 	}
 }

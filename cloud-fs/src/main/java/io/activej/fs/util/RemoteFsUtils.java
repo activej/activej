@@ -21,51 +21,41 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.json.JsonUtils;
+import io.activej.common.collection.Try;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
+import io.activej.fs.ActiveFs;
+import io.activej.fs.exception.FsBatchException;
+import io.activej.fs.exception.FsException;
+import io.activej.fs.exception.FsIOException;
+import io.activej.fs.exception.FsScalarException;
 import io.activej.promise.Promise;
 
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static io.activej.codec.json.JsonUtils.fromJson;
-import static io.activej.fs.ActiveFs.*;
+import static io.activej.common.collection.CollectionUtils.map;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toMap;
 
 public final class RemoteFsUtils {
+	public static final FsIOException UNEXPECTED_DATA = new FsIOException(ActiveFs.class, "Received more data than expected");
+	public static final FsIOException UNEXPECTED_END_OF_STREAM = new FsIOException(ActiveFs.class, "Received less data than expected");
+
 	private static final Pattern ANY_GLOB_METACHARS = Pattern.compile("[*?{}\\[\\]\\\\]");
 	private static final Pattern UNESCAPED_GLOB_METACHARS = Pattern.compile("(?<!\\\\)(?:\\\\\\\\)*[*?{}\\[\\]]");
-
-	public static final Map<Integer, Throwable> ID_TO_ERROR;
-	public static final Map<Throwable, Integer> ERROR_TO_ID;
-
-	static {
-		Map<Integer, Throwable> tempMap = new HashMap<>();
-
-		tempMap.put(1, FILE_NOT_FOUND);
-		tempMap.put(2, IS_DIRECTORY);
-		tempMap.put(3, ILLEGAL_OFFSET);
-		tempMap.put(4, MALFORMED_GLOB);
-		tempMap.put(5, FORBIDDEN_PATH);
-		tempMap.put(6, PATH_CONTAINS_FILE);
-		tempMap.put(7, UNEXPECTED_DATA);
-		tempMap.put(8, UNEXPECTED_END_OF_STREAM);
-
-		ID_TO_ERROR = unmodifiableMap(tempMap);
-		ERROR_TO_ID = unmodifiableMap(tempMap.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
-	}
 
 	/**
 	 * Escapes any glob metacharacters so that given path string can ever only match one file.
@@ -152,6 +142,37 @@ public final class RemoteFsUtils {
 								return Promise.complete();
 							}));
 		};
+	}
+
+	/*
+		Casting received errors before sending to remote peer
+		ActiveFs.class is used as a component to hide implementation details from peer
+	 */
+	public static FsException castError(Throwable e) {
+		return e instanceof FsException ? (FsException) e : new FsIOException(ActiveFs.class, "Unknown error");
+	}
+
+	public static FsBatchException batchEx(Class<?> component, String name, FsScalarException exception) {
+		return new FsBatchException(component, map(name, exception));
+	}
+
+	public static Promise<Void> reduceErrors(List<Try<Void>> tries, Iterator<String> sources) {
+		Map<String, FsScalarException> scalarExceptions = new HashMap<>();
+		for (Try<Void> aTry : tries) {
+			String source = sources.next();
+			if (aTry.isSuccess()) continue;
+			Throwable exception = aTry.getException();
+			if (exception instanceof FsScalarException) {
+				scalarExceptions.put(source, ((FsScalarException) exception));
+			} else {
+				return Promise.ofException(exception);
+			}
+		}
+		if (!scalarExceptions.isEmpty()) {
+			return Promise.ofException(new FsBatchException(ActiveFs.class, scalarExceptions));
+		}
+		return Promise.complete();
+
 	}
 
 }

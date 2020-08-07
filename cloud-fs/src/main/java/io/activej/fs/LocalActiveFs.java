@@ -30,9 +30,11 @@ import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
-import io.activej.fs.exception.FsStateException;
+import io.activej.fs.exception.FsScalarException;
+import io.activej.fs.exception.scalar.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.Promise.BlockingCallable;
@@ -62,11 +64,9 @@ import java.util.stream.Stream;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.map;
-import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
-import static io.activej.fs.util.RemoteFsUtils.isWildcard;
-import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
+import static io.activej.fs.util.RemoteFsUtils.*;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
@@ -183,22 +183,22 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					Path path = resolve(name);
 					FileChannel channel;
 					if (offset == 0) {
-						deleteIfEmptyDir(path);
+						deleteIfEmptyDir(name);
 						channel = ensureParent(path, () -> FileChannel.open(path, CREATE, WRITE));
 					} else {
 						channel = FileChannel.open(path, WRITE);
 					}
 					if (channel.size() < offset) {
-						throw ILLEGAL_OFFSET;
+						throw new IllegalOffsetException(LocalActiveFs.class);
 					}
 					return channel;
 				})
-				.thenEx(translateKnownErrors(name))
+				.thenEx(translateScalarErrors(name))
 				.whenComplete(appendBeginPromise.recordStats())
 				.map(channel -> ChannelFileWriter.create(executor, channel)
 						.withOffset(offset)
 						.withAcknowledgement(ack -> ack
-								.thenEx(translateKnownErrors(name))
+								.thenEx(translateScalarErrors(name))
 								.whenComplete(appendFinishPromise.recordStats())
 								.whenComplete(toLogger(logger, TRACE, "appendComplete", name, offset, this))))
 				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
@@ -212,11 +212,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return resolveAsync(name)
 				.then(path -> execute(() -> {
 					if (!Files.exists(path)) {
-						throw FILE_NOT_FOUND;
+						throw new FileNotFoundException(LocalActiveFs.class);
 					}
 					FileChannel channel = FileChannel.open(path, READ);
 					if (channel.size() < offset) {
-						throw ILLEGAL_OFFSET;
+						throw new IllegalOffsetException(LocalActiveFs.class);
 					}
 					return channel;
 				}))
@@ -225,10 +225,10 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						.withOffset(offset)
 						.withLimit(limit)
 						.withEndOfStream(eos -> eos
-								.thenEx(translateKnownErrors(name))
+								.thenEx(translateScalarErrors(name))
 								.whenComplete(downloadFinishPromise.recordStats())
 								.whenComplete(toLogger(logger, TRACE, "downloadComplete", name, offset, limit))))
-				.thenEx(translateKnownErrors(name))
+				.thenEx(translateScalarErrors(name))
 				.whenComplete(toLogger(logger, TRACE, "download", name, offset, limit, this))
 				.whenComplete(downloadBeginPromise.recordStats());
 	}
@@ -246,7 +246,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						},
 						CollectorsEx.throwingMerger())
 				))
-				.thenEx(translateKnownErrors())
+				.thenEx(translateScalarErrors())
 				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
@@ -254,17 +254,17 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return execute(() -> doCopy(map(name, target)))
-				.thenEx(translateKnownErrors())
+				.thenEx(translateScalarErrors())
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return execute(() -> doCopy(sourceToTarget))
-				.thenEx(translateKnownErrors())
 				.whenComplete(toLogger(logger, TRACE, "copyAll", toLimitedString(sourceToTarget, 50), this))
 				.whenComplete(copyAllPromise.recordStats());
 	}
@@ -272,17 +272,17 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		return execute(() -> doMove(map(name, target)))
-				.thenEx(translateKnownErrors())
+				.thenEx(translateScalarErrors())
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return execute(() -> doMove(sourceToTarget))
-				.thenEx(translateKnownErrors())
 				.whenComplete(toLogger(logger, TRACE, "moveAll", toLimitedString(sourceToTarget, 50), this))
 				.whenComplete(moveAllPromise.recordStats());
 	}
@@ -290,7 +290,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		return execute(() -> doDelete(singleton(name)))
-				.thenEx(translateKnownErrors(name))
+				.thenEx(translateScalarErrors(name))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
 	}
@@ -300,7 +300,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		if (toDelete.isEmpty()) return Promise.complete();
 
 		return execute(() -> doDelete(toDelete))
-				.thenEx(translateKnownErrors())
 				.whenComplete(toLogger(logger, TRACE, "deleteAll", toDelete, this))
 				.whenComplete(deleteAllPromise.recordStats());
 	}
@@ -377,7 +376,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	private void deleteIfEmptyDir(Path target) throws IOException, FsStateException {
+	private void deleteIfEmptyDir(String name) throws IOException, IsADirectoryException, ForbiddenPathException {
+		Path target = resolve(name);
 		if (!Files.isDirectory(target)) {
 			return;
 		}
@@ -387,15 +387,19 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				Path path = iterator.next();
 				if (Files.isRegularFile(path)) {
 					// regular file inside target directory
-					throw IS_DIRECTORY;
+					throw dirEx(name);
 				}
 				try {
 					Files.deleteIfExists(path);
 				} catch (DirectoryNotEmptyException e) {
-					throw IS_DIRECTORY;
+					throw dirEx(name);
 				}
 			}
 		}
+	}
+
+	private IsADirectoryException dirEx(String name) {
+		return new IsADirectoryException(LocalActiveFs.class, "Path '" + name + "' is a directory");
 	}
 
 	private void clearTempDir() throws IOException {
@@ -410,10 +414,10 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	private Path resolve(String name) throws FsException {
+	private Path resolve(String name) throws ForbiddenPathException {
 		Path path = storage.resolve(toLocalName.apply(name)).normalize();
 		if (!path.startsWith(storage)) {
-			throw FORBIDDEN_PATH;
+			throw new ForbiddenPathException(LocalActiveFs.class, "Path '" + name + "' is forbidden");
 		}
 		return path;
 	}
@@ -429,7 +433,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
 				() -> {
-					deleteIfEmptyDir(resolve(name));
+					deleteIfEmptyDir(name);
 					Path tempPath = Files.createTempFile(tempDir, "", "");
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
@@ -437,64 +441,72 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						.transformWith(transformer)
 						.withAcknowledgement(ack -> ack
 								.then(() -> execute(() -> doMove(pathAndChannel.getValue1(), resolve(name))))
-								.thenEx(translateKnownErrors(name))
+								.thenEx(translateScalarErrors(name))
 								.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
 								.whenComplete(uploadFinishPromise.recordStats())
 								.whenComplete(toLogger(logger, TRACE, "uploadComplete", name, this))))
-				.thenEx(translateKnownErrors(name))
+				.thenEx(translateScalarErrors(name))
 				.whenComplete(uploadBeginPromise.recordStats());
 	}
 
-	private void doCopy(Map<String, String> sourceToTargetMap) throws Exception {
+	private void doCopy(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException {
 		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
-			Path path = resolve(entry.getKey());
-			Path targetPath = resolve(entry.getValue());
+			String from = entry.getKey();
+			String to = entry.getValue();
+			translateBatchErrors(from, to, () -> {
+				Path path = resolve(from);
+				deleteIfEmptyDir(from);
+				if (!Files.exists(path)) {
+					throw new FileNotFoundException(LocalActiveFs.class, "File '" + from + "' not found");
+				}
+				Path targetPath = resolve(to);
+				deleteIfEmptyDir(to);
 
-			deleteIfEmptyDir(path);
-			if (!Files.exists(path)) throw FILE_NOT_FOUND;
-			deleteIfEmptyDir(targetPath);
+				if (path.equals(targetPath)) {
+					touch(path);
+					return;
+				}
 
-			if (path.equals(targetPath)) {
-				touch(path);
-				continue;
-			}
-
-			ensureParent(targetPath, () -> {
-				if (hardlinkOnCopy) {
-					try {
-						Files.createLink(targetPath, path);
-						touch(targetPath);
-					} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
-						// if couldn't, then just actually copy it
+				ensureParent(targetPath, () -> {
+					if (hardlinkOnCopy) {
+						try {
+							Files.createLink(targetPath, path);
+							touch(targetPath);
+						} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
+							// if couldn't, then just actually copy it
+							Files.copy(path, targetPath, REPLACE_EXISTING);
+						}
+					} else {
 						Files.copy(path, targetPath, REPLACE_EXISTING);
 					}
-				} else {
-					Files.copy(path, targetPath, REPLACE_EXISTING);
-				}
-				return null;
+					return null;
+				});
 			});
 		}
 	}
 
-	private void doMove(Map<String, String> sourceToTargetMap) throws Exception {
+	private void doMove(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException {
 		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
-			Path path = resolve(entry.getKey());
-			Path targetPath = resolve(entry.getValue());
-
-			deleteIfEmptyDir(path);
-			if (!Files.exists(path)) throw FILE_NOT_FOUND;
-			deleteIfEmptyDir(targetPath);
-
-			if (path.equals(targetPath)) {
-				touch(path);
-				continue;
-			}
-
-			doMove(path, targetPath);
+			String from = entry.getKey();
+			String to = entry.getValue();
+			translateBatchErrors(from, to, () -> {
+				Path path = resolve(from);
+				deleteIfEmptyDir(from);
+				if (!Files.exists(path)) {
+					throw new FileNotFoundException(LocalActiveFs.class, "File '" + from + "' not found");
+				}
+				Path targetPath = resolve(to);
+				deleteIfEmptyDir(to);
+				if (path.equals(targetPath)) {
+					touch(path);
+					return;
+				}
+				doMove(path, targetPath);
+			});
 		}
 	}
 
-	private void doMove(Path path, Path targetPath) throws Exception {
+	private void doMove(Path path, Path targetPath) throws IOException {
 		ensureParent(targetPath, () -> {
 			try {
 				Files.move(path, targetPath, ATOMIC_MOVE);
@@ -508,24 +520,25 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		deleteEmptyParents(path.getParent());
 	}
 
-	private void doDelete(Set<String> toDelete) throws FsException, IOException {
+	private void doDelete(Set<String> toDelete) throws FsBatchException, FsIOException {
 		for (String name : toDelete) {
-			Path path = resolve(name);
+			translateBatchErrors(name, null, () -> {
+				Path path = resolve(name);
+				// cannot delete storage
+				if (path.equals(storage)) return;
 
-			// cannot delete storage
-			if (path.equals(storage)) continue;
+				try {
+					Files.deleteIfExists(path);
+				} catch (DirectoryNotEmptyException e) {
+					throw dirEx(name);
+				}
 
-			try {
-				Files.deleteIfExists(path);
-			} catch (DirectoryNotEmptyException e) {
-				throw IS_DIRECTORY;
-			}
-
-			deleteEmptyParents(path.getParent());
+				deleteEmptyParents(path.getParent());
+			});
 		}
 	}
 
-	private <V> V ensureParent(Path path, BlockingCallable<V> afterCreation) throws Exception {
+	private <V> V ensureParent(Path path, FsCallable<V> afterCreation) throws IOException {
 		Path parent = path.getParent();
 		while (true) {
 			Files.createDirectories(parent);
@@ -544,7 +557,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		Files.setLastModifiedTime(path, FileTime.fromMillis(now.currentTimeMillis()));
 	}
 
-	private Collection<Path> findMatching(String glob) throws IOException, FsException {
+	private Collection<Path> findMatching(String glob) throws IOException, ForbiddenPathException, MalformedGlobException {
 		// optimization for 'ping' empty list requests
 		if (glob.isEmpty()) {
 			return emptyList();
@@ -602,7 +615,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			long timestamp = Files.getLastModifiedTime(path).toMillis();
 			return FileMetadata.of(Files.size(path), timestamp);
 		} catch (IOException e) {
-			throw new UncheckedException(new FsIOException(LocalActiveFs.class, "Failed to retrieve metadata", e));
+			logger.warn("Failed to retrieve metadata for {}", path, e);
+			throw new UncheckedException(new FsIOException(LocalActiveFs.class, "Failed to retrieve metadata"));
 		}
 	}
 
@@ -612,11 +626,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		void accept(Path path) throws IOException;
 	}
 
-	private void walkFiles(Path dir, Walker walker) throws IOException, FsException {
+	private void walkFiles(Path dir, Walker walker) throws IOException, MalformedGlobException {
 		walkFiles(dir, null, walker);
 	}
 
-	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException, FsException {
+	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException, MalformedGlobException {
 		if (!Files.isDirectory(dir) || dir.startsWith(tempDir)) {
 			return;
 		}
@@ -701,38 +715,91 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return Promise.ofBlockingRunnable(executor, runnable);
 	}
 
-	private <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> translateKnownErrors() {
-		return translateKnownErrors(null);
+	private <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> translateScalarErrors() {
+		return translateScalarErrors(null);
 	}
 
-	private <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> translateKnownErrors(@Nullable String name) {
+	private <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> translateScalarErrors(@Nullable String name) {
 		return (v, e) -> {
-			if (e == null || e instanceof FsException) {
-				return Promise.of(v, e);
+			if (e == null) {
+				return Promise.of(v);
+			} else if (e instanceof FsBatchException) {
+				Map<String, FsScalarException> exceptions = ((FsBatchException) e).getExceptions();
+				assert exceptions.size() == 1;
+				return Promise.ofException(first(exceptions.values()));
+			} else if (e instanceof FsException) {
+				return Promise.ofException(e);
 			} else if (e instanceof FileAlreadyExistsException) {
 				return execute(() -> {
-					if (name != null && Files.isDirectory(resolve(name))) throw IS_DIRECTORY;
-					throw PATH_CONTAINS_FILE;
+					if (name != null && Files.isDirectory(resolve(name))) throw dirEx(name);
+					throw new PathContainsFileException(LocalActiveFs.class);
 				});
 			} else if (e instanceof NoSuchFileException) {
-				return Promise.ofException(FILE_NOT_FOUND);
+				return Promise.ofException(new FileNotFoundException(LocalActiveFs.class));
 			}
 			return execute(() -> {
-				if (name != null && Files.isDirectory(resolve(name))) throw IS_DIRECTORY;
+				if (name != null && Files.isDirectory(resolve(name))) throw dirEx(name);
+				logger.warn("Operation failed", e);
 				if (e instanceof IOException) {
-					throw new FsIOException(LocalActiveFs.class, e);
+					throw new FsIOException(LocalActiveFs.class, "IO Error");
 				}
-				throw new FsIOException(LocalActiveFs.class, "Unknown error", e);
+				throw new FsIOException(LocalActiveFs.class, "Unknown error");
 			});
 		};
 	}
 
-	private PathMatcher getPathMatcher(FileSystem fileSystem, String glob) throws FsException {
+	private void translateBatchErrors(@NotNull String first, @Nullable String second, FsRunnable runnable) throws FsBatchException, FsIOException {
+		try {
+			runnable.run();
+		} catch (FsScalarException e){
+			throw batchEx(LocalActiveFs.class, first, e);
+		} catch (FileAlreadyExistsException e) {
+			checkIfDirectories(first, second);
+			throw batchEx(LocalActiveFs.class, first, new PathContainsFileException(LocalActiveFs.class));
+		} catch (NoSuchFileException e) {
+			throw batchEx(LocalActiveFs.class, first, new FileNotFoundException(LocalActiveFs.class));
+		} catch (IOException e) {
+			checkIfDirectories(first, second);
+			logger.warn("Operation failed", e);
+			throw new FsIOException(LocalActiveFs.class, "IO Error'");
+		} catch (Exception e) {
+			logger.warn("Operation failed", e);
+			throw new FsIOException(LocalActiveFs.class, "Unknown Error");
+		}
+	}
+
+	private void checkIfDirectories(@NotNull String first, @Nullable String second) throws FsBatchException {
+		try {
+			if (Files.isDirectory(resolve(first))) {
+				throw batchEx(LocalActiveFs.class, first, dirEx(first));
+			}
+		} catch (ForbiddenPathException e) {
+			throw batchEx(LocalActiveFs.class, first, e);
+		}
+		try {
+			if (Files.isDirectory(resolve(second))) {
+				throw batchEx(LocalActiveFs.class, first, dirEx(second));
+			}
+		} catch (ForbiddenPathException e) {
+			throw batchEx(LocalActiveFs.class, first, e);
+		}
+	}
+
+	private PathMatcher getPathMatcher(FileSystem fileSystem, String glob) throws MalformedGlobException {
 		try {
 			return fileSystem.getPathMatcher("glob:" + glob);
 		} catch (PatternSyntaxException | UnsupportedOperationException e) {
-			throw MALFORMED_GLOB;
+			logger.warn("Malformed glob", e);
+			throw new MalformedGlobException(LocalActiveFs.class);
 		}
+	}
+
+	private interface FsCallable<V> {
+		V call() throws IOException;
+	}
+
+	private interface FsRunnable {
+		void run() throws IOException, FsScalarException;
 	}
 
 	//region JMX

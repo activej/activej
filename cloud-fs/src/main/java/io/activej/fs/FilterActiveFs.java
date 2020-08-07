@@ -20,18 +20,20 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.CollectorsEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.fs.exception.FsBatchException;
+import io.activej.fs.exception.FsScalarException;
+import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.collection.CollectionUtils.isBijection;
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toSet;
@@ -42,6 +44,8 @@ import static java.util.stream.Collectors.toSet;
  * Inherits all of the limitations of parent {@link ActiveFs}
  */
 final class FilterActiveFs implements ActiveFs {
+	private static final ForbiddenPathException FORBIDDEN_PATH_EXCEPTION = new ForbiddenPathException(FilterActiveFs.class);
+
 	private final ActiveFs parent;
 	private final Predicate<String> predicate;
 
@@ -53,7 +57,7 @@ final class FilterActiveFs implements ActiveFs {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		if (!predicate.test(name)) {
-			return Promise.ofException(FORBIDDEN_PATH);
+			return Promise.ofException(FORBIDDEN_PATH_EXCEPTION);
 		}
 		return parent.upload(name);
 	}
@@ -61,7 +65,7 @@ final class FilterActiveFs implements ActiveFs {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 		if (!predicate.test(name)) {
-			return Promise.ofException(FORBIDDEN_PATH);
+			return Promise.ofException(FORBIDDEN_PATH_EXCEPTION);
 		}
 		return parent.upload(name);
 	}
@@ -69,7 +73,7 @@ final class FilterActiveFs implements ActiveFs {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 		if (!predicate.test(name)) {
-			return Promise.ofException(FORBIDDEN_PATH);
+			return Promise.ofException(FORBIDDEN_PATH_EXCEPTION);
 		}
 		return parent.append(name, offset);
 	}
@@ -77,7 +81,7 @@ final class FilterActiveFs implements ActiveFs {
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		if (!predicate.test(name)) {
-			return Promise.ofException(FILE_NOT_FOUND);
+			return Promise.ofException(FORBIDDEN_PATH_EXCEPTION);
 		}
 		return parent.download(name, offset, limit);
 	}
@@ -89,6 +93,9 @@ final class FilterActiveFs implements ActiveFs {
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
+		if (sourceToTarget.isEmpty()) return Promise.complete();
+
 		return filteringOp(sourceToTarget, parent::copyAll);
 	}
 
@@ -99,6 +106,9 @@ final class FilterActiveFs implements ActiveFs {
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
+		if (sourceToTarget.isEmpty()) return Promise.complete();
+
 		return filteringOp(sourceToTarget, parent::moveAll);
 	}
 
@@ -149,24 +159,30 @@ final class FilterActiveFs implements ActiveFs {
 
 	private Promise<Void> filteringOp(String source, String target, BiFunction<String, String, Promise<Void>> original) {
 		if (!predicate.test(source)) {
-			return Promise.ofException(FILE_NOT_FOUND);
+			return Promise.ofException(new ForbiddenPathException(FilterActiveFs.class, "Path '" + source + "' is forbidden"));
 		}
 		if (!predicate.test(target)) {
-			return Promise.complete();
+			return Promise.ofException(new ForbiddenPathException(FilterActiveFs.class, "Path '" + target + "' is forbidden"));
 		}
 		return original.apply(source, target);
 	}
 
 	private Promise<Void> filteringOp(Map<String, String> sourceToTarget, Function<Map<String, String>, Promise<Void>> original) {
 		Map<String, String> renamed = new LinkedHashMap<>();
+		Map<String, FsScalarException> exceptions = new HashMap<>();
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
-			if (!predicate.test(entry.getKey())) {
-				return Promise.ofException(FILE_NOT_FOUND);
+			String source = entry.getKey();
+			if (!predicate.test(source)) {
+				exceptions.put(source, new ForbiddenPathException(FilterActiveFs.class, "Path '" + source + "' is forbidden"));
 			}
-			if (!predicate.test(entry.getValue())) {
-				return Promise.complete();
+			String target = entry.getValue();
+			if (!predicate.test(target)) {
+				exceptions.put(source, new ForbiddenPathException(FilterActiveFs.class, "Path '" + target + "' is forbidden"));
 			}
-			renamed.put(entry.getKey(), entry.getValue());
+			renamed.put(source, target);
+		}
+		if (!exceptions.isEmpty()) {
+			return Promise.ofException(new FsBatchException(FilterActiveFs.class, exceptions));
 		}
 		return original.apply(renamed);
 	}
