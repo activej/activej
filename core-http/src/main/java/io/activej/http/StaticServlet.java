@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.http.loader.StaticLoader;
 import io.activej.promise.Promise;
@@ -174,9 +175,11 @@ public final class StaticServlet implements AsyncServlet {
 	@NotNull
 	private Promise<HttpResponse> tryLoadIndexResource(String mappedPath) {
 		String dirPath = mappedPath.endsWith("/") || mappedPath.isEmpty() ? mappedPath : (mappedPath + '/');
-		return Promises.<HttpResponse>firstSuccessful(indexResources.stream()
-				.map(indexResource -> () -> resourceLoader.load(dirPath + indexResource)
-						.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource)))))
+		return Promises.first(
+				indexResources.stream()
+						.map(indexResource -> AsyncSupplier.of(() ->
+								resourceLoader.load(dirPath + indexResource)
+										.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource))))))
 				.thenEx(((response, e) -> e == null ? Promise.of(response) : Promise.ofException(StaticLoader.NOT_FOUND_EXCEPTION)));
 	}
 

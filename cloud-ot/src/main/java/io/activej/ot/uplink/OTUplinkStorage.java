@@ -28,8 +28,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static io.activej.common.collection.CollectionUtils.concat;
+import static io.activej.promise.Promises.isErrorOrResult;
 import static io.activej.promise.Promises.retry;
 import static java.util.Collections.emptyList;
 
@@ -203,6 +205,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 	@Override
 	public Promise<FetchData<Long, D>> checkout() {
 		return retry(
+				isErrorOrResult(Objects::nonNull),
 				() -> storage.getSnapshot()
 						.then(snapshotData -> snapshotData != null ?
 								Promise.of(snapshotData) :
@@ -210,8 +213,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 										.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.getDiffs(), uplinkSnapshotData.getCommitId(), uplinkSnapshotData.getLevel())
 												.then(ok -> Promise.of(ok ?
 														new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.getDiffs()) :
-														null)))),
-				(v, e) -> e != null || v != null)
+														null)))))
 				.then(snapshotData ->
 						storage.fetch(snapshotData.getCommitId())
 								.map(fetchData ->

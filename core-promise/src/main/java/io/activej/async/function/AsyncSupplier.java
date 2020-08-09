@@ -40,13 +40,8 @@ public interface AsyncSupplier<T> {
 	 */
 	Promise<T> get();
 
-	static <T> AsyncSupplier<T> of(@NotNull Supplier<? extends T> supplier) {
-		return () -> Promise.of(supplier.get());
-	}
-
-	@SuppressWarnings("unchecked")
-	static <T> AsyncSupplier<T> cast(@NotNull AsyncSupplier<? extends T> supplier) {
-		return (AsyncSupplier<T>) supplier;
+	static <T> AsyncSupplier<T> of(@NotNull Supplier<Promise<T>> supplier) {
+		return supplier::get;
 	}
 
 	static <T> AsyncSupplier<T> ofValue(@Nullable T value) {

@@ -28,10 +28,12 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.common.Checks.checkState;
+import static io.activej.promise.Promises.isErrorOrResult;
 import static io.activej.promise.Promises.retry;
 
 public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBeanEx {
@@ -92,9 +94,9 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 			return Promise.of(next++);
 		}
 		return retry(
+				isErrorOrResult(Objects::nonNull),
 				() -> reserveId.get()
-						.then(() -> next < limit ? Promise.of(next++) : Promise.of(null)),
-				(v, e) -> e != null || v != null);
+						.map($ -> next < limit ? next++ : null));
 	}
 
 	@NotNull

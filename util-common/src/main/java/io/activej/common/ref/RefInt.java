@@ -27,16 +27,12 @@ public final class RefInt {
 		return ++value;
 	}
 
-	public int inc(int add) {
-		return value += add;
-	}
-
 	public int dec() {
 		return --value;
 	}
 
-	public int dec(int sub) {
-		return value -= sub;
+	public int add(int add) {
+		return value += add;
 	}
 
 	public int get() {

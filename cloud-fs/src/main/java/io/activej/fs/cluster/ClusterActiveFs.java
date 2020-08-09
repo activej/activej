@@ -52,6 +52,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
+import static io.activej.promise.Promises.first;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
@@ -334,8 +335,8 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		Set<ChannelConsumer<ByteBuf>> consumers = new HashSet<>();
 		RefBoolean failed = new RefBoolean(false);
 		return Promises.toList(
-				Stream.generate(() ->
-						Promises.firstSuccessful(transformIterator(idIterator,
+				Stream.generate(() -> first(
+						transformIterator(idIterator,
 								id -> call(id, action)
 										.whenResult(consumer -> {
 											if (failed.get()) {
@@ -344,9 +345,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 												consumers.add(consumer);
 											}
 										})
-										.map(consumer -> new Container<>(id,
-												consumer.withAcknowledgement(ack ->
-														ack.thenEx(partitions.wrapDeath(id))))))))
+										.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.thenEx(partitions.wrapDeath(id))))))))
 						.limit(uploadTargetsMax))
 				.thenEx((containers, e) -> {
 					if (e != null) {

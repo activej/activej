@@ -240,16 +240,15 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 					}
 
 					return Promises.reduce(
-							groupedById.entrySet().stream()
-									.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
-											.whenException(e -> partitions.markIfDead(entry.getKey(), e)))
-									.iterator(),
-							groupedById.size(),
 							filteredMap.entrySet().stream()
 									.map(e -> new InfoResults(e.getKey(), e.getValue()))
 									.collect(toMap(InfoResults::getName, Function.identity())),
 							(result, metas) -> filteredMap.keySet().forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
-							Map::values)
+							Map::values,
+							groupedById.entrySet().stream()
+									.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
+											.whenException(e -> partitions.markIfDead(entry.getKey(), e)))
+									.iterator())
 							.whenResult(results -> {
 								repartitionPlan = results.stream()
 										.sorted()

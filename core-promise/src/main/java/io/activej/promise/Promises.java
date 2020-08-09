@@ -31,10 +31,12 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.*;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.nullify;
@@ -48,9 +50,11 @@ import static java.util.Collections.emptyList;
 /**
  * Allows to manage multiple {@link Promise}s.
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"WeakerAccess", "unchecked"})
 public final class Promises {
 	public static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(Promises.class, "Promise timeout");
+	public static final StacklessException NOT_ENOUGH_PROMISES_EXCEPTION = new StacklessException(Promises.class,
+			"There are no promises to be complete");
 
 	/**
 	 * @see #timeout(long, Promise)
@@ -258,6 +262,20 @@ public final class Promises {
 	}
 
 	/**
+	 * Returns a {@code Promise} that completes when
+	 * all of the {@code promises} are completed.
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static Promise<Void> all(@NotNull List<? extends Promise<?>> promises) {
+		int size = promises.size();
+		if (size == 0) return Promise.complete();
+		if (size == 1) return promises.get(0).toVoid();
+		if (size == 2) return promises.get(0).both(promises.get(1));
+		return all(promises.iterator());
+	}
+
+	/**
 	 * @see Promises#all(List)
 	 */
 	@Contract(pure = true)
@@ -276,20 +294,6 @@ public final class Promises {
 	}
 
 	/**
-	 * Returns a {@code Promise} that completes when
-	 * all of the {@code promises} are completed.
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static Promise<Void> all(@NotNull List<? extends Promise<?>> promises) {
-		int size = promises.size();
-		if (size == 0) return Promise.complete();
-		if (size == 1) return promises.get(0).toVoid();
-		if (size == 2) return promises.get(0).both(promises.get(1));
-		return all(promises.iterator());
-	}
-
-	/**
 	 * Returns {@code Promise} that completes when all of the {@code promises}
 	 * are completed. If at least one of the {@code promises} completes
 	 * exceptionally, a {@link CompleteExceptionallyPromise} will be returned.
@@ -297,7 +301,7 @@ public final class Promises {
 	@NotNull
 	public static Promise<Void> all(@NotNull Iterator<? extends Promise<?>> promises) {
 		if (!promises.hasNext()) return all();
-		@NotNull PromiseAll<Object> resultPromise = new PromiseAll<>();
+		PromiseAll<Object> resultPromise = new PromiseAll<>();
 		while (promises.hasNext()) {
 			Promise<?> promise = promises.next();
 			if (promise.isResult()) continue;
@@ -306,34 +310,7 @@ public final class Promises {
 			promise.whenComplete(resultPromise);
 		}
 		resultPromise.countdown--;
-		return resultPromise.countdown != 0 ? resultPromise : Promise.complete();
-	}
-
-	/**
-	 * {@code allCompleted} should be used if you want to work only with succeeded Promise results.
-	 * <p>
-	 * Returns {@link Promise} that completes when all of the {@code promises} are completed.
-	 * If some {@code promises} completes exceptionally,
-	 * it will execute the next {@link Promise}
-	 * If one or more exceptions happens,
-	 * the last exception will be returned during {@code whenException} call.
-	 *
-	 * @since 3.0.0
-	 */
-	public static Promise<Void> allCompleted(@NotNull Iterator<? extends Promise<?>> promises) {
-		if (!promises.hasNext()) return all();
-		@NotNull PromiseAllSettled<Object> resultPromise = new PromiseAllSettled<>();
-		while (promises.hasNext()) {
-			Promise<?> promise = promises.next();
-			if (promise.isResult()) continue;
-			resultPromise.countdown++;
-			promise.whenComplete(resultPromise);
-		}
-		resultPromise.countdown--;
-		if (resultPromise.countdown != 0) {
-			return resultPromise;
-		}
-		return Promise.complete();
+		return resultPromise.countdown == 0 ? Promise.complete() : resultPromise;
 	}
 
 	/**
@@ -345,7 +322,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T> any() {
-		return Promise.ofException(new StacklessException(Promises.class, "All promises completed exceptionally"));
+		return Promise.ofException(NOT_ENOUGH_PROMISES_EXCEPTION);
 	}
 
 	/**
@@ -353,7 +330,6 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@NotNull
-	@SuppressWarnings("unchecked")
 	public static <T> Promise<T> any(@NotNull Promise<? extends T> promise1) {
 		return (Promise<T>) promise1;
 	}
@@ -363,7 +339,6 @@ public final class Promises {
 	 *
 	 * @see #any(Iterator)
 	 */
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T> any(@NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
@@ -375,9 +350,21 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@NotNull
-	@SafeVarargs
 	public static <T> Promise<T> any(@NotNull Promise<? extends T>... promises) {
-		return any(asIterator(promises));
+		return any(isResult(), asIterator(promises));
+	}
+
+	/**
+	 * @see #any(Iterator)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T> any(@NotNull List<? extends Promise<? extends T>> promises) {
+		int size = promises.size();
+		if (size == 0) return any();
+		if (size == 1) return (Promise<T>) promises.get(0);
+		if (size == 2) return ((Promise<T>) promises.get(0)).either(promises.get(1));
+		return any(isResult(), promises.iterator());
 	}
 
 	/**
@@ -386,179 +373,145 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T> any(@NotNull Stream<? extends Promise<? extends T>> promises) {
-		return any(promises.iterator());
+		return any(isResult(), promises.iterator());
 	}
 
-	/**
-	 * @see #any(Iterator)
-	 */
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T> any(@NotNull Iterable<? extends Promise<? extends T>> promises) {
-		return any(promises.iterator());
-	}
-
-	/**
-	 * @see #any(Iterator)
-	 */
-	@SuppressWarnings("unchecked")
-	@Contract(pure = true)
-	@NotNull
-	public static <T> Promise<T> any(@NotNull List<? extends Promise<? extends T>> promises) {
-		int size = promises.size();
-		if (size == 1) return (Promise<T>) promises.get(0);
-		if (size == 2) return ((Promise<T>) promises.get(0)).either(promises.get(1));
-		return any(promises.iterator());
+		return any(isResult(), promises.iterator());
 	}
 
 	@NotNull
 	public static <T> Promise<T> any(@NotNull Iterator<? extends Promise<? extends T>> promises) {
-		return any(promises, $ -> {});
+		return any(isResult(), promises);
+	}
+
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T> promise1) {
+		return any(predicate, asIterator(promise1));
+	}
+
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
+		return any(predicate, asIterator(promise1, promise2));
+	}
+
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T>... promises) {
+		return any(predicate, asIterator(promises));
+	}
+
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Stream<? extends Promise<? extends T>> promises) {
+		return any(predicate, promises.iterator());
+	}
+
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Iterable<? extends Promise<? extends T>> promises) {
+		return any(predicate, promises.iterator());
 	}
 
 	@NotNull
-	public static <T> Promise<T> any(@NotNull Stream<? extends Promise<? extends T>> promises, @NotNull Consumer<T> cleanup) {
-		return any(promises.iterator(), cleanup);
-	}
-
-	@NotNull
-	public static <T> Promise<T> any(@NotNull Iterable<? extends Promise<? extends T>> promises, @NotNull Consumer<T> cleanup) {
-		return any(promises.iterator(), cleanup);
-	}
-
-	/**
-	 * Returns one of the first completed {@code Promise}s. Since it's
-	 * async, we can't really get the FIRST completed {@code Promise}.
-	 *
-	 * @return one of the first completed {@code Promise}s
-	 */
-	@NotNull
-	public static <T> Promise<T> any(@NotNull Iterator<? extends Promise<? extends T>> promises, @NotNull Consumer<T> cleanup) {
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Iterator<? extends Promise<? extends T>> promises) {
 		if (!promises.hasNext()) return any();
-		@NotNull PromiseAny<T> resultPromise = new PromiseAny<>();
+		PromiseAny<T> resultPromise = new PromiseAny<>(predicate);
 		while (promises.hasNext()) {
 			Promise<? extends T> promise = promises.next();
-			if (promise.isResult()) return Promise.of(promise.getResult());
-			if (promise.isException()) continue;
-			resultPromise.errors++;
-			promise.whenComplete((result, e) -> {
-				if (e == null) {
-					if (resultPromise.isComplete()) {
-						cleanup.accept(result);
-					} else {
-						resultPromise.complete(result);
-					}
-				} else {
-					if (--resultPromise.errors == 0) {
-						resultPromise.completeExceptionally(e);
-					}
-				}
-			});
-		}
-		resultPromise.errors--;
-		return resultPromise.errors != 0 ? resultPromise : any();
-	}
-
-	/**
-	 * Returns a {@link CompleteExceptionallyPromise} with {@link StacklessException},
-	 * since this method doesn't accept any {@code Promise}s
-	 *
-	 * @see #some(Iterator, int)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static Promise<?> some(int number) {
-		if (number == 0) return Promise.of(emptyList());
-
-		return Promise.ofException(new StacklessException(Promises.class,
-				"There are no promises to be complete"));
-	}
-
-	@SuppressWarnings("unchecked")
-	@Contract(pure = true)
-	@NotNull
-	public static <T> Promise<List<T>> some(@NotNull Promise<? extends T> promise, int number) {
-		if (number == 0) return (Promise<List<T>>) some(number);
-		if (number > 1) return Promise.ofException(new StacklessException(Promises.class,
-				"There are not enough promises to be complete"));
-
-		return promise.map(Collections::singletonList);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Contract(pure = true)
-	@NotNull
-	public static <T> Promise<List<T>> some(@NotNull Promise<? extends T> promise1,
-			@NotNull Promise<? extends T> promise2,
-			int number) {
-		if (number == 0) return (Promise<List<T>>) some(number);
-		if (number == 1) return any(promise1, promise2).map(Collections::singletonList);
-
-		return some(asIterator(promise1, promise2), number);
-	}
-
-	@Contract(pure = true)
-	@NotNull
-	public static <T> Promise<List<T>> some(@NotNull List<? extends Promise<? extends T>> promises, int number) {
-		return some(promises.iterator(), number);
-	}
-
-	@Contract(pure = true)
-	@NotNull
-	public static <T> Promise<List<T>> some(@NotNull Stream<? extends Promise<? extends T>> promises, int number) {
-		return some(promises.iterator(), number);
-	}
-
-	@Contract(pure = true)
-	@NotNull
-	public static <T> Promise<List<T>> some(@NotNull Iterable<? extends Promise<? extends T>> promises, int number) {
-		return some(promises.iterator(), number);
-	}
-
-	/**
-	 * Returns {@see Promise} which will have the array of first complete {@see Promise},
-	 * the size of array will be the {@param number} if there will be passed the appropriate
-	 * amount of {@param promises}. In case the lower amount {@param promises} then {@param number} of
-	 * the return array will consist of the same {@param promises} which will be complete.
-	 * <p>
-	 * Provided the number is less or equal '0', the result will be the {@see Promise}
-	 * and result of it is {@see CompleteExceptionallyPromise}
-	 * <p>
-	 * The result in the same order isn`t guaranteed
-	 *
-	 * @param number - amount first complete {@see Promise}
-	 * @return {@see Promise} which has the array of values from completed {@param promises}
-	 */
-	@SuppressWarnings("unchecked")
-	@Contract(pure = true)
-	@NotNull
-	public static <T> Promise<List<T>> some(@NotNull Iterator<? extends Promise<? extends T>> promises, int number) {
-		if (number == 0 || !promises.hasNext()) return (Promise<List<T>>) some(number);
-
-		PromiseSome<T> some = new PromiseSome<>(number);
-		while (promises.hasNext()) {
-			Promise<? extends T> promise = promises.next();
-			if (some.isComplete()) break;
-			if (promise.isResult()) {
-				some.resultList.add(promise.getResult());
-				if (some.isFull()) {
-					return Promise.of(some.resultList);
+			if (promise.isComplete()) {
+				if (predicate.test(promise.getResult(), promise.getException())) {
+					return Promise.of(promise.getResult());
 				}
 				continue;
 			}
-			if (promise.isException()) {
-				continue;
-			}
-			some.activePromises++;
-			promise.whenComplete(some);
+			resultPromise.countdown++;
+			promise.whenComplete(resultPromise);
 		}
-		some.activePromises--;
+		resultPromise.countdown--;
+		return resultPromise.countdown == 0 ? any() : resultPromise;
+	}
 
-		if (some.notEnoughForTheResult()) {
-			return Promise.ofException(new StacklessException(Promises.class, "There are not enough promises to be complete"));
+	/**
+	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
+	 */
+	@SuppressWarnings("unused")
+	@Contract(pure = true)
+	@NotNull
+	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher) {
+		return Promise.of(finisher.apply(accumulator));
+	}
+
+	/**
+	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
+			@NotNull Promise<? extends T> promise1) {
+		return promise1.map(v -> {
+			consumer.accept(accumulator, v);
+			return finisher.apply(accumulator);
+		});
+	}
+
+	/**
+	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
+			@NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
+		Consumer<T> consumer2 = v -> consumer.accept(accumulator, v);
+		return promise1.whenResult(consumer2).both(promise2.whenResult(consumer2)).map($ -> finisher.apply(accumulator));
+	}
+
+	/**
+	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
+			@NotNull Promise<? extends T>... promises) {
+		return reduce(accumulator, consumer, finisher, asIterator(promises));
+	}
+
+	/**
+	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
+			@NotNull Stream<? extends Promise<? extends T>> promises) {
+		return reduce(accumulator, consumer, finisher, promises.iterator());
+	}
+
+	/**
+	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
+			@NotNull Iterable<? extends Promise<? extends T>> promises) {
+		return reduce(accumulator, consumer, finisher, promises.iterator());
+	}
+
+	/**
+	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
+			@NotNull Iterator<? extends Promise<? extends T>> promises) {
+		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
+		while (promises.hasNext()) {
+			asyncAccumulator.addPromise((Promise<T>) promises.next(), consumer);
 		}
-
-		return some;
+		return asyncAccumulator.run().map(finisher);
 	}
 
 	/**
@@ -593,11 +546,23 @@ public final class Promises {
 	/**
 	 * @see Promises#toList(List)
 	 */
-	@SafeVarargs
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<List<T>> toList(@NotNull Promise<? extends T>... promises) {
-		return toList(asList(promises));
+		return toList(asIterator(promises));
+	}
+
+	/**
+	 * Reduces list of {@code Promise}s into Promise&lt;List&gt;.
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<List<T>> toList(@NotNull List<? extends Promise<? extends T>> promises) {
+		int size = promises.size();
+		if (size == 0) return Promise.of(Collections.emptyList());
+		if (size == 1) return promises.get(0).map(Collections::singletonList);
+		if (size == 2) return promises.get(0).combine(promises.get(1), Arrays::asList);
+		return toListImpl(promises.iterator(), promises.size());
 	}
 
 	/**
@@ -606,49 +571,46 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<List<T>> toList(@NotNull Stream<? extends Promise<? extends T>> promises) {
-		List<Promise<? extends T>> list = promises.collect(Collectors.toList());
-		return toList(list);
+		return toList(promises.iterator());
 	}
 
 	/**
-	 * Reduces list of {@code Promise}s into Promise&lt;List&gt;.
+	 * @see Promises#toList(List)
 	 */
 	@Contract(pure = true)
 	@NotNull
-	@SuppressWarnings("unchecked")
-	public static <T> Promise<List<T>> toList(@NotNull List<? extends Promise<? extends T>> promises) {
-		int size = promises.size();
-		if (size == 0) return Promise.of(Collections.emptyList());
-		if (size == 1) return promises.get(0).map(Collections::singletonList);
-		if (size == 2) return promises.get(0).combine(promises.get(1), Arrays::asList);
+	public static <T> Promise<List<T>> toList(@NotNull Iterable<? extends Promise<? extends T>> promises) {
+		return toList(promises.iterator());
+	}
 
-		@SuppressWarnings("unchecked") PromiseToList<T> resultPromise = new PromiseToList<>((T[]) new Object[size]);
+	/**
+	 * @see Promises#toList(List)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<List<T>> toList(@NotNull Iterator<? extends Promise<? extends T>> promises) {
+		return toListImpl(promises, 10);
+	}
 
-		for (int i = 0; i < size; i++) {
-			Promise<? extends T> promise = promises.get(i);
-			if (promise.isResult()) {
-				resultPromise.accumulator[i] = promise.getResult();
-				continue;
-			}
-			if (promise.isException()) return Promise.ofException(promise.getException());
-			int index = i;
-			resultPromise.countdown++;
-			promise.whenComplete((result, e) -> {
-				if (e == null) {
-					resultPromise.processComplete(result, index);
-				} else {
-					resultPromise.tryCompleteExceptionally(e);
-				}
-			});
+	/**
+	 * @see Promises#toList(List)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	private static <T> Promise<List<T>> toListImpl(@NotNull Iterator<? extends Promise<? extends T>> promises, int initialSize) {
+		PromisesToList<T> resultPromise = new PromisesToList<>(initialSize);
+
+		for (int i = 0; promises.hasNext() && !resultPromise.isComplete(); i++) {
+			resultPromise.addToList(i, promises.next());
 		}
-		return resultPromise.countdown != 0 ? resultPromise : Promise.of(((List<T>) asList(resultPromise.accumulator)));
+
+		return resultPromise.countdown == 0 ? Promise.of(resultPromise.getList()) : resultPromise;
 	}
 
 	/**
 	 * Returns an array of provided {@code type} and length 0
 	 * wrapped in {@code Promise}.
 	 */
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T[]> toArray(@NotNull Class<T> type) {
@@ -658,7 +620,6 @@ public final class Promises {
 	/**
 	 * Returns an array with {@code promise1} result.
 	 */
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T> promise1) {
@@ -672,7 +633,6 @@ public final class Promises {
 	/**
 	 * Returns an array with {@code promise1} and {@code promise2} results.
 	 */
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
@@ -687,21 +647,10 @@ public final class Promises {
 	/**
 	 * @see Promises#toArray(Class, List)
 	 */
-	@SafeVarargs
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T>... promises) {
-		return toArray(type, asList(promises));
-	}
-
-	/**
-	 * @see Promises#toArray(Class, List)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Stream<? extends Promise<? extends T>> promises) {
-		List<Promise<? extends T>> list = promises.collect(Collectors.toList());
-		return toArray(type, list);
+		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
 	}
 
 	/**
@@ -714,27 +663,34 @@ public final class Promises {
 		if (size == 0) return toArray(type);
 		if (size == 1) return toArray(type, promises.get(0));
 		if (size == 2) return toArray(type, promises.get(0), promises.get(1));
+		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
+	}
 
-		@SuppressWarnings("unchecked") PromiseToArray<T> resultPromise = new PromiseToArray<>((T[]) Array.newInstance(type, size));
+	/**
+	 * @see Promises#toArray(Class, List)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Stream<? extends Promise<? extends T>> promises) {
+		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
+	}
 
-		for (int i = 0; i < size; i++) {
-			Promise<? extends T> promise = promises.get(i);
-			if (promise.isResult()) {
-				resultPromise.accumulator[i] = promise.getResult();
-				continue;
-			}
-			if (promise.isException()) return Promise.ofException(promise.getException());
-			int index = i;
-			resultPromise.countdown++;
-			promise.whenComplete((result, e) -> {
-				if (e == null) {
-					resultPromise.processComplete(result, index);
-				} else {
-					resultPromise.tryCompleteExceptionally(e);
-				}
-			});
-		}
-		return resultPromise.countdown != 0 ? resultPromise : Promise.of(resultPromise.accumulator);
+	/**
+	 * @see Promises#toArray(Class, List)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Iterable<? extends Promise<? extends T>> promises) {
+		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
+	}
+
+	/**
+	 * @see Promises#toArray(Class, List)
+	 */
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Iterator<? extends Promise<? extends T>> promises) {
+		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
 	}
 
 	@Contract(pure = true)
@@ -751,7 +707,6 @@ public final class Promises {
 		return promise1.combine(promise2, constructor::create);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2, T3, R> Promise<R> toTuple(@NotNull TupleConstructor3<T1, T2, T3, R> constructor,
@@ -762,7 +717,6 @@ public final class Promises {
 				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2)));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2, T3, T4, R> Promise<R> toTuple(@NotNull TupleConstructor4<T1, T2, T3, T4, R> constructor,
@@ -774,7 +728,6 @@ public final class Promises {
 				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3)));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2, T3, T4, T5, R> Promise<R> toTuple(@NotNull TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
@@ -787,7 +740,6 @@ public final class Promises {
 				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4)));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2, T3, T4, T5, T6, R> Promise<R> toTuple(@NotNull TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
@@ -814,7 +766,6 @@ public final class Promises {
 		return promise1.combine(promise2, Tuple2::new);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2, T3> Promise<Tuple3<T1, T2, T3>> toTuple(
@@ -825,7 +776,6 @@ public final class Promises {
 				.map(list -> new Tuple3<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2)));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2, T3, T4> Promise<Tuple4<T1, T2, T3, T4>> toTuple(
@@ -837,7 +787,6 @@ public final class Promises {
 				.map(list -> new Tuple4<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3)));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2, T3, T4, T5> Promise<Tuple5<T1, T2, T3, T4, T5>> toTuple(
@@ -850,7 +799,6 @@ public final class Promises {
 				.map(list -> new Tuple5<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4)));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
 	@NotNull
 	public static <T1, T2, T3, T4, T5, T6> Promise<Tuple6<T1, T2, T3, T4, T5, T6>> toTuple(
@@ -972,7 +920,6 @@ public final class Promises {
 	 * @see Promises#sequence(Iterator)
 	 */
 	@NotNull
-	@SafeVarargs
 	public static Promise<Void> sequence(@NotNull AsyncSupplier<Void>... promises) {
 		return sequence(asList(promises));
 	}
@@ -990,7 +937,7 @@ public final class Promises {
 	 */
 	@NotNull
 	public static Promise<Void> sequence(@NotNull Stream<? extends AsyncSupplier<Void>> promises) {
-		return sequence(asPromises(promises.iterator()));
+		return sequence(asPromises(promises));
 	}
 
 	/**
@@ -1028,43 +975,41 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
-	@SafeVarargs
-	public static <T> Promise<T> firstSuccessful(AsyncSupplier<? extends T>... promises) {
-		return first(isResult(), promises);
+	public static <T> Promise<T> first(AsyncSupplier<? extends T>... promises) {
+		return first(Promises.isResult(), promises);
 	}
 
 	/**
-	 * @see #firstSuccessful(AsyncSupplier[])
+	 * @see #first(AsyncSupplier[])
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
-	public static <T> Promise<T> firstSuccessful(@NotNull Iterable<? extends AsyncSupplier<? extends T>> promises) {
-		return first(isResult(), promises);
+	public static <T> Promise<T> first(@NotNull Iterable<? extends AsyncSupplier<? extends T>> promises) {
+		return first(Promises.isResult(), promises);
 	}
 
 	/**
-	 * @see #firstSuccessful(AsyncSupplier[])
+	 * @see #first(AsyncSupplier[])
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
-	public static <T> Promise<T> firstSuccessful(@NotNull Stream<? extends AsyncSupplier<? extends T>> promises) {
-		return first(isResult(), promises);
+	public static <T> Promise<T> first(@NotNull Stream<? extends AsyncSupplier<? extends T>> promises) {
+		return first(Promises.isResult(), promises);
 	}
 
 	/**
-	 * @see #firstSuccessful(AsyncSupplier[])
+	 * @see #first(AsyncSupplier[])
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
-	public static <T> Promise<T> firstSuccessful(@NotNull Iterator<? extends Promise<? extends T>> promises) {
-		return first(isResult(), promises);
+	public static <T> Promise<T> first(@NotNull Iterator<? extends Promise<? extends T>> promises) {
+		return first(Promises.isResult(), promises);
 	}
 
 	/**
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
-	@SafeVarargs
 	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Throwable> predicate,
 			@NotNull AsyncSupplier<? extends T>... promises) {
 		return first(predicate, asList(promises));
@@ -1122,27 +1067,38 @@ public final class Promises {
 			});
 			return;
 		}
-		cb.setException(new StacklessException(Promises.class, "No promise result met the condition"));
+		cb.setException(NOT_ENOUGH_PROMISES_EXCEPTION);
 	}
 
 	/**
 	 * Returns a {@link BiPredicate} which checks if
 	 * {@code Promise} wasn't completed exceptionally.
 	 */
-	@Contract(value = " -> new", pure = true)
 	@NotNull
 	public static <T> BiPredicate<T, Throwable> isResult() {
 		return ($, e) -> e == null;
+	}
+
+	public static <T> BiPredicate<T, Throwable> isResult(Predicate<T> predicate) {
+		return (v, e) -> e == null && predicate.test(v);
+	}
+
+	public static <T> BiPredicate<T, Throwable> isErrorOrResult(Predicate<T> predicate) {
+		return (v, e) -> e != null || predicate.test(v);
 	}
 
 	/**
 	 * Returns a {@link BiPredicate} which checks if
 	 * {@code Promise} was completed with an exception.
 	 */
-	@Contract(value = " -> new", pure = true)
 	@NotNull
 	public static <T> BiPredicate<T, Throwable> isError() {
 		return ($, e) -> e != null;
+	}
+
+	@NotNull
+	public static <T> BiPredicate<T, Throwable> isError(Predicate<Throwable> predicate) {
+		return ($, e) -> e != null && predicate.test(e);
 	}
 
 	/**
@@ -1191,7 +1147,6 @@ public final class Promises {
 	 * with an exception. In both situations returned {@code Promise}
 	 * is a marker of completion of the loop.
 	 */
-
 	public static <T> Promise<T> loop(@Nullable T seed, @NotNull Predicate<T> loopCondition, @NotNull Function<T, Promise<T>> next) {
 		if (!loopCondition.test(seed)) return Promise.of(seed);
 		return until(seed, next, v -> !loopCondition.test(v));
@@ -1229,34 +1184,11 @@ public final class Promises {
 	}
 
 	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier) {
-		return retry(asyncSupplier, (v, e) -> e == null);
+		return retry(isResult(), asyncSupplier);
 	}
 
-	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, BiPredicate<T, Throwable> breakCondition) {
-		return Promise.ofCallback(cb -> retryImpl(asyncSupplier, breakCondition, cb));
-	}
-
-	static <T> void retryImpl(AsyncSupplier<T> next, BiPredicate<T, Throwable> breakCondition, SettablePromise<T> cb) {
-		while (true) {
-			Promise<T> promise = next.get();
-			if (promise.isComplete()) {
-				T v = promise.getResult();
-				Throwable e = promise.getException();
-				if (breakCondition.test(v, e)) {
-					cb.accept(v, e);
-					return;
-				}
-				continue;
-			}
-			promise.whenComplete((v, e) -> {
-				if (breakCondition.test(v, e)) {
-					cb.accept(v, e);
-				} else {
-					retryImpl(next, breakCondition, cb);
-				}
-			});
-			break;
-		}
+	public static <T> Promise<T> retry(BiPredicate<T, Throwable> breakCondition, AsyncSupplier<T> asyncSupplier) {
+		return first(breakCondition, Stream.generate(() -> asyncSupplier));
 	}
 
 	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, @NotNull RetryPolicy<?> retryPolicy) {
@@ -1264,7 +1196,6 @@ public final class Promises {
 	}
 
 	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, BiPredicate<T, Throwable> breakCondition, @NotNull RetryPolicy<?> retryPolicy) {
-		//noinspection unchecked
 		return Promise.ofCallback(cb ->
 				retryImpl(asyncSupplier, breakCondition, (RetryPolicy<Object>) retryPolicy, null, cb));
 	}
@@ -1295,7 +1226,6 @@ public final class Promises {
 	 * Transforms a collection of {@link AsyncSupplier}
 	 * {@code tasks} to a collection of {@code Promise}s.
 	 */
-	@SuppressWarnings("unchecked")
 	@NotNull
 	public static <T> Iterator<Promise<T>> asPromises(@NotNull Iterator<? extends AsyncSupplier<? extends T>> tasks) {
 		return transformIterator((Iterator<AsyncSupplier<T>>) tasks, AsyncSupplier::get);
@@ -1321,9 +1251,8 @@ public final class Promises {
 	 * Transforms an {@link AsyncSupplier} {@code tasks}
 	 * to a collection of {@code Promise}s.
 	 */
-	@SafeVarargs
 	public static <T> Iterator<Promise<T>> asPromises(@NotNull AsyncSupplier<? extends T>... tasks) {
-		return asPromises(asList(tasks));
+		return asPromises(asIterator(tasks));
 	}
 
 	/**
@@ -1346,48 +1275,59 @@ public final class Promises {
 	 */
 	public static <T, A, R> Promise<R> reduce(@NotNull Collector<T, A, R> collector, int maxCalls,
 			@NotNull Iterator<Promise<T>> promises) {
-		return reduce(promises, maxCalls, collector.supplier().get(), collector.accumulator(), collector.finisher());
+		return reduce(collector.supplier().get(), collector.accumulator(), collector.finisher(), maxCalls, promises);
 	}
 
 	/**
-	 * @param promises    {@code Iterable} of {@code Promise}s
+	 * @param <T>         type of input elements for this operation
+	 * @param <A>         mutable accumulation type of the operation
+	 * @param <R>         result type of the reduction operation
 	 * @param accumulator supplier of the result
-	 * @param maxCalls    max amount of concurrently running {@code Promise}s
 	 * @param consumer    a {@link BiConsumer} which folds a result of each of the
 	 *                    completed {@code promises} into accumulator
 	 * @param finisher    a {@link Function} which performs the final transformation
 	 *                    from the intermediate accumulations
-	 * @param <T>         type of input elements for this operation
-	 * @param <A>         mutable accumulation type of the operation
-	 * @param <R>         result type of the reduction operation
+	 * @param maxCalls    max amount of concurrently running {@code Promise}s
+	 * @param promises    {@code Iterable} of {@code Promise}s
 	 * @return a {@code Promise} which wraps the accumulated result of the
 	 * reduction. If one of the {@code promises} completed exceptionally, a {@code Promise}
 	 * with an exception will be returned.
-	 * @see #reduce(Collector, int, Iterator)
+	 * @see Promises#reduce(Collector, int, Iterator)
 	 */
-	public static <T, A, R> Promise<R> reduce(@NotNull Iterator<Promise<T>> promises, int maxCalls,
-			A accumulator,
-			@NotNull BiConsumer<A, T> consumer,
-			@NotNull Function<A, R> finisher) {
+	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumer<A, T> consumer, @NotNull Function<A, R> finisher, int maxCalls, @NotNull Iterator<Promise<T>> promises) {
 		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
 		for (int i = 0; promises.hasNext() && i < maxCalls; i++) {
-			reduceImpl(asyncAccumulator, promises, consumer);
+			reduceImpl(asyncAccumulator, consumer, promises);
 		}
 		return asyncAccumulator.run().map(finisher);
 	}
 
-	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, Iterator<Promise<T>> promises, BiConsumer<A, T> consumer) {
+	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, BiConsumer<A, T> consumer, Iterator<Promise<T>> promises) {
 		while (promises.hasNext()) {
 			Promise<T> promise = promises.next();
 			if (promise.isComplete()) {
 				asyncAccumulator.addPromise(promise, consumer);
 			} else {
 				asyncAccumulator.addPromise(
-						promise.whenResult(() -> reduceImpl(asyncAccumulator, promises, consumer)),
+						promise.whenResult(() -> reduceImpl(asyncAccumulator, consumer, promises)),
 						consumer);
 				break;
 			}
 		}
+	}
+
+	@Contract(pure = true)
+	@NotNull
+	public static <T, A, R> Function<T, Promise<R>> coalesce(@NotNull Supplier<A> argumentAccumulatorSupplier, @NotNull BiConsumer<A, T> argumentAccumulatorFn,
+			@NotNull Function<A, Promise<R>> fn) {
+		AsyncBuffer<A, R> buffer = new AsyncBuffer<>(fn, argumentAccumulatorSupplier);
+		return v -> {
+			Promise<R> promise = buffer.add(argumentAccumulatorFn, v);
+			if (!buffer.isActive()) {
+				repeat(() -> buffer.flush().map($ -> buffer.isBuffered()));
+			}
+			return promise;
+		};
 	}
 
 	// region helper classes
@@ -1411,43 +1351,19 @@ public final class Promises {
 		}
 	}
 
-	private static final class PromiseAllSettled<T> extends NextPromise<T, Void> {
-		int countdown;
-		@Nullable Throwable lastException;
-
-		@Override
-		public String describe() {
-			return "PromiseAllSettled{" +
-					"countdown=" + countdown +
-					", lastException=" + lastException +
-					'}';
-		}
-
-		@Override
-		public void accept(T result, @Nullable Throwable e) {
-			if (e != null) {
-				lastException = e;
-			}
-			if (--countdown == 0) {
-				if (lastException == null) {
-					complete(null);
-				} else {
-					completeExceptionally(lastException);
-				}
-			}
-		}
-	}
-
 	private static final class PromiseAny<T> extends NextPromise<T, T> {
-		int errors = 1;
+		private final BiPredicate<? super T, ? super Throwable> predicate;
+		int countdown = 1;
+
+		private PromiseAny(BiPredicate<? super T, ? super Throwable> predicate) {this.predicate = predicate;}
 
 		@Override
 		public void accept(@Nullable T result, @Nullable Throwable e) {
-			if (e == null) {
-				tryComplete(result);
+			if (predicate.test(result, e)) {
+				tryComplete(result, e);
 			} else {
-				if (--errors == 0) {
-					completeExceptionally(e);
+				if (--countdown == 0) {
+					completeExceptionally(NOT_ENOUGH_PROMISES_EXCEPTION);
 				}
 			}
 		}
@@ -1458,107 +1374,52 @@ public final class Promises {
 		}
 	}
 
-	private static final class PromiseSome<T> extends NextPromise<T, List<T>> {
-		final List<T> resultList;
-		final int expectedSize;
-		int activePromises = 1;
-
-		PromiseSome(int expectedSize) {
-			this.expectedSize = expectedSize;
-			this.resultList = new ArrayList<>(expectedSize);
-		}
-
-		@Override
-		public void accept(@Nullable T result, @Nullable Throwable e) {
-			activePromises--;
-			if (isComplete()) {
-				return;
-			}
-			if (e == null) {
-				resultList.add(result);
-				if (isFull()) {
-					complete(resultList);
-				}
-			} else {
-				if (notEnoughForTheResult()) {
-					completeExceptionally(new StacklessException(Promises.class, "There are not enough promises to be complete"));
-				}
-			}
-		}
-
-		@Override
-		protected String describe() {
-			return "Promises.some(" + expectedSize + ")";
-		}
-
-		boolean isFull() {
-			return resultList.size() == expectedSize;
-		}
-
-		boolean notEnoughForTheResult() {
-			return activePromises + resultList.size() < expectedSize;
-		}
-	}
-
-	private static final class PromiseToArray<T> extends NextPromise<T, T[]> {
-		final T[] accumulator;
+	private static final class PromisesToList<T> extends AbstractPromise<List<T>> {
+		Object[] array;
 		int countdown;
+		int size;
 
-		private PromiseToArray(@NotNull T[] accumulator) {
-			this.accumulator = accumulator;
+		private PromisesToList(int initialSize) {
+			this.array = new Object[initialSize];
+		}
+
+		private void addToList(int i, Promise<? extends T> promise) {
+			ensureSize(i + 1);
+			if (promise.isResult()) {
+				array[i] = promise.getResult();
+			} else if (promise.isException()) {
+				tryCompleteExceptionally(promise.getException());
+			} else {
+				countdown++;
+				promise.whenComplete((result, e) -> {
+					if (e == null) {
+						processComplete(result, i);
+					} else {
+						tryCompleteExceptionally(e);
+					}
+				});
+			}
+		}
+
+		private void ensureSize(int size) {
+			this.size = size;
+			if (size >= array.length) {
+				array = Arrays.copyOf(array, array.length * 2);
+			}
 		}
 
 		void processComplete(@Nullable T result, int i) {
 			if (isComplete()) {
 				return;
 			}
-			accumulator[i] = result;
+			array[i] = result;
 			if (--countdown == 0) {
-				complete(this.accumulator);
+				complete(getList());
 			}
 		}
 
-		@Override
-		public void accept(@Nullable T result, @Nullable Throwable e) {
-			if (e == null) {
-				processComplete(result, 0);
-			} else {
-				tryCompleteExceptionally(e);
-			}
-		}
-
-		@Override
-		protected String describe() {
-			return "Promises.toArray()";
-		}
-	}
-
-	private static final class PromiseToList<T> extends NextPromise<T, List<T>> {
-		final Object[] accumulator;
-		int countdown;
-
-		private PromiseToList(@NotNull T[] accumulator) {
-			this.accumulator = accumulator;
-		}
-
-		@SuppressWarnings("unchecked")
-		void processComplete(@Nullable T result, int i) {
-			if (isComplete()) {
-				return;
-			}
-			accumulator[i] = result;
-			if (--countdown == 0) {
-				complete((List<T>) asList(this.accumulator));
-			}
-		}
-
-		@Override
-		public void accept(@Nullable T result, @Nullable Throwable e) {
-			if (e == null) {
-				processComplete(result, 0);
-			} else {
-				tryCompleteExceptionally(e);
-			}
+		private List<T> getList() {
+			return (List<T>) asList(size == this.array.length ? this.array : Arrays.copyOf(this.array, size));
 		}
 
 		@Override
@@ -1568,19 +1429,5 @@ public final class Promises {
 	}
 
 	// endregion
-
-	@Contract(pure = true)
-	@NotNull
-	public static <T, A, R> Function<T, Promise<R>> coalesce(@NotNull Supplier<A> argumentAccumulatorSupplier, @NotNull BiConsumer<A, T> argumentAccumulatorFn,
-			@NotNull Function<A, Promise<R>> fn) {
-		AsyncBuffer<A, R> buffer = new AsyncBuffer<>(fn, argumentAccumulatorSupplier);
-		return v -> {
-			Promise<R> promise = buffer.add(argumentAccumulatorFn, v);
-			if (!buffer.isActive()) {
-				repeat(() -> buffer.flush().map($ -> buffer.isBuffered()));
-			}
-			return promise;
-		};
-	}
 
 }
