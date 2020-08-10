@@ -21,20 +21,16 @@ import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
-import io.activej.dataflow.inject.CodecsModule;
 import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.node.Node;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.inject.Injector;
-import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
@@ -42,14 +38,10 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.inject.module.Modules.combine;
-import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 import static java.util.stream.Collectors.toList;
 
@@ -71,7 +63,7 @@ public abstract class DataflowClientLauncher extends Launcher {
 
 	@Provides
 	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) {
-		return new DataflowClient(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers);
+		return DataflowClient.create(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers);
 	}
 
 	@Provides

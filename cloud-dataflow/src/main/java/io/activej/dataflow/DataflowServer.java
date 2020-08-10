@@ -36,6 +36,7 @@ import io.activej.dataflow.node.Node;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
+import io.activej.eventloop.net.SocketSettings;
 import io.activej.inject.ResourceLocator;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -62,6 +63,9 @@ import static java.util.stream.Collectors.toMap;
 public final class DataflowServer extends AbstractServer<DataflowServer> {
 	private static final int MAX_LAST_RAN_TASKS = ApplicationSettings.getInt(DataflowServer.class, "maxLastRanTasks", 1000);
 
+	public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofMinutes(1);
+	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault().withImplIdleTimeout(DEFAULT_IDLE_TIMEOUT);
+
 	private final Map<StreamId, ChannelQueue<ByteBuf>> pendingStreams = new HashMap<>();
 	private final Map<Class, BiConsumer<Messaging<DataflowCommand, DataflowResponse>, ?>> handlers = new HashMap<>();
 
@@ -78,11 +82,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 
 	private int succeededTasks = 0, canceledTasks = 0, failedTasks = 0;
 
-	private <T> void handleCommand(Class<T> cls, BiConsumer<Messaging<DataflowCommand, DataflowResponse>, T> handler) {
-		handlers.put(cls, handler);
-	}
-
-	public DataflowServer(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
+	private DataflowServer(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
 		super(eventloop);
 		this.codec = codec;
 		this.serializers = serializers;
@@ -187,6 +187,15 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 							.collect(toMap(Node::getIndex, Node::getStats)), task.getGraphViz()))
 					.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
 		});
+	}
+
+	public static DataflowServer create(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
+		return new DataflowServer(eventloop, codec, serializers, environment)
+				.withSocketSettings(DEFAULT_SOCKET_SETTINGS);
+	}
+
+	private <T> void handleCommand(Class<T> cls, BiConsumer<Messaging<DataflowCommand, DataflowResponse>, T> handler) {
+		handlers.put(cls, handler);
 	}
 
 	private void sendResponse(Messaging<DataflowCommand, DataflowResponse> messaging, @Nullable Throwable throwable) {

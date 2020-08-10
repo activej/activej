@@ -477,12 +477,12 @@ public final class DataflowTest {
 
 					@Provides
 					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerModule.BinarySerializerLocator serializers, Injector environment) {
-						return new DataflowServer(eventloop, codec, serializers, environment);
+						return DataflowServer.create(eventloop, codec, serializers, environment);
 					}
 
 					@Provides
 					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerModule.BinarySerializerLocator serializers) {
-						return new DataflowClient(executor, secondaryPath, codec, serializers);
+						return DataflowClient.create(executor, secondaryPath, codec, serializers);
 					}
 
 					@Provides

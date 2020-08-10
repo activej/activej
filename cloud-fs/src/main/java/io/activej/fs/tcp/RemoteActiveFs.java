@@ -67,6 +67,8 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	public static final FsIOException INVALID_MESSAGE = new FsIOException(RemoteActiveFs.class, "Invalid or unexpected message received");
 	public static final FsIOException UNKNOWN_SERVER_ERROR = new FsIOException(RemoteActiveFs.class, "Unknown server error occurred");
+	public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofMinutes(1);
+	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault().withImplIdleTimeout(DEFAULT_IDLE_TIMEOUT);
 
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
 			nullTerminatedJson(RemoteFsResponses.CODEC, RemoteFsCommands.CODEC);
@@ -74,7 +76,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	private final Eventloop eventloop;
 	private final InetSocketAddress address;
 
-	private SocketSettings socketSettings = SocketSettings.createDefault();
+	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	//region JMX
 	private final PromiseStats connectPromise = PromiseStats.create(Duration.ofMinutes(5));

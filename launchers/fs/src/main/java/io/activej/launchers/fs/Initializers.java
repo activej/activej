@@ -19,6 +19,7 @@ package io.activej.launchers.fs;
 import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
+import io.activej.eventloop.net.SocketSettings;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.FsPartitions;
@@ -27,6 +28,7 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
 
+import java.time.Duration;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
@@ -59,7 +61,8 @@ public final class Initializers {
 			}
 			Map<String, Config> httpPartitions = config.getChild("partitions").getChild("http").getChildren();
 			for (Map.Entry<String, Config> connection : httpPartitions.entrySet()) {
-				AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop);
+				AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
+						.withSocketSettings(SocketSettings.createDefault().withImplIdleTimeout(Duration.ofMinutes(1)));
 				HttpActiveFs client = HttpActiveFs.create(connection.getValue().get(ofString(), THIS), httpClient);
 				fsPartitions.withPartition(connection.getKey(), client);
 			}

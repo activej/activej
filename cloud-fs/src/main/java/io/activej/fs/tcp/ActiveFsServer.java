@@ -20,6 +20,7 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
+import io.activej.eventloop.net.SocketSettings;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsIOException;
 import io.activej.fs.exception.scalar.FileNotFoundException;
@@ -51,6 +52,8 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private static final ByteBufsCodec<FsCommand, FsResponse> SERIALIZER =
 			nullTerminatedJson(RemoteFsCommands.CODEC, RemoteFsResponses.CODEC);
 
+	public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofMinutes(1);
+	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault().withImplIdleTimeout(DEFAULT_IDLE_TIMEOUT);
 	public static final FsIOException NO_HANDLER_FOR_MESSAGE = new FsIOException(ActiveFsServer.class, "No handler for received message type");
 
 	private final Map<Class<?>, MessagingHandler<FsCommand>> handlers = new HashMap<>();
@@ -79,7 +82,8 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	}
 
 	public static ActiveFsServer create(Eventloop eventloop, ActiveFs fs) {
-		return new ActiveFsServer(eventloop, fs);
+		return new ActiveFsServer(eventloop, fs)
+				.withSocketSettings(DEFAULT_SOCKET_SETTINGS);
 	}
 
 	public ActiveFs getFs() {

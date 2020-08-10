@@ -21,6 +21,7 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
+import io.activej.eventloop.net.SocketSettings;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
@@ -32,6 +33,7 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
+import java.time.Duration;
 import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.ofPath;
@@ -55,6 +57,7 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 	@Provides
 	ActiveFsServer activeFsServer(Eventloop eventloop, ActiveFs activeFs, Config config) {
 		return ActiveFsServer.create(eventloop, activeFs)
+				.withSocketSettings(SocketSettings.createDefault().withImplIdleTimeout(Duration.ofMinutes(1)))
 				.withInitializer(ofActiveFsServer(config.getChild("activefs")));
 	}
 

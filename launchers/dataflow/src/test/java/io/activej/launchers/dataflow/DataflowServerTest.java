@@ -344,7 +344,7 @@ public class DataflowServerTest {
 
 					@Provides
 					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) throws IOException {
-						return new DataflowClient(Executors.newSingleThreadExecutor(), temporaryFolder.newFolder().toPath(), codec, serializers);
+						return DataflowClient.create(Executors.newSingleThreadExecutor(), temporaryFolder.newFolder().toPath(), codec, serializers);
 					}
 
 					@Provides

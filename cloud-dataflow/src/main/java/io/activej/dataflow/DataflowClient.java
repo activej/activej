@@ -57,9 +57,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 public final class DataflowClient {
 	private static final Logger logger = getLogger(DataflowClient.class);
 
-	public static final Duration DEFAULT_DOWNLOAD_IDLE_TIMEOUT = Duration.ZERO;
+	public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofMinutes(1);
+	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault().withImplIdleTimeout(DEFAULT_IDLE_TIMEOUT);
 
-	private final SocketSettings socketSettings = SocketSettings.createDefault();
+	private final SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	private final Executor executor;
 	private final Path secondaryPath;
@@ -70,13 +71,17 @@ public final class DataflowClient {
 	private final AtomicInteger secondaryId = new AtomicInteger(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
 
 	private int bufferMinSize, bufferMaxSize;
-	private Duration downloadIdleTimeout = DEFAULT_DOWNLOAD_IDLE_TIMEOUT;
+	private Duration downloadIdleTimeout = DEFAULT_IDLE_TIMEOUT;
 
-	public DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) {
+	private DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) {
 		this.executor = executor;
 		this.secondaryPath = secondaryPath;
 		this.codec = codec;
 		this.serializers = serializers;
+	}
+
+	public static DataflowClient create(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) {
+		return new DataflowClient(executor, secondaryPath, codec, serializers);
 	}
 
 	public DataflowClient withBufferSizes(int bufferMinSize, int bufferMaxSize) {

@@ -299,7 +299,7 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
-						return new DataflowServer(eventloop, codec, locator, injector);
+						return DataflowServer.create(eventloop, codec, locator, injector);
 					}
 
 					@Provides
@@ -381,7 +381,7 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator locator) throws IOException {
-						return new DataflowClient(executor, Files.createTempDirectory("").toAbsolutePath(), codec, locator);
+						return DataflowClient.create(executor, Files.createTempDirectory("").toAbsolutePath(), codec, locator);
 					}
 
 					@Provides

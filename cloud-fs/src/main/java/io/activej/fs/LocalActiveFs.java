@@ -86,7 +86,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
-	public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ZERO;
+	public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofMinutes(1);
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
