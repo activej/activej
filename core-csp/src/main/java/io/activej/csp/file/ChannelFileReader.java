@@ -21,10 +21,13 @@ import io.activej.async.file.ExecutorAsyncFileService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
+import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.CloseException;
 import io.activej.csp.AbstractChannelSupplier;
+import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +37,13 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.nullify;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.nio.file.StandardOpenOption.READ;
 
 /**
@@ -46,9 +52,12 @@ import static java.nio.file.StandardOpenOption.READ;
 public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileReader.class);
 
-	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{READ};
-
+	public static final AsyncTimeoutException IDLE_TIMEOUT_EXCEPTION = new AsyncTimeoutException(ChannelFileReader.class,
+			"Reader was idle for too long");
+	public static final int NO_TIMEOUT = 0;
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(8);
+
+	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{READ};
 
 	private final AsyncFileService fileService;
 	private final FileChannel channel;
@@ -56,6 +65,10 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	private int bufferSize = DEFAULT_BUFFER_SIZE.toInt();
 	private long position = 0;
 	private long limit = Long.MAX_VALUE;
+	private int idleTimeout = NO_TIMEOUT;
+
+	@Nullable
+	private ScheduledRunnable scheduledIdleTimeout;
 
 	private ChannelFileReader(AsyncFileService fileService, FileChannel channel) {
 		this.fileService = fileService;
@@ -117,6 +130,14 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 		return this;
 	}
 
+	public ChannelFileReader withIdleTimeout(Duration idleTimeout) {
+		this.idleTimeout = Math.toIntExact(idleTimeout.toMillis());
+		if (this.idleTimeout != NO_TIMEOUT) {
+			scheduleIdleTimeout();
+		}
+		return this;
+	}
+
 	public long getPosition() {
 		return position;
 	}
@@ -127,6 +148,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 			close();
 			return Promise.of(null);
 		}
+		scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
 		ByteBuf buf = ByteBufPool.allocateExact((int) Math.min(bufferSize, limit));
 		return fileService.read(channel, position, buf.array(), buf.head(), buf.writeRemaining()) // reads are synchronized at least on asyncFile, so if produce() is called twice, position wont be broken (i hope)
 				.thenEx((bytesRead, e) -> {
@@ -146,6 +168,9 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 					if (limit != Long.MAX_VALUE) {
 						limit -= bytesRead; // bytesRead is always <= the limit (^ see the min call)
 					}
+					if (idleTimeout != NO_TIMEOUT) {
+						scheduleIdleTimeout();
+					}
 					return Promise.of(buf);
 				});
 	}
@@ -153,6 +178,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	@Override
 	protected void onClosed(@NotNull Throwable e) {
 		try {
+			scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
 			if (!channel.isOpen()) {
 				throw new CloseException(ChannelFileReader.class, "File has been closed");
 			}
@@ -162,6 +188,14 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 		} catch (IOException | CloseException e1) {
 			logger.error("{}: failed to close file", this, e1);
 		}
+	}
+
+	private void scheduleIdleTimeout() {
+		assert idleTimeout != NO_TIMEOUT;
+		scheduledIdleTimeout = eventloop.delayBackground(idleTimeout, wrapContext(this, () -> {
+			scheduledIdleTimeout = null;
+			closeEx(IDLE_TIMEOUT_EXCEPTION);
+		}));
 	}
 
 	@Override

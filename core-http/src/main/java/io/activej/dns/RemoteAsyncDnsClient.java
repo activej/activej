@@ -144,7 +144,12 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 			logger.trace("Incoming query, opening UDP socket");
 			DatagramChannel channel = Eventloop.createDatagramChannel(datagramSocketSettings, null, dnsServerAddress);
 			return AsyncUdpSocketNio.connect(eventloop, channel)
-					.map(s -> this.socket = s.withInspector(socketInspector));
+					.map(s -> {
+						if (datagramSocketSettings.hasImplIdleTimeout()) {
+							s = s.withIdleTimeout(datagramSocketSettings.getImplIdleTimeout());
+						}
+						return this.socket = s.withInspector(socketInspector);
+					});
 		} catch (IOException e) {
 			logger.error("UDP socket creation failed.", e);
 			return Promise.ofException(e);

@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.concurrent.Executor;
 
 import static java.nio.file.StandardOpenOption.*;
@@ -79,6 +80,12 @@ public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
 					}
 					return new ChannelFileBuffer(reader, writer, executor, path);
 				});
+	}
+
+	public ChannelFileBuffer withIdleTimeout(Duration idleTimeout) {
+		writer.withIdleTimeout(idleTimeout);
+		reader.withIdleTimeout(idleTimeout);
+		return this;
 	}
 
 	@Override

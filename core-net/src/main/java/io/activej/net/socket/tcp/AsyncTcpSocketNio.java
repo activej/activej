@@ -57,6 +57,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(AsyncTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
 
 	public static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(AsyncTcpSocketNio.class, "timed out");
+	public static final AsyncTimeoutException IDLE_TIMEOUT_EXCEPTION = new AsyncTimeoutException(AsyncTcpSocketNio.class, "Socket was idle for too long");
 	public static final int NO_TIMEOUT = 0;
 
 	private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
@@ -79,10 +80,13 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private SelectionKey key;
 	private byte ops;
 
+	private int idleTimeout = NO_TIMEOUT;
 	private int readTimeout = NO_TIMEOUT;
 	private int writeTimeout = NO_TIMEOUT;
 	private int readBufferSize = DEFAULT_READ_BUFFER_SIZE;
 
+	@Nullable
+	private ScheduledRunnable scheduledIdleTimeout;
 	@Nullable
 	private ScheduledRunnable scheduledReadTimeout;
 	@Nullable
@@ -92,6 +96,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
+		void onIdleTimeout();
+
 		void onReadTimeout();
 
 		void onRead(ByteBuf buf);
@@ -110,6 +116,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
 		public static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
+		private final EventStats idleTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final ValueStats reads = ValueStats.create(SMOOTHING_WINDOW).withUnit("bytes").withRate();
 		private final EventStats readEndOfStreams = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats readErrors = EventStats.create(SMOOTHING_WINDOW);
@@ -118,6 +125,11 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		private final EventStats writeErrors = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats writeTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats writeOverloaded = EventStats.create(SMOOTHING_WINDOW);
+
+		@Override
+		public void onIdleTimeout() {
+			idleTimeouts.recordEvent();
+		}
 
 		@Override
 		public void onReadTimeout() {
@@ -154,6 +166,11 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		@Override
 		public void onWriteError(IOException e) {
 			writeErrors.recordEvent();
+		}
+
+		@JmxAttribute
+		public EventStats getIdleTimeouts() {
+			return idleTimeouts;
 		}
 
 		@JmxAttribute
@@ -204,6 +221,10 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 			socketSettings.applySettings(socketChannel);
 		} catch (IOException ignored) {
 		}
+		if (socketSettings.hasImplIdleTimeout()) {
+			asyncTcpSocket.idleTimeout = (int) socketSettings.getImplIdleTimeoutMillis();
+			asyncTcpSocket.scheduleIdleTimeout();
+		}
 		if (socketSettings.hasImplReadTimeout()) {
 			asyncTcpSocket.readTimeout = (int) socketSettings.getImplReadTimeoutMillis();
 		}
@@ -246,6 +267,18 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	}
 
 	// timeouts management
+	private void scheduleIdleTimeout() {
+		assert idleTimeout != NO_TIMEOUT;
+		if (scheduledIdleTimeout != null) {
+			scheduledIdleTimeout.cancel();
+		}
+		scheduledIdleTimeout = eventloop.delayBackground(idleTimeout, wrapContext(this, () -> {
+			if (inspector != null) inspector.onIdleTimeout();
+			scheduledIdleTimeout = null;
+			closeEx(IDLE_TIMEOUT_EXCEPTION);
+		}));
+	}
+
 	private void scheduleReadTimeout() {
 		assert scheduledReadTimeout == null && readTimeout != NO_TIMEOUT;
 		scheduledReadTimeout = eventloop.delayBackground(readTimeout, wrapContext(this, () -> {
@@ -288,10 +321,14 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	public Promise<ByteBuf> read() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
 		read = null;
 		if (readBuf != null || readEndOfStream) {
 			ByteBuf readBuf = this.readBuf;
 			this.readBuf = null;
+			if (idleTimeout != NO_TIMEOUT) {
+				scheduleIdleTimeout();
+			}
 			return Promise.of(readBuf);
 		}
 		SettablePromise<ByteBuf> read = new SettablePromise<>();
@@ -319,6 +356,9 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 			ByteBuf readBuf = this.readBuf;
 			this.read = null;
 			this.readBuf = null;
+			if (idleTimeout != NO_TIMEOUT) {
+				scheduleIdleTimeout();
+			}
 			read.set(readBuf);
 		}
 		if (isClosed()) return;
@@ -382,11 +422,15 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 			if (buf != null) buf.recycle();
 			return Promise.ofException(CLOSE_EXCEPTION);
 		}
+		scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
 		writeEndOfStream |= buf == null;
 
 		if (writeBuf == null) {
 			if (buf != null && !buf.canRead()) {
 				buf.recycle();
+				if (idleTimeout != NO_TIMEOUT) {
+					scheduleIdleTimeout();
+				}
 				return Promise.complete();
 			}
 			writeBuf = buf;
@@ -408,6 +452,9 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 
 		if (this.writeBuf == null) {
+			if (idleTimeout != NO_TIMEOUT) {
+				scheduleIdleTimeout();
+			}
 			return Promise.complete();
 		}
 		SettablePromise<Void> write = new SettablePromise<>();
@@ -434,6 +481,9 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		if (writeBuf == null) {
 			SettablePromise<@Nullable Void> write = this.write;
 			this.write = null;
+			if (idleTimeout != NO_TIMEOUT) {
+				scheduleIdleTimeout();
+			}
 			write.set(null);
 		}
 		if (isClosed()) return;

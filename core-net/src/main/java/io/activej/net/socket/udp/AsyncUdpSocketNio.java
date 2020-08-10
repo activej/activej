@@ -26,6 +26,7 @@ import io.activej.common.inspector.BaseInspector;
 import io.activej.common.tuple.Tuple2;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.NioChannelEventHandler;
+import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ValueStats;
@@ -44,13 +45,17 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.nullify;
 import static io.activej.common.api.Recyclable.deepRecycle;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventHandler {
 	private static final boolean CHECK = Checks.isEnabled(AsyncUdpSocketNio.class);
 
-	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
 	public static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
+	public static final int NO_TIMEOUT = 0;
+
+	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
 
 	private final Eventloop eventloop;
 
@@ -66,6 +71,11 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	private final ArrayDeque<Tuple2<UdpPacket, SettablePromise<Void>>> writeQueue = new ArrayDeque<>();
 
+	private int idleTimeout = NO_TIMEOUT;
+
+	@Nullable
+	private ScheduledRunnable scheduledIdleTimeout;
+
 	private int ops = 0;
 
 	// region JMX
@@ -80,6 +90,8 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		void onSend(UdpPacket packet);
 
 		void onSendError(IOException e);
+
+		void onIdleTimeout();
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
@@ -87,12 +99,14 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		private final EventStats receiveErrors;
 		private final ValueStats sends;
 		private final EventStats sendErrors;
+		private final EventStats idleTimeouts;
 
 		public JmxInspector(Duration smoothingWindow) {
 			this.receives = ValueStats.create(smoothingWindow).withUnit("bytes").withRate();
 			this.receiveErrors = EventStats.create(smoothingWindow);
 			this.sends = ValueStats.create(smoothingWindow).withUnit("bytes").withRate();
 			this.sendErrors = EventStats.create(smoothingWindow);
+			this.idleTimeouts = EventStats.create(smoothingWindow);
 		}
 
 		@Override
@@ -115,6 +129,11 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 			sendErrors.recordEvent();
 		}
 
+		@Override
+		public void onIdleTimeout() {
+			idleTimeouts.recordEvent();
+		}
+
 		@JmxAttribute(description = "Received packet size")
 		public ValueStats getReceives() {
 			return receives;
@@ -133,6 +152,11 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		@JmxAttribute
 		public EventStats getSendErrors() {
 			return sendErrors;
+		}
+
+		@JmxAttribute
+		public EventStats getIdleTimeouts() {
+			return idleTimeouts;
 		}
 	}
 	// endregion
@@ -156,6 +180,14 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		return this;
 	}
 
+	public AsyncUdpSocketNio withIdleTimeout(Duration idleTimeout) {
+		this.idleTimeout = Math.toIntExact(idleTimeout.toMillis());
+		if (this.idleTimeout != NO_TIMEOUT) {
+			scheduleIdleTimeout();
+		}
+		return this;
+	}
+
 	public void setReceiveBufferSize(int receiveBufferSize) {
 		this.receiveBufferSize = receiveBufferSize;
 	}
@@ -170,14 +202,24 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		if (!isOpen()) {
 			return Promise.ofException(AsyncCloseable.CLOSE_EXCEPTION);
 		}
+		scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
 		UdpPacket polled = readBuffer.poll();
 		if (polled != null) {
+			if (idleTimeout != NO_TIMEOUT) {
+				scheduleIdleTimeout();
+			}
 			return Promise.of(polled);
 		}
-		return Promise.ofCallback(cb -> {
-			readQueue.add(cb);
-			readInterest(true);
-		});
+		return Promise.<UdpPacket>ofCallback(
+				cb -> {
+					readQueue.add(cb);
+					readInterest(true);
+				})
+				.whenResult(() -> {
+					if (idleTimeout != NO_TIMEOUT) {
+						scheduleIdleTimeout();
+					}
+				});
 	}
 
 	@Override
@@ -223,10 +265,17 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		if (!isOpen()) {
 			return Promise.ofException(AsyncCloseable.CLOSE_EXCEPTION);
 		}
-		return Promise.ofCallback(cb -> {
-			writeQueue.add(new Tuple2<>(packet, cb));
-			onWriteReady();
-		});
+		scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
+		return Promise.<Void>ofCallback(
+				cb -> {
+					writeQueue.add(new Tuple2<>(packet, cb));
+					onWriteReady();
+				})
+				.whenComplete(() -> {
+					if (idleTimeout != NO_TIMEOUT) {
+						scheduleIdleTimeout();
+					}
+				});
 	}
 
 	@Override
@@ -281,6 +330,18 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		interests(writeInterest ? (ops | SelectionKey.OP_WRITE) : (ops & ~SelectionKey.OP_WRITE));
 	}
 
+	private void scheduleIdleTimeout() {
+		assert idleTimeout != NO_TIMEOUT;
+		if (scheduledIdleTimeout != null) {
+			scheduledIdleTimeout.cancel();
+		}
+		scheduledIdleTimeout = eventloop.delayBackground(idleTimeout, wrapContext(this, () -> {
+			if (inspector != null) inspector.onIdleTimeout();
+			scheduledIdleTimeout = null;
+			close();
+		}));
+	}
+
 	@Override
 	public void close() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
@@ -288,6 +349,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		if (key == null) {
 			return;
 		}
+		scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
 		this.key = null;
 		eventloop.closeChannel(channel, key);
 		deepRecycle(writeQueue);

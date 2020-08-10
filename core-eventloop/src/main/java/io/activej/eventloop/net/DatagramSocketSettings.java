@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.channels.DatagramChannel;
+import java.time.Duration;
 
 import static io.activej.common.Checks.checkState;
 import static java.net.StandardSocketOptions.*;
@@ -37,33 +38,39 @@ public final class DatagramSocketSettings {
 	private final byte reuseAddress;
 	private final int sendBufferSize;
 	private final byte broadcast;
+	private final int implIdleTimeout;
 
 	// region builders
-	private DatagramSocketSettings(int receiveBufferSize, int sendBufferSize, byte reuseAddress, byte broadcast) {
+	private DatagramSocketSettings(int receiveBufferSize, int sendBufferSize, byte reuseAddress, byte broadcast, int implIdleTimeout) {
 		this.receiveBufferSize = receiveBufferSize;
 		this.reuseAddress = reuseAddress;
 		this.sendBufferSize = sendBufferSize;
 		this.broadcast = broadcast;
+		this.implIdleTimeout = implIdleTimeout;
 	}
 
 	public static DatagramSocketSettings create() {
-		return new DatagramSocketSettings(0, 0, DEF_BOOL, DEF_BOOL);
+		return new DatagramSocketSettings(0, 0, DEF_BOOL, DEF_BOOL, 0);
 	}
 
 	public DatagramSocketSettings withReceiveBufferSize(@NotNull MemSize receiveBufferSize) {
-		return new DatagramSocketSettings(receiveBufferSize.toInt(), sendBufferSize, reuseAddress, broadcast);
+		return new DatagramSocketSettings(receiveBufferSize.toInt(), sendBufferSize, reuseAddress, broadcast, implIdleTimeout);
 	}
 
 	public DatagramSocketSettings withSendBufferSize(@NotNull MemSize sendBufferSize) {
-		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize.toInt(), reuseAddress, broadcast);
+		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize.toInt(), reuseAddress, broadcast, implIdleTimeout);
 	}
 
 	public DatagramSocketSettings withReuseAddress(boolean reuseAddress) {
-		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize, reuseAddress ? TRUE : FALSE, broadcast);
+		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize, reuseAddress ? TRUE : FALSE, broadcast, implIdleTimeout);
 	}
 
 	public DatagramSocketSettings withBroadcast(boolean broadcast) {
-		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize, reuseAddress, broadcast ? TRUE : FALSE);
+		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize, reuseAddress, broadcast ? TRUE : FALSE, implIdleTimeout);
+	}
+
+	public DatagramSocketSettings withImplIdleTimeout(Duration implIdleTimeout) {
+		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize, reuseAddress, broadcast, (int) implIdleTimeout.toMillis());
 	}
 	// endregion
 
@@ -126,5 +133,18 @@ public final class DatagramSocketSettings {
 	public boolean getBroadcast() {
 		checkState(hasBroadcast(), "No 'broadcast' setting is present");
 		return broadcast != FALSE;
+	}
+
+	public boolean hasImplIdleTimeout() {
+		return implIdleTimeout != 0;
+	}
+
+	public Duration getImplIdleTimeout() {
+		return Duration.ofMillis(getImplIdleTimeoutMillis());
+	}
+
+	public long getImplIdleTimeoutMillis() {
+		checkState(hasImplIdleTimeout(), "No 'implicit idle timeout' setting is present");
+		return implIdleTimeout;
 	}
 }

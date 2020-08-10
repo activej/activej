@@ -19,10 +19,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.test.TestUtils.assertComplete;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.junit.Assert.*;
@@ -34,26 +36,27 @@ public final class ChannelFileReaderWriterTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+	public static final Path TEST_FILE = Paths.get("test_data/in.dat");
 
 	@Rule
 	public TemporaryFolder tempFolder = new TemporaryFolder();
 
 	@Test
 	public void streamFileReader() throws IOException {
-		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat"))
+		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), TEST_FILE)
 				.then(cfr -> cfr.toCollector(ByteBufQueue.collector())));
 
-		assertArrayEquals(Files.readAllBytes(Paths.get("test_data/in.dat")), byteBuf.asArray());
+		assertArrayEquals(Files.readAllBytes(TEST_FILE), byteBuf.asArray());
 	}
 
 	@Test
 	public void streamFileReaderWithDelay() throws IOException {
-		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat"))
+		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), TEST_FILE)
 				.then(cfr -> cfr.withBufferSize(MemSize.of(1))
 						.mapAsync(buf -> Promises.delay(10L, buf))
 						.toCollector(ByteBufQueue.collector())));
 
-		assertArrayEquals(Files.readAllBytes(Paths.get("test_data/in.dat")), byteBuf.asArray());
+		assertArrayEquals(Files.readAllBytes(TEST_FILE), byteBuf.asArray());
 	}
 
 	@Test
@@ -119,12 +122,24 @@ public final class ChannelFileReaderWriterTest {
 
 	@Test
 	public void readOverFile() throws IOException {
-		ChannelFileReader cfr = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat")));
+		ChannelFileReader cfr = await(ChannelFileReader.open(newCachedThreadPool(), TEST_FILE));
 
-		ByteBuf byteBuf = await(cfr.withOffset(Files.size(Paths.get("test_data/in.dat")) + 100)
+		ByteBuf byteBuf = await(cfr.withOffset(Files.size(TEST_FILE) + 100)
 				.withBufferSize(MemSize.of(1))
 				.toCollector(ByteBufQueue.collector()));
 
 		assertEquals("", byteBuf.asString(UTF_8));
+	}
+
+	@Test
+	public void testIdleTimeouts() {
+		await(ChannelFileReader.open(newCachedThreadPool(), TEST_FILE)
+				.map(fileReader -> fileReader.withIdleTimeout(Duration.ofMillis(5)))
+				.whenComplete(assertComplete(reader -> assertFalse(reader.isClosed())))
+				.then(reader -> Promises.delay(Duration.ofMillis(10), reader))
+				.whenComplete(assertComplete(reader -> {
+					assertTrue(reader.isClosed());
+					assertSame(ChannelFileReader.IDLE_TIMEOUT_EXCEPTION, reader.getException());
+				})));
 	}
 }

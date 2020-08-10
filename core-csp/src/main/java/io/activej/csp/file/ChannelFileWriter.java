@@ -19,9 +19,12 @@ package io.activej.csp.file;
 import io.activej.async.file.AsyncFileService;
 import io.activej.async.file.ExecutorAsyncFileService;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.csp.AbstractChannelConsumer;
+import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,10 +32,13 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.nullify;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.nio.file.StandardOpenOption.*;
 
 /**
@@ -40,6 +46,10 @@ import static java.nio.file.StandardOpenOption.*;
  */
 public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileWriter.class);
+
+	public static final AsyncTimeoutException IDLE_TIMEOUT_EXCEPTION = new AsyncTimeoutException(ChannelFileWriter.class,
+			"Writer was idle for too long");
+	public static final int NO_TIMEOUT = 0;
 
 	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{WRITE, CREATE_NEW, APPEND};
 
@@ -50,8 +60,12 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 	private boolean forceMetadata = false;
 	private long startingOffset = 0;
 	private boolean started;
+	private int idleTimeout = NO_TIMEOUT;
 
 	private long position = 0;
+
+	@Nullable
+	private ScheduledRunnable scheduledIdleTimeout;
 
 	private ChannelFileWriter(AsyncFileService fileService, FileChannel channel) {
 		this.fileService = fileService;
@@ -97,17 +111,27 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 		return this;
 	}
 
+	public ChannelFileWriter withIdleTimeout(Duration idleTimeout) {
+		this.idleTimeout = Math.toIntExact(idleTimeout.toMillis());
+		if (this.idleTimeout != NO_TIMEOUT) {
+			scheduleIdleTimeout();
+		}
+		return this;
+	}
+
 	public long getPosition() {
 		return position;
 	}
 
 	@Override
 	protected void onClosed(@NotNull Throwable e) {
+		scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
 		closeFile();
 	}
 
 	@Override
 	protected Promise<Void> doAccept(ByteBuf buf) {
+		scheduledIdleTimeout = nullify(scheduledIdleTimeout, ScheduledRunnable::cancel);
 		if (!started) {
 			position = startingOffset;
 		}
@@ -122,15 +146,15 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 
 		byte[] array = buf.getArray();
 		return fileService.write(channel, p, array, 0, array.length)
-				.thenEx(($, e2) -> {
+				.thenEx(($, e) -> {
 					if (isClosed()) return Promise.ofException(getException());
-					if (e2 != null) {
-						closeEx(e2);
+					if (e != null) {
+						closeEx(e);
 					}
-					return Promise.of($, e2);
-				})
-				.then(() -> {
 					buf.recycle();
+					if (idleTimeout != NO_TIMEOUT) {
+						scheduleIdleTimeout();
+					}
 					return Promise.complete();
 				});
 	}
@@ -150,6 +174,14 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 		} catch (IOException e) {
 			logger.error("{}: failed to close file", this, e);
 		}
+	}
+
+	private void scheduleIdleTimeout() {
+		assert idleTimeout != NO_TIMEOUT;
+		scheduledIdleTimeout = eventloop.delayBackground(idleTimeout, wrapContext(this, () -> {
+			scheduledIdleTimeout = null;
+			closeEx(IDLE_TIMEOUT_EXCEPTION);
+		}));
 	}
 
 	@Override

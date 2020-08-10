@@ -475,6 +475,10 @@ public final class ConfigConverters {
 								config.get(ofDuration(), "lingerTimeout",
 										defaultValue.hasLingerTimeout() ? defaultValue.getLingerTimeout() : null)))
 						.andThen(applyIfNotNull(
+								SocketSettings::withImplIdleTimeout,
+								config.get(ofDuration(), "implIdleTimeout",
+										defaultValue.hasImplIdleTimeout() ? defaultValue.getImplIdleTimeout() : null)))
+						.andThen(applyIfNotNull(
 								SocketSettings::withImplReadTimeout,
 								config.get(ofDuration(), "implReadTimeout",
 										defaultValue.hasImplReadTimeout() ? defaultValue.getImplReadTimeout() : null)))
@@ -512,6 +516,10 @@ public final class ConfigConverters {
 								DatagramSocketSettings::withBroadcast,
 								config.get(ofBoolean(), "broadcast",
 										defaultValue.hasBroadcast() ? defaultValue.getBroadcast() : null)))
+						.andThen(applyIfNotNull(
+								DatagramSocketSettings::withImplIdleTimeout,
+								config.get(ofDuration(), "implIdleTimeout",
+										defaultValue.hasImplIdleTimeout() ? defaultValue.getImplIdleTimeout() : null)))
 						.apply(DatagramSocketSettings.create());
 			}
 		};

@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
@@ -56,6 +57,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 public final class DataflowClient {
 	private static final Logger logger = getLogger(DataflowClient.class);
 
+	public static final Duration DEFAULT_DOWNLOAD_IDLE_TIMEOUT = Duration.ZERO;
+
 	private final SocketSettings socketSettings = SocketSettings.createDefault();
 
 	private final Executor executor;
@@ -67,6 +70,7 @@ public final class DataflowClient {
 	private final AtomicInteger secondaryId = new AtomicInteger(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
 
 	private int bufferMinSize, bufferMaxSize;
+	private Duration downloadIdleTimeout = DEFAULT_DOWNLOAD_IDLE_TIMEOUT;
 
 	public DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) {
 		this.executor = executor;
@@ -78,6 +82,11 @@ public final class DataflowClient {
 	public DataflowClient withBufferSizes(int bufferMinSize, int bufferMaxSize) {
 		this.bufferMinSize = bufferMinSize;
 		this.bufferMaxSize = bufferMaxSize;
+		return this;
+	}
+
+	public DataflowClient withDownloadIdleTimeout(Duration downloadIdleTimeout){
+		this.downloadIdleTimeout = downloadIdleTimeout;
 		return this;
 	}
 
@@ -94,7 +103,8 @@ public final class DataflowClient {
 
 								ChannelQueue<ByteBuf> buffer = new ChannelBufferWithFallback<>(
 										primaryBuffer,
-										() -> ChannelFileBuffer.create(executor, secondaryPath.resolve(secondaryId.getAndIncrement() + ".bin")));
+										() -> ChannelFileBuffer.create(executor, secondaryPath.resolve(secondaryId.getAndIncrement() + ".bin"))
+												.map(fileBuffer -> fileBuffer.withIdleTimeout(downloadIdleTimeout)));
 
 								return messaging.receiveBinaryStream()
 										.transformWith(transformer)

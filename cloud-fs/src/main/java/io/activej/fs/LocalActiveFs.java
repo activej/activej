@@ -86,6 +86,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
+	public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ZERO;
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -103,6 +104,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
 	private boolean hardlinkOnCopy = false;
 	private Path tempDir;
+	private Duration idleTimeout = DEFAULT_IDLE_TIMEOUT;
 
 	CurrentTimeProvider now;
 
@@ -161,6 +163,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		this.tempDir = tempDir;
 		return this;
 	}
+
+	public LocalActiveFs withIdleTimeout(Duration idleTimeout) {
+		this.idleTimeout = idleTimeout;
+		return this;
+	}
 	// endregion
 
 	@Override
@@ -197,6 +204,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				.whenComplete(appendBeginPromise.recordStats())
 				.map(channel -> ChannelFileWriter.create(executor, channel)
 						.withOffset(offset)
+						.withIdleTimeout(idleTimeout)
 						.withAcknowledgement(ack -> ack
 								.thenEx(translateScalarErrors(name))
 								.whenComplete(appendFinishPromise.recordStats())
@@ -224,6 +232,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						.withBufferSize(readerBufferSize)
 						.withOffset(offset)
 						.withLimit(limit)
+						.withIdleTimeout(idleTimeout)
 						.withEndOfStream(eos -> eos
 								.thenEx(translateScalarErrors(name))
 								.whenComplete(downloadFinishPromise.recordStats())
@@ -438,6 +447,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
 				.map(pathAndChannel -> ChannelFileWriter.create(executor, pathAndChannel.getValue2())
+						.withIdleTimeout(idleTimeout)
 						.transformWith(transformer)
 						.withAcknowledgement(ack -> ack
 								.then(() -> execute(() -> doMove(pathAndChannel.getValue1(), resolve(name))))
@@ -751,7 +761,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private void translateBatchErrors(@NotNull String first, @Nullable String second, FsRunnable runnable) throws FsBatchException, FsIOException {
 		try {
 			runnable.run();
-		} catch (FsScalarException e){
+		} catch (FsScalarException e) {
 			throw batchEx(LocalActiveFs.class, first, e);
 		} catch (FileAlreadyExistsException e) {
 			checkIfDirectories(first, second);
