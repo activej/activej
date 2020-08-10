@@ -3,6 +3,7 @@ package io.activej.csp.process;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -19,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static io.activej.common.api.Recyclable.deepRecycle;
-import static io.activej.common.api.Recyclable.tryRecycle;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static org.junit.Assert.assertSame;
@@ -71,7 +70,7 @@ public final class AbstractCommunicatingProcessTest {
 				.set(ChannelConsumer.of(value -> {
 					actualData.add(value);
 					if (expectedData.size() == actualData.size()) {
-						deepRecycle(actualData);
+						Recyclers.recycle(actualData);
 						consumedAll = true;
 					}
 					return Promise.complete();
@@ -85,7 +84,7 @@ public final class AbstractCommunicatingProcessTest {
 	public void testAckPropagationWithFailure() {
 		processes[size - 1].getOutput()
 				.set(ChannelConsumer.of(value -> {
-					tryRecycle(value);
+					Recyclers.recycle(value);
 					return Promise.ofException(error);
 				}));
 

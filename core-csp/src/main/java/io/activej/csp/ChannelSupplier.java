@@ -21,6 +21,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.eventloop.Eventloop;
@@ -40,7 +41,6 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.api.Recyclable.tryRecycle;
 import static io.activej.common.collection.CollectionUtils.asIterator;
 
 /**
@@ -381,14 +381,14 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 					if (promise.isResult()) {
 						T value = promise.getResult();
 						if (value == null || predicate.test(value)) return promise;
-						tryRecycle(value);
+						Recyclers.recycle(value);
 						continue;
 					}
 					return promise.then(value -> {
 						if (value == null || predicate.test(value)) {
 							return Promise.of(value);
 						} else {
-							tryRecycle(value);
+							Recyclers.recycle(value);
 							return get();
 						}
 					});

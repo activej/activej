@@ -17,6 +17,7 @@
 package io.activej.async.process;
 
 import io.activej.common.exception.CloseException;
+import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -31,6 +32,11 @@ import org.jetbrains.annotations.NotNull;
  * All operations of this interface are idempotent.
  */
 public interface AsyncCloseable {
+	@SuppressWarnings("unused")
+	Object $STATIC_INIT = new Object() {{
+		Recyclers.register(AsyncCloseable.class, AsyncCloseable::close);
+	}};
+
 	CloseException CLOSE_EXCEPTION = new CloseException(AsyncCloseable.class, "Closed");
 
 	/**

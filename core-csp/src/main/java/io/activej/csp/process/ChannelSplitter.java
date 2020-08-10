@@ -16,6 +16,7 @@
 
 package io.activej.csp.process;
 
+import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -29,7 +30,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.api.Recyclable.tryRecycle;
 import static io.activej.common.api.Sliceable.trySlice;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 
@@ -102,7 +102,7 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 											closeEx(e2);
 										}
 									});
-							tryRecycle(item);
+							Recyclers.recycle(item);
 						} else {
 							Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
 									.whenComplete(($, e1) -> completeProcessEx(e1));

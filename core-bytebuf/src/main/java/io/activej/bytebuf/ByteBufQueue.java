@@ -18,9 +18,9 @@ package io.activej.bytebuf;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
-import io.activej.common.api.Recyclable;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.InvalidSizeException;
+import io.activej.common.recycle.Recyclable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

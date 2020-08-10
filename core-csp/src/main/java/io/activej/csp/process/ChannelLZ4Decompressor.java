@@ -124,11 +124,14 @@ public final class ChannelLZ4Decompressor extends AbstractCommunicatingProcess
 			return;
 		}
 
-		try (ByteBuf headerBuf = bufs.takeExactSize(HEADER_LENGTH)) {
+		ByteBuf headerBuf = bufs.takeExactSize(HEADER_LENGTH);
+		try {
 			readHeader(header, headerBuf.array(), headerBuf.head());
 		} catch (ParseException e) {
 			closeEx(e);
 			return;
+		} finally {
+			headerBuf.recycle();
 		}
 
 		if (!header.finished) {

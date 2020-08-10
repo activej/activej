@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.csp;
+package io.activej.common.recycle;
 
-import io.activej.common.recycle.Recyclable;
-import io.activej.promise.Promise;
-import org.jetbrains.annotations.Nullable;
-
-public final class RecyclingChannelConsumer<T extends Recyclable> extends AbstractChannelConsumer<T> {
-
-	@Override
-	protected Promise<Void> doAccept(@Nullable T value) {
-		if (value != null) {
-			value.recycle();
-		}
-		return Promise.complete();
-	}
+/**
+ * Since some objects (mainly {@link io.activej.bytebuf.ByteBuf ByteBufs}) have
+ * the notion of ownership and recyclability, a way to recognize them is needed.
+ * This interface marks objects that need to be recycled at the end of their lifetime,
+ * so that some generic abstraction (such as CSP) could try to recycle some object that it consumes.
+ */
+@SuppressWarnings("JavadocReference")
+public interface Recyclable {
+	/**
+	 * Free some resource that this object possesses, e.g. return itself to the pool etc.
+	 */
+	void recycle();
 }

@@ -17,13 +17,13 @@
 package io.activej.async.process;
 
 import io.activej.common.Checks;
+import io.activej.common.recycle.Recyclers;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.api.Recyclable.tryRecycle;
 
 public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 	private static final boolean CHECK = Checks.isEnabled(AbstractAsyncCloseable.class);
@@ -74,7 +74,7 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 	@NotNull
 	public final <T> Promise<T> sanitize(T value, @Nullable Throwable e) {
 		if (exception != null) {
-			tryRecycle(value);
+			Recyclers.recycle(value);
 			if (value instanceof AsyncCloseable) {
 				((AsyncCloseable) value).closeEx(exception);
 			}

@@ -19,12 +19,12 @@ package io.activej.csp;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.common.Checks;
+import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.api.Recyclable.tryRecycle;
 
 public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable implements ChannelConsumer<T> {
 	protected static final boolean CHECK = Checks.isEnabled(AbstractChannelConsumer.class);
@@ -46,7 +46,7 @@ public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable 
 	public final Promise<Void> accept(@Nullable T value) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (isClosed()) {
-			tryRecycle(value);
+			Recyclers.recycle(value);
 			return Promise.ofException(getException());
 		}
 		return doAccept(value);

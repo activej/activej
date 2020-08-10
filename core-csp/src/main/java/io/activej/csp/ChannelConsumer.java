@@ -21,6 +21,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
@@ -37,8 +38,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
-import static io.activej.common.api.Recyclable.tryRecycle;
 
 /**
  * This interface represents consumer of data items that should be used serially
@@ -147,7 +146,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 		return new AbstractChannelConsumer<T>() {
 			@Override
 			protected Promise<Void> doAccept(T value) {
-				tryRecycle(value);
+				Recyclers.recycle(value);
 				return Promise.ofException(e);
 			}
 		};
@@ -194,7 +193,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 						this.consumer = consumer;
 						return consumer.accept(value);
 					} else {
-						tryRecycle(value);
+						Recyclers.recycle(value);
 						return Promise.ofException(e);
 					}
 				});
@@ -400,7 +399,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 				if (value != null && predicate.test(value)) {
 					return ChannelConsumer.this.accept(value);
 				} else {
-					tryRecycle(value);
+					Recyclers.recycle(value);
 					return Promise.complete();
 				}
 			}

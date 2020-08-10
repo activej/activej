@@ -17,13 +17,13 @@
 package io.activej.csp.queue;
 
 import io.activej.common.Checks;
+import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.api.Recyclable.tryRecycle;
 import static java.lang.Integer.numberOfLeadingZeros;
 import static java.lang.Math.max;
 
@@ -158,7 +158,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 
 			doAdd(item);
 		} else {
-			tryRecycle(item);
+			Recyclers.recycle(item);
 			throw exception;
 		}
 	}
@@ -244,7 +244,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 				return Promise.complete();
 			}
 		} else {
-			tryRecycle(item);
+			Recyclers.recycle(item);
 			return Promise.ofException(exception);
 		}
 	}
@@ -308,7 +308,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 			take = null;
 		}
 		for (int i = head; i != tail; i = (i + 1) & (elements.length - 1)) {
-			tryRecycle(elements[i]);
+			Recyclers.recycle(elements[i]);
 		}
 		//noinspection AssignmentToNull - resource release
 		elements = null;

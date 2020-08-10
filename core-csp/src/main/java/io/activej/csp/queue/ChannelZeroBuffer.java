@@ -17,13 +17,13 @@
 package io.activej.csp.queue;
 
 import io.activej.common.Checks;
+import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.api.Recyclable.tryRecycle;
 
 /**
  * Represents a buffer of zero capacity and stores only
@@ -91,7 +91,7 @@ public final class ChannelZeroBuffer<T> implements ChannelQueue<T> {
 			this.put = new SettablePromise<>();
 			return put;
 		} else {
-			tryRecycle(item);
+			Recyclers.recycle(item);
 			return Promise.ofException(exception);
 		}
 	}
@@ -152,7 +152,7 @@ public final class ChannelZeroBuffer<T> implements ChannelQueue<T> {
 			take.setException(e);
 			take = null;
 		}
-		tryRecycle(value);
+		Recyclers.recycle(value);
 		value = null;
 	}
 

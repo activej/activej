@@ -17,14 +17,13 @@
 package io.activej.csp.queue;
 
 import io.activej.async.process.AsyncCloseable;
+import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
-
-import static io.activej.common.api.Recyclable.tryRecycle;
 
 public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 	private final ChannelQueue<T> queue;
@@ -47,7 +46,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 	@Override
 	public Promise<Void> put(@Nullable T item) {
 		if (exception != null) {
-			tryRecycle(item);
+			Recyclers.recycle(item);
 			return Promise.ofException(exception);
 		}
 		return doPut(item);

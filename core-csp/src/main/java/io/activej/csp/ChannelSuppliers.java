@@ -20,11 +20,11 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.common.api.Recyclable;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclers;
 import io.activej.csp.queue.ChannelBuffer;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.eventloop.Eventloop;
@@ -45,7 +45,6 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.nullify;
-import static io.activej.common.api.Recyclable.deepRecycle;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 
@@ -188,7 +187,7 @@ public final class ChannelSuppliers {
 					cb.set(finisher.apply(accumulatedValue));
 				}
 			} else {
-				deepRecycle(finisher.apply(accumulatedValue));
+				Recyclers.recycle(finisher.apply(accumulatedValue));
 				cb.setException(e);
 			}
 		});
@@ -460,7 +459,7 @@ public final class ChannelSuppliers {
 
 		@Override
 		protected void onCleanup() {
-			item = nullify(item, Recyclable::tryRecycle);
+			item = nullify(item, Recyclers::recycle);
 		}
 	}
 
@@ -483,7 +482,7 @@ public final class ChannelSuppliers {
 
 		@Override
 		protected void onCleanup() {
-			deepRecycle(iterator);
+			Recyclers.recycle(iterator);
 		}
 	}
 

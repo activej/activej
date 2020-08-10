@@ -23,6 +23,7 @@ import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
+import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.Tuple2;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.NioChannelEventHandler;
@@ -44,7 +45,6 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.api.Recyclable.deepRecycle;
 
 public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventHandler {
 	private static final boolean CHECK = Checks.isEnabled(AsyncUdpSocketNio.class);
@@ -290,7 +290,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		}
 		this.key = null;
 		eventloop.closeChannel(channel, key);
-		deepRecycle(writeQueue);
+		Recyclers.recycle(writeQueue);
 	}
 
 	@Override

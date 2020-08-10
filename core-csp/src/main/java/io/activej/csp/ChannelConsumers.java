@@ -17,8 +17,9 @@
 package io.activej.csp;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.api.Recyclable;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclable;
+import io.activej.common.recycle.Recyclers;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -32,7 +33,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
-import static io.activej.common.api.Recyclable.deepRecycle;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
@@ -66,7 +66,7 @@ public final class ChannelConsumers {
 				if (e == null) {
 					acceptAllImpl(output, it, cb);
 				} else {
-					deepRecycle(it);
+					Recyclers.recycle(it);
 					cb.setException(e);
 				}
 			});

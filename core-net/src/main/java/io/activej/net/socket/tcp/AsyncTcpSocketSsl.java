@@ -19,6 +19,7 @@ package io.activej.net.socket.tcp;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.recycle.Recyclers;
 import io.activej.eventloop.net.CloseWithoutNotifyException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -33,7 +34,6 @@ import javax.net.ssl.SSLException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
-import static io.activej.common.api.Recyclable.tryRecycle;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.BUFFER_UNDERFLOW;
 import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
@@ -155,7 +155,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 				.whenResult(buf -> {
 					if (isClosed()) {
 						assert pendingUpstreamWrite != null;
-						tryRecycle(buf);
+						Recyclers.recycle(buf);
 						return;
 					}
 					if (buf != null) {
@@ -403,11 +403,12 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	@Override
 	public void closeEx(@NotNull Throwable e) {
 		if (isClosed()) return;
-		tryRecycle(net2engine);
-		tryRecycle(engine2app);
+		Recyclers.recycle(net2engine);
+		Recyclers.recycle(engine2app);
 		net2engine = engine2app = null;
 		tryCloseOutbound();
-		tryRecycle(app2engine); // app2Engine is recycled later as it is used while sending close notify messages
+		// app2Engine is recycled later as it is used while sending close notify messages
+		Recyclers.recycle(app2engine);
 		app2engine = null;
 		if (pendingUpstreamWrite != null) {
 			pendingUpstreamWrite.whenResult(() -> upstream.closeEx(e));

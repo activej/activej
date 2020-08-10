@@ -19,6 +19,7 @@ package io.activej.csp.process;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncProcess;
 import io.activej.common.exception.StacklessException;
+import io.activej.common.recycle.Recyclers;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.csp.ChannelConsumer;
@@ -28,8 +29,6 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static io.activej.common.api.Recyclable.tryRecycle;
 
 /**
  * An abstract AsyncProcess which describes interactions
@@ -211,7 +210,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	 */
 	protected final <T> Promise<T> sanitize(T value, @Nullable Throwable e) {
 		if (isProcessComplete()) {
-			tryRecycle(value);
+			Recyclers.recycle(value);
 			if (value instanceof AsyncCloseable) {
 				((AsyncCloseable) value).closeEx(ASYNC_PROCESS_IS_COMPLETE);
 			}

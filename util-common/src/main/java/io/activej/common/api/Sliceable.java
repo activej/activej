@@ -16,6 +16,8 @@
 
 package io.activej.common.api;
 
+import io.activej.common.recycle.Recyclable;
+
 /**
  * Some objects (mainly {@link io.activej.bytebuf.ByteBuf ByteBufs}) have the reference counter
  * so that they can be 'lightly cloned' or 'sliced' and the {@link Recyclable#recycle() recycle} method should be called
