@@ -21,10 +21,13 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
+import io.activej.eventloop.net.SocketSettings;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
-import io.activej.fs.tcp.ActiveFsServer;
-import io.activej.inject.annotation.Inject;
+import io.activej.fs.http.ActiveFsServlet;
+import io.activej.http.AsyncHttpServer;
+import io.activej.http.AsyncServlet;
+import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
@@ -32,18 +35,17 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
+import java.time.Duration;
 import java.util.concurrent.Executor;
 
+import static io.activej.config.converter.ConfigConverters.ofBoolean;
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.inject.module.Modules.combine;
-import static io.activej.launchers.fs.Initializers.ofActiveFsServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
+import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 
-public abstract class ActiveFsServerLauncher extends Launcher {
-	public static final String PROPERTIES_FILE = "activefs-server.properties";
-
-	@Inject
-	ActiveFsServer activeFsServer;
+public abstract class HttpActiveFsServerLauncher extends Launcher {
+	public static final String PROPERTIES_FILE = "http-activefs-server.properties";
 
 	@Provides
 	public Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
@@ -52,14 +54,21 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
 	}
 
+	@Eager
 	@Provides
-	ActiveFsServer activeFsServer(Eventloop eventloop, ActiveFs activeFs, Config config) {
-		return ActiveFsServer.create(eventloop, activeFs)
-				.withInitializer(ofActiveFsServer(config.getChild("activefs")));
+	AsyncHttpServer server(Eventloop eventloop, AsyncServlet servlet, Config config) {
+		return AsyncHttpServer.create(eventloop, servlet)
+				.withSocketSettings(SocketSettings.createDefault().withImplIdleTimeout(Duration.ofMinutes(1)))
+				.withInitializer(ofHttpServer(config.getChild("activefs.http")));
 	}
 
 	@Provides
-	ActiveFs localActivefs(Eventloop eventloop, Executor executor, Config config){
+	AsyncServlet servlet(ActiveFs activeFs, Config config){
+		return ActiveFsServlet.create(activeFs, config.get(ofBoolean(), "activefs.inline", true));
+	}
+
+	@Provides
+	ActiveFs activeFs(Eventloop eventloop, Executor executor, Config config){
 		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "activefs.path"));
 	}
 
@@ -90,7 +99,7 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Launcher launcher = new ActiveFsServerLauncher() {};
+		Launcher launcher = new HttpActiveFsServerLauncher() {};
 		launcher.launch(args);
 	}
 }
