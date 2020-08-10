@@ -18,6 +18,7 @@ package io.activej.async;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
@@ -65,16 +66,23 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 	}
 
 	public <T> void addPromise(@NotNull Promise<T> promise, @NotNull BiConsumer<A, T> consumer) {
-		if (resultPromise.isComplete()) return;
+		if (resultPromise.isComplete()) {
+			promise.whenResult(Recyclers::recycle);
+			return;
+		}
 		activePromises++;
 		promise.whenComplete((v, e) -> {
 			activePromises--;
-			if (resultPromise.isComplete()) return;
+			if (resultPromise.isComplete()) {
+				Recyclers.recycle(v);
+				return;
+			}
 			if (e == null) {
 				try {
 					consumer.accept(accumulator, v);
 				} catch (UncheckedException u) {
 					resultPromise.setException(u.getCause());
+					Recyclers.recycle(accumulator);
 					return;
 				}
 				if (activePromises == 0 && started) {
@@ -82,6 +90,7 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 				}
 			} else {
 				resultPromise.setException(e);
+				Recyclers.recycle(accumulator);
 			}
 		});
 	}
@@ -110,11 +119,17 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 	}
 
 	public void complete(A result) {
-		resultPromise.trySet(result);
+		if (resultPromise.trySet(result)) {
+			if (result != accumulator) {
+				Recyclers.recycle(accumulator);
+			}
+		}
 	}
 
 	@Override
 	public void closeEx(@NotNull Throwable e) {
-		resultPromise.trySetException(e);
+		if (resultPromise.trySetException(e)) {
+			Recyclers.recycle(accumulator);
+		}
 	}
 }

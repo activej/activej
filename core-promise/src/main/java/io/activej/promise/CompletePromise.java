@@ -19,6 +19,7 @@ package io.activej.promise;
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -160,28 +161,22 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@NotNull
 	@Override
 	public final <U, V> Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
-		if (other.isComplete()) {
-			if (other.isResult()) {
-				try {
-					return Promise.of(fn.apply(getResult(), other.getResult()));
-				} catch (UncheckedException u) {
-					return Promise.ofException(u.getCause());
-				}
-			}
-			return (Promise<V>) other;
-		}
-		return other.map(otherResult -> fn.apply(getResult(), otherResult));
+		return (Promise<V>) other
+				.map(otherResult -> fn.apply(this.getResult(), otherResult))
+				.whenException(() -> Recyclers.recycle(this.getResult()));
 	}
 
 	@NotNull
 	@Override
 	public final Promise<Void> both(@NotNull Promise<?> other) {
-		return other.toVoid();
+		Recyclers.recycle(getResult());
+		return other.map(AbstractPromise::recycleToVoid);
 	}
 
 	@NotNull
 	@Override
 	public final Promise<T> either(@NotNull Promise<? extends T> other) {
+		other.whenResult(Recyclers::recycle);
 		return this;
 	}
 

@@ -245,6 +245,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 									.collect(toMap(InfoResults::getName, Function.identity())),
 							(result, metas) -> filteredMap.keySet().forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
 							Map::values,
+							groupedById.size(),
 							groupedById.entrySet().stream()
 									.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
 											.whenException(e -> partitions.markIfDead(entry.getKey(), e)))

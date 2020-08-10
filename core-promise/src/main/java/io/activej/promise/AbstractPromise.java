@@ -21,6 +21,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -128,22 +129,28 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		}
 	}
 
-	protected void tryComplete(@Nullable T value, @Nullable Throwable e) {
+	protected boolean tryComplete(@Nullable T value, @Nullable Throwable e) {
 		if (!isComplete()) {
 			complete(value, e);
+			return true;
 		}
+		return false;
 	}
 
-	protected void tryComplete(@Nullable T value) {
+	protected boolean tryComplete(@Nullable T value) {
 		if (!isComplete()) {
 			complete(value);
+			return true;
 		}
+		return false;
 	}
 
-	protected void tryCompleteExceptionally(@NotNull Throwable e) {
+	protected boolean tryCompleteExceptionally(@NotNull Throwable e) {
 		if (!isComplete()) {
 			completeExceptionally(e);
+			return true;
 		}
+		return false;
 	}
 
 	@NotNull
@@ -506,11 +513,23 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@NotNull
 	@Override
 	public <U, V> Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
-		if (isComplete()) {
-			return isResult() ? other.map(otherResult -> fn.apply(getResult(), otherResult)) : (Promise<V>) this;
+		if (this.isComplete()) {
+			if (this.isResult()) {
+				return (Promise<V>) other
+						.map(otherResult -> fn.apply(this.getResult(), otherResult))
+						.whenException(() -> Recyclers.recycle(this.getResult()));
+			}
+			other.whenResult(Recyclers::recycle);
+			return (Promise<V>) this;
 		}
 		if (other.isComplete()) {
-			return other.isResult() ? this.map(result -> fn.apply(result, other.getResult())) : (Promise<V>) other;
+			if (other.isResult()) {
+				return (Promise<V>) this
+						.map(result -> fn.apply(result, other.getResult()))
+						.whenException(() -> Recyclers.recycle(other.getResult()));
+			}
+			this.whenResult(Recyclers::recycle);
+			return (Promise<V>) other;
 		}
 		PromiseCombine<T, V, U> resultPromise = new PromiseCombine<>(fn);
 		other.whenComplete(resultPromise::acceptOther);
@@ -543,15 +562,15 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 		}
 
-		public void acceptOther(U otherResult, @Nullable Throwable e) {
+		public void acceptOther(U result, @Nullable Throwable e) {
 			if (e == null) {
 				if (thisResult != NO_RESULT) {
-					onBothResults(thisResult, otherResult);
+					onBothResults(thisResult, result);
 				} else {
-					this.otherResult = otherResult;
+					otherResult = result;
 				}
 			} else {
-				tryCompleteExceptionally(e);
+				onAnyException(e);
 			}
 		}
 
@@ -560,7 +579,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		}
 
 		void onAnyException(@NotNull Throwable e) {
-			tryCompleteExceptionally(e);
+			if (tryCompleteExceptionally(e)) {
+				if (thisResult != NO_RESULT) Recyclers.recycle(thisResult);
+				if (otherResult != NO_RESULT) Recyclers.recycle(otherResult);
+			}
 		}
 
 		@Override
@@ -572,16 +594,32 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@NotNull
 	@Override
 	public Promise<Void> both(@NotNull Promise<?> other) {
-		if (isComplete()) {
-			return isResult() ? other.toVoid() : (Promise<Void>) this;
+		if (this.isComplete()) {
+			if (this.isResult()) {
+				Recyclers.recycle(this.getResult());
+				return other.map(AbstractPromise::recycleToVoid);
+			}
+			other.whenResult(Recyclers::recycle);
+			return (Promise<Void>) this;
 		}
 		if (other.isComplete()) {
-			return other.isResult() ? toVoid() : (Promise<Void>) other;
+			if (other.isResult()) {
+				Recyclers.recycle(other.getResult());
+				return this.map(AbstractPromise::recycleToVoid);
+			}
+			this.whenResult(Recyclers::recycle);
+			return (Promise<Void>) other;
 		}
 		PromiseBoth<Object> resultPromise = new PromiseBoth<>();
 		other.whenComplete(resultPromise);
 		subscribe(resultPromise);
 		return resultPromise;
+	}
+
+	@Nullable
+	protected static Void recycleToVoid(Object item) {
+		Recyclers.recycle(item);
+		return null;
 	}
 
 	private static class PromiseBoth<T> extends NextPromise<T, Void> {
@@ -590,6 +628,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		@Override
 		public void accept(T result, @Nullable Throwable e) {
 			if (e == null) {
+				Recyclers.recycle(result);
 				if (--counter == 0) {
 					complete(null);
 				}
@@ -608,10 +647,18 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@Override
 	public Promise<T> either(@NotNull Promise<? extends T> other) {
 		if (isComplete()) {
-			return isResult() ? this : (Promise<T>) other;
+			if (isResult()) {
+				other.whenResult(Recyclers::recycle);
+				return this;
+			}
+			return (Promise<T>) other;
 		}
 		if (other.isComplete()) {
-			return other.isResult() ? (Promise<T>) other : this;
+			if (other.isResult()) {
+				this.whenResult(Recyclers::recycle);
+				return (Promise<T>) other;
+			}
+			return this;
 		}
 		EitherPromise<T> resultPromise = new EitherPromise<>();
 		other.whenComplete(resultPromise);
@@ -620,15 +667,17 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	private static final class EitherPromise<T> extends NextPromise<T, T> {
-		int errors;
+		int errors = 2;
 
 		@Override
 		public void accept(T result, @Nullable Throwable e) {
 			if (e == null) {
-				tryComplete(result);
+				if (!tryComplete(result)) {
+					Recyclers.recycle(result);
+				}
 			} else {
-				if (++errors == 2) {
-					completeExceptionally(e);
+				if (--errors == 0) {
+					completeExceptionally(NOT_ENOUGH_PROMISES_EXCEPTION);
 				}
 			}
 		}
@@ -744,8 +793,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		}
 	}
 
-	private static final String IDENT = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
-	private static final Pattern PACKAGE_NAME_AND_LAMBDA_PART = Pattern.compile("^(?:" + IDENT + "\\.)*((?:" + IDENT + "?)\\$\\$Lambda\\$\\d+)/.*$");
+	private static final String INDENT = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
+	private static final Pattern PACKAGE_NAME_AND_LAMBDA_PART = Pattern.compile("^(?:" + INDENT + "\\.)*((?:" + INDENT + "?)\\$\\$Lambda\\$\\d+)/.*$");
 
 	private static <T> void appendChildren(StringBuilder sb, Callback<T> callback, String indent) {
 		if (callback == null) {

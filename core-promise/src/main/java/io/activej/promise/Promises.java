@@ -21,6 +21,7 @@ import io.activej.async.AsyncBuffer;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.StacklessException;
+import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.*;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.schedule.ScheduledRunnable;
@@ -44,6 +45,7 @@ import static io.activej.common.collection.CollectionUtils.asIterator;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.promise.Promise.NOT_ENOUGH_PROMISES_EXCEPTION;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
@@ -53,8 +55,6 @@ import static java.util.Collections.emptyList;
 @SuppressWarnings({"WeakerAccess", "unchecked"})
 public final class Promises {
 	public static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(Promises.class, "Promise timeout");
-	public static final StacklessException NOT_ENOUGH_PROMISES_EXCEPTION = new StacklessException(Promises.class,
-			"There are no promises to be complete");
 
 	/**
 	 * @see #timeout(long, Promise)
@@ -304,7 +304,10 @@ public final class Promises {
 		PromiseAll<Object> resultPromise = new PromiseAll<>();
 		while (promises.hasNext()) {
 			Promise<?> promise = promises.next();
-			if (promise.isResult()) continue;
+			if (promise.isResult()) {
+				Recyclers.recycle(promise.getResult());
+				continue;
+			}
 			if (promise.isException()) return Promise.ofException(promise.getException());
 			resultPromise.countdown++;
 			promise.whenComplete(resultPromise);
@@ -434,84 +437,6 @@ public final class Promises {
 		}
 		resultPromise.countdown--;
 		return resultPromise.countdown == 0 ? any() : resultPromise;
-	}
-
-	/**
-	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
-	 */
-	@SuppressWarnings("unused")
-	@Contract(pure = true)
-	@NotNull
-	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher) {
-		return Promise.of(finisher.apply(accumulator));
-	}
-
-	/**
-	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
-			@NotNull Promise<? extends T> promise1) {
-		return promise1.map(v -> {
-			consumer.accept(accumulator, v);
-			return finisher.apply(accumulator);
-		});
-	}
-
-	/**
-	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
-			@NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
-		Consumer<T> consumer2 = v -> consumer.accept(accumulator, v);
-		return promise1.whenResult(consumer2).both(promise2.whenResult(consumer2)).map($ -> finisher.apply(accumulator));
-	}
-
-	/**
-	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
-			@NotNull Promise<? extends T>... promises) {
-		return reduce(accumulator, consumer, finisher, asIterator(promises));
-	}
-
-	/**
-	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
-			@NotNull Stream<? extends Promise<? extends T>> promises) {
-		return reduce(accumulator, consumer, finisher, promises.iterator());
-	}
-
-	/**
-	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
-			@NotNull Iterable<? extends Promise<? extends T>> promises) {
-		return reduce(accumulator, consumer, finisher, promises.iterator());
-	}
-
-	/**
-	 * @see Promises#reduce(Object, BiConsumer, Function, int, Iterator)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	public static <T, A, R> Promise<R> reduce(A accumulator, BiConsumer<A, T> consumer, Function<A, R> finisher,
-			@NotNull Iterator<? extends Promise<? extends T>> promises) {
-		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
-		while (promises.hasNext()) {
-			asyncAccumulator.addPromise((Promise<T>) promises.next(), consumer);
-		}
-		return asyncAccumulator.run().map(finisher);
 	}
 
 	/**
@@ -1056,14 +981,16 @@ public final class Promises {
 					cb.accept(v, e);
 					return;
 				}
+				Recyclers.recycle(v);
 				continue;
 			}
 			nextPromise.whenComplete((v, e) -> {
 				if (predicate.test(v, e)) {
 					cb.accept(v, e);
-					return;
+				} else {
+					Recyclers.recycle(v);
+					firstImpl(promises, predicate, cb);
 				}
-				firstImpl(promises, predicate, cb);
 			});
 			return;
 		}
@@ -1079,12 +1006,16 @@ public final class Promises {
 		return ($, e) -> e == null;
 	}
 
-	public static <T> BiPredicate<T, Throwable> isResult(Predicate<T> predicate) {
+	public static <T> BiPredicate<T, Throwable> isResult(Predicate<? super T> predicate) {
 		return (v, e) -> e == null && predicate.test(v);
 	}
 
-	public static <T> BiPredicate<T, Throwable> isErrorOrResult(Predicate<T> predicate) {
+	public static <T> BiPredicate<T, Throwable> isResultOrError(Predicate<? super T> predicate) {
 		return (v, e) -> e != null || predicate.test(v);
+	}
+
+	public static <T> BiPredicate<T, Throwable> isResultOrError(Predicate<? super T> predicate, Predicate<? super Throwable> predicateError) {
+		return (v, e) -> e == null ? predicate.test(v) : predicateError.test(e);
 	}
 
 	/**
@@ -1097,7 +1028,7 @@ public final class Promises {
 	}
 
 	@NotNull
-	public static <T> BiPredicate<T, Throwable> isError(Predicate<Throwable> predicate) {
+	public static <T> BiPredicate<T, Throwable> isError(Predicate<? super Throwable> predicate) {
 		return ($, e) -> e != null && predicate.test(e);
 	}
 
@@ -1337,6 +1268,7 @@ public final class Promises {
 		@Override
 		public void accept(@Nullable T result, @Nullable Throwable e) {
 			if (e == null) {
+				Recyclers.recycle(result);
 				if (--countdown == 0) {
 					complete(null);
 				}
@@ -1360,8 +1292,11 @@ public final class Promises {
 		@Override
 		public void accept(@Nullable T result, @Nullable Throwable e) {
 			if (predicate.test(result, e)) {
-				tryComplete(result, e);
+				if (!tryComplete(result, e)) {
+					Recyclers.recycle(result);
+				}
 			} else {
+				Recyclers.recycle(result);
 				if (--countdown == 0) {
 					completeExceptionally(NOT_ENOUGH_PROMISES_EXCEPTION);
 				}
@@ -1386,16 +1321,31 @@ public final class Promises {
 		private void addToList(int i, Promise<? extends T> promise) {
 			ensureSize(i + 1);
 			if (promise.isResult()) {
-				array[i] = promise.getResult();
+				if (!isComplete()) {
+					array[i] = promise.getResult();
+				} else {
+					Recyclers.recycle(result);
+				}
 			} else if (promise.isException()) {
-				tryCompleteExceptionally(promise.getException());
+				if (tryCompleteExceptionally(promise.getException())) {
+					Recyclers.recycle(array);
+				}
 			} else {
 				countdown++;
 				promise.whenComplete((result, e) -> {
 					if (e == null) {
-						processComplete(result, i);
+						if (!isComplete()) {
+							array[i] = result;
+							if (--countdown == 0) {
+								complete(getList());
+							}
+						} else {
+							Recyclers.recycle(result);
+						}
 					} else {
-						tryCompleteExceptionally(e);
+						if (tryCompleteExceptionally(e)) {
+							Recyclers.recycle(array);
+						}
 					}
 				});
 			}
@@ -1405,16 +1355,6 @@ public final class Promises {
 			this.size = size;
 			if (size >= array.length) {
 				array = Arrays.copyOf(array, array.length * 2);
-			}
-		}
-
-		void processComplete(@Nullable T result, int i) {
-			if (isComplete()) {
-				return;
-			}
-			array[i] = result;
-			if (--countdown == 0) {
-				complete(getList());
 			}
 		}
 

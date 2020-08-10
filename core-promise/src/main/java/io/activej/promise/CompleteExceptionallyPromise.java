@@ -19,6 +19,7 @@ package io.activej.promise;
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -160,6 +161,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <U, V> Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
+		other.whenResult(Recyclers::recycle);
 		return (Promise<V>) this;
 	}
 
@@ -167,6 +169,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Promise<Void> both(@NotNull Promise<?> other) {
+		other.whenResult(Recyclers::recycle);
 		return (Promise<Void>) this;
 	}
 

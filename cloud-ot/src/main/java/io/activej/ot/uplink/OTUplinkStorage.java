@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.collection.CollectionUtils.concat;
-import static io.activej.promise.Promises.isErrorOrResult;
+import static io.activej.promise.Promises.isResultOrError;
 import static io.activej.promise.Promises.retry;
 import static java.util.Collections.emptyList;
 
@@ -205,7 +205,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 	@Override
 	public Promise<FetchData<Long, D>> checkout() {
 		return retry(
-				isErrorOrResult(Objects::nonNull),
+				isResultOrError(Objects::nonNull),
 				() -> storage.getSnapshot()
 						.then(snapshotData -> snapshotData != null ?
 								Promise.of(snapshotData) :

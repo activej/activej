@@ -38,7 +38,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
-import static io.activej.promise.Promises.isErrorOrResult;
+import static io.activej.promise.Promises.isResultOrError;
 import static io.activej.promise.Promises.retry;
 import static java.util.Collections.singleton;
 
@@ -131,7 +131,7 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC> {
 	@Override
 	public Promise<FetchData<K, D>> poll(K currentCommitId) {
 		return retry(
-				isErrorOrResult(polledHeads -> !polledHeads.contains(currentCommitId)),
+				isResultOrError(polledHeads -> !polledHeads.contains(currentCommitId)),
 				PollSanitizer.create(repository.pollHeads()))
 				.then(heads -> doFetch(heads, currentCommitId));
 	}

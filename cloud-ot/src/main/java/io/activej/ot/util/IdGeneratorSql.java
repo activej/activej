@@ -33,7 +33,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.common.Checks.checkState;
-import static io.activej.promise.Promises.isErrorOrResult;
+import static io.activej.promise.Promises.isResultOrError;
 import static io.activej.promise.Promises.retry;
 
 public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBeanEx {
@@ -94,7 +94,7 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 			return Promise.of(next++);
 		}
 		return retry(
-				isErrorOrResult(Objects::nonNull),
+				isResultOrError(Objects::nonNull),
 				() -> reserveId.get()
 						.map($ -> next < limit ? next++ : null));
 	}

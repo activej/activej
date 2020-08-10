@@ -32,8 +32,7 @@ import org.jetbrains.annotations.NotNull;
  * All operations of this interface are idempotent.
  */
 public interface AsyncCloseable {
-	@SuppressWarnings("unused")
-	Object $STATIC_INIT = new Object() {{
+	Object STATIC = new Object() {{
 		Recyclers.register(AsyncCloseable.class, AsyncCloseable::close);
 	}};
 
