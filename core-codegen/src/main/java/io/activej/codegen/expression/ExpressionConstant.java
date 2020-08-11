@@ -23,27 +23,26 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.objectweb.asm.Type.getType;
 
 /**
  * Defines methods to create a constant value
  */
-final class ExpressionConstant implements Expression {
+public final class ExpressionConstant implements Expression {
+	private static final AtomicInteger COUNTER = new AtomicInteger();
+
 	@NotNull
 	private final Object value;
 	@Nullable
 	private final Type type;
 
-	private String staticConstantField;
+	private final int id = COUNTER.incrementAndGet();
 
 	ExpressionConstant(@NotNull Object value) {
 		this.value = value;
 		this.type = null;
-	}
-
-	ExpressionConstant(@NotNull Object value, @Nullable Type type) {
-		this.value = value;
-		this.type = type;
 	}
 
 	ExpressionConstant(@NotNull Object value, Class<?> type) {
@@ -91,12 +90,18 @@ final class ExpressionConstant implements Expression {
 		} else if (value instanceof Enum) {
 			g.getStatic(type, ((Enum<?>) value).name(), type);
 		} else {
-			if (staticConstantField == null) {
-				staticConstantField = "$STATIC_CONSTANT_" + (ctx.getStaticConstants().size() + 1);
-				ctx.addStaticConstant(staticConstantField, value);
-			}
-			g.getStatic(ctx.getSelfType(), staticConstantField, getType(value.getClass()));
+			String field = "$STATIC_CONSTANT_" + getId();
+			ctx.getClassBuilder().withStaticFinalField(field, value.getClass(), this);
+			g.getStatic(ctx.getSelfType(), field, getType(value.getClass()));
 		}
 		return type;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public boolean isJvmPrimitive() {
+		return value.getClass() == String.class || Primitives.isWrapperType(value.getClass());
 	}
 }

@@ -86,9 +86,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.sort;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * Represents an OLAP cube. Provides methods for loading and querying data.
@@ -961,7 +959,9 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		MeasuresFunction<R> createMeasuresFunction() {
 			return ClassBuilder.create(queryClassLoader, MeasuresFunction.class)
 					.withClassKey(resultClass, resultComputedMeasures)
-					.withFields(resultComputedMeasures.stream().collect(toMap(identity(), computedMeasure -> computedMeasures.get(computedMeasure).getType(measures))))
+					.withInitializer(cb ->
+							resultComputedMeasures.forEach(computedMeasure ->
+									cb.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
 					.withMethod("computeMeasures", sequence(list -> {
 						for (String computedMeasure : resultComputedMeasures) {
 							Expression record = cast(arg(0), resultClass);

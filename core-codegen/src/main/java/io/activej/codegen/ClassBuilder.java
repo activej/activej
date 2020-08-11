@@ -18,6 +18,7 @@ package io.activej.codegen;
 
 import io.activej.codegen.DefiningClassLoader.ClassKey;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.ExpressionConstant;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.codegen.util.WithInitializer;
 import org.jetbrains.annotations.Nullable;
@@ -33,9 +34,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;
@@ -52,24 +55,32 @@ import static org.objectweb.asm.commons.Method.getMethod;
 public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
+	public static final String CLASS_BUILDER_MARKER = "$GENERATED";
 	public static final String DEFAULT_CLASS_NAME = ClassBuilder.class.getPackage().getName() + ".Class";
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 
+	private static final ConcurrentHashMap<Integer, Object> STATIC_CONSTANTS = new ConcurrentHashMap<>();
+
 	private final DefiningClassLoader classLoader;
 
-	private final Class<?> superclass;
-	private final List<Class<?>> interfaces;
+	protected final Class<?> superclass;
+	protected final List<Class<?>> interfaces;
 	@Nullable
 	private ClassKey classKey;
 	private Path bytecodeSaveDir;
 
 	private String className;
-	private final Map<String, Class<?>> fields = new LinkedHashMap<>();
-	private final Map<String, Class<?>> staticFields = new LinkedHashMap<>();
-	private final Map<Method, Expression> methods = new LinkedHashMap<>();
-	private final Map<Method, Expression> staticMethods = new LinkedHashMap<>();
 
-	private final Map<String, Object> staticConstants = new LinkedHashMap<>();
+	protected final Map<String, Class<?>> fields = new LinkedHashMap<>();
+	private final Set<String> fieldsFinal = new HashSet<>();
+	private final Set<String> fieldsStatic = new HashSet<>();
+	private final Map<String, Expression> fieldExpressions = new HashMap<>();
+
+	protected final Map<Method, Expression> methods = new LinkedHashMap<>();
+	protected final Map<Method, Expression> staticMethods = new LinkedHashMap<>();
+
+	private final List<Expression> initializers = new ArrayList<>();
+	private final List<Expression> staticInitializers = new ArrayList<>();
 
 	// region builders
 
@@ -84,6 +95,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		this.superclass = superclass;
 		this.interfaces = types;
 		this.classKey = null;
+		withStaticField(CLASS_BUILDER_MARKER, Void.class);
 	}
 
 	public static <T> ClassBuilder<T> create(DefiningClassLoader classLoader, Class<? super T> implementation, Class<?>... interfaces) {
@@ -119,20 +131,38 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		return this;
 	}
 
-	/**
-	 * Creates a new field for a dynamic class
-	 *
-	 * @param field      name of field
-	 * @param fieldClass type of field
-	 * @return changed AsmFunctionFactory
-	 */
-	public ClassBuilder<T> withField(String field, Class<?> fieldClass) {
-		fields.put(field, fieldClass);
+	public ClassBuilder<T> withStaticInitializer(Expression expression) {
+		staticInitializers.add(expression);
 		return this;
 	}
 
-	public ClassBuilder<T> withFields(Map<String, Class<?>> fields) {
-		this.fields.putAll(fields);
+	public ClassBuilder<T> withConstructor(Expression expression) {
+		initializers.add(expression);
+		return this;
+	}
+
+	/**
+	 * Creates a new field for a dynamic class
+	 *
+	 * @param field name of field
+	 * @param type  type of field
+	 * @return changed AsmFunctionFactory
+	 */
+	public ClassBuilder<T> withField(String field, Class<?> type) {
+		fields.put(field, type);
+		return this;
+	}
+
+	public ClassBuilder<T> withField(String field, Class<?> type, Expression value) {
+		fields.put(field, type);
+		fieldExpressions.put(field, value);
+		return this;
+	}
+
+	public ClassBuilder<T> withFinalField(String field, Class<?> type, Expression value) {
+		fields.put(field, type);
+		fieldsFinal.add(field);
+		fieldExpressions.put(field, value);
 		return this;
 	}
 
@@ -198,26 +228,32 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		staticMethods.put(new Method(methodName, getType(returnClass), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
 	}
 
-	public <F> ClassBuilder<T> withStaticField(String fieldName, Class<F> type, F value) {
-		this.staticFields.put(fieldName, type);
-		this.staticConstants.put(fieldName, value);
+	public ClassBuilder<T> withStaticField(String field, Class<?> type) {
+		this.fields.put(field, type);
+		this.fieldsStatic.add(field);
 		return this;
 	}
 
-	public Map<Method, Expression> getMethods() {
-		return methods;
+	public ClassBuilder<T> withStaticField(String field, Class<?> type, Expression value) {
+		this.fields.put(field, type);
+		this.fieldsStatic.add(field);
+		this.fieldExpressions.put(field, value);
+		return this;
 	}
 
-	public Map<String, Class<?>> getFields() {
-		return fields;
+	public ClassBuilder<T> withStaticFinalField(String field, Class<?> type, Expression value) {
+		this.fields.put(field, type);
+		this.fieldsStatic.add(field);
+		this.fieldsFinal.add(field);
+		if (value instanceof ExpressionConstant && !((ExpressionConstant) value).isJvmPrimitive()) {
+			STATIC_CONSTANTS.put(((ExpressionConstant) value).getId(), ((ExpressionConstant) value).getValue());
+		}
+		this.fieldExpressions.put(field, value);
+		return this;
 	}
 
-	public Map<Method, Expression> getStaticMethods() {
-		return staticMethods;
-	}
-
-	public Map<String, Class<?>> getStaticFields() {
-		return staticFields;
+	public static Object getStaticConstant(int id) {
+		return STATIC_CONSTANTS.get(id);
 	}
 
 	// endregion
@@ -230,29 +266,33 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 			}
 		}
 
-		byte[] bytecode = defineNewClass(className != null ? className : DEFAULT_CLASS_NAME + COUNTER.incrementAndGet());
+		try {
+			byte[] bytecode = defineNewClass(className != null ? className : DEFAULT_CLASS_NAME + COUNTER.incrementAndGet());
 
-		synchronized (classLoader) {
-			if (classKey != null) {
-				Class<?> cachedClass = classLoader.getCachedClass(classKey);
+			synchronized (classLoader) {
+				if (classKey != null) {
+					Class<?> cachedClass = classLoader.getCachedClass(classKey);
 
-				if (cachedClass != null) {
-					return (Class<T>) cachedClass;
+					if (cachedClass != null) {
+						return (Class<T>) cachedClass;
+					}
 				}
-			}
-
-			Class<T> definedClass = (Class<T>) classLoader.defineAndCacheClass(classKey, className, bytecode);
-
-			for (Map.Entry<String, Object> entry : staticConstants.entrySet()) {
+				Class<T> aClass = (Class<T>) classLoader.defineAndCacheClass(classKey, className, bytecode);
 				try {
-					Field field = definedClass.getField(entry.getKey());
-					field.set(null, entry.getValue());
-				} catch (NoSuchFieldException | IllegalAccessException e) {
+					Field field = aClass.getField(CLASS_BUILDER_MARKER);
+					//noinspection ResultOfMethodCallIgnored
+					field.get(null);
+				} catch (IllegalAccessException | NoSuchFieldException e) {
 					throw new AssertionError(e);
 				}
+				return aClass;
 			}
-
-			return definedClass;
+		} finally {
+			for (Expression expression : this.fieldExpressions.values()) {
+				if (expression instanceof ExpressionConstant) {
+					STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
+				}
+			}
 		}
 	}
 
@@ -273,32 +313,48 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 			g.loadThis();
 			g.invokeConstructor(getType(superclass), m);
 
+			Context ctx = new Context(classLoader, this, g, classType, m);
+
+			for (String field : this.fieldExpressions.keySet()) {
+				if (this.fieldsStatic.contains(field)) continue;
+				Expression expression = this.fieldExpressions.get(field);
+				set(property(self(), field), expression).load(ctx);
+			}
+
+			for (Expression initializer : initializers) {
+				initializer.load(ctx);
+			}
+
 			g.returnValue();
 			g.endMethod();
 		}
 
-		for (Map.Entry<String, Class<?>> entry : fields.entrySet()) {
-			cw.visitField(ACC_PUBLIC, entry.getKey(), getType(entry.getValue()).getDescriptor(), null, null);
-		}
-
 		Set<Method> methods = new HashSet<>();
 		Set<Method> staticMethods = new HashSet<>();
+		Set<String> fields = new HashSet<>();
 
 		while (true) {
+			Set<String> newFields = new LinkedHashSet<>(this.fields.keySet());
+			newFields.removeAll(fields);
 			Set<Method> newMethods = new LinkedHashSet<>(this.methods.keySet());
 			newMethods.removeAll(methods);
 			Set<Method> newStaticMethods = new LinkedHashSet<>(this.staticMethods.keySet());
 			newStaticMethods.removeAll(staticMethods);
 
-			if (newMethods.isEmpty() && newStaticMethods.isEmpty()) {
+			if (newFields.isEmpty() && newMethods.isEmpty() && newStaticMethods.isEmpty()) {
 				break;
+			}
+
+			for (String field : newFields) {
+				cw.visitField(ACC_PUBLIC + (fieldsStatic.contains(field) ? ACC_STATIC : 0) + (fieldsFinal.contains(field) ? ACC_FINAL : 0),
+						field, getType(this.fields.get(field)).getDescriptor(), null, null);
 			}
 
 			for (Method m : newMethods) {
 				try {
-					GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC, m, null, null, cw);
+					GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_FINAL, m, null, null, cw);
 
-					Context ctx = new Context(classLoader, g, classType, superclass, interfaces, fields, this.methods, this.staticMethods, m, staticConstants);
+					Context ctx = new Context(classLoader, this, g, classType, m);
 
 					Expression expression = this.methods.get(m);
 					ctx.cast(expression.load(ctx), m.getReturnType());
@@ -314,7 +370,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				try {
 					GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC + ACC_FINAL, m, null, null, cw);
 
-					Context ctx = new Context(classLoader, g, classType, superclass, interfaces, fields, this.methods, this.staticMethods, m, staticConstants);
+					Context ctx = new Context(classLoader, this, g, classType, m);
 
 					Expression expression = this.staticMethods.get(m);
 					ctx.cast(expression.load(ctx), m.getReturnType());
@@ -326,16 +382,37 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				}
 			}
 
+			fields.addAll(newFields);
 			methods.addAll(newMethods);
 			staticMethods.addAll(newStaticMethods);
 		}
 
-		for (Map.Entry<String, Class<?>> entry : staticFields.entrySet()) {
-			cw.visitField(ACC_PUBLIC + ACC_STATIC, entry.getKey(), getType(entry.getValue()).getDescriptor(), null, null);
-		}
+		{
+			Method m = getMethod("void <clinit> ()");
+			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC, m, null, null, cw);
 
-		for (Map.Entry<String, Object> entry : staticConstants.entrySet()) {
-			cw.visitField(ACC_PUBLIC + ACC_STATIC, entry.getKey(), getType(entry.getValue().getClass()).getDescriptor(), null, null);
+			Context ctx = new Context(classLoader, this, g, classType, m);
+
+			for (String field : this.fieldExpressions.keySet()) {
+				if (!this.fieldsStatic.contains(field)) continue;
+				Expression expression = this.fieldExpressions.get(field);
+
+				if (expression instanceof ExpressionConstant && !((ExpressionConstant) expression).isJvmPrimitive()) {
+					set(staticField(field), cast(
+							staticCall(ClassBuilder.class, "getStaticConstant", value(((ExpressionConstant) expression).getId())),
+							this.fields.get(field)))
+							.load(ctx);
+				} else {
+					set(staticField(field), expression).load(ctx);
+				}
+			}
+
+			for (Expression initializer : staticInitializers) {
+				initializer.load(ctx);
+			}
+
+			g.returnValue();
+			g.endMethod();
 		}
 
 		if (bytecodeSaveDir != null) {

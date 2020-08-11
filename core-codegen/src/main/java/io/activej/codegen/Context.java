@@ -41,40 +41,28 @@ import static org.objectweb.asm.Type.*;
  */
 public final class Context {
 	private final DefiningClassLoader classLoader;
+	private final ClassBuilder<?> classBuilder;
 	private final GeneratorAdapter g;
 	private final Type selfType;
-	private final Class<?> superclass;
-	private final List<Class<?>> interfaces;
-	private final Map<String, Class<?>> fields;
-	private final Map<Method, Expression> methods;
-	private final Map<Method, Expression> staticMethods;
 	private final Method method;
-	private final Map<String, Object> staticConstants;
 
-	public Context(DefiningClassLoader classLoader,
+	public Context(DefiningClassLoader classLoader, ClassBuilder<?> builder,
 			GeneratorAdapter g,
 			Type selfType,
-			Class<?> superclass,
-			List<Class<?>> interfaces,
-			Map<String, Class<?>> fields,
-			Map<Method, Expression> methods,
-			Map<Method, Expression> staticMethods,
-			Method method,
-			Map<String, Object> staticConstants) {
+			Method method) {
 		this.classLoader = classLoader;
+		this.classBuilder = builder;
 		this.g = g;
 		this.selfType = selfType;
-		this.superclass = superclass;
-		this.interfaces = interfaces;
-		this.fields = fields;
-		this.methods = methods;
-		this.staticMethods = staticMethods;
 		this.method = method;
-		this.staticConstants = staticConstants;
 	}
 
 	public DefiningClassLoader getClassLoader() {
 		return classLoader;
+	}
+
+	public ClassBuilder<?> getClassBuilder() {
+		return classBuilder;
 	}
 
 	public GeneratorAdapter getGeneratorAdapter() {
@@ -86,35 +74,27 @@ public final class Context {
 	}
 
 	public Class<?> getSuperclass() {
-		return superclass;
+		return classBuilder.superclass;
 	}
 
 	public List<Class<?>> getInterfaces() {
-		return interfaces;
+		return classBuilder.interfaces;
 	}
 
 	public Map<String, Class<?>> getFields() {
-		return fields;
+		return classBuilder.fields;
 	}
 
 	public Map<Method, Expression> getMethods() {
-		return methods;
+		return classBuilder.methods;
 	}
 
 	public Map<Method, Expression> getStaticMethods() {
-		return staticMethods;
+		return classBuilder.staticMethods;
 	}
 
 	public Method getMethod() {
 		return method;
-	}
-
-	public Map<String, Object> getStaticConstants() {
-		return staticConstants;
-	}
-
-	public void addStaticConstant(String field, Object value) {
-		staticConstants.put(field, value);
 	}
 
 	public VarLocal newLocal(Type type) {

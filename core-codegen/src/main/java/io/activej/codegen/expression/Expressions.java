@@ -145,6 +145,10 @@ public class Expressions {
 		return new ExpressionStaticField(owner, field);
 	}
 
+	public static Variable staticField(String field) {
+		return new ExpressionStaticField(null, field);
+	}
+
 	/**
 	 * Returns current instance
 	 *
@@ -604,18 +608,6 @@ public class Expressions {
 
 	public static Expression neg(Expression arg) {
 		return new ExpressionNeg(arg);
-	}
-
-	public static Expression setListItem(Expression list, Expression index, Expression value) {
-		return call(list, "set", index, value);
-	}
-
-	public static Expression getListItem(Expression list, Expression index) {
-		return call(cast(list, List.class), "get", index);
-	}
-
-	public static Expression addListItem(Expression list, Expression value) {
-		return call(list, "add", value);
 	}
 
 }

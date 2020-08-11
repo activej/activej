@@ -517,10 +517,10 @@ public class ExpressionTest {
 		WriteAllListElement testClass = ClassBuilder.create(DefiningClassLoader.create(), WriteAllListElement.class)
 				.withMethod("write",
 						forEach(arg(0),
-								it -> sequence(addListItem(arg(1), it), voidExp())))
+								it -> sequence(call(arg(1), "add", it), voidExp())))
 				.withMethod("writeIter",
 						forEach(arg(0),
-								it -> sequence(addListItem(arg(1), it), voidExp())))
+								it -> sequence(call(arg(1), "add", it), voidExp())))
 				.buildClassAndCreateNewInstance();
 
 		testClass.write(listFrom, listTo1);
@@ -548,7 +548,7 @@ public class ExpressionTest {
 
 		WriteArrayElements testClass = ClassBuilder.create(DefiningClassLoader.create(), WriteArrayElements.class)
 				.withMethod("write", forEach(arg(0),
-						it -> sequence(addListItem(arg(1), cast(it, Object.class)), voidExp())))
+						it -> sequence(call(arg(1), "add", cast(it, Object.class)), voidExp())))
 				.buildClassAndCreateNewInstance();
 
 		testClass.write(intsFrom, list);
@@ -831,7 +831,7 @@ public class ExpressionTest {
 								.withQuotes("{", "}", ", ")
 								.with(call(self(), "b")))
 				.buildClassAndCreateNewInstance();
-		assertEquals(1, folder.list().length );
+		assertEquals(1, folder.list().length);
 		assertNull(instance.b());
 		assertEquals("{null}", instance.toString());
 	}
@@ -922,8 +922,22 @@ public class ExpressionTest {
 	}
 
 	@org.junit.Test
+	public void testFields() {
+		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
+		Object testObject = new Object();
+		Getter instance = ClassBuilder.create(definingClassLoader, Getter.class)
+//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
+				.withField("field1", Object.class, value(testObject))
+				.withMethod("get", property(self(), "field1"))
+				.buildClassAndCreateNewInstance();
+		assertSame(testObject, instance.get(null));
+	}
+
+	@org.junit.Test
 	public void testStaticFields() throws IllegalAccessException, InstantiationException {
 		Class<StaticPojo> build = ClassBuilder.create(DefiningClassLoader.create(), StaticPojo.class)
+//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
+				.withStaticField("field", int.class, value(10))
 				.withMethod("getField", staticField(StaticFieldHolder.class, "field"))
 				.withMethod("setField", set(staticField(StaticFieldHolder.class, "field"), arg(0)))
 				.build();
