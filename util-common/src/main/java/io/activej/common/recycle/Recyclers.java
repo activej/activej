@@ -4,17 +4,16 @@ import io.activej.common.collection.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static java.util.Collections.singletonMap;
 
+@SuppressWarnings("unchecked")
 public class Recyclers {
-	private static final Recycler<?> NO_RECYCLER = $ -> {};
+	private static final Recycler<?> NO_RECYCLER = item -> {};
 
 	private static final Map<Class<?>, Recycler<?>> REGISTRY = new HashMap<>();
 	private static final ConcurrentHashMap<Class<?>, Recycler<?>> CACHED_RECYCLERS = new ConcurrentHashMap<>();
@@ -26,7 +25,9 @@ public class Recyclers {
 		register(Map.class, Recyclers::recycleMap);
 		register(Iterable.class, Recyclers::recycleIterable);
 		register(Iterator.class, Recyclers::recycleIterator);
-		register(Stream.class, Recyclers::recycleStream);
+		register(Stream.class, stream -> stream.forEach(Recyclers::recycle));
+		register(Optional.class, optional -> optional.ifPresent(Recyclers::recycle));
+		register(CompletionStage.class, future -> future.thenAccept(Recyclers::recycle));
 	}
 
 	synchronized public static <T> void register(Class<T> type, Recycler<T> item) {
@@ -117,6 +118,13 @@ public class Recyclers {
 		}
 	}
 
+	private static void recycleArray(Object[] array) {
+		//noinspection ForLoopReplaceableByForEach
+		for (int i = 0, length = array.length; i < length; i++) {
+			recycle(array[i]);
+		}
+	}
+
 	private static void recycleMap(Map<?, ?> map) {
 		for (Object item : map.values()) {
 			recycle(item);
@@ -134,16 +142,4 @@ public class Recyclers {
 			recycle(iterator.next());
 		}
 	}
-
-	private static void recycleStream(Stream<?> stream) {
-		stream.forEach(Recyclers::recycle);
-	}
-
-	private static void recycleArray(Object[] array) {
-		//noinspection ForLoopReplaceableByForEach
-		for (int i = 0, length = array.length; i < length; i++) {
-			recycle(array[i]);
-		}
-	}
-
 }

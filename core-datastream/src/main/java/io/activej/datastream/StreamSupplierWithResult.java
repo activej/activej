@@ -16,6 +16,7 @@
 
 package io.activej.datastream;
 
+import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.Tuple2;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -28,6 +29,13 @@ import java.util.function.Function;
  * that represents some kind of result from the streaming process.
  */
 public final class StreamSupplierWithResult<T, X> {
+	static {
+		Recyclers.register(StreamSupplierWithResult.class, item -> {
+			Recyclers.recycle(item.supplier);
+			Recyclers.recycle(item.result);
+		});
+	}
+
 	@NotNull
 	private final StreamSupplier<T> supplier;
 	@NotNull

@@ -36,6 +36,10 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
  */
 @SuppressWarnings("unchecked")
 public abstract class CompletePromise<T> implements Promise<T> {
+	static {
+		Recyclers.register(CompletePromise.class, promise -> Recyclers.recycle(promise.getResult()));
+	}
+
 	@Override
 	public final boolean isComplete() {
 		return true;

@@ -16,6 +16,7 @@
 
 package io.activej.common.collection;
 
+import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +26,13 @@ import java.util.function.*;
 import static io.activej.common.Checks.checkState;
 
 public final class Either<L, R> {
+	static {
+		Recyclers.register(Either.class, either -> {
+			Recyclers.recycle(either.left);
+			Recyclers.recycle(either.right);
+		});
+	}
+
 	@Nullable
 	private final L left;
 

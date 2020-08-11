@@ -16,6 +16,7 @@
 
 package io.activej.datastream;
 
+import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,6 +27,13 @@ import java.util.function.Function;
  * that represents some kind of result from the streaming process.
  */
 public final class StreamConsumerWithResult<T, X> {
+	static {
+		Recyclers.register(StreamConsumerWithResult.class, item -> {
+			Recyclers.recycle(item.consumer);
+			Recyclers.recycle(item.result);
+		});
+	}
+
 	@NotNull
 	private final StreamConsumer<T> consumer;
 

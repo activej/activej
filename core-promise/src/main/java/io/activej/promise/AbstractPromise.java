@@ -40,6 +40,10 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 @SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
 abstract class AbstractPromise<T> implements Promise<T> {
+	static {
+		Recyclers.register(AbstractPromise.class, promise -> promise.whenResult(Recyclers::recycle));
+	}
+
 	private static final boolean CHECK = Checks.isEnabled(AbstractPromise.class);
 
 	private static final Object PROMISE_NOT_SET = new Object();

@@ -17,6 +17,7 @@
 package io.activej.common.collection;
 
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +33,10 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 
 public final class Try<T> {
+	static {
+		Recyclers.register(Try.class, aTry -> Recyclers.recycle(aTry.result));
+	}
+
 	private final T result;
 
 	@Nullable
