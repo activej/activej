@@ -120,6 +120,18 @@ public final class TestLocalActiveFs {
 	}
 
 	@Test
+	public void testUploadToDirectory() {
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.upload("1")));
+		assertThat(exception, instanceOf(IsADirectoryException.class));
+	}
+
+	@Test
+	public void testAppendToDirectory() {
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.append("1", 0)));
+		assertThat(exception, instanceOf(IsADirectoryException.class));
+	}
+
+	@Test
 	public void uploadIncompleteFile() {
 		String filename = "incomplete.txt";
 		Path path = storagePath.resolve(filename);

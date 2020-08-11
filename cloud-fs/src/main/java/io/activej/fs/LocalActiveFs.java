@@ -69,7 +69,6 @@ import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.*;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
-import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.*;
@@ -183,8 +182,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					Path path = resolve(name);
 					FileChannel channel;
 					if (offset == 0) {
-						deleteIfEmptyDir(name);
-						channel = ensureParent(path, () -> FileChannel.open(path, CREATE, WRITE));
+						channel = ensureTarget(null, path, () -> FileChannel.open(path, CREATE, WRITE));
 					} else {
 						channel = FileChannel.open(path, WRITE);
 					}
@@ -211,7 +209,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 		return resolveAsync(name)
 				.then(path -> execute(() -> {
-					if (!Files.exists(path)) {
+					if (!Files.isRegularFile(path)) {
 						throw new FileNotFoundException(LocalActiveFs.class);
 					}
 					FileChannel channel = FileChannel.open(path, READ);
@@ -364,37 +362,26 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return "LocalActiveFs{storage=" + storage + '}';
 	}
 
-	private void deleteEmptyParents(Path parent) {
-		while (!parent.equals(storage) && !parent.equals(tempDir)) {
-			try {
-				Files.deleteIfExists(parent);
-				parent = parent.getParent();
-			} catch (IOException ignored) {
-				// either directory is not empty or some other exception
-				return;
-			}
-		}
-	}
+	private void tryDelete(Path target) throws IOException, IsADirectoryException {
+		try {
+			Files.walkFileTree(target, new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					if (target.equals(file)) {
+						Files.deleteIfExists(file);
+						return CONTINUE;
+					}
+					throw new DirectoryNotEmptyException(target.toString());
+				}
 
-	private void deleteIfEmptyDir(String name) throws IOException, IsADirectoryException, ForbiddenPathException {
-		Path target = resolve(name);
-		if (!Files.isDirectory(target)) {
-			return;
-		}
-		try (Stream<Path> paths = Files.walk(target)) {
-			Iterator<Path> iterator = paths.sorted(reverseOrder()).iterator();
-			while (iterator.hasNext()) {
-				Path path = iterator.next();
-				if (Files.isRegularFile(path)) {
-					// regular file inside target directory
-					throw dirEx(name);
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+					Files.deleteIfExists(dir);
+					return CONTINUE;
 				}
-				try {
-					Files.deleteIfExists(path);
-				} catch (DirectoryNotEmptyException e) {
-					throw dirEx(name);
-				}
-			}
+			});
+		} catch (DirectoryNotEmptyException e) {
+			throw dirEx(storage.relativize(target).toString());
 		}
 	}
 
@@ -416,7 +403,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private Path resolve(String name) throws ForbiddenPathException {
 		Path path = storage.resolve(toLocalName.apply(name)).normalize();
-		if (!path.startsWith(storage)) {
+		if (!path.startsWith(storage) || path.startsWith(tempDir)) {
 			throw new ForbiddenPathException(LocalActiveFs.class, "Path '" + name + "' is forbidden");
 		}
 		return path;
@@ -433,7 +420,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
 				() -> {
-					deleteIfEmptyDir(name);
 					Path tempPath = Files.createTempFile(tempDir, "", "");
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
@@ -455,19 +441,17 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			String to = entry.getValue();
 			translateBatchErrors(from, to, () -> {
 				Path path = resolve(from);
-				deleteIfEmptyDir(from);
-				if (!Files.exists(path)) {
+				if (!Files.isRegularFile(path)) {
 					throw new FileNotFoundException(LocalActiveFs.class, "File '" + from + "' not found");
 				}
 				Path targetPath = resolve(to);
-				deleteIfEmptyDir(to);
 
 				if (path.equals(targetPath)) {
 					touch(path);
 					return;
 				}
 
-				ensureParent(targetPath, () -> {
+				ensureTarget(path, targetPath, () -> {
 					if (hardlinkOnCopy) {
 						try {
 							Files.createLink(targetPath, path);
@@ -491,12 +475,10 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			String to = entry.getValue();
 			translateBatchErrors(from, to, () -> {
 				Path path = resolve(from);
-				deleteIfEmptyDir(from);
-				if (!Files.exists(path)) {
+				if (!Files.isRegularFile(path)) {
 					throw new FileNotFoundException(LocalActiveFs.class, "File '" + from + "' not found");
 				}
 				Path targetPath = resolve(to);
-				deleteIfEmptyDir(to);
 				if (path.equals(targetPath)) {
 					touch(path);
 					return;
@@ -506,18 +488,13 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	private void doMove(Path path, Path targetPath) throws IOException {
-		ensureParent(targetPath, () -> {
-			try {
-				Files.move(path, targetPath, ATOMIC_MOVE);
-				touch(targetPath);
-			} catch (AtomicMoveNotSupportedException e) {
-				Files.move(path, targetPath, REPLACE_EXISTING);
-			}
+	private void doMove(Path path, Path targetPath) throws IOException, FsScalarException {
+		ensureTarget(path, targetPath, () -> {
+			Files.createLink(targetPath, path);
+			touch(targetPath);
+			Files.deleteIfExists(path);
 			return null;
 		});
-
-		deleteEmptyParents(path.getParent());
 	}
 
 	private void doDelete(Set<String> toDelete) throws FsBatchException, FsIOException {
@@ -532,23 +509,29 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				} catch (DirectoryNotEmptyException e) {
 					throw dirEx(name);
 				}
-
-				deleteEmptyParents(path.getParent());
 			});
 		}
 	}
 
-	private <V> V ensureParent(Path path, FsCallable<V> afterCreation) throws IOException {
-		Path parent = path.getParent();
+	private <V> V ensureTarget(@Nullable Path source, Path target, FsCallable<V> afterCreation) throws IOException, FsScalarException {
+		Path parent = target.getParent();
 		while (true) {
-			Files.createDirectories(parent);
 			try {
 				return afterCreation.call();
 			} catch (NoSuchFileException e) {
-				if (path.toString().equals(e.getFile())) {
-					continue;
+				if (Files.exists(parent)) {
+					throw e;
 				}
-				throw e;
+				Files.createDirectories(parent);
+			} catch (FileSystemException e) {
+				if (source != null && !Files.isRegularFile(source)) {
+					throw new FileNotFoundException(LocalActiveFs.class);
+				}
+				try {
+					tryDelete(target);
+				} catch (FileSystemException e2) {
+					throw new PathContainsFileException(LocalActiveFs.class);
+				}
 			}
 		}
 	}
@@ -751,7 +734,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private void translateBatchErrors(@NotNull String first, @Nullable String second, FsRunnable runnable) throws FsBatchException, FsIOException {
 		try {
 			runnable.run();
-		} catch (FsScalarException e){
+		} catch (FsScalarException e) {
 			throw batchEx(LocalActiveFs.class, first, e);
 		} catch (FileAlreadyExistsException e) {
 			checkIfDirectories(first, second);
