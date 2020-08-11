@@ -90,6 +90,24 @@ public final class FsIntegrationTest {
 	}
 
 	@Test
+	public void testUploadCompletesCorrectly() {
+		String resultFile = "file_uploaded.txt";
+
+		byte[] bytes = await(fs.upload(resultFile)
+				.then(ChannelSupplier.of(ByteBuf.wrapForReading(CONTENT))::streamTo)
+				.map($ -> {
+					try {
+						return Files.readAllBytes(storage.resolve(resultFile));
+					} catch (IOException e) {
+						throw new AssertionError(e);
+					}
+				})
+				.whenComplete(server::close));
+
+		assertArrayEquals(CONTENT, bytes);
+	}
+
+	@Test
 	public void uploadLessThanSpecified() {
 		String filename = "incomplete.txt";
 		Path path = storage.resolve(filename);

@@ -116,9 +116,8 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 					.map(uploader -> size == null ? uploader : uploader.transformWith(ofFixedSize(size)))
 					.then(uploader -> messaging.send(new UploadAck())
 							.then(() -> messaging.receiveBinaryStream()
-									.withEndOfStream(eos -> eos
-											.then(() -> messaging.send(new UploadFinished())))
 									.streamTo(uploader)))
+					.then(() -> messaging.send(new UploadFinished()))
 					.then(messaging::sendEndOfStream)
 					.whenResult(messaging::close)
 					.whenComplete(uploadPromise.recordStats())

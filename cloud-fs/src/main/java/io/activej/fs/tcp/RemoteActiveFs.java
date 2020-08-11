@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
@@ -80,6 +81,8 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	private final PromiseStats connectPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats appendStartPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats appendFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -147,7 +150,8 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 									messaging.closeEx(e);
 									logger.warn("Cancelled while trying to upload file {}: {}", name, this, e);
 								})
-								.whenComplete(uploadFinishPromise.recordStats()))))
+								.whenComplete(uploadFinishPromise.recordStats())
+								.whenComplete(toLogger(logger, TRACE, "uploadComplete", messaging, name, size, this)))))
 				.whenException(e -> {
 					messaging.closeEx(e);
 					logger.warn("Error while trying to upload file {}: {}", name, this, e);
@@ -166,8 +170,12 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 												.then(messaging::receive)
 												.whenResult(messaging::close)
 												.then(msg -> cast(msg, AppendFinished.class).toVoid())
-												.whenException(messaging::closeEx))))
-								.whenException(messaging::closeEx));
+												.whenException(messaging::closeEx)
+												.whenComplete(appendFinishPromise.recordStats())
+												.whenComplete(toLogger(logger, TRACE, "appendComplete", name, offset, this)))))
+								.whenException(messaging::closeEx))
+				.whenComplete(appendStartPromise.recordStats())
+				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
 	}
 
 	@Override
@@ -204,6 +212,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM : UNEXPECTED_DATA);
 													})
 													.whenComplete(downloadFinishPromise.recordStats())
+													.whenComplete(toLogger(logger, "downloadComplete", name, offset, limit, this))
 													.whenResult(messaging::close)));
 								})
 								.whenException(e -> {
@@ -365,6 +374,16 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	@JmxAttribute
 	public PromiseStats getUploadFinishPromise() {
 		return uploadFinishPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getAppendStartPromise() {
+		return appendStartPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getAppendFinishPromise() {
+		return appendFinishPromise;
 	}
 
 	@JmxAttribute
