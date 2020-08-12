@@ -16,7 +16,6 @@
 
 package io.activej.fs.cluster;
 
-import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
@@ -35,6 +34,7 @@ import java.util.Objects;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
+import static io.activej.fs.cluster.FsPartitions.LOCAL_EXCEPTION;
 
 final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelByteSplitter, ByteBuf>, WithChannelOutputs<ByteBuf> {
@@ -132,6 +132,6 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 
 		// not passing the exception to all the outputs,
 		// so that they wouldn't be marked dead
-		outputs.forEach(AsyncCloseable::close);
+		outputs.forEach(output -> output.closeEx(LOCAL_EXCEPTION));
 	}
 }

@@ -500,9 +500,4 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		};
 	}
 
-	static Promise<Void> getEndOfStream(Consumer<Function<Promise<Void>, Promise<Void>>> fn) {
-		return Promise.ofCallback(cb ->
-				fn.accept(endOfStream -> endOfStream.whenComplete(cb)));
-	}
-
 }

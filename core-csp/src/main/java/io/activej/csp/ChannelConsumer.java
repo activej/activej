@@ -444,12 +444,4 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 		};
 	}
 
-	/**
-	 * Returns a Promise as a marker of completion.
-	 */
-	static Promise<Void> getAcknowledgement(Consumer<Function<Promise<Void>, Promise<Void>>> fn) {
-		return Promise.ofCallback(cb ->
-				fn.accept(ack -> ack.whenComplete(cb)));
-	}
-
 }

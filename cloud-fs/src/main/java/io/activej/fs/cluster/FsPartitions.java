@@ -37,12 +37,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 
 public final class FsPartitions implements EventloopService, WithInitializer<FsPartitions> {
 	private static final Logger logger = LoggerFactory.getLogger(FsPartitions.class);
+
+	static final FsException LOCAL_EXCEPTION = new FsException(FsPartitions.class, "Local exception");
 
 	private final Map<Object, ActiveFs> alivePartitions = new HashMap<>();
 	private final Map<Object, ActiveFs> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
@@ -176,7 +177,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * or that there were no response at all
 	 */
 	public void markIfDead(Object partitionId, Throwable e) {
-		if (!(e instanceof FsException) && e != CLOSE_EXCEPTION || e instanceof FsIOException) {
+		if (!(e instanceof FsException) && e != LOCAL_EXCEPTION || e instanceof FsIOException) {
 			markDead(partitionId, e);
 		}
 	}

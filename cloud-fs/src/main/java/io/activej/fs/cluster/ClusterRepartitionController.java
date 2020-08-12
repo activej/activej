@@ -56,7 +56,6 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
-import static io.activej.csp.ChannelConsumer.getAcknowledgement;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
@@ -197,7 +196,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 				.whenComplete(repartitionPromiseStats.recordStats())
 				.thenEx(($, e) -> {
 					if (e != null) {
-						logger.warn("forced repartition finish, {} files ensured, {} errored, {} untouched", ensuredFiles, failedFiles, allFiles - ensuredFiles - failedFiles);
+						logger.warn("forced repartition finish, {} files ensured, {} errored, {} untouched", ensuredFiles, failedFiles, allFiles - ensuredFiles - failedFiles, e);
 					} else {
 						logger.info("repartition finished, {} files ensured, {} errored", ensuredFiles, failedFiles);
 					}
@@ -322,7 +321,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								if (fs == null) {
 									return Promise.ofException(new FsIOException(ClusterRepartitionController.class, "File system '" + partitionId + "' is not alive"));
 								}
-								return getAcknowledgement(fn ->
+								return Promise.<Void>ofCallback(cb ->
 										splitter.addOutput()
 												.set(ChannelConsumer.ofPromise(Promise.complete()
 														.then(() -> remoteMeta == null ?
@@ -335,15 +334,12 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 															}
 														}))
 														.withAcknowledgement(ack -> ack
-																.thenEx(($, e) -> {
-																	if (e != null) {
-																		logger.warn("failed uploading to partition {}", partitionId, e);
-																		partitions.markIfDead(partitionId, e);
-																	}
-																	// returning complete promise so that other uploads would not fail
-																	return fn.apply(Promise.complete());
-																}))))
-										.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId));
+																.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
+																.whenException(e -> {
+																	logger.warn("failed uploading to partition {}", partitionId, e);
+																	partitions.markIfDead(partitionId, e);
+																})
+																.whenComplete(cb))));
 							})
 							.map(Promise::toTry))
 							.then(tries -> {
