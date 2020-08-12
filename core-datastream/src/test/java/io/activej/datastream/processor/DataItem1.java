@@ -1,11 +1,11 @@
 package io.activej.datastream.processor;
 
 public class DataItem1 {
-	public int key1;
-	public int key2;
+	public final int key1;
+	public final int key2;
 
-	public long metric1;
-	public long metric2;
+	public final long metric1;
+	public final long metric2;
 
 	public DataItem1(int key1, int key2, long metric1, long metric2) {
 		this.key1 = key1;

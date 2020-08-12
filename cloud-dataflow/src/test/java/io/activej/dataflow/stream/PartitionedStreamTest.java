@@ -94,7 +94,7 @@ public final class PartitionedStreamTest {
 	public static ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Rule
-	public TemporaryFolder tempDir = new TemporaryFolder();
+	public final TemporaryFolder tempDir = new TemporaryFolder();
 
 	private Eventloop serverEventloop;
 	private List<AsyncHttpServer> sourceFsServers;

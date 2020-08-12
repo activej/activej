@@ -275,7 +275,7 @@ public final class AsyncTcpSocketSslTest {
 				builder.append('a');
 			} else if (randNumber == 1) {
 				builder.append('b');
-			} else if (randNumber == 2) {
+			} else {
 				builder.append('c');
 			}
 		}

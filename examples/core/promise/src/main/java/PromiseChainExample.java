@@ -10,15 +10,15 @@ public class PromiseChainExample {
 	public static void main(String[] args) {
 		//[START REGION_1]
 		doSomeProcess()
-				.whenResult(result -> System.out.println(String.format("Result of some process is '%s'", result)))
-				.whenException(e -> System.out.println(String.format("Exception after some process is '%s'", e.getMessage())))
+				.whenResult(result -> System.out.printf("Result of some process is '%s'%n", result))
+				.whenException(e -> System.out.printf("Exception after some process is '%s'%n", e.getMessage()))
 				.map(String::toLowerCase)
 				.mapEx((result, e) -> e == null ? String.format("The mapped result is '%s'", result) : e.getMessage())
 				.whenResult(s -> System.out.println(s));
 		//[END REGION_1]
 		Promise.complete()
 				.then(PromiseChainExample::loadData)
-				.whenResult(result -> System.out.println(String.format("Loaded data is '%s'", result)));
+				.whenResult(result -> System.out.printf("Loaded data is '%s'%n", result));
 		eventloop.run();
 	}
 

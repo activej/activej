@@ -54,6 +54,7 @@ public final class AggregationStructure implements WithInitializer<AggregationSt
 		return this;
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public AggregationStructure withIgnoredMeasure(String measureId, FieldType measureType) {
 		checkArgument(!measureTypes.containsKey(measureId), "Measure '%s' has already been added", measureId);
 		measureTypes.put(measureId, measureType);

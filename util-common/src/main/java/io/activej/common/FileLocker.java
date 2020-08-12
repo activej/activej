@@ -27,6 +27,7 @@ import java.nio.channels.FileLock;
 
 import static io.activej.common.Checks.checkState;
 
+@SuppressWarnings("unused")
 public final class FileLocker {
 	private static final Logger logger = LoggerFactory.getLogger(FileLocker.class);
 
@@ -61,7 +62,7 @@ public final class FileLocker {
 		}
 	}
 
-	@SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
+	@SuppressWarnings({"WeakerAccess", "ResultOfMethodCallIgnored"})
 	public synchronized boolean obtainLock() {
 		try {
 			File parentDir = lockFile.getCanonicalFile().getParentFile();

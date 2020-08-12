@@ -39,7 +39,6 @@ import static io.activej.launchers.initializers.Initializers.ofEventloop;
 
 public abstract class RpcServerLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "rpc-server.properties";
-	public static final String BUSINESS_MODULE_PROP = "businessLogicModule";
 
 	@Inject
 	RpcServer rpcServer;
@@ -80,11 +79,10 @@ public abstract class RpcServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String businessLogicModuleName = System.getProperty(BUSINESS_MODULE_PROP);
-
-		Module businessLogicModule = businessLogicModuleName != null ?
-				(Module) Class.forName(businessLogicModuleName).newInstance() :
-				new AbstractModule() {
+		new RpcServerLauncher() {
+			@Override
+			protected Module getBusinessLogicModule() {
+				return new AbstractModule() {
 					@Provides
 					Initializer<RpcServer> rpcServerInitializer() {
 						return server -> server
@@ -93,14 +91,7 @@ public abstract class RpcServerLauncher extends Launcher {
 										req -> Promise.of("Request: " + req));
 					}
 				};
-
-		Launcher launcher = new RpcServerLauncher() {
-			@Override
-			protected Module getBusinessLogicModule() {
-				return businessLogicModule;
 			}
-		};
-
-		launcher.launch(args);
+		}.launch(args);
 	}
 }

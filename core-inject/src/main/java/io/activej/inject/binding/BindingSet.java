@@ -51,7 +51,7 @@ public final class BindingSet<K> {
 		this.type = type;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static BindingSet<?> merge(Key<?> key, BindingSet<?> first, BindingSet<?> second) {
 		if (first.type != second.type) {
 			throw new DIException("Two binding sets bound with different types for key " + key.getDisplayString());

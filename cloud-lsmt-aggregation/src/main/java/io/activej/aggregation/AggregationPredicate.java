@@ -30,7 +30,7 @@ public interface AggregationPredicate {
 
 	Map<String, Object> getFullySpecifiedDimensions();
 
-	Expression createPredicate(Expression record, Map<String, FieldType> fields);
+	Expression createPredicate(Expression record, @SuppressWarnings("rawtypes") Map<String, FieldType> fields);
 
 	@Override
 	boolean equals(Object o);

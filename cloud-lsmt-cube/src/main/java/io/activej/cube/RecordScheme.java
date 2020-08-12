@@ -42,6 +42,7 @@ public final class RecordScheme {
 		return new RecordScheme();
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public RecordScheme withField(@NotNull String field, @NotNull Type type) {
 		addField(field, type);
 		return this;

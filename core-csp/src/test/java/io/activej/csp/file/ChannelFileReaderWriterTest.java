@@ -36,7 +36,7 @@ public final class ChannelFileReaderWriterTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Rule
-	public TemporaryFolder tempFolder = new TemporaryFolder();
+	public final TemporaryFolder tempFolder = new TemporaryFolder();
 
 	@Test
 	public void streamFileReader() throws IOException {

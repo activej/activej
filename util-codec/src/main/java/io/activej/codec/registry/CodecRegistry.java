@@ -134,7 +134,7 @@ public final class CodecRegistry implements CodecFactory {
 		return withGeneric(type, (self, $) -> codec.apply(self));
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public <T> CodecRegistry withGeneric(Class<T> type, BiFunction<CodecFactory, StructuredCodec<Object>[], StructuredCodec<? extends T>> fn) {
 		map.put(type, (BiFunction) fn);
 		return this;
@@ -170,7 +170,7 @@ public final class CodecRegistry implements CodecFactory {
 		return doGet(RecursiveType.of(type));
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private <T> StructuredCodec<T> doGet(RecursiveType type) {
 		Class clazz = type.getRawType();
 		if (Enum.class.isAssignableFrom(clazz)) {

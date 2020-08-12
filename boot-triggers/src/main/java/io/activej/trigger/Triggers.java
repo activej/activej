@@ -94,6 +94,7 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 		return this;
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public Triggers withTrigger(Severity severity, String component, String name, Supplier<TriggerResult> triggerFunction) {
 		return withTrigger(Trigger.of(severity, component, name, triggerFunction));
 	}

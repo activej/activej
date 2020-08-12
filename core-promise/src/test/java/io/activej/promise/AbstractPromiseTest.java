@@ -14,7 +14,7 @@ public final class AbstractPromiseTest {
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 		RefInt refInt = new RefInt(count);
 		for (int i = 0; i < count; i++) {
-			settablePromise.whenResult(() -> refInt.dec());
+			settablePromise.whenResult(refInt::dec);
 		}
 
 		settablePromise.set(null);

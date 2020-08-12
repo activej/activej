@@ -17,7 +17,7 @@ import java.util.function.DoubleUnaryOperator;
 
 @State(Scope.Benchmark)
 public class CalculatorBenchmark {
-	static Specializer SPECIALIZER = Specializer.create();
+	final static Specializer SPECIALIZER = Specializer.create();
 
 	CalculatorExpression ast;
 	CalculatorExpression manual;
@@ -30,7 +30,7 @@ public class CalculatorBenchmark {
 
 		ast = SpecializerCalculatorExample.PARSER.parse(source);
 		manual = x -> ((2.0 + 2.0 * 2.0) * -x) + 5.0 + 1024.0 / (100.0 + 58.0) * 50.0 * 37.0 - 100.0 + 2.0 * (Math.pow(x, 2.0)) % 3.0;
-		generated = CodegenCalculatorExample.compile(source).newInstance();
+		generated = CodegenCalculatorExample.compile(source).getDeclaredConstructor().newInstance();
 		specialized = SPECIALIZER.specialize(ast);
 	}
 

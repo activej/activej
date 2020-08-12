@@ -4,7 +4,6 @@ import io.activej.dataflow.graph.TaskStatus;
 import io.activej.dataflow.stats.NodeStat;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 

@@ -314,6 +314,7 @@ public final class HttpActiveFs implements ActiveFs {
 		if (ack.isOk()) {
 			return Promise.complete();
 		}
+		//noinspection ConstantConditions - checked above
 		return Promise.ofException(ack.getError());
 	}
 

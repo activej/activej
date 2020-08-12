@@ -211,7 +211,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "RedundantCast"})
 	private void scanClassSettings(Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggers, KeyWithWorkerData internalKey, Object instance) {
 		for (Map.Entry<Class<?>, Set<TriggerConfig<?>>> entry : classSettings.entrySet()) {
 			for (TriggerConfig<?> config : entry.getValue()) {
@@ -224,7 +224,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "RedundantCast"})
 	private void scanKeySettings(Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggers, KeyWithWorkerData internalKey, Object instance) {
 		Key<Object> key = (Key<Object>) internalKey.getKey();
 		for (TriggerConfig<?> config : keySettings.getOrDefault(key, emptySet())) {

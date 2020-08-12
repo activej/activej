@@ -269,6 +269,7 @@ public final class JsonStructuredInput implements StructuredInput {
 	}
 
 	@Override
+	@SuppressWarnings("RedundantThrows")
 	public <T> T readCustom(Type type) throws ParseException {
 		throw new UnsupportedOperationException("No custom type readers");
 	}

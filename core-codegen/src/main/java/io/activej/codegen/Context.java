@@ -323,6 +323,7 @@ public final class Context {
 		return ownerType;
 	}
 
+	@SuppressWarnings("StatementWithEmptyBody")
 	private Method findMethod(Stream<Method> methods, String name, Class<?>[] arguments) {
 		Set<Method> methodSet = methods.collect(toSet());
 

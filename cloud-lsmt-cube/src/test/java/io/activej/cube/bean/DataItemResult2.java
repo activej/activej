@@ -33,6 +33,7 @@ public class DataItemResult2 {
 			keysToMap(Stream.of("metric1", "metric2", "metric3"), k -> sum(ofLong()));
 
 	@Override
+	@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass", "RedundantIfStatement"})
 	public boolean equals(Object o) {
 		DataItemResult2 that = (DataItemResult2) o;
 

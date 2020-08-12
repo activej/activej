@@ -7,6 +7,6 @@ public class StressTestAllOperations {
 	public static void main(String[] args) throws IOException {
 		StressClient client = new StressClient();
 		client.setup();
-		client.start(100, 360_000);
+		client.start();
 	}
 }

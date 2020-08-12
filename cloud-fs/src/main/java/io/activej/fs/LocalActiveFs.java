@@ -148,6 +148,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	/**
 	 * If set to {@code true}, an attempt to create a hard link will be made when copying files
 	 */
+	@SuppressWarnings("UnusedReturnValue")
 	public LocalActiveFs withHardLinkOnCopy(boolean hardLinkOnCopy) {
 		this.hardlinkOnCopy = hardLinkOnCopy;
 		return this;

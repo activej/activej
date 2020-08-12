@@ -284,8 +284,14 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 		return this;
 	}
 
-	public AsyncHttpClient withReadWriteTimeout(@NotNull Duration readTimeout) {
-		this.readWriteTimeoutMillis = (int) readTimeout.toMillis();
+	public AsyncHttpClient withReadWriteTimeout(@NotNull Duration readWriteTimeout) {
+		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
+		return this;
+	}
+
+	public AsyncHttpClient withReadWriteTimeout(@NotNull Duration readWriteTimeout, @NotNull Duration readWriteTimeoutShutdown) {
+		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
+		this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
 		return this;
 	}
 

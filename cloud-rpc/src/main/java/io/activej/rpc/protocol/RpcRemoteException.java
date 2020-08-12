@@ -37,7 +37,9 @@ public class RpcRemoteException extends RpcException implements RpcMandatoryData
 	}
 
 	public RpcRemoteException(Throwable cause) {
-		this(cause.toString(), cause);
+		super(RpcServerConnection.class, cause.toString(), cause);
+		this.causeClassName = cause.getClass().getName();
+		this.causeMessage = cause.getMessage();
 	}
 
 	@SuppressWarnings("unused")

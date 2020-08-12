@@ -74,7 +74,6 @@ public interface SerializerDef {
 	/**
 	 * Serializes provided {@link Expression} {@code value} to byte array
 	 *
-	 * @param staticEncoders
 	 * @param buf                byte array to which the value will be serialized
 	 * @param pos                an offset in the byte array
 	 * @param value              the value to be serialized to byte array
@@ -98,7 +97,6 @@ public interface SerializerDef {
 	/**
 	 * Deserializes object from byte array
 	 *
-	 * @param staticDecoders
 	 * @param in                 BinaryInput
 	 * @param compatibilityLevel defines the {@link CompatibilityLevel compatibility level} of the serializer
 	 * @return deserialized {@code Expression} object of provided targetType

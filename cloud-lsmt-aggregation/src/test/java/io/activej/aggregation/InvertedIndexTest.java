@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 
 public class InvertedIndexTest {
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

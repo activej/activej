@@ -28,6 +28,7 @@ import org.junit.runners.Parameterized.Parameters;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -102,7 +103,9 @@ public final class TestClusterDeadPartitionCheck {
 							@Override
 							public void closeServer(AbstractServer<?> server) {
 								server.close();
-								for (SelectionKey key : server.getEventloop().getSelector().keys()) {
+								Selector selector = server.getEventloop().getSelector();
+								if (selector == null) return;
+								for (SelectionKey key : selector.keys()) {
 									Object attachment = key.attachment();
 									if (attachment instanceof AsyncTcpSocketNio) {
 										((AsyncTcpSocketNio) attachment).close();

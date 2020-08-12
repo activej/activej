@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 
+@SuppressWarnings("Convert2MethodRef")
 public final class ChannelExample {
 	//[START REGION_1]
 	private static void supplierOfValues() {

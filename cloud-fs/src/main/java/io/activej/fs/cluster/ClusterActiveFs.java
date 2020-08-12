@@ -134,6 +134,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	/**
 	 * Sets the replication count as well as number of upload targets that determines the number of server where file will be uploaded.
 	 */
+	@SuppressWarnings("UnusedReturnValue")
 	public ClusterActiveFs withPersistenceOptions(int deadPartitionsThreshold, int uploadTargetsMin, int uploadTargetsMax) {
 		checkArgument(0 <= deadPartitionsThreshold && deadPartitionsThreshold < partitions.getPartitions().size(),
 				"Dead partitions threshold cannot be less than zero or greater than number of partitions");

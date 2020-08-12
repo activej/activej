@@ -27,9 +27,9 @@
 
 {{#poll}}
 <form method="post" action="/vote">
+  <input name="id" value="{{id}}" hidden>
   <table>
     <tr>
-      <input name="id" value="{{id}}" hidden>
       <th colspan="2" style="text-align: center"><h3>Title: {{title}}</h3></th>
     </tr>
     <tr>

@@ -43,6 +43,7 @@ public class KeyValuePair {
 		return result;
 	}
 
+	@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 	public static final List<String> KEYS = asList("key");
 
 	public static final List<String> FIELDS = asList("value", "timestamp");

@@ -12,7 +12,10 @@ import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -39,7 +42,7 @@ public class CrdtStorageAPITest {
 	private static final CrdtDataSerializer<String, TimestampContainer<Integer>> serializer = new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(INT_SERIALIZER));
 
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -60,13 +63,6 @@ public class CrdtStorageAPITest {
 		Path folder = temporaryFolder.newFolder().toPath();
 		Files.createDirectories(folder);
 		client = clientFactory.create(Executors.newSingleThreadExecutor(), folder, TimestampContainer.createCrdtFunction(Integer::max));
-	}
-
-	@After
-	public void tearDown() {
-		if (client instanceof CrdtStorageRocksDB) {
-//			((RocksDBCrdtClient) client).getDb().close();
-		}
 	}
 
 	@FunctionalInterface

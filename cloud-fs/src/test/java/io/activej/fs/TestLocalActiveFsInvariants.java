@@ -45,6 +45,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+@SuppressWarnings("ConstantConditions")
 public final class TestLocalActiveFsInvariants {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

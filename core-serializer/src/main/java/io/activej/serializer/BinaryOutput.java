@@ -111,10 +111,12 @@ public final class BinaryOutput {
 		pos = BinaryOutputUtils.writeUTF8Nullable(array, pos, s);
 	}
 
+	@SuppressWarnings("deprecation")
 	public void writeUTF8mb3(String s) {
 		pos = BinaryOutputUtils.writeUTF8mb3(array, pos, s);
 	}
 
+	@SuppressWarnings("deprecation")
 	public void writeUTF8mb3Nullable(String s) {
 		pos = BinaryOutputUtils.writeUTF8mb3Nullable(array, pos, s);
 	}

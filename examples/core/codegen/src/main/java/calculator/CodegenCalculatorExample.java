@@ -70,7 +70,7 @@ public final class CodegenCalculatorExample {
 		// manual code, super fast
 		System.out.println(((2.0 + 2.0 * 2.0) * -x) + 5.0 + 1024.0 / (100.0 + 58.0) * 50.0 * 37.0 - 100.0 + 2.0 * Math.pow(x, 2.0) % 3.0);
 
-		DoubleUnaryOperator instance = compile("((2 + 2 * 2) * -x) + 5 + 1024 / (100 + 58) * 50 * 37 - 100 + 2 * x ^ 2 % 3").newInstance();
+		DoubleUnaryOperator instance = compile("((2 + 2 * 2) * -x) + 5 + 1024 / (100 + 58) * 50 * 37 - 100 + 2 * x ^ 2 % 3").getDeclaredConstructor().newInstance();
 
 		// generated instance evaluation, literally equivalent to manual code (with a method call around it), except it was dynamically generated
 		System.out.println(instance.applyAsDouble(x));

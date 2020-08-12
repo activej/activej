@@ -46,6 +46,7 @@ public class TestAggregatorSplitter extends LogDataConsumerSplitter<TestPubReque
 	private static final Set<String> ADV_DIMENSIONS = union(PUB_DIMENSIONS, singleton("adv"));
 	private static final Set<String> ADV_METRICS = singleton("advRequests");
 
+	@SuppressWarnings("SameParameterValue")
 	private static <T> Set<T> union(Set<T> a, Set<T> b) {
 		Set<T> set = new HashSet<>(a);
 		set.addAll(b);

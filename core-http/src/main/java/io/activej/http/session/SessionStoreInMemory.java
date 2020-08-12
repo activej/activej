@@ -81,7 +81,7 @@ public final class SessionStoreInMemory<T> implements SessionStore<T> {
 	}
 
 	private class TWithTimestamp {
-		T value;
+		final T value;
 		long timestamp;
 
 		public TWithTimestamp(T value, long timestamp) {

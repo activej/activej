@@ -49,6 +49,7 @@ public final class SimpleThreadFactory implements ThreadFactory, WithInitializer
 		return new SimpleThreadFactory(name);
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public SimpleThreadFactory withThreadGroup(ThreadGroup threadGroup) {
 		this.threadGroup = threadGroup;
 		return this;

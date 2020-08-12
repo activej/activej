@@ -24,7 +24,7 @@ public class StressDownload {
 
 	private static final Path CLIENT_STORAGE = Paths.get("./test_data/client_storage");
 
-	private static Random rand = new Random();
+	private static final Random rand = new Random();
 	public static final List<String> FILES = new ArrayList<>();
 
 	public static void main(String[] args) throws IOException {

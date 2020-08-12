@@ -196,6 +196,7 @@ public final class BinarySerializers {
 		}
 
 		@Override
+		@SuppressWarnings("deprecation")
 		public String decode(BinaryInput in) {
 			return in.readUTF8mb3();
 		}
@@ -269,6 +270,7 @@ public final class BinarySerializers {
 				}
 
 				@Override
+				@SuppressWarnings("deprecation")
 				public String decode(BinaryInput in) {
 					return in.readUTF8mb3Nullable();
 				}

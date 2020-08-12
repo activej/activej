@@ -80,7 +80,7 @@ public final class ReportingTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private static final int SERVER_PORT = getFreePort();
 

@@ -28,6 +28,7 @@ import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@SuppressWarnings("RedundantThrows")
 public final class BinaryStructuredInput implements StructuredInput {
 	private final ByteBuf buf;
 

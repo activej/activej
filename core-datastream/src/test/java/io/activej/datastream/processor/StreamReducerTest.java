@@ -167,8 +167,8 @@ public class StreamReducerTest {
 	}
 
 	private static final class KeyValue1 {
-		public int key;
-		public double metric1;
+		public final int key;
+		public final double metric1;
 
 		private KeyValue1(int key, double metric1) {
 			this.key = key;
@@ -188,7 +188,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue1 firstValue) {
 				return new KeyValueResult(key, firstValue.metric1, 0.0, 0.0);
@@ -209,8 +209,8 @@ public class StreamReducerTest {
 	}
 
 	private static final class KeyValue2 {
-		public int key;
-		public double metric2;
+		public final int key;
+		public final double metric2;
 
 		private KeyValue2(int key, double metric2) {
 			this.key = key;
@@ -230,7 +230,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue2 firstValue) {
 				return new KeyValueResult(key, 0.0, firstValue.metric2, 0.0);
@@ -250,9 +250,9 @@ public class StreamReducerTest {
 	}
 
 	private static final class KeyValue3 {
-		public int key;
-		public double metric2;
-		public double metric3;
+		public final int key;
+		public final double metric2;
+		public final double metric3;
 
 		private KeyValue3(int key, double metric2, double metric3) {
 			this.key = key;
@@ -274,7 +274,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue3 firstValue) {
 				return new KeyValueResult(key, 0.0, firstValue.metric2, firstValue.metric3);
@@ -296,7 +296,7 @@ public class StreamReducerTest {
 	}
 
 	private static final class KeyValueResult {
-		public int key;
+		public final int key;
 		public double metric1;
 		public double metric2;
 		public double metric3;
@@ -309,6 +309,7 @@ public class StreamReducerTest {
 		}
 
 		@Override
+		@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass", "RedundantIfStatement"})
 		public boolean equals(Object o) {
 			KeyValueResult that = (KeyValueResult) o;
 

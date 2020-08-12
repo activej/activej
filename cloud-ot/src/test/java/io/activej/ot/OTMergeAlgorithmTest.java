@@ -29,16 +29,16 @@ public class OTMergeAlgorithmTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	static <K, D> OTLoadedGraph<K, D> buildGraph(Consumer<OTGraphBuilder<K, D>> consumer, OTSystem<D> system) {
-		OTLoadedGraph<K, D> graph = new OTLoadedGraph<>(system);
+	static OTLoadedGraph<String, TestOp> buildGraph(Consumer<OTGraphBuilder<String, TestOp>> consumer) {
+		OTLoadedGraph<String, TestOp> graph = new OTLoadedGraph<>(OTMergeAlgorithmTest.system);
 		consumer.accept((parent, child, diffs) -> {
 			checkArgument(graph.getParents(child) == null || graph.getParents(child).get(parent) == null, "Invalid graph");
 			graph.addEdge(parent, child, diffs);
 		});
-		Map<K, Long> levels = new HashMap<>();
-		for (K commitId : graph.getTips()) {
+		Map<String, Long> levels = new HashMap<>();
+		for (String commitId : graph.getTips()) {
 			Utils.calcLevels(commitId, levels,
-					parentId -> firstNonNull(graph.getParents(parentId), Collections.<K, List<D>>emptyMap()).keySet());
+					parentId -> firstNonNull(graph.getParents(parentId), Collections.<String, List<TestOp>>emptyMap()).keySet());
 		}
 		levels.forEach(graph::setLevel);
 
@@ -56,7 +56,7 @@ public class OTMergeAlgorithmTest {
 	}
 
 	private void doTestMerge(Set<String> heads, Consumer<OTGraphBuilder<String, TestOp>> graphBuilder, TestAcceptor testAcceptor) throws Exception {
-		OTLoadedGraph<String, TestOp> graph = buildGraph(graphBuilder, system);
+		OTLoadedGraph<String, TestOp> graph = buildGraph(graphBuilder);
 		Map<String, List<TestOp>> merge;
 		try {
 			merge = graph.merge(heads);

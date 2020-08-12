@@ -24,7 +24,6 @@ import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
 
@@ -89,7 +88,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	}
 
 	@Override
-	protected final void doClose(@Nullable Throwable e) {
+	protected final void doClose(@NotNull Throwable e) {
 		Eventloop.getCurrentEventloop().post(this::onCleanup);
 		input.closeEx(e);
 		output.closeEx(e);

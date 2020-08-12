@@ -11,7 +11,7 @@ import static io.activej.codec.StructuredCodecs.*;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
-@SuppressWarnings("ConstantConditions")
+@SuppressWarnings({"ConstantConditions", "ArraysAsListWithZeroOrOneArgument"})
 public class StructuredCodecTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();

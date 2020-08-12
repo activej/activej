@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 public class DynamicMBeanRegistrationTest {
 
 	@Rule
-	public JUnitRuleMockery context = new JUnitRuleMockery();
+	public final JUnitRuleMockery context = new JUnitRuleMockery();
 
 	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
 	private final DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();

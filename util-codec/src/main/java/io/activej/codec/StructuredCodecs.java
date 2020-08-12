@@ -236,6 +236,7 @@ public final class StructuredCodecs {
 		}
 	};
 
+	@SuppressWarnings("rawtypes")
 	public static <T> StructuredCodec<Class<? extends T>> ofClass() {
 		return (StructuredCodec) CLASS_CODEC;
 	}

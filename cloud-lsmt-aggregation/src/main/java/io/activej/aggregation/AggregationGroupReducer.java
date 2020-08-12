@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+@SuppressWarnings("rawtypes")
 public final class AggregationGroupReducer<C, T, K extends Comparable> extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
 	private static final Logger logger = LoggerFactory.getLogger(AggregationGroupReducer.class);
 

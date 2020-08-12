@@ -48,7 +48,6 @@ import static io.activej.launchers.initializers.Initializers.ofEventloop;
 
 public abstract class DataflowServerLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "dataflow-server.properties";
-	public static final String BUSINESS_MODULE_PROP = "businessLogicModule";
 
 	@Inject
 	DataflowServer dataflowServer;
@@ -117,19 +116,6 @@ public abstract class DataflowServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String businessLogicModuleName = System.getProperty(BUSINESS_MODULE_PROP);
-
-		Module businessLogicModule = businessLogicModuleName != null ?
-				(Module) Class.forName(businessLogicModuleName).newInstance() :
-				Module.empty();
-
-		Launcher launcher = new DataflowServerLauncher() {
-			@Override
-			protected Module getBusinessLogicModule() {
-				return businessLogicModule;
-			}
-		};
-
-		launcher.launch(args);
+		new DataflowServerLauncher() {}.launch(args);
 	}
 }

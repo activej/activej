@@ -300,7 +300,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 					return Promise.of(ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufQueue.collector())
 							.map(value -> {
 								fields.put(fieldName, value.asString(UTF_8));
-								return (Void) null;
+								return null;
 							})));
 				}
 

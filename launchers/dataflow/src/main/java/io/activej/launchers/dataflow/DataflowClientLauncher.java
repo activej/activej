@@ -21,19 +21,16 @@ import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
-import io.activej.dataflow.inject.CodecsModule;
 import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.node.Node;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
@@ -42,20 +39,18 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.inject.module.Modules.combine;
-import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 import static java.util.stream.Collectors.toList;
 
 public abstract class DataflowClientLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "dataflow-client.properties";
-	public static final String BUSINESS_MODULE_PROP = "businessLogicModule";
+
+	@Inject
+	DataflowClient client;
 
 	@Provides
 	Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
@@ -113,19 +108,6 @@ public abstract class DataflowClientLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String businessLogicModuleName = System.getProperty(BUSINESS_MODULE_PROP);
-
-		Module businessLogicModule = businessLogicModuleName != null ?
-				(Module) Class.forName(businessLogicModuleName).newInstance() :
-				Module.empty();
-
-		Launcher launcher = new DataflowClientLauncher() {
-			@Override
-			protected Module getBusinessLogicModule() {
-				return businessLogicModule;
-			}
-		};
-
-		launcher.launch(args);
+		new DataflowClientLauncher() {}.launch(args);
 	}
 }

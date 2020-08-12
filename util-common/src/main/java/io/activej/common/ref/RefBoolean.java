@@ -31,6 +31,7 @@ public final class RefBoolean {
 		this.value = peer;
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public boolean flip() {
 		return value = !value;
 	}

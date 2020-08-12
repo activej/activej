@@ -20,6 +20,7 @@ public class DataItemResult {
 	}
 
 	@Override
+	@SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
 	public boolean equals(Object o) {
 		DataItemResult that = (DataItemResult) o;
 

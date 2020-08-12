@@ -48,7 +48,7 @@ public final class CubeTest {
 	private static final int LISTEN_PORT = getFreePort();
 
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

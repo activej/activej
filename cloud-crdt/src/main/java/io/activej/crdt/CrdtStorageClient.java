@@ -48,6 +48,7 @@ import static io.activej.crdt.CrdtMessaging.CrdtMessages.PING;
 import static io.activej.crdt.CrdtMessaging.CrdtResponses.*;
 import static io.activej.crdt.util.Utils.nullTerminatedJson;
 
+@SuppressWarnings("rawtypes")
 public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService, EventloopJmxBeanEx {
 	private final Eventloop eventloop;
 	private final InetSocketAddress address;

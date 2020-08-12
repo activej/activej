@@ -171,6 +171,7 @@ public class CodeGenSerializerDefByteBufferTest {
 		public ByteBuffer buffer;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testByteBuffer() {
 		TestByteBuffer object = new TestByteBuffer();

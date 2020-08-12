@@ -2,6 +2,7 @@ package io.activej.specializer;
 
 import java.io.IOException;
 
+@SuppressWarnings("all")
 public class TestClass1 extends AbstractTestClass1 {
 	public final int finalX;
 	public final TestInterface delegate;

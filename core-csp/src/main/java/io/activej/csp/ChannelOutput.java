@@ -33,6 +33,7 @@ public interface ChannelOutput<T> {
 		return queue.getSupplier();
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	default Promise<Void> bindTo(ChannelInput<T> to) {
 		return bindTo(to, new ChannelZeroBuffer<>());
 	}

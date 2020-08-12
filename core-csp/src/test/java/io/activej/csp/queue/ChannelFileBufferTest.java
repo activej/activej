@@ -29,7 +29,7 @@ public final class ChannelFileBufferTest {
 	public static EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
-	public static TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private ExecutorService executor;
 

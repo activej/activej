@@ -91,6 +91,7 @@ public class MemcacheRpcMessage {
 		}
 	}
 
+	@SuppressWarnings("InstantiationOfUtilityClass")
 	public static final class PutResponse {
 		public static final PutResponse INSTANCE = new PutResponse();
 	}

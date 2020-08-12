@@ -10,9 +10,9 @@ import static io.activej.config.converter.ConfigConverters.ofInteger;
 public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 
 	static final class ByteBufPoolAbuser implements Runnable {
-		int number;
-		int allocationSize;
-		int iterations;
+		final int number;
+		final int allocationSize;
+		final int iterations;
 
 		public ByteBufPoolAbuser(int allocationSize, int iterations, int number) {
 			this.allocationSize = allocationSize;

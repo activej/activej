@@ -37,6 +37,7 @@ public class OptimizedSelectedKeysSetTest {
 		fillSet(size);
 
 		set.clear();
+		//noinspection ConstantConditions - testing Set implementation
 		assertEquals(0, set.size());
 	}
 
@@ -52,6 +53,7 @@ public class OptimizedSelectedKeysSetTest {
 		}
 
 		set.clear();
+		//noinspection RedundantOperationOnEmptyContainer
 		iterator = set.iterator();
 		assertFalse(iterator.hasNext());
 	}
@@ -63,7 +65,7 @@ public class OptimizedSelectedKeysSetTest {
 	}
 
 	private static class SimpleSelectionKey extends SelectionKey {
-		int id;
+		final int id;
 
 		SimpleSelectionKey(int id) {
 			this.id = id;

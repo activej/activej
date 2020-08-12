@@ -88,6 +88,7 @@ public final class SerializerDefString implements SerializerDefWithNullable {
 					return nullable ?
 							staticCall(BinaryOutputUtils.class, "writeUTF16Nullable" + LE, buf, pos, string) :
 							staticCall(BinaryOutputUtils.class, "writeUTF16" + LE, buf, pos, string);
+				//noinspection deprecation
 				case UTF8_MB3:
 					return nullable ?
 							staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :

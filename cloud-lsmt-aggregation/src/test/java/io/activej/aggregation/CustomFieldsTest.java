@@ -33,7 +33,7 @@ import static junit.framework.TestCase.assertEquals;
 
 public class CustomFieldsTest {
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -45,14 +45,14 @@ public class CustomFieldsTest {
 	public static class EventRecord {
 		// dimensions
 		@Key
-		public int siteId;
+		public final int siteId;
 
 		// measures
 		@Measures({"sumRevenue", "minRevenue", "maxRevenue"})
-		public double revenue;
+		public final double revenue;
 
 		@Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"})
-		public long userId;
+		public final long userId;
 
 		public EventRecord(int siteId, double revenue, long userId) {
 			this.siteId = siteId;

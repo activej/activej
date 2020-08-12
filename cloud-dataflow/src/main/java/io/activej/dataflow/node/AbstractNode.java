@@ -1,11 +1,9 @@
 package io.activej.dataflow.node;
 
 import io.activej.dataflow.stats.NodeStat;
-import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
-import java.util.function.Function;
 
 public abstract class AbstractNode implements Node {
 	private final int index;

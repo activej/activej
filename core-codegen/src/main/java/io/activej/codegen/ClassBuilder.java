@@ -430,8 +430,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 	public T buildClassAndCreateNewInstance() {
 		try {
-			return build().newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
+			return build().getConstructor().newInstance();
+		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
 			throw new RuntimeException(e);
 		}
 	}

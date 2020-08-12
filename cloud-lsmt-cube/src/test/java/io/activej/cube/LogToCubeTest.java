@@ -52,7 +52,7 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public final class LogToCubeTest {
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

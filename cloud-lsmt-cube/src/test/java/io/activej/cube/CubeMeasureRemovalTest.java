@@ -62,7 +62,7 @@ import static org.junit.Assert.*;
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class CubeMeasureRemovalTest {
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();

@@ -163,6 +163,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 				this);
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> bindTo(BinaryChannelInput input) {
 		return input.set(this);
 	}

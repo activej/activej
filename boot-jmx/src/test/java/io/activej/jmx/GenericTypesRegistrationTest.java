@@ -16,7 +16,7 @@ import static io.activej.jmx.helper.CustomMatchers.objectname;
 public class GenericTypesRegistrationTest {
 
 	@Rule
-	public JUnitRuleMockery context = new JUnitRuleMockery();
+	public final JUnitRuleMockery context = new JUnitRuleMockery();
 
 	private final MBeanServer mBeanServer = context.mock(MBeanServer.class);
 	private final JmxRegistry jmxRegistry = JmxRegistry.create(mBeanServer, DynamicMBeanFactory.create());

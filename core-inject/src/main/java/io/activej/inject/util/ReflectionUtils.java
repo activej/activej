@@ -284,6 +284,7 @@ public final class ReflectionUtils {
 					CompiledBinding<Object> binding = compiledBindings.get(key);
 					//noinspection Convert2Lambda
 					return new CompiledBindingInitializer<T>() {
+						@SuppressWarnings("rawtypes")
 						@Override
 						public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
 							Object arg = binding.getInstance(instances, synchronizedScope);
@@ -304,6 +305,7 @@ public final class ReflectionUtils {
 		return methodInjector(container, null, method);
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static <T> BindingInitializer<T> methodInjector(Key<T> container, @Nullable T containerInstance, Method method) {
 		method.setAccessible(true);
 		Dependency[] dependencies = toDependencies(container.getType(), containerInstance, method.getParameters());

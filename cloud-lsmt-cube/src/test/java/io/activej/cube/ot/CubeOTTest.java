@@ -39,17 +39,17 @@ public class CubeOTTest {
 		return new LogPositionDiff(LogPosition.create(logFile, start), LogPosition.create(logFile, end));
 	}
 
-	private static CubeDiff cubeDiff(String key, AggregationChunk... added) {
-		return cubeDiff(key, asList(added), Collections.emptyList());
+	private static CubeDiff cubeDiff(AggregationChunk... added) {
+		return cubeDiff(asList(added), Collections.emptyList());
 	}
 
-	private static CubeDiff cubeDiff(String key, List<AggregationChunk> added, List<AggregationChunk> removed) {
-		return CubeDiff.of(singletonMap(key, AggregationDiff.of(new HashSet<>(added),
+	private static CubeDiff cubeDiff(List<AggregationChunk> added, List<AggregationChunk> removed) {
+		return CubeDiff.of(singletonMap("key", AggregationDiff.of(new HashSet<>(added),
 				new HashSet<>(removed))));
 	}
 
-	private static AggregationChunk chunk(long chunkId, List<String> fields, PrimaryKey minKey, PrimaryKey maxKey, int count) {
-		return AggregationChunk.create(chunkId, fields, minKey, maxKey, count);
+	private static AggregationChunk chunk(List<String> fields, PrimaryKey minKey, PrimaryKey maxKey, int count) {
+		return AggregationChunk.create((long) 1, fields, minKey, maxKey, count);
 	}
 
 	private static List<AggregationChunk> addedChunks(Collection<CubeDiff> cubeDiffs) {
@@ -66,11 +66,11 @@ public class CubeOTTest {
 		List<String> fields = asList("field1", "field2");
 		LogDiff<CubeDiff> changesLeft = LogDiff.of(
 				singletonMap("clicks", positionDiff(logFile, 0, 10)),
-				cubeDiff("key", chunk(1, fields, ofArray("str", 10), ofArray("str", 20), 15)));
+				cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 20), 15)));
 
 		LogDiff<CubeDiff> changesRight = LogDiff.of(
 				singletonMap("clicks", positionDiff(logFile, 0, 20)),
-				cubeDiff("key", chunk(1, fields, ofArray("str", 10), ofArray("str", 25), 30)));
+				cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 25), 30)));
 		TransformResult<LogDiff<CubeDiff>> transform = logSystem.transform(changesLeft, changesRight);
 
 		assertTrue(transform.hasConflict());
@@ -79,7 +79,7 @@ public class CubeOTTest {
 
 		LogDiff<CubeDiff> result = LogDiff.of(
 				singletonMap("clicks", positionDiff(logFile, 10, 20)),
-				cubeDiff("key", addedChunks(changesRight.getDiffs()), addedChunks(changesLeft.getDiffs())));
+				cubeDiff(addedChunks(changesRight.getDiffs()), addedChunks(changesLeft.getDiffs())));
 
 		assertEquals(1, transform.left.size());
 		assertEquals(result, transform.left.get(0));

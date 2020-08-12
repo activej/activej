@@ -36,7 +36,7 @@ public final class TestCrdtLocalFileConsolidation {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Before
 	public void setup() throws IOException {

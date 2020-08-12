@@ -27,7 +27,7 @@ public final class ChannelBufferWithFallbackTest {
 	public static EventloopRule eventloopRule = new EventloopRule();
 
 	@Rule
-	public TemporaryFolder temporaryFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private ExecutorService executor;
 

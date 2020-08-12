@@ -24,6 +24,7 @@ import java.util.Map;
 /**
  * This is a collection of most well-known {@link MediaType} token references as Java constants.
  */
+@SuppressWarnings({"unused", "SameParameterValue"})
 public final class MediaTypes {
 	static final CaseInsensitiveTokenMap<MediaType> mimes = new CaseInsensitiveTokenMap<>(2048, 2, MediaType.class, MediaType::new);
 	private static final Map<String, MediaType> ext2mime = new HashMap<>();

@@ -13,6 +13,7 @@ import static io.activej.promise.Promises.loop;
 import static io.activej.promise.Promises.repeat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@SuppressWarnings("Convert2MethodRef")
 public final class PingPongSocketConnection {
 	private static final InetSocketAddress ADDRESS = new InetSocketAddress("localhost", 9022);
 	private static final int ITERATIONS = 3;

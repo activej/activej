@@ -7,7 +7,7 @@ public class StressTestUploadSmallObjects {
 		StressClient client = new StressClient();
 		client.setup();
 		for (int i = 0; i < 100; i++) {
-			client.uploadSerializedObject(i);
+			client.uploadSerializedObject();
 		}
 		for (int i = 0; i < 100; i++) {
 			client.downloadSmallObjects(i);

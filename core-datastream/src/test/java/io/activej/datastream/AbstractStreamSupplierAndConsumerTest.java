@@ -342,7 +342,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 	}
 
 	private final class StatusAssertingSupplier extends AbstractStreamSupplier<Integer> {
-		List<Status> statuses = new ArrayList<>();
+		final List<Status> statuses = new ArrayList<>();
 
 		public void trySend(Integer item) {
 			if (RANDOM.nextBoolean()) {
@@ -415,7 +415,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 	}
 
 	private static final class StatusAssertingConsumer extends AbstractStreamConsumer<Integer> {
-		List<Status> statuses = new ArrayList<>();
+		final List<Status> statuses = new ArrayList<>();
 
 		void assertStatuses(Status... expectedStatuses) {
 			assertEquals(asList(expectedStatuses), statuses);

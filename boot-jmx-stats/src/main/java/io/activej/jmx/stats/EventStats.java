@@ -131,6 +131,7 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 	public void refresh(long timestamp) {
 		long timeElapsedMillis = timestamp - lastTimestampMillis;
 
+		//noinspection StatementWithEmptyBody
 		if (isTimePeriodValid(timeElapsedMillis)) {
 			double timeElapsed = timeElapsedMillis * 0.001;
 			double smoothingFactor = exp(timeElapsed * smoothingWindowCoef);

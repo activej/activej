@@ -7,6 +7,7 @@ import io.activej.inject.module.AbstractModule;
 
 import java.util.Optional;
 
+@SuppressWarnings("unused")
 public class BindingGeneratorExample {
 	static class Sugar {
 		private final String name;
@@ -158,7 +159,7 @@ public class BindingGeneratorExample {
 
 		//[START REGION_3]
 		Injector injector = Injector.of(cookbook);
-		System.out.println(injector.getInstance(new Key<Cookie<Pastry>>() {}).getPastry().get().getButter().getName());
+		System.out.println(injector.getInstance(new Key<Cookie<Pastry>>() {}).getPastry().orElseThrow(AssertionError::new).getButter().getName());
 		//[END REGION_3]
 	}
 

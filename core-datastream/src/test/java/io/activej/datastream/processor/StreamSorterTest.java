@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
 
 public final class StreamSorterTest {
 	@Rule
-	public TemporaryFolder tempFolder = new TemporaryFolder();
+	public final TemporaryFolder tempFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

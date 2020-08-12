@@ -11,6 +11,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 
 //[START EXAMPLE]
+@SuppressWarnings("Convert2MethodRef")
 public final class ByteBufsDecoderExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();

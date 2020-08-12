@@ -40,7 +40,7 @@ public final class SimpleObjectExample {
 		}
 
 		@Serialize(order = 0)
-		public int age;
+		public final int age;
 
 		@Serialize(order = 1)
 		public final String name;

@@ -353,6 +353,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@NotNull
+	@SafeVarargs
 	public static <T> Promise<T> any(@NotNull Promise<? extends T>... promises) {
 		return any(isResult(), asIterator(promises));
 	}
@@ -404,6 +405,7 @@ public final class Promises {
 
 	@Contract(pure = true)
 	@NotNull
+	@SafeVarargs
 	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T>... promises) {
 		return any(predicate, asIterator(promises));
 	}
@@ -473,6 +475,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@NotNull
+	@SafeVarargs
 	public static <T> Promise<List<T>> toList(@NotNull Promise<? extends T>... promises) {
 		return toList(asIterator(promises));
 	}
@@ -574,6 +577,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@NotNull
+	@SafeVarargs
 	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T>... promises) {
 		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
 	}
@@ -845,6 +849,7 @@ public final class Promises {
 	 * @see Promises#sequence(Iterator)
 	 */
 	@NotNull
+	@SafeVarargs
 	public static Promise<Void> sequence(@NotNull AsyncSupplier<Void>... promises) {
 		return sequence(asList(promises));
 	}
@@ -900,6 +905,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
+	@SafeVarargs
 	public static <T> Promise<T> first(AsyncSupplier<? extends T>... promises) {
 		return first(Promises.isResult(), promises);
 	}
@@ -935,6 +941,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
+	@SafeVarargs
 	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Throwable> predicate,
 			@NotNull AsyncSupplier<? extends T>... promises) {
 		return first(predicate, asList(promises));
@@ -1182,6 +1189,7 @@ public final class Promises {
 	 * Transforms an {@link AsyncSupplier} {@code tasks}
 	 * to a collection of {@code Promise}s.
 	 */
+	@SafeVarargs
 	public static <T> Iterator<Promise<T>> asPromises(@NotNull AsyncSupplier<? extends T>... tasks) {
 		return asPromises(asIterator(tasks));
 	}

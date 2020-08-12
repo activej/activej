@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 
 public class EffectiveConfigTest {
 	@Rule
-	public TemporaryFolder folder = new TemporaryFolder();
+	public final TemporaryFolder folder = new TemporaryFolder();
 
 	private EffectiveConfig config;
 

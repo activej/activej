@@ -60,6 +60,10 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 		this.mapping = mapping;
 	}
 
+	public static ReportingServiceServlet create(Eventloop eventloop, ICube cube, CodecFactory mapping) {
+		return new ReportingServiceServlet(eventloop, cube, mapping);
+	}
+
 	public static ReportingServiceServlet create(Eventloop eventloop, ICube cube) {
 		return new ReportingServiceServlet(eventloop, cube, CUBE_TYPES);
 	}

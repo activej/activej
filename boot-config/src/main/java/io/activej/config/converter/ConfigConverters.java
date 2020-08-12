@@ -585,6 +585,7 @@ public final class ConfigConverters {
 		};
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static ConfigConverter<RetryPolicy> ofRetryPolicy() {
 		return new ConfigConverter<RetryPolicy>() {
 			@NotNull

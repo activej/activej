@@ -91,11 +91,13 @@ public final class CubeQuery {
 		return withOrderings(asList(orderings));
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public CubeQuery withLimit(Integer limit) {
 		this.limit = limit;
 		return this;
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public CubeQuery withOffset(Integer offset) {
 		this.offset = offset;
 		return this;

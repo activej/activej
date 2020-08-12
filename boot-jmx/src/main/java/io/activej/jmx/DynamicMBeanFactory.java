@@ -176,12 +176,12 @@ public final class DynamicMBeanFactory {
 				.orElseThrow(() -> new NoSuchElementException("Class or its superclass or any of implemented interfaces should be annotated with @JmxBean annotation"));
 		return adapters.computeIfAbsent(adapterClass, $ -> {
 			try {
-				JmxBeanAdapter jmxBeanAdapter = adapterClass.newInstance();
+				JmxBeanAdapter jmxBeanAdapter = adapterClass.getDeclaredConstructor().newInstance();
 				if (jmxBeanAdapter instanceof JmxBeanAdapterWithRefresh) {
 					((JmxBeanAdapterWithRefresh) jmxBeanAdapter).setRefreshParameters(specifiedRefreshPeriod, maxJmxRefreshesPerOneCycle);
 				}
 				return jmxBeanAdapter;
-			} catch (InstantiationException | IllegalAccessException e) {
+			} catch (ReflectiveOperationException e) {
 				throw new RuntimeException(e);
 			}
 		});
@@ -430,7 +430,7 @@ public final class DynamicMBeanFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static JmxReducer<?> fetchReducerFrom(@Nullable Method getter) throws IllegalAccessException, InstantiationException {
+	private static JmxReducer<?> fetchReducerFrom(@Nullable Method getter) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
 		if (getter == null) {
 			return DEFAULT_REDUCER;
 		}
@@ -439,7 +439,7 @@ public final class DynamicMBeanFactory {
 		if (reducerClass == DEFAULT_REDUCER.getClass()) {
 			return DEFAULT_REDUCER;
 		}
-		return ((Class<? extends JmxReducer<?>>) reducerClass).newInstance();
+		return ((Class<? extends JmxReducer<?>>) reducerClass).getDeclaredConstructor().newInstance();
 	}
 
 	private static void checkJmxStatsAreValid(Class<?> returnClass, Class<?> beanClass, @Nullable Method getter) {

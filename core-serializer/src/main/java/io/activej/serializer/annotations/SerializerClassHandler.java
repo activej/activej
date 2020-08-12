@@ -27,9 +27,9 @@ public final class SerializerClassHandler implements AnnotationHandler<Serialize
 	@Override
 	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializerClass annotation, CompatibilityLevel compatibilityLevel) {
 		try {
-			SerializerDef serializer = annotation.value().newInstance();
+			SerializerDef serializer = annotation.value().getDeclaredConstructor().newInstance();
 			return SerializerDefBuilder.of(serializer);
-		} catch (InstantiationException | IllegalAccessException e) {
+		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
 			try {
 				SerializerDef serializer = (SerializerDef) annotation.value().getMethod("instance").invoke(null);
 				return SerializerDefBuilder.of(serializer);

@@ -83,9 +83,13 @@ public final class HttpCookie {
 		this.value = value;
 	}
 
-	private HttpCookie(String name, String value, String path) {
+	public HttpCookie(String name, String value, String path) {
 		this(name, value);
 		this.path = path;
+	}
+
+	public static HttpCookie of(String name, String value, String path) {
+		return new HttpCookie(name, value, path);
 	}
 
 	public static HttpCookie of(String name, String value) {

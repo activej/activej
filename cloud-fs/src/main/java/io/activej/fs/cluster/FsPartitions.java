@@ -152,6 +152,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * @param e           optional exception for logging
 	 * @return <code>true</code> if partition was alive and <code>false</code> otherwise
 	 */
+	@SuppressWarnings("UnusedReturnValue")
 	public boolean markDead(Object partitionId, @Nullable Throwable e) {
 		ActiveFs partition = alivePartitions.remove(partitionId);
 		if (partition != null) {

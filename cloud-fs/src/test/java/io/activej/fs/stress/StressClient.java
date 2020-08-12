@@ -123,10 +123,10 @@ class StressClient {
 
 	}
 
-	void start(int operationsQuantity, int maxDuration) throws IOException {
+	void start() throws IOException {
 		setup();
-		for (int i = 0; i < operationsQuantity; i++) {
-			eventloop.delay(rand.nextInt(maxDuration), () ->
+		for (int i = 0; i < 100; i++) {
+			eventloop.delay(rand.nextInt(360000), () ->
 					operations.get(rand.nextInt(4)).go());
 		}
 		eventloop.run();
@@ -160,7 +160,7 @@ class StressClient {
 		return name.toString();
 	}
 
-	void uploadSerializedObject(int i) throws UnknownHostException {
+	void uploadSerializedObject() throws UnknownHostException {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		BinarySerializer<TestObject> binarySerializer = SerializerBuilder
 				.create(classLoader)

@@ -72,6 +72,7 @@ public final class StaticServlet implements AsyncServlet {
 		return new StaticServlet(StaticLoader.ofPath(executor, path));
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public StaticServlet withContentType(ContentType contentType) {
 		return withContentTypeResolver($ -> contentType);
 	}

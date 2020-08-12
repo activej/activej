@@ -181,9 +181,9 @@ public class StreamJoinTest {
 	}
 
 	private static final class DataItemMaster {
-		int id;
-		int detailId;
-		String master;
+		final int id;
+		final int detailId;
+		final String master;
 
 		private DataItemMaster(int id, int detailId, String master) {
 			this.id = id;
@@ -202,8 +202,8 @@ public class StreamJoinTest {
 	}
 
 	private static final class DataItemDetail {
-		int id;
-		String detail;
+		final int id;
+		final String detail;
 
 		private DataItemDetail(int id, String detail) {
 			this.id = id;
@@ -220,10 +220,10 @@ public class StreamJoinTest {
 	}
 
 	private static final class DataItemMasterDetail {
-		int id;
-		int detailId;
-		String master;
-		String detail;
+		final int id;
+		final int detailId;
+		final String master;
+		final String detail;
 
 		private DataItemMasterDetail(int id, int detailId, String master, String detail) {
 			this.id = id;
@@ -233,6 +233,7 @@ public class StreamJoinTest {
 		}
 
 		@Override
+		@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass", "RedundantIfStatement"})
 		public boolean equals(Object o) {
 			DataItemMasterDetail that = (DataItemMasterDetail) o;
 			if (id != that.id) return false;

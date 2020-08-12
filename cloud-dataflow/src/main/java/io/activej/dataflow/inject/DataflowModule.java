@@ -22,7 +22,6 @@ import io.activej.codec.StructuredCodec;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.stats.BinaryNodeStat;
-import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.StatReducer;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;

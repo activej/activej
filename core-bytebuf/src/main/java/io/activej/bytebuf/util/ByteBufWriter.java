@@ -71,6 +71,7 @@ public final class ByteBufWriter extends Writer {
 	@Override
 	public void write(int c) {
 		// sneaky little buffering for proper encoding of surrogate character pairs
+		//noinspection SynchronizeOnNonFinalField - lock is from java.io.Writer
 		synchronized (lock) {
 			if (surrogateBuffer == null) {
 				surrogateBuffer = new char[2];

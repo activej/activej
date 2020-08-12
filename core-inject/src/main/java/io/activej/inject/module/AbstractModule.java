@@ -36,7 +36,7 @@ import static io.activej.inject.util.Utils.checkState;
  * This class is an abstract module wrapper around {@link ModuleBuilder}.
  * It provides functionality that is similar to some other DI frameworks for the ease of transition.
  */
-@SuppressWarnings({"SameParameterValue", "UnusedReturnValue"})
+@SuppressWarnings({"SameParameterValue", "UnusedReturnValue", "unused"})
 public abstract class AbstractModule implements Module {
 	private Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings;
 	private Map<Integer, Set<BindingTransformer<?>>> bindingTransformers;

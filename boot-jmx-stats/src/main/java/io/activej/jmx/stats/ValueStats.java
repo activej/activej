@@ -304,6 +304,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 
 		long timeElapsedMillis = lastTimestampMillis == 0L ? 0 : timestamp - lastTimestampMillis;
 
+		//noinspection StatementWithEmptyBody
 		if (isTimePeriodValid(timeElapsedMillis)) {
 			double timeElapsed = timeElapsedMillis * 0.001;
 			double smoothingFactor = exp(timeElapsed * smoothingWindowCoef);

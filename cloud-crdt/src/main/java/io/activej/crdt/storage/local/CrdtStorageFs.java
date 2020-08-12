@@ -63,6 +63,7 @@ import static io.activej.fs.ActiveFsAdapters.subdirectory;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 
+@SuppressWarnings("rawtypes")
 public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
 		WithInitializer<CrdtStorageFs<K, S>>, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
@@ -121,6 +122,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		return new CrdtStorageFs<>(eventloop, fs, subdirectory(fs, ".consolidation"), subdirectory(fs, ".tombstones"), serializer, CrdtFunction.ofCrdtType());
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public CrdtStorageFs<K, S> withConsolidationMargin(Duration consolidationMargin) {
 		this.consolidationMargin = consolidationMargin;
 		return this;

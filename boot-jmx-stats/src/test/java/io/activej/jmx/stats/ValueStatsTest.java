@@ -13,6 +13,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class ValueStatsTest {
 	private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 	private static final int ONE_SECOND_IN_MILLIS = 1000;

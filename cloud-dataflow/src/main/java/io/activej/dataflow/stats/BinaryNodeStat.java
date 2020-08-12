@@ -5,7 +5,6 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelTransformer;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 public class BinaryNodeStat extends NodeStat implements ChannelTransformer<ByteBuf, ByteBuf> {

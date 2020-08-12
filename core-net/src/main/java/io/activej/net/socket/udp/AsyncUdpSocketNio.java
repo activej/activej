@@ -262,7 +262,6 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		writeInterest(!writeQueue.isEmpty());
 	}
 
-	@SuppressWarnings("MagicConstant")
 	private void interests(int newOps) {
 		if (ops != newOps) {
 			ops = newOps;

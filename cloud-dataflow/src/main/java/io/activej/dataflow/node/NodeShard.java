@@ -38,11 +38,11 @@ import static java.util.Collections.singletonList;
  * @param <T> data items type
  */
 public final class NodeShard<K, T> extends AbstractNode {
-	private Function<T, K> keyFunction;
+	private final Function<T, K> keyFunction;
 
 	private final int nonce;
-	private StreamId input;
-	private List<StreamId> outputs;
+	private final StreamId input;
+	private final List<StreamId> outputs;
 
 	public NodeShard(int index, Function<T, K> keyFunction, StreamId input, int nonce) {
 		this(index, keyFunction, input, new ArrayList<>(), nonce);

@@ -62,7 +62,7 @@ public final class TestGzipProcessorUtils {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
+	public final ExpectedException expectedException = ExpectedException.none();
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();

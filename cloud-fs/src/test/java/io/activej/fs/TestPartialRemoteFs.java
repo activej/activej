@@ -49,7 +49,7 @@ public final class TestPartialRemoteFs {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Rule
-	public TemporaryFolder tempFolder = new TemporaryFolder();
+	public final TemporaryFolder tempFolder = new TemporaryFolder();
 
 	private ActiveFsServer server;
 	private RemoteActiveFs client;

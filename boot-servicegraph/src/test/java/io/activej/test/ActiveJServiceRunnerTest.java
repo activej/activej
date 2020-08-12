@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
 
 @RunWith(ActiveJServiceRunner.class)
 @UseModules({TestModule.class})
+@SuppressWarnings("BeforeOrAfterWithIncorrectSignature")
 public class ActiveJServiceRunnerTest {
 
 	private static class TestService implements Service {

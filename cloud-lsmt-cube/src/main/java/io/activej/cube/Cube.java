@@ -58,6 +58,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -346,7 +347,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		fieldTypes.put(dimensionId, type);
 	}
 
-	public Cube addAggregation(AggregationConfig config) {
+	public void addAggregation(AggregationConfig config) {
 		checkArgument(!aggregations.containsKey(config.id), "Aggregation '%s' is already defined", config.id);
 
 		AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
@@ -372,7 +373,6 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 		aggregations.put(config.id, new AggregationContainer(aggregation, config.measures, config.predicate));
 		logger.info("Added aggregation {} for id '{}'", aggregation, config.id);
-		return this;
 	}
 
 	@NotNull
@@ -496,8 +496,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		logger.info("Started consuming data. Dimensions: {}. Measures: {}", dimensionFields.keySet(), measureFields.keySet());
 
 		StreamSplitter<T, T> streamSplitter = StreamSplitter.create((item, acceptors) -> {
-			for (int i = 0; i < acceptors.length; i++) {
-				StreamDataAcceptor<T> acceptor = acceptors[i];
+			for (StreamDataAcceptor<T> acceptor : acceptors) {
 				acceptor.accept(item);
 			}
 		});
@@ -794,7 +793,6 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		return classLoaderCache.getOrCreate(key);
 	}
 
-	@SuppressWarnings("rawtypes")
 	private class RequestContext<R> {
 		DefiningClassLoader queryClassLoader;
 		CubeQuery query;
@@ -1015,8 +1013,8 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		Promise<QueryResult> processResults(List<R> results) {
 			R totals;
 			try {
-				totals = resultClass.newInstance();
-			} catch (InstantiationException | IllegalAccessException e) {
+				totals = resultClass.getDeclaredConstructor().newInstance();
+			} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
 				throw new RuntimeException(e);
 			}
 

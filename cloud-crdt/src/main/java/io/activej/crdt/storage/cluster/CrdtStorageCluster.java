@@ -101,6 +101,7 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 		return new CrdtStorageCluster<>(eventloop, new HashMap<>(clients), CrdtFunction.ofCrdtType());
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public CrdtStorageCluster<I, K, S> withPartition(I partitionId, CrdtStorage<K, S> client) {
 		clients.put(partitionId, client);
 		aliveClients.put(partitionId, client);

@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.fs.util.Codecs.FS_EXCEPTION_CODEC;
 
 public final class UploadAcknowledgement {
+	@SuppressWarnings("ConstantConditions")
 	public static final StructuredCodec<UploadAcknowledgement> CODEC = StructuredCodecs.object(UploadAcknowledgement::new,
 			"error", UploadAcknowledgement::getError, FS_EXCEPTION_CODEC.nullable());
 

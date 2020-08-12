@@ -30,9 +30,9 @@
   <div style="float: left; margin: 10px;">
     {{#polls}}
     <form method="post" action="/vote">
+      <input name="id" value="{{key}}" hidden>
       <table>
         <tr>
-          <input name="id" value="{{key}}" hidden>
           <th colspan="2" style="text-align: center">
             <h3><a href="/poll/{{key}}">Title: {{value.title}}</a></h3>
           </th>

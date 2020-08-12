@@ -78,7 +78,7 @@ public final class ScopedValue<T> {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		ScopedValue other = (ScopedValue) o;
+		ScopedValue<?> other = (ScopedValue<?>) o;
 		return Arrays.equals(scope, other.scope) && value.equals(other.value);
 
 	}

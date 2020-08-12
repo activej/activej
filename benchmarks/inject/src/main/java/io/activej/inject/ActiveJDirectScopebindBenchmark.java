@@ -251,7 +251,7 @@ public class ActiveJDirectScopebindBenchmark {
 	}
 
 	CookieBucket cb;
-	Key<CookieBucket> key = Key.of(CookieBucket.class);
+	final Key<CookieBucket> key = Key.of(CookieBucket.class);
 
 	@Param({"1", "10"})
 	int arg;

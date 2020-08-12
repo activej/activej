@@ -54,7 +54,7 @@ public class Utils {
 				.withInvertFunction(TestSet.class, op -> asList(set(op.getNext(), op.getPrev())));
 	}
 
-	public static StructuredCodec<TestOp> OP_CODEC = new StructuredCodec<TestOp>() {
+	public static final StructuredCodec<TestOp> OP_CODEC = new StructuredCodec<TestOp>() {
 		@Override
 		public void encode(StructuredOutput out, TestOp testOp) {
 			out.writeObject(() -> {

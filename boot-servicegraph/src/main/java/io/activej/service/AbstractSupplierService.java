@@ -74,7 +74,7 @@ public abstract class AbstractSupplierService<V> implements SupplierService<V> {
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
+	@SuppressWarnings({"WeakerAccess", "RedundantThrows"})
 	protected void onStop(V value) throws Exception {
 	}
 }

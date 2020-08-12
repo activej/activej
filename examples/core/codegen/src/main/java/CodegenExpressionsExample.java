@@ -4,7 +4,7 @@ import io.activej.codegen.DefiningClassLoader;
 import static io.activej.codegen.expression.Expressions.*;
 
 public final class CodegenExpressionsExample {
-	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
+	public static void main(String[] args) throws ReflectiveOperationException {
 		//[START REGION_1]
 		Class<Example> example = ClassBuilder
 				// DefiningClassLoader represents a loader for defining dynamically generated classes
@@ -14,7 +14,7 @@ public final class CodegenExpressionsExample {
 		//[END REGION_1]
 
 		//[START REGION_2]
-		Example instance = example.newInstance();
+		Example instance = example.getDeclaredConstructor().newInstance();
 		instance.sayHello();
 		//[END REGION_2]
 	}

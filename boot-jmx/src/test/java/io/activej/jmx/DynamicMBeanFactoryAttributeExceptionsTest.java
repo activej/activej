@@ -13,7 +13,7 @@ import static java.util.Collections.singletonList;
 
 public class DynamicMBeanFactoryAttributeExceptionsTest {
 	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
+	public final ExpectedException expectedException = ExpectedException.none();
 
 	@Test
 	public void concurrentJmxBeansAreNotAllowedToBeInPool() {
@@ -37,7 +37,7 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 				"or public no-arg constructor");
 
 		DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(new MBeanWithInterfaceAsJmxStatsAttributes()), defaultSettings(), false);
+				.createDynamicMBean(singletonList(new MBeanWithInterfaceAsJmxStatsAttributes()), defaultSettings(), false);
 	}
 
 	@Test

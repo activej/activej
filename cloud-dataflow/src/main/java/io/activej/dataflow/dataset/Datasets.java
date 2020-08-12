@@ -21,7 +21,6 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.processor.StreamJoin.Joiner;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
-import io.activej.dataflow.dataset.impl.DatasetRepartition;
 
 import java.util.Comparator;
 import java.util.List;

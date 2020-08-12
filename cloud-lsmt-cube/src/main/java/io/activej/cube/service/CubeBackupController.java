@@ -84,6 +84,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanEx {
 
 	private final AsyncSupplier<Void> backup = reuse(this::backupHead);
 
+	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> backup() {
 		return backup.get();
 	}

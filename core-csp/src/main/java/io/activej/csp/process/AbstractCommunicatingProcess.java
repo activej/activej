@@ -50,9 +50,10 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	protected void beforeProcess() {
 	}
 
-	protected void afterProcess(@Nullable Throwable e) {
+	protected void afterProcess(@SuppressWarnings("unused") @Nullable Throwable e) {
 	}
 
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	public final boolean isProcessStarted() {
 		return processStarted;
 	}

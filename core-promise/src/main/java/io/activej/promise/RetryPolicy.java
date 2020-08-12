@@ -93,11 +93,11 @@ public interface RetryPolicy<S> {
 		public abstract long nextRetryTimestamp(long now, Throwable lastError, int retryCount, long firstRetryTimestamp);
 	}
 
-	static RetryPolicy<SimpleRetryState> exponentialBackoff(Duration initialDelay, Duration maxDelay, double exponent) {
+	static RetryPolicy<?> exponentialBackoff(Duration initialDelay, Duration maxDelay, double exponent) {
 		return exponentialBackoff(initialDelay.toMillis(), maxDelay.toMillis(), exponent);
 	}
 
-	static RetryPolicy<SimpleRetryState> exponentialBackoff(long initialDelay, long maxDelay, double exponent) {
+	static RetryPolicy<?> exponentialBackoff(long initialDelay, long maxDelay, double exponent) {
 		checkArgument(maxDelay > initialDelay && exponent > 1.0,
 				"Max delay should be greater than initial delay and exponent should be greater than 1.0");
 		int maxRetryCount = (int) ceil(log((double) maxDelay / initialDelay) / log(exponent));
@@ -112,11 +112,11 @@ public interface RetryPolicy<S> {
 		};
 	}
 
-	static RetryPolicy exponentialBackoff(Duration initialDelay, Duration maxDelay) {
+	static RetryPolicy<?> exponentialBackoff(Duration initialDelay, Duration maxDelay) {
 		return exponentialBackoff(initialDelay.toMillis(), maxDelay.toMillis());
 	}
 
-	static RetryPolicy exponentialBackoff(long initialDelay, long maxDelay) {
+	static RetryPolicy<?> exponentialBackoff(long initialDelay, long maxDelay) {
 		return exponentialBackoff(initialDelay, maxDelay, 2.0);
 	}
 
@@ -160,7 +160,7 @@ public interface RetryPolicy<S> {
 		};
 	}
 
-	default RetryPolicy withMaxTotalRetryTimeout(Duration maxRetryTimeout) {
+	default RetryPolicy<?> withMaxTotalRetryTimeout(Duration maxRetryTimeout) {
 		long maxRetryTimeoutMillis = maxRetryTimeout.toMillis();
 		return new DelegatingRetryPolicy<RefLong, S>(this) {
 			@Override

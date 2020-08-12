@@ -142,7 +142,7 @@ public final class Specializer {
 		public Object ensureInstance() {
 			if (specializedInstance != null) return specializedInstance;
 			try {
-				specializedInstance = ensureClass().newInstance();
+				specializedInstance = ensureClass().getDeclaredConstructor().newInstance();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -290,7 +290,7 @@ public final class Specializer {
 			return cw.toByteArray();
 		}
 
-		@SuppressWarnings("ConstantConditions")
+		@SuppressWarnings({"ConstantConditions", "DuplicateBranchesInSwitch"})
 		void transformMethod(MethodNode methodNode, GeneratorAdapter g) {
 			AnalyzerAdapter analyzerAdapter = new AnalyzerAdapter(getType(instanceClass).getInternalName(), ACC_PUBLIC | ACC_FINAL, methodNode.name, methodNode.desc, null);
 

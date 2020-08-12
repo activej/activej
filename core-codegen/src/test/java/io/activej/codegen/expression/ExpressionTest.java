@@ -20,9 +20,10 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
+@SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
 public class ExpressionTest {
 	@Rule
-	public TemporaryFolder tempFolder = new TemporaryFolder();
+	public final TemporaryFolder tempFolder = new TemporaryFolder();
 
 	public static class TestPojo {
 		public int property1;
@@ -69,13 +70,13 @@ public class ExpressionTest {
 	}
 
 	public static class TestPojo2 {
-		public String property1;
-		public int property2;
-		public long property3;
-		public float property4;
-		public int property5;
-		public double property6;
-		public String property7;
+		public final String property1;
+		public final int property2;
+		public final long property3;
+		public final float property4;
+		public final int property5;
+		public final double property6;
+		public final String property7;
 
 		public TestPojo2(String property1, int property2, long property3, float property4, int property5, double property6, String property7) {
 			this.property1 = property1;
@@ -165,7 +166,7 @@ public class ExpressionTest {
 	}
 
 	@org.junit.Test
-	public void test() throws IllegalAccessException, InstantiationException {
+	public void test() throws ReflectiveOperationException {
 		Class<Test> testClass = ClassBuilder.create(DefiningClassLoader.create(), Test.class)
 				.withField("x", int.class)
 				.withField("y", Long.class)
@@ -211,7 +212,7 @@ public class ExpressionTest {
 								.with(property(self(), "x"))
 								.with("labelY: ", property(self(), "y")))
 				.build();
-		Test test = testClass.newInstance();
+		Test test = testClass.getDeclaredConstructor().newInstance();
 
 		assertEquals(11, (int) test.test(10));
 		assertEquals(33, test.hash(new TestPojo(1, 2)));
@@ -226,8 +227,8 @@ public class ExpressionTest {
 		assertTrue(test.compare(new TestPojo(0, 10), new TestPojo(1, 10)) < 0);
 		assertTrue(test.compare(new TestPojo(1, 0), new TestPojo(1, 10)) < 0);
 
-		Test test1 = testClass.newInstance();
-		Test test2 = testClass.newInstance();
+		Test test1 = testClass.getDeclaredConstructor().newInstance();
+		Test test2 = testClass.getDeclaredConstructor().newInstance();
 
 		test1.setXY(1, (byte) 10);
 		test2.setXY(1, (byte) 10);
@@ -256,7 +257,7 @@ public class ExpressionTest {
 	}
 
 	@org.junit.Test
-	public void test2() throws IllegalAccessException, InstantiationException {
+	public void test2() throws ReflectiveOperationException {
 		Class<Test2> testClass = ClassBuilder.create(DefiningClassLoader.create(), Test2.class)
 				.withMethod("hash",
 						hash(
@@ -269,7 +270,7 @@ public class ExpressionTest {
 								property(arg(0), "property7")))
 				.build();
 
-		Test2 test = testClass.newInstance();
+		Test2 test = testClass.getDeclaredConstructor().newInstance();
 		TestPojo2 testPojo2 = new TestPojo2("randomString", 42, 666666, 43258.42342f, 54359878, 43252353278423.423468, "fhsduighrwqruqsd");
 
 		assertEquals(testPojo2.hashCode(), test.hash(testPojo2));
@@ -630,7 +631,7 @@ public class ExpressionTest {
 	}
 
 	@org.junit.Test
-	public void testCompare() throws IllegalAccessException, InstantiationException {
+	public void testCompare() throws ReflectiveOperationException {
 		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 		Class<TestCompare> test1 = ClassBuilder.create(definingClassLoader, TestCompare.class)
 				.withMethod("compareObjectLE", cmp(CompareOperation.LE, arg(0), arg(1)))
@@ -639,7 +640,7 @@ public class ExpressionTest {
 				.withMethod("compareObjectNE", cmp(CompareOperation.NE, arg(0), arg(1)))
 				.build();
 
-		TestCompare testCompare = test1.newInstance();
+		TestCompare testCompare = test1.getDeclaredConstructor().newInstance();
 		assertTrue(testCompare.compareObjectLE(5, 5));
 		assertTrue(testCompare.comparePrimitiveLE(5, 6));
 		assertTrue(testCompare.compareObjectEQ(5, 5));
@@ -647,8 +648,8 @@ public class ExpressionTest {
 	}
 
 	public static class StringHolder {
-		public String string1;
-		public String string2;
+		public final String string1;
+		public final String string2;
 
 		public StringHolder(String string1, String string2) {
 			this.string1 = string1;
@@ -934,14 +935,14 @@ public class ExpressionTest {
 	}
 
 	@org.junit.Test
-	public void testStaticFields() throws IllegalAccessException, InstantiationException {
+	public void testStaticFields() throws ReflectiveOperationException {
 		Class<StaticPojo> build = ClassBuilder.create(DefiningClassLoader.create(), StaticPojo.class)
 //				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 				.withStaticField("field", int.class, value(10))
 				.withMethod("getField", staticField(StaticFieldHolder.class, "field"))
 				.withMethod("setField", set(staticField(StaticFieldHolder.class, "field"), arg(0)))
 				.build();
-		StaticPojo staticPojo = build.newInstance();
+		StaticPojo staticPojo = build.getDeclaredConstructor().newInstance();
 		assertEquals(0, staticPojo.getField());
 		staticPojo.setField(100);
 		assertEquals(100, staticPojo.getField());

@@ -239,6 +239,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 						}
 					}
 
+					//noinspection ConstantConditions - get() after select()
 					return Promises.reduce(
 							filteredMap.entrySet().stream()
 									.map(e -> new InfoResults(e.getKey(), e.getValue()))
@@ -369,6 +370,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private Promise<InfoResults> getInfoResults(String name, FileMetadata fileToUpload, List<Object> selected) {
 		InfoResults infoResults = new InfoResults(name, fileToUpload);
+		//noinspection ConstantConditions - get() right after select()
 		return Promises.toList(selected.stream()
 				.map(partitionId -> partitions.get(partitionId)
 						.info(name) // checking file existence and size on particular partition
@@ -471,8 +473,8 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 							.getSize());
 
 	private final class InfoResults implements Comparable<InfoResults> {
-		String name;
-		FileMetadata localMetadata;
+		final String name;
+		final FileMetadata localMetadata;
 		final List<@Nullable FileMetadata> remoteMetadata = new ArrayList<>();
 
 		private InfoResults(@NotNull String name, @NotNull FileMetadata localMetadata) {

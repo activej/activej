@@ -105,6 +105,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 
 	private final AsyncSupplier<Void> consolidate = reuse(this::doConsolidate);
 
+	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> consolidate() {
 		return consolidate.get();
 	}

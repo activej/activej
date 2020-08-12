@@ -100,25 +100,25 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 		runLeaf(methodBlock(method), description, notifier);
 	}
 
-	private static void addClassModules(Set<Module> modules, Class<?> cls) throws IllegalAccessException, InstantiationException, ExceptionInInitializerError {
+	private static void addClassModules(Set<Module> modules, Class<?> cls) throws ExceptionInInitializerError, ReflectiveOperationException {
 		while (cls != null) {
 			UseModules useModules = cls.getAnnotation(UseModules.class);
 			if (useModules != null) {
 				for (Class<? extends Module> moduleClass : useModules.value()) {
-					modules.add(moduleClass.newInstance());
+					modules.add(moduleClass.getDeclaredConstructor().newInstance());
 				}
 			}
 			cls = cls.getSuperclass();
 		}
 	}
 
-	private static void addMethodModules(Set<Module> modules, FrameworkMethod method) throws IllegalAccessException, InstantiationException, ExceptionInInitializerError {
+	private static void addMethodModules(Set<Module> modules, FrameworkMethod method) throws ExceptionInInitializerError, ReflectiveOperationException {
 		UseModules useModules = method.getMethod().getAnnotation(UseModules.class);
 		if (useModules == null) {
 			return;
 		}
 		for (Class<? extends Module> moduleClass : useModules.value()) {
-			modules.add(moduleClass.newInstance());
+			modules.add(moduleClass.getDeclaredConstructor().newInstance());
 		}
 	}
 

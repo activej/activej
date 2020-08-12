@@ -113,7 +113,8 @@ public class ActiveJRunnerTest {
 		}
 
 		public static class Dependant {
-			@Nullable String info;
+			@Nullable
+			final String info;
 
 			@Inject
 			Dependant(Setupable setupable) {
@@ -122,6 +123,7 @@ public class ActiveJRunnerTest {
 		}
 
 		@Before
+		@SuppressWarnings("BeforeOrAfterWithIncorrectSignature")
 		public void setup(Setupable setupable) {
 			setupable.info = "hello world";
 		}

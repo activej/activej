@@ -57,7 +57,7 @@ public final class ClusterRepartitionControllerLauncherTest {
 	@Ignore("manual startup point for the testing launcher override")
 	public void launchCluster() throws Exception {
 		long start = System.nanoTime();
-		createFiles(Paths.get("storages/local"), 1000, 10 * 1024, 100 * 1024);
+		createFiles(Paths.get("storages/local"));
 		System.out.println("Created local files in " + ((System.nanoTime() - start) / 1e6) + " ms");
 
 		new ClusterRepartitionControllerLauncher() {
@@ -81,12 +81,12 @@ public final class ClusterRepartitionControllerLauncherTest {
 		}.launch(new String[0]);
 	}
 
-	private static void createFiles(Path path, int n, int minSize, int maxSize) throws IOException {
+	private static void createFiles(Path path) throws IOException {
 		Files.createDirectories(path);
-		int delta = maxSize - minSize;
+		int delta = 102400 - 10240;
 		Random rng = new Random(7L);
-		for (int i = 0; i < n; i++) {
-			byte[] data = new byte[minSize + (delta <= 0 ? 0 : rng.nextInt(delta))];
+		for (int i = 0; i < 1000; i++) {
+			byte[] data = new byte[10240 + rng.nextInt(delta)];
 			rng.nextBytes(data);
 			Files.write(path.resolve("file_" + i + ".txt"), data);
 		}

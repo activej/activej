@@ -6,8 +6,12 @@ import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.annotations.SerializeReference;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class SerializerReferenceTest {
@@ -118,8 +122,8 @@ public class SerializerReferenceTest {
 
 		Node node1 = new Node();
 		Node node2 = new Node();
-		node1.nodes = Arrays.asList(node2);
-		node2.nodes = Arrays.asList(node1);
+		node1.nodes = singletonList(node2);
+		node2.nodes = singletonList(node1);
 		container.node = node1;
 
 		Container container1 = doTest(Container.class, container);

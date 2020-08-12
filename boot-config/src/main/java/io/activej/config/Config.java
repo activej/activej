@@ -16,7 +16,6 @@
 
 package io.activej.config;
 
-import io.activej.common.CollectorsEx;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.ConfigConverters;
 import org.jetbrains.annotations.NotNull;
@@ -267,7 +266,9 @@ public interface Config {
 		return ofMap(System.getProperties().entrySet().stream()
 				.map(e -> (Map.Entry<String, String>) (Map.Entry<?, ?>) e)
 				.filter(entry -> entry.getKey().startsWith(prefix))
-				.collect(CollectorsEx.toMap()));
+				.collect(Collectors.toMap(
+						e -> e.getKey().length() == prefix.length() ? "" : e.getKey().substring(prefix.length() + 1),
+						Map.Entry::getValue)));
 	}
 
 	/**

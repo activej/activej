@@ -17,6 +17,7 @@ import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 
+@SuppressWarnings("unused")
 public class BinarySerializerTest {
 	private static final DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 
@@ -734,6 +735,7 @@ public class BinarySerializerTest {
 		@Serialize(order = 2)
 		@SerializeStringFormat(value = StringFormat.UTF8_MB3, path = 0)
 		@SerializeNullable(path = 0)
+		@SuppressWarnings("deprecation")
 		public List<String> stringsUtf8Custom;
 
 		@Serialize(order = 3)

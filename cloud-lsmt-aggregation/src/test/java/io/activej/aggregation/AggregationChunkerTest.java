@@ -175,7 +175,7 @@ public final class AggregationChunkerTest {
 				StreamSupplier.closingWithError(exception)
 		);
 		AggregationChunker chunker = AggregationChunker.create(
-				structure, structure.getMeasures(), recordClass, (PartitionPredicate) singlePartition(),
+				structure, structure.getMeasures(), recordClass, singlePartition(),
 				aggregationChunkStorage, classLoader, 1);
 
 		Throwable e = awaitException(supplier.streamTo(chunker));
@@ -244,7 +244,7 @@ public final class AggregationChunkerTest {
 				new KeyValuePair(1, 1, 2),
 				new KeyValuePair(1, 1, 2));
 		AggregationChunker chunker = AggregationChunker.create(
-				structure, structure.getMeasures(), recordClass, (PartitionPredicate) singlePartition(),
+				structure, structure.getMeasures(), recordClass, singlePartition(),
 				aggregationChunkStorage, classLoader, 1);
 
 		awaitException(supplier.streamTo(chunker));

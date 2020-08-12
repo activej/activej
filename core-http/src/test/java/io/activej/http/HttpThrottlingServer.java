@@ -69,6 +69,7 @@ public class HttpThrottlingServer {
 		return AsyncHttpServer.create(eventloop, servlet).withListenPort(SERVER_PORT);
 	}
 
+	@SuppressWarnings("SameParameterValue")
 	protected static HttpResponse longBusinessLogic(String response, int loadBusinessLogic) {
 		long result = 0;
 		for (int i = 0; i < loadBusinessLogic; ++i) {

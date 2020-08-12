@@ -139,7 +139,7 @@ public final class ApiTest {
 		Promise<Void> appendPromise = ChannelSupplier.ofIterable(data)
 				.map(ByteBufStrings::wrapUtf8)
 				.streamTo(client.append("test", dataSize / 2));
-		doTest(appendPromise, "test", (long) dataSize / 2, data);
+		doTest(appendPromise, "test", dataSize / 2, data);
 	}
 
 	@Test

@@ -10,7 +10,7 @@ import static io.activej.codegen.expression.Expressions.*;
  * Methods are constructed programmatically using our fluent API built on top of ASM.
  */
 public class DynamicClassCreationExample {
-	public static void main(String[] args) throws IllegalAccessException, InstantiationException {
+	public static void main(String[] args) throws ReflectiveOperationException {
 		//[START REGION_2]
 		Class<Person> personClass = ClassBuilder.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader()), Person.class)
 
@@ -39,8 +39,8 @@ public class DynamicClassCreationExample {
 
 		//[START REGION_3]
 		// Instantiate two objects of dynamically defined class
-		Person jack = personClass.newInstance();
-		Person martha = personClass.newInstance();
+		Person jack = personClass.getDeclaredConstructor().newInstance();
+		Person martha = personClass.getDeclaredConstructor().newInstance();
 
 		jack.setIdAndName(5, "Jack");
 		martha.setIdAndName(jack.getId() * 2, "Martha");
@@ -60,6 +60,7 @@ public class DynamicClassCreationExample {
 	}
 
 	//[START REGION_1]
+	@SuppressWarnings("unused")
 	public interface Person extends Comparable<Person> {
 		void setIdAndName(int id, String name);
 
@@ -82,9 +83,10 @@ public class DynamicClassCreationExample {
 	}
 	//[END REGION_1]
 
+	@SuppressWarnings("unused")
 	public static class ExamplePojo {
-		int id;
-		String name;
+		final int id;
+		final String name;
 
 		ExamplePojo(int id, String name) {
 			this.id = id;

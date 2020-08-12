@@ -178,6 +178,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 
 	public static final class MBeanWithOperationThatReturnsValue implements ConcurrentJmxBean {
 
+		@SuppressWarnings("unused")
 		@JmxOperation
 		public int sum(int a, int b) {
 			return a + b;
@@ -185,6 +186,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 	}
 
 	public static class MBeanWithNonPublicOperation implements ConcurrentJmxBean {
+		@SuppressWarnings("unused")
 		@JmxOperation
 		void action() {
 		}

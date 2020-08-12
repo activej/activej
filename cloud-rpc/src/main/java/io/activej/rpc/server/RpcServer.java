@@ -166,6 +166,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 		return this;
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public RpcServer withAutoFlushInterval(Duration autoFlushInterval) {
 		this.autoFlushInterval = autoFlushInterval;
 		return this;
@@ -233,6 +234,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 		connections.add(connection);
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	boolean remove(RpcServerConnection connection) {
 		if (!connections.remove(connection)) {
 			return false;

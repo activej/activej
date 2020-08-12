@@ -181,6 +181,7 @@ public final class ByteBufPool {
 					updateStats();
 					evict();
 					try {
+						//noinspection BusyWait
 						Thread.sleep(WATCHDOG_INTERVAL.toMillis());
 					} catch (InterruptedException ignored) {
 						break;

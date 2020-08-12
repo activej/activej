@@ -28,6 +28,7 @@ public abstract class AbstractAttributeResolver<K, A> implements AttributeResolv
 
 	protected abstract A resolveAttributes(K key);
 
+	@SuppressWarnings("unused")
 	protected Promise<Void> prepareToResolveAttributes(List<Object> results, KeyFunction keyFunction, AttributesFunction attributesFunction) {
 		return Promise.complete();
 	}

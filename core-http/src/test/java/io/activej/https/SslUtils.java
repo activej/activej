@@ -9,6 +9,7 @@ import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+@SuppressWarnings("SameParameterValue")
 class SslUtils {
 	static TrustManager[] createTrustManagers(File path, String pass) throws Exception {
 		KeyStore trustStore = KeyStore.getInstance("JKS");

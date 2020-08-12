@@ -32,7 +32,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
-import static java.util.Collections.singletonList;
 
 public final class DatasetJoin<K, L, R, V> extends SortedDataset<K, V> {
 	private final SortedDataset<K, L> left;

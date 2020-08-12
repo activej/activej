@@ -41,7 +41,7 @@ public final class RpcNoServerTest {
 
 	protected static class HelloRequest {
 		@Serialize(order = 0)
-		public String name;
+		public final String name;
 
 		public HelloRequest(@Deserialize("name") String name) {
 			this.name = name;
@@ -50,7 +50,7 @@ public final class RpcNoServerTest {
 
 	protected static class HelloResponse {
 		@Serialize(order = 0)
-		public String message;
+		public final String message;
 
 		public HelloResponse(@Deserialize("message") String message) {
 			this.message = message;

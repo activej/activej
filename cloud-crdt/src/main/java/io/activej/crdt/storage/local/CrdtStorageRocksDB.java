@@ -48,6 +48,7 @@ import org.rocksdb.*;
 import java.time.Duration;
 import java.util.concurrent.Executor;
 
+@SuppressWarnings("rawtypes")
 public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService, EventloopJmxBeanEx {
 	private final Eventloop eventloop;
 	private final Executor executor;

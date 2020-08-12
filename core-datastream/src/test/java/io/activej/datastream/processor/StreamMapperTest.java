@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import static io.activej.datastream.StreamSupplier.concat;
 import static io.activej.datastream.TestStreamTransformers.*;
@@ -85,13 +84,6 @@ public class StreamMapperTest {
 
 		assertClosedWithError(consumer);
 		assertClosedWithError(mapper);
-	}
-
-	@Test
-	public void testIdentity() {
-		Function<String, String> function1 = Function.identity();
-		Function<Integer, Integer> function2 = Function.identity();
-		assertSame(function1, function2);
 	}
 
 	@Test
