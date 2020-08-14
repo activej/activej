@@ -732,7 +732,7 @@ public final class ByteBufQueue implements Recyclable {
 		return iterator;
 	}
 
-	public static class ByteBufIterator implements Iterator<ByteBuf>, Recyclable {
+	public static class ByteBufIterator implements Iterator<ByteBuf> {
 		ByteBuf[] bufs;
 		int first;
 		final int last;
@@ -759,14 +759,6 @@ public final class ByteBufQueue implements Recyclable {
 
 		public boolean isRecycled() {
 			return bufs == null;
-		}
-
-		@Override
-		public void recycle() {
-			while (hasNext()) {
-				next().recycle();
-			}
-			bufs = null;
 		}
 	}
 
