@@ -16,17 +16,28 @@
 
 package io.activej.http;
 
-import io.activej.promise.Promise;
+import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.Beta;
 
-/**
- * An interface for an asynchronous HTTP client.
- * <p>
- * It is as simple as an asynchronous function that accepts {@link HttpRequest}
- * and returns an {@link HttpResponse} for it,
- * so it is basically a reciprocal of the {@link AsyncServlet}.
- */
-public interface IAsyncHttpClient {
-	Promise<HttpResponse> request(HttpRequest request);
+import java.util.function.Consumer;
 
-	Promise<WebSocket> webSocketRequest(HttpRequest request);
+@Beta
+interface PingPongHandler {
+	void onPing(ByteBuf payload);
+
+	void onPong(ByteBuf payload);
+
+	static PingPongHandler of(Consumer<ByteBuf> onPing, Consumer<ByteBuf> onPong){
+		return new PingPongHandler() {
+			@Override
+			public void onPing(ByteBuf payload) {
+				onPing.accept(payload);
+			}
+
+			@Override
+			public void onPong(ByteBuf payload) {
+				onPong.accept(payload);
+			}
+		};
+	}
 }

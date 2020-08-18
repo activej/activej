@@ -26,6 +26,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpServer.Inspector;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocketSsl;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,10 +36,14 @@ import java.util.Arrays;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
+import static io.activej.csp.ChannelSupplier.ofLazyProvider;
+import static io.activej.csp.ChannelSuppliers.concat;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
 import static io.activej.http.HttpMethod.*;
+import static io.activej.http.Protocol.*;
+import static io.activej.http.WebSocketConstants.HANDSHAKE_FAILED;
 
 /**
  * It represents server connection. It can receive {@link HttpRequest requests}
@@ -78,6 +83,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	private final AsyncServlet servlet;
 	private final char[] charBuffer;
 	private final int maxBodySize;
+	private final int maxWebSocketMessageSize;
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
 	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");
@@ -99,6 +105,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		this.inspector = server.inspector;
 		this.charBuffer = charBuffer;
 		this.maxBodySize = server.maxBodySize;
+		this.maxWebSocketMessageSize = server.maxWebSocketMessageSize;
 	}
 
 	public void serve() {
@@ -221,11 +228,13 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	private void writeHttpResponse(HttpResponse httpResponse) {
-		HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
-		if (server.maxKeepAliveRequests != 0 && ++numberOfKeepAliveRequests >= server.maxKeepAliveRequests) {
-			connectionHeader = CONNECTION_CLOSE_HEADER;
+		if (httpResponse.getHeader(CONNECTION) == null) {
+			HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
+			if (server.maxKeepAliveRequests != 0 && ++numberOfKeepAliveRequests >= server.maxKeepAliveRequests) {
+				connectionHeader = CONNECTION_CLOSE_HEADER;
+			}
+			httpResponse.addHeader(CONNECTION, connectionHeader);
 		}
-		httpResponse.addHeader(CONNECTION, connectionHeader);
 		ByteBuf buf = renderHttpMessage(httpResponse);
 		if (buf != null) {
 			if ((flags & KEEP_ALIVE) != 0) {
@@ -245,8 +254,24 @@ final class HttpServerConnection extends AbstractHttpConnection {
 
 		//noinspection ConstantConditions
 		request.flags |= MUST_LOAD_BODY;
-		request.body = body;
-		request.bodyStream = bodySupplier;
+		if (isWebSocket()) {
+			if (body != null && body.readRemaining() == 0) {
+				ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> ChannelSupplier.of(readQueue.takeRemaining()));
+				ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
+				request.bodyStream = concat(ofQueueSupplier, ofSocketSupplier)
+						.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection));
+				flags |= BODY_RECEIVED;
+				request.setProtocol(socket instanceof AsyncTcpSocketSsl ? WSS : WS);
+				request.maxBodySize = maxWebSocketMessageSize;
+			} else {
+				closeWithError(HANDSHAKE_FAILED);
+				return;
+			}
+		} else {
+			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? HTTPS : HTTP);
+			request.body = body;
+			request.bodyStream = bodySupplier;
+		}
 		request.setRemoteAddress(remoteAddress);
 
 		if (inspector != null) {
@@ -271,17 +296,16 @@ final class HttpServerConnection extends AbstractHttpConnection {
 				}
 				return;
 			}
+			switchPool(server.poolReadWrite);
 			if (e == null) {
 				if (inspector != null) {
 					inspector.onHttpResponse(request, response);
 				}
-				switchPool(server.poolReadWrite);
 				writeHttpResponse(response);
 			} else {
 				if (inspector != null) {
 					inspector.onServletException(request, e);
 				}
-				switchPool(server.poolReadWrite);
 				writeException(e);
 			}
 
@@ -292,7 +316,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	@Override
 	protected void onBodyReceived() {
 		assert !isClosed();
-		flags |= BODY_RECEIVED;
+		flags ^= BODY_RECEIVED;
 		if ((flags & BODY_SENT) != 0 && pool != server.poolServing) {
 			onHttpMessageComplete();
 		}

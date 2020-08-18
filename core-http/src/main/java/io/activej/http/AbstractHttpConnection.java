@@ -62,11 +62,18 @@ public abstract class AbstractHttpConnection {
 
 	protected static final HttpHeaderValue CONNECTION_KEEP_ALIVE_HEADER = HttpHeaderValue.of("keep-alive");
 	protected static final HttpHeaderValue CONNECTION_CLOSE_HEADER = HttpHeaderValue.of("close");
+	protected static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.of("upgrade");
+	protected static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.of("websocket");
 	protected static final int UNSET_CONTENT_LENGTH = -1;
 
 	private static final byte[] CONNECTION_KEEP_ALIVE = encodeAscii("keep-alive");
 	private static final byte[] TRANSFER_ENCODING_CHUNKED = encodeAscii("chunked");
+	private static final byte[] CONTENT_ENCODING_GZIP = encodeAscii("gzip");
 	private static final byte[] EMPTY_HEADER = new byte[0];
+
+	protected static final byte[] CONNECTION_UPGRADE = encodeAscii("upgrade");
+	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
+	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
 
 	protected final Eventloop eventloop;
 
@@ -76,11 +83,13 @@ public abstract class AbstractHttpConnection {
 	protected static final byte KEEP_ALIVE = 1 << 0;
 	protected static final byte GZIPPED = 1 << 1;
 	protected static final byte CHUNKED = 1 << 2;
-	protected static final byte BODY_RECEIVED = 1 << 3;
-	protected static final byte BODY_SENT = 1 << 4;
+	protected static final byte WEB_SOCKET = 1 << 3;
+	protected static final byte UPGRADE = 1 << 4;
+	protected static final byte BODY_RECEIVED = 1 << 5;
+	protected static final byte BODY_SENT = 1 << 6;
 	protected static final byte CLOSED = (byte) (1 << 7);
 
-	@MagicConstant(flags = {KEEP_ALIVE, GZIPPED, CHUNKED, BODY_RECEIVED, BODY_SENT, CLOSED})
+	@MagicConstant(flags = {KEEP_ALIVE, GZIPPED, CHUNKED, WEB_SOCKET, UPGRADE, BODY_RECEIVED, BODY_SENT, CLOSED})
 	protected byte flags = 0;
 
 	@Nullable
@@ -92,8 +101,6 @@ public abstract class AbstractHttpConnection {
 	protected long poolTimestamp;
 
 	protected int numberOfKeepAliveRequests;
-
-	protected static final byte[] CONTENT_ENCODING_GZIP = encodeAscii("gzip");
 
 	protected int contentLength;
 
@@ -150,6 +157,18 @@ public abstract class AbstractHttpConnection {
 
 	protected final boolean isClosed() {
 		return flags < 0;
+	}
+
+	protected boolean isWebSocket() {
+		return (flags & WEB_SOCKET) != 0 && (flags & UPGRADE) != 0;
+	}
+
+	protected void closeWebSocketConnection(Throwable e) {
+		if (e instanceof WebSocketException) {
+			close();
+		} else {
+			closeWithError(e);
+		}
 	}
 
 	public final void close() {
@@ -320,7 +339,10 @@ public abstract class AbstractHttpConnection {
 			contentLength = trimAndDecodePositiveInt(array, pos, len);
 		} else if (header == CONNECTION) {
 			flags = (byte) ((flags & ~KEEP_ALIVE) |
-					(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
+					(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE :
+							equalsLowerCaseAscii(CONNECTION_UPGRADE, array, pos, len) ? UPGRADE : 0));
+		} else if (header == HttpHeaders.UPGRADE) {
+			flags |= equalsLowerCaseAscii(UPGRADE_WEBSOCKET, array, pos, len) ? WEB_SOCKET : 0;
 		} else if (header == TRANSFER_ENCODING) {
 			flags |= equalsLowerCaseAscii(TRANSFER_ENCODING_CHUNKED, array, pos, len) ? CHUNKED : 0;
 		} else if (header == CONTENT_ENCODING) {
@@ -443,18 +465,20 @@ public abstract class AbstractHttpConnection {
 		assert bodyStream != null;
 		httpMessage.bodyStream = null;
 
-		if ((httpMessage.flags & HttpMessage.USE_GZIP) != 0) {
-			httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
-			BufsConsumerGzipDeflater deflater = BufsConsumerGzipDeflater.create();
-			bodyStream.bindTo(deflater.getInput());
-			bodyStream = deflater.getOutput().getSupplier();
-		}
+		if (!isWebSocket()) {
+			if ((httpMessage.flags & HttpMessage.USE_GZIP) != 0) {
+				httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
+				BufsConsumerGzipDeflater deflater = BufsConsumerGzipDeflater.create();
+				bodyStream.bindTo(deflater.getInput());
+				bodyStream = deflater.getOutput().getSupplier();
+			}
 
-		if (httpMessage.headers.get(CONTENT_LENGTH) == null) {
-			httpMessage.addHeader(TRANSFER_ENCODING, ofBytes(TRANSFER_ENCODING_CHUNKED));
-			BufsConsumerChunkedEncoder chunker = BufsConsumerChunkedEncoder.create();
-			bodyStream.bindTo(chunker.getInput());
-			bodyStream = chunker.getOutput().getSupplier();
+			if (httpMessage.headers.get(CONTENT_LENGTH) == null) {
+				httpMessage.addHeader(TRANSFER_ENCODING, ofBytes(TRANSFER_ENCODING_CHUNKED));
+				BufsConsumerChunkedEncoder chunker = BufsConsumerChunkedEncoder.create();
+				bodyStream.bindTo(chunker.getInput());
+				bodyStream = chunker.getOutput().getSupplier();
+			}
 		}
 
 		ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize());

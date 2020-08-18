@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static io.activej.http.Protocol.*;
 import static java.util.Collections.emptyList;
 
 @SuppressWarnings("WeakerAccess")
@@ -79,13 +80,10 @@ public final class UrlParser {
 	private static final char IPV6_OPENING_BRACKET = '[';
 	private static final String IPV6_CLOSING_SECTION_WITH_PORT = "]:";
 
-	private static final String HTTP = "http";
-	private static final String HTTPS = "https";
-
 	private final String raw;
 
 	private int portValue = -1;
-	private boolean https = false;
+	private Protocol protocol;
 
 	private short host = -1;
 	private short path = -1;
@@ -132,10 +130,14 @@ public final class UrlParser {
 				throw new ParseException(UrlParser.class, "Partial URI is not allowed: " + raw);
 			index = 0;
 		} else {
-			if (index == 5 && raw.startsWith(HTTPS)) {
-				https = true;
-			} else if (index == 4 && raw.startsWith(HTTP)) {
-				https = false;
+			if (index == 5 && raw.startsWith(HTTPS.lowercase())) {
+				protocol = HTTPS;
+			} else if (index == 4 && raw.startsWith(HTTP.lowercase())) {
+				protocol = HTTP;
+			} else if (index == 3 && raw.startsWith(WSS.lowercase())) {
+				protocol = WSS;
+			} else if (index == 2 && raw.startsWith(WS.lowercase())) {
+				protocol = WS;
 			} else {
 				throw new UnknownFormatException(UrlParser.class, "Unsupported schema: " + raw.substring(0, index));
 			}
@@ -160,7 +162,7 @@ public final class UrlParser {
 				portValue = toInt(raw, port, hostPortEnd);
 			} else {
 				if (host != -1) {
-					portValue = https ? 443 : 80;
+					portValue = protocol.isSecure() ? 443 : 80;
 				}
 			}
 
@@ -233,8 +235,17 @@ public final class UrlParser {
 		return host == -1;
 	}
 
+	@Deprecated
 	public boolean isHttps() {
-		return https;
+		return protocol == HTTPS;
+	}
+
+	public Protocol getProtocol() {
+		return protocol;
+	}
+
+	void setProtocol(Protocol protocol) {
+		this.protocol = protocol;
 	}
 
 	@Nullable

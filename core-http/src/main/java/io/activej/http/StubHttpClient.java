@@ -65,4 +65,9 @@ public final class StubHttpClient implements IAsyncHttpClient {
 			}
 		});
 	}
+
+	@Override
+	public Promise<WebSocket> webSocketRequest(HttpRequest request) {
+		throw new UnsupportedOperationException("StubHttpClient#webSocketRequest is not implemented yet");
+	}
 }

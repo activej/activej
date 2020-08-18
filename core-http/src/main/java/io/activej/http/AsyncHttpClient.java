@@ -53,12 +53,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.jmx.MBeanFormat.formatListAsMultilineString;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
+import static io.activej.http.Protocol.*;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -80,6 +82,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(AsyncHttpClient.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
 	public static final Duration KEEP_ALIVE_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpClient.class, "keepAliveTimeout", Duration.ZERO);
 	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(AsyncHttpClient.class, "maxBodySize", MemSize.ZERO);
+	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(AsyncHttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(AsyncHttpClient.class, "maxKeepAliveRequests", 0);
 
 	@NotNull
@@ -104,6 +107,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 	int readWriteTimeoutMillisShutdown = (int) READ_WRITE_TIMEOUT_SHUTDOWN.toMillis();
 	int keepAliveTimeoutMillis = (int) KEEP_ALIVE_TIMEOUT.toMillis();
 	int maxBodySize = MAX_BODY_SIZE.toInt();
+	int maxWebSocketMessageSize = MAX_WEB_SOCKET_MESSAGE_SIZE.toInt();
 	int maxKeepAliveRequests = MAX_KEEP_ALIVE_REQUESTS;
 
 	// SSL
@@ -309,6 +313,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 		return this;
 	}
 
+	public AsyncHttpClient withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
+		this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
+		return this;
+	}
+
 	public AsyncHttpClient withInspector(Inspector inspector) {
 		this.inspector = inspector;
 		return this;
@@ -377,6 +386,20 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 
 	@Override
 	public Promise<HttpResponse> request(HttpRequest request) {
+		if (CHECK) checkArgument(request.getProtocol(), protocol -> protocol == HTTP || protocol == HTTPS);
+		return doRequest(request, connection-> connection.send(request));
+	}
+
+	@Override
+	public Promise<WebSocket> webSocketRequest(HttpRequest request) {
+		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
+		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
+
+		return doRequest(request, connection -> connection.sendWebSocketRequest(request));
+	}
+
+	@NotNull
+	private <T> Promise<T> doRequest(HttpRequest request, Function<HttpClientConnection, Promise<T>> fn) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (inspector != null) inspector.onRequest(request);
 		String host = request.getUrl().getHost();
@@ -389,7 +412,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 						if (inspector != null) inspector.onResolve(request, dnsResponse);
 						if (dnsResponse.isSuccessful()) {
 							//noinspection ConstantConditions - dnsResponse is successful (not null)
-							return doSend(request, dnsResponse.getRecord().getIps());
+							return doSend(request, dnsResponse.getRecord().getIps(), fn);
 						} else {
 							return Promise.ofException(new DnsQueryException(AsyncHttpClient.class, dnsResponse));
 						}
@@ -401,30 +424,30 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 				});
 	}
 
-	private Promise<HttpResponse> doSend(HttpRequest request, InetAddress[] inetAddresses) {
+	private <T> Promise<T> doSend(HttpRequest request, InetAddress[] inetAddresses, Function<HttpClientConnection, Promise<T>> fn) {
 		InetAddress inetAddress = inetAddresses[(inetAddressIdx++ & Integer.MAX_VALUE) % inetAddresses.length];
 		InetSocketAddress address = new InetSocketAddress(inetAddress, request.getUrl().getPort());
 
 		HttpClientConnection keepAliveConnection = takeKeepAliveConnection(address);
 		if (keepAliveConnection != null) {
-			return keepAliveConnection.send(request);
+			return fn.apply(keepAliveConnection);
 		}
 
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.thenEx((asyncTcpSocketImpl, e) -> {
 					if (e == null) {
-						boolean https = request.isHttps();
+						boolean isSecure = request.getProtocol().isSecure();
 						asyncTcpSocketImpl
-								.withInspector(https ? socketInspector : socketSslInspector);
+								.withInspector(isSecure ? socketInspector : socketSslInspector);
 
-						if (https && sslContext == null) {
-							throw new IllegalArgumentException("Cannot send HTTPS Request without SSL enabled");
+						if (isSecure && sslContext == null) {
+							throw new IllegalArgumentException("Cannot send Secure Request without SSL enabled");
 						}
 
 						String host = request.getUrl().getHost();
 						assert host != null;
 
-						AsyncTcpSocket asyncTcpSocket = https ?
+						AsyncTcpSocket asyncTcpSocket = isSecure ?
 								wrapClientSocket(asyncTcpSocketImpl,
 										host, request.getUrl().getPort(),
 										sslContext, sslExecutor) :
@@ -437,7 +460,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 						if (expiredConnectionsCheck == null)
 							scheduleExpiredConnectionsCheck();
 
-						return connection.send(request);
+						return fn.apply(connection);
 					} else {
 						if (inspector != null) inspector.onConnectError(request, address, e);
 						request.recycle();

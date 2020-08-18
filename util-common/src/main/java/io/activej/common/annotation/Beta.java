@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package io.activej.http;
+package io.activej.common.annotation;
 
-import io.activej.promise.Promise;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * An interface for an asynchronous HTTP client.
+ * Elements that are marked with this annotation are experimental and are subject to change.
  * <p>
- * It is as simple as an asynchronous function that accepts {@link HttpRequest}
- * and returns an {@link HttpResponse} for it,
- * so it is basically a reciprocal of the {@link AsyncServlet}.
+ * API of such elements may be changed or removed without following semantic versioning.
  */
-public interface IAsyncHttpClient {
-	Promise<HttpResponse> request(HttpRequest request);
-
-	Promise<WebSocket> webSocketRequest(HttpRequest request);
+@Retention(RetentionPolicy.SOURCE)
+@Target({
+		ElementType.ANNOTATION_TYPE,
+		ElementType.CONSTRUCTOR,
+		ElementType.FIELD,
+		ElementType.METHOD,
+		ElementType.TYPE
+})
+public @interface Beta {
 }

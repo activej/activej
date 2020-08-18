@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
@@ -35,8 +36,13 @@ import java.net.InetSocketAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.SP;
 import static io.activej.bytebuf.ByteBufStrings.decodePositiveInt;
-import static io.activej.http.HttpHeaders.CONNECTION;
+import static io.activej.csp.ChannelSuppliers.concat;
+import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
+import static io.activej.http.HttpUtils.generateWebSocketKey;
+import static io.activej.http.HttpUtils.isAnswerInvalid;
+import static io.activej.http.WebSocketConstants.HANDSHAKE_FAILED;
+import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -85,6 +91,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 final class HttpClientConnection extends AbstractHttpConnection {
 	public static final ParseException INVALID_RESPONSE = new UnknownFormatException(HttpClientConnection.class, "Invalid response");
 	public static final ParseException CONNECTION_CLOSED = new ParseException(HttpClientConnection.class, "Connection closed");
+	public static final StacklessException NOT_ACCEPTED_RESPONSE = new StacklessException(HttpClientConnection.class, "Response was not accepted");
 
 	@Nullable
 	private SettablePromise<HttpResponse> promise;
@@ -98,6 +105,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
 	final int maxBodySize;
+	final int maxWebSocketMessageSize;
 
 	HttpClientConnection(Eventloop eventloop, AsyncHttpClient client,
 			AsyncTcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
@@ -105,6 +113,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 		this.remoteAddress = remoteAddress;
 		this.client = client;
 		this.maxBodySize = client.maxBodySize;
+		this.maxWebSocketMessageSize = client.maxWebSocketMessageSize;
 		this.inspector = client.inspector;
 	}
 
@@ -175,8 +184,19 @@ final class HttpClientConnection extends AbstractHttpConnection {
 		HttpResponse response = this.response;
 		//noinspection ConstantConditions
 		response.flags |= MUST_LOAD_BODY;
-		response.body = body;
-		response.bodyStream = bodySupplier;
+		if (isWebSocket()) {
+			if (response.getCode() == 101) {
+				assert body != null && body.readRemaining() == 0;
+				response.bodyStream = concat(ChannelSupplier.of(readQueue.takeRemaining()), ChannelSupplier.ofSocket(socket));
+				flags |= BODY_RECEIVED;
+			} else {
+				closeWithError(HANDSHAKE_FAILED);
+				return;
+			}
+		} else {
+			response.body = body;
+			response.bodyStream = bodySupplier;
+		}
 		if (inspector != null) inspector.onHttpResponse(this, response);
 
 		SettablePromise<HttpResponse> promise = this.promise;
@@ -188,7 +208,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	protected void onBodyReceived() {
 		assert !isClosed();
-		flags |= BODY_RECEIVED;
+		flags ^= BODY_RECEIVED;
 		if (response != null && (flags & BODY_SENT) != 0) {
 			onHttpMessageComplete();
 		}
@@ -219,6 +239,84 @@ final class HttpClientConnection extends AbstractHttpConnection {
 				.streamTo(buffer.getConsumer())
 				.both(inflaterFinished)
 				.whenComplete(afterProcessCb);
+	}
+
+	@NotNull
+	public Promise<WebSocket> sendWebSocketRequest(HttpRequest request) {
+		assert !isClosed();
+		SettablePromise<HttpResponse> promise = new SettablePromise<>();
+		this.promise = promise;
+		(pool = client.poolReadWrite).addLastNode(this);
+		poolTimestamp = eventloop.currentTimeMillis();
+		flags |= WEB_SOCKET;
+		flags |= UPGRADE;
+		request.addHeader(CONNECTION, CONNECTION_UPGRADE_HEADER);
+		request.addHeader(HttpHeaders.UPGRADE, UPGRADE_WEBSOCKET_HEADER);
+		request.addHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
+
+		byte[] encodedKey = generateWebSocketKey();
+		request.addHeader(SEC_WEBSOCKET_KEY, encodedKey);
+
+
+		ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
+		request.setBodyStream(buffer.getSupplier());
+
+		writeHttpMessageAsStream(request);
+		request.recycle();
+
+		if (!isClosed()) {
+			readHttpResponse();
+		}
+		return promise
+				.then(res -> {
+					assert res.getCode() == 101;
+					if (isAnswerInvalid(res, encodedKey)) {
+						closeWithError(HANDSHAKE_FAILED);
+						return Promise.ofException(HANDSHAKE_FAILED);
+					}
+					WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(true);
+					WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(maxWebSocketMessageSize, encoder, false);
+					encoder.getCloseSentPromise()
+							.then(decoder::getCloseReceivedPromise)
+							.whenException(this::closeWebSocketConnection)
+							.whenResult(this::closeWebSocketConnection);
+
+					decoder.getProcessCompletion()
+							.whenComplete(($, e) -> {
+								if (isClosed()) return;
+								if (e == null) {
+									onBodyReceived();
+									encoder.closeEx(REGULAR_CLOSE);
+								} else {
+									encoder.closeEx(e);
+								}
+							});
+					return Promise.of((WebSocket) new WebSocketImpl(
+							request,
+							res,
+							res.getBodyStream().transformWith(decoder),
+							buffer.getConsumer().transformWith(encoder),
+							decoder::onProtocolError,
+							maxWebSocketMessageSize
+					));
+				})
+				.whenException(this::closeWithError);
+	}
+
+	private void readHttpResponse() {
+		/*
+			as per RFC 7230, section 3.3.3,
+			if no Content-Length header is set, client should read body until a server closes the connection
+		*/
+		contentLength = UNSET_CONTENT_LENGTH;
+		if (readQueue.isEmpty()) {
+			tryReadHttpMessage();
+		} else {
+			eventloop.post(() -> {
+				if (isClosed()) return;
+				tryReadHttpMessage();
+			});
+		}
 	}
 
 	private void onHttpMessageComplete() {
@@ -273,19 +371,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 		}
 		request.recycle();
 		if (!isClosed()) {
-			/*
-				as per RFC 7230, section 3.3.3,
-				if no Content-Length header is set, client should read body until a server closes the connection
-			*/
-			contentLength = UNSET_CONTENT_LENGTH;
-			if (readQueue.isEmpty()) {
-				tryReadHttpMessage();
-			} else {
-				eventloop.post(() -> {
-					if (isClosed()) return;
-					tryReadHttpMessage();
-				});
-			}
+			readHttpResponse();
 		}
 		return promise;
 	}

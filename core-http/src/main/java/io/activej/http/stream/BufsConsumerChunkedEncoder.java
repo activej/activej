@@ -90,12 +90,11 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 		char[] hexRepr = Integer.toHexString(bufSize).toCharArray();
 		int hexLen = hexRepr.length;
 		ByteBuf chunkBuf = ByteBufPool.allocate(hexLen + 2 + bufSize + 2);
-		byte[] chunkArray = chunkBuf.array();
 		for (int i = 0; i < hexLen; i++) {
-			chunkArray[i] = (byte) hexRepr[i];
+			chunkBuf.set(i, (byte) hexRepr[i]);
 		}
-		chunkArray[hexLen] = CR;
-		chunkArray[hexLen + 1] = LF;
+		chunkBuf.set(hexLen, CR);
+		chunkBuf.set(hexLen + 1, LF);
 		chunkBuf.tail(hexLen + 2);
 		chunkBuf.put(buf);
 		buf.recycle();

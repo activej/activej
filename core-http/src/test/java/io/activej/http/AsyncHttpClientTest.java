@@ -21,15 +21,11 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +36,7 @@ import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.eventloop.Eventloop.CONNECT_TIMEOUT;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
 import static io.activej.http.HttpClientConnection.INVALID_RESPONSE;
+import static io.activej.https.SslUtils.createTestSslContext;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.*;
@@ -49,13 +46,6 @@ import static org.junit.Assert.*;
 
 public final class AsyncHttpClientTest {
 	private static final int PORT = getFreePort();
-
-	private static final String KEYSTORE_PATH = "./src/test/resources/keystore.jks";
-	private static final String KEYSTORE_PASS = "testtest";
-	private static final String KEY_PASS = "testtest";
-
-	private static final String TRUSTSTORE_PATH = "./src/test/resources/truststore.jks";
-	private static final String TRUSTSTORE_PASS = "testtest";
 
 	private static final byte[] HELLO_WORLD = encodeAscii("Hello, World!");
 
@@ -312,38 +302,14 @@ public final class AsyncHttpClientTest {
 						.whenResult(asyncTcpSocket::close))
 				.withAcceptOnce();
 		if (ssl) {
-			server.withSslListenAddress(createSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(PORT));
+			server.withSslListenAddress(createTestSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(PORT));
 		} else {
 			server.withListenAddress(new InetSocketAddress(PORT));
 		}
 		server.listen();
 		return AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.withSslEnabled(createSslContext(), Executors.newSingleThreadExecutor())
+				.withSslEnabled(createTestSslContext(), Executors.newSingleThreadExecutor())
 				.request(HttpRequest.get("http" + (ssl ? "s" : "") + "://127.0.0.1:" + PORT));
 	}
 
-	private static SSLContext createSslContext() {
-		try {
-			SSLContext instance = SSLContext.getInstance("TLSv1.2");
-
-			KeyStore keyStore = KeyStore.getInstance("JKS");
-			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			try (InputStream input = new FileInputStream(new File(KEYSTORE_PATH))) {
-				keyStore.load(input, KEYSTORE_PASS.toCharArray());
-			}
-			kmf.init(keyStore, KEY_PASS.toCharArray());
-
-			KeyStore trustStore = KeyStore.getInstance("JKS");
-			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-			try (InputStream input = new FileInputStream(new File(TRUSTSTORE_PATH))) {
-				trustStore.load(input, TRUSTSTORE_PASS.toCharArray());
-			}
-			tmf.init(trustStore);
-
-			instance.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
-			return instance;
-		} catch (Exception e) {
-			throw new AssertionError(e);
-		}
-	}
 }

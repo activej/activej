@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.activej.http.Protocol.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -27,7 +28,25 @@ public final class HttpUrlTest {
 	public void testSimple() {
 		UrlParser url = UrlParser.of("https://127.0.0.1:45678");
 
-		assertTrue(url.isHttps());
+		assertSame(url.getProtocol(), HTTPS);
+		assertEquals("127.0.0.1", url.getHost());
+		assertEquals(45678, url.getPort());
+	}
+
+	@Test
+	public void testWebSocket() {
+		UrlParser url = UrlParser.of("ws://127.0.0.1:45678");
+
+		assertSame(url.getProtocol(), WS);
+		assertEquals("127.0.0.1", url.getHost());
+		assertEquals(45678, url.getPort());
+	}
+
+	@Test
+	public void testSecureWebSocket() {
+		UrlParser url = UrlParser.of("wss://127.0.0.1:45678");
+
+		assertSame(url.getProtocol(), WSS);
 		assertEquals("127.0.0.1", url.getHost());
 		assertEquals(45678, url.getPort());
 	}

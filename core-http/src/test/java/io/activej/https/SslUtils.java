@@ -10,7 +10,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 @SuppressWarnings("SameParameterValue")
-class SslUtils {
+public class SslUtils {
+	private static final String KEYSTORE_PATH = "./src/test/resources/keystore.jks";
+	private static final String KEYSTORE_PASS = "testtest";
+	private static final String KEY_PASS = "testtest";
+
+	private static final String TRUSTSTORE_PATH = "./src/test/resources/truststore.jks";
+	private static final String TRUSTSTORE_PASS = "testtest";
+
 	static TrustManager[] createTrustManagers(File path, String pass) throws Exception {
 		KeyStore trustStore = KeyStore.getInstance("JKS");
 
@@ -37,5 +44,30 @@ class SslUtils {
 		SSLContext instance = SSLContext.getInstance(algorithm);
 		instance.init(keyManagers, trustManagers, secureRandom);
 		return instance;
+	}
+
+	public static SSLContext createTestSslContext() {
+		try {
+			SSLContext instance = SSLContext.getInstance("TLSv1.2");
+
+			KeyStore keyStore = KeyStore.getInstance("JKS");
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			try (InputStream input = new FileInputStream(new File(KEYSTORE_PATH))) {
+				keyStore.load(input, KEYSTORE_PASS.toCharArray());
+			}
+			kmf.init(keyStore, KEY_PASS.toCharArray());
+
+			KeyStore trustStore = KeyStore.getInstance("JKS");
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+			try (InputStream input = new FileInputStream(new File(TRUSTSTORE_PATH))) {
+				trustStore.load(input, TRUSTSTORE_PASS.toCharArray());
+			}
+			tmf.init(trustStore);
+
+			instance.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
+			return instance;
+		} catch (Exception e) {
+			throw new AssertionError(e);
+		}
 	}
 }

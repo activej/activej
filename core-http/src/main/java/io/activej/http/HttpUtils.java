@@ -16,8 +16,12 @@
 
 package io.activej.http;
 
+import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.http.WebSocketConstants.FrameType;
+import io.activej.http.WebSocketConstants.MessageType;
+import io.activej.http.WebSocketConstants.OpCode;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
@@ -25,10 +29,20 @@ import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.nio.charset.CharacterCodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpHeaders.HOST;
+import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_ACCEPT;
+import static io.activej.http.WebSocketConstants.FrameType.*;
+import static io.activej.http.WebSocketConstants.MAGIC_STRING;
+import static io.activej.http.WebSocketConstants.OpCode.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Util for working with {@link HttpRequest}
@@ -270,7 +284,8 @@ public final class HttpUtils {
 		String query = request.getQuery();
 		String fragment = request.getFragment();
 		StringBuilder fullUriBuilder = new StringBuilder(builderCapacity)
-				.append(request.isHttps() ? "https://" : "http://")
+				.append(request.getProtocol().lowercase())
+				.append("://")
 				.append(host)
 				.append(request.getPath());
 		if (!query.isEmpty()) {
@@ -338,4 +353,86 @@ public final class HttpUtils {
 				return code + ". Unknown HTTP code, returned from an error";
 		}
 	}
+
+	static boolean isHeaderMissing(HttpMessage message, HttpHeader header, String value) {
+		String headerValue = message.getHeader(header);
+		if (headerValue != null) {
+			for (String val : headerValue.split(",")) {
+				if (value.equalsIgnoreCase(val.trim())) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	static String getWebSocketAnswer(String key) {
+		String answer;
+		try {
+			answer = Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-1")
+					.digest((key + MAGIC_STRING).getBytes(UTF_8)));
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+		return answer;
+	}
+
+	static byte[] generateWebSocketKey() {
+		byte[] key = new byte[16];
+		ThreadLocalRandom.current().nextBytes(key);
+		return Base64.getEncoder().encode(key);
+	}
+
+	static boolean isAnswerInvalid(HttpResponse response, byte[] key) {
+		String header = response.getHeader(SEC_WEBSOCKET_ACCEPT);
+		return header == null || !getWebSocketAnswer(new String(key)).equals(header.trim());
+	}
+
+	static boolean isReservedCloseCode(int closeCode) {
+		return closeCode < 1000 ||
+				(closeCode >= 1004 && closeCode < 1007) ||
+				(closeCode >= 1015 && closeCode < 3000);
+	}
+
+	static String getUTF8(ByteBuf buf) throws CharacterCodingException {
+		return UTF_8.newDecoder().decode(buf.toReadByteBuffer()).toString();
+	}
+
+	static OpCode frameToOpType(FrameType frameType) {
+		switch (frameType) {
+			case TEXT:
+				return OP_TEXT;
+			case BINARY:
+				return OP_BINARY;
+			case CONTINUATION:
+				return OP_CONTINUATION;
+			default:
+				throw new AssertionError();
+		}
+	}
+
+	static FrameType opToFrameType(OpCode opType) {
+		switch (opType) {
+			case OP_TEXT:
+				return TEXT;
+			case OP_BINARY:
+				return BINARY;
+			case OP_CONTINUATION:
+				return CONTINUATION;
+			default:
+				throw new AssertionError();
+		}
+	}
+
+	static MessageType frameToMessageType(FrameType frameType) {
+		switch (frameType) {
+			case TEXT:
+				return MessageType.TEXT;
+			case BINARY:
+				return MessageType.BINARY;
+			default:
+				throw new AssertionError();
+		}
+	}
+
 }

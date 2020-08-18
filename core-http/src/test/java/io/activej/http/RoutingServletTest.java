@@ -10,13 +10,14 @@ import org.junit.rules.ExpectedException;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.http.HttpMethod.*;
+import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
 import static io.activej.test.TestUtils.assertComplete;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public final class RoutingServletTest {
 	private static final String TEMPLATE = "http://www.site.org";
+	private static final String TEMPLATE_WS = "ws://www.site.org";
 	private static final String DELIM = "*****************************************************************************";
 
 	@ClassRule
@@ -25,7 +26,7 @@ public final class RoutingServletTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
-	void check(Promise<HttpResponse> promise, String expectedBody, int expectedCode) {
+	private void check(Promise<HttpResponse> promise, String expectedBody, int expectedCode) {
 		assertTrue(promise.isComplete());
 		if (promise.isResult()) {
 			HttpResponse result = promise.getResult();
@@ -37,6 +38,11 @@ public final class RoutingServletTest {
 		} else {
 			assertEquals(expectedCode, ((HttpException) promise.getException()).getCode());
 		}
+	}
+
+	private void checkWebSocket(Promise<HttpResponse> promise) {
+		assertTrue(promise.isException());
+		assertSame(NOT_A_WEB_SOCKET_REQUEST, promise.getException());
 	}
 
 	@Test
@@ -343,4 +349,33 @@ public final class RoutingServletTest {
 		check(main.serve(HttpRequest.get(TEMPLATE + "/method/yumgn?query=string")), "Success: ", 200);
 		check(main.serve(HttpRequest.get(TEMPLATE + "/method/yumgn/first?query=string")), "Success: first", 200);
 	}
+
+	@Test
+	public void testWebSocket() {
+		String wsPath = "/web/socket";
+		RoutingServlet main = RoutingServlet.create()
+				.mapWebSocket(wsPath, request -> HttpResponse.ok200())
+				.map(POST, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("post")))
+				.map(GET, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("get")))
+				.map(wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("all")))
+				.map(wsPath + "/inside", request -> HttpResponse.ok200().withBody(wrapUtf8("inner")));
+
+		checkWebSocket(main.serve(HttpRequest.webSocket(TEMPLATE_WS + wsPath)));
+		check(main.serve(HttpRequest.post(TEMPLATE + wsPath)), "post", 200);
+		check(main.serve(HttpRequest.get(TEMPLATE + wsPath)), "get", 200);
+		check(main.serve(HttpRequest.of(OPTIONS, TEMPLATE + wsPath)), "all", 200);
+		check(main.serve(HttpRequest.of(OPTIONS, TEMPLATE + wsPath + "/inside")), "inner", 200);
+	}
+
+	@Test
+	public void testWebSocketSingle() {
+		String wsPath = "/web/socket";
+		RoutingServlet main = RoutingServlet.create()
+				.mapWebSocket(wsPath, request -> HttpResponse.ok200());
+
+		checkWebSocket(main.serve(HttpRequest.webSocket(TEMPLATE_WS + wsPath)));
+		check(main.serve(HttpRequest.get(TEMPLATE + wsPath)), "", 404);
+		check(main.serve(HttpRequest.post(TEMPLATE + wsPath)), "", 404);
+	}
+
 }

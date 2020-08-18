@@ -54,6 +54,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	public static final Duration SERVE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(AsyncHttpServer.class, "serveTimeout_Shutdown", Duration.ofSeconds(0));
 	public static final Duration KEEP_ALIVE_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpServer.class, "keepAliveTimeout", Duration.ofSeconds(30));
 	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(AsyncHttpServer.class, "maxBodySize", MemSize.ZERO);
+	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(AsyncHttpServer.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(AsyncHttpServer.class, "maxKeepAliveRequests", 0);
 
 	@NotNull
@@ -67,6 +68,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	int serveTimeoutMillisShutdown = (int) SERVE_TIMEOUT_SHUTDOWN.toMillis();
 	int keepAliveTimeoutMillis = (int) KEEP_ALIVE_TIMEOUT.toMillis();
 	int maxBodySize = MAX_BODY_SIZE.toInt();
+	int maxWebSocketMessageSize = MAX_WEB_SOCKET_MESSAGE_SIZE.toInt();
 	int maxKeepAliveRequests = MAX_KEEP_ALIVE_REQUESTS;
 
 	final ConnectionsLinkedList poolNew = new ConnectionsLinkedList();
@@ -200,6 +202,11 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 
 	public AsyncHttpServer withMaxBodySize(int maxBodySize) {
 		this.maxBodySize = maxBodySize;
+		return this;
+	}
+
+	public AsyncHttpServer withMaxWebSocketMessageSize(int maxWebSocketMessageSize) {
+		this.maxWebSocketMessageSize = maxWebSocketMessageSize;
 		return this;
 	}
 

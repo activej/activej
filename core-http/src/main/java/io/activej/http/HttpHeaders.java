@@ -110,6 +110,10 @@ public final class HttpHeaders {
 	public static final HttpHeader X_REAL_IP = headers.register("X-Real-IP");
 	public static final HttpHeader X_AUTH_TOKEN = headers.register("X-Auth-Token");
 
+	public static final HttpHeader SEC_WEBSOCKET_KEY = headers.register("Sec-WebSocket-Key");
+	public static final HttpHeader SEC_WEBSOCKET_ACCEPT = headers.register("Sec-WebSocket-Accept");
+	public static final HttpHeader SEC_WEBSOCKET_VERSION = headers.register("Sec-WebSocket-Version");
+
 	public static HttpHeader of(byte[] array, int offset, int length, int lowerCaseHashCode) {
 		return headers.getOrCreate(array, offset, length, lowerCaseHashCode);
 	}
