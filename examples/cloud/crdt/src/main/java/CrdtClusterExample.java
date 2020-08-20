@@ -38,6 +38,7 @@ public final class CrdtClusterExample {
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
 			Path storage = Files.createTempDirectory("storage_"+ id);
+			Files.createDirectories(storage.resolve(LocalActiveFs.DEFAULT_TEMP_DIR));
 			ActiveFs fs = LocalActiveFs.create(eventloop, executor, storage);
 			clients.put(id, CrdtStorageFs.create(eventloop, fs, SERIALIZER));
 		}

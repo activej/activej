@@ -13,7 +13,6 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +28,7 @@ public class SerializerBenchmark {
 	private static final DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 	private static final BinarySerializer<TestData> serializer = SerializerBuilder.create(definingClassLoader)
 			.withCompatibilityLevel(LEVEL_3_LE)
-			.withGeneratedBytecodePath(Paths.get("tmp").toAbsolutePath())
+			// .withGeneratedBytecodePath(Paths.get("tmp").toAbsolutePath())
 			.build(TestData.class);
 	private static final byte[] array = new byte[10000];
 

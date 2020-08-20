@@ -38,6 +38,7 @@ public final class CrdtFsConsolidationExample {
 		//[START REGION_1]
 		// create our storage dir and an fs client which operates on that dir
 		Path storage = Files.createTempDirectory("storage");
+		Files.createDirectories(storage.resolve(LocalActiveFs.DEFAULT_TEMP_DIR));
 		LocalActiveFs fsClient = LocalActiveFs.create(eventloop, executor, storage);
 
 		// our item is a set of integers, so we create a CRDT function for it

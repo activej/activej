@@ -27,8 +27,8 @@ public class ServerSetupExample extends ActiveFsServerLauncher {
 			@Provides
 			Config config() {
 				return Config.create()
-						.with("remotefs.path", storage.toString())
-						.with("remotefs.listenAddresses", "6732");
+						.with("activefs.path", storage.toString())
+						.with("activefs.listenAddresses", "6732");
 			}
 		};
 	}
