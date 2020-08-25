@@ -22,7 +22,9 @@ import io.activej.dns.protocol.DnsQuery;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBean;
+import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,10 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Checks.checkState;
@@ -43,7 +42,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
-public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanEx {
+public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxBean {
 	private final Logger logger = LoggerFactory.getLogger(CachedAsyncDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(CachedAsyncDnsClient.class);
 
@@ -74,19 +73,15 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	}
 
 	public CachedAsyncDnsClient withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta) {
-		return withExpiration(errorCacheExpiration, hardExpirationDelta, DnsCache.DEFAULT_TIMED_OUT_EXCEPTION_TTL);
+		return withExpiration(errorCacheExpiration, hardExpirationDelta, DnsCache.DEFAULT_TIMED_OUT_EXPIRATION);
 	}
 
 	public CachedAsyncDnsClient withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta, Duration timedOutExceptionTtl) {
 		cache
-				.withErrorCacheExpirationSeconds(errorCacheExpiration)
+				.withErrorCacheExpiration(errorCacheExpiration)
 				.withHardExpirationDelta(hardExpirationDelta)
-				.withTimedOutExceptionTtl(timedOutExceptionTtl);
+				.withTimedOutExpiration(timedOutExceptionTtl);
 		return this;
-	}
-
-	public DnsCache getCache() {
-		return cache;
 	}
 
 	public AsyncDnsClient adaptToAnotherEventloop(Eventloop anotherEventloop) {
@@ -192,6 +187,36 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	@Override
 	public Eventloop getEventloop() {
 		return eventloop;
+	}
+
+	@JmxAttribute(name = "")
+	public DnsCache getCache() {
+		return cache;
+	}
+
+	@JmxOperation
+	public List<String> getResolvedDomains() {
+		return cache.getResolvedDomains();
+	}
+
+	@JmxOperation
+	public List<String> getFailedDomains() {
+		return cache.getFailedDomains();
+	}
+
+	@JmxOperation
+	public List<String> getDomainRecord(String domain) {
+		return cache.getDomainRecord(domain);
+	}
+
+	@JmxOperation
+	public List<String> getDomainRecords() {
+		return cache.getDomainRecords();
+	}
+
+	@JmxOperation
+	public void clear() {
+		cache.clear();
 	}
 
 }

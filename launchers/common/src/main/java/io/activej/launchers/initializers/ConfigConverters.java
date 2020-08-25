@@ -37,12 +37,14 @@ public final class ConfigConverters {
 			@Override
 			public DnsCache get(Config config) {
 				Duration errorCacheExpiration = config.get(ofDuration(), "errorCacheExpiration", DEFAULT_ERROR_CACHE_EXPIRATION);
+				Duration timedOutExceptionTtl = config.get(ofDuration(), "timedOutExpiration", DEFAULT_TIMED_OUT_EXPIRATION);
 				Duration hardExpirationDelta = config.get(ofDuration(), "hardExpirationDelta", DEFAULT_HARD_EXPIRATION_DELTA);
-				Duration timedOutExceptionTtl = config.get(ofDuration(), "timedOutExceptionTtl", DEFAULT_TIMED_OUT_EXCEPTION_TTL);
+				Duration maxTtl = config.get(ofDuration(), "maxTtl", DEFAULT_MAX_TTL);
 				return DnsCache.create(eventloop)
-						.withErrorCacheExpirationSeconds(errorCacheExpiration)
+						.withErrorCacheExpiration(errorCacheExpiration)
+						.withTimedOutExpiration(timedOutExceptionTtl)
 						.withHardExpirationDelta(hardExpirationDelta)
-						.withTimedOutExceptionTtl(timedOutExceptionTtl);
+						.withMaxTtl(maxTtl);
 			}
 
 			@Nullable
