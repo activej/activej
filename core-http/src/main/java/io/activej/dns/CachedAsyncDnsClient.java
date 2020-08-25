@@ -170,20 +170,17 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 			}
 			return cacheResult.getResponseAsPromise();
 		}
-		Promise<DnsResponse> promise = pending.compute(query, (k, v) -> {
-			if (v != null) {
-				logger.trace("{} is already pending", k);
-				return v;
-			}
-			Promise<DnsResponse> resolve = client.resolve(k);
-			resolve.whenComplete((response, e) -> {
-				addToCache(k, response, e);
-				pending.remove(k);
-			});
-			return resolve;
-		});
 		cache.performCleanup();
-		return promise;
+		Promise<DnsResponse> promise = pending.get(query);
+		if (promise != null) return promise;
+		Promise<DnsResponse> resolve = client.resolve(query).whenComplete((response, e) ->
+				addToCache(query, response, e)
+		);
+		if (resolve.isComplete()) return resolve;
+		pending.put(query, resolve);
+		return resolve.whenComplete((response, e) ->
+				pending.remove(query)
+		);
 	}
 
 	@Override
