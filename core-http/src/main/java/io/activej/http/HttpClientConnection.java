@@ -276,6 +276,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 					}
 					WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(true);
 					WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(maxWebSocketMessageSize, encoder, false);
+
 					encoder.getCloseSentPromise()
 							.then(decoder::getCloseReceivedPromise)
 							.whenException(this::closeWebSocketConnection)
@@ -286,11 +287,12 @@ final class HttpClientConnection extends AbstractHttpConnection {
 								if (isClosed()) return;
 								if (e == null) {
 									onBodyReceived();
-									encoder.closeEx(REGULAR_CLOSE);
+									encoder.sendCloseFrame(REGULAR_CLOSE);
 								} else {
 									encoder.closeEx(e);
 								}
 							});
+
 					return Promise.of((WebSocket) new WebSocketImpl(
 							request,
 							res,

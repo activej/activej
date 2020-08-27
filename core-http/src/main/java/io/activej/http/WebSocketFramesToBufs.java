@@ -26,6 +26,7 @@ import io.activej.csp.ChannelOutput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.http.WebSocket.Frame;
 import io.activej.http.WebSocketConstants.*;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -41,13 +42,13 @@ import static io.activej.http.WebSocketConstants.OpCode.OP_PONG;
 
 @Beta
 final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<WebSocketFramesToBufs, WebSocket.Frame, ByteBuf>, PingPongHandler {
+		implements WithChannelTransformer<WebSocketFramesToBufs, Frame, ByteBuf>, PingPongHandler {
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
 	private final boolean masked;
 	private final SettablePromise<Void> closeSentPromise = new SettablePromise<>();
 
-	private ChannelSupplier<WebSocket.Frame> input;
+	private ChannelSupplier<Frame> input;
 	private ChannelConsumer<ByteBuf> output;
 
 	@Nullable
@@ -65,7 +66,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 
 	@SuppressWarnings("ConstantConditions") //check input for clarity
 	@Override
-	public ChannelInput<WebSocket.Frame> getInput() {
+	public ChannelInput<Frame> getInput() {
 		return input -> {
 			checkState(this.input == null, "Input already set");
 			this.input = sanitize(input);
@@ -95,7 +96,6 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	protected void doProcess() {
 		input.streamTo(ChannelConsumer.of(frame -> doAccept(encodeData(frame))))
 				.then(() -> sendCloseFrame(REGULAR_CLOSE))
-				.whenComplete(($, e) -> input.closeEx(e == null ? REGULAR_CLOSE : e))
 				.whenResult(this::completeProcess);
 	}
 
@@ -129,7 +129,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		return framedBuf;
 	}
 
-	private ByteBuf encodeData(WebSocket.Frame frame) {
+	private ByteBuf encodeData(Frame frame) {
 		return doEncode(frame.getPayload(), frameToOpType(frame.getType()), frame.isLastFrame());
 	}
 
@@ -167,6 +167,10 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	}
 
 	private Promise<Void> doAccept(@Nullable ByteBuf buf) {
+		if (closeSentPromise.isComplete()){
+			if (buf != null) buf.recycle();
+			return Promise.ofException(WebSocketConstants.CLOSE_EXCEPTION);
+		}
 		if (pendingPromise == null) {
 			return pendingPromise = output.accept(buf);
 		} else {
@@ -176,7 +180,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		}
 	}
 
-	private Promise<Void> sendCloseFrame(WebSocketException e) {
+	Promise<Void> sendCloseFrame(WebSocketException e) {
 		if (closing) return Promise.complete();
 		closing = true;
 		return doAccept(encodeClose(e == STATUS_CODE_MISSING ? EMPTY_CLOSE : e))
@@ -186,9 +190,8 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 
 	@Override
 	protected void doClose(Throwable e) {
-		if (output == null || input == null) {
-			return;
-		}
+		if (output == null || input == null) return;
+
 		WebSocketException exception;
 		if (e instanceof WebSocketException) {
 			WebSocketException wsEx = (WebSocketException) e;
@@ -202,8 +205,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		} else {
 			exception = WebSocketConstants.CLOSE_EXCEPTION;
 		}
-		sendCloseFrame(exception)
-				.whenComplete(($, e1) -> input.closeEx(e1 == null ? e : e1));
+		sendCloseFrame(exception);
 	}
 
 }

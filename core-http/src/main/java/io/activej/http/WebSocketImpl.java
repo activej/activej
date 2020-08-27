@@ -16,15 +16,22 @@
 
 package io.activej.http;
 
+import io.activej.async.function.AsyncSupplier;
+import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.Checks;
 import io.activej.common.annotation.Beta;
+import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
+import io.activej.csp.AbstractChannelConsumer;
+import io.activej.csp.AbstractChannelSupplier;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.WebSocketConstants.*;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,18 +39,28 @@ import java.nio.charset.CharacterCodingException;
 import java.util.function.Consumer;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
+import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.nullify;
+import static io.activej.csp.ChannelSuppliers.prefetch;
 import static io.activej.http.HttpUtils.frameToMessageType;
 import static io.activej.http.HttpUtils.getUTF8;
 import static io.activej.http.WebSocketConstants.*;
 
 @Beta
-final class WebSocketImpl implements WebSocket {
+final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
+	private static final boolean CHECK = Checks.isEnabled(WebSocketImpl.class);
+
 	private final HttpRequest request;
 	private final HttpResponse response;
 	private final Consumer<WebSocketException> onProtocolError;
 	private final ChannelSupplier<Frame> frameInput;
 	private final ChannelConsumer<Frame> frameOutput;
 	private final int maxMessageSize;
+
+	@Nullable
+	private SettablePromise<?> readPromise;
+	@Nullable
+	private SettablePromise<Void> writePromise;
 
 	WebSocketImpl(
 			HttpRequest request,
@@ -54,8 +71,8 @@ final class WebSocketImpl implements WebSocket {
 			int maxMessageSize) {
 		this.request = request;
 		this.response = response;
-		this.frameInput = frameInput;
-		this.frameOutput = frameOutput;
+		this.frameInput = prefetch(sanitize(frameInput));
+		this.frameOutput = sanitize(frameOutput);
 		this.onProtocolError = onProtocolError;
 		this.maxMessageSize = maxMessageSize;
 	}
@@ -63,70 +80,74 @@ final class WebSocketImpl implements WebSocket {
 	@Override
 	@NotNull
 	public Promise<Message> readMessage() {
-		ByteBufQueue messageQueue = new ByteBufQueue();
-		Ref<MessageType> typeRef = new Ref<>();
-		return Promises.repeat(() -> frameInput.get()
-				.then(frame -> {
-					if (frame == null) {
+		return doRead(() -> {
+			ByteBufQueue messageQueue = new ByteBufQueue();
+			Ref<MessageType> typeRef = new Ref<>();
+			return Promises.repeat(() -> frameInput.get()
+					.then(frame -> {
+						if (frame == null) {
+							if (typeRef.get() == null) {
+								return Promise.of(false);
+							}
+							// hence all other exceptions would fail get() promise
+							return Promise.ofException(REGULAR_CLOSE);
+						}
 						if (typeRef.get() == null) {
-							return Promise.of(false);
+							typeRef.set(frameToMessageType(frame.getType()));
 						}
-						// hence all other exceptions would fail get() promise
-						return Promise.ofException(REGULAR_CLOSE);
-					}
-					if (typeRef.get() == null) {
-						typeRef.set(frameToMessageType(frame.getType()));
-					}
-					ByteBuf payload = frame.getPayload();
-					if (messageQueue.remainingBytes() + payload.readRemaining() > maxMessageSize){
-						return protocolError(MESSAGE_TOO_BIG);
-					}
-					messageQueue.add(payload);
-					return Promise.of(!frame.isLastFrame());
-				}))
-				.whenException(e -> messageQueue.recycle())
-				.then($ -> {
-					ByteBuf payload = messageQueue.takeRemaining();
-					MessageType type = typeRef.get();
-					if (type == MessageType.TEXT) {
-						try {
-							return Promise.of(Message.text(getUTF8(payload)));
-						} catch (CharacterCodingException e) {
-							return protocolError(NOT_A_VALID_UTF_8);
-						} finally {
-							payload.recycle();
+						ByteBuf payload = frame.getPayload();
+						if (messageQueue.remainingBytes() + payload.readRemaining() > maxMessageSize) {
+							return protocolError(MESSAGE_TOO_BIG);
 						}
-					} else if (type == MessageType.BINARY) {
-						return Promise.of(Message.binary(payload));
-					} else {
-						return Promise.of(null);
-					}
-				});
+						messageQueue.add(payload);
+						return Promise.of(!frame.isLastFrame());
+					}))
+					.whenException(e -> messageQueue.recycle())
+					.then($ -> {
+						ByteBuf payload = messageQueue.takeRemaining();
+						MessageType type = typeRef.get();
+						if (type == MessageType.TEXT) {
+							try {
+								return Promise.of(Message.text(getUTF8(payload)));
+							} catch (CharacterCodingException e) {
+								return protocolError(NOT_A_VALID_UTF_8);
+							} finally {
+								payload.recycle();
+							}
+						} else if (type == MessageType.BINARY) {
+							return Promise.of(Message.binary(payload));
+						} else {
+							return Promise.of(null);
+						}
+					});
+		});
 	}
 
 	@Override
 	@NotNull
 	public Promise<Frame> readFrame() {
-		return frameInput.get();
+		return doRead(frameInput::get);
 	}
 
 	@Override
 	@NotNull
 	public Promise<Void> writeMessage(@Nullable Message msg) {
-		if (msg == null) {
-			return frameOutput.accept(null);
-		}
-		if (msg.getType() == MessageType.TEXT) {
-			return frameOutput.accept(Frame.text(wrapForReading(msg.getText().getBytes())));
-		} else {
-			return frameOutput.accept(Frame.binary(msg.getBuf()));
-		}
+		return doWrite(() -> {
+			if (msg == null) {
+				return frameOutput.accept(null);
+			}
+			if (msg.getType() == MessageType.TEXT) {
+				return frameOutput.accept(Frame.text(wrapForReading(msg.getText().getBytes())));
+			} else {
+				return frameOutput.accept(Frame.binary(msg.getBuf()));
+			}
+		}, msg);
 	}
 
 	@Override
 	@NotNull
 	public Promise<Void> writeFrame(@Nullable Frame frame) {
-		return frameOutput.accept(frame);
+		return doWrite(() -> frameOutput.accept(frame), frame);
 	}
 
 	@Override
@@ -140,13 +161,95 @@ final class WebSocketImpl implements WebSocket {
 	}
 
 	@Override
-	public void closeEx(@NotNull Throwable exception) {
-		frameOutput.closeEx(exception);
-		frameInput.closeEx(exception);
+	protected void onClosed(@NotNull Throwable e) {
+		frameOutput.closeEx(e);
+		frameInput.closeEx(e);
+		readPromise = nullify(readPromise, SettablePromise::setException, e);
+		writePromise = nullify(writePromise, SettablePromise::setException, e);
 	}
 
-	private <T> Promise<T> protocolError(WebSocketException exception){
+	@Override
+	protected void onCleanup() {
+		if (!request.isRecycled()) {
+			request.recycle();
+		}
+		if (!response.isRecycled()) {
+			response.recycle();
+		}
+	}
+
+	private <T> Promise<T> protocolError(WebSocketException exception) {
 		onProtocolError.accept(exception);
+		closeEx(exception);
 		return Promise.ofException(exception);
 	}
+
+	// region sanitizers
+	private <T> Promise<T> doRead(AsyncSupplier<T> supplier) {
+		if (CHECK) {
+			checkState(eventloop.inEventloopThread());
+			checkState(readPromise == null, "Concurrent reads");
+		}
+
+		if (isClosed()) return Promise.ofException(getException());
+
+		SettablePromise<T> readPromise = new SettablePromise<>();
+		this.readPromise = readPromise;
+		supplier.get()
+				.whenComplete((result, e) -> {
+					this.readPromise = null;
+					readPromise.trySet(result, e);
+				});
+		return readPromise;
+	}
+
+	private Promise<Void> doWrite(AsyncSupplier<Void> supplier, @Nullable Recyclable recyclable) {
+		if (CHECK) {
+			checkState(eventloop.inEventloopThread());
+			checkState(writePromise == null, "Concurrent writes");
+		}
+
+		if (isClosed()) {
+			if (recyclable != null) recyclable.recycle();
+			return Promise.ofException(getException());
+		}
+
+		SettablePromise<Void> writePromise = new SettablePromise<>();
+		this.writePromise = writePromise;
+		supplier.get()
+				.whenComplete((result, e) -> {
+					this.writePromise = null;
+					writePromise.trySet(result, e);
+				});
+		return writePromise;
+	}
+
+	private ChannelSupplier<Frame> sanitize(ChannelSupplier<Frame> supplier) {
+		return new AbstractChannelSupplier<Frame>(supplier) {
+			@Override
+			protected Promise<Frame> doGet() {
+				return sanitize(supplier.get());
+			}
+
+			@Override
+			protected void onClosed(@NotNull Throwable e) {
+				WebSocketImpl.this.closeEx(e);
+			}
+		};
+	}
+
+	private ChannelConsumer<Frame> sanitize(ChannelConsumer<Frame> consumer) {
+		return new AbstractChannelConsumer<Frame>(consumer) {
+			@Override
+			protected Promise<Void> doAccept(@Nullable Frame value) {
+				return sanitize(consumer.accept(value));
+			}
+
+			@Override
+			protected void onClosed(@NotNull Throwable e) {
+				WebSocketImpl.this.closeEx(e);
+			}
+		};
+	}
+	// endregion
 }

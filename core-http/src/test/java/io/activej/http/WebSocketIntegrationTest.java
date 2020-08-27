@@ -6,7 +6,6 @@ import io.activej.http.WebSocket.Frame;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -30,7 +29,7 @@ public final class WebSocketIntegrationTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private static final PingPongHandler HANDLER_STUB = PingPongHandler.of(ByteBuf::recycle, ByteBuf::recycle);
-	private static final int MAX_MESSAGE_SIZE = 1_000;
+	private static final int MAX_MESSAGE_SIZE = 70_000;
 
 	@Test
 	public void simpleMessage() {
@@ -40,6 +39,7 @@ public final class WebSocketIntegrationTest {
 
 	@Test
 	public void binaryData() {
+		doTest(randomBytes(0));
 		doTest(randomBytes(1));
 		doTest(randomBytes(100));
 
@@ -48,12 +48,7 @@ public final class WebSocketIntegrationTest {
 		doTest(randomBytes(126));
 		doTest(randomBytes(127));
 		doTest(randomBytes(128));
-	}
 
-	@Test
-	@Ignore("Takes long time")
-	public void binaryDataLarge() {
-		// edge cases
 		doTest(randomBytes(65535));
 		doTest(randomBytes(65536));
 		doTest(randomBytes(65537));

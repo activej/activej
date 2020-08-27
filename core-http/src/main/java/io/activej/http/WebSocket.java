@@ -34,10 +34,10 @@ import static io.activej.http.WebSocketConstants.MessageType.TEXT;
 
 public interface WebSocket extends AsyncCloseable {
 	@NotNull
-	Promise<@Nullable Message> readMessage();
+	Promise<Message> readMessage();
 
 	@NotNull
-	Promise<@Nullable Frame> readFrame();
+	Promise<Frame> readFrame();
 
 	@NotNull
 	default ChannelSupplier<Frame> frameReadChannel() {

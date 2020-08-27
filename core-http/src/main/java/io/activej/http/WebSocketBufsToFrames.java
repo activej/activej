@@ -27,6 +27,7 @@ import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.csp.dsl.WithBinaryChannelInput;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.http.WebSocket.Frame;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 
@@ -40,7 +41,7 @@ import static io.activej.http.WebSocketConstants.OpCode.*;
 
 @Beta
 final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<WebSocketBufsToFrames, ByteBuf, WebSocket.Frame>, WithBinaryChannelInput<WebSocketBufsToFrames> {
+		implements WithChannelTransformer<WebSocketBufsToFrames, ByteBuf, Frame>, WithBinaryChannelInput<WebSocketBufsToFrames> {
 
 	private static final byte OP_CODE_MASK = 0b00001111;
 	private static final byte RSV_MASK = 0b01110000;
@@ -56,7 +57,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 
 	private ByteBufQueue bufs;
 	private BinaryChannelSupplier input;
-	private ChannelConsumer<WebSocket.Frame> output;
+	private ChannelConsumer<Frame> output;
 
 	private int maskIndex;
 	private boolean isFin;
@@ -90,7 +91,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 
 	@SuppressWarnings("ConstantConditions") //check output for clarity
 	@Override
-	public ChannelOutput<WebSocket.Frame> getOutput() {
+	public ChannelOutput<Frame> getOutput() {
 		return output -> {
 			checkState(this.output == null, "Output already set");
 			this.output = sanitize(output);
@@ -239,7 +240,8 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		if (currentOpCode.isControlCode()) {
 			processControlPayload();
 		} else {
-			sendDataFrame();
+			output.accept(new Frame(opToFrameType(currentOpCode), frameQueue.takeRemaining(), isFin))
+					.whenResult(this::processOpCode);
 		}
 	}
 
@@ -250,7 +252,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 			if (controlPayload.canRead()) {
 				int payloadLength = controlPayload.readRemaining();
 				if (payloadLength < 2 || payloadLength > 125) {
-					onCloseReceived(INVALID_PAYLOAD_LENGTH);
+					onProtocolError(INVALID_PAYLOAD_LENGTH);
 					return;
 				}
 				int statusCode = Short.toUnsignedInt(controlPayload.readShort());
@@ -287,11 +289,6 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 			pingPongHandler.onPong(controlPayload);
 			processOpCode();
 		}
-	}
-
-	private void sendDataFrame() {
-		output.accept(new WebSocket.Frame(opToFrameType(currentOpCode), frameQueue.takeRemaining(), isFin))
-				.whenResult(this::processOpCode);
 	}
 
 	private void unmask(ByteBuf buf) {

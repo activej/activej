@@ -97,17 +97,19 @@ final class WebSocketAdapter implements AsyncServlet {
 						WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(false);
 						WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(request.maxBodySize, encoder, true);
 
+						encoder.getCloseSentPromise()
+								.then(decoder::getCloseReceivedPromise)
+								.whenException(rawStream::closeEx)
+								.whenResult(rawStream::closeEx);
+
 						decoder.getProcessCompletion()
 								.whenComplete(($, e) -> {
 									if (e == null) {
-										encoder.closeEx(REGULAR_CLOSE);
+										encoder.sendCloseFrame(REGULAR_CLOSE);
 									} else {
 										encoder.closeEx(e);
 									}
 								});
-						encoder.getCloseSentPromise().then(decoder::getCloseReceivedPromise)
-								.whenException(rawStream::closeEx)
-								.whenResult(rawStream::closeEx);
 
 						return Promise.of(new WebSocketImpl(
 								request,

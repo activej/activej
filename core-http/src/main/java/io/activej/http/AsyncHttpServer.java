@@ -205,8 +205,8 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		return this;
 	}
 
-	public AsyncHttpServer withMaxWebSocketMessageSize(int maxWebSocketMessageSize) {
-		this.maxWebSocketMessageSize = maxWebSocketMessageSize;
+	public AsyncHttpServer withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
+		this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
 		return this;
 	}
 

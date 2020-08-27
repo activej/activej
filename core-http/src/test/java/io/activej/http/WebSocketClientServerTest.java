@@ -1,5 +1,7 @@
 package io.activej.http;
 
+import io.activej.common.ref.Ref;
+import io.activej.common.ref.RefBoolean;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -11,6 +13,7 @@ import io.activej.promise.SettablePromise;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,6 +32,7 @@ import static io.activej.https.SslUtils.createTestSslContext;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.instanceOf;
@@ -149,6 +153,155 @@ public final class WebSocketClientServerTest {
 				.webSocketRequest(HttpRequest.webSocket("ws://127.0.0.1:" + PORT)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
+	}
+
+	@Test
+	public void testCloseByServerWithError() throws IOException {
+		WebSocketException testError = new WebSocketException(getClass(), 4321, "Test error");
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		List<String> messages = asList("first", "second", "third");
+
+		startTestServer(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
+				.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
+				.then(() -> webSocket.writeMessage(Message.text(messages.get(2))))
+				.whenComplete(() -> webSocket.closeEx(testError)));
+
+		List<String> result = new ArrayList<>();
+		WebSocketException exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.withSslEnabled(createTestSslContext(), executor)
+				.webSocketRequest(HttpRequest.webSocket("ws://127.0.0.1:" + PORT))
+				.then(webSocket -> webSocket.readMessage()
+						.then(message -> {
+							result.add(message.getText());
+							return webSocket.readMessage();
+						})
+						.then(message -> {
+							result.add(message.getText());
+							return webSocket.readMessage();
+						})
+						.then(message -> {
+							result.add(message.getText());
+							return webSocket.readMessage();
+						})));
+
+		assertEquals(testError.getCode(), exception.getCode());
+		assertEquals(testError.getMessage(), exception.getMessage());
+		assertEquals(result, messages);
+		executor.shutdown();
+	}
+
+	@Test
+	public void testCloseByServerWithEOS() throws IOException {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		List<String> messages = asList("first", "second", "third");
+
+		startTestServer(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
+				.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
+				.then(() -> webSocket.writeMessage(Message.text(messages.get(2))))
+				.then(() -> webSocket.writeMessage(null))
+				.whenException((Runnable) Assert::fail)
+		);
+
+		List<String> result = new ArrayList<>();
+		Message lastMessage = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.withSslEnabled(createTestSslContext(), executor)
+				.webSocketRequest(HttpRequest.webSocket("ws://127.0.0.1:" + PORT))
+				.then(webSocket -> webSocket.readMessage()
+						.then(message -> {
+							result.add(message.getText());
+							return webSocket.readMessage();
+						})
+						.then(message -> {
+							result.add(message.getText());
+							return webSocket.readMessage();
+						})
+						.then(message -> {
+							result.add(message.getText());
+							return webSocket.readMessage();
+						})));
+
+		assertNull(lastMessage);
+		assertEquals(result, messages);
+		executor.shutdown();
+	}
+
+	@Test
+	public void testCloseByClientWithError() throws IOException {
+		WebSocketException testError = new WebSocketException(getClass(), 4321, "Test error");
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		List<String> messages = asList("first", "second", "third");
+		List<String> result = new ArrayList<>();
+		Ref<Throwable> serverErrorRef = new Ref<>();
+
+		startTestServer(webSocket -> webSocket.readMessage()
+				.then(message -> {
+					result.add(message.getText());
+					return webSocket.readMessage();
+				})
+				.then(message -> {
+					result.add(message.getText());
+					return webSocket.readMessage();
+				})
+				.then(message -> {
+					result.add(message.getText());
+					return webSocket.readMessage();
+				})
+				.whenException(serverErrorRef::set));
+
+		await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.withSslEnabled(createTestSslContext(), executor)
+				.webSocketRequest(HttpRequest.webSocket("ws://127.0.0.1:" + PORT))
+				.then(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
+						.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
+						.then(() -> webSocket.writeMessage(Message.text(messages.get(2))))
+						.whenComplete(() -> webSocket.closeEx(testError))));
+
+		WebSocketException exception = (WebSocketException) serverErrorRef.get();
+		assertEquals(testError.getCode(), exception.getCode());
+		assertEquals(testError.getMessage(), exception.getMessage());
+		assertEquals(result, messages);
+		executor.shutdown();
+	}
+
+	@Test
+	public void testCloseByClientWithEOS() throws IOException {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		List<String> messages = asList("first", "second", "third");
+		List<String> result = new ArrayList<>();
+
+		RefBoolean lastMessageNull = new RefBoolean(false);
+		startTestServer(webSocket -> webSocket.readMessage()
+				.then(message -> {
+					result.add(message.getText());
+					return webSocket.readMessage();
+				})
+				.then(message -> {
+					result.add(message.getText());
+					return webSocket.readMessage();
+				})
+				.then(message -> {
+					result.add(message.getText());
+					return webSocket.readMessage();
+				})
+				.whenResult(lastMessage -> {
+					if (lastMessage == null){
+						lastMessageNull.set(true);
+					}
+				}));
+
+		await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.withSslEnabled(createTestSslContext(), executor)
+				.webSocketRequest(HttpRequest.webSocket("ws://127.0.0.1:" + PORT))
+				.then(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
+						.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
+						.then(() -> webSocket.writeMessage(Message.text(messages.get(2))))
+						.then(() -> webSocket.writeMessage(null))
+						.whenException((Runnable) Assert::fail)
+				));
+
+		assertTrue(lastMessageNull.get());
+		assertEquals(result, messages);
+		executor.shutdown();
 	}
 
 	private void startTestServer(Consumer<WebSocket> webSocketConsumer) throws IOException {
