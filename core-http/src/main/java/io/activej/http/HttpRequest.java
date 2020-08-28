@@ -38,6 +38,9 @@ import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullToEmpty;
+import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
+import static io.activej.http.HttpClientConnection.CONNECTION_UPGRADE_HEADER;
+import static io.activej.http.HttpClientConnection.UPGRADE_WEBSOCKET_HEADER;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.Protocol.*;
@@ -101,8 +104,13 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	public static HttpRequest webSocket(@NotNull String url) {
 		HttpRequest request = new HttpRequest(GET, null);
 		request.setUrl(url);
+
 		if (CHECK) checkArgument(request.getProtocol(), protocol -> protocol == WS || protocol == WSS,
 				"Protocol must be either 'ws://' or 'wss://'");
+
+		request.addHeader(CONNECTION, CONNECTION_UPGRADE_HEADER);
+		request.addHeader(HttpHeaders.UPGRADE, UPGRADE_WEBSOCKET_HEADER);
+		request.addHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
 		return request;
 	}
 

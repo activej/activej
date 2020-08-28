@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.http.TestUtils.*;
-import static io.activej.http.WebSocketConstants.FrameType.*;
+import static io.activej.http.WebSocket.Frame.FrameType.*;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
@@ -32,7 +32,7 @@ public final class WebSocketBufsToFramesTest {
 
 		Frame result = await(ChannelSupplier.of(wrapForReading(frame))
 				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, HANDLER_STUB, false))
+				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
 				.get());
 
 		assertEquals(TEXT, result.getType());
@@ -48,7 +48,7 @@ public final class WebSocketBufsToFramesTest {
 
 		Frame result = await(ChannelSupplier.of(wrapForReading(frame))
 				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, HANDLER_STUB, true))
+				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), true))
 				.get());
 
 		assertEquals(TEXT, result.getType());
@@ -65,7 +65,7 @@ public final class WebSocketBufsToFramesTest {
 
 		ChannelSupplier<Frame> supplier = ChannelSupplier.of(wrapForReading(frame1), wrapForReading(frame2))
 				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, HANDLER_STUB, false));
+				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false));
 
 		Frame firstFrame = await(supplier.get());
 		assertEquals(TEXT, firstFrame.getType());
@@ -87,7 +87,7 @@ public final class WebSocketBufsToFramesTest {
 
 		Frame result = await(ChannelSupplier.of(wrapForReading(header), wrapForReading(payload))
 				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, HANDLER_STUB, false))
+				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
 				.get());
 
 		assertEquals(BINARY, result.getType());
@@ -104,7 +104,7 @@ public final class WebSocketBufsToFramesTest {
 
 		Frame result = await(ChannelSupplier.of(wrapForReading(header), wrapForReading(payload))
 				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, HANDLER_STUB, false))
+				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
 				.get());
 
 		assertEquals(BINARY, result.getType());
@@ -120,7 +120,7 @@ public final class WebSocketBufsToFramesTest {
 		ByteBufQueue pingMessage = new ByteBufQueue();
 		await(ChannelSupplier.of(wrapForReading(pingFrame), closeUnmasked())
 				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, PingPongHandler.of(pingMessage::add, $ -> fail()), false))
+				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, pingMessage::add, failOnItem(), false))
 				.streamTo(ChannelConsumer.ofConsumer($ -> fail())));
 
 		assertEquals("Hello", pingMessage.takeRemaining().asString(UTF_8));
@@ -135,7 +135,7 @@ public final class WebSocketBufsToFramesTest {
 		ByteBufQueue pongMessage = new ByteBufQueue();
 		await(ChannelSupplier.of(wrapForReading(pingFrame), closeMasked())
 				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, PingPongHandler.of($ -> fail(), pongMessage::add), true))
+				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), pongMessage::add, true))
 				.streamTo(ChannelConsumer.ofConsumer($ -> fail())));
 
 		assertEquals("Hello", pongMessage.takeRemaining().asString(UTF_8));

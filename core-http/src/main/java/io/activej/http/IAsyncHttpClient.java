@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.annotation.Beta;
 import io.activej.promise.Promise;
 
 /**
@@ -28,5 +29,6 @@ import io.activej.promise.Promise;
 public interface IAsyncHttpClient {
 	Promise<HttpResponse> request(HttpRequest request);
 
+	@Beta
 	Promise<WebSocket> webSocketRequest(HttpRequest request);
 }

@@ -13,9 +13,8 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.csp.dsl.ChannelSupplierTransformer.identity;
-import static io.activej.http.TestUtils.chunker;
-import static io.activej.http.TestUtils.randomBytes;
-import static io.activej.http.WebSocketConstants.FrameType.BINARY;
+import static io.activej.http.TestUtils.*;
+import static io.activej.http.WebSocket.Frame.FrameType.BINARY;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
@@ -28,7 +27,6 @@ public final class WebSocketIntegrationTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private static final PingPongHandler HANDLER_STUB = PingPongHandler.of(ByteBuf::recycle, ByteBuf::recycle);
 	private static final int MAX_MESSAGE_SIZE = 70_000;
 
 	@Test
@@ -67,7 +65,7 @@ public final class WebSocketIntegrationTest {
 		List<Frame> result = await(ChannelSupplier.of(Frame.binary(buf))
 				.transformWith(WebSocketFramesToBufs.create(mask))
 				.transformWith(chunked ? chunker() : identity())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, HANDLER_STUB, mask))
+				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), mask))
 				.toCollector(toList()));
 
 		assertEquals(1, result.size());

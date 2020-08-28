@@ -43,7 +43,7 @@ import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.Protocol.*;
-import static io.activej.http.WebSocketConstants.HANDSHAKE_FAILED;
+import static io.activej.http.WebSocketConstants.UPGRADE_WITH_BODY;
 
 /**
  * It represents server connection. It can receive {@link HttpRequest requests}
@@ -83,7 +83,6 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	private final AsyncServlet servlet;
 	private final char[] charBuffer;
 	private final int maxBodySize;
-	private final int maxWebSocketMessageSize;
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
 	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");
@@ -105,7 +104,6 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		this.inspector = server.inspector;
 		this.charBuffer = charBuffer;
 		this.maxBodySize = server.maxBodySize;
-		this.maxWebSocketMessageSize = server.maxWebSocketMessageSize;
 	}
 
 	public void serve() {
@@ -228,12 +226,18 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	private void writeHttpResponse(HttpResponse httpResponse) {
-		if (httpResponse.getHeader(CONNECTION) == null) {
+		boolean isWebSocket = isWebSocket();
+		if (!isWebSocket || httpResponse.getCode() != 101) {
 			HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
 			if (server.maxKeepAliveRequests != 0 && ++numberOfKeepAliveRequests >= server.maxKeepAliveRequests) {
 				connectionHeader = CONNECTION_CLOSE_HEADER;
 			}
 			httpResponse.addHeader(CONNECTION, connectionHeader);
+
+			if (isWebSocket) {
+				// if web socket upgrade request was unsuccessful, it is not a web socket connection
+				flags &= ~WEB_SOCKET;
+			}
 		}
 		ByteBuf buf = renderHttpMessage(httpResponse);
 		if (buf != null) {
@@ -255,18 +259,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		//noinspection ConstantConditions
 		request.flags |= MUST_LOAD_BODY;
 		if (isWebSocket()) {
-			if (body != null && body.readRemaining() == 0) {
-				ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> ChannelSupplier.of(readQueue.takeRemaining()));
-				ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
-				request.bodyStream = concat(ofQueueSupplier, ofSocketSupplier)
-						.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection));
-				flags |= BODY_RECEIVED;
-				request.setProtocol(socket instanceof AsyncTcpSocketSsl ? WSS : WS);
-				request.maxBodySize = maxWebSocketMessageSize;
-			} else {
-				closeWithError(HANDSHAKE_FAILED);
-				return;
-			}
+			if (!processWebSocketRequest(body)) return;
 		} else {
 			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? HTTPS : HTTP);
 			request.body = body;
@@ -313,10 +306,26 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		});
 	}
 
+	@SuppressWarnings("ConstantConditions")
+	private boolean processWebSocketRequest(@Nullable ByteBuf body) {
+		if (body != null && body.readRemaining() == 0) {
+			ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> ChannelSupplier.of(readQueue.takeRemaining()));
+			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
+			request.bodyStream = concat(ofQueueSupplier, ofSocketSupplier)
+					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection));
+			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? WSS : WS);
+			request.maxBodySize = server.maxWebSocketMessageSize;
+			return true;
+		} else {
+			closeWithError(UPGRADE_WITH_BODY);
+			return false;
+		}
+	}
+
 	@Override
 	protected void onBodyReceived() {
 		assert !isClosed();
-		flags ^= BODY_RECEIVED;
+		flags |= BODY_RECEIVED;
 		if ((flags & BODY_SENT) != 0 && pool != server.poolServing) {
 			onHttpMessageComplete();
 		}
@@ -338,6 +347,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 
 	private void onHttpMessageComplete() {
 		assert !isClosed();
+		if (isWebSocket()) return;
 
 		if ((flags & KEEP_ALIVE) != 0 && server.keepAliveTimeoutMillis != 0) {
 			switchPool(server.poolKeepAlive);

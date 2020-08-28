@@ -32,8 +32,10 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 
 import java.nio.charset.CharacterCodingException;
+import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.csp.binary.ByteBufsDecoder.ofFixedSize;
 import static io.activej.http.HttpUtils.*;
 import static io.activej.http.WebSocketConstants.*;
@@ -50,7 +52,8 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	private static final ByteBufsDecoder<Byte> SINGLE_BYTE_DECODER = queue -> queue.hasRemainingBytes(1) ? queue.getByte() : null;
 
 	private final long maxMessageSize;
-	private final PingPongHandler pingPongHandler;
+	private final Consumer<ByteBuf> onPing;
+	private final Consumer<ByteBuf> onPong;
 	private final byte[] mask = new byte[4];
 	private final boolean masked;
 	private final SettablePromise<WebSocketException> closeReceivedPromise = new SettablePromise<>();
@@ -68,14 +71,15 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	private final ByteBufQueue controlMessageQueue = new ByteBufQueue();
 
 	// region creators
-	WebSocketBufsToFrames(long maxMessageSize, PingPongHandler pingPongHandler, boolean masked) {
+	WebSocketBufsToFrames(long maxMessageSize, Consumer<ByteBuf> onPing, Consumer<ByteBuf> onPong, boolean masked) {
 		this.maxMessageSize = maxMessageSize;
-		this.pingPongHandler = pingPongHandler;
+		this.onPing = onPing;
+		this.onPong = onPong;
 		this.masked = masked;
 	}
 
-	public static WebSocketBufsToFrames create(long maxMessageSize, PingPongHandler pingPongHandler, boolean maskRequired) {
-		return new WebSocketBufsToFrames(maxMessageSize, pingPongHandler, maskRequired);
+	public static WebSocketBufsToFrames create(long maxMessageSize, Consumer<ByteBuf> onPing, Consumer<ByteBuf> onPong, boolean maskRequired) {
+		return new WebSocketBufsToFrames(maxMessageSize, onPing, onPong, maskRequired);
 	}
 
 	@Override
@@ -145,15 +149,14 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 							onProtocolError(WAITING_FOR_LAST_FRAME);
 							return;
 						}
-						waitingForFin = !isFin;
 					} else {
 						if (currentOpCode == OP_CONTINUATION) {
 							onProtocolError(UNEXPECTED_CONTINUATION);
 							return;
 						}
 
-						waitingForFin = !isFin;
 					}
+					waitingForFin = !isFin;
 
 					processLength();
 				});
@@ -282,11 +285,11 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 				onCloseReceived(STATUS_CODE_MISSING);
 			}
 		} else if (currentOpCode == OP_PING) {
-			pingPongHandler.onPing(controlPayload);
+			onPing.accept(controlPayload);
 			processOpCode();
 		} else {
 			assert currentOpCode == OP_PONG;
-			pingPongHandler.onPong(controlPayload);
+			onPong.accept(controlPayload);
 			processOpCode();
 		}
 	}
@@ -313,7 +316,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	@Override
 	protected void doClose(Throwable e) {
 		if (output != null) {
-			output.closeEx(e);
+			output.closeEx(e == UNEXPECTED_END_OF_STREAM_EXCEPTION ? CLOSE_FRAME_MISSING : e);
 		}
 		frameQueue.recycle();
 		controlMessageQueue.recycle();

@@ -8,6 +8,7 @@ import io.activej.csp.process.ChannelByteChunker;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -156,7 +157,9 @@ public class TestUtils {
 
 	private static final Random RANDOM = ThreadLocalRandom.current();
 
-	public static final PingPongHandler HANDLER_STUB = PingPongHandler.of(ByteBuf::recycle, ByteBuf::recycle);
+	public static <T> Consumer<T> failOnItem(){
+		return $ -> Assert.fail();
+	}
 
 	public static ChannelByteChunker chunker() {
 		MemSize min = MemSize.of(RANDOM.nextInt(5) + 1);

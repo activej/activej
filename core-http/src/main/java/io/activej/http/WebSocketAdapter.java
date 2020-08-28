@@ -33,7 +33,6 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.getWebSocketAnswer;
-import static io.activej.http.HttpUtils.isHeaderMissing;
 import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
 import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
 
@@ -50,8 +49,7 @@ final class WebSocketAdapter implements AsyncServlet {
 	}
 
 	private static Promise<Void> validateHeaders(HttpRequest request) {
-		if (isHeaderMissing(request, UPGRADE, "websocket") ||
-				isHeaderMissing(request, CONNECTION, "upgrade") ||
+		if (isUpgradeHeaderMissing(request) ||
 				!Arrays.equals(WEB_SOCKET_VERSION, request.getHeader(SEC_WEBSOCKET_VERSION, ByteBuf::getArray))) {
 			return Promise.ofException(NOT_A_WEB_SOCKET_REQUEST);
 		}
@@ -95,21 +93,13 @@ final class WebSocketAdapter implements AsyncServlet {
 								.withHeader(SEC_WEBSOCKET_ACCEPT, answer));
 
 						WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(false);
-						WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(request.maxBodySize, encoder, true);
+						WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(
+								request.maxBodySize,
+								encoder::sendPong,
+								ByteBuf::recycle,
+								true);
 
-						encoder.getCloseSentPromise()
-								.then(decoder::getCloseReceivedPromise)
-								.whenException(rawStream::closeEx)
-								.whenResult(rawStream::closeEx);
-
-						decoder.getProcessCompletion()
-								.whenComplete(($, e) -> {
-									if (e == null) {
-										encoder.sendCloseFrame(REGULAR_CLOSE);
-									} else {
-										encoder.closeEx(e);
-									}
-								});
+						bindWebSocketTransformers(rawStream, encoder, decoder);
 
 						return Promise.of(new WebSocketImpl(
 								request,
@@ -118,9 +108,37 @@ final class WebSocketAdapter implements AsyncServlet {
 								buffer.getConsumer().transformWith(encoder),
 								decoder::onProtocolError,
 								request.maxBodySize
-								));
+						));
 					});
 					return successfulUpgrade;
 				});
+	}
+
+	public static void bindWebSocketTransformers(ChannelSupplier<ByteBuf> rawStream, WebSocketFramesToBufs encoder, WebSocketBufsToFrames decoder) {
+		encoder.getCloseSentPromise()
+				.then(decoder::getCloseReceivedPromise)
+				.whenException(rawStream::closeEx)
+				.whenResult(rawStream::closeEx);
+
+		decoder.getProcessCompletion()
+				.whenComplete(($, e) -> {
+					if (e == null) {
+						encoder.sendCloseFrame(REGULAR_CLOSE);
+					} else {
+						encoder.closeEx(e);
+					}
+				});
+	}
+
+	private static boolean isUpgradeHeaderMissing(HttpMessage message) {
+		String headerValue = message.getHeader(HttpHeaders.CONNECTION);
+		if (headerValue != null) {
+			for (String val : headerValue.split(",")) {
+				if ("upgrade".equalsIgnoreCase(val.trim())) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 }

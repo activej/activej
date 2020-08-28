@@ -28,7 +28,7 @@ import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.http.WebSocketConstants.*;
+import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -44,6 +44,7 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.csp.ChannelSuppliers.prefetch;
 import static io.activej.http.HttpUtils.frameToMessageType;
 import static io.activej.http.HttpUtils.getUTF8;
+import static io.activej.http.WebSocket.Message.MessageType.TEXT;
 import static io.activej.http.WebSocketConstants.*;
 
 @Beta
@@ -136,7 +137,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 			if (msg == null) {
 				return frameOutput.accept(null);
 			}
-			if (msg.getType() == MessageType.TEXT) {
+			if (msg.getType() == TEXT) {
 				return frameOutput.accept(Frame.text(wrapForReading(msg.getText().getBytes())));
 			} else {
 				return frameOutput.accept(Frame.binary(msg.getBuf()));

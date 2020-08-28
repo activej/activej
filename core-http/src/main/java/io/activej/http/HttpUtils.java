@@ -19,8 +19,8 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
-import io.activej.http.WebSocketConstants.FrameType;
-import io.activej.http.WebSocketConstants.MessageType;
+import io.activej.http.WebSocket.Frame.FrameType;
+import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,7 +39,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpHeaders.HOST;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_ACCEPT;
-import static io.activej.http.WebSocketConstants.FrameType.*;
+import static io.activej.http.WebSocket.Frame.FrameType.*;
 import static io.activej.http.WebSocketConstants.MAGIC_STRING;
 import static io.activej.http.WebSocketConstants.OpCode.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -352,18 +352,6 @@ public final class HttpUtils {
 			default:
 				return code + ". Unknown HTTP code, returned from an error";
 		}
-	}
-
-	static boolean isHeaderMissing(HttpMessage message, HttpHeader header, String value) {
-		String headerValue = message.getHeader(header);
-		if (headerValue != null) {
-			for (String val : headerValue.split(",")) {
-				if (value.equalsIgnoreCase(val.trim())) {
-					return false;
-				}
-			}
-		}
-		return true;
 	}
 
 	static String getWebSocketAnswer(String key) {

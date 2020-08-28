@@ -68,9 +68,9 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	@Beta
-	public static RoutingServlet wrapWebSocket(AsyncServlet servlet) {
+	public static RoutingServlet wrapWebSocket(AsyncWebSocketServlet servlet) {
 		RoutingServlet wrapper = new RoutingServlet();
-		wrapper.fallbackServlets.put(new MappingKey(), servlet);
+		wrapper.fallbackServlets.put(new MappingKey(), webSocket(servlet));
 		return wrapper;
 	}
 
@@ -104,12 +104,20 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		return doMap(new MappingKey(method), path, servlet, merger);
 	}
 
+	/**
+	 * Maps given consumer of a web socket as a web socket servlet on some path.
+	 * Fails if there is already a web socket servlet mapped on this path.
+	 */
 	@Beta
 	@Contract("_, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, Consumer<WebSocket> webSocketConsumer) {
 		return mapWebSocket(path, webSocketConsumer, DEFAULT_MERGER);
 	}
 
+	/**
+	 * Maps given consumer of a web socket as a web socket servlet on some path.
+	 * Calls the merger if there is already a web socket servlet mapped on this path.
+	 */
 	@Beta
 	@Contract("_, _, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, Consumer<WebSocket> webSocketConsumer, @NotNull BinaryOperator<AsyncServlet> merger) {
@@ -117,7 +125,8 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	/**
-	 * Maps given servlet as a web socket servlet on some path and calls the merger if there is already a servlet there.
+	 * Maps given web socket servlet on some path.
+	 * Fails if there is already a web socket servlet mapped on this path.
 	 */
 	@Beta
 	@Contract("_, _ -> this")
@@ -125,6 +134,10 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		return mapWebSocket(path, servlet, DEFAULT_MERGER);
 	}
 
+	/**
+	 * Maps given web socket servlet on some path.
+	 * Calls the merger if there is already a web socket servlet mapped on this path.
+	 */
 	@Beta
 	@Contract("_, _, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, @NotNull AsyncWebSocketServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
@@ -349,6 +362,18 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		}
 	}
 
+	/**
+	 * A servlet for handling web socket upgrade requests.
+	 * An implementation may inspect incoming HTTP request, based on which an implementation MUST call a provided function
+	 * with a corresponding HTTP response.
+	 * <p>
+	 * If a response has a code {@code 101} it is considered successful and the resulted promise of a web socket will be
+	 * completed with a {@link WebSocket}. A successful response must have no body or body stream.
+	 * <p>
+	 * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
+	 * exceptionally.
+	 */
+	@Beta
 	public interface AsyncWebSocketServlet {
 		void serve(HttpRequest request, Function<HttpResponse, Promise<WebSocket>> fn);
 	}

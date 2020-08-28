@@ -20,6 +20,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
+import io.activej.common.annotation.Beta;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
@@ -53,7 +54,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
-import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
@@ -387,19 +387,35 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 	@Override
 	public Promise<HttpResponse> request(HttpRequest request) {
 		if (CHECK) checkArgument(request.getProtocol(), protocol -> protocol == HTTP || protocol == HTTPS);
-		return doRequest(request, connection-> connection.send(request));
+
+		//noinspection unchecked
+		return (Promise<HttpResponse>) doRequest(request, false);
 	}
 
+	/**
+	 * Sends a web socket request and returns a promise of a web socket.
+	 * <p>
+	 * Sent request must be constructed via {@link HttpRequest#webSocket(String)} method
+	 * and must not have a body or body stream.
+	 * <p>
+	 * After receiving a {@link WebSocket}, caller can inspect server response via calling {@link WebSocket#getResponse()}.
+	 * If a response does not satisfy a caller, it may close the web socket with an appropriate exception.
+	 *
+	 * @param request web socket request
+	 * @return promise of a web socket
+	 */
+	@Beta
 	@Override
 	public Promise<WebSocket> webSocketRequest(HttpRequest request) {
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
 
-		return doRequest(request, connection -> connection.sendWebSocketRequest(request));
+		//noinspection unchecked
+		return (Promise<WebSocket>) doRequest(request, true);
 	}
 
 	@NotNull
-	private <T> Promise<T> doRequest(HttpRequest request, Function<HttpClientConnection, Promise<T>> fn) {
+	private Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (inspector != null) inspector.onRequest(request);
 		String host = request.getUrl().getHost();
@@ -412,7 +428,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 						if (inspector != null) inspector.onResolve(request, dnsResponse);
 						if (dnsResponse.isSuccessful()) {
 							//noinspection ConstantConditions - dnsResponse is successful (not null)
-							return doSend(request, dnsResponse.getRecord().getIps(), fn);
+							return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
 						} else {
 							return Promise.ofException(new DnsQueryException(AsyncHttpClient.class, dnsResponse));
 						}
@@ -424,13 +440,17 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 				});
 	}
 
-	private <T> Promise<T> doSend(HttpRequest request, InetAddress[] inetAddresses, Function<HttpClientConnection, Promise<T>> fn) {
+	private Promise<?> doSend(HttpRequest request, InetAddress[] inetAddresses, boolean isWebSocket) {
 		InetAddress inetAddress = inetAddresses[(inetAddressIdx++ & Integer.MAX_VALUE) % inetAddresses.length];
 		InetSocketAddress address = new InetSocketAddress(inetAddress, request.getUrl().getPort());
 
 		HttpClientConnection keepAliveConnection = takeKeepAliveConnection(address);
 		if (keepAliveConnection != null) {
-			return fn.apply(keepAliveConnection);
+			if (isWebSocket) {
+				return keepAliveConnection.sendWebSocketRequest(request);
+			} else {
+				return keepAliveConnection.send(request);
+			}
 		}
 
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
@@ -460,7 +480,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService
 						if (expiredConnectionsCheck == null)
 							scheduleExpiredConnectionsCheck();
 
-						return fn.apply(connection);
+						if (isWebSocket) {
+							return connection.sendWebSocketRequest(request);
+						} else {
+							return connection.send(request);
+						}
 					} else {
 						if (inspector != null) inspector.onConnectError(request, address, e);
 						request.recycle();

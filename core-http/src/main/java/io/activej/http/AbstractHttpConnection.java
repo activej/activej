@@ -62,8 +62,6 @@ public abstract class AbstractHttpConnection {
 
 	protected static final HttpHeaderValue CONNECTION_KEEP_ALIVE_HEADER = HttpHeaderValue.of("keep-alive");
 	protected static final HttpHeaderValue CONNECTION_CLOSE_HEADER = HttpHeaderValue.of("close");
-	protected static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.of("upgrade");
-	protected static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.of("websocket");
 	protected static final int UNSET_CONTENT_LENGTH = -1;
 
 	private static final byte[] CONNECTION_KEEP_ALIVE = encodeAscii("keep-alive");
@@ -71,7 +69,6 @@ public abstract class AbstractHttpConnection {
 	private static final byte[] CONTENT_ENCODING_GZIP = encodeAscii("gzip");
 	private static final byte[] EMPTY_HEADER = new byte[0];
 
-	protected static final byte[] CONNECTION_UPGRADE = encodeAscii("upgrade");
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
 
@@ -84,12 +81,11 @@ public abstract class AbstractHttpConnection {
 	protected static final byte GZIPPED = 1 << 1;
 	protected static final byte CHUNKED = 1 << 2;
 	protected static final byte WEB_SOCKET = 1 << 3;
-	protected static final byte UPGRADE = 1 << 4;
-	protected static final byte BODY_RECEIVED = 1 << 5;
-	protected static final byte BODY_SENT = 1 << 6;
+	protected static final byte BODY_RECEIVED = 1 << 4;
+	protected static final byte BODY_SENT = 1 << 5;
 	protected static final byte CLOSED = (byte) (1 << 7);
 
-	@MagicConstant(flags = {KEEP_ALIVE, GZIPPED, CHUNKED, WEB_SOCKET, UPGRADE, BODY_RECEIVED, BODY_SENT, CLOSED})
+	@MagicConstant(flags = {KEEP_ALIVE, GZIPPED, CHUNKED, WEB_SOCKET, BODY_RECEIVED, BODY_SENT, CLOSED})
 	protected byte flags = 0;
 
 	@Nullable
@@ -160,7 +156,7 @@ public abstract class AbstractHttpConnection {
 	}
 
 	protected boolean isWebSocket() {
-		return (flags & WEB_SOCKET) != 0 && (flags & UPGRADE) != 0;
+		return (flags & WEB_SOCKET) != 0;
 	}
 
 	protected void closeWebSocketConnection(Throwable e) {
@@ -339,8 +335,7 @@ public abstract class AbstractHttpConnection {
 			contentLength = trimAndDecodePositiveInt(array, pos, len);
 		} else if (header == CONNECTION) {
 			flags = (byte) ((flags & ~KEEP_ALIVE) |
-					(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE :
-							equalsLowerCaseAscii(CONNECTION_UPGRADE, array, pos, len) ? UPGRADE : 0));
+					(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
 		} else if (header == HttpHeaders.UPGRADE) {
 			flags |= equalsLowerCaseAscii(UPGRADE_WEBSOCKET, array, pos, len) ? WEB_SOCKET : 0;
 		} else if (header == TRANSFER_ENCODING) {
