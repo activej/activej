@@ -32,10 +32,12 @@ public final class HttpMessageTest {
 
 	@Test
 	public void testHttpResponse() {
-		assertHttpMessageEquals("HTTP/1.1 100 OK\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(100));
+		assertHttpMessageEquals("HTTP/1.1 100 Continue\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(100));
+		assertHttpMessageEquals("HTTP/1.1 123 OK\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(123));
 		assertHttpMessageEquals("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(200));
 		assertHttpMessageEquals("HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(400));
-		assertHttpMessageEquals("HTTP/1.1 405 Error\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(405));
+		assertHttpMessageEquals("HTTP/1.1 405 Method Not Allowed\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(405));
+		assertHttpMessageEquals("HTTP/1.1 456 Error\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(456));
 		assertHttpMessageEquals("HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n", HttpResponse.ofCode(500));
 		assertHttpMessageEquals("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 11\r\n\r\n" +
 				"Bad Gateway", HttpResponse.ofCode(502).withBody("Bad Gateway".getBytes(StandardCharsets.UTF_8)));
