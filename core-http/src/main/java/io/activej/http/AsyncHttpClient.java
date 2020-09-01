@@ -72,7 +72,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * to cleanup the keep-alive connections etc.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public final class AsyncHttpClient implements IAsyncHttpClient, EventloopService, EventloopJmxBeanEx {
+public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketClient, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = getLogger(AsyncHttpClient.class);
 	private static final boolean CHECK = Checks.isEnabled(AsyncHttpClient.class);
 

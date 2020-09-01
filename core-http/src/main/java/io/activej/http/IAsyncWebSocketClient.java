@@ -16,15 +16,10 @@
 
 package io.activej.http;
 
+import io.activej.common.annotation.Beta;
 import io.activej.promise.Promise;
 
-/**
- * An interface for an asynchronous HTTP client.
- * <p>
- * It is as simple as an asynchronous function that accepts {@link HttpRequest}
- * and returns an {@link HttpResponse} for it,
- * so it is basically a reciprocal of the {@link AsyncServlet}.
- */
-public interface IAsyncHttpClient {
-	Promise<HttpResponse> request(HttpRequest request);
+@Beta
+public interface IAsyncWebSocketClient {
+	Promise<WebSocket> webSocketRequest(HttpRequest request);
 }
