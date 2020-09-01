@@ -47,12 +47,15 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	private static final BinaryOperator<AsyncServlet> DEFAULT_MERGER = ($, $2) -> {
 		throw new IllegalArgumentException("Already mapped");
 	};
-	protected final Map<MappingKey, AsyncServlet> rootServlets = new HashMap<>();
+	private static final int WS_ORDINAL = HttpMethod.values().length;
+	private static final int ANY_HTTP_ORDINAL = WS_ORDINAL + 1;
+
+	protected final AsyncServlet[] rootServlets = new AsyncServlet[ANY_HTTP_ORDINAL + 1];
+	protected final AsyncServlet[] fallbackServlets = new AsyncServlet[ANY_HTTP_ORDINAL + 1];
 
 	protected final Map<String, RoutingServlet> routes = new HashMap<>();
 	protected final Map<String, RoutingServlet> parameters = new HashMap<>();
 
-	protected final Map<MappingKey, AsyncServlet> fallbackServlets = new HashMap<>();
 
 	private RoutingServlet() {
 	}
@@ -63,14 +66,14 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 
 	public static RoutingServlet wrap(AsyncServlet servlet) {
 		RoutingServlet wrapper = new RoutingServlet();
-		wrapper.fallbackServlets.put(new MappingKey(null), servlet);
+		wrapper.fallbackServlets[ANY_HTTP_ORDINAL] = servlet;
 		return wrapper;
 	}
 
 	@Beta
 	public static RoutingServlet wrapWebSocket(AsyncWebSocketServlet servlet) {
 		RoutingServlet wrapper = new RoutingServlet();
-		wrapper.fallbackServlets.put(new MappingKey(), webSocket(servlet));
+		wrapper.fallbackServlets[WS_ORDINAL] = webSocket(servlet);
 		return wrapper;
 	}
 
@@ -101,7 +104,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 */
 	@Contract("_, _, _, _ -> this")
 	public RoutingServlet map(@Nullable HttpMethod method, @NotNull String path, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		return doMap(new MappingKey(method), path, servlet, merger);
+		return doMap(method == null ? ANY_HTTP_ORDINAL : method.ordinal(), path, servlet, merger);
 	}
 
 	/**
@@ -141,16 +144,16 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	@Beta
 	@Contract("_, _, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, @NotNull AsyncWebSocketServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		return doMap(new MappingKey(), path, webSocket(servlet), merger);
+		return doMap(WS_ORDINAL, path, webSocket(servlet), merger);
 	}
 
 	@Contract("_, _, _, _ -> this")
-	private RoutingServlet doMap(MappingKey key, @NotNull String path, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
+	private RoutingServlet doMap(int ordinal, @NotNull String path, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
 		checkArgument(path.startsWith(ROOT) && (path.endsWith(WILDCARD) || !path.contains(STAR)), "Invalid path: " + path);
 		if (path.endsWith(WILDCARD)) {
-			makeSubtree(path.substring(0, path.length() - 2)).mapFallback(key, servlet, merger);
+			makeSubtree(path.substring(0, path.length() - 2)).mapFallback(ordinal, servlet, merger);
 		} else {
-			makeSubtree(path).map(key, servlet, merger);
+			makeSubtree(path).map(ordinal, servlet, merger);
 		}
 		return this;
 	}
@@ -160,8 +163,20 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	private void visit(String prefix, Visitor visitor) {
-		rootServlets.forEach((key, servlet) -> visitor.accept(key.method, prefix, servlet));
-		fallbackServlets.forEach((key, servlet) -> visitor.accept(key.method, prefix + STAR, servlet));
+		for (int i = 0; i < rootServlets.length; i++) {
+			AsyncServlet rootServlet = rootServlets[i];
+			if (rootServlet != null) {
+				HttpMethod method = i == WS_ORDINAL || i == ANY_HTTP_ORDINAL ? null : HttpMethod.values()[i];
+				visitor.accept(method, prefix, rootServlet);
+			}
+		}
+		for (int i = 0; i < fallbackServlets.length; i++) {
+			AsyncServlet fallbackServlet = fallbackServlets[i];
+			if (fallbackServlet != null) {
+				HttpMethod method = i == WS_ORDINAL || i == ANY_HTTP_ORDINAL ? null : HttpMethod.values()[i];
+				visitor.accept(method, prefix, fallbackServlet);
+			}
+		}
 		routes.forEach((route, subtree) -> subtree.visit(prefix + route + "/", visitor));
 		parameters.forEach((route, subtree) -> subtree.visit(prefix + ":" + route + "/", visitor));
 	}
@@ -201,12 +216,17 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 				Promise.ofException(HttpException.notFound404());
 	}
 
-	private void map(MappingKey key, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		rootServlets.merge(key, servlet, merger);
+	private void map(int ordinal, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
+		doMerge(rootServlets, ordinal, servlet, merger);
 	}
 
-	private void mapFallback(MappingKey key, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		fallbackServlets.merge(key, servlet, merger);
+	private void mapFallback(int ordinal, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
+		doMerge(fallbackServlets, ordinal, servlet, merger);
+	}
+
+	private void doMerge(AsyncServlet[] servlets, int ordinal, AsyncServlet servlet, BinaryOperator<AsyncServlet> merger) {
+		AsyncServlet oldValue = servlets[ordinal];
+		servlets[ordinal] = (oldValue == null) ? servlet : merger.apply(oldValue, servlet);
 	}
 
 	@Nullable
@@ -214,10 +234,10 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		int introPosition = request.getPos();
 		String urlPart = request.pollUrlPart();
 		Protocol protocol = request.getProtocol();
-		MappingKey mappingKey = protocol == WS || protocol == WSS ? new MappingKey() : new MappingKey(request.getMethod());
+		int ordinal = protocol == WS || protocol == WSS ? WS_ORDINAL : request.getMethod().ordinal();
 
 		if (urlPart.isEmpty()) {
-			AsyncServlet servlet = getOrDefault(rootServlets, mappingKey);
+			AsyncServlet servlet = getOrDefault(rootServlets, ordinal);
 			if (servlet != null) {
 				return servlet.serveAsync(request);
 			}
@@ -243,7 +263,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 			}
 		}
 
-		AsyncServlet servlet = getOrDefault(fallbackServlets, mappingKey);
+		AsyncServlet servlet = getOrDefault(fallbackServlets, ordinal);
 		if (servlet != null) {
 			request.setPos(introPosition);
 			return servlet.serveAsync(request);
@@ -305,8 +325,18 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	private static void mergeInto(RoutingServlet into, RoutingServlet from, BinaryOperator<AsyncServlet> merger) {
-		from.rootServlets.forEach((key, servlet) -> into.map(key, servlet, merger));
-		from.fallbackServlets.forEach((key, servlet) -> into.mapFallback(key, servlet, merger));
+		for (int i = 0; i < from.rootServlets.length; i++) {
+			AsyncServlet rootServlet = from.rootServlets[i];
+			if (rootServlet != null) {
+				into.map(i, rootServlet, merger);
+			}
+		}
+		for (int i = 0; i < from.fallbackServlets.length; i++) {
+			AsyncServlet fallbackServlet = from.fallbackServlets[i];
+			if (fallbackServlet != null) {
+				into.map(i, fallbackServlet, merger);
+			}
+		}
 		from.routes.forEach((key, value) ->
 				into.routes.merge(key, value, (s1, s2) -> {
 					mergeInto(s1, s2, merger);
@@ -320,46 +350,12 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	@Nullable
-	private static AsyncServlet getOrDefault(Map<MappingKey, AsyncServlet> map, MappingKey key) {
-		AsyncServlet maybeResult = map.get(key);
-		if (maybeResult != null || key.isWebSocket) {
+	private static AsyncServlet getOrDefault(AsyncServlet[] servlets, int ordinal) {
+		AsyncServlet maybeResult = servlets[ordinal];
+		if (maybeResult != null || ordinal == WS_ORDINAL) {
 			return maybeResult;
 		}
-		return map.get(new MappingKey(null));
-	}
-
-	private static final class MappingKey {
-		@Nullable
-		private final HttpMethod method;
-		private final boolean isWebSocket;
-
-		private MappingKey(@Nullable HttpMethod method) {
-			this.method = method;
-			this.isWebSocket = false;
-		}
-
-		private MappingKey() {
-			this.method = null;
-			this.isWebSocket = true;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			MappingKey that = (MappingKey) o;
-
-			if (isWebSocket != that.isWebSocket) return false;
-			return method == that.method;
-		}
-
-		@Override
-		public int hashCode() {
-			int result = method != null ? method.hashCode() : 0;
-			result = 31 * result + (isWebSocket ? 1 : 0);
-			return result;
-		}
+		return servlets[ANY_HTTP_ORDINAL];
 	}
 
 	/**
