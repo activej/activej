@@ -186,11 +186,10 @@ final class HttpClientConnection extends AbstractHttpConnection {
 		HttpResponse response = this.response;
 		//noinspection ConstantConditions
 		response.flags |= MUST_LOAD_BODY;
+		response.body = body;
+		response.bodyStream = bodySupplier;
 		if (isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
-		} else {
-			response.body = body;
-			response.bodyStream = bodySupplier;
 		}
 		if (inspector != null) inspector.onHttpResponse(this, response);
 

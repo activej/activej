@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetAddress;
 import java.util.Arrays;
 
+import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
 import static io.activej.csp.ChannelSupplier.ofLazyProvider;
@@ -258,12 +259,12 @@ final class HttpServerConnection extends AbstractHttpConnection {
 
 		//noinspection ConstantConditions
 		request.flags |= MUST_LOAD_BODY;
+		request.body = body;
+		request.bodyStream = bodySupplier;
 		if (isWebSocket()) {
 			if (!processWebSocketRequest(body)) return;
 		} else {
 			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? HTTPS : HTTP);
-			request.body = body;
-			request.bodyStream = bodySupplier;
 		}
 		request.setRemoteAddress(remoteAddress);
 
@@ -309,7 +310,9 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	@SuppressWarnings("ConstantConditions")
 	private boolean processWebSocketRequest(@Nullable ByteBuf body) {
 		if (body != null && body.readRemaining() == 0) {
-			ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> ChannelSupplier.of(readQueue.takeRemaining()));
+			ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> isClosed() ?
+					ChannelSupplier.ofException(CLOSE_EXCEPTION) :
+					ChannelSupplier.of(readQueue.takeRemaining()));
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
 			request.bodyStream = concat(ofQueueSupplier, ofSocketSupplier)
 					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection));

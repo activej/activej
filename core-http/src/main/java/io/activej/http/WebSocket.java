@@ -170,6 +170,11 @@ public interface WebSocket extends AsyncCloseable {
 	HttpResponse getResponse();
 
 	/**
+	 * Indicates whether this socket has already been closed or not
+	 */
+	boolean isClosed();
+
+	/**
 	 * Representation of a complete web socket message. It may contain either text or binary data.
 	 */
 	final class Message implements Recyclable {

@@ -1,5 +1,6 @@
 package io.activej.http;
 
+import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.ref.RefInt;
@@ -7,6 +8,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.WebSocket.Message;
+import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -145,7 +147,16 @@ public final class WebSocketClientServerTest {
 	@Test
 	public void testRejectedHandshake() throws IOException {
 		AsyncHttpServer.create(Eventloop.getCurrentEventloop(), RoutingServlet.create()
-				.mapWebSocket("/", ($, fn) -> fn.apply(HttpResponse.ofCode(400))))
+				.mapWebSocket("/", new WebSocketServlet() {
+					@Override
+					protected Promisable<HttpResponse> onRequest(HttpRequest request) {
+						return HttpResponse.ofCode(400).withBody(ByteBufPool.allocate(1000));
+					}
+
+					@Override
+					protected void onWebSocket(WebSocket webSocket) {
+					}
+				}))
 				.withListenPort(PORT)
 				.withAcceptOnce()
 				.listen();

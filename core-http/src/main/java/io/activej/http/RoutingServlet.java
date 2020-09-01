@@ -28,12 +28,10 @@ import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.http.Protocol.WS;
 import static io.activej.http.Protocol.WSS;
-import static io.activej.http.WebSocketAdapter.webSocket;
 
 /**
  * This servlet allows to build complex servlet trees, routing requests between them by the HTTP paths.
@@ -55,7 +53,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	protected final Map<String, RoutingServlet> routes = new HashMap<>();
 	protected final Map<String, RoutingServlet> parameters = new HashMap<>();
 
-
 	private RoutingServlet() {
 	}
 
@@ -69,12 +66,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		return wrapper;
 	}
 
-	public static RoutingServlet wrapWebSocket(AsyncWebSocketServlet servlet) {
-		RoutingServlet wrapper = new RoutingServlet();
-		wrapper.fallbackServlets[WS_ORDINAL] = webSocket(servlet);
-		return wrapper;
-	}
-
 	/**
 	 * Maps given servlet on some path. Fails when such path already has a servlet mapped to it.
 	 */
@@ -85,6 +76,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	/**
 	 * Maps given servlet on some path and calls the merger if there is already a servlet there.
 	 */
+	@Deprecated
 	public RoutingServlet map(@NotNull String path, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
 		return map(null, path, servlet, merger);
 	}
@@ -101,6 +93,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * @see #map(HttpMethod, String, AsyncServlet, BinaryOperator)
 	 */
 	@Contract("_, _, _, _ -> this")
+	@Deprecated
 	public RoutingServlet map(@Nullable HttpMethod method, @NotNull String path, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
 		return doMap(method == null ? ANY_HTTP_ORDINAL : method.ordinal(), path, servlet, merger);
 	}
@@ -111,34 +104,18 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 */
 	@Contract("_, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, Consumer<WebSocket> webSocketConsumer) {
-		return mapWebSocket(path, webSocketConsumer, DEFAULT_MERGER);
+		return mapWebSocket(path, new WebSocketServlet() {
+			@Override
+			protected void onWebSocket(WebSocket webSocket) {
+				webSocketConsumer.accept(webSocket);
+			}
+		});
 	}
 
-	/**
-	 * Maps given consumer of a web socket as a web socket servlet on some path.
-	 * Calls the merger if there is already a web socket servlet mapped on this path.
-	 */
-	@Contract("_, _, _ -> this")
-	public RoutingServlet mapWebSocket(@NotNull String path, Consumer<WebSocket> webSocketConsumer, @NotNull BinaryOperator<AsyncServlet> merger) {
-		return mapWebSocket(path, ($, fn) -> fn.apply(HttpResponse.ofCode(101)).whenResult(webSocketConsumer), merger);
-	}
-
-	/**
-	 * Maps given web socket servlet on some path.
-	 * Fails if there is already a web socket servlet mapped on this path.
-	 */
 	@Contract("_, _ -> this")
-	public RoutingServlet mapWebSocket(@NotNull String path, @NotNull AsyncWebSocketServlet servlet) {
-		return mapWebSocket(path, servlet, DEFAULT_MERGER);
-	}
-
-	/**
-	 * Maps given web socket servlet on some path.
-	 * Calls the merger if there is already a web socket servlet mapped on this path.
-	 */
-	@Contract("_, _, _ -> this")
-	public RoutingServlet mapWebSocket(@NotNull String path, @NotNull AsyncWebSocketServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		return doMap(WS_ORDINAL, path, webSocket(servlet), merger);
+	@NotNull
+	public RoutingServlet mapWebSocket(@NotNull String path, WebSocketServlet servlet) {
+		return doMap(WS_ORDINAL, path, servlet, DEFAULT_MERGER);
 	}
 
 	@Contract("_, _, _, _ -> this")
@@ -350,21 +327,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 			return maybeResult;
 		}
 		return servlets[ANY_HTTP_ORDINAL];
-	}
-
-	/**
-	 * A servlet for handling web socket upgrade requests.
-	 * An implementation may inspect incoming HTTP request, based on which an implementation MUST call a provided function
-	 * with a corresponding HTTP response.
-	 * <p>
-	 * If a response has a code {@code 101} it is considered successful and the resulted promise of a web socket will be
-	 * completed with a {@link WebSocket}. A successful response must have no body or body stream.
-	 * <p>
-	 * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
-	 * exceptionally.
-	 */
-	public interface AsyncWebSocketServlet {
-		void serve(HttpRequest request, Function<HttpResponse, Promise<WebSocket>> fn);
 	}
 
 	@FunctionalInterface
