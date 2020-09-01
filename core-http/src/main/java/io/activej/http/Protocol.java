@@ -16,13 +16,11 @@
 
 package io.activej.http;
 
-import io.activej.common.annotation.Beta;
-
 public enum Protocol {
 	HTTP,
 	HTTPS,
-	@Beta WS,
-	@Beta WSS;
+	WS,
+	WSS;
 
 	private final String lowercase;
 

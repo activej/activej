@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.common.annotation.Beta;
 import io.activej.common.api.WithInitializer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
@@ -70,7 +69,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		return wrapper;
 	}
 
-	@Beta
 	public static RoutingServlet wrapWebSocket(AsyncWebSocketServlet servlet) {
 		RoutingServlet wrapper = new RoutingServlet();
 		wrapper.fallbackServlets[WS_ORDINAL] = webSocket(servlet);
@@ -111,7 +109,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * Maps given consumer of a web socket as a web socket servlet on some path.
 	 * Fails if there is already a web socket servlet mapped on this path.
 	 */
-	@Beta
 	@Contract("_, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, Consumer<WebSocket> webSocketConsumer) {
 		return mapWebSocket(path, webSocketConsumer, DEFAULT_MERGER);
@@ -121,7 +118,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * Maps given consumer of a web socket as a web socket servlet on some path.
 	 * Calls the merger if there is already a web socket servlet mapped on this path.
 	 */
-	@Beta
 	@Contract("_, _, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, Consumer<WebSocket> webSocketConsumer, @NotNull BinaryOperator<AsyncServlet> merger) {
 		return mapWebSocket(path, ($, fn) -> fn.apply(HttpResponse.ofCode(101)).whenResult(webSocketConsumer), merger);
@@ -131,7 +127,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * Maps given web socket servlet on some path.
 	 * Fails if there is already a web socket servlet mapped on this path.
 	 */
-	@Beta
 	@Contract("_, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, @NotNull AsyncWebSocketServlet servlet) {
 		return mapWebSocket(path, servlet, DEFAULT_MERGER);
@@ -141,7 +136,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * Maps given web socket servlet on some path.
 	 * Calls the merger if there is already a web socket servlet mapped on this path.
 	 */
-	@Beta
 	@Contract("_, _, _ -> this")
 	public RoutingServlet mapWebSocket(@NotNull String path, @NotNull AsyncWebSocketServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
 		return doMap(WS_ORDINAL, path, webSocket(servlet), merger);
@@ -369,7 +363,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
 	 * exceptionally.
 	 */
-	@Beta
 	public interface AsyncWebSocketServlet {
 		void serve(HttpRequest request, Function<HttpResponse, Promise<WebSocket>> fn);
 	}

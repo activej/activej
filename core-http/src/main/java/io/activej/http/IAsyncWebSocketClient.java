@@ -16,10 +16,8 @@
 
 package io.activej.http;
 
-import io.activej.common.annotation.Beta;
 import io.activej.promise.Promise;
 
-@Beta
 public interface IAsyncWebSocketClient {
 	Promise<WebSocket> webSocketRequest(HttpRequest request);
 }

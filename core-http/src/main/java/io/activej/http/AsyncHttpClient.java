@@ -20,7 +20,6 @@ import io.activej.async.service.EventloopService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.annotation.Beta;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
@@ -404,7 +403,6 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	 * @param request web socket request
 	 * @return promise of a web socket
 	 */
-	@Beta
 	@Override
 	public Promise<WebSocket> webSocketRequest(HttpRequest request) {
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");

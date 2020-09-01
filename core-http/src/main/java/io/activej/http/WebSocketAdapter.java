@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.annotation.Beta;
 import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.queue.ChannelZeroBuffer;
@@ -36,7 +35,6 @@ import static io.activej.http.HttpUtils.getWebSocketAnswer;
 import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
 import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
 
-@Beta
 final class WebSocketAdapter implements AsyncServlet {
 	private final AsyncWebSocketServlet webSocketServlet;
 

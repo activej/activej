@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.Checks;
-import io.activej.common.annotation.Beta;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -43,7 +42,6 @@ import static io.activej.http.WebSocketConstants.*;
 import static io.activej.http.WebSocketConstants.OpCode.OP_CLOSE;
 import static io.activej.http.WebSocketConstants.OpCode.OP_PONG;
 
-@Beta
 final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<WebSocketFramesToBufs, Frame, ByteBuf> {
 	private static final Boolean CHECK = Checks.isEnabled(WebSocketFramesToBufs.class);

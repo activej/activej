@@ -16,11 +16,9 @@
 
 package io.activej.http;
 
-import io.activej.common.annotation.Beta;
 import io.activej.common.exception.StacklessException;
 import org.jetbrains.annotations.Nullable;
 
-@Beta
 public final class WebSocketConstants {
 	// region exceptions
 	public static final WebSocketException EMPTY_CLOSE = new WebSocketException(WebSocketConstants.class);

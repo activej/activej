@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.annotation.Beta;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -41,7 +40,6 @@ import static io.activej.http.HttpUtils.*;
 import static io.activej.http.WebSocketConstants.*;
 import static io.activej.http.WebSocketConstants.OpCode.*;
 
-@Beta
 final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<WebSocketBufsToFrames, ByteBuf, Frame>, WithBinaryChannelInput<WebSocketBufsToFrames> {
 

@@ -21,7 +21,6 @@ import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.Checks;
-import io.activej.common.annotation.Beta;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
 import io.activej.csp.AbstractChannelConsumer;
@@ -47,7 +46,6 @@ import static io.activej.http.HttpUtils.getUTF8;
 import static io.activej.http.WebSocket.Message.MessageType.TEXT;
 import static io.activej.http.WebSocketConstants.*;
 
-@Beta
 final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	private static final boolean CHECK = Checks.isEnabled(WebSocketImpl.class);
 

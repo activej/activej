@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.common.annotation.Beta;
 import io.activej.common.exception.StacklessException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +32,6 @@ import static io.activej.http.HttpUtils.isReservedCloseCode;
  * Note that some codes are forbidden to be sent on a wire, exceptions with such codes will be translated to a more generic
  * exceptions.
  */
-@Beta
 public final class WebSocketException extends StacklessException {
 	@Nullable
 	private final Integer code;
