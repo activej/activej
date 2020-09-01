@@ -360,7 +360,7 @@ public final class RoutingServletTest {
 				.map(wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("all")))
 				.map(wsPath + "/inside", request -> HttpResponse.ok200().withBody(wrapUtf8("inner")));
 
-		checkWebSocket(main.serve(HttpRequest.webSocket(TEMPLATE_WS + wsPath)));
+		checkWebSocket(main.serve(HttpRequest.get(TEMPLATE_WS + wsPath)));
 		check(main.serve(HttpRequest.post(TEMPLATE + wsPath)), "post", 200);
 		check(main.serve(HttpRequest.get(TEMPLATE + wsPath)), "get", 200);
 		check(main.serve(HttpRequest.of(OPTIONS, TEMPLATE + wsPath)), "all", 200);
@@ -373,7 +373,7 @@ public final class RoutingServletTest {
 		RoutingServlet main = RoutingServlet.create()
 				.mapWebSocket(wsPath, request -> HttpResponse.ok200());
 
-		checkWebSocket(main.serve(HttpRequest.webSocket(TEMPLATE_WS + wsPath)));
+		checkWebSocket(main.serve(HttpRequest.get(TEMPLATE_WS + wsPath)));
 		check(main.serve(HttpRequest.get(TEMPLATE + wsPath)), "", 404);
 		check(main.serve(HttpRequest.post(TEMPLATE + wsPath)), "", 404);
 	}

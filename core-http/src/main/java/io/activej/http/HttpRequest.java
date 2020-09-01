@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
-import io.activej.common.annotation.Beta;
 import io.activej.common.api.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullToEmpty;
 import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
@@ -43,7 +41,8 @@ import static io.activej.http.HttpClientConnection.CONNECTION_UPGRADE_HEADER;
 import static io.activej.http.HttpClientConnection.UPGRADE_WEBSOCKET_HEADER;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.*;
-import static io.activej.http.Protocol.*;
+import static io.activej.http.Protocol.WS;
+import static io.activej.http.Protocol.WSS;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 
@@ -64,23 +63,32 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	private static final int HTTP_1_1_SIZE = HTTP_1_1.length;
 	@NotNull
 	private final HttpMethod method;
-	private UrlParser url;
+	private final UrlParser url;
 	private InetAddress remoteAddress;
 	private Map<String, String> pathParameters;
 	private Map<String, String> queryParameters;
 	private Map<String, String> postParameters;
 
 	// region creators
-	HttpRequest(@NotNull HttpMethod method, @Nullable UrlParser url) {
+	HttpRequest(@NotNull HttpMethod method, @NotNull UrlParser url) {
 		this.method = method;
 		this.url = url;
 	}
 
 	@NotNull
 	public static HttpRequest of(@NotNull HttpMethod method, @NotNull String url) {
-		HttpRequest request = new HttpRequest(method, null);
-		request.setUrl(url);
-		if (CHECK) checkArgument(request.getProtocol(), protocol -> protocol == HTTP || protocol == HTTPS, "Incorrect protocol");
+		UrlParser urlParser = UrlParser.of(url);
+		HttpRequest request = new HttpRequest(method, UrlParser.of(url));
+		String hostAndPort = urlParser.getHostAndPort();
+		if (hostAndPort != null) {
+			request.headers.add(HOST, HttpHeaderValue.of(hostAndPort));
+		}
+		Protocol protocol = urlParser.getProtocol();
+		if (protocol == WS || protocol == WSS){
+			request.addHeader(CONNECTION, CONNECTION_UPGRADE_HEADER);
+			request.addHeader(HttpHeaders.UPGRADE, UPGRADE_WEBSOCKET_HEADER);
+			request.addHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
+		}
 		return request;
 	}
 
@@ -97,21 +105,6 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	@NotNull
 	public static HttpRequest put(@NotNull String url) {
 		return HttpRequest.of(PUT, url);
-	}
-
-	@Beta
-	@NotNull
-	public static HttpRequest webSocket(@NotNull String url) {
-		HttpRequest request = new HttpRequest(GET, null);
-		request.setUrl(url);
-
-		if (CHECK) checkArgument(request.getProtocol(), protocol -> protocol == WS || protocol == WSS,
-				"Protocol must be either 'ws://' or 'wss://'");
-
-		request.addHeader(CONNECTION, CONNECTION_UPGRADE_HEADER);
-		request.addHeader(HttpHeaders.UPGRADE, UPGRADE_WEBSOCKET_HEADER);
-		request.addHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
-		return request;
 	}
 
 	@NotNull
@@ -223,15 +216,6 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	UrlParser getUrl() {
 		return url;
-	}
-
-	void setUrl(@NotNull String url) {
-		if (CHECK) checkState(!isRecycled());
-		this.url = UrlParser.of(url);
-		if (!this.url.isRelativePath()) {
-			assert this.url.getHostAndPort() != null; // sadly no advanced contracts yet
-			addHeader(HOST, this.url.getHostAndPort());
-		}
 	}
 
 	@Nullable

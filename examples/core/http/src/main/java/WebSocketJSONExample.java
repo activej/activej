@@ -99,7 +99,7 @@ public final class WebSocketJSONExample {
 
 		@Override
 		protected void run() throws Exception {
-			eventloop.submit(() -> client.webSocketRequest(HttpRequest.webSocket("ws://127.0.0.1:" + PORT))
+			eventloop.submit(() -> client.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + PORT))
 					.then(webSocket -> {
 						System.out.println("Sending request for '3 + 5'");
 						Request addRequest = new Request(3, 5, Operator.ADD);

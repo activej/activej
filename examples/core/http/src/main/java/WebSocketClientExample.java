@@ -42,7 +42,7 @@ public final class WebSocketClientExample extends Launcher {
 		String url = args.length != 0 ? args[0] : "ws://127.0.0.1:8080/";
 		System.out.println("\nWeb Socket request: " + url);
 		CompletableFuture<?> future = eventloop.submit(() ->
-				httpClient.webSocketRequest(HttpRequest.webSocket(url))
+				httpClient.webSocketRequest(HttpRequest.get(url))
 						.then(webSocket -> {
 							ChannelSupplier.of("Hello", "This", "Messages", "Should", "Be", "Echoed", "Via", "Web", "Socket")
 									.mapAsync(message -> Promises.delay(Duration.ofSeconds(1), message))
