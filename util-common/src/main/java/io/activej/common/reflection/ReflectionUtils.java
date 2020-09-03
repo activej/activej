@@ -77,6 +77,7 @@ public final class ReflectionUtils {
 
 	public static boolean isGetter(Method method) {
 		return method.getName().length() > 2
+				&& method.getParameterCount() == 0
 				&& (method.getName().startsWith("get") && method.getReturnType() != void.class
 				|| method.getName().startsWith("is") && (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class));
 	}

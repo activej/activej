@@ -142,6 +142,17 @@ public final class DynamicMBeanFactoryOperationsTest {
 		assertNull(mbean.invoke("sum", new Object[]{7, 8}, new String[]{"int", "int"}));
 	}
 
+	@Test
+	public void getOperationWithArgument() throws Exception {
+		MBeanWithGetOperationWithArgument mbeanWithGet = new MBeanWithGetOperationWithArgument();
+		DynamicMBean mbean = DynamicMBeanFactory.create()
+				.createDynamicMBean(singletonList(mbeanWithGet), defaultSettings(), false);
+
+		int argument = 123;
+		int result = (int) mbean.invoke("getValue", new Object[]{argument}, new String[]{"int"});
+		assertEquals(argument, result);
+	}
+
 	// helpers
 	public static class BeanStubWithOperations implements ConcurrentJmxBean {
 		private int count = 0;
@@ -189,6 +200,14 @@ public final class DynamicMBeanFactoryOperationsTest {
 		@SuppressWarnings("unused")
 		@JmxOperation
 		void action() {
+		}
+	}
+
+	public static class MBeanWithGetOperationWithArgument implements ConcurrentJmxBean {
+		@SuppressWarnings("unused")
+		@JmxOperation
+		public int getValue(int value) {
+			return value;
 		}
 	}
 
