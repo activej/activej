@@ -24,45 +24,39 @@ import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.FsPartitions;
 import io.activej.fs.cluster.ServerSelector;
 import io.activej.fs.tcp.ActiveFsServer;
-import io.activej.inject.annotation.Inject;
+import io.activej.http.AsyncServlet;
+import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
-import io.activej.launcher.Launcher;
+import io.activej.inject.module.AbstractModule;
+import io.activej.inject.module.Module;
+import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static io.activej.common.Utils.nullToDefault;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
 import static io.activej.launchers.fs.Initializers.ofFsPartitions;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
 
-/**
- * @deprecated use {@link ClusterTcpServerLauncher} instead
- */
-public abstract class ClusterRepartitionControllerLauncher extends ActiveFsServerLauncher {
-
-	@Inject
-	ClusterRepartitionController controller;
-
-	@Inject
-	@Named("repartition")
-	EventloopTaskScheduler repartitionScheduler;
-
-	@Inject
-	@Named("clusterDeadCheck")
-	EventloopTaskScheduler clusterDeadCheckScheduler;
+public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
+	public static final String DEFAULT_DEAD_CHECK_INTERVAL = "1 seconds";
+	public static final String DEFAULT_REPARTITION_INTERVAL = "1 seconds";
 
 	@Provides
+	@Eager
 	@Named("repartition")
-	EventloopTaskScheduler eventloopTaskScheduler(Config config, ClusterRepartitionController controller) {
+	EventloopTaskScheduler repartitionScheduler(Config config, ClusterRepartitionController controller) {
 		return EventloopTaskScheduler.create(controller.getEventloop(), controller::repartition)
 				.withInitializer(ofEventloopTaskScheduler(config.getChild("activefs.repartition")));
 	}
 
 	@Provides
+	@Eager
 	@Named("clusterDeadCheck")
 	EventloopTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
 		return EventloopTaskScheduler.create(partitions.getEventloop(), partitions::checkDeadPartitions)
@@ -70,24 +64,44 @@ public abstract class ClusterRepartitionControllerLauncher extends ActiveFsServe
 	}
 
 	@Provides
-	ClusterRepartitionController repartitionController(Config config,
-			ActiveFsServer localServer, FsPartitions partitions) {
-		String localPartitionId = config.get("activefs.repartition.localPartitionId");
+	ClusterRepartitionController repartitionController(Config config, ActiveFsServer localServer, FsPartitions partitions) {
+		String localPartitionId = first(partitions.getAllPartitions());
+		assert localPartitionId != null;
+
 		return ClusterRepartitionController.create(localPartitionId, partitions)
 				.withInitializer(ofClusterRepartitionController(config.getChild("activefs.repartition")));
 	}
 
 	@Provides
 	FsPartitions fsPartitions(Config config, Eventloop eventloop, @Optional ServerSelector serverSelector, ActiveFs fs) {
-		Map<Object, ActiveFs> partitions = new HashMap<>();
+		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
 		partitions.put(config.get("activefs.repartition.localPartitionId"), fs);
+
 		return FsPartitions.create(eventloop, partitions)
 				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER))
 				.withInitializer(ofFsPartitions(config.getChild("activefs.cluster")));
 	}
 
+	@Override
+	protected Module getOverrideModule() {
+		return new AbstractModule() {
+			@Provides
+			AsyncServlet guiServlet(ActiveFs fs, ClusterRepartitionController controller) {
+				return ActiveFsGuiServlet.create(fs, "Cluster server [" + controller.getLocalPartitionId() + ']');
+			}
+		};
+	}
+
+	@Override
+	protected Config createConfig() {
+		return super.createConfig()
+				.with("activefs.repartition.schedule.type", "interval")
+				.with("activefs.repartition.schedule.value", DEFAULT_REPARTITION_INTERVAL)
+				.with("activefs.repartition.deadCheck.schedule.type", "interval")
+				.with("activefs.repartition.deadCheck.schedule.value", DEFAULT_DEAD_CHECK_INTERVAL);
+	}
+
 	public static void main(String[] args) throws Exception {
-		Launcher launcher = new ClusterRepartitionControllerLauncher() {};
-		launcher.launch(args);
+		new ClusterTcpServerLauncher().launch(args);
 	}
 }

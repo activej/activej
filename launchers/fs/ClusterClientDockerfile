@@ -1,0 +1,39 @@
+FROM maven:3.6.3-openjdk-11 as build-java
+WORKDIR /build
+
+# tool layer
+RUN apt update && apt install git
+
+ARG BRANCH=master
+
+# activej layer
+ADD https://api.github.com/repos/activej/activej/git/refs/heads/${BRANCH} last-commit.json
+RUN git clone --depth 1 -b ${BRANCH} https://github.com/activej/activej \
+ && cd activej \
+ && mvn install -DskipTests \
+ && cd ..
+
+# app-server layer
+COPY pom.xml ./
+COPY src src
+RUN mvn package -DskipTests
+
+FROM openjdk:8-jre-alpine
+WORKDIR /app
+
+COPY --from=build-java /build/target/cluster-client.jar ./
+
+EXPOSE 8080
+EXPOSE 9000
+
+ENTRYPOINT [[ -z "$PARTITIONS" ]] && { echo "Pass '-e PARTITIONS=partition1;partition2...'"; exit 1; } \
+        || java $SYS_PROPS \
+                -Dconfig.activefs.cluster.partitions=$PARTITIONS \
+                -Dcom.sun.management.jmxremote \
+                -Dcom.sun.management.jmxremote.authenticate=false \
+                -Dcom.sun.management.jmxremote.ssl=false \
+                -Dcom.sun.management.jmxremote.port=${JMX_PORT:-9010} \
+                -Dcom.sun.management.jmxremote.rmi.port=${JMX_PORT:-9010} \
+                -Djava.rmi.server.hostname=${JMX_HOST:-localhost} \
+                -Dcom.sun.management.jmxremote.local.only=false \
+                -jar cluster-client.jar

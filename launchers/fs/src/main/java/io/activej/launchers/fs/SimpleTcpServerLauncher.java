@@ -24,29 +24,32 @@ import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
-import io.activej.inject.annotation.Inject;
+import io.activej.http.AsyncHttpServer;
+import io.activej.http.AsyncServlet;
+import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
+import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
 import io.activej.service.ServiceGraphModule;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.fs.Initializers.ofActiveFsServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
+import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 
-/**
- * @deprecated use {@link SimpleTcpServerLauncher} instead
- */
-public abstract class ActiveFsServerLauncher extends Launcher {
+public class SimpleTcpServerLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "activefs-server.properties";
-
-	@Inject
-	ActiveFsServer activeFsServer;
+	public static final Path DEFAULT_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "fs-storage");
+	public static final String DEFAULT_SERVER_LISTEN_ADDRESS = "*:9000";
+	public static final String DEFAULT_GUI_SERVER_LISTEN_ADDRESS = "*:8080";
 
 	@Provides
 	public Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
@@ -55,6 +58,7 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
 	}
 
+	@Eager
 	@Provides
 	ActiveFsServer activeFsServer(Eventloop eventloop, ActiveFs activeFs, Config config) {
 		return ActiveFsServer.create(eventloop, activeFs)
@@ -62,8 +66,20 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 	}
 
 	@Provides
-	ActiveFs localActivefs(Eventloop eventloop, Executor executor, Config config){
-		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "activefs.path"));
+	@Eager
+	AsyncHttpServer guiServer(Eventloop eventloop, AsyncServlet servlet, Config config) {
+		return AsyncHttpServer.create(eventloop, servlet)
+				.withInitializer(ofHttpServer(config.getChild("activefs.http.gui")));
+	}
+
+	@Provides
+	AsyncServlet guiServlet(ActiveFs activeFs) {
+		return ActiveFsGuiServlet.create(activeFs);
+	}
+
+	@Provides
+	ActiveFs localActivefs(Eventloop eventloop, Executor executor, Config config) {
+		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
 	}
 
 	@Provides
@@ -73,9 +89,15 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return createConfig()
 				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(Config.ofSystemProperties("config"));
+	}
+
+	protected Config createConfig() {
+		return Config.create()
+				.with("activefs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
+				.with("activefs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS);
 	}
 
 	@Override
@@ -93,7 +115,6 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Launcher launcher = new ActiveFsServerLauncher() {};
-		launcher.launch(args);
+		new SimpleTcpServerLauncher().launch(args);
 	}
 }

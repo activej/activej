@@ -20,10 +20,16 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
 import io.activej.common.api.WithInitializer;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
+import io.activej.fs.http.HttpActiveFs;
+import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.http.AsyncHttpClient;
+import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -31,14 +37,16 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.common.Utils.parseInetSocketAddress;
+import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 public final class FsPartitions implements EventloopService, WithInitializer<FsPartitions> {
 	private static final Logger logger = LoggerFactory.getLogger(FsPartitions.class);
@@ -69,11 +77,11 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	}
 
 	public static FsPartitions create(Eventloop eventloop) {
-		return new FsPartitions(eventloop, new HashMap<>());
+		return new FsPartitions(eventloop, new LinkedHashMap<>());
 	}
 
 	public static FsPartitions create(Eventloop eventloop, Map<Object, ActiveFs> partitions) {
-		return new FsPartitions(eventloop, partitions);
+		return new FsPartitions(eventloop, new LinkedHashMap<>(partitions));
 	}
 
 	public FsPartitions withPartition(Object id, ActiveFs partition) {
@@ -257,4 +265,39 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 									return null;
 								})));
 	}
+
+	// region JMX
+	@JmxAttribute
+	public List<String> getAllPartitions() {
+		return partitions.keySet().stream()
+				.map(Object::toString)
+				.collect(toList());
+	}
+
+	@JmxOperation
+	public void setPartitions(List<String> partitions) throws ParseException {
+		Map<String, Object> previousPartitions = this.partitions.keySet().stream()
+				.collect(toMap(Object::toString, Function.identity()));
+		Set<String> previousPartitionsKeyset = previousPartitions.keySet();
+		logger.info("Setting new partitions. Previous partitions: {}, new partitions: {}", previousPartitionsKeyset, partitions);
+		Set<String> partitionsSet = new HashSet<>(partitions);
+		for (String toRemove : difference(previousPartitionsKeyset, partitionsSet)) {
+			Object key = previousPartitions.get(toRemove);
+			this.partitions.remove(key);
+			this.alivePartitions.remove(key);
+			this.deadPartitions.remove(key);
+		}
+
+		for (String toAdd : difference(partitionsSet, previousPartitionsKeyset)) {
+			ActiveFs client;
+			if (toAdd.startsWith("http")) {
+				client = HttpActiveFs.create(toAdd, AsyncHttpClient.create(eventloop));
+			} else {
+				client = RemoteActiveFs.create(eventloop, parseInetSocketAddress(toAdd));
+			}
+			this.partitions.put(toAdd, client);
+			this.alivePartitions.put(toAdd, client);
+		}
+	}
+	// endregion
 }

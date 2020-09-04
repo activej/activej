@@ -18,6 +18,7 @@ package io.activej.fs.tcp;
 
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -67,7 +68,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
 	public static final FsIOException INVALID_MESSAGE = new FsIOException(RemoteActiveFs.class, "Invalid or unexpected message received");
-	public static final FsIOException UNKNOWN_SERVER_ERROR = new FsIOException(RemoteActiveFs.class, "Unknown server error occurred");
+	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectionTimeout", Duration.ZERO);
 
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
 			nullTerminatedJson(RemoteFsResponses.CODEC, RemoteFsCommands.CODEC);
@@ -76,6 +77,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	private final InetSocketAddress address;
 
 	private SocketSettings socketSettings = SocketSettings.createDefault();
+	private int connectionTimeout = (int) DEFAULT_CONNECTION_TIMEOUT.toMillis();
 
 	//region JMX
 	private final PromiseStats connectPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -109,6 +111,11 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	public RemoteActiveFs withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
+		return this;
+	}
+
+	public RemoteActiveFs withConnectionTimeout(Duration connectionTimeout) {
+		this.connectionTimeout = (int) connectionTimeout.toMillis();
 		return this;
 	}
 	// endregion
@@ -312,7 +319,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	}
 
 	private Promise<MessagingWithBinaryStreaming<FsResponse, FsCommand>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
-		return AsyncTcpSocketNio.connect(address, 0, socketSettings)
+		return AsyncTcpSocketNio.connect(address, connectionTimeout, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))
 				.whenException(e -> logger.warn("failed connecting to [{}] : {}", address, this, e))

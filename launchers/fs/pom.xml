@@ -24,6 +24,11 @@
       <artifactId>activej-launchers-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.spullara.mustache.java</groupId>
+      <artifactId>compiler</artifactId>
+      <version>0.9.4</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -39,6 +44,67 @@
           </archive>
         </configuration>
       </plugin>
+
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+
+          <execution>
+            <id>simple-server</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>io.activej.launchers.fs.SimpleTcpServerLauncher</mainClass>
+                </transformer>
+              </transformers>
+              <finalName>simple-server</finalName>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>cluster-server</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>io.activej.launchers.fs.ClusterTcpServerLauncher</mainClass>
+                </transformer>
+              </transformers>
+              <finalName>cluster-server</finalName>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>cluster-client</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>io.activej.launchers.fs.ClusterTcpClientLauncher</mainClass>
+                </transformer>
+              </transformers>
+              <finalName>cluster-client</finalName>
+            </configuration>
+          </execution>
+
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 

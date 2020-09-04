@@ -23,6 +23,7 @@ import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -55,9 +56,11 @@ import java.util.function.Predicate;
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Checks.checkState;
+import static io.activej.common.Checks.*;
+import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public final class ClusterRepartitionController implements WithInitializer<ClusterRepartitionController>, EventloopJmxBeanEx, EventloopService {
@@ -100,7 +103,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	}
 
 	public static ClusterRepartitionController create(Object localPartitionId, FsPartitions partitions) {
-		ActiveFs local = partitions.getPartitions().get(localPartitionId);
+		ActiveFs local = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
 		return new ClusterRepartitionController(localPartitionId, local, partitions);
 	}
 
@@ -146,14 +149,6 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 		return localFs;
 	}
 
-	public FsPartitions getPartitions() {
-		return partitions;
-	}
-
-	public int getReplicationCount() {
-		return replicationCount;
-	}
-
 	@NotNull
 	public Promise<Void> repartition() {
 		return repartition.get();
@@ -163,6 +158,14 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	private Promise<Void> doRepartition() {
 		if (CHECK)
 			checkState(partitions.getEventloop().inEventloopThread(), "Should be called from eventloop thread");
+
+		if (replicationCount == 1) {
+			Set<Object> partitions = this.partitions.getPartitions().keySet();
+			if (partitions.size() == 1 && first(partitions).equals(localPartitionId)) {
+				logger.info("Only local partition is known, nowhere to repartition");
+				return Promise.complete();
+			}
+		}
 
 		isRepartitioning = true;
 		processedFiles.clear();
@@ -226,7 +229,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 					Map<String, FileMetadata> filteredMap = map.entrySet().stream()
 							.filter(entry -> negativeGlobPredicate.test(entry.getKey()))
-							.filter(entr -> !processedFiles.contains(entr.getKey()))
+							.filter(entry -> !processedFiles.contains(entry.getKey()))
 							.collect(CollectorsEx.toMap());
 
 					Map<Object, Set<String>> groupedById = new HashMap<>();
@@ -287,12 +290,12 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 						logger.trace("deleting file {} locally", meta);
 						return localFs.delete(name) // so we delete the copy which does not belong to local partition
 								.map($ -> {
-									logger.info("handled file {} (ensured on {})", meta, ids);
+									logger.info("handled file {} : {} (ensured on {})", name, meta, ids);
 									return true;
 								});
 					}
 					if (!infoResults.shouldBeUploaded()) {                             // everybody had the file AND
-						logger.info("handled file {} (ensured on {})", meta, ids);     // we don't delete the local copy
+						logger.trace("handled file {} : {} (ensured on {})", name, meta, ids);     // we don't delete the local copy
 						return Promise.of(true);
 					}
 
@@ -349,14 +352,14 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								}
 
 								if (belongsToLocal) { // don't delete local if it was marked
-									logger.info("handled file {} (ensured on {}, uploaded to {})", meta, selected, infoResults);
+									logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
 									return Promise.of(true);
 								}
 
 								logger.trace("deleting file {} on {}", meta, localPartitionId);
 								return localFs.delete(name)
 										.map($ -> {
-											logger.info("handled file {} (ensured on {}, uploaded to {})", meta, selected, infoResults);
+											logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
 											return true;
 										});
 							});
@@ -455,6 +458,32 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	@JmxAttribute
 	public int getLastFailedFiles() {
 		return failedFiles;
+	}
+
+	@JmxAttribute(name = "")
+	public FsPartitions getPartitions() {
+		return partitions;
+	}
+
+	@JmxOperation
+	public void setPartitions(String partitionString) throws ParseException {
+		List<String> newPartitions = Arrays.stream(partitionString.split(";"))
+				.map(String::trim)
+				.filter(s -> !s.isEmpty())
+				.collect(toList());
+		checkArgument(newPartitions.contains(localPartitionId.toString()), "Cannot remove local partition");
+
+		this.partitions.setPartitions(newPartitions);
+	}
+
+	@JmxAttribute
+	public int getReplicationCount() {
+		return replicationCount;
+	}
+
+	@JmxAttribute
+	public void setReplicationCount(int replicationCount) {
+		this.replicationCount = checkArgument(replicationCount, count -> count > 0);
 	}
 	// endregion
 

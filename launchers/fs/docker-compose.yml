@@ -1,0 +1,78 @@
+version: '3'
+services:
+
+  server1:
+    image: "cluster-server"
+    ports:
+      - "9001:9000"
+      - "8081:8080"
+    #volumes:
+    #  - <host-dir>:/tmp/fs-storage
+    environment:
+      LOCAL_PARTITION_ID: server1:9000
+      SYS_PROPS: "-Dconfig.activefs.repartition.replicationCount=2
+                  -Dconfig.activefs.repartition.initialDelay=PT5S
+                  -DRemoteActiveFs.connectionTimeout=PT1S
+                  -Dconfig.activefs.cluster.partitions=server1:9000;server2:9000;server3:9000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  server2:
+    image: "cluster-server"
+    ports:
+      - "9002:9000"
+      - "8082:8080"
+    #volumes:
+    #  - <host-dir>:/tmp/fs-storage
+    environment:
+      LOCAL_PARTITION_ID: server2:9000
+      SYS_PROPS: "-Dconfig.activefs.repartition.replicationCount=2
+                  -Dconfig.activefs.repartition.initialDelay=PT5S
+                  -DRemoteActiveFs.connectionTimeout=PT1S
+                  -Dconfig.activefs.cluster.partitions=server1:9000;server2:9000;server3:9000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  server3:
+    image: "cluster-server"
+    ports:
+      - "9003:9000"
+      - "8083:8080"
+    #volumes:
+    #  - <host-dir>:/tmp/fs-storage
+    environment:
+      LOCAL_PARTITION_ID: server3:9000
+      SYS_PROPS: "-Dconfig.activefs.repartition.replicationCount=2
+                  -Dconfig.activefs.repartition.initialDelay=PT5S
+                  -DRemoteActiveFs.connectionTimeout=PT1S
+                  -Dconfig.activefs.cluster.partitions=server1:9000;server2:9000;server3:9000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  client:
+    image: "cluster-client"
+    depends_on:
+      - server1
+      - server2
+      - server3
+    ports:
+      - "9000:9000"
+      - "8080:8080"
+    environment:
+      PARTITIONS: server1:9000;server2:9000;server3:9000
+      SYS_PROPS: "-Dconfig.activefs.cluster.replicationCount=2
+                  -DRemoteActiveFs.connectionTimeout=PT1S"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
