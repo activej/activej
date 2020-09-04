@@ -34,6 +34,9 @@ import io.activej.promise.Promise;
 import java.util.*;
 
 import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.fs.http.FsCommand.DOWNLOAD;
+import static io.activej.fs.http.FsCommand.UPLOAD;
+import static io.activej.http.AsyncServletDecorator.mapResponse;
 import static io.activej.http.ContentTypes.HTML_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.CONTENT_TYPE;
@@ -55,8 +58,14 @@ public final class ActiveFsGuiServlet {
 	public static RoutingServlet create(ActiveFs fs, String title) {
 		Mustache mustache = new DefaultMustacheFactory().compile("fs/gui/static/index.html");
 		RoutingServlet fsServlet = ActiveFsServlet.create(fs);
+
+		RoutingServlet uploadServlet = fsServlet.getSubtree("/" + UPLOAD);
+		RoutingServlet downloadServlet = fsServlet.getSubtree("/" + DOWNLOAD);
+		assert uploadServlet != null && downloadServlet != null;
+
 		return RoutingServlet.create()
-				.map("/api/*", fsServlet)
+				.map("/api/upload", uploadServlet)
+				.map("/api/download/*", downloadServlet)
 				.map(POST, "/api/newDir", request -> request.loadBody()
 						.then(() -> {
 							String dir = request.getPostParameter("dir");
