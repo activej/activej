@@ -197,7 +197,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						.withAcknowledgement(ack -> ack
 								.thenEx(translateScalarErrors(name))
 								.whenComplete(appendFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "appendComplete", name, offset, this))))
+								.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this))))
 				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
 	}
 
@@ -224,7 +224,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						.withEndOfStream(eos -> eos
 								.thenEx(translateScalarErrors(name))
 								.whenComplete(downloadFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "downloadComplete", name, offset, limit))))
+								.whenComplete(toLogger(logger, TRACE, "onDownloadComplete", name, offset, limit))))
 				.thenEx(translateScalarErrors(name))
 				.whenComplete(toLogger(logger, TRACE, "download", name, offset, limit, this))
 				.whenComplete(downloadBeginPromise.recordStats());
@@ -416,7 +416,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 								.thenEx(translateScalarErrors(name))
 								.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
 								.whenComplete(uploadFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "uploadComplete", name, this))))
+								.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this))))
 				.thenEx(translateScalarErrors(name))
 				.whenComplete(uploadBeginPromise.recordStats());
 	}

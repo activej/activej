@@ -58,8 +58,12 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 
 	// region JMX
 	private final PromiseStats handleRequestPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats uploadPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final PromiseStats downloadPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats uploadBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats uploadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats appendBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats appendFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats downloadBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats downloadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats copyAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats movePromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -116,12 +120,16 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 					.map(uploader -> size == null ? uploader : uploader.transformWith(ofFixedSize(size)))
 					.then(uploader -> messaging.send(new UploadAck())
 							.then(() -> messaging.receiveBinaryStream()
-									.streamTo(uploader)))
+									.streamTo(uploader.withAcknowledgement(
+											ack -> ack
+													.whenComplete(uploadFinishPromise.recordStats())
+													.whenComplete(toLogger(logger, TRACE, "onUploadComplete", msg, this)))
+									)))
 					.then(() -> messaging.send(new UploadFinished()))
 					.then(messaging::sendEndOfStream)
 					.whenResult(messaging::close)
-					.whenComplete(uploadPromise.recordStats())
-					.whenComplete(toLogger(logger, TRACE, "receiving data", msg, this));
+					.whenComplete(uploadBeginPromise.recordStats())
+					.whenComplete(toLogger(logger, TRACE, "upload", msg, this));
 		});
 
 		onMessage(Append.class, (messaging, msg) -> {
@@ -129,10 +137,15 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 			long offset = msg.getOffset();
 			return fs.append(name, offset)
 					.then(uploader -> messaging.send(new AppendAck())
-							.then(() -> messaging.receiveBinaryStream().streamTo(uploader)))
+							.then(() -> messaging.receiveBinaryStream().streamTo(uploader.withAcknowledgement(
+									ack -> ack
+											.whenComplete(appendFinishPromise.recordStats())
+											.whenComplete(toLogger(logger, TRACE, "onAppendComplete", msg, this))))))
 					.then(() -> messaging.send(new AppendFinished()))
 					.then(messaging::sendEndOfStream)
-					.whenResult(messaging::close);
+					.whenResult(messaging::close)
+					.whenComplete(appendBeginPromise.recordStats())
+					.whenComplete(toLogger(logger, TRACE, "append", msg, this));
 		});
 
 		onMessage(Download.class, (messaging, msg) -> {
@@ -150,10 +163,13 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 						return fs.download(name, offset, fixedLimit)
 								.then(supplier -> messaging.send(new DownloadSize(fixedLimit))
 										.whenException(supplier::closeEx)
-										.then(() -> supplier.streamTo(messaging.sendBinaryStream())))
-								.whenComplete(toLogger(logger, "sending data", meta, offset, fixedLimit, this));
+										.then(() -> supplier.streamTo(messaging.sendBinaryStream()
+												.withAcknowledgement(ack -> ack
+														.whenComplete(toLogger(logger, TRACE, "onDownloadComplete", meta, offset, fixedLimit, this))
+														.whenComplete(downloadFinishPromise.recordStats())))))
+								.whenComplete(toLogger(logger, "download", meta, offset, fixedLimit, this));
 					})
-					.whenComplete(downloadPromise.recordStats());
+					.whenComplete(downloadBeginPromise.recordStats());
 		});
 		onMessage(Copy.class, simpleHandler(msg -> fs.copy(msg.getName(), msg.getTarget()), $ -> new CopyFinished(), copyPromise));
 		onMessage(CopyAll.class, simpleHandler(msg -> fs.copyAll(msg.getSourceToTarget()), $ -> new CopyAllFinished(), copyAllPromise));
@@ -191,13 +207,33 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 
 	// region JMX
 	@JmxAttribute
-	public PromiseStats getUploadPromise() {
-		return uploadPromise;
+	public PromiseStats getUploadBeginPromise() {
+		return uploadBeginPromise;
 	}
 
 	@JmxAttribute
-	public PromiseStats getDownloadPromise() {
-		return downloadPromise;
+	public PromiseStats getUploadFinishPromise() {
+		return uploadFinishPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getAppendBeginPromise() {
+		return appendBeginPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getAppendFinishPromise() {
+		return appendFinishPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getDownloadBeginPromise() {
+		return downloadBeginPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getDownloadFinishPromise() {
+		return downloadFinishPromise;
 	}
 
 	@JmxAttribute

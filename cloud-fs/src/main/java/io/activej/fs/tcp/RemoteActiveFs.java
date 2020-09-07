@@ -151,7 +151,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 									logger.warn("Cancelled while trying to upload file {}: {}", name, this, e);
 								})
 								.whenComplete(uploadFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "uploadComplete", messaging, name, size, this)))))
+								.whenComplete(toLogger(logger, TRACE, "onUploadComplete", messaging, name, size, this)))))
 				.whenException(e -> {
 					messaging.closeEx(e);
 					logger.warn("Error while trying to upload file {}: {}", name, this, e);
@@ -172,7 +172,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 												.then(msg -> cast(msg, AppendFinished.class).toVoid())
 												.whenException(messaging::closeEx)
 												.whenComplete(appendFinishPromise.recordStats())
-												.whenComplete(toLogger(logger, TRACE, "appendComplete", name, offset, this)))))
+												.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)))))
 								.whenException(messaging::closeEx))
 				.whenComplete(appendStartPromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
@@ -212,7 +212,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM : UNEXPECTED_DATA);
 													})
 													.whenComplete(downloadFinishPromise.recordStats())
-													.whenComplete(toLogger(logger, "downloadComplete", name, offset, limit, this))
+													.whenComplete(toLogger(logger, "onDownloadComplete", name, offset, limit, this))
 													.whenResult(messaging::close)));
 								})
 								.whenException(e -> {
