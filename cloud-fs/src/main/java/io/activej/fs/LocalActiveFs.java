@@ -59,7 +59,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collector;
-import java.util.stream.Stream;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -72,7 +71,6 @@ import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.*;
-import static java.util.Comparator.reverseOrder;
 
 /**
  * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
@@ -344,7 +342,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> start() {
 		return execute(() -> {
-			clearTempDir();
 			Files.createDirectories(tempDir);
 			if (!tempDir.startsWith(storage)) {
 				Files.createDirectories(storage);
@@ -388,18 +385,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private IsADirectoryException dirEx(String name) {
 		return new IsADirectoryException(LocalActiveFs.class, "Path '" + name + "' is a directory");
-	}
-
-	private void clearTempDir() throws IOException {
-		if (!Files.isDirectory(tempDir)) {
-			return;
-		}
-		try (Stream<Path> paths = Files.walk(tempDir)) {
-			//noinspection ResultOfMethodCallIgnored
-			paths.sorted(reverseOrder())
-					.map(Path::toFile)
-					.forEach(File::delete);
-		}
 	}
 
 	private Path resolve(String name) throws ForbiddenPathException {
