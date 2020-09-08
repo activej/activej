@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -55,18 +56,27 @@ public final class ChannelConsumers {
 	 */
 	public static <T> Promise<Void> acceptAll(ChannelConsumer<T> output, Iterator<? extends T> it) {
 		if (!it.hasNext()) return Promise.complete();
-		return Promise.ofCallback(cb -> acceptAllImpl(output, it, cb));
+		return Promise.ofCallback(cb -> acceptAllImpl(output, it, false, cb));
 	}
 
-	private static <T> void acceptAllImpl(ChannelConsumer<T> output, Iterator<? extends T> it, SettablePromise<Void> cb) {
+	public static <T> Promise<Void> acceptAll(ChannelConsumer<T> output, List<? extends T> list) {
+		if (list.isEmpty()) return Promise.complete();
+		return Promise.ofCallback(cb -> acceptAllImpl(output, list.iterator(), true, cb));
+	}
+
+	private static <T> void acceptAllImpl(ChannelConsumer<T> output, Iterator<? extends T> it, boolean ownership, SettablePromise<Void> cb) {
 		while (it.hasNext()) {
 			Promise<Void> accept = output.accept(it.next());
 			if (accept.isResult()) continue;
 			accept.whenComplete(($, e) -> {
 				if (e == null) {
-					acceptAllImpl(output, it, cb);
+					acceptAllImpl(output, it, ownership, cb);
 				} else {
-					Recyclers.recycle(it);
+					if (ownership) {
+						it.forEachRemaining(Recyclers::recycle);
+					} else {
+						Recyclers.recycle(it);
+					}
 					cb.setException(e);
 				}
 			});

@@ -48,6 +48,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.promise.Promise.NOT_ENOUGH_PROMISES_EXCEPTION;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
  * Allows to manage multiple {@link Promise}s.
@@ -82,6 +83,7 @@ public final class Promises {
 			@Nullable
 			ScheduledRunnable schedule = getCurrentEventloop().delay(delay,
 					wrapContext(this, () -> {
+						promise.whenResult(Recyclers::recycle);
 						schedule = null;
 						tryCompleteExceptionally(TIMEOUT_EXCEPTION);
 					}));
@@ -258,7 +260,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static Promise<Void> all(@NotNull Promise<?>... promises) {
-		return all(asIterator(promises));
+		return all(asList(promises));
 	}
 
 	/**
@@ -270,9 +272,10 @@ public final class Promises {
 	public static Promise<Void> all(@NotNull List<? extends Promise<?>> promises) {
 		int size = promises.size();
 		if (size == 0) return Promise.complete();
-		if (size == 1) return promises.get(0).toVoid();
+		if (size == 1) return promises.get(0).map(AbstractPromise::recycleToVoid);
 		if (size == 2) return promises.get(0).both(promises.get(1));
-		return all(promises.iterator());
+
+		return allIterator(promises.iterator(), true);
 	}
 
 	/**
@@ -300,6 +303,11 @@ public final class Promises {
 	 */
 	@NotNull
 	public static Promise<Void> all(@NotNull Iterator<? extends Promise<?>> promises) {
+		return allIterator(promises, false);
+	}
+
+	@NotNull
+	private static Promise<Void> allIterator(@NotNull Iterator<? extends Promise<?>> promises, boolean ownership) {
 		if (!promises.hasNext()) return all();
 		PromiseAll<Object> resultPromise = new PromiseAll<>();
 		while (promises.hasNext()) {
@@ -308,7 +316,14 @@ public final class Promises {
 				Recyclers.recycle(promise.getResult());
 				continue;
 			}
-			if (promise.isException()) return Promise.ofException(promise.getException());
+			if (promise.isException()) {
+				if (ownership) {
+					promises.forEachRemaining(Recyclers::recycle);
+				} else {
+					Recyclers.recycle(promises);
+				}
+				return Promise.ofException(promise.getException());
+			}
 			resultPromise.countdown++;
 			promise.whenComplete(resultPromise);
 		}
@@ -355,7 +370,7 @@ public final class Promises {
 	@NotNull
 	@SafeVarargs
 	public static <T> Promise<T> any(@NotNull Promise<? extends T>... promises) {
-		return any(isResult(), asIterator(promises));
+		return any(isResult(), asList(promises));
 	}
 
 	/**
@@ -368,7 +383,7 @@ public final class Promises {
 		if (size == 0) return any();
 		if (size == 1) return (Promise<T>) promises.get(0);
 		if (size == 2) return ((Promise<T>) promises.get(0)).either(promises.get(1));
-		return any(isResult(), promises.iterator());
+		return any(isResult(), promises);
 	}
 
 	/**
@@ -394,20 +409,20 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T> promise1) {
-		return any(predicate, asIterator(promise1));
+		return any(predicate, singletonList(promise1));
 	}
 
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
-		return any(predicate, asIterator(promise1, promise2));
+		return any(predicate, asList(promise1, promise2));
 	}
 
 	@Contract(pure = true)
 	@NotNull
 	@SafeVarargs
 	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T>... promises) {
-		return any(predicate, asIterator(promises));
+		return any(predicate, asList(promises));
 	}
 
 	@Contract(pure = true)
@@ -422,16 +437,35 @@ public final class Promises {
 		return any(predicate, promises.iterator());
 	}
 
+	@Contract(pure = true)
+	@NotNull
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull List<? extends Promise<? extends T>> promises) {
+		return anyIterator(predicate, promises.iterator(), true);
+	}
+
 	@NotNull
 	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Iterator<? extends Promise<? extends T>> promises) {
+		return anyIterator(predicate, promises, false);
+	}
+
+	@NotNull
+	private static <T> Promise<T> anyIterator(@NotNull BiPredicate<T, Throwable> predicate,
+			@NotNull Iterator<? extends Promise<? extends T>> promises, boolean ownership) {
 		if (!promises.hasNext()) return any();
 		PromiseAny<T> resultPromise = new PromiseAny<>(predicate);
 		while (promises.hasNext()) {
 			Promise<? extends T> promise = promises.next();
 			if (promise.isComplete()) {
-				if (predicate.test(promise.getResult(), promise.getException())) {
-					return Promise.of(promise.getResult());
+				T result = promise.getResult();
+				if (predicate.test(result, promise.getException())) {
+					if (ownership){
+						promises.forEachRemaining(Recyclers::recycle);
+					} else {
+						Recyclers.recycle(promises);
+					}
+					return Promise.of(result);
 				}
+				Recyclers.recycle(result);
 				continue;
 			}
 			resultPromise.countdown++;
@@ -477,7 +511,7 @@ public final class Promises {
 	@NotNull
 	@SafeVarargs
 	public static <T> Promise<List<T>> toList(@NotNull Promise<? extends T>... promises) {
-		return toList(asIterator(promises));
+		return toList(asList(promises));
 	}
 
 	/**
@@ -490,7 +524,7 @@ public final class Promises {
 		if (size == 0) return Promise.of(Collections.emptyList());
 		if (size == 1) return promises.get(0).map(Collections::singletonList);
 		if (size == 2) return promises.get(0).combine(promises.get(1), Arrays::asList);
-		return toListImpl(promises.iterator(), promises.size());
+		return toListImpl(promises.iterator(), promises.size(), true);
 	}
 
 	/**
@@ -517,7 +551,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<List<T>> toList(@NotNull Iterator<? extends Promise<? extends T>> promises) {
-		return toListImpl(promises, 10);
+		return toListImpl(promises, 10, false);
 	}
 
 	/**
@@ -525,11 +559,19 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@NotNull
-	private static <T> Promise<List<T>> toListImpl(@NotNull Iterator<? extends Promise<? extends T>> promises, int initialSize) {
+	private static <T> Promise<List<T>> toListImpl(@NotNull Iterator<? extends Promise<? extends T>> promises, int initialSize, boolean ownership) {
 		PromisesToList<T> resultPromise = new PromisesToList<>(initialSize);
 
 		for (int i = 0; promises.hasNext() && !resultPromise.isComplete(); i++) {
 			resultPromise.addToList(i, promises.next());
+		}
+
+		if (promises.hasNext()) {
+			if (ownership) {
+				promises.forEachRemaining(Recyclers::recycle);
+			} else {
+				Recyclers.recycle(promises);
+			}
 		}
 
 		return resultPromise.countdown == 0 ? Promise.of(resultPromise.getList()) : resultPromise;

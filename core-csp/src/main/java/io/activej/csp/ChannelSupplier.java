@@ -41,7 +41,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.collection.CollectionUtils.asIterator;
+import static java.util.Arrays.asList;
 
 /**
  * This interface represents supplier of {@link Promise} of data that should be used serially
@@ -125,7 +125,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 */
 	@SafeVarargs
 	static <T> ChannelSupplier<T> of(T... values) {
-		return ofIterator(asIterator(values));
+		return ofIterable(asList(values));
 	}
 
 	/**
@@ -148,6 +148,13 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	/**
 	 * @see #ofIterator(Iterator)
 	 */
+	static <T> ChannelSupplier<T> ofIterable(List<? extends T> list) {
+		return new ChannelSuppliers.ChannelSupplierOfIterator<>(list.iterator(), true);
+	}
+
+	/**
+	 * @see #ofIterator(Iterator)
+	 */
 	static <T> ChannelSupplier<T> ofStream(Stream<? extends T> stream) {
 		return ofIterator(stream.iterator());
 	}
@@ -160,7 +167,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * @return a ChannelSupplier which wraps elements of <T> type
 	 */
 	static <T> ChannelSupplier<T> ofIterator(Iterator<? extends T> iterator) {
-		return new ChannelSuppliers.ChannelSupplierOfIterator<>(iterator);
+		return new ChannelSuppliers.ChannelSupplierOfIterator<>(iterator, false);
 	}
 
 	/**

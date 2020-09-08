@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -92,6 +93,13 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 */
 	default Promise<Void> acceptAll(@NotNull Iterable<T> iterable) {
 		return acceptAll(iterable.iterator());
+	}
+
+	/**
+	 * @see #acceptAll(Iterator)
+	 */
+	default Promise<Void> acceptAll(@NotNull List<T> list) {
+		return ChannelConsumers.acceptAll(this, list);
 	}
 
 	/**

@@ -37,6 +37,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -47,6 +48,7 @@ import java.util.function.ToIntFunction;
 import static io.activej.common.Utils.nullify;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
+import static java.util.Arrays.asList;
 
 /**
  * Provides additional functionality for managing {@link ChannelSupplier}s.
@@ -59,7 +61,7 @@ public final class ChannelSuppliers {
 	 * @see #concat(Iterator)
 	 */
 	public static <T> ChannelSupplier<T> concat(ChannelSupplier<? extends T> supplier1, ChannelSupplier<? extends T> supplier2) {
-		return concat(CollectionUtils.asIterator(supplier1, supplier2));
+		return concat(asList(supplier1, supplier2));
 	}
 
 	/**
@@ -67,7 +69,14 @@ public final class ChannelSuppliers {
 	 */
 	@SafeVarargs
 	public static <T> ChannelSupplier<T> concat(ChannelSupplier<? extends T>... suppliers) {
-		return concat(CollectionUtils.asIterator(suppliers));
+		return concat(asList(suppliers));
+	}
+
+	/**
+	 * @see #concat(Iterator)
+	 */
+	public static <T> ChannelSupplier<T> concat(List<ChannelSupplier<? extends T>> suppliers) {
+		return new ChannelSupplierConcat<>(suppliers.iterator(), true);
 	}
 
 	/**
@@ -86,41 +95,7 @@ public final class ChannelSuppliers {
 	 * @return a ChannelSupplier of {@code <T>}
 	 */
 	public static <T> ChannelSupplier<T> concat(Iterator<? extends ChannelSupplier<? extends T>> iterator) {
-		return new AbstractChannelSupplier<T>() {
-			ChannelSupplier<? extends T> current = ChannelSupplier.of();
-
-			@Override
-			protected Promise<T> doGet() {
-				return current.get()
-						.thenEx((value, e) -> {
-							if (e == null) {
-								if (value != null) {
-									return Promise.of(value);
-								} else {
-									if (iterator.hasNext()) {
-										current = iterator.next();
-										return get();
-									} else {
-										return Promise.of(null);
-									}
-								}
-							} else {
-								while (iterator.hasNext()) {
-									iterator.next().closeEx(e);
-								}
-								return Promise.ofException(e);
-							}
-						});
-			}
-
-			@Override
-			protected void onClosed(@NotNull Throwable e) {
-				current.closeEx(e);
-				while (iterator.hasNext()) {
-					iterator.next().closeEx(e);
-				}
-			}
-		};
+		return new ChannelSupplierConcat<>(iterator, false);
 	}
 
 	/**
@@ -470,9 +445,11 @@ public final class ChannelSuppliers {
 	 */
 	public static final class ChannelSupplierOfIterator<T> extends AbstractChannelSupplier<T> {
 		private final Iterator<? extends T> iterator;
+		private final boolean ownership;
 
-		public ChannelSupplierOfIterator(Iterator<? extends T> iterator) {
+		public ChannelSupplierOfIterator(Iterator<? extends T> iterator, boolean ownership) {
 			this.iterator = iterator;
+			this.ownership = ownership;
 		}
 
 		@Override
@@ -482,7 +459,11 @@ public final class ChannelSuppliers {
 
 		@Override
 		protected void onCleanup() {
-			Recyclers.recycle(iterator);
+			if (ownership) {
+				iterator.forEachRemaining(Recyclers::recycle);
+			} else {
+				Recyclers.recycle(iterator);
+			}
 		}
 	}
 
@@ -499,6 +480,50 @@ public final class ChannelSuppliers {
 		@Override
 		protected Promise<T> doGet() {
 			return Promise.ofException(e);
+		}
+	}
+
+	public static final class ChannelSupplierConcat<T> extends AbstractChannelSupplier<T> {
+		private final Iterator<? extends ChannelSupplier<? extends T>> iterator;
+		private final boolean ownership;
+
+		public ChannelSupplierConcat (Iterator<? extends ChannelSupplier<? extends T>> iterator, boolean ownership) {
+			this.iterator = iterator;
+			this.ownership = ownership;
+		}
+
+		ChannelSupplier<? extends T> current = ChannelSupplier.of();
+
+		@Override
+		protected Promise<T> doGet() {
+			return current.get()
+					.thenEx((value, e) -> {
+						if (e == null) {
+							if (value != null) {
+								return Promise.of(value);
+							} else {
+								if (iterator.hasNext()) {
+									current = iterator.next();
+									return get();
+								} else {
+									return Promise.of(null);
+								}
+							}
+						} else {
+							closeEx(e);
+							return Promise.ofException(e);
+						}
+					});
+		}
+
+		@Override
+		protected void onClosed(@NotNull Throwable e) {
+			current.closeEx(e);
+			if (ownership) {
+				iterator.forEachRemaining(Recyclers::recycle);
+			} else {
+				Recyclers.recycle(iterator);
+			}
 		}
 	}
 }

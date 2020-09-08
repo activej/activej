@@ -4,10 +4,12 @@ import io.activej.common.collection.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import static java.util.Collections.singletonMap;
 
@@ -23,9 +25,6 @@ public class Recyclers {
 		register(AutoCloseable.class, Recyclers::recycleCloseable);
 		register(List.class, Recyclers::recycleList);
 		register(Map.class, Recyclers::recycleMap);
-		register(Iterable.class, Recyclers::recycleIterable);
-		register(Iterator.class, Recyclers::recycleIterator);
-		register(Stream.class, stream -> stream.forEach(Recyclers::recycle));
 		register(Optional.class, optional -> optional.ifPresent(Recyclers::recycle));
 		register(CompletionStage.class, future -> future.thenAccept(Recyclers::recycle));
 	}
@@ -131,15 +130,4 @@ public class Recyclers {
 		}
 	}
 
-	private static void recycleIterable(Iterable<?> iterable) {
-		for (Object item : iterable) {
-			recycle(item);
-		}
-	}
-
-	private static void recycleIterator(Iterator<?> iterator) {
-		while (iterator.hasNext()) {
-			recycle(iterator.next());
-		}
-	}
 }

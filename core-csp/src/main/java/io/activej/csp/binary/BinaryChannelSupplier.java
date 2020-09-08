@@ -27,6 +27,7 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
+import java.util.List;
 
 public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	public static final Exception UNEXPECTED_DATA_EXCEPTION = new ParseException(BinaryChannelSupplier.class, "Unexpected data after end-of-stream");
@@ -51,7 +52,11 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	public abstract Promise<Void> endOfStream();
 
 	public static BinaryChannelSupplier ofIterable(Iterable<ByteBuf> iterable) {
-		return of(ChannelSupplier.ofIterator(iterable.iterator()));
+		return of(ChannelSupplier.ofIterable(iterable));
+	}
+
+	public static BinaryChannelSupplier ofIterable(List<ByteBuf> iterable) {
+		return of(ChannelSupplier.ofIterable(iterable));
 	}
 
 	public static BinaryChannelSupplier ofIterator(Iterator<ByteBuf> iterator) {
