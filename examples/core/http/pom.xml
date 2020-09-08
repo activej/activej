@@ -149,6 +149,24 @@
               <mainClass>StaticServletExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>WebSocketPingClientExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>WebSocketPingClientExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>WebSocketPongServerExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>WebSocketPongServerExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
