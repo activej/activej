@@ -33,6 +33,7 @@ public final class WebSocketPingClientExample extends Launcher {
 		return ServiceGraphModule.create();
 	}
 
+	//[START EXAMPLE]
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
 		String url = args.length != 0 ? args[0] : "ws://127.0.0.1:8080/";
@@ -47,6 +48,7 @@ public final class WebSocketPingClientExample extends Launcher {
 		});
 		future.get();
 	}
+	//[END EXAMPLE]
 
 	public static void main(String[] args) throws Exception {
 		WebSocketPingClientExample example = new WebSocketPingClientExample();

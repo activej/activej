@@ -6,6 +6,7 @@ import io.activej.launchers.http.HttpServerLauncher;
 
 public final class WebSocketPongServerExample extends HttpServerLauncher {
 
+	//[START EXAMPLE]
 	@Provides
 	AsyncServlet servlet() {
 		return RoutingServlet.create()
@@ -14,6 +15,7 @@ public final class WebSocketPongServerExample extends HttpServerLauncher {
 						.then(() -> webSocket.writeMessage(Message.text("Pong")))
 						.whenComplete(webSocket::close));
 	}
+	//[END EXAMPLE]
 
 	public static void main(String[] args) throws Exception {
 		WebSocketPongServerExample launcher = new WebSocketPongServerExample();
