@@ -17,15 +17,19 @@
 package io.activej.async.process;
 
 import io.activej.common.Checks;
+import io.activej.common.Debug;
 import io.activej.common.recycle.Recyclers;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static io.activej.common.Checks.checkState;
 
 public abstract class AbstractAsyncCloseable implements AsyncCloseable {
+	private static final Logger logger = Debug.LOG_ASYNC_CLOSE_ERRORS ? LoggerFactory.getLogger(AbstractAsyncCloseable.class) : null;
 	private static final boolean CHECK = Checks.isEnabled(AbstractAsyncCloseable.class);
 
 	protected final Eventloop eventloop = Eventloop.getCurrentEventloop();
@@ -53,6 +57,9 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 	public final void closeEx(@NotNull Throwable e) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (isClosed()) return;
+		if (logger != null && logger.isDebugEnabled() && e != CLOSE_EXCEPTION) {
+			logger.debug("{} was closed with error", this, e);
+		}
 		exception = e;
 		eventloop.post(this::onCleanup);
 		onClosed(e);

@@ -16,6 +16,7 @@
 
 package io.activej.common.exception;
 
+import io.activej.common.Debug;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,7 +75,7 @@ public class StacklessException extends Exception {
 
 	@Override
 	public final Throwable fillInStackTrace() {
-		return this;
+		return Debug.STACKFUL_EXCEPTIONS ? super.fillInStackTrace() : this;
 	}
 
 	@Override
