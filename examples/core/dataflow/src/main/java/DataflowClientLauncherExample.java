@@ -30,6 +30,7 @@ import static java.util.Comparator.naturalOrder;
  */
 //[START REGION_1]
 public final class DataflowClientLauncherExample extends DataflowClientLauncher {
+	private static final String DEFAULT_PARTITION = "127.0.0.1:9000";
 
 	@Inject
 	DataflowClient client;
@@ -52,7 +53,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 				.bind(Config.class).toInstance(
 						Config.create()
 								.with("dataflow.secondaryBufferPath", Util.createTempDir("dataflow-client-secondary-storage"))
-								.with("dataflow.partitions", String.join(",", args)))
+								.with("dataflow.partitions", args.length == 0 ? DEFAULT_PARTITION : String.join(",", args)))
 				.build();
 	}
 	//[END REGION_1]

@@ -33,7 +33,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 					.validate(name -> !name.isEmpty(), "Name cannot be empty"),
 			ofPost("age")
 					.map(Integer::valueOf, "Cannot parse age")
-					.validate(age -> age >= 18, "Age must be greater than 18"),
+					.validate(age -> age >= 18, "Age must not be less than 18"),
 			ADDRESS_DECODER.withId("contact-address")
 	);
 	//[END REGION_1]
