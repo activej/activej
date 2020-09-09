@@ -305,7 +305,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		for (int i = 0; i < from.fallbackServlets.length; i++) {
 			AsyncServlet fallbackServlet = from.fallbackServlets[i];
 			if (fallbackServlet != null) {
-				into.map(i, fallbackServlet, merger);
+				into.mapFallback(i, fallbackServlet, merger);
 			}
 		}
 		from.routes.forEach((key, value) ->
