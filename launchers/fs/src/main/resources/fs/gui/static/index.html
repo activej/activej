@@ -2,98 +2,142 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>{{title}}</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
-    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 </head>
 
 <body>
-  <form id="upload-form" enctype="multipart/form-data">
-    <div class="form-group">
-      <div class="custom-file">
-        <input id="file-input" name="input" type="file" class="file" multiple data-show-upload="true"
-          data-show-caption="true">
-        <input type="submit" value="Upload Here" name="submit">
-      </div>
-    </div>
-  </form>
+    <nav id="navbar-example2" class="navbar navbar-light bg-light">
+        <a class="navbar-brand" href="">{{title}}</a>
+    </nav>
 
-  <form id="new-dir-form" class="form-inline">
-    <div class="form-group mx-sm-3 mb-2">
-      <label for="directoryName" class="sr-only">Password</label>
-      <input type="text" name="dir" class="form-control" id="directoryName" required />
-    </div>
-    <button type="submit" class="btn btn-primary mb-2">Create new directory</button>
-  </form>
+    <div class="container mt-4">
 
-  <div>
-    <div>
-      <h3><a href="/">root</a> {{#breadcrumbs}} / <a href="/?dir={{fullPath}}">{{shortName}}</a> {{/breadcrumbs}}</h3>
-      <ul>
-        {{#dirContents.dirs}}
-        <li><a href="/?dir={{fullPath}}">Dir: {{shortName}}</a></li>
-        {{/dirContents.dirs}}
-        {{#dirContents.files}}
-        <li title="{{size}}"><a href="/api/download/{{fullName}}">{{name}}</a></li>
-        {{/dirContents.files}}
-      </ul>
-    </div>
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="input-group form-group">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="file-input">
+                    <label class="custom-file-label" for="file-input">Choose files...</label>
+                </div>
+                <button id="upload-button" class="ml-3 btn btn-light" style="width: 100px;" type="submit" name="submit">
+                    <span id="upload-spinner" class="" role="status" aria-hidden="true"></span>
+                    <span>Upload</span>
+                </button>
+            </div>
+        </form>
 
-  </div>
+        <form id="new-dir-form" class="form-inline mb-3">
+            <div class="form-group mr-3 mb-2">
+                <label for="directoryName" class="sr-only">Password</label>
+                <input type="text" placeholder="Enter directory name" name="dir" class="form-control" id="directoryName"
+                       required/>
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Create new directory</button>
+        </form>
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                {{#breadcrumbs}}
+                <li class="breadcrumb-item"><a href="/?dir={{fullPath}}">{{shortName}}</a></li>
+                {{/breadcrumbs}}
+            </ol>
+        </nav>
+
+        <ul class="list-group list-group-flush">
+            {{#dirContents.dirs}}
+            <li class="list-group-item">
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="mr-2 bi bi-folder" fill="currentColor"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.828 4a3 3 0 0 1-2.12-.879l-.83-.828A1 1 0 0 0 6.173 2H2.5a1 1 0 0 0-1 .981L1.546 4h-1L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3v1z"/>
+                    <path fill-rule="evenodd"
+                          d="M13.81 4H2.19a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zM2.19 3A2 2 0 0 0 .198 5.181l.637 7A2 2 0 0 0 2.826 14h10.348a2 2 0 0 0 1.991-1.819l.637-7A2 2 0 0 0 13.81 3H2.19z"/>
+                </svg>
+                <a href="/?dir={{fullPath}}">{{shortName}}</a>
+            </li>
+            {{/dirContents.dirs}}
+            {{#dirContents.files}}
+            <li class="list-group-item">
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="mr-2 bi bi-file-earmark-text" fill="currentColor"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 0h5.5v1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h1V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z"/>
+                    <path d="M9.5 3V0L14 4.5h-3A1.5 1.5 0 0 1 9.5 3z"/>
+                    <path fill-rule="evenodd"
+                          d="M5 11.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+                <a title="{{size}}" href="/api/download/{{fullName}}">{{name}}</a>
+            </li>
+            {{/dirContents.files}}
+        </ul>
+        <hr/>
+
+    </div>
 </body>
 
 <script>
-  $(document).ready(function () {
-    $("#upload-form").on("submit", function (e) {
-      e.preventDefault();
+    $(document).ready(function () {
+        $(".custom-file-input").on("change", function() {
+            var fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
 
-      const formData = new FormData();
+        $("#upload-form").on("submit", function (e) {
+            e.preventDefault();
 
-      // construct the form data and apply new file name
-      var files = $('#file-input').get(0).files;
-      console.log(files);
-      console.log(files.length);
-      for (var i = 0; i < files.length; i++) {
-        var file = files[i];
-        console.log(file);
-        formData.append('file', file, '{{dirContents.current}}' + file.name);
-      }
+            const formData = new FormData();
 
-      $.ajax({
-        url: '/api/upload',
-        success: function () {
-          location.reload();
-        },
-        error: function (e) {
-          alert('error ' + e.message);
-        },
-        data: formData,
-        type: 'POST',
-        cache: false,
-        contentType: false,
-        processData: false
-      });
+
+            $('#upload-button').addClass('disabled');
+            $('#upload-spinner').addClass('spinner-border spinner-border-sm');
+
+            // construct the form data and apply new file name
+            var files = $('#file-input').get(0).files;
+            console.log(files);
+            console.log(files.length);
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                console.log(file);
+                formData.append('file', file, '{{dirContents.current}}' + file.name);
+            }
+
+            $.ajax({
+                url: '/api/upload',
+                success: function () {
+                    location.reload();
+                },
+                error: function (e) {
+                    alert('error ' + e.message);
+                },
+                data: formData,
+                type: 'POST',
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+        });
+
+        $('#upload-spinner').removeClass('spinner-border spinner-border-sm');
     });
-  });
 
-  $("#new-dir-form").on("submit", function (e) {
-    e.preventDefault();
-    $.ajax({
-      url: '/api/newDir',
-      success: function () {
-        location.reload();
-      },
-      error: function (e) {
-        alert('error ' + e.message);
-      },
-      data: { dir: '{{dirContents.current}}' + e.target.elements.dir.value },
-      type: 'POST',
-      cache: false,
-      processData: true
+    $("#new-dir-form").on("submit", function (e) {
+        e.preventDefault();
+        $.ajax({
+            url: '/api/newDir',
+            success: function () {
+                location.reload();
+            },
+            error: function (e) {
+                alert('error ' + e.message);
+            },
+            data: {dir: '{{dirContents.current}}' + e.target.elements.dir.value},
+            type: 'POST',
+            cache: false,
+            processData: true
+        });
     });
-  });
 </script>
 
 </html>
