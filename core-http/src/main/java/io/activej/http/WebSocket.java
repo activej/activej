@@ -217,7 +217,7 @@ public interface WebSocket extends AsyncCloseable {
 			}
 		}
 
-		enum MessageType {
+		public enum MessageType {
 			TEXT, BINARY
 		}
 	}
@@ -274,7 +274,7 @@ public interface WebSocket extends AsyncCloseable {
 			payload.recycle();
 		}
 
-		enum FrameType {
+		public enum FrameType {
 			TEXT, BINARY, CONTINUATION
 		}
 	}
