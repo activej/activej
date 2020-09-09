@@ -223,7 +223,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 * A shortcut for {@link #concat(Iterator)} that uses a list of suppliers
 	 */
 	static <T> StreamSupplier<T> concat(List<StreamSupplier<T>> suppliers) {
-		return new StreamSuppliers.Concat<>(ChannelSupplier.ofIterable(suppliers));
+		return new StreamSuppliers.Concat<>(ChannelSupplier.ofList(suppliers));
 	}
 
 	/**

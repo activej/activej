@@ -69,7 +69,7 @@ public final class HttpStreamTest {
 
 		Integer code = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.request(HttpRequest.post("http://127.0.0.1:" + PORT)
-						.withBodyStream(ChannelSupplier.ofIterable(expectedList)
+						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
 				.async()
 				.map(HttpResponse::getCode));
@@ -81,7 +81,7 @@ public final class HttpStreamTest {
 	public void testStreamDownload() throws IOException {
 		startTestServer(request ->
 				HttpResponse.ok200()
-						.withBodyStream(ChannelSupplier.ofIterable(expectedList)
+						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))));
 
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
@@ -99,12 +99,12 @@ public final class HttpStreamTest {
 				.getBodyStream()
 				.async()
 				.toList()
-				.map(ChannelSupplier::ofIterable)
+				.map(ChannelSupplier::ofList)
 				.then(bodyStream -> Promise.of(HttpResponse.ok200().withBodyStream(bodyStream.async()))));
 
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.request(HttpRequest.post("http://127.0.0.1:" + PORT)
-						.withBodyStream(ChannelSupplier.ofIterable(expectedList)
+						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
 				.whenComplete(assertComplete(response -> assertEquals(200, response.getCode())))
 				.then(response -> response.getBodyStream().async().toCollector(ByteBufQueue.collector())));
@@ -118,7 +118,7 @@ public final class HttpStreamTest {
 
 		startTestServer(request -> Promise.ofException(new HttpException(432, exceptionMessage)));
 
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofIterable(expectedList);
+		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(expectedList);
 
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.request(HttpRequest.post("http://127.0.0.1:" + PORT)
@@ -225,7 +225,7 @@ public final class HttpStreamTest {
 				AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 						.request(HttpRequest.post("http://127.0.0.1:" + PORT)
 								.withBodyStream(ChannelSuppliers.concat(
-										ChannelSupplier.ofIterable(expectedList),
+										ChannelSupplier.ofList(expectedList),
 										ChannelSupplier.ofException(exception))))
 						.then(response -> response.getBodyStream().toCollector(ByteBufQueue.collector())));
 

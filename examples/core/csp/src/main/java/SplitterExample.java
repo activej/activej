@@ -17,7 +17,7 @@ public class SplitterExample {
 				.limit(5)
 				.collect(Collectors.toList());
 
-		ChannelSplitter<Integer> splitter = ChannelSplitter.create(ChannelSupplier.ofIterable(integers));
+		ChannelSplitter<Integer> splitter = ChannelSplitter.create(ChannelSupplier.ofList(integers));
 
 		List<Integer> list1 = new ArrayList<>();
 		List<Integer> list2 = new ArrayList<>();

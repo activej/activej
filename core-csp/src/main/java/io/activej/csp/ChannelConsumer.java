@@ -91,6 +91,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	/**
 	 * @see #acceptAll(Iterator)
 	 */
+	@Deprecated
 	default Promise<Void> acceptAll(@NotNull Iterable<T> iterable) {
 		return acceptAll(iterable.iterator());
 	}

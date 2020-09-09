@@ -16,7 +16,7 @@ public final class ChannelExample {
 	}
 
 	private static void supplierOfList(List<String> list) {
-		ChannelSupplier.ofIterable(list)
+		ChannelSupplier.ofList(list)
 				.streamTo(ChannelConsumer.ofConsumer(System.out::println));
 	}
 

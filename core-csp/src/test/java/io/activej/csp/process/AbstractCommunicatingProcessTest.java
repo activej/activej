@@ -60,7 +60,7 @@ public final class AbstractCommunicatingProcessTest {
 			processes[i].getOutput().bindTo(processes[i + 1].getInput());
 		}
 
-		acknowledgement = ChannelSupplier.ofIterable(expectedData)
+		acknowledgement = ChannelSupplier.ofList(expectedData)
 				.bindTo(processes[0].getInput());
 	}
 

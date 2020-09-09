@@ -36,7 +36,7 @@ public class ChannelSplitterTest {
 		List<String> theList = new ArrayList<>();
 
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSupplier.ofIterable(expected));
+				.withInput(ChannelSupplier.ofList(expected));
 
 		for (int i = 0; i < n; i++) {
 			splitter.addOutput()
@@ -59,7 +59,7 @@ public class ChannelSplitterTest {
 
 		StacklessException exception = new StacklessException(ChannelSplitterTest.class, "test exception");
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSuppliers.concat(ChannelSupplier.ofIterable(expected), ChannelSupplier.ofException(exception)));
+				.withInput(ChannelSuppliers.concat(ChannelSupplier.ofList(expected), ChannelSupplier.ofException(exception)));
 
 		for (int i = 0; i < n; i++) {
 			splitter.addOutput()
@@ -79,7 +79,7 @@ public class ChannelSplitterTest {
 		expected.add("third");
 
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSupplier.ofIterable(expected));
+				.withInput(ChannelSupplier.ofList(expected));
 		StacklessException exception = new StacklessException(ChannelSplitterTest.class, "test exception");
 
 		for (int i = 0; i < n; i++) {

@@ -120,7 +120,7 @@ public final class ApiTest {
 
 	@Test
 	public void upload() {
-		Promise<Void> uploadPromise = ChannelSupplier.ofIterable(data)
+		Promise<Void> uploadPromise = ChannelSupplier.ofList(data)
 				.map(ByteBufStrings::wrapUtf8)
 				.streamTo(client.upload("test"));
 		doTest(uploadPromise, "test", data);
@@ -128,7 +128,7 @@ public final class ApiTest {
 
 	@Test
 	public void uploadWithSize() {
-		Promise<Void> uploadPromise = ChannelSupplier.ofIterable(data)
+		Promise<Void> uploadPromise = ChannelSupplier.ofList(data)
 				.map(ByteBufStrings::wrapUtf8)
 				.streamTo(client.upload("test", dataSize));
 		doTest(uploadPromise, "test", dataSize, data);
@@ -136,7 +136,7 @@ public final class ApiTest {
 
 	@Test
 	public void append() {
-		Promise<Void> appendPromise = ChannelSupplier.ofIterable(data)
+		Promise<Void> appendPromise = ChannelSupplier.ofList(data)
 				.map(ByteBufStrings::wrapUtf8)
 				.streamTo(client.append("test", dataSize / 2));
 		doTest(appendPromise, "test", dataSize / 2, data);
@@ -226,7 +226,7 @@ public final class ApiTest {
 
 			@Override
 			public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
-				return Promise.of(ChannelSupplier.ofIterable(data)
+				return Promise.of(ChannelSupplier.ofList(data)
 						.map(ByteBufStrings::wrapUtf8)
 						.withEndOfStream(eos -> eos
 								.then(result -> resultOf(result, name, offset, limit, data))));

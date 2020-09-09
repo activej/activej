@@ -14,7 +14,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.csp.ChannelSupplier.ofIterable;
+import static io.activej.csp.ChannelSupplier.ofList;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertTrue;
 
@@ -45,28 +45,28 @@ public final class BufsConsumerIntegrationTest {
 	@Test
 	public void testEncodeDecodeSingleBuf() {
 		writeSingleBuf();
-		chunkedEncoder.getInput().set(ofIterable(list));
+		chunkedEncoder.getInput().set(ofList(list));
 		doTest(chunkedEncoder, chunkedDecoder);
 	}
 
 	@Test
 	public void testEncodeDecodeMultipleBufs() {
 		writeMultipleBufs();
-		chunkedEncoder.getInput().set(ofIterable(list));
+		chunkedEncoder.getInput().set(ofList(list));
 		doTest(chunkedEncoder, chunkedDecoder);
 	}
 
 	@Test
 	public void testGzipGunzipSingleBuf() {
 		writeSingleBuf();
-		gzipDeflater.getInput().set(ofIterable(list));
+		gzipDeflater.getInput().set(ofList(list));
 		doTest(gzipInflater, gzipDeflater);
 	}
 
 	@Test
 	public void testGzipGunzipMultipleBufs() {
 		writeMultipleBufs();
-		gzipDeflater.getInput().set(ofIterable(list));
+		gzipDeflater.getInput().set(ofList(list));
 		doTest(gzipInflater, gzipDeflater);
 	}
 

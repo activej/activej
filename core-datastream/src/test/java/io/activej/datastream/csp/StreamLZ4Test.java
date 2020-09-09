@@ -36,7 +36,7 @@ public final class StreamLZ4Test {
 		List<ByteBuf> buffers = IntStream.range(0, buffersCount).mapToObj($ -> createRandomByteBuf()).collect(toList());
 		byte[] expected = buffers.stream().map(ByteBuf::slice).collect(ByteBufQueue.collector()).asArray();
 
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofIterable(buffers)
+		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(buffers)
 				.transformWith(ChannelByteChunker.create(MemSize.of(64), MemSize.of(128)))
 				.transformWith(ChannelLZ4Compressor.createFastCompressor())
 				.transformWith(ChannelByteChunker.create(MemSize.of(64), MemSize.of(128)))

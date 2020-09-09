@@ -37,7 +37,7 @@ public class ChannelSupplierTest {
 
 	@Test
 	public void testToCollector() {
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofIterable(asList(
+		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(asList(
 				ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
 				ByteBuf.wrapForReading("Test2".getBytes(UTF_8)),
 				ByteBuf.wrapForReading("Test3".getBytes(UTF_8)),

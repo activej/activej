@@ -204,7 +204,7 @@ public final class BufsConsumerChunkedDecoderTest {
 	}
 
 	private void doTest(@Nullable Exception expectedException) {
-		chunkedDecoder.getInput().set(BinaryChannelSupplier.of(ChannelSupplier.ofIterable(list)));
+		chunkedDecoder.getInput().set(BinaryChannelSupplier.of(ChannelSupplier.ofList(list)));
 		Promise<?> processResult = chunkedDecoder.getProcessCompletion();
 		if (expectedException == null) {
 			await(processResult);

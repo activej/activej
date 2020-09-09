@@ -66,7 +66,7 @@ public final class MultipartParserTest {
 
 		List<Map<String, String>> headers = new ArrayList<>();
 
-		String res = await(BinaryChannelSupplier.of(ChannelSupplier.ofIterable(split))
+		String res = await(BinaryChannelSupplier.of(ChannelSupplier.ofList(split))
 				.parseStream(MultipartParser.create(BOUNDARY.substring(2)))
 				.toCollector(mapping(frame -> {
 					if (frame.isData()) {

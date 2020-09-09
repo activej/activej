@@ -125,7 +125,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 */
 	@SafeVarargs
 	static <T> ChannelSupplier<T> of(T... values) {
-		return ofIterable(asList(values));
+		return ofList(asList(values));
 	}
 
 	/**
@@ -141,6 +141,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	/**
 	 * @see #ofIterator(Iterator)
 	 */
+	@Deprecated
 	static <T> ChannelSupplier<T> ofIterable(Iterable<? extends T> iterable) {
 		return ofIterator(iterable.iterator());
 	}
@@ -148,7 +149,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	/**
 	 * @see #ofIterator(Iterator)
 	 */
-	static <T> ChannelSupplier<T> ofIterable(List<? extends T> list) {
+	static <T> ChannelSupplier<T> ofList(List<? extends T> list) {
 		return new ChannelSuppliers.ChannelSupplierOfIterator<>(list.iterator(), true);
 	}
 

@@ -292,6 +292,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@NotNull
+	@Deprecated
 	public static Promise<Void> all(@NotNull Iterable<? extends Promise<?>> promises) {
 		return all(promises.iterator());
 	}
@@ -397,6 +398,7 @@ public final class Promises {
 
 	@Contract(pure = true)
 	@NotNull
+	@Deprecated
 	public static <T> Promise<T> any(@NotNull Iterable<? extends Promise<? extends T>> promises) {
 		return any(isResult(), promises.iterator());
 	}
@@ -433,6 +435,7 @@ public final class Promises {
 
 	@Contract(pure = true)
 	@NotNull
+	@Deprecated
 	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Iterable<? extends Promise<? extends T>> promises) {
 		return any(predicate, promises.iterator());
 	}
