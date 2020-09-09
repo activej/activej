@@ -21,17 +21,17 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 final class ExpressionLet implements Variable {
-	private final Expression field;
+	private final Expression value;
 	private VarLocal var;
 
-	ExpressionLet(Expression field) {
-		this.field = field;
+	ExpressionLet(Expression value) {
+		this.value = value;
 	}
 
 	@Override
 	public Type load(Context ctx) {
 		if (var == null) {
-			var = ctx.newLocal(field.load(ctx));
+			var = ctx.newLocal(value.load(ctx));
 			var.store(ctx);
 		}
 		return var.load(ctx);
@@ -46,7 +46,7 @@ final class ExpressionLet implements Variable {
 	@Override
 	public void store(Context ctx, Object storeContext, Type type) {
 		if (var == null) {
-			Type fieldType = field.load(ctx);
+			Type fieldType = value.load(ctx);
 			var = ctx.newLocal(fieldType);
 			var.store(ctx);
 		}

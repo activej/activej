@@ -818,6 +818,8 @@ public final class SerializerBuilder {
 		Set<Integer> collectedVersions = new HashSet<>();
 		Map<Object, Expression> encoderInitializers = new HashMap<>();
 		Map<Object, Expression> decoderInitializers = new HashMap<>();
+		Map<Object, Expression> encoderFinalizers = new HashMap<>();
+		Map<Object, Expression> decoderFinalizers = new HashMap<>();
 		Set<SerializerDef> visited = newSetFromMap(new IdentityHashMap<>());
 		SerializerDef.Visitor visitor = new SerializerDef.Visitor() {
 			@Override
@@ -825,6 +827,8 @@ public final class SerializerBuilder {
 				if (!visited.add(serializer)) return;
 				encoderInitializers.putAll(serializer.getEncoderInitializer());
 				decoderInitializers.putAll(serializer.getDecoderInitializer());
+				encoderFinalizers.putAll(serializer.getEncoderFinalizer());
+				decoderFinalizers.putAll(serializer.getDecoderFinalizer());
 				collectedVersions.addAll(serializer.getVersions());
 				serializer.accept(this);
 			}
@@ -840,23 +844,26 @@ public final class SerializerBuilder {
 				Integer.valueOf(serializeVersion) :
 				getLatestVersion(versions);
 
-		defineEncoders(classBuilder, serializer, currentVersion, new ArrayList<>(encoderInitializers.values()));
+		defineEncoders(classBuilder, serializer, currentVersion,
+				new ArrayList<>(encoderInitializers.values()), new ArrayList<>(encoderFinalizers.values()));
 
-		defineDecoders(classBuilder, serializer, allVersions, new ArrayList<>(decoderInitializers.values()));
+		defineDecoders(classBuilder, serializer, allVersions,
+				new ArrayList<>(decoderInitializers.values()), new ArrayList<>(decoderFinalizers.values()));
 
 		return classBuilder.buildClassAndCreateNewInstance();
 	}
 
-	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer currentVersion, List<Expression> encoderInitializers) {
+	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer currentVersion,
+			List<Expression> encoderInitializers, List<Expression> encoderFinalizers) {
 		StaticEncoders staticEncoders = staticEncoders(classBuilder);
 
-		classBuilder.withMethod("encode", int.class, asList(byte[].class, int.class, Object.class), sequence(
-				sequence(encoderInitializers),
+		classBuilder.withMethod("encode", int.class, asList(byte[].class, int.class, Object.class), methodBody(
+				encoderInitializers, encoderFinalizers,
 				let(cast(arg(2), serializer.getEncodeType()), data ->
 						encoderImpl(classBuilder, serializer, currentVersion, staticEncoders, arg(0), arg(1), data))));
 
-		classBuilder.withMethod("encode", void.class, asList(BinaryOutput.class, Object.class), sequence(
-				sequence(encoderInitializers),
+		classBuilder.withMethod("encode", void.class, asList(BinaryOutput.class, Object.class), methodBody(
+				encoderInitializers, encoderFinalizers,
 				let(call(arg(0), "array"), buf ->
 						let(call(arg(0), "pos"), pos ->
 								let(cast(arg(1), serializer.getEncodeType()), data ->
@@ -879,16 +886,17 @@ public final class SerializerBuilder {
 				pos);
 	}
 
-	private void defineDecoders(ClassBuilder<?> classBuilder, SerializerDef serializer, List<Integer> allVersions, List<Expression> decoderInitializers) {
+	private void defineDecoders(ClassBuilder<?> classBuilder, SerializerDef serializer, List<Integer> allVersions,
+			List<Expression> decoderInitializers, List<Expression> decoderFinalizers) {
 		StaticDecoders staticDecoders = staticDecoders(classBuilder);
 
 		Integer latestVersion = getLatestVersion(allVersions);
-		classBuilder.withMethod("decode", Object.class, asList(BinaryInput.class), sequence(
-				sequence(decoderInitializers),
+		classBuilder.withMethod("decode", Object.class, asList(BinaryInput.class), methodBody(
+				decoderInitializers, decoderFinalizers,
 				decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, arg(0))));
 
-		classBuilder.withMethod("decode", Object.class, asList(byte[].class, int.class), sequence(
-				sequence(decoderInitializers),
+		classBuilder.withMethod("decode", Object.class, asList(byte[].class, int.class), methodBody(
+				decoderInitializers, decoderFinalizers,
 				let(constructor(BinaryInput.class, arg(0), arg(1)), in ->
 						decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, in))));
 
@@ -912,6 +920,13 @@ public final class SerializerBuilder {
 					sequence(serializer.defineDecoder(staticDecoders,
 							arg(0), version, compatibilityLevel)));
 		}
+	}
+
+	private Expression methodBody(List<Expression> initializers, List<Expression> finalizers, Expression body) {
+		if (initializers.isEmpty() && finalizers.isEmpty()) return body;
+		return finalizers.isEmpty() ?
+				sequence(sequence(initializers), body) :
+				sequence(sequence(initializers), let(body, v -> sequence(body, sequence(finalizers), v)));
 	}
 
 	private Expression decodeImpl(ClassBuilder<?> classBuilder, SerializerDef serializer, Integer latestVersion, StaticDecoders staticDecoders,

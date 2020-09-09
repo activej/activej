@@ -98,6 +98,7 @@ public final class Context {
 	}
 
 	public VarLocal newLocal(Type type) {
+		if (type == Type.VOID_TYPE) return VarLocal.VAR_LOCAL_VOID;
 		int local = getGeneratorAdapter().newLocal(type);
 		return new VarLocal(local);
 	}

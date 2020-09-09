@@ -59,6 +59,14 @@ public interface SerializerDef {
 		return Collections.emptyMap();
 	}
 
+	default Map<Object, Expression> getEncoderFinalizer() {
+		return Collections.emptyMap();
+	}
+
+	default Map<Object, Expression> getDecoderFinalizer() {
+		return Collections.emptyMap();
+	}
+
 	default Class<?> getDecodeType() {
 		return getEncodeType();
 	}

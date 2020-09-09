@@ -25,6 +25,9 @@ import org.objectweb.asm.commons.GeneratorAdapter;
  * Defines methods which allow to create a local variable
  */
 public final class VarLocal implements Variable {
+	private static final int VOID = -1;
+	public static final VarLocal VAR_LOCAL_VOID = new VarLocal(VOID);
+
 	private final int local;
 
 	public VarLocal(int local) {
@@ -33,6 +36,7 @@ public final class VarLocal implements Variable {
 
 	@Override
 	public Type load(Context ctx) {
+		if (local == VOID) return Type.VOID_TYPE;
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		g.loadLocal(local);
 		return g.getLocalType(local);
@@ -46,15 +50,18 @@ public final class VarLocal implements Variable {
 
 	@Override
 	public void store(Context ctx, Object storeContext, Type type) {
+		if (local == VOID) return;
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		g.storeLocal(local);
 	}
 
 	public void store(Context ctx) {
+		if (local == VOID) return;
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		g.storeLocal(local);
 	}
 
+	@Deprecated
 	public int getLocal() {
 		return local;
 	}
