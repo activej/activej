@@ -407,7 +407,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public Promise<T> whenResult(@NotNull Consumer<? super T> action) {
+	public Promise<T> whenResult(Consumer<? super T> action) {
 		if (isComplete()) {
 			if (isResult()) action.accept(result);
 			return this;

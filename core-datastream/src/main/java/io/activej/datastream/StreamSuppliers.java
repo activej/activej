@@ -86,12 +86,13 @@ final class StreamSuppliers {
 			this.promise = promise;
 		}
 
+		@SuppressWarnings("Convert2MethodRef") // does not compile on Java 8
 		@Override
 		protected void onInit() {
 			promise
 					.whenResult(supplier -> {
 						this.getEndOfStream()
-								.whenException(supplier::closeEx);
+								.whenException(e -> supplier.closeEx(e));
 						supplier.getEndOfStream()
 								.whenResult(this::sendEndOfStream)
 								.whenException(this::closeEx);

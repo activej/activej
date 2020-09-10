@@ -438,7 +438,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenResult(@NotNull Consumer<? super T> action);
+	Promise<T> whenResult(Consumer<? super T> action);
 
 	Promise<T> whenResult(@NotNull Runnable action);
 
