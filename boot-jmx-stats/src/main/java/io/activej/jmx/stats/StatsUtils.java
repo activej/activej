@@ -21,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,6 +30,8 @@ import java.util.function.Predicate;
 
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.reflection.ReflectionUtils.isSimpleType;
+import static java.lang.System.identityHashCode;
+import static java.util.Arrays.asList;
 
 public final class StatsUtils {
 	public static boolean isJmxStats(Class<?> cls) {
@@ -78,12 +79,18 @@ public final class StatsUtils {
 		return null;
 	}
 
+	private static final ThreadLocal<Set<Object>> VISITED = ThreadLocal.withInitial(HashSet::new);
+
 	private static void visitFields(Object instance, Predicate<Object> action) {
-		if (instance == null) {
-			return;
-		}
+		doVisitFields(instance, action);
+		VISITED.get().clear();
+	}
+
+	private static void doVisitFields(Object instance, Predicate<Object> action) {
+		if (instance == null) return;
+
 		for (Method method : instance.getClass().getMethods()) {
-			if (method.getParameters().length != 0 || !Modifier.isPublic(method.getModifiers())) {
+			if (method.getParameters().length != 0) {
 				continue;
 			}
 			Class<?> returnType = method.getReturnType();
@@ -93,11 +100,18 @@ public final class StatsUtils {
 			if (!method.isAnnotationPresent(JmxAttribute.class)) {
 				continue;
 			}
+
+			if (!VISITED.get().add(asList(identityHashCode(instance), method))) {
+				continue;
+			}
+
 			Object fieldValue;
 			try {
 				fieldValue = method.invoke(instance);
-			} catch (IllegalAccessException | InvocationTargetException e) {
-				continue;
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			} catch (InvocationTargetException e) {
+				throw new RuntimeException(e.getCause());
 			}
 			if (fieldValue == null) {
 				continue;
@@ -107,15 +121,16 @@ public final class StatsUtils {
 			}
 			if (Map.class.isAssignableFrom(returnType)) {
 				for (Object item : ((Map<?, ?>) fieldValue).values()) {
-					visitFields(item, action);
+					doVisitFields(item, action);
 				}
 			} else if (Collection.class.isAssignableFrom(returnType)) {
 				for (Object item : (Collection<?>) fieldValue) {
-					visitFields(item, action);
+					doVisitFields(item, action);
 				}
 			} else {
-				visitFields(fieldValue, action);
+				doVisitFields(fieldValue, action);
 			}
 		}
 	}
+
 }

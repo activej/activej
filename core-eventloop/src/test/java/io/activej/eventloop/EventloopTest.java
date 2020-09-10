@@ -1,8 +1,11 @@
 package io.activej.eventloop;
 
 import io.activej.common.ref.Ref;
+import io.activej.eventloop.inspector.EventloopStats;
 import io.activej.eventloop.util.RunnableWithContext;
 import org.junit.Test;
+
+import java.time.Duration;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
@@ -31,5 +34,11 @@ public final class EventloopTest {
 		eventloop.run();
 		assertEquals(error, errorRef.get());
 		assertEquals(contextString, sb.toString());
+	}
+
+	@Test
+	public void testGetSmoothingWindow() {
+		Duration smoothingWindow = Eventloop.create().withInspector(EventloopStats.create()).getSmoothingWindow();
+		assertEquals(Eventloop.DEFAULT_SMOOTHING_WINDOW, smoothingWindow);
 	}
 }
