@@ -13,6 +13,7 @@ import io.activej.inject.util.Constructors.Constructor0;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.annotation.ElementType;
@@ -33,6 +34,11 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public final class TestDI {
+
+	@Before
+	public void setUp() {
+		StringInterface.counter = 0;
+	}
 
 	@Test
 	public void basic() {

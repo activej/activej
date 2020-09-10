@@ -3,6 +3,7 @@ package io.activej.service;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -47,6 +48,12 @@ public class TestStartTwice {
 			return new ServiceImpl();
 		}
 
+	}
+
+	@Before
+	public void setUp() {
+		countStart.set(0);
+		countStop.set(0);
 	}
 
 	@Test

@@ -8,8 +8,8 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public final class EventloopTaskSchedulerTest {
 
@@ -19,20 +19,19 @@ public final class EventloopTaskSchedulerTest {
 	@Test
 	public void testStopping() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		eventloop.startExternalTask();
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
-		settablePromise.whenComplete(eventloop::completeExternalTask);
 
 		EventloopTaskScheduler scheduler = EventloopTaskScheduler.create(eventloop, () -> settablePromise)
 				.withSchedule(EventloopTaskScheduler.Schedule.immediate());
 		scheduler.start();
 
-		Promise.complete().async().whenComplete(() -> {
-			Promise<Void> stopPromise = scheduler.stop();
-			assertFalse(stopPromise.isComplete());
-			settablePromise.set(null);
-			assertTrue(stopPromise.isComplete());
-		});
+		await(Promise.complete().async()
+				.then(() -> {
+					Promise<Void> stopPromise = scheduler.stop();
+					assertFalse(stopPromise.isComplete());
+					settablePromise.set(null);
+					return stopPromise;
+				}));
 
 		eventloop.run();
 	}
@@ -40,21 +39,20 @@ public final class EventloopTaskSchedulerTest {
 	@Test
 	public void testStoppingWithRetryPolicy() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		eventloop.startExternalTask();
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
-		settablePromise.whenComplete(eventloop::completeExternalTask);
 
 		EventloopTaskScheduler scheduler = EventloopTaskScheduler.create(eventloop, () -> Promise.ofException(new Exception()))
 				.withRetryPolicy(RetryPolicy.immediateRetry())
 				.withSchedule(EventloopTaskScheduler.Schedule.immediate());
 		scheduler.start();
 
-		Promise.complete().async().whenComplete(() -> {
-			Promise<Void> stopPromise = scheduler.stop()
-					.whenComplete(eventloop::completeExternalTask);
-			assertFalse(stopPromise.isComplete());
-			settablePromise.set(null);
-		});
+		await(Promise.complete().async()
+				.then(() -> {
+					Promise<Void> stopPromise = scheduler.stop();
+					assertFalse(stopPromise.isComplete());
+					settablePromise.set(null);
+					return stopPromise;
+				}));
 
 		eventloop.run();
 	}

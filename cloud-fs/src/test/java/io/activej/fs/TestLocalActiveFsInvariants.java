@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -230,7 +231,7 @@ public final class TestLocalActiveFsInvariants {
 	public void moveUpdatesTimestamp() {
 		both(client -> {
 			FileMetadata oldMeta = await(client.info("file"));
-			await(Promises.delay(10));
+			await(Promises.delay(getDelay(oldMeta.getTimestamp())));
 			await(client.move("file", "newFile"));
 			FileMetadata newMeta = await(client.info("newFile"));
 
@@ -329,7 +330,7 @@ public final class TestLocalActiveFsInvariants {
 	public void copyUpdatesTimestamp() {
 		both(fs -> {
 			FileMetadata oldMeta = await(fs.info("file"));
-			await(Promises.delay(10));
+			await(Promises.delay(getDelay(oldMeta.getTimestamp())));
 			await(fs.copy("file", "newFile"));
 			FileMetadata newMeta = await(fs.info("newFile"));
 
@@ -614,7 +615,7 @@ public final class TestLocalActiveFsInvariants {
 			FileMetadata oldMeta1 = await(client.info("file"));
 			FileMetadata oldMeta2 = await(client.info("file2"));
 
-			await(Promises.delay(10));
+			await(Promises.delay(getDelay(oldMeta1.getTimestamp())));
 
 			await(client.copyAll(map(
 					"file", "newFile",
@@ -811,7 +812,7 @@ public final class TestLocalActiveFsInvariants {
 			FileMetadata oldMeta1 = await(client.info("file"));
 			FileMetadata oldMeta2 = await(client.info("file2"));
 
-			await(Promises.delay(10));
+			await(Promises.delay(getDelay(oldMeta1.getTimestamp())));
 
 			await(client.moveAll(map(
 					"file", "newFile",
@@ -1040,5 +1041,10 @@ public final class TestLocalActiveFsInvariants {
 		public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 			return peer.list(glob);
 		}
+	}
+
+	// In older JDK versions Files::getLastModifiedTime returns time in SECONDS resolution
+	private static Duration getDelay(long timestamp) {
+		return timestamp % 1000 == 0 ? Duration.ofSeconds(1) : Duration.ofMillis(10);
 	}
 }

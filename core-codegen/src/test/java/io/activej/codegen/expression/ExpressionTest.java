@@ -948,6 +948,7 @@ public class ExpressionTest {
 		assertEquals(100, staticPojo.getField());
 		staticPojo.setField(-100);
 		assertEquals(-100, staticPojo.getField());
+		staticPojo.setField(0);
 	}
 
 	public interface StaticPojo {
