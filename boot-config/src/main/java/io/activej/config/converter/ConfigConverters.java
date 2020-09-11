@@ -179,6 +179,7 @@ public final class ConfigConverters {
 		};
 	}
 
+	@Deprecated
 	public static ConfigConverter<String> ofNullableString() {
 		return new SimpleConfigConverter<String>() {
 			@Override
@@ -652,12 +653,12 @@ public final class ConfigConverters {
 			protected SimpleThreadFactory provide(Config config, SimpleThreadFactory defaultValue) {
 				SimpleThreadFactory result = SimpleThreadFactory.create();
 				@Nullable ThreadGroup threadGroup = defaultValue.getThreadGroup();
-				String threadGroupName = config.get(ofNullableString(), "threadGroup", threadGroup == null ? null : threadGroup.getName());
+				String threadGroupName = config.get(ofString(), "threadGroup", threadGroup == null ? null : threadGroup.getName());
 				if (threadGroupName != null) {
 					result.withThreadGroup(new ThreadGroup(threadGroupName));
 				}
 				return result
-						.withName(config.get(ofNullableString(), "name", defaultValue.getName()))
+						.withName(config.get(ofString(), "name", defaultValue.getName()))
 						.withPriority(config.get(ofInteger(), "priority", defaultValue.getPriority()))
 						.withDaemon(config.get(ofBoolean(), "daemon", defaultValue.isDaemon()));
 			}

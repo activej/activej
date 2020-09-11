@@ -302,18 +302,12 @@ public class ConfigConvertersTest {
 
 		// no default
 		assertEquals(stringValue, config.get(ofString(), presentPath));
-		assertEquals(stringValue, config.get(ofNullableString(), presentPath));
 		assertTrue(config.get(ofString(), emptyPath).isEmpty());
-		assertTrue(config.get(ofNullableString(), emptyPath).isEmpty());
 		assertNotPresent(() -> config.get(ofString(), nonPresentPath));
-		assertNotPresent(() -> config.get(ofNullableString(), nonPresentPath));
 
 		// with default
 		assertEquals(stringValue, config.get(ofString(), presentPath, defaultValue));
-		assertEquals(stringValue, config.get(ofNullableString(), presentPath, defaultValue));
 		assertTrue(config.get(ofString(), emptyPath, defaultValue).isEmpty());
-		assertEquals(defaultValue, config.get(ofNullableString(), emptyPath, defaultValue));
 		assertEquals(defaultValue, config.get(ofString(), nonPresentPath, defaultValue));
-		assertEquals(defaultValue, config.get(ofNullableString(), nonPresentPath, defaultValue));
 	}
 }
