@@ -2,6 +2,7 @@ package io.activej.config;
 
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.ConfigConverters;
+import org.junit.Assert;
 
 import java.util.NoSuchElementException;
 
@@ -28,6 +29,24 @@ public class ConfigTestUtils {
 		testSimpleGetWithDefault(config);
 		testGetWithConverter(config);
 		testGetWithConverterWithDefault(config);
+	}
+
+	public static void assertNotPresent(Runnable runnable) {
+		assertError(runnable, NoSuchElementException.class);
+	}
+
+	public static void assertIllegalArgument(Runnable runnable) {
+		assertError(runnable, IllegalArgumentException.class);
+	}
+
+	private static void assertError(Runnable runnable, Class<?> errorClass) {
+		try {
+			runnable.run();
+			Assert.fail();
+		} catch (Throwable e) {
+			if (errorClass.isAssignableFrom(e.getClass())) return;
+			throw e;
+		}
 	}
 
 	private static void testHasChild(Config config) {

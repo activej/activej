@@ -2,7 +2,6 @@ package io.activej.config;
 
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.net.ServerSocketSettings;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -10,6 +9,7 @@ import java.util.Map;
 
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.config.Config.THIS;
+import static io.activej.config.ConfigTestUtils.assertIllegalArgument;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -54,17 +54,8 @@ public class ConfigTest {
 		assertEquals("aa", config.get("a.a"));
 		assertEquals("ab", config.get("a.b"));
 
-		try {
-			config1.combineWith(Config.EMPTY.with("a", "x"));
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
-
-		try {
-			config1.combineWith(Config.EMPTY.with("a.a", "x"));
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
+		assertIllegalArgument(() -> config1.combineWith(Config.EMPTY.with("a", "x")));
+		assertIllegalArgument(() -> config1.combineWith(Config.EMPTY.with("a.a", "x")));
 
 		config1.combineWith(Config.EMPTY.with("a.a.a", "x"));
 	}

@@ -5,7 +5,6 @@ import io.activej.config.Config;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.net.SocketSettings;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.InetAddress;
@@ -15,9 +14,10 @@ import java.time.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import static io.activej.config.Config.THIS;
+import static io.activej.config.ConfigTestUtils.assertIllegalArgument;
+import static io.activej.config.ConfigTestUtils.assertNotPresent;
 import static io.activej.config.converter.ConfigConverters.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -50,12 +50,7 @@ public class ConfigConvertersTest {
 		// Test of default value
 		assertEquals((Long) 123L, test.get(ofDuration().transform(Duration::toMillis, Duration::ofMillis), "nonExistingPath", 123L));
 
-		try {
-			test.get(ofDuration().transform(Duration::toMillis, Duration::ofMillis), "nonExistingPath");
-			Assert.fail();
-		} catch (NoSuchElementException ignored) {
-		}
-
+		assertNotPresent(() -> test.get(ofDuration().transform(Duration::toMillis, Duration::ofMillis), "nonExistingPath"));
 	}
 
 	@Test
@@ -151,11 +146,7 @@ public class ConfigConvertersTest {
 		assertEquals(asList(1, 5, 10), listConverter.get(Config.ofValue("1, 5,   10   ")));
 		assertEquals(emptyList(), listConverter.get(Config.ofValue("")));
 		assertEquals(asList(1, 2, 3), listConverter.get(Config.EMPTY, asList(1, 2, 3)));
-		try {
-			assertEquals(emptyList(), listConverter.get(Config.EMPTY));
-			Assert.fail();
-		} catch (NoSuchElementException ignored) {
-		}
+		assertNotPresent(() -> listConverter.get(Config.EMPTY));
 	}
 
 	@Test
@@ -245,23 +236,9 @@ public class ConfigConvertersTest {
 		assertEquals(Period.ZERO, Config.ofValue(ofPeriod(), Period.ZERO).get(ofPeriod(), THIS));
 		assertEquals(expected, Config.ofValue(" -12 months 1998 year 23 days").get(ofPeriod(), THIS));
 
-		try {
-			Config.ofValue(" 1 2 3 ").get(ofPeriod(), THIS);
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
-
-		try {
-			Config.ofValue(" 1998 years 12 month 23 days 12 months").get(ofPeriod(), THIS);
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
-
-		try {
-			Config.ofValue(" 1998 years12 month 23 days").get(ofPeriod(), THIS);
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
+		assertIllegalArgument(() -> Config.ofValue(" 1 2 3 ").get(ofPeriod(), THIS));
+		assertIllegalArgument(() -> Config.ofValue(" 1998 years 12 month 23 days 12 months").get(ofPeriod(), THIS));
+		assertIllegalArgument(() -> Config.ofValue(" 1998 years12 month 23 days").get(ofPeriod(), THIS));
 	}
 
 	@Test
@@ -278,29 +255,10 @@ public class ConfigConvertersTest {
 		assertEquals(Duration.ofHours(2).plusSeconds(36), Config.ofValue("2.01 hours").get(ofDuration(), THIS));
 		assertEquals(Duration.ofDays(2).plusMinutes(1).plusSeconds(26).plusMillis(400), Config.ofValue("2.001 days").get(ofDuration(), THIS));
 
-		try {
-			Config.ofValue(" 1 2 3 ").get(ofDuration(), THIS);
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
-
-		try {
-			Config.ofValue("1 days2 hours").get(ofDuration(), THIS);
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
-
-		try {
-			Config.ofValue("1 day 2 hours 2 hours").get(ofDuration(), THIS);
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
-
-		try {
-			Config.ofValue("2.2 nanos").get(ofDuration(), THIS);
-			Assert.fail();
-		} catch (IllegalArgumentException ignored) {
-		}
+		assertIllegalArgument(() -> Config.ofValue(" 1 2 3 ").get(ofDuration(), THIS));
+		assertIllegalArgument(() -> Config.ofValue("1 days2 hours").get(ofDuration(), THIS));
+		assertIllegalArgument(() -> Config.ofValue("1 day 2 hours 2 hours").get(ofDuration(), THIS));
+		assertIllegalArgument(() -> Config.ofValue("2.2 nanos").get(ofDuration(), THIS));
 	}
 
 	@Test
@@ -327,5 +285,35 @@ public class ConfigConvertersTest {
 		assertEquals(3, (int) testConfig.get(ofPeriodAsDays(), "ofPeriodAsDays"));
 		assertEquals(MemSize.gigabytes(2).toLong(), (long) testConfig.get(ofMemSizeAsLong(), "ofMemSizeAsBytesLong"));
 		assertEquals(now.toEpochMilli(), (long) testConfig.get(ofInstantAsEpochMillis(), "ofInstantAsEpochMillis"));
+	}
+
+	@Test
+	public void testStringConverters() {
+		String stringValue = "test";
+		String defaultValue = "default";
+
+		String presentPath = "present";
+		String emptyPath = "empty";
+		String nonPresentPath = "nonpresent";
+
+		Config config = Config.create()
+				.with(emptyPath, "")
+				.with(presentPath, stringValue);
+
+		// no default
+		assertEquals(stringValue, config.get(ofString(), presentPath));
+		assertEquals(stringValue, config.get(ofNullableString(), presentPath));
+		assertTrue(config.get(ofString(), emptyPath).isEmpty());
+		assertTrue(config.get(ofNullableString(), emptyPath).isEmpty());
+		assertNotPresent(() -> config.get(ofString(), nonPresentPath));
+		assertNotPresent(() -> config.get(ofNullableString(), nonPresentPath));
+
+		// with default
+		assertEquals(stringValue, config.get(ofString(), presentPath, defaultValue));
+		assertEquals(stringValue, config.get(ofNullableString(), presentPath, defaultValue));
+		assertTrue(config.get(ofString(), emptyPath, defaultValue).isEmpty());
+		assertEquals(defaultValue, config.get(ofNullableString(), emptyPath, defaultValue));
+		assertEquals(defaultValue, config.get(ofString(), nonPresentPath, defaultValue));
+		assertEquals(defaultValue, config.get(ofNullableString(), nonPresentPath, defaultValue));
 	}
 }

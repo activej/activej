@@ -174,7 +174,7 @@ public final class ConfigConverters {
 			@NotNull
 			@Override
 			public String get(Config config) {
-				return get(config, "");
+				return config.getValue();
 			}
 		};
 	}
