@@ -126,6 +126,11 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> parse(ByteBufsDecoder<T> decoder) {
+		return doParse(decoder, this);
+	}
+
+	@NotNull
+	private <T> Promise<T> doParse(ByteBufsDecoder<T> decoder, AsyncCloseable closeable) {
 		while (true) {
 			if (!bufs.isEmpty()) {
 				T result;
@@ -142,8 +147,8 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			Promise<Void> moreDataPromise = needMoreData();
 			if (moreDataPromise.isResult()) continue;
 			return moreDataPromise
-					.whenException(this::closeEx)
-					.then(() -> parse(decoder));
+					.whenException(closeable::closeEx)
+					.then(() -> doParse(decoder, closeable));
 		}
 	}
 
@@ -160,7 +165,11 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 
 	public final <T> ChannelSupplier<T> parseStream(ByteBufsDecoder<T> decoder) {
 		return ChannelSupplier.of(
-				() -> parse(decoder)
+				() -> doParse(decoder,
+						e -> {
+							if (e == UNEXPECTED_END_OF_STREAM_EXCEPTION && bufs.isEmpty()) return;
+							closeEx(e);
+						})
 						.thenEx((value, e) -> {
 							if (e == null) return Promise.of(value);
 							if (e == UNEXPECTED_END_OF_STREAM_EXCEPTION && bufs.isEmpty()) return Promise.of(null);
