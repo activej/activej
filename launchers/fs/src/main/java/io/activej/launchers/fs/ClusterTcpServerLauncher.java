@@ -47,6 +47,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	public static final String DEFAULT_DEAD_CHECK_INTERVAL = "1 seconds";
 	public static final String DEFAULT_REPARTITION_INTERVAL = "1 seconds";
 
+	//[START EXAMPLE]
 	@Provides
 	@Eager
 	@Named("repartition")
@@ -81,6 +82,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER))
 				.withInitializer(ofFsPartitions(config.getChild("activefs.cluster")));
 	}
+	//[END EXAMPLE]
 
 	@Override
 	protected Module getOverrideModule() {

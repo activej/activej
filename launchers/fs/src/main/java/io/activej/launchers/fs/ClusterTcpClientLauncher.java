@@ -52,6 +52,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 		return Eventloop.create();
 	}
 
+	//[START EXAMPLE]
 	@Provides
 	@Eager
 	@Named("clusterDeadCheck")
@@ -83,6 +84,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 		return FsPartitions.create(eventloop)
 				.withInitializer(ofFsPartitions(config.getChild("activefs.cluster")));
 	}
+	//[END EXAMPLE]
 
 	@Provides
 	Config config() {
