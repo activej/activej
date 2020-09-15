@@ -505,7 +505,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			try {
 				return afterCreation.call();
 			} catch (NoSuchFileException e) {
-				if (Files.exists(parent)) {
+				if (source != null && !Files.exists(source)) {
 					throw e;
 				}
 				Files.createDirectories(parent);

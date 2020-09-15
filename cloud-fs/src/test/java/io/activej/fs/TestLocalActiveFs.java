@@ -13,6 +13,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.fs.exception.scalar.FileNotFoundException;
 import io.activej.fs.exception.scalar.IsADirectoryException;
 import io.activej.fs.exception.scalar.MalformedGlobException;
+import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
@@ -43,7 +45,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newCachedThreadPool;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
@@ -104,7 +106,7 @@ public final class TestLocalActiveFs {
 		} catch (IOException ignored) {
 		}
 
-		client = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), storagePath);
+		client = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newCachedThreadPool(), storagePath);
 		initTempDir(storagePath);
 	}
 
@@ -417,6 +419,24 @@ public final class TestLocalActiveFs {
 		String data = "test";
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
 		assertThat(exception, instanceOf(IsADirectoryException.class));
+	}
+
+	@Test
+	public void testUploadToSameNewDir() {
+		String dir = "newDir";
+		Set<String> filenames = IntStream.range(0, 5)
+				.mapToObj(i -> dir + ActiveFs.SEPARATOR + i + ".txt")
+				.collect(toSet());
+
+		await(Promises.all(filenames.stream()
+				.map(filename -> client.upload(filename)
+						.then(ChannelConsumer::acceptEndOfStream))));
+
+		Map<String, FileMetadata> files = await(client.list(dir + ActiveFs.SEPARATOR + '*'));
+		assertEquals(filenames, files.keySet());
+		for (FileMetadata meta : files.values()) {
+			assertEquals(0, meta.getSize());
+		}
 	}
 
 	private List<Path> createEmptyDirectories() {
