@@ -31,6 +31,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLException;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
@@ -433,5 +434,10 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	@Override
 	public boolean isClosed() {
 		return net2engine == null;
+	}
+
+	@Override
+	public SocketAddress getRemoteAddress() {
+		return upstream.getRemoteAddress();
 	}
 }

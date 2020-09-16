@@ -340,7 +340,15 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		accepts.recordEvent();
 		if (ssl) acceptsSsl.recordEvent();
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
-		AsyncTcpSocket asyncTcpSocket = wrapChannel(eventloop, socketChannel, socketSettings);
+		AsyncTcpSocket asyncTcpSocket;
+		try {
+			asyncTcpSocket = wrapChannel(eventloop, socketChannel, socketSettings)
+					.withInspector(ssl ? socketSslInspector : socketInspector);
+		} catch (IOException e) {
+			logger.warn("Failed to wrap channel {}", socketChannel, e);
+			eventloop.closeChannel(socketChannel, null);
+			return;
+		}
 		asyncTcpSocket = ssl ? wrapServerSocket(asyncTcpSocket, sslContext, sslExecutor) : asyncTcpSocket;
 		serve(asyncTcpSocket, remoteAddress);
 	}

@@ -27,13 +27,15 @@ public final class TcpServerExample {
 		Eventloop eventloop = Eventloop.create();
 
 		eventloop.listen(new InetSocketAddress("localhost", TcpClientExample.PORT), ServerSocketSettings.create(100), channel -> {
-			AsyncTcpSocket socket = AsyncTcpSocketNio.wrapChannel(eventloop, channel, null);
+			AsyncTcpSocket socket;
 
 			try {
-				System.out.println("Client connected: " + channel.getRemoteAddress());
+				socket = AsyncTcpSocketNio.wrapChannel(eventloop, channel, null);
 			} catch (IOException e) {
-				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
+
+			System.out.println("Client connected: " + socket.getRemoteAddress());
 
 			ChannelSupplier.ofSocket(socket)
 					.transformWith(ChannelDeserializer.create(INT_SERIALIZER))

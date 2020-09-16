@@ -10,6 +10,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
@@ -30,7 +31,12 @@ public final class TcpClientExample {
 
 		eventloop.connect(new InetSocketAddress("localhost", PORT), (socketChannel, e) -> {
 			if (e == null) {
-				AsyncTcpSocket socket = AsyncTcpSocketNio.wrapChannel(eventloop, socketChannel, null);
+				AsyncTcpSocket socket;
+				try {
+					socket = AsyncTcpSocketNio.wrapChannel(eventloop, socketChannel, null);
+				} catch (IOException ioEx) {
+					throw new RuntimeException(ioEx);
+				}
 
 				StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 						.transformWith(ChannelSerializer.create(INT_SERIALIZER))

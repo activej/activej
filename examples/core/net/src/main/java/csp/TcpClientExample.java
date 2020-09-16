@@ -9,6 +9,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Scanner;
 
@@ -46,7 +47,12 @@ public final class TcpClientExample {
 		eventloop.connect(new InetSocketAddress("localhost", 9922), (socketChannel, e) -> {
 			if (e == null) {
 				System.out.println("Connected to server, enter some text and send it by pressing 'Enter'.");
-				AsyncTcpSocket socket = AsyncTcpSocketNio.wrapChannel(getCurrentEventloop(), socketChannel, null);
+				AsyncTcpSocket socket;
+				try {
+					socket = AsyncTcpSocketNio.wrapChannel(getCurrentEventloop(), socketChannel, null);
+				} catch (IOException ioException) {
+					throw new RuntimeException(e);
+				}
 
 				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
 						.parseStream(ByteBufsDecoder.ofCrlfTerminatedBytes())
