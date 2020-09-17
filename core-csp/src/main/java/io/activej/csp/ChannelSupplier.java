@@ -141,14 +141,6 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	/**
 	 * @see #ofIterator(Iterator)
 	 */
-	@Deprecated
-	static <T> ChannelSupplier<T> ofIterable(Iterable<? extends T> iterable) {
-		return ofIterator(iterable.iterator());
-	}
-
-	/**
-	 * @see #ofIterator(Iterator)
-	 */
 	static <T> ChannelSupplier<T> ofList(List<? extends T> list) {
 		return new ChannelSuppliers.ChannelSupplierOfIterator<>(list.iterator(), true);
 	}

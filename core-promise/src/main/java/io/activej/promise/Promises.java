@@ -288,16 +288,6 @@ public final class Promises {
 	}
 
 	/**
-	 * @see Promises#all(List)
-	 */
-	@Contract(pure = true)
-	@NotNull
-	@Deprecated
-	public static Promise<Void> all(@NotNull Iterable<? extends Promise<?>> promises) {
-		return all(promises.iterator());
-	}
-
-	/**
 	 * Returns {@code Promise} that completes when all of the {@code promises}
 	 * are completed. If at least one of the {@code promises} completes
 	 * exceptionally, a {@link CompleteExceptionallyPromise} will be returned.
@@ -396,13 +386,6 @@ public final class Promises {
 		return any(isResult(), promises.iterator());
 	}
 
-	@Contract(pure = true)
-	@NotNull
-	@Deprecated
-	public static <T> Promise<T> any(@NotNull Iterable<? extends Promise<? extends T>> promises) {
-		return any(isResult(), promises.iterator());
-	}
-
 	@NotNull
 	public static <T> Promise<T> any(@NotNull Iterator<? extends Promise<? extends T>> promises) {
 		return any(isResult(), promises);
@@ -430,13 +413,6 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Stream<? extends Promise<? extends T>> promises) {
-		return any(predicate, promises.iterator());
-	}
-
-	@Contract(pure = true)
-	@NotNull
-	@Deprecated
-	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Iterable<? extends Promise<? extends T>> promises) {
 		return any(predicate, promises.iterator());
 	}
 

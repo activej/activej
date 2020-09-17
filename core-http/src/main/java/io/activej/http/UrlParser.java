@@ -235,11 +235,6 @@ public final class UrlParser {
 		return host == -1;
 	}
 
-	@Deprecated
-	public boolean isHttps() {
-		return protocol == HTTPS;
-	}
-
 	public Protocol getProtocol() {
 		return protocol;
 	}

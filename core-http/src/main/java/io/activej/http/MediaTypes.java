@@ -74,9 +74,6 @@ public final class MediaTypes {
 	public static final MediaType XHTML = register("text/xhtml+xml", "xhtml");
 	public static final MediaType GV = register("text/vnd.graphviz", "gv"); // https://www.iana.org/assignments/media-types/text/vnd.graphviz
 
-	@Deprecated
-	public static final MediaType JAVASCRIPT_TXT = register("text/javascript");
-
 	public static final MediaType BMP = register("image/bmp", "bmp");
 	public static final MediaType ICO = register("image/vnd.microsoft.icon", "ico");
 	public static final MediaType CRW = register("image/x-canon-crw", "crw");

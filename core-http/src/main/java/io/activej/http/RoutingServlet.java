@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
@@ -41,9 +40,6 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	private static final String STAR = "*";
 	private static final String WILDCARD = "/" + STAR;
 
-	private static final BinaryOperator<AsyncServlet> DEFAULT_MERGER = ($, $2) -> {
-		throw new IllegalArgumentException("Already mapped");
-	};
 	private static final int WS_ORDINAL = HttpMethod.values().length;
 	private static final int ANY_HTTP_ORDINAL = WS_ORDINAL + 1;
 
@@ -70,15 +66,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * Maps given servlet on some path. Fails when such path already has a servlet mapped to it.
 	 */
 	public RoutingServlet map(@NotNull String path, @NotNull AsyncServlet servlet) {
-		return map(null, path, servlet, DEFAULT_MERGER);
-	}
-
-	/**
-	 * Maps given servlet on some path and calls the merger if there is already a servlet there.
-	 */
-	@Deprecated
-	public RoutingServlet map(@NotNull String path, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		return map(null, path, servlet, merger);
+		return map(null, path, servlet);
 	}
 
 	/**
@@ -86,16 +74,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 */
 	@Contract("_, _, _ -> this")
 	public RoutingServlet map(@Nullable HttpMethod method, @NotNull String path, @NotNull AsyncServlet servlet) {
-		return map(method, path, servlet, DEFAULT_MERGER);
-	}
-
-	/**
-	 * @see #map(HttpMethod, String, AsyncServlet, BinaryOperator)
-	 */
-	@Contract("_, _, _, _ -> this")
-	@Deprecated
-	public RoutingServlet map(@Nullable HttpMethod method, @NotNull String path, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		return doMap(method == null ? ANY_HTTP_ORDINAL : method.ordinal(), path, servlet, merger);
+		return doMap(method == null ? ANY_HTTP_ORDINAL : method.ordinal(), path, servlet);
 	}
 
 	/**
@@ -115,16 +94,16 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	@Contract("_, _ -> this")
 	@NotNull
 	public RoutingServlet mapWebSocket(@NotNull String path, WebSocketServlet servlet) {
-		return doMap(WS_ORDINAL, path, servlet, DEFAULT_MERGER);
+		return doMap(WS_ORDINAL, path, servlet);
 	}
 
-	@Contract("_, _, _, _ -> this")
-	private RoutingServlet doMap(int ordinal, @NotNull String path, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
+	@Contract("_, _, _ -> this")
+	private RoutingServlet doMap(int ordinal, @NotNull String path, @NotNull AsyncServlet servlet) {
 		checkArgument(path.startsWith(ROOT) && (path.endsWith(WILDCARD) || !path.contains(STAR)), "Invalid path: " + path);
 		if (path.endsWith(WILDCARD)) {
-			makeSubtree(path.substring(0, path.length() - 2)).mapFallback(ordinal, servlet, merger);
+			makeSubtree(path.substring(0, path.length() - 2)).mapFallback(ordinal, servlet);
 		} else {
-			makeSubtree(path).map(ordinal, servlet, merger);
+			makeSubtree(path).map(ordinal, servlet);
 		}
 		return this;
 	}
@@ -167,14 +146,9 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 
 	@Contract("_, _ -> new")
 	public RoutingServlet merge(String path, RoutingServlet servlet) {
-		return merge(path, servlet, DEFAULT_MERGER);
-	}
-
-	@Contract("_, _, _ -> new")
-	public RoutingServlet merge(String path, RoutingServlet servlet, BinaryOperator<AsyncServlet> merger) {
 		RoutingServlet merged = new RoutingServlet();
-		mergeInto(merged, this, merger);
-		mergeInto(merged.makeSubtree(path), servlet, merger);
+		mergeInto(merged, this);
+		mergeInto(merged.makeSubtree(path), servlet);
 		return merged;
 	}
 
@@ -187,17 +161,19 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 				Promise.ofException(HttpException.notFound404());
 	}
 
-	private void map(int ordinal, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		doMerge(rootServlets, ordinal, servlet, merger);
+	private void map(int ordinal, @NotNull AsyncServlet servlet) {
+		doMerge(rootServlets, ordinal, servlet);
 	}
 
-	private void mapFallback(int ordinal, @NotNull AsyncServlet servlet, @NotNull BinaryOperator<AsyncServlet> merger) {
-		doMerge(fallbackServlets, ordinal, servlet, merger);
+	private void mapFallback(int ordinal, @NotNull AsyncServlet servlet) {
+		doMerge(fallbackServlets, ordinal, servlet);
 	}
 
-	private void doMerge(AsyncServlet[] servlets, int ordinal, AsyncServlet servlet, BinaryOperator<AsyncServlet> merger) {
-		AsyncServlet oldValue = servlets[ordinal];
-		servlets[ordinal] = (oldValue == null) ? servlet : merger.apply(oldValue, servlet);
+	private void doMerge(AsyncServlet[] servlets, int ordinal, AsyncServlet servlet) {
+		if (servlets[ordinal] != null) {
+			throw new IllegalArgumentException("Already mapped");
+		}
+		servlets[ordinal] = servlet;
 	}
 
 	@Nullable
@@ -273,49 +249,41 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	public static RoutingServlet merge(RoutingServlet first, RoutingServlet second) {
-		return merge(first, second, DEFAULT_MERGER);
-	}
-
-	public static RoutingServlet merge(RoutingServlet... servlets) {
-		return merge(DEFAULT_MERGER, servlets);
-	}
-
-	public static RoutingServlet merge(RoutingServlet first, RoutingServlet second, BinaryOperator<AsyncServlet> merger) {
 		RoutingServlet merged = new RoutingServlet();
-		mergeInto(merged, first, merger);
-		mergeInto(merged, second, merger);
+		mergeInto(merged, first);
+		mergeInto(merged, second);
 		return merged;
 	}
 
-	public static RoutingServlet merge(BinaryOperator<AsyncServlet> merger, RoutingServlet... servlets) {
+	public static RoutingServlet merge(RoutingServlet... servlets) {
 		RoutingServlet merged = new RoutingServlet();
 		for (RoutingServlet servlet : servlets) {
-			mergeInto(merged, servlet, merger);
+			mergeInto(merged, servlet);
 		}
 		return merged;
 	}
 
-	private static void mergeInto(RoutingServlet into, RoutingServlet from, BinaryOperator<AsyncServlet> merger) {
+	private static void mergeInto(RoutingServlet into, RoutingServlet from) {
 		for (int i = 0; i < from.rootServlets.length; i++) {
 			AsyncServlet rootServlet = from.rootServlets[i];
 			if (rootServlet != null) {
-				into.map(i, rootServlet, merger);
+				into.map(i, rootServlet);
 			}
 		}
 		for (int i = 0; i < from.fallbackServlets.length; i++) {
 			AsyncServlet fallbackServlet = from.fallbackServlets[i];
 			if (fallbackServlet != null) {
-				into.mapFallback(i, fallbackServlet, merger);
+				into.mapFallback(i, fallbackServlet);
 			}
 		}
 		from.routes.forEach((key, value) ->
 				into.routes.merge(key, value, (s1, s2) -> {
-					mergeInto(s1, s2, merger);
+					mergeInto(s1, s2);
 					return s1;
 				}));
 		from.parameters.forEach((key, value) ->
 				into.parameters.merge(key, value, (s1, s2) -> {
-					mergeInto(s1, s2, merger);
+					mergeInto(s1, s2);
 					return s1;
 				}));
 	}

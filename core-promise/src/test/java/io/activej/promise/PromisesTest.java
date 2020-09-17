@@ -26,7 +26,7 @@ import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-@SuppressWarnings({"Convert2MethodRef", "CachedNumberConstructorCall", "deprecation"})
+@SuppressWarnings({"Convert2MethodRef"})
 public final class PromisesTest {
 
 	@ClassRule

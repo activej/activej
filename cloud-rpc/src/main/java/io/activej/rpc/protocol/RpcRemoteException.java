@@ -29,13 +29,6 @@ public class RpcRemoteException extends RpcException implements RpcMandatoryData
 	@Nullable
 	private final String causeClassName;
 
-	@Deprecated
-	public RpcRemoteException(String message, Throwable cause) {
-		super(RpcServerConnection.class, message, cause);
-		this.causeClassName = cause.getClass().getName();
-		this.causeMessage = cause.getMessage();
-	}
-
 	public RpcRemoteException(Throwable cause) {
 		super(RpcServerConnection.class, cause.toString(), cause);
 		this.causeClassName = cause.getClass().getName();

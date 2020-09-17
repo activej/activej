@@ -179,21 +179,6 @@ public final class ConfigConverters {
 		};
 	}
 
-	@Deprecated
-	public static ConfigConverter<String> ofNullableString() {
-		return new SimpleConfigConverter<String>() {
-			@Override
-			protected String fromString(String string) {
-				return string;
-			}
-
-			@Override
-			protected String toString(String value) {
-				return value;
-			}
-		};
-	}
-
 	public static ConfigConverter<Byte> ofByte() {
 		return new SimpleConfigConverter<Byte>() {
 			@Override

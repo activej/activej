@@ -60,9 +60,4 @@ public final class VarLocal implements Variable {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		g.storeLocal(local);
 	}
-
-	@Deprecated
-	public int getLocal() {
-		return local;
-	}
 }

@@ -84,23 +84,11 @@ public final class DnsCache {
 		return new DnsCache(eventloop);
 	}
 
-	@Deprecated
-	public DnsCache withErrorCacheExpirationSeconds(Duration errorCacheExpiration) {
-		this.errorCacheExpiration = errorCacheExpiration.toMillis();
-		return this;
-	}
-
 	/**
 	 * @param errorCacheExpiration expiration time for errors without time to live
 	 */
 	public DnsCache withErrorCacheExpiration(Duration errorCacheExpiration) {
 		this.errorCacheExpiration = errorCacheExpiration.toMillis();
-		return this;
-	}
-
-	@Deprecated
-	public DnsCache withTimedOutExceptionTtl(Duration timedOutExceptionTtl) {
-		this.timedOutExpiration = timedOutExceptionTtl.toMillis();
 		return this;
 	}
 

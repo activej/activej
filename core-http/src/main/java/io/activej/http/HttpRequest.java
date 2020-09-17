@@ -196,11 +196,6 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		remoteAddress = inetAddress;
 	}
 
-	@Deprecated
-	public boolean isHttps() {
-		return url.isHttps();
-	}
-
 	public Protocol getProtocol() {
 		return url.getProtocol();
 	}

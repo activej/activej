@@ -234,11 +234,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		return this;
 	}
 
-	@Deprecated
-	public RpcClient withAutoFlushInterval(Duration autoFlushInterval) {
-		return withAutoFlush(autoFlushInterval);
-	}
-
 	public RpcClient withKeepAlive(Duration keepAliveInterval) {
 		this.keepAliveInterval = keepAliveInterval;
 		return this;
@@ -268,12 +263,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	public RpcClient withLogger(Logger logger) {
 		this.logger = logger;
-		return this;
-	}
-
-	@Deprecated
-	public RpcClient withImmediateStart() {
-		// do nothing
 		return this;
 	}
 

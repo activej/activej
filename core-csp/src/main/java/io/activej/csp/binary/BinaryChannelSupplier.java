@@ -51,11 +51,6 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 
 	public abstract Promise<Void> endOfStream();
 
-	@Deprecated
-	public static BinaryChannelSupplier ofIterable(Iterable<ByteBuf> iterable) {
-		return of(ChannelSupplier.ofIterable(iterable));
-	}
-
 	public static BinaryChannelSupplier ofList(List<ByteBuf> iterable) {
 		return of(ChannelSupplier.ofList(iterable));
 	}

@@ -86,8 +86,6 @@ public final class HttpHeaders {
 	public static final HttpHeader RETRY_AFTER = headers.register("Retry-After");
 	public static final HttpHeader SERVER = headers.register("Server");
 	public static final HttpHeader SET_COOKIE = headers.register("Set-Cookie");
-	@Deprecated
-	public static final HttpHeader SET_COOKIE2 = headers.register("Set-Cookie2");
 	public static final HttpHeader STRICT_TRANSPORT_SECURITY = headers.register("Strict-Transport-Security");
 	public static final HttpHeader TIMING_ALLOW_ORIGIN = headers.register("Timing-Allow-Origin");
 	public static final HttpHeader TRAILER = headers.register("Trailer");
