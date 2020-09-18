@@ -91,7 +91,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  */
 final class HttpClientConnection extends AbstractHttpConnection {
 	public static final ParseException INVALID_RESPONSE = new UnknownFormatException(HttpClientConnection.class, "Invalid response");
-	public static final ParseException CONNECTION_CLOSED = new ParseException(HttpClientConnection.class, "Connection closed");
+	public static final StacklessException CONNECTION_CLOSED = new StacklessException(HttpClientConnection.class, "Connection closed");
 	public static final StacklessException NOT_ACCEPTED_RESPONSE = new StacklessException(HttpClientConnection.class, "Response was not accepted");
 
 	static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.of("upgrade");
@@ -121,7 +121,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 
 	@Override
 	public void onClosedWithError(@NotNull Throwable e) {
-		if (inspector != null) inspector.onHttpError(this, (flags & KEEP_ALIVE) != 0, e);
+		if (inspector != null) inspector.onHttpError((flags & KEEP_ALIVE) != 0, e);
 		if (promise != null) {
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
@@ -136,31 +136,31 @@ final class HttpClientConnection extends AbstractHttpConnection {
 
 		if (!http1x) throw INVALID_RESPONSE;
 
-		int sp1;
+		int pos = 9;
+		HttpVersion version = HttpVersion.HTTP_1_1;
 		if (http11) {
 			flags |= KEEP_ALIVE;
-			sp1 = 9;
 		} else if (line[6] == '.' && line[7] == '0' && line[8] == SP) {
-			sp1 = 9;
+			version = HttpVersion.HTTP_1_0;
 		} else if (line[6] == SP) {
-			sp1 = 7;
+			version = HttpVersion.HTTP_1_0;
+			pos = 7;
 		} else {
 			throw new ParseException(HttpClientConnection.class, "Invalid response: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
-		int statusCode = decodePositiveInt(line, sp1, 3);
+		int statusCode = decodePositiveInt(line, pos, 3);
 		if (!(statusCode >= 100 && statusCode < 600)) {
 			throw new UnknownFormatException(HttpClientConnection.class, "Invalid HTTP Status Code " + statusCode);
 		}
-		response = new HttpResponse(statusCode);
+		response = new HttpResponse(version, statusCode);
 		response.maxBodySize = maxBodySize;
 		/*
 		  RFC 2616, section 4.4
 		  1.Any response message which "MUST NOT" include a message-body (such as the 1xx, 204, and 304 responses and any response to a HEAD request) is always
 		  terminated by the first empty line after the header fields, regardless of the entity-header fields present in the message.
 		 */
-		int messageCode = response.getCode();
-		if ((messageCode >= 100 && messageCode < 200) || messageCode == 204 || messageCode == 304) {
+		if (statusCode < 200 || statusCode == 204 || statusCode == 304) {
 			// Reset Content-Length for the case keep-alive connection
 			contentLength = 0;
 		}
@@ -191,7 +191,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 		if (isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
 		}
-		if (inspector != null) inspector.onHttpResponse(this, response);
+		if (inspector != null) inspector.onHttpResponse(response, (flags & KEEP_ALIVE) != 0);
 
 		SettablePromise<HttpResponse> promise = this.promise;
 		this.promise = null;
@@ -405,7 +405,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	protected void onClosed() {
 		if (promise != null) {
-			if (inspector != null) inspector.onHttpError(this, (flags & KEEP_ALIVE) != 0, CONNECTION_CLOSED);
+			if (inspector != null) inspector.onHttpError((flags & KEEP_ALIVE) != 0, CONNECTION_CLOSED);
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
 			promise.setException(CONNECTION_CLOSED);

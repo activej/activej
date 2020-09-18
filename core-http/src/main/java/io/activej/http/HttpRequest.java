@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullToEmpty;
 import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
@@ -61,7 +62,6 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	private static final int LONGEST_HTTP_METHOD_SIZE = 12;
 	private static final byte[] HTTP_1_1 = encodeAscii(" HTTP/1.1");
 	private static final int HTTP_1_1_SIZE = HTTP_1_1.length;
-	@NotNull
 	private final HttpMethod method;
 	private final UrlParser url;
 	private InetAddress remoteAddress;
@@ -70,7 +70,8 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	private Map<String, String> postParameters;
 
 	// region creators
-	HttpRequest(@NotNull HttpMethod method, @NotNull UrlParser url) {
+	HttpRequest(@NotNull HttpVersion version, @NotNull HttpMethod method, @NotNull UrlParser url) {
+		super(version);
 		this.method = method;
 		this.url = url;
 	}
@@ -78,7 +79,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	@NotNull
 	public static HttpRequest of(@NotNull HttpMethod method, @NotNull String url) {
 		UrlParser urlParser = UrlParser.of(url);
-		HttpRequest request = new HttpRequest(method, UrlParser.of(url));
+		HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, method, UrlParser.of(url));
 		String hostAndPort = urlParser.getHostAndPort();
 		if (hostAndPort != null) {
 			request.headers.add(HOST, HttpHeaderValue.of(hostAndPort));
@@ -188,6 +189,8 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	@Contract(pure = true)
 	public InetAddress getRemoteAddress() {
+		// it makes sense to call this method only on server
+		if (CHECK) checkNotNull(remoteAddress);
 		return remoteAddress;
 	}
 

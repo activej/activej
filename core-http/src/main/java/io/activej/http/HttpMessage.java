@@ -66,6 +66,8 @@ public abstract class HttpMessage {
 	 */
 	static final byte RECYCLED = (byte) (1 << 7);
 
+	private final HttpVersion version;
+
 	@MagicConstant(flags = {MUST_LOAD_BODY, USE_GZIP, RECYCLED})
 	byte flags;
 
@@ -77,7 +79,8 @@ public abstract class HttpMessage {
 	protected int maxBodySize;
 	protected Map<Object, Object> attachments;
 
-	protected HttpMessage() {
+	protected HttpMessage(HttpVersion version) {
+		this.version = version;
 	}
 
 	void addHeaderBuf(@NotNull ByteBuf buf) {
@@ -92,6 +95,10 @@ public abstract class HttpMessage {
 				buf.recycle();
 			};
 		}
+	}
+
+	public HttpVersion getVersion() {
+		return version;
 	}
 
 	public void addHeader(@NotNull HttpHeader header, @NotNull String string) {

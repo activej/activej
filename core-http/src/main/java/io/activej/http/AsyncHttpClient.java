@@ -127,13 +127,13 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onResolveError(HttpRequest request, Throwable e);
 
-		void onConnect(HttpRequest request, HttpClientConnection connection);
+		void onConnect(HttpRequest request, InetSocketAddress address);
 
 		void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e);
 
-		void onHttpResponse(HttpClientConnection connection, HttpResponse response);
+		void onHttpResponse(HttpResponse response, boolean keepAlive);
 
-		void onHttpError(HttpClientConnection connection, boolean keepAliveConnection, Throwable e);
+		void onHttpError(boolean keepAliveConnection, Throwable e);
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -165,7 +165,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onConnect(HttpRequest request, HttpClientConnection connection) {
+		public void onConnect(HttpRequest request, InetSocketAddress address) {
 			connected.recordEvent();
 		}
 
@@ -175,12 +175,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onHttpResponse(HttpClientConnection connection, HttpResponse response) {
+		public void onHttpResponse(HttpResponse response, boolean keepAlive) {
 			responses++;
 		}
 
 		@Override
-		public void onHttpError(HttpClientConnection connection, boolean keepAliveConnection, Throwable e) {
+		public void onHttpError(boolean keepAliveConnection, Throwable e) {
 			if (e == AbstractHttpConnection.READ_TIMEOUT_ERROR || e == AbstractHttpConnection.WRITE_TIMEOUT_ERROR) {
 				httpTimeouts.recordEvent();
 				return;
@@ -394,8 +394,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	/**
 	 * Sends a web socket request and returns a promise of a web socket.
 	 * <p>
-	 * Sent request must be constructed via {@link HttpRequest#webSocket(String)} method
-	 * and must not have a body or body stream.
+	 * Sent request must not have a body or body stream.
 	 * <p>
 	 * After receiving a {@link WebSocket}, caller can inspect server response via calling {@link WebSocket#getResponse()}.
 	 * If a response does not satisfy a caller, it may close the web socket with an appropriate exception.
@@ -473,7 +472,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
 
-						if (inspector != null) inspector.onConnect(request, connection);
+						if (inspector != null) inspector.onConnect(request, address);
 
 						if (expiredConnectionsCheck == null)
 							scheduleExpiredConnectionsCheck();

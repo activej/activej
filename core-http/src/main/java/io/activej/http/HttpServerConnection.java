@@ -43,6 +43,8 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
 import static io.activej.http.HttpMethod.*;
+import static io.activej.http.HttpVersion.HTTP_1_0;
+import static io.activej.http.HttpVersion.HTTP_1_1;
 import static io.activej.http.Protocol.*;
 import static io.activej.http.WebSocketConstants.UPGRADE_WITH_BODY;
 
@@ -152,15 +154,24 @@ final class HttpServerConnection extends AbstractHttpConnection {
 			}
 		}
 
-		if (p + 7 < limit) {
-			boolean http11 = line[p + 0] == 'H' && line[p + 1] == 'T' && line[p + 2] == 'T' && line[p + 3] == 'P'
-					&& line[p + 4] == '/' && line[p + 5] == '1' && line[p + 6] == '.' && line[p + 7] == '1';
-			if (http11) {
+		HttpVersion version;
+		if (p + 7 < limit
+				&& line[p + 0] == 'H' && line[p + 1] == 'T' && line[p + 2] == 'T' && line[p + 3] == 'P' && line[p + 4] == '/' && line[p + 5] == '1' && line[p + 6] == '.') {
+			if (line[p + 7] == '1') {
 				flags |= KEEP_ALIVE; // keep-alive for HTTP/1.1
+				version = HTTP_1_1;
+			} else if (line[p + 7] == '0') {
+				version = HTTP_1_0;
+			} else {
+				throw new UnknownFormatException(HttpServerConnection.class,
+						"Unknown HTTP version. First Bytes: " + Arrays.toString(line));
 			}
+		} else {
+			throw new UnknownFormatException(HttpServerConnection.class,
+					"Unsupported HTTP version. First Bytes: " + Arrays.toString(line));
 		}
 
-		request = new HttpRequest(method,
+		request = new HttpRequest(version, method,
 				UrlParser.parse(decodeAscii(line, urlStart, urlEnd - urlStart, ThreadLocalCharArray.ensure(charBuffer, urlEnd - urlStart))));
 		request.maxBodySize = maxBodySize;
 
@@ -176,11 +187,11 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	private static HttpMethod getHttpMethod(byte[] line) {
-		boolean get = line[0] == 'G' && line[1] == 'E' && line[2] == 'T' && line[3] == SP;
+		boolean get = line[0] == 'G' && line[1] == 'E' && line[2] == 'T' && (line[3] == SP || line[3] == HT);
 		if (get) {
 			return GET;
 		}
-		boolean post = line[0] == 'P' && line[1] == 'O' && line[2] == 'S' && line[3] == 'T' && line[4] == SP;
+		boolean post = line[0] == 'P' && line[1] == 'O' && line[2] == 'S' && line[3] == 'T' && (line[4] == SP || line[4] == HT);
 		if (post) {
 			return POST;
 		}
@@ -191,7 +202,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		int hashCode = 1;
 		for (int i = 0; i < 10; i++) {
 			byte b = line[i];
-			if (b == SP) {
+			if (b == SP || b == HT) {
 				for (int p = 0; p < MAX_PROBINGS; p++) {
 					int slot = (hashCode + p) & (METHODS.length - 1);
 					HttpMethod method = METHODS[slot];
@@ -268,9 +279,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		}
 		request.setRemoteAddress(remoteAddress);
 
-		if (inspector != null) {
-			inspector.onHttpRequest(request);
-		}
+		if (inspector != null) inspector.onHttpRequest(request, (flags & KEEP_ALIVE) != 0);
 
 		switchPool(server.poolServing);
 
@@ -293,7 +302,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 			switchPool(server.poolReadWrite);
 			if (e == null) {
 				if (inspector != null) {
-					inspector.onHttpResponse(request, response);
+					inspector.onHttpResponse(request, response, (flags & KEEP_ALIVE) != 0);
 				}
 				writeHttpResponse(response);
 			} else {

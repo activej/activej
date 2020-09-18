@@ -97,11 +97,11 @@ public final class AsyncHttpServerTest {
 		socket.connect(new InetSocketAddress("localhost", port));
 
 		for (int i = 0; i < 200; i++) {
-			writeByRandomParts(socket, "GET /abc HTTP1.0\r\nHost: localhost\r\nConnection: keep-alive\r\n\r\n");
+			writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\nConnection: keep-alive\r\n\r\n");
 			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
 		}
 
-		writeByRandomParts(socket, "GET /abc HTTP1.1\r\nHost: localhost\r\n\r\n");
+		writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\n\r\n");
 		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc"); // ?
 
 		assertEquals(0, toByteArray(socket.getInputStream()).length);
@@ -137,7 +137,7 @@ public final class AsyncHttpServerTest {
 			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
 		}
 
-		writeByRandomParts(socket, "GET /abc HTTP1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
+		writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
 		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc"); // ?
 
 		assertEquals(0, toByteArray(socket.getInputStream()).length);
@@ -183,7 +183,7 @@ public final class AsyncHttpServerTest {
 			try {
 				Socket socket = new Socket();
 				socket.connect(new InetSocketAddress("localhost", port));
-				writeByRandomParts(socket, "GET /abc HTTP1.1\r\nHost: localhost\r\n\r\n");
+				writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\n\r\n");
 				socket.close();
 			} catch (IOException e) {
 				throw new AssertionError(e);

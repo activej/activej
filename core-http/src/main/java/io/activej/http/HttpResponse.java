@@ -37,6 +37,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.http.ContentTypes.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.*;
+import static io.activej.http.HttpVersion.HTTP_1_1;
 import static io.activej.http.MediaTypes.OCTET_STREAM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -119,34 +120,35 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	private Map<String, HttpCookie> parsedCookies;
 
 	// region creators
-	HttpResponse(int code) {
+	HttpResponse(HttpVersion version, int code) {
+		super(version);
 		this.code = code;
 	}
 
 	@NotNull
 	public static HttpResponse ofCode(int code) {
 		if (CHECK) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
-		return new HttpResponse(code);
+		return new HttpResponse(HTTP_1_1, code);
 	}
 
 	@NotNull
 	public static HttpResponse ok200() {
-		return new HttpResponse(200);
+		return new HttpResponse(HTTP_1_1, 200);
 	}
 
 	@NotNull
 	public static HttpResponse ok201() {
-		return new HttpResponse(201);
+		return new HttpResponse(HTTP_1_1, 201);
 	}
 
 	@NotNull
 	public static HttpResponse ok206() {
-		return new HttpResponse(206);
+		return new HttpResponse(HTTP_1_1, 206);
 	}
 
 	@NotNull
 	public static HttpResponse redirect301(@NotNull String url) {
-		HttpResponse response = new HttpResponse(301);
+		HttpResponse response = new HttpResponse(HTTP_1_1, 301);
 		// RFC-7231, section 6.4.2 (https://tools.ietf.org/html/rfc7231#section-6.4.2)
 		response.addHeader(LOCATION, url);
 		return response;
@@ -154,7 +156,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@NotNull
 	public static HttpResponse redirect302(@NotNull String url) {
-		HttpResponse response = new HttpResponse(302);
+		HttpResponse response = new HttpResponse(HTTP_1_1, 302);
 		// RFC-7231, section 6.4.3 (https://tools.ietf.org/html/rfc7231#section-6.4.3)
 		response.addHeader(LOCATION, url);
 		return response;
@@ -162,7 +164,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@NotNull
 	public static HttpResponse redirect307(@NotNull String url) {
-		HttpResponse response = new HttpResponse(307);
+		HttpResponse response = new HttpResponse(HTTP_1_1, 307);
 		// RFC-7231, section 6.4.7 (https://tools.ietf.org/html/rfc7231#section-6.4.7)
 		response.addHeader(LOCATION, url);
 		return response;
@@ -170,7 +172,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@NotNull
 	public static HttpResponse redirect308(@NotNull String url) {
-		HttpResponse response = new HttpResponse(308);
+		HttpResponse response = new HttpResponse(HTTP_1_1, 308);
 		// RFC-7238, section 3 (https://tools.ietf.org/html/rfc7238#section-3)
 		response.addHeader(LOCATION, url);
 		return response;
@@ -178,7 +180,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@NotNull
 	public static HttpResponse unauthorized401(@NotNull String challenge) {
-		HttpResponse response = new HttpResponse(401);
+		HttpResponse response = new HttpResponse(HTTP_1_1, 401);
 		// RFC-7235, section 3.1 (https://tools.ietf.org/html/rfc7235#section-3.1)
 		response.addHeader(WWW_AUTHENTICATE, challenge);
 		return response;
@@ -186,7 +188,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@NotNull
 	public static HttpResponse notFound404() {
-		return new HttpResponse(404);
+		return new HttpResponse(HTTP_1_1, 404);
 	}
 
 	@NotNull
@@ -196,7 +198,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@NotNull
 	public static Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader, boolean inline) {
-		HttpResponse response = new HttpResponse(rangeHeader == null ? 200 : 206);
+		HttpResponse response = new HttpResponse(HTTP_1_1, rangeHeader == null ? 200 : 206);
 
 		String localName = name.substring(name.lastIndexOf('/') + 1);
 		MediaType mediaType = MediaTypes.getByExtension(localName.substring(localName.lastIndexOf('.') + 1));

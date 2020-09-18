@@ -69,16 +69,16 @@ public final class HttpWorkerServerTest {
 			socket1.connect(localhost);
 
 			for (int i = 0; i < 10; i++) {
-				socket0.getOutputStream().write(encodeAscii("GET /abc HTTP1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
+				socket0.getOutputStream().write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
 				readAndAssert(socket0.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 16\r\n\r\nHello, world! #0");
 
-				socket0.getOutputStream().write(encodeAscii("GET /abc HTTP1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
+				socket0.getOutputStream().write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
 				readAndAssert(socket0.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 16\r\n\r\nHello, world! #0");
 
-				socket1.getOutputStream().write(encodeAscii("GET /abc HTTP1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
+				socket1.getOutputStream().write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
 				readAndAssert(socket1.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 16\r\n\r\nHello, world! #1");
 
-				socket1.getOutputStream().write(encodeAscii("GET /abc HTTP1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
+				socket1.getOutputStream().write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
 				readAndAssert(socket1.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 16\r\n\r\nHello, world! #1");
 			}
 		} finally {

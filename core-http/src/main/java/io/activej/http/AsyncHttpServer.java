@@ -87,9 +87,9 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onHttpError(InetAddress remoteAddress, Throwable e);
 
-		void onHttpRequest(HttpRequest request);
+		void onHttpRequest(HttpRequest request, boolean keepAlive);
 
-		void onHttpResponse(HttpRequest request, HttpResponse httpResponse);
+		void onHttpResponse(HttpRequest request, HttpResponse httpResponse, boolean keepAlive);
 
 		void onServletException(HttpRequest request, Throwable e);
 	}
@@ -113,12 +113,12 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		}
 
 		@Override
-		public void onHttpRequest(HttpRequest request) {
+		public void onHttpRequest(HttpRequest request, boolean keepAlive) {
 			totalRequests.recordEvent();
 		}
 
 		@Override
-		public void onHttpResponse(HttpRequest request, HttpResponse httpResponse) {
+		public void onHttpResponse(HttpRequest request, HttpResponse httpResponse, boolean keepAlive) {
 			totalResponses.recordEvent();
 		}
 
