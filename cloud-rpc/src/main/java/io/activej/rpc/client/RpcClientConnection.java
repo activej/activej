@@ -429,7 +429,15 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	@Override
 	public String toString() {
-		return "RpcClientConnection{address=" + address + '}';
+		int active = activeRequests.size();
+		long failed = connectionStats.getFailedRequests().getTotalCount();
+
+		return "RpcClientConnection{" +
+				"address=" + address +
+				", active=" + active +
+				", successes=" + (connectionStats.getTotalRequests().getTotalCount() - failed - active) +
+				", failures=" + failed +
+				'}';
 	}
 
 }

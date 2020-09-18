@@ -208,4 +208,14 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 		failedRequests.refresh(timestamp);
 		requestHandlingTime.refresh(timestamp);
 	}
+
+	@Override
+	public String toString() {
+		return "RpcServerConnection{" +
+				"address=" + remoteAddress +
+				",active=" + activeRequests +
+				", successes=" + successfulRequests.getTotalCount() +
+				", failures=" + failedRequests.getTotalCount() +
+				'}';
+	}
 }
