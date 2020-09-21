@@ -123,6 +123,27 @@ public final class AbstractHttpConnectionTest {
 	}
 
 	@Test
+	public void testServerWithNoKeepAlive() throws Exception {
+		client.withKeepAliveTimeout(Duration.ofSeconds(30));
+
+		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), request -> HttpResponse.ok200())
+				.withListenPort(PORT)
+				.withKeepAliveTimeout(Duration.ZERO);
+		server.listen();
+
+		int code = await(client.request(HttpRequest.get(URL))
+				.then(response -> {
+					assertEquals(200, response.getCode());
+					return Promise.complete().async();
+				})
+				.then(() -> client.request(HttpRequest.get(URL)))
+				.map(HttpResponse::getCode)
+				.whenComplete(server::close));
+
+		assertEquals(200, code);
+	}
+
+	@Test
 	@Ignore("Takes a long time")
 	public void testHugeBodyStreams() throws IOException {
 		int size = 10_000;
