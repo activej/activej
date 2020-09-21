@@ -309,6 +309,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		if (acceptFilter != null && acceptFilter.filterAccept(channel, localAddress, remoteAddress, ssl)) {
 			filteredAccepts.recordEvent();
 			onFilteredAccept(channel, localAddress, remoteAddress, ssl);
+			eventloop.closeChannel(channel, null);
 			return;
 		}
 
