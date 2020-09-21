@@ -182,7 +182,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 
 		request = new HttpRequest(version, method,
-				UrlParser.parse(decodeAscii(line, urlStart, urlEnd - urlStart, ThreadLocalCharArray.ensure(charBuffer, urlEnd - urlStart))));
+				UrlParser.parse(decodeAscii(line, urlStart, urlEnd - urlStart, ThreadLocalCharArray.ensure(charBuffer, urlEnd - urlStart))), this);
 		request.maxBodySize = maxBodySize;
 
 		if (method == GET || method == DELETE) {
@@ -290,7 +290,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 		request.setRemoteAddress(remoteAddress);
 
-		if (inspector != null) inspector.onHttpRequest(this, request);
+		if (inspector != null) inspector.onHttpRequest(request);
 
 		switchPool(server.poolServing);
 
@@ -313,12 +313,12 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			switchPool(server.poolReadWrite);
 			if (e == null) {
 				if (inspector != null) {
-					inspector.onHttpResponse(this, request, response);
+					inspector.onHttpResponse(request, response);
 				}
 				writeHttpResponse(response);
 			} else {
 				if (inspector != null) {
-					inspector.onServletException(this, request, e);
+					inspector.onServletException(request, e);
 				}
 				writeException(e);
 			}

@@ -64,28 +64,30 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	private static final int HTTP_1_1_SIZE = HTTP_1_1.length;
 	private final HttpMethod method;
 	private final UrlParser url;
+	private final HttpServerConnection connection;
 	private InetAddress remoteAddress;
 	private Map<String, String> pathParameters;
 	private Map<String, String> queryParameters;
 	private Map<String, String> postParameters;
 
 	// region creators
-	HttpRequest(@NotNull HttpVersion version, @NotNull HttpMethod method, @NotNull UrlParser url) {
+	HttpRequest(@NotNull HttpVersion version, @NotNull HttpMethod method, @NotNull UrlParser url, @Nullable HttpServerConnection connection) {
 		super(version);
 		this.method = method;
 		this.url = url;
+		this.connection = connection;
 	}
 
 	@NotNull
 	public static HttpRequest of(@NotNull HttpMethod method, @NotNull String url) {
 		UrlParser urlParser = UrlParser.of(url);
-		HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, method, UrlParser.of(url));
+		HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, method, UrlParser.of(url), null);
 		String hostAndPort = urlParser.getHostAndPort();
 		if (hostAndPort != null) {
 			request.headers.add(HOST, HttpHeaderValue.of(hostAndPort));
 		}
 		Protocol protocol = urlParser.getProtocol();
-		if (protocol == WS || protocol == WSS){
+		if (protocol == WS || protocol == WSS) {
 			request.addHeader(CONNECTION, CONNECTION_UPGRADE_HEADER);
 			request.addHeader(HttpHeaders.UPGRADE, UPGRADE_WEBSOCKET_HEADER);
 			request.addHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
@@ -244,6 +246,10 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 			cookies.put(cookie.getName(), cookie.getValue());
 		}
 		return parsedCookies = cookies;
+	}
+
+	public HttpServerConnection getConnection() {
+		return connection;
 	}
 
 	@Nullable

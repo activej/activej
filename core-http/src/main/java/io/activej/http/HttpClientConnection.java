@@ -160,7 +160,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		if (!(statusCode >= 100 && statusCode < 600)) {
 			throw new UnknownFormatException(HttpClientConnection.class, "Invalid HTTP Status Code " + statusCode);
 		}
-		response = new HttpResponse(version, statusCode);
+		response = new HttpResponse(version, statusCode, this);
 		response.maxBodySize = maxBodySize;
 		/*
 		  RFC 2616, section 4.4
@@ -198,7 +198,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		if (isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
 		}
-		if (inspector != null) inspector.onHttpResponse(this, response);
+		if (inspector != null) inspector.onHttpResponse(response);
 
 		SettablePromise<HttpResponse> promise = this.promise;
 		this.promise = null;

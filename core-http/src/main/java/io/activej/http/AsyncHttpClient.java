@@ -127,11 +127,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onResolveError(HttpRequest request, Throwable e);
 
-		void onConnect(HttpClientConnection connection, HttpRequest request);
+		void onConnect(HttpRequest request, HttpClientConnection connection);
 
 		void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e);
 
-		void onHttpResponse(HttpClientConnection connection, HttpResponse response);
+		void onHttpResponse(HttpResponse response);
 
 		void onHttpError(HttpClientConnection connection, Throwable e);
 	}
@@ -165,7 +165,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onConnect(HttpClientConnection connection, HttpRequest request) {
+		public void onConnect(HttpRequest request, HttpClientConnection connection) {
 			connected.recordEvent();
 		}
 
@@ -175,7 +175,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onHttpResponse(HttpClientConnection connection, HttpResponse response) {
+		public void onHttpResponse(HttpResponse response) {
 			responses++;
 		}
 
@@ -472,7 +472,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
 
-						if (inspector != null) inspector.onConnect(connection, request);
+						if (inspector != null) inspector.onConnect(request, connection);
 
 						if (expiredConnectionsCheck == null)
 							scheduleExpiredConnectionsCheck();

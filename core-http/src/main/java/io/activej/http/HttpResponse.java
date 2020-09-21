@@ -115,14 +115,20 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	private static final int LONGEST_FIRST_LINE_SIZE = CODE_511_BYTES.length;
 
 	private final int code;
+	private final HttpClientConnection connection;
 
 	@Nullable
 	private Map<String, HttpCookie> parsedCookies;
 
 	// region creators
-	HttpResponse(HttpVersion version, int code) {
+	HttpResponse(HttpVersion version, int code, @Nullable HttpClientConnection connection) {
 		super(version);
 		this.code = code;
+		this.connection = connection;
+	}
+
+	HttpResponse(HttpVersion version, int code) {
+		this(version, code, null);
 	}
 
 	@NotNull
@@ -364,6 +370,10 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	@Override
 	boolean isContentLengthExpected() {
 		return true;
+	}
+
+	public HttpClientConnection getConnection() {
+		return connection;
 	}
 
 	public int getCode() {

@@ -85,13 +85,13 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
+		void onHttpRequest(HttpRequest request);
+
+		void onHttpResponse(HttpRequest request, HttpResponse httpResponse);
+
+		void onServletException(HttpRequest request, Throwable e);
+
 		void onHttpError(HttpServerConnection connection, Throwable e);
-
-		void onHttpRequest(HttpServerConnection connection, HttpRequest request);
-
-		void onHttpResponse(HttpServerConnection connection, HttpRequest request, HttpResponse httpResponse);
-
-		void onServletException(HttpServerConnection connection, HttpRequest request, Throwable e);
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
@@ -104,27 +104,27 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		private final ExceptionStats servletExceptions = ExceptionStats.create();
 
 		@Override
+		public void onHttpRequest(HttpRequest request) {
+			totalRequests.recordEvent();
+		}
+
+		@Override
+		public void onHttpResponse(HttpRequest request, HttpResponse httpResponse) {
+			totalResponses.recordEvent();
+		}
+
+		@Override
+		public void onServletException(HttpRequest request, Throwable e) {
+			servletExceptions.recordException(e, request.toString());
+		}
+
+		@Override
 		public void onHttpError(HttpServerConnection connection, Throwable e) {
 			if (e == AbstractHttpConnection.READ_TIMEOUT_ERROR || e == AbstractHttpConnection.WRITE_TIMEOUT_ERROR) {
 				httpTimeouts.recordEvent();
 			} else {
 				httpErrors.recordException(e);
 			}
-		}
-
-		@Override
-		public void onHttpRequest(HttpServerConnection connection, HttpRequest request) {
-			totalRequests.recordEvent();
-		}
-
-		@Override
-		public void onHttpResponse(HttpServerConnection connection, HttpRequest request, HttpResponse httpResponse) {
-			totalResponses.recordEvent();
-		}
-
-		@Override
-		public void onServletException(HttpServerConnection connection, HttpRequest request, Throwable e) {
-			servletExceptions.recordException(e, request.toString());
 		}
 
 		@JmxAttribute(extraSubAttributes = "totalCount")
