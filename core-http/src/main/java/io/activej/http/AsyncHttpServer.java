@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
+import static io.activej.http.PoolLabel.*;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -70,10 +71,10 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	int maxWebSocketMessageSize = MAX_WEB_SOCKET_MESSAGE_SIZE.toInt();
 	int maxKeepAliveRequests = MAX_KEEP_ALIVE_REQUESTS;
 
-	final ConnectionsLinkedList poolNew = new ConnectionsLinkedList();
-	final ConnectionsLinkedList poolReadWrite = new ConnectionsLinkedList();
-	final ConnectionsLinkedList poolServing = new ConnectionsLinkedList();
-	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList();
+	final ConnectionsLinkedList poolNew = new ConnectionsLinkedList(NEW);
+	final ConnectionsLinkedList poolReadWrite = new ConnectionsLinkedList(READ_WRITE);
+	final ConnectionsLinkedList poolServing = new ConnectionsLinkedList(SERVING);
+	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList(KEEP_ALIVE);
 	private int poolKeepAliveExpired;
 	private int poolReadWriteExpired;
 

@@ -365,8 +365,8 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		(pool = client.poolReadWrite).addLastNode(this);
 		poolTimestamp = eventloop.currentTimeMillis();
 		HttpHeaderValue connectionHeader = CONNECTION_KEEP_ALIVE_HEADER;
-		if (client.keepAliveTimeoutMillis == 0 ||
-				client.maxKeepAliveRequests != 0 && ++numberOfKeepAliveRequests >= client.maxKeepAliveRequests) {
+		if (++numberOfKeepAliveRequests >= client.maxKeepAliveRequests &&
+				client.maxKeepAliveRequests != 0 || client.keepAliveTimeoutMillis == 0) {
 			connectionHeader = CONNECTION_CLOSE_HEADER;
 		}
 		request.addHeader(CONNECTION, connectionHeader);

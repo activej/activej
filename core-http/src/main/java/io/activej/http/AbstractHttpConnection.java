@@ -46,6 +46,7 @@ import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
+import static io.activej.http.PoolLabel.NONE;
 import static java.lang.Math.max;
 
 @SuppressWarnings({"WeakerAccess", "PointlessBitwiseExpression"})
@@ -201,6 +202,14 @@ public abstract class AbstractHttpConnection {
 
 	public MemSize getMaxBodySize() {
 		return MemSize.bytes(maxBodySize);
+	}
+
+	public int getNumberOfKeepAliveRequests() {
+		return numberOfKeepAliveRequests;
+	}
+
+	public PoolLabel getCurrentPool() {
+		return pool == null ? NONE : pool.getLabel();
 	}
 
 	protected void closeWebSocketConnection(Throwable e) {

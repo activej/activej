@@ -19,6 +19,8 @@ package io.activej.http;
 import org.jetbrains.annotations.Nullable;
 
 final class ConnectionsLinkedList {
+	private final PoolLabel label;
+
 	private int size;
 
 	@Nullable
@@ -26,12 +28,21 @@ final class ConnectionsLinkedList {
 	@Nullable
 	private AbstractHttpConnection last;
 
+	ConnectionsLinkedList(PoolLabel label) {
+		assert label != PoolLabel.NONE;
+		this.label = label;
+	}
+
 	public boolean isEmpty() {
 		return first == null;
 	}
 
 	public int size() {
 		return size;
+	}
+
+	public PoolLabel getLabel() {
+		return label;
 	}
 
 	public void addLastNode(AbstractHttpConnection node) {
@@ -90,5 +101,10 @@ final class ConnectionsLinkedList {
 			assert connection.prev == null && connection.next == null;
 			connection = next;
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "ConnectionsLinkedList[" + label + "]{" + "size=" + size + '}';
 	}
 }
