@@ -46,6 +46,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -229,7 +230,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket) {
+	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		Messaging<DataflowCommand, DataflowResponse> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 		messaging.receive()
 				.whenResult(msg -> {

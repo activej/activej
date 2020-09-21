@@ -22,8 +22,6 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetSocketAddress;
-
 /**
  * Common interface for connection-oriented transport protocols.
  * <p>
@@ -61,6 +59,4 @@ public interface AsyncTcpSocket extends AsyncCloseable {
 	Promise<Void> write(@Nullable ByteBuf buf);
 
 	boolean isClosed();
-
-	InetSocketAddress getRemoteAddress();
 }

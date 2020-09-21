@@ -38,7 +38,6 @@ import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetSocketAddress;
 import java.time.Duration;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
@@ -46,7 +45,6 @@ import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
-import static io.activej.http.PoolLabel.NONE;
 import static java.lang.Math.max;
 
 @SuppressWarnings({"WeakerAccess", "PointlessBitwiseExpression"})
@@ -80,7 +78,6 @@ public abstract class AbstractHttpConnection {
 
 	protected final AsyncTcpSocket socket;
 	protected final ByteBufQueue readQueue = new ByteBufQueue();
-	protected final InetSocketAddress remoteAddress;
 	protected final int maxBodySize;
 
 	protected static final byte KEEP_ALIVE = 1 << 0;
@@ -138,7 +135,6 @@ public abstract class AbstractHttpConnection {
 	public AbstractHttpConnection(Eventloop eventloop, AsyncTcpSocket socket, int maxBodySize) {
 		this.eventloop = eventloop;
 		this.socket = socket;
-		this.remoteAddress = socket.getRemoteAddress();
 		this.maxBodySize = maxBodySize;
 	}
 
@@ -196,20 +192,12 @@ public abstract class AbstractHttpConnection {
 		return MemSize.bytes(contentLength);
 	}
 
-	public InetSocketAddress getRemoteAddress() {
-		return remoteAddress;
-	}
-
 	public MemSize getMaxBodySize() {
 		return MemSize.bytes(maxBodySize);
 	}
 
 	public int getNumberOfKeepAliveRequests() {
 		return numberOfKeepAliveRequests;
-	}
-
-	public PoolLabel getCurrentPool() {
-		return pool == null ? NONE : pool.getLabel();
 	}
 
 	protected void closeWebSocketConnection(Throwable e) {
@@ -590,9 +578,10 @@ public abstract class AbstractHttpConnection {
 		return ", socket=" + socket +
 				", readQueue=" + readQueue +
 				", closed=" + isClosed() +
-				", keepAlive=" + ((flags & KEEP_ALIVE) != 0) +
-				", isGzipped=" + ((flags & GZIPPED) != 0) +
-				", isChunked=" + ((flags & CHUNKED) != 0) +
+				", keepAlive=" + isKeepAlive() +
+				", gzipped=" + isGzipped() +
+				", chunked=" + isChunked() +
+				", webSocket=" + isWebSocket() +
 				", contentLengthRemaining=" + contentLength +
 				", poolTimestamp=" + poolTimestamp;
 	}

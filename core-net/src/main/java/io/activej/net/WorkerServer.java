@@ -19,7 +19,6 @@ package io.activej.net;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.SocketSettings;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 
@@ -31,6 +30,6 @@ import java.nio.channels.SocketChannel;
 public interface WorkerServer {
 	Eventloop getEventloop();
 
-	void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetAddress remoteAddress,
+	void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteAddress,
 			boolean ssl, SocketSettings socketSettings);
 }

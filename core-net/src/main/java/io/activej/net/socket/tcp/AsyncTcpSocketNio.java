@@ -38,7 +38,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -96,23 +95,23 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
-		void onConnect(SocketAddress remoteAddress);
+		void onConnect(InetSocketAddress remoteAddress);
 
-		void onReadTimeout(SocketAddress remoteAddress);
+		void onReadTimeout(InetSocketAddress remoteAddress);
 
-		void onRead(SocketAddress remoteAddress, ByteBuf buf);
+		void onRead(InetSocketAddress remoteAddress, ByteBuf buf);
 
-		void onReadEndOfStream(SocketAddress remoteAddress);
+		void onReadEndOfStream(InetSocketAddress remoteAddress);
 
-		void onReadError(SocketAddress remoteAddress, IOException e);
+		void onReadError(InetSocketAddress remoteAddress, IOException e);
 
-		void onWriteTimeout(SocketAddress remoteAddress);
+		void onWriteTimeout(InetSocketAddress remoteAddress);
 
-		void onWrite(SocketAddress remoteAddress, ByteBuf buf, int bytes);
+		void onWrite(InetSocketAddress remoteAddress, ByteBuf buf, int bytes);
 
-		void onWriteError(SocketAddress remoteAddress, IOException e);
+		void onWriteError(InetSocketAddress remoteAddress, IOException e);
 
-		void onClose(SocketAddress remoteAddress);
+		void onClose(InetSocketAddress remoteAddress);
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
@@ -130,49 +129,49 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		private final EventStats closes = EventStats.create(SMOOTHING_WINDOW);
 
 		@Override
-		public void onConnect(SocketAddress remoteAddress) {
+		public void onConnect(InetSocketAddress remoteAddress) {
 			connects.recordEvent();
 		}
 
 		@Override
-		public void onReadTimeout(SocketAddress remoteAddress) {
+		public void onReadTimeout(InetSocketAddress remoteAddress) {
 			readTimeouts.recordEvent();
 		}
 
 		@Override
-		public void onRead(SocketAddress remoteAddress, ByteBuf buf) {
+		public void onRead(InetSocketAddress remoteAddress, ByteBuf buf) {
 			reads.recordValue(buf.readRemaining());
 		}
 
 		@Override
-		public void onReadEndOfStream(SocketAddress remoteAddress) {
+		public void onReadEndOfStream(InetSocketAddress remoteAddress) {
 			readEndOfStreams.recordEvent();
 		}
 
 		@Override
-		public void onReadError(SocketAddress remoteAddress, IOException e) {
+		public void onReadError(InetSocketAddress remoteAddress, IOException e) {
 			readErrors.recordException(e, remoteAddress);
 		}
 
 		@Override
-		public void onWriteTimeout(SocketAddress remoteAddress) {
+		public void onWriteTimeout(InetSocketAddress remoteAddress) {
 			writeTimeouts.recordEvent();
 		}
 
 		@Override
-		public void onWrite(SocketAddress remoteAddress, ByteBuf buf, int bytes) {
+		public void onWrite(InetSocketAddress remoteAddress, ByteBuf buf, int bytes) {
 			writes.recordValue(bytes);
 			if (buf.readRemaining() != bytes)
 				writeOverloaded.recordEvent();
 		}
 
 		@Override
-		public void onWriteError(SocketAddress remoteAddress, IOException e) {
+		public void onWriteError(InetSocketAddress remoteAddress, IOException e) {
 			writeErrors.recordException(e, remoteAddress);
 		}
 
 		@Override
-		public void onClose(SocketAddress remoteAddress) {
+		public void onClose(InetSocketAddress remoteAddress) {
 			closes.recordEvent();
 		}
 
@@ -227,8 +226,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 	}
 
-	public static AsyncTcpSocketNio wrapChannel(Eventloop eventloop, SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
-		AsyncTcpSocketNio asyncTcpSocket = new AsyncTcpSocketNio(eventloop, socketChannel);
+	public static AsyncTcpSocketNio wrapChannel(Eventloop eventloop, SocketChannel socketChannel, @NotNull InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
+		AsyncTcpSocketNio asyncTcpSocket = new AsyncTcpSocketNio(eventloop, socketChannel, remoteAddress);
 		if (socketSettings == null) return asyncTcpSocket;
 		socketSettings.applySettings(socketChannel);
 		if (socketSettings.hasImplReadTimeout()) {
@@ -241,6 +240,10 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 			asyncTcpSocket.readBufferSize = socketSettings.getImplReadBufferSizeBytes();
 		}
 		return asyncTcpSocket;
+	}
+
+	public static AsyncTcpSocketNio wrapChannel(Eventloop eventloop, SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
+		return wrapChannel(eventloop, socketChannel, ((InetSocketAddress) socketChannel.getRemoteAddress()), socketSettings);
 	}
 
 	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address) {
@@ -256,7 +259,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		return Promise.<SocketChannel>ofCallback(cb -> eventloop.connect(address, timeout, cb))
 				.then(channel -> {
 					try {
-						return Promise.of(wrapChannel(eventloop, channel, socketSettings));
+						return Promise.of(wrapChannel(eventloop, channel, address, socketSettings));
 					} catch (IOException e) {
 						eventloop.closeChannel(channel, null);
 						return Promise.ofException(e);
@@ -270,10 +273,10 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		return this;
 	}
 
-	private AsyncTcpSocketNio(Eventloop eventloop, @NotNull SocketChannel socketChannel) throws IOException {
+	private AsyncTcpSocketNio(Eventloop eventloop, @NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
 		this.eventloop = eventloop;
 		this.channel = socketChannel;
-		this.remoteAddress = (InetSocketAddress) socketChannel.getRemoteAddress();
+		this.remoteAddress = remoteAddress;
 	}
 	// endregion
 
@@ -536,11 +539,6 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	@Override
 	public boolean isClosed() {
 		return channel == null;
-	}
-
-	@Override
-	public InetSocketAddress getRemoteAddress() {
-		return remoteAddress;
 	}
 
 	@Nullable

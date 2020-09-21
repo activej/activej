@@ -32,6 +32,8 @@ import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetSocketAddress;
+
 import static io.activej.bytebuf.ByteBufStrings.SP;
 import static io.activej.bytebuf.ByteBufStrings.decodePositiveInt;
 import static io.activej.csp.ChannelSuppliers.concat;
@@ -103,13 +105,25 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Nullable
 	private final Inspector inspector;
 
+	final InetSocketAddress remoteAddress;
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
 
-	HttpClientConnection(Eventloop eventloop, AsyncHttpClient client, AsyncTcpSocket asyncTcpSocket) {
+	HttpClientConnection(Eventloop eventloop, AsyncHttpClient client, AsyncTcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
 		super(eventloop, asyncTcpSocket, client.maxBodySize);
 		this.client = client;
 		this.inspector = client.inspector;
+		this.remoteAddress = remoteAddress;
+	}
+
+	public PoolLabel getCurrentPool() {
+		if (pool == client.poolKeepAlive) return PoolLabel.KEEP_ALIVE;
+		if (pool == client.poolReadWrite) return PoolLabel.READ_WRITE;
+		return PoolLabel.NONE;
+	}
+
+	public InetSocketAddress getRemoteAddress() {
+		return remoteAddress;
 	}
 
 	@Override
@@ -426,10 +440,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	public String toString() {
 		return "HttpClientConnection{" +
-				"promise=" + promise +
+				"pool=" + getCurrentPool() +
+				", promise=" + promise +
 				", response=" + response +
 				", httpClient=" + client +
-				", keepAlive=" + (pool == client.poolKeepAlive) +
 				//				", lastRequestUrl='" + (request.getFullUrl() == null ? "" : request.getFullUrl()) + '\'' +
 				", remoteAddress=" + remoteAddress +
 				',' + super.toString() +

@@ -31,11 +31,10 @@ public final class TcpServerExample {
 
 			try {
 				socket = AsyncTcpSocketNio.wrapChannel(eventloop, channel, null);
+				System.out.println("Client connected: " + channel.getRemoteAddress());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-
-			System.out.println("Client connected: " + socket.getRemoteAddress());
 
 			ChannelSupplier.ofSocket(socket)
 					.transformWith(ChannelDeserializer.create(INT_SERIALIZER))

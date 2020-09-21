@@ -199,7 +199,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 	// endregion
 
-	protected abstract void serve(AsyncTcpSocket socket);
+	protected abstract void serve(AsyncTcpSocket socket, InetAddress remoteAddress);
 
 	protected void onListen() {
 	}
@@ -298,13 +298,14 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 	private void doAccept(SocketChannel channel, InetSocketAddress localAddress, boolean ssl) {
-		InetAddress remoteAddress;
+		InetSocketAddress remoteSocketAddress;
 		try {
-			remoteAddress = ((InetSocketAddress) channel.getRemoteAddress()).getAddress();
+			remoteSocketAddress = (InetSocketAddress) channel.getRemoteAddress();
 		} catch (IOException e) {
 			eventloop.closeChannel(channel, null);
 			return;
 		}
+		InetAddress remoteAddress = remoteSocketAddress.getAddress();
 
 		if (acceptFilter != null && acceptFilter.filterAccept(channel, localAddress, remoteAddress, ssl)) {
 			filteredAccepts.recordEvent();
@@ -317,7 +318,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		Eventloop workerServerEventloop = workerServer.getEventloop();
 
 		if (workerServerEventloop == eventloop) {
-			workerServer.doAccept(channel, localAddress, remoteAddress, ssl, socketSettings);
+			workerServer.doAccept(channel, localAddress, remoteSocketAddress, ssl, socketSettings);
 		} else {
 			if (logger.isTraceEnabled()) {
 				logger.trace("received connection from [{}]{}: {}", remoteAddress, ssl ? " over SSL" : "", this);
@@ -325,7 +326,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 			accepts.recordEvent();
 			if (ssl) acceptsSsl.recordEvent();
 			onAccept(channel, localAddress, remoteAddress, ssl);
-			workerServerEventloop.execute(wrapContext(workerServer, () -> workerServer.doAccept(channel, localAddress, remoteAddress, ssl, socketSettings)));
+			workerServerEventloop.execute(wrapContext(workerServer, () -> workerServer.doAccept(channel, localAddress, remoteSocketAddress, ssl, socketSettings)));
 		}
 
 		if (acceptOnce) {
@@ -334,15 +335,16 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 	@Override
-	public final void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetAddress remoteAddress,
+	public final void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteSocketAddress,
 			boolean ssl, SocketSettings socketSettings) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		accepts.recordEvent();
 		if (ssl) acceptsSsl.recordEvent();
+		InetAddress remoteAddress = remoteSocketAddress.getAddress();
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
 		AsyncTcpSocket asyncTcpSocket;
 		try {
-			asyncTcpSocket = wrapChannel(eventloop, socketChannel, socketSettings)
+			asyncTcpSocket = wrapChannel(eventloop, socketChannel, remoteSocketAddress, socketSettings)
 					.withInspector(ssl ? socketSslInspector : socketInspector);
 		} catch (IOException e) {
 			logger.warn("Failed to wrap channel {}", socketChannel, e);
@@ -350,7 +352,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 			return;
 		}
 		asyncTcpSocket = ssl ? wrapServerSocket(asyncTcpSocket, sslContext, sslExecutor) : asyncTcpSocket;
-		serve(asyncTcpSocket);
+		serve(asyncTcpSocket, remoteAddress);
 	}
 
 	public ServerSocketSettings getServerSocketSettings() {

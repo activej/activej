@@ -33,6 +33,7 @@ import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
@@ -40,7 +41,6 @@ import java.util.stream.Stream;
 
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
-import static io.activej.http.PoolLabel.*;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -71,10 +71,10 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	int maxWebSocketMessageSize = MAX_WEB_SOCKET_MESSAGE_SIZE.toInt();
 	int maxKeepAliveRequests = MAX_KEEP_ALIVE_REQUESTS;
 
-	final ConnectionsLinkedList poolNew = new ConnectionsLinkedList(NEW);
-	final ConnectionsLinkedList poolReadWrite = new ConnectionsLinkedList(READ_WRITE);
-	final ConnectionsLinkedList poolServing = new ConnectionsLinkedList(SERVING);
-	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList(KEEP_ALIVE);
+	final ConnectionsLinkedList poolNew = new ConnectionsLinkedList();
+	final ConnectionsLinkedList poolReadWrite = new ConnectionsLinkedList();
+	final ConnectionsLinkedList poolServing = new ConnectionsLinkedList();
+	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList();
 	private int poolKeepAliveExpired;
 	private int poolReadWriteExpired;
 
@@ -256,11 +256,11 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket) {
+	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		if (expiredConnectionsCheck == null) {
 			scheduleExpiredConnectionsCheck();
 		}
-		HttpServerConnection connection = new HttpServerConnection(eventloop, socket, this, servlet, charBuffer);
+		HttpServerConnection connection = new HttpServerConnection(eventloop, socket, remoteAddress, this, servlet, charBuffer);
 		connection.serve();
 	}
 

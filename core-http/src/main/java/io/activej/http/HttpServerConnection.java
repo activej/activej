@@ -31,6 +31,7 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetAddress;
 import java.util.Arrays;
 
 import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
@@ -75,6 +76,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 	}
 
+	private final InetAddress remoteAddress;
+
 	@Nullable
 	private HttpRequest request;
 	private final AsyncHttpServer server;
@@ -90,12 +93,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * Creates a new instance of HttpServerConnection
 	 *
 	 * @param eventloop     eventloop which will handle its tasks
+	 * @param remoteAddress an address of remote
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests
 	 */
-	HttpServerConnection(Eventloop eventloop, AsyncTcpSocket asyncTcpSocket,
+	HttpServerConnection(Eventloop eventloop, AsyncTcpSocket asyncTcpSocket, InetAddress remoteAddress,
 			AsyncHttpServer server, AsyncServlet servlet, char[] charBuffer) {
 		super(eventloop, asyncTcpSocket, server.maxBodySize);
+		this.remoteAddress = remoteAddress;
 		this.server = server;
 		this.servlet = servlet;
 		this.inspector = server.inspector;
@@ -106,6 +111,18 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		(pool = server.poolNew).addLastNode(this);
 		poolTimestamp = eventloop.currentTimeMillis();
 		socket.read().whenComplete(startLineConsumer);
+	}
+
+	public PoolLabel getCurrentPool() {
+		if (pool == server.poolNew) return PoolLabel.NEW;
+		if (pool == server.poolKeepAlive) return PoolLabel.KEEP_ALIVE;
+		if (pool == server.poolReadWrite) return PoolLabel.READ_WRITE;
+		if (pool == server.poolServing) return PoolLabel.SERVING;
+		return PoolLabel.NONE;
+	}
+
+	public InetAddress getRemoteAddress() {
+		return remoteAddress;
 	}
 
 	@Override
@@ -392,7 +409,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@Override
 	public String toString() {
 		return "HttpServerConnection{" +
-				"remoteAddress=" + remoteAddress +
+				"pool=" + getCurrentPool() +
+				", remoteAddress=" + remoteAddress +
 				',' + super.toString() +
 				'}';
 	}

@@ -59,8 +59,6 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.jmx.MBeanFormat.formatListAsMultilineString;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
-import static io.activej.http.PoolLabel.KEEP_ALIVE;
-import static io.activej.http.PoolLabel.READ_WRITE;
 import static io.activej.http.Protocol.*;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -94,8 +92,8 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
-	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList(KEEP_ALIVE);
-	final ConnectionsLinkedList poolReadWrite = new ConnectionsLinkedList(READ_WRITE);
+	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList();
+	final ConnectionsLinkedList poolReadWrite = new ConnectionsLinkedList();
 	private int poolKeepAliveExpired;
 	private int poolReadWriteExpired;
 
@@ -472,7 +470,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 										sslContext, sslExecutor) :
 								asyncTcpSocketImpl;
 
-						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket);
+						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
 
 						if (inspector != null) inspector.onConnect(connection, request);
 
