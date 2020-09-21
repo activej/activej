@@ -22,7 +22,7 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 
 /**
  * Common interface for connection-oriented transport protocols.
@@ -62,5 +62,5 @@ public interface AsyncTcpSocket extends AsyncCloseable {
 
 	boolean isClosed();
 
-	SocketAddress getRemoteAddress();
+	InetSocketAddress getRemoteAddress();
 }

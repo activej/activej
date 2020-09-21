@@ -64,7 +64,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
 
 	private final Eventloop eventloop;
-	private final SocketAddress remoteAddress;
+	private final InetSocketAddress remoteAddress;
 
 	@Nullable
 	private SocketChannel channel;
@@ -273,7 +273,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private AsyncTcpSocketNio(Eventloop eventloop, @NotNull SocketChannel socketChannel) throws IOException {
 		this.eventloop = eventloop;
 		this.channel = socketChannel;
-		this.remoteAddress = socketChannel.getRemoteAddress();
+		this.remoteAddress = (InetSocketAddress) socketChannel.getRemoteAddress();
 	}
 	// endregion
 
@@ -539,7 +539,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	}
 
 	@Override
-	public SocketAddress getRemoteAddress() {
+	public InetSocketAddress getRemoteAddress() {
 		return remoteAddress;
 	}
 

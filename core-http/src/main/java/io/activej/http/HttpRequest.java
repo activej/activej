@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,7 +64,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	private static final int HTTP_1_1_SIZE = HTTP_1_1.length;
 	private final HttpMethod method;
 	private final UrlParser url;
-	private InetAddress remoteAddress;
+	private InetSocketAddress remoteAddress;
 	private Map<String, String> pathParameters;
 	private Map<String, String> queryParameters;
 	private Map<String, String> postParameters;
@@ -188,13 +188,13 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	@Contract(pure = true)
-	public InetAddress getRemoteAddress() {
+	public InetSocketAddress getRemoteAddress() {
 		// it makes sense to call this method only on server
 		if (CHECK) checkNotNull(remoteAddress);
 		return remoteAddress;
 	}
 
-	void setRemoteAddress(@NotNull InetAddress inetAddress) {
+	void setRemoteAddress(@NotNull InetSocketAddress inetAddress) {
 		if (CHECK) checkState(!isRecycled());
 		remoteAddress = inetAddress;
 	}

@@ -31,7 +31,6 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetAddress;
 import java.util.Arrays;
 
 import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
@@ -53,7 +52,7 @@ import static io.activej.http.WebSocketConstants.UPGRADE_WITH_BODY;
  * from {@link AsyncHttpClient clients} and respond to them with
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
-final class HttpServerConnection extends AbstractHttpConnection {
+public final class HttpServerConnection extends AbstractHttpConnection {
 	private static final boolean CHECK = Checks.isEnabled(HttpServerConnection.class);
 
 	private static final int HEADERS_SLOTS = 256;
@@ -76,8 +75,6 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		}
 	}
 
-	private final InetAddress remoteAddress;
-
 	@Nullable
 	private HttpRequest request;
 	private final AsyncHttpServer server;
@@ -85,7 +82,6 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	private final Inspector inspector;
 	private final AsyncServlet servlet;
 	private final char[] charBuffer;
-	private final int maxBodySize;
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
 	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");
@@ -94,31 +90,28 @@ final class HttpServerConnection extends AbstractHttpConnection {
 	 * Creates a new instance of HttpServerConnection
 	 *
 	 * @param eventloop     eventloop which will handle its tasks
-	 * @param remoteAddress an address of remote
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests
 	 */
-	HttpServerConnection(Eventloop eventloop, InetAddress remoteAddress, AsyncTcpSocket asyncTcpSocket,
+	HttpServerConnection(Eventloop eventloop, AsyncTcpSocket asyncTcpSocket,
 			AsyncHttpServer server, AsyncServlet servlet, char[] charBuffer) {
-		super(eventloop, asyncTcpSocket);
+		super(eventloop, asyncTcpSocket, server.maxBodySize);
 		this.server = server;
 		this.servlet = servlet;
-		this.remoteAddress = remoteAddress;
 		this.inspector = server.inspector;
 		this.charBuffer = charBuffer;
-		this.maxBodySize = server.maxBodySize;
 	}
 
-	public void serve() {
+	void serve() {
 		(pool = server.poolNew).addLastNode(this);
 		poolTimestamp = eventloop.currentTimeMillis();
 		socket.read().whenComplete(startLineConsumer);
 	}
 
 	@Override
-	public void onClosedWithError(@NotNull Throwable e) {
+	protected void onClosedWithError(@NotNull Throwable e) {
 		if (inspector != null) {
-			inspector.onHttpError(remoteAddress, e);
+			inspector.onHttpError(this, e);
 		}
 	}
 
@@ -279,7 +272,7 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		}
 		request.setRemoteAddress(remoteAddress);
 
-		if (inspector != null) inspector.onHttpRequest(request, (flags & KEEP_ALIVE) != 0);
+		if (inspector != null) inspector.onHttpRequest(this, request);
 
 		switchPool(server.poolServing);
 
@@ -302,12 +295,12 @@ final class HttpServerConnection extends AbstractHttpConnection {
 			switchPool(server.poolReadWrite);
 			if (e == null) {
 				if (inspector != null) {
-					inspector.onHttpResponse(request, response, (flags & KEEP_ALIVE) != 0);
+					inspector.onHttpResponse(this, request, response);
 				}
 				writeHttpResponse(response);
 			} else {
 				if (inspector != null) {
-					inspector.onServletException(request, e);
+					inspector.onServletException(this, request, e);
 				}
 				writeException(e);
 			}

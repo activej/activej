@@ -199,7 +199,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 	// endregion
 
-	protected abstract void serve(AsyncTcpSocket socket, InetAddress remoteAddress);
+	protected abstract void serve(AsyncTcpSocket socket);
 
 	protected void onListen() {
 	}
@@ -350,7 +350,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 			return;
 		}
 		asyncTcpSocket = ssl ? wrapServerSocket(asyncTcpSocket, sslContext, sslExecutor) : asyncTcpSocket;
-		serve(asyncTcpSocket, remoteAddress);
+		serve(asyncTcpSocket);
 	}
 
 	public ServerSocketSettings getServerSocketSettings() {

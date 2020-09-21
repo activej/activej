@@ -31,7 +31,6 @@ import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 
-import java.net.InetAddress;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -91,7 +90,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(AsyncTcpSocket socket) {
 		MessagingWithBinaryStreaming<FsCommand, FsResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()

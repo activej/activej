@@ -127,13 +127,13 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onResolveError(HttpRequest request, Throwable e);
 
-		void onConnect(HttpRequest request, InetSocketAddress address);
+		void onConnect(HttpClientConnection connection, HttpRequest request);
 
 		void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e);
 
-		void onHttpResponse(HttpResponse response, boolean keepAlive);
+		void onHttpResponse(HttpClientConnection connection, HttpResponse response);
 
-		void onHttpError(boolean keepAliveConnection, Throwable e);
+		void onHttpError(HttpClientConnection connection, Throwable e);
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -165,7 +165,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onConnect(HttpRequest request, InetSocketAddress address) {
+		public void onConnect(HttpClientConnection connection, HttpRequest request) {
 			connected.recordEvent();
 		}
 
@@ -175,12 +175,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onHttpResponse(HttpResponse response, boolean keepAlive) {
+		public void onHttpResponse(HttpClientConnection connection, HttpResponse response) {
 			responses++;
 		}
 
 		@Override
-		public void onHttpError(boolean keepAliveConnection, Throwable e) {
+		public void onHttpError(HttpClientConnection connection, Throwable e) {
 			if (e == AbstractHttpConnection.READ_TIMEOUT_ERROR || e == AbstractHttpConnection.WRITE_TIMEOUT_ERROR) {
 				httpTimeouts.recordEvent();
 				return;
@@ -191,7 +191,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 			}
 			// when connection is in keep-alive state, it means that the response already happened,
 			// so error of keep-alive connection is not a response error
-			if (!keepAliveConnection) {
+			if (!connection.isKeepAlive()) {
 				responsesErrors++;
 			}
 		}
@@ -470,9 +470,9 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 										sslContext, sslExecutor) :
 								asyncTcpSocketImpl;
 
-						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
+						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket);
 
-						if (inspector != null) inspector.onConnect(request, address);
+						if (inspector != null) inspector.onConnect(connection, request);
 
 						if (expiredConnectionsCheck == null)
 							scheduleExpiredConnectionsCheck();

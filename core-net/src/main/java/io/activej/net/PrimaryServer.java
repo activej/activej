@@ -19,7 +19,6 @@ package io.activej.net;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -62,7 +61,7 @@ public final class PrimaryServer extends AbstractServer<PrimaryServer> {
 	// endregion
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(AsyncTcpSocket socket) {
 		throw new UnsupportedOperationException();
 	}
 

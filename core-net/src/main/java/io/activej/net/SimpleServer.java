@@ -19,7 +19,6 @@ package io.activej.net;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 
-import java.net.InetAddress;
 import java.util.function.Consumer;
 
 /**
@@ -43,7 +42,7 @@ public final class SimpleServer extends AbstractServer<SimpleServer> {
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(AsyncTcpSocket socket) {
 		socketConsumer.accept(socket);
 	}
 }

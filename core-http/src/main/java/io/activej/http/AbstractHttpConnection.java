@@ -38,6 +38,9 @@ import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetSocketAddress;
+import java.time.Duration;
+
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
@@ -76,6 +79,8 @@ public abstract class AbstractHttpConnection {
 
 	protected final AsyncTcpSocket socket;
 	protected final ByteBufQueue readQueue = new ByteBufQueue();
+	protected final InetSocketAddress remoteAddress;
+	protected final int maxBodySize;
 
 	protected static final byte KEEP_ALIVE = 1 << 0;
 	protected static final byte GZIPPED = 1 << 1;
@@ -126,11 +131,14 @@ public abstract class AbstractHttpConnection {
 	/**
 	 * Creates a new instance of AbstractHttpConnection
 	 *
-	 * @param eventloop eventloop which will handle its I/O operations
+	 * @param eventloop   eventloop which will handle its I/O operations
+	 * @param maxBodySize - maximum size of message body
 	 */
-	public AbstractHttpConnection(Eventloop eventloop, AsyncTcpSocket socket) {
+	public AbstractHttpConnection(Eventloop eventloop, AsyncTcpSocket socket, int maxBodySize) {
 		this.eventloop = eventloop;
 		this.socket = socket;
+		this.remoteAddress = socket.getRemoteAddress();
+		this.maxBodySize = maxBodySize;
 	}
 
 	protected abstract void onStartLine(byte[] line, int limit) throws ParseException;
@@ -151,12 +159,48 @@ public abstract class AbstractHttpConnection {
 
 	protected abstract void onClosedWithError(@NotNull Throwable e);
 
-	protected final boolean isClosed() {
+	public final boolean isClosed() {
 		return flags < 0;
 	}
 
-	protected boolean isWebSocket() {
+	public boolean isKeepAlive() {
+		return (flags & KEEP_ALIVE) != 0;
+	}
+
+	public boolean isGzipped() {
+		return (flags & GZIPPED) != 0;
+	}
+
+	public boolean isChunked() {
+		return (flags & CHUNKED) != 0;
+	}
+
+	public boolean isBodyReceived() {
+		return (flags & BODY_RECEIVED) != 0;
+	}
+
+	public boolean isBodySent() {
+		return (flags & BODY_SENT) != 0;
+	}
+
+	public boolean isWebSocket() {
 		return (flags & WEB_SOCKET) != 0;
+	}
+
+	public Duration getPoolTimestamp() {
+		return Duration.ofMillis(poolTimestamp);
+	}
+
+	public MemSize getContentLength() {
+		return MemSize.bytes(contentLength);
+	}
+
+	public InetSocketAddress getRemoteAddress() {
+		return remoteAddress;
+	}
+
+	public MemSize getMaxBodySize() {
+		return MemSize.bytes(maxBodySize);
 	}
 
 	protected void closeWebSocketConnection(Throwable e) {
@@ -167,7 +211,7 @@ public abstract class AbstractHttpConnection {
 		}
 	}
 
-	public final void close() {
+	protected final void close() {
 		if (isClosed()) return;
 		flags |= CLOSED;
 		onClosed();

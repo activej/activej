@@ -31,7 +31,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLException;
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
@@ -437,7 +437,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	}
 
 	@Override
-	public SocketAddress getRemoteAddress() {
+	public InetSocketAddress getRemoteAddress() {
 		return upstream.getRemoteAddress();
 	}
 }

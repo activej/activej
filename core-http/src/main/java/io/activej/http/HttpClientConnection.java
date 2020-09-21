@@ -32,8 +32,6 @@ import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetSocketAddress;
-
 import static io.activej.bytebuf.ByteBufStrings.SP;
 import static io.activej.bytebuf.ByteBufStrings.decodePositiveInt;
 import static io.activej.csp.ChannelSuppliers.concat;
@@ -89,7 +87,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * }
  * </pre>
  */
-final class HttpClientConnection extends AbstractHttpConnection {
+public final class HttpClientConnection extends AbstractHttpConnection {
 	public static final ParseException INVALID_RESPONSE = new UnknownFormatException(HttpClientConnection.class, "Invalid response");
 	public static final StacklessException CONNECTION_CLOSED = new StacklessException(HttpClientConnection.class, "Connection closed");
 	public static final StacklessException NOT_ACCEPTED_RESPONSE = new StacklessException(HttpClientConnection.class, "Response was not accepted");
@@ -105,23 +103,18 @@ final class HttpClientConnection extends AbstractHttpConnection {
 	@Nullable
 	private final Inspector inspector;
 
-	final InetSocketAddress remoteAddress;
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
-	final int maxBodySize;
 
-	HttpClientConnection(Eventloop eventloop, AsyncHttpClient client,
-			AsyncTcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
-		super(eventloop, asyncTcpSocket);
-		this.remoteAddress = remoteAddress;
+	HttpClientConnection(Eventloop eventloop, AsyncHttpClient client, AsyncTcpSocket asyncTcpSocket) {
+		super(eventloop, asyncTcpSocket, client.maxBodySize);
 		this.client = client;
-		this.maxBodySize = client.maxBodySize;
 		this.inspector = client.inspector;
 	}
 
 	@Override
-	public void onClosedWithError(@NotNull Throwable e) {
-		if (inspector != null) inspector.onHttpError((flags & KEEP_ALIVE) != 0, e);
+	protected void onClosedWithError(@NotNull Throwable e) {
+		if (inspector != null) inspector.onHttpError(this, e);
 		if (promise != null) {
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
@@ -191,7 +184,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 		if (isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
 		}
-		if (inspector != null) inspector.onHttpResponse(response, (flags & KEEP_ALIVE) != 0);
+		if (inspector != null) inspector.onHttpResponse(this, response);
 
 		SettablePromise<HttpResponse> promise = this.promise;
 		this.promise = null;
@@ -248,7 +241,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@NotNull
-	public Promise<WebSocket> sendWebSocketRequest(HttpRequest request) {
+	Promise<WebSocket> sendWebSocketRequest(HttpRequest request) {
 		assert !isClosed();
 		SettablePromise<HttpResponse> promise = new SettablePromise<>();
 		this.promise = promise;
@@ -365,7 +358,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 	 *
 	 * @param request request for sending
 	 */
-	public Promise<HttpResponse> send(HttpRequest request) {
+	Promise<HttpResponse> send(HttpRequest request) {
 		assert !isClosed();
 		SettablePromise<HttpResponse> promise = new SettablePromise<>();
 		this.promise = promise;
@@ -405,7 +398,7 @@ final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	protected void onClosed() {
 		if (promise != null) {
-			if (inspector != null) inspector.onHttpError((flags & KEEP_ALIVE) != 0, CONNECTION_CLOSED);
+			if (inspector != null) inspector.onHttpError(this, CONNECTION_CLOSED);
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
 			promise.setException(CONNECTION_CLOSED);

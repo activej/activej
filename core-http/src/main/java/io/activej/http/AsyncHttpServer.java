@@ -33,7 +33,6 @@ import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
@@ -85,13 +84,13 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
-		void onHttpError(InetAddress remoteAddress, Throwable e);
+		void onHttpError(HttpServerConnection connection, Throwable e);
 
-		void onHttpRequest(HttpRequest request, boolean keepAlive);
+		void onHttpRequest(HttpServerConnection connection, HttpRequest request);
 
-		void onHttpResponse(HttpRequest request, HttpResponse httpResponse, boolean keepAlive);
+		void onHttpResponse(HttpServerConnection connection, HttpRequest request, HttpResponse httpResponse);
 
-		void onServletException(HttpRequest request, Throwable e);
+		void onServletException(HttpServerConnection connection, HttpRequest request, Throwable e);
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
@@ -104,7 +103,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		private final ExceptionStats servletExceptions = ExceptionStats.create();
 
 		@Override
-		public void onHttpError(InetAddress remoteAddress, Throwable e) {
+		public void onHttpError(HttpServerConnection connection, Throwable e) {
 			if (e == AbstractHttpConnection.READ_TIMEOUT_ERROR || e == AbstractHttpConnection.WRITE_TIMEOUT_ERROR) {
 				httpTimeouts.recordEvent();
 			} else {
@@ -113,17 +112,17 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		}
 
 		@Override
-		public void onHttpRequest(HttpRequest request, boolean keepAlive) {
+		public void onHttpRequest(HttpServerConnection connection, HttpRequest request) {
 			totalRequests.recordEvent();
 		}
 
 		@Override
-		public void onHttpResponse(HttpRequest request, HttpResponse httpResponse, boolean keepAlive) {
+		public void onHttpResponse(HttpServerConnection connection, HttpRequest request, HttpResponse httpResponse) {
 			totalResponses.recordEvent();
 		}
 
 		@Override
-		public void onServletException(HttpRequest request, Throwable e) {
+		public void onServletException(HttpServerConnection connection, HttpRequest request, Throwable e) {
 			servletExceptions.recordException(e, request.toString());
 		}
 
@@ -256,11 +255,11 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(AsyncTcpSocket socket) {
 		if (expiredConnectionsCheck == null) {
 			scheduleExpiredConnectionsCheck();
 		}
-		HttpServerConnection connection = new HttpServerConnection(eventloop, remoteAddress, socket, this, servlet, charBuffer);
+		HttpServerConnection connection = new HttpServerConnection(eventloop, socket, this, servlet, charBuffer);
 		connection.serve();
 	}
 

@@ -29,8 +29,6 @@ import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
 
-import java.net.InetAddress;
-
 import static io.activej.crdt.CrdtMessaging.*;
 import static io.activej.crdt.util.Utils.nullTerminatedJson;
 
@@ -56,7 +54,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
     }
 
     @Override
-    protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+    protected void serve(AsyncTcpSocket socket) {
         MessagingWithBinaryStreaming<CrdtMessage, CrdtResponse> messaging =
                 MessagingWithBinaryStreaming.create(socket, nullTerminatedJson(MESSAGE_CODEC, RESPONSE_CODEC));
         messaging.receive()
