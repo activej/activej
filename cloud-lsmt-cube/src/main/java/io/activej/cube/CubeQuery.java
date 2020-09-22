@@ -67,8 +67,8 @@ public final class CubeQuery {
 		return this;
 	}
 
-	public CubeQuery withHaving(AggregationPredicate predicate) {
-		this.having = predicate;
+	public CubeQuery withHaving(AggregationPredicate having) {
+		this.having = having;
 		return this;
 	}
 

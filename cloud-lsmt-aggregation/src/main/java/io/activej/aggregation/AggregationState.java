@@ -461,10 +461,11 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public List<AggregationChunk> findChunks(AggregationPredicate predicate, List<String> fields) {
-		Set<String> requestedFields = new HashSet<>(fields);
-
 		RangeScan rangeScan = toRangeScan(predicate, aggregation.getKeys(), aggregation.getKeyTypes());
+		if (rangeScan.isNoScan())
+			return emptyList();
 
+		Set<String> requestedFields = new HashSet<>(fields);
 		List<AggregationChunk> chunks = new ArrayList<>();
 		for (AggregationChunk chunk : rangeQuery(rangeScan.getFrom(), rangeScan.getTo())) {
 			if (intersection(new HashSet<>(chunk.getMeasures()), requestedFields).isEmpty())
