@@ -21,6 +21,7 @@ import io.activej.codec.StructuredCodecs;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.reflection.RecursiveType;
@@ -35,16 +36,27 @@ import java.util.Set;
 
 import static io.activej.codec.StructuredCodecs.*;
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.StringFormat.UTF8;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 public final class FieldTypes {
 
 	public static FieldType<Byte> ofByte() {
-		return new FieldType<>(byte.class, new SerializerDefByte(false), BYTE_CODEC);
+		return new FieldType<Byte>(byte.class, new SerializerDefByte(false), BYTE_CODEC) {
+			@Override
+			public Expression toStringValue(Expression value) {
+				return Expressions.staticCall(Byte.class, "toString", value);
+			}
+		};
 	}
 
 	public static FieldType<Short> ofShort() {
-		return new FieldType<>(short.class, new SerializerDefShort(false), SHORT_CODEC);
+		return new FieldType<Short>(short.class, new SerializerDefShort(false), SHORT_CODEC) {
+			@Override
+			public Expression toStringValue(Expression value) {
+				return Expressions.staticCall(Short.class, "toString", value);
+			}
+		};
 	}
 
 	public static FieldType<Integer> ofInt() {
@@ -61,6 +73,14 @@ public final class FieldTypes {
 
 	public static FieldType<Double> ofDouble() {
 		return new FieldType<>(double.class, new SerializerDefDouble(false), DOUBLE_CODEC);
+	}
+
+	public static FieldType<Character> ofChar() {
+		return new FieldType<>(char.class, new SerializerDefChar(false), CHARACTER_CODEC);
+	}
+
+	public static FieldType<Boolean> ofBoolean() {
+		return new FieldType<>(boolean.class, new SerializerDefBoolean(false), BOOLEAN_CODEC);
 	}
 
 	public static <T> FieldType<Set<T>> ofSet(FieldType<T> fieldType) {
@@ -82,11 +102,16 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<String> ofString() {
-		return new FieldType<>(String.class, new SerializerDefString(), STRING_CODEC);
+		return ofString(UTF8);
 	}
 
 	public static FieldType<String> ofString(StringFormat format) {
-		return new FieldType<>(String.class, new SerializerDefString(format), STRING_CODEC);
+		return new FieldType<String>(String.class, new SerializerDefString(format), STRING_CODEC) {
+			@Override
+			public Expression toStringValue(Expression value) {
+				return value;
+			}
+		};
 	}
 
 	public static FieldType<LocalDate> ofLocalDate() {

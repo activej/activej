@@ -195,8 +195,7 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateRegexp.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			Pattern p = Pattern.compile(right.regexp);
-			if (p.matcher(left.key).matches())
+			if (right.regexp.matcher(left.key).matches())
 				return left;
 			return alwaysFalse();
 		});
@@ -1015,9 +1014,9 @@ public class AggregationPredicates {
 
 	public static final class PredicateRegexp implements AggregationPredicate {
 		final String key;
-		final String regexp;
+		final Pattern regexp;
 
-		private PredicateRegexp(String key, String regexp) {
+		private PredicateRegexp(String key, Pattern regexp) {
 			this.key = key;
 			this.regexp = regexp;
 		}
@@ -1027,6 +1026,10 @@ public class AggregationPredicates {
 		}
 
 		public String getRegexp() {
+			return regexp.pattern();
+		}
+
+		public Pattern getRegexpPattern() {
 			return regexp;
 		}
 
@@ -1047,11 +1050,12 @@ public class AggregationPredicates {
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return E.cmpNe(
-					E.value(false),
-					E.call(E.call(E.value(Pattern.compile(regexp)), "matcher",
-							E.staticCall(String.class, "valueOf",
-									E.property(record, key.replace('.', '$')))), "matches"));
+			Variable value = E.property(record, key.replace('.', '$'));
+			return E.and(
+					isNotNull(value, fields.get(key)),
+					E.cmpNe(
+							E.value(false),
+							E.call(E.call(E.value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
 		}
 
 		@Override
@@ -1062,20 +1066,20 @@ public class AggregationPredicates {
 			PredicateRegexp that = (PredicateRegexp) o;
 
 			if (!key.equals(that.key)) return false;
-			return regexp.equals(that.regexp);
+			return regexp.pattern().equals(that.regexp.pattern());
 
 		}
 
 		@Override
 		public int hashCode() {
 			int result = key.hashCode();
-			result = 31 * result + regexp.hashCode();
+			result = 31 * result + regexp.pattern().hashCode();
 			return result;
 		}
 
 		@Override
 		public String toString() {
-			return key + " " + regexp;
+			return key + " " + regexp.pattern();
 		}
 	}
 
@@ -1478,6 +1482,10 @@ public class AggregationPredicates {
 	}
 
 	public static AggregationPredicate regexp(String key, String pattern) {
+		return new PredicateRegexp(key, Pattern.compile(pattern));
+	}
+
+	public static AggregationPredicate regexp(String key, Pattern pattern) {
 		return new PredicateRegexp(key, pattern);
 	}
 
@@ -1541,6 +1549,10 @@ public class AggregationPredicates {
 	@SuppressWarnings("unchecked")
 	private static Object toInternalValue(Map<String, FieldType> fields, String key, Object value) {
 		return fields.containsKey(key) ? fields.get(key).toInternalValue(value) : value;
+	}
+
+	private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
+		return fields.containsKey(key) ? fields.get(key).toStringValue(value) : value;
 	}
 
 	public static RangeScan toRangeScan(AggregationPredicate predicate, List<String> primaryKey, Map<String, FieldType> fields) {

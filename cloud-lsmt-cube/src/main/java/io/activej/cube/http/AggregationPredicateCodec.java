@@ -25,6 +25,8 @@ import io.activej.common.exception.parse.ParseException;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.codec.StructuredInput.Token.OBJECT;
@@ -319,7 +321,13 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 	private AggregationPredicate readRegexp(StructuredInput reader) throws ParseException {
 		String attribute = reader.readString();
 		String regexp = reader.readString();
-		return regexp(attribute, regexp);
+		Pattern pattern;
+		try {
+			pattern = Pattern.compile(regexp);
+		} catch (PatternSyntaxException e) {
+			throw new ParseException("Malformed regexp", e);
+		}
+		return regexp(attribute, pattern);
 	}
 
 	private AggregationPredicate readAnd(StructuredInput reader) throws ParseException {

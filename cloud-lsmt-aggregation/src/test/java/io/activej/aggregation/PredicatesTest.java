@@ -1,9 +1,20 @@
 package io.activej.aggregation;
 
+import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.DefiningClassLoader;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Predicate;
+
 import static io.activej.aggregation.AggregationPredicates.*;
-import static org.junit.Assert.assertEquals;
+import static io.activej.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.codegen.expression.Expressions.arg;
+import static io.activej.codegen.expression.Expressions.cast;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.*;
 
 public class PredicatesTest {
 	@Test
@@ -522,4 +533,75 @@ public class PredicatesTest {
 		assertEquals(in("x", 1, 2, 3), predicate.simplify());
 	}
 
+	@Test
+	public void testPredicateRegexp() {
+		Record record = new Record();
+		assertTrue(matches(record, "booleanValue", "^false$"));
+		record.booleanValue = true;
+		assertTrue(matches(record, "booleanValue", "^true$"));
+
+		assertTrue(matches(record, "byteValue", "^0$"));
+		record.byteValue = 123;
+		assertTrue(matches(record, "byteValue", "^123$"));
+
+		record.shortValue = 123;
+		assertTrue(matches(record, "shortValue", "^123$"));
+
+		record.charValue = 'i';
+		assertTrue(matches(record, "charValue", "^i$"));
+
+		record.intValue = -123;
+		assertTrue(matches(record, "intValue", "^-123$"));
+
+		record.longValue = Long.MIN_VALUE;
+		assertTrue(matches(record, "longValue", "^" + Long.MIN_VALUE + "$"));
+
+		record.floatValue = 0.000000001f;
+		assertTrue(matches(record, "floatValue", "^1\\.0E-9$"));
+
+		record.doubleValue = 123.33333;
+		assertTrue(matches(record, "doubleValue", "^123\\.3+$"));
+
+		// null is not matched
+		assertFalse(matches(record, "stringValue", ".*"));
+		record.stringValue = "abcdefg";
+		assertTrue(matches(record, "stringValue", "^abc.*fg$"));
+	}
+
+	@SuppressWarnings("unchecked")
+	private boolean matches(Record record, String field, String pattern) {
+		AggregationPredicate aggregationPredicate = AggregationPredicates.regexp(field, pattern);
+		return ClassBuilder.create(DefiningClassLoader.create(), Predicate.class)
+				.withMethod("test", boolean.class, singletonList(Object.class),
+						aggregationPredicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
+				.buildClassAndCreateNewInstance()
+				.test(record);
+	}
+
+	public static final class Record {
+		@SuppressWarnings("rawtypes")
+		private static final Map<String, FieldType> FIELD_TYPES = new HashMap<>();
+
+		static {
+			FIELD_TYPES.put("booleanValue", ofBoolean());
+			FIELD_TYPES.put("byteValue", ofByte());
+			FIELD_TYPES.put("shortValue", ofShort());
+			FIELD_TYPES.put("charValue", ofChar());
+			FIELD_TYPES.put("intValue", ofInt());
+			FIELD_TYPES.put("longValue", ofLong());
+			FIELD_TYPES.put("floatValue", ofFloat());
+			FIELD_TYPES.put("doubleValue", ofDouble());
+			FIELD_TYPES.put("stringValue", ofString());
+		}
+
+		public boolean booleanValue;
+		public byte byteValue;
+		public short shortValue;
+		public char charValue;
+		public int intValue;
+		public long longValue;
+		public float floatValue;
+		public double doubleValue;
+		public String stringValue;
+	}
 }
