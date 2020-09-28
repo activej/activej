@@ -30,10 +30,8 @@ import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
-import io.activej.fs.exception.FsBatchException;
-import io.activej.fs.exception.FsException;
-import io.activej.fs.exception.FsIOException;
-import io.activej.fs.exception.FsScalarException;
+import io.activej.fs.LocalFileUtils.*;
+import io.activej.fs.exception.*;
 import io.activej.fs.exception.scalar.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -49,15 +47,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.time.Duration;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collector;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
@@ -65,12 +63,13 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
-import static io.activej.fs.util.RemoteFsUtils.*;
-import static java.nio.file.FileVisitResult.CONTINUE;
-import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
+import static io.activej.fs.LocalFileUtils.*;
+import static io.activej.fs.util.RemoteFsUtils.batchEx;
+import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Collections.*;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singleton;
 
 /**
  * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
@@ -232,17 +231,27 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
-		return execute(() -> findMatching(glob).stream()
-				.collect(Collector.of(
-						(Supplier<Map<String, FileMetadata>>) HashMap::new,
-						(map, path) -> {
-							FileMetadata metadata = toFileMetadata(path);
-							if (metadata != null) {
-								map.put(toFileName(path), metadata);
-							}
-						},
-						CollectorsEx.throwingMerger())
-				))
+		if (glob.isEmpty()) return Promise.of(emptyMap());
+
+		return execute(
+				() -> {
+					String subdir = extractSubDir(glob);
+					Path subdirectory = resolve(subdir);
+					String subglob = glob.substring(subdir.length());
+
+					return LocalFileUtils.findMatching(tempDir, subglob, subdirectory).stream()
+							.collect(Collector.of(
+									(Supplier<Map<String, FileMetadata>>) HashMap::new,
+									(map, path) -> {
+										FileMetadata metadata = toFileMetadata(path);
+										if (metadata != null) {
+											String filename = toRemoteName.apply(storage.relativize(path).toString());
+											map.put(filename, metadata);
+										}
+									},
+									CollectorsEx.throwingMerger())
+							);
+				})
 				.thenEx(translateScalarErrors())
 				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
@@ -341,12 +350,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		return execute(() -> {
-			Files.createDirectories(tempDir);
-			if (!tempDir.startsWith(storage)) {
-				Files.createDirectories(storage);
-			}
-		});
+		return execute(() -> LocalFileUtils.init(storage, tempDir));
 	}
 
 	@NotNull
@@ -360,39 +364,12 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return "LocalActiveFs{storage=" + storage + '}';
 	}
 
-	private void tryDelete(Path target) throws IOException, IsADirectoryException {
-		try {
-			Files.walkFileTree(target, new SimpleFileVisitor<Path>() {
-				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					if (target.equals(file)) {
-						Files.deleteIfExists(file);
-						return CONTINUE;
-					}
-					throw new DirectoryNotEmptyException(target.toString());
-				}
-
-				@Override
-				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-					Files.deleteIfExists(dir);
-					return CONTINUE;
-				}
-			});
-		} catch (DirectoryNotEmptyException e) {
-			throw dirEx(storage.relativize(target).toString());
-		}
-	}
-
 	private IsADirectoryException dirEx(String name) {
 		return new IsADirectoryException(LocalActiveFs.class, "Path '" + name + "' is a directory");
 	}
 
 	private Path resolve(String name) throws ForbiddenPathException {
-		Path path = storage.resolve(toLocalName.apply(name)).normalize();
-		if (!path.startsWith(storage) || path.startsWith(tempDir)) {
-			throw new ForbiddenPathException(LocalActiveFs.class, "Path '" + name + "' is forbidden");
-		}
-		return path;
+		return LocalFileUtils.resolve(storage, tempDir, toLocalName.apply(name));
 	}
 
 	private Promise<Path> resolveAsync(String name) {
@@ -423,29 +400,21 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private void doCopy(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException {
 		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
-			String from = entry.getKey();
-			String to = entry.getValue();
-			translateBatchErrors(from, to, () -> {
-				Path path = resolve(from);
+			translateBatchErrors(entry, () -> {
+				Path path = resolve(entry.getKey());
 				if (!Files.isRegularFile(path)) {
-					throw new FileNotFoundException(LocalActiveFs.class, "File '" + from + "' not found");
+					throw new FileNotFoundException(LocalActiveFs.class, "File '" + entry.getKey() + "' not found");
 				}
-				Path targetPath = resolve(to);
+				Path targetPath = resolve(entry.getValue());
 
 				if (path.equals(targetPath)) {
-					touch(path);
+					touch(path, now);
 					return;
 				}
 
 				ensureTarget(path, targetPath, () -> {
 					if (hardlinkOnCopy) {
-						try {
-							Files.createLink(targetPath, path);
-							touch(targetPath);
-						} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
-							// if couldn't, then just actually copy it
-							Files.copy(path, targetPath, REPLACE_EXISTING);
-						}
+						LocalFileUtils.copyViaHardlink(path, targetPath, now);
 					} else {
 						Files.copy(path, targetPath, REPLACE_EXISTING);
 					}
@@ -457,16 +426,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private void doMove(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException {
 		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
-			String from = entry.getKey();
-			String to = entry.getValue();
-			translateBatchErrors(from, to, () -> {
-				Path path = resolve(from);
+			translateBatchErrors(entry, () -> {
+				Path path = resolve(entry.getKey());
 				if (!Files.isRegularFile(path)) {
-					throw new FileNotFoundException(LocalActiveFs.class, "File '" + from + "' not found");
+					throw new FileNotFoundException(LocalActiveFs.class, "File '" + entry.getKey() + "' not found");
 				}
-				Path targetPath = resolve(to);
+				Path targetPath = resolve(entry.getValue());
 				if (path.equals(targetPath)) {
-					touch(path);
+					touch(path, now);
 					return;
 				}
 				doMove(path, targetPath);
@@ -476,16 +443,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private void doMove(Path path, Path targetPath) throws IOException, FsScalarException {
 		ensureTarget(path, targetPath, () -> {
-			Files.createLink(targetPath, path);
-			touch(targetPath);
-			Files.deleteIfExists(path);
+			moveViaHardlink(path, targetPath, now);
 			return null;
 		});
 	}
 
 	private void doDelete(Set<String> toDelete) throws FsBatchException, FsIOException {
 		for (String name : toDelete) {
-			translateBatchErrors(name, null, () -> {
+			translateBatchErrors(name, () -> {
 				Path path = resolve(name);
 				// cannot delete storage
 				if (path.equals(storage)) return;
@@ -500,180 +465,25 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private <V> V ensureTarget(@Nullable Path source, Path target, FsCallable<V> afterCreation) throws IOException, FsScalarException {
-		Path parent = target.getParent();
-		while (true) {
-			try {
-				return afterCreation.call();
-			} catch (NoSuchFileException e) {
-				if (source != null && !Files.exists(source)) {
-					throw e;
-				}
-				Files.createDirectories(parent);
-			} catch (FileSystemException e) {
-				if (source != null && !Files.isRegularFile(source)) {
-					throw new FileNotFoundException(LocalActiveFs.class);
-				}
-				try {
-					tryDelete(target);
-				} catch (FileSystemException e2) {
-					throw new PathContainsFileException(LocalActiveFs.class);
-				}
-			}
+		try {
+			return LocalFileUtils.ensureTarget(source, target, afterCreation);
+		} catch (NoSuchFileException e) {
+			throw e;
+		} catch (DirectoryNotEmptyException e) {
+			throw dirEx(storage.relativize(target).toString());
+		} catch (FileSystemException e) {
+			throw new PathContainsFileException(LocalActiveFs.class);
 		}
-	}
-
-	private void touch(Path path) throws IOException {
-		Files.setLastModifiedTime(path, FileTime.fromMillis(now.currentTimeMillis()));
-	}
-
-	private Collection<Path> findMatching(String glob) throws IOException, ForbiddenPathException, MalformedGlobException {
-		// optimization for 'ping' empty list requests
-		if (glob.isEmpty()) {
-			return emptyList();
-		}
-
-		// get strict prefix folder from the glob
-		StringBuilder sb = new StringBuilder();
-		String[] split = glob.split(SEPARATOR);
-		for (int i = 0; i < split.length - 1; i++) {
-			String part = split[i];
-			if (isWildcard(part)) {
-				break;
-			}
-			sb.append(part).append(SEPARATOR);
-		}
-		String subglob = glob.substring(sb.length());
-		Path subdirectory = resolve(sb.toString());
-
-		// optimization for listing all files
-		if ("**".equals(subglob)) {
-			List<Path> list = new ArrayList<>();
-			walkFiles(subdirectory, list::add);
-			return list;
-		}
-
-		// optimization for single-file requests
-		if (subglob.isEmpty()) {
-			return Files.isRegularFile(subdirectory) ?
-					singletonList(subdirectory) :
-					emptyList();
-		}
-
-		// common route
-		List<Path> list = new ArrayList<>();
-		PathMatcher matcher = getPathMatcher(storage.getFileSystem(), subglob);
-
-		walkFiles(subdirectory, subglob, path -> {
-			if (matcher.matches(subdirectory.relativize(path))) {
-				list.add(path);
-			}
-		});
-
-		return list;
-	}
-
-	private String toFileName(Path path) {
-		return toRemoteName.apply(storage.relativize(path).toString());
 	}
 
 	@Nullable
 	private FileMetadata toFileMetadata(Path path) {
 		try {
-			if (!Files.isRegularFile(path)) return null;
-
-			long timestamp = Files.getLastModifiedTime(path).toMillis();
-			return FileMetadata.of(Files.size(path), timestamp);
+			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {
 			logger.warn("Failed to retrieve metadata for {}", path, e);
 			throw new UncheckedException(new FsIOException(LocalActiveFs.class, "Failed to retrieve metadata"));
 		}
-	}
-
-	@FunctionalInterface
-	private interface Walker {
-
-		void accept(Path path) throws IOException;
-	}
-
-	private void walkFiles(Path dir, Walker walker) throws IOException, MalformedGlobException {
-		walkFiles(dir, null, walker);
-	}
-
-	private void walkFiles(Path dir, @Nullable String glob, Walker walker) throws IOException, MalformedGlobException {
-		if (!Files.isDirectory(dir) || dir.startsWith(tempDir)) {
-			return;
-		}
-		String[] parts;
-		if (glob == null || (parts = glob.split(SEPARATOR))[0].contains("**")) {
-			Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
-
-				@Override
-				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-					if (dir.startsWith(tempDir)) {
-						return SKIP_SUBTREE;
-					}
-					return CONTINUE;
-				}
-
-				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					walker.accept(file);
-					return CONTINUE;
-				}
-
-				@Override
-				public FileVisitResult visitFileFailed(Path file, IOException exc) {
-					logger.warn("Failed to visit file {}", storage.relativize(file), exc);
-					return CONTINUE;
-				}
-			});
-			return;
-		}
-
-		FileSystem fs = dir.getFileSystem();
-
-		PathMatcher[] matchers = new PathMatcher[parts.length];
-		matchers[0] = getPathMatcher(fs, parts[0]);
-
-		for (int i = 1; i < parts.length; i++) {
-			String part = parts[i];
-			if (part.contains("**")) {
-				break;
-			}
-			matchers[i] = getPathMatcher(fs, part);
-		}
-
-		Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				walker.accept(file);
-				return CONTINUE;
-			}
-
-			@Override
-			public FileVisitResult preVisitDirectory(Path subdir, BasicFileAttributes attrs) {
-				if (subdir.equals(dir)) {
-					return CONTINUE;
-				}
-				Path relative = dir.relativize(subdir);
-				for (int i = 0; i < Math.min(relative.getNameCount(), matchers.length); i++) {
-					PathMatcher matcher = matchers[i];
-					if (matcher == null) {
-						return CONTINUE;
-					}
-					if (!matcher.matches(relative.getName(i))) {
-						return SKIP_SUBTREE;
-					}
-				}
-				return CONTINUE;
-			}
-
-			@Override
-			public FileVisitResult visitFileFailed(Path file, IOException exc) {
-				logger.warn("Failed to visit file {}", storage.relativize(file), exc);
-				return CONTINUE;
-			}
-		});
 	}
 
 	private <T> Promise<T> execute(BlockingCallable<T> callable) {
@@ -705,6 +515,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				});
 			} else if (e instanceof NoSuchFileException) {
 				return Promise.ofException(new FileNotFoundException(LocalActiveFs.class));
+			} else if (e instanceof GlobException) {
+				return Promise.ofException(new MalformedGlobException(LocalActiveFs.class));
 			}
 			return execute(() -> {
 				if (name != null && Files.isDirectory(resolve(name))) throw dirEx(name);
@@ -717,7 +529,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		};
 	}
 
-	private void translateBatchErrors(@NotNull String first, @Nullable String second, FsRunnable runnable) throws FsBatchException, FsIOException {
+	private void translateBatchErrors(Map.Entry<String, String> entry, FsRunnable runnable) throws FsBatchException, FsIOException {
+		String first = entry.getKey();
+		String second = entry.getValue();
 		try {
 			runnable.run();
 		} catch (FsScalarException e) {
@@ -730,11 +544,15 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		} catch (IOException e) {
 			checkIfDirectories(first, second);
 			logger.warn("Operation failed", e);
-			throw new FsIOException(LocalActiveFs.class, "IO Error'");
+			throw new FsIOException(LocalActiveFs.class, "IO Error");
 		} catch (Exception e) {
 			logger.warn("Operation failed", e);
 			throw new FsIOException(LocalActiveFs.class, "Unknown Error");
 		}
+	}
+
+	private void translateBatchErrors(@NotNull String first, FsRunnable runnable) throws FsBatchException, FsIOException {
+		translateBatchErrors(new AbstractMap.SimpleEntry<>(first, null), runnable);
 	}
 
 	private void checkIfDirectories(@NotNull String first, @Nullable String second) throws FsBatchException {
@@ -752,23 +570,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		} catch (ForbiddenPathException e) {
 			throw batchEx(LocalActiveFs.class, first, e);
 		}
-	}
-
-	private PathMatcher getPathMatcher(FileSystem fileSystem, String glob) throws MalformedGlobException {
-		try {
-			return fileSystem.getPathMatcher("glob:" + glob);
-		} catch (PatternSyntaxException | UnsupportedOperationException e) {
-			logger.warn("Malformed glob", e);
-			throw new MalformedGlobException(LocalActiveFs.class);
-		}
-	}
-
-	private interface FsCallable<V> {
-		V call() throws IOException;
-	}
-
-	private interface FsRunnable {
-		void run() throws IOException, FsScalarException;
 	}
 
 	//region JMX

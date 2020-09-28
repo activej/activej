@@ -1,6 +1,7 @@
 package io.activej.fs;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,7 +16,7 @@ import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
 
 @SuppressWarnings("unused")
 public interface BlockingFs {
-	String SEPARATOR = "/";
+	String SEPARATOR = ActiveFs.SEPARATOR;
 
 	OutputStream upload(@NotNull String name) throws IOException;
 
@@ -46,7 +47,7 @@ public interface BlockingFs {
 	default void copy(@NotNull String name, @NotNull String target) throws IOException {
 		InputStream from = download(name);
 		OutputStream to = upload(target);
-		Utils.copy(from, to);
+		LocalFileUtils.copy(from, to);
 	}
 
 	default void copyAll(Map<String, String> sourceToTarget) throws IOException {
@@ -71,16 +72,18 @@ public interface BlockingFs {
 
 	Map<String, FileMetadata> list(@NotNull String glob) throws IOException;
 
+	@Nullable
 	default FileMetadata info(@NotNull String name) throws IOException {
-		Map<String, FileMetadata> map = list(escapeGlob(name));
-		return map.get(name);
+		return list(escapeGlob(name)).get(name);
 	}
 
 	default Map<String, @NotNull FileMetadata> infoAll(@NotNull Set<String> names) throws IOException {
 		Map<String, @NotNull FileMetadata> result = new LinkedHashMap<>();
 		for (String name : names) {
 			FileMetadata info = info(name);
-			result.put(name, info);
+			if (info != null) {
+				result.put(name, info);
+			}
 		}
 		return result;
 	}

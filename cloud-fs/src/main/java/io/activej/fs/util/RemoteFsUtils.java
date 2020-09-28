@@ -172,7 +172,6 @@ public final class RemoteFsUtils {
 			return Promise.ofException(new FsBatchException(ActiveFs.class, scalarExceptions));
 		}
 		return Promise.complete();
-
 	}
 
 }
