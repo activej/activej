@@ -1,6 +1,5 @@
 package io.activej.serializer;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.annotations.SerializeReference;
@@ -11,24 +10,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.activej.serializer.Utils.doTest;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class SerializerReferenceTest {
-	private static final DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
-
-	private static <T> T doTest(Class<T> type, T testData1) {
-		BinarySerializer<T> serializer = SerializerBuilder.create(definingClassLoader)
-//				.withGeneratedBytecodePath(Paths.get("tmp").toAbsolutePath())
-				.build(type);
-		return doTest(testData1, serializer, serializer);
-	}
-
-	private static <T> T doTest(T testData1, BinarySerializer<T> serializer, BinarySerializer<T> deserializer) {
-		byte[] array = new byte[1000];
-		serializer.encode(array, 0, testData1);
-		return deserializer.decode(array, 0);
-	}
 
 	public static class TestDataReferences {
 		@Serialize(order = 0)

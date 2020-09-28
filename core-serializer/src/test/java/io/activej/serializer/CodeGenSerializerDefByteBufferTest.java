@@ -1,6 +1,5 @@
 package io.activej.serializer;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
@@ -9,15 +8,11 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 
+import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
+import static io.activej.serializer.Utils.doTest;
 import static org.junit.Assert.*;
 
 public class CodeGenSerializerDefByteBufferTest {
-
-	private static <T> T doTest(T testData1, BinarySerializer<T> serializer, BinarySerializer<T> deserializer) {
-		byte[] array = new byte[1000];
-		serializer.encode(array, 0, testData1);
-		return deserializer.decode(array, 0);
-	}
 
 	@Test
 	public void test() {
@@ -177,7 +172,7 @@ public class CodeGenSerializerDefByteBufferTest {
 		TestByteBuffer object = new TestByteBuffer();
 
 		{
-			BinarySerializer<TestByteBuffer> serializer = SerializerBuilder.create(DefiningClassLoader.create())
+			BinarySerializer<TestByteBuffer> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 					.withCompatibilityLevel(CompatibilityLevel.LEVEL_2)
 					.build(TestByteBuffer.class);
 			TestByteBuffer deserialized = doTest(object, serializer, serializer);
@@ -185,7 +180,7 @@ public class CodeGenSerializerDefByteBufferTest {
 		}
 
 		{
-			BinarySerializer<TestByteBuffer> serializer = SerializerBuilder.create(DefiningClassLoader.create())
+			BinarySerializer<TestByteBuffer> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 					.build(TestByteBuffer.class);
 			TestByteBuffer deserialized = doTest(object, serializer, serializer);
 			assertNull(deserialized.buffer);

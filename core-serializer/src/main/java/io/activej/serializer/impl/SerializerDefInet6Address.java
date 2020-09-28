@@ -22,6 +22,7 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
 import java.net.Inet6Address;
+import java.net.NetworkInterface;
 import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
@@ -54,6 +55,6 @@ public final class SerializerDefInet6Address implements SerializerDef {
 		return let(arrayNew(byte[].class, value(16)), array ->
 				sequence(
 						readBytes(in, array),
-						staticCall(getDecodeType(), "getByAddress", array)));
+						staticCall(getDecodeType(), "getByAddress", nullRef(String.class), array, nullRef(NetworkInterface.class))));
 	}
 }

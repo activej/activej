@@ -1,6 +1,5 @@
 package io.activej.serializer;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import org.jetbrains.annotations.Nullable;
@@ -13,25 +12,14 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
+import static io.activej.serializer.Utils.doTest;
 import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("unused")
 public class BinarySerializerTest {
-	private static final DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
-
-	private static <T> T doTest(Class<T> type, T testData1) {
-		BinarySerializer<T> serializer = SerializerBuilder.create(definingClassLoader)
-				.build(type);
-		return doTest(testData1, serializer, serializer);
-	}
-
-	private static <T> T doTest(T testData1, BinarySerializer<T> serializer, BinarySerializer<T> deserializer) {
-		byte[] array = new byte[1000];
-		serializer.encode(array, 0, testData1);
-		return deserializer.decode(array, 0);
-	}
 
 	public static class TestDataScalars {
 		public enum TestEnum {
@@ -1400,7 +1388,7 @@ public class BinarySerializerTest {
 		TestEnum2 testData2 = doTest(TestEnum2.class, testData1);
 		assertEquals(testData1, testData2);
 
-		BinarySerializer<EnumPojo> serializer = SerializerBuilder.create(definingClassLoader)
+		BinarySerializer<EnumPojo> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 				.build(EnumPojo.class);
 
 		byte[] array = new byte[2000];
@@ -1605,11 +1593,11 @@ public class BinarySerializerTest {
 		TestConstructorWithBoolean test = new TestConstructorWithBoolean("abc", true);
 
 		BinarySerializer<TestConstructorWithBoolean> serializer1 = SerializerBuilder
-				.create(definingClassLoader)
+				.create(DEFINING_CLASS_LOADER)
 				.build(TestConstructorWithBoolean.class);
 
 		BinarySerializer<TestConstructorWithBoolean> serializer2 = SerializerBuilder
-				.create(definingClassLoader)
+				.create(DEFINING_CLASS_LOADER)
 				.withVersion(1)
 				.build(TestConstructorWithBoolean.class);
 
@@ -1784,7 +1772,7 @@ public class BinarySerializerTest {
 	@Test
 	public void testNullableOpt() {
 		BinarySerializer<NullableOpt> serializer = SerializerBuilder
-				.create(definingClassLoader)
+				.create(DEFINING_CLASS_LOADER)
 				.build(NullableOpt.class);
 
 		byte[] array = new byte[2000];
@@ -1848,7 +1836,7 @@ public class BinarySerializerTest {
 	public void testVersionGetter() {
 		TestGetterVersion test = TestGetterVersion.of("test", asList("a", "b"));
 		BinarySerializer<TestGetterVersion> serializerV1 = SerializerBuilder
-				.create(DefiningClassLoader.create())
+				.create(DEFINING_CLASS_LOADER)
 				.withVersion(1)
 				.build(TestGetterVersion.class);
 
@@ -1857,7 +1845,7 @@ public class BinarySerializerTest {
 		assertEquals(test.getStr(), _testV1.getStr());
 
 		BinarySerializer<TestGetterVersion> serializerV2 = SerializerBuilder
-				.create(DefiningClassLoader.create())
+				.create(DEFINING_CLASS_LOADER)
 				.withVersion(2)
 				.build(TestGetterVersion.class);
 
@@ -1916,7 +1904,7 @@ public class BinarySerializerTest {
 	@Test
 	public void testArrayOfCustomClasses() {
 		BinarySerializer<CustomArrayHolder> serializer = SerializerBuilder
-				.create(DefiningClassLoader.create())
+				.create(DEFINING_CLASS_LOADER)
 				.build(CustomArrayHolder.class);
 		StringWrapper[] array = {new StringWrapper("str"), new StringWrapper("abc")};
 		CustomArrayHolder holder = new CustomArrayHolder(array);
@@ -1947,7 +1935,7 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testOverridenBridgeMethod() {
-		BinarySerializer<Imp> serializer = SerializerBuilder.create(DefiningClassLoader.create()).build(Imp.class);
+		BinarySerializer<Imp> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(Imp.class);
 		Imp object = new Imp();
 		object.setValue(100);
 		Imp deserialized = doTest(object, serializer, serializer);
@@ -1976,7 +1964,7 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testGenericBridgeMethod() {
-		BinarySerializer<GenericImp> serializer = SerializerBuilder.create(DefiningClassLoader.create()).build(GenericImp.class);
+		BinarySerializer<GenericImp> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(GenericImp.class);
 		GenericImp object = new GenericImp();
 		object.setValue(100);
 		GenericImp deserialized = doTest(object, serializer, serializer);
