@@ -16,6 +16,9 @@
 
 package io.activej.cube;
 
+import io.activej.common.record.Record;
+import io.activej.common.record.RecordScheme;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

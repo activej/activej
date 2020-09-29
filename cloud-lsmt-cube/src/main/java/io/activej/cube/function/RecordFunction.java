@@ -16,7 +16,7 @@
 
 package io.activej.cube.function;
 
-import io.activej.cube.Record;
+import io.activej.common.record.Record;
 
 public interface RecordFunction {
 	void copyAttributes(Object result, Record record);

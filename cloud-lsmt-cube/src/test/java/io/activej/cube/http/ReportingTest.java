@@ -6,6 +6,7 @@ import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.record.Record;
 import io.activej.cube.*;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
@@ -214,7 +215,7 @@ public final class ReportingTest {
 		}
 
 		public LogItem(int date, int advertiser, int campaign, int banner, long impressions, long clicks,
-					   long conversions, double revenue, int userId, int errors, int affiliate, String site) {
+				long conversions, double revenue, int userId, int errors, int affiliate, String site) {
 			this.date = date;
 			this.advertiser = advertiser;
 			this.campaign = campaign;

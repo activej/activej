@@ -30,6 +30,8 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.api.WithInitializer;
+import io.activej.common.record.Record;
+import io.activej.common.record.RecordScheme;
 import io.activej.common.ref.Ref;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.attributes.AttributeResolver;
