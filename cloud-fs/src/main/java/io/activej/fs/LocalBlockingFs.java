@@ -30,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,8 +41,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Collections.emptyMap;
 
 public final class LocalBlockingFs implements BlockingFs, BlockingService, ConcurrentJmxBean {
@@ -97,8 +102,18 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		Path tempPath = Files.createTempFile(tempDir, "", "");
 		return new ForwardingOutputStream(new FileOutputStream(tempPath.toFile())) {
 			@Override
+			protected void onInternalError(IOException e) throws IOException {
+				Files.deleteIfExists(tempPath);
+			}
+
+			@Override
 			protected void onClose() throws IOException {
-				doMove(tempPath, resolve(name));
+				try {
+					doMove(tempPath, resolve(name));
+				} catch (IOException e) {
+					Files.deleteIfExists(tempPath);
+					throw e;
+				}
 			}
 		};
 	}
@@ -112,6 +127,11 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			@Override
 			protected void onBytes(int len) throws IOException {
 				if ((totalSize += len) > size) throwOnSizeMismatch();
+			}
+
+			@Override
+			protected void onInternalError(IOException e) throws IOException {
+				Files.deleteIfExists(tempPath);
 			}
 
 			@Override
@@ -130,13 +150,29 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public OutputStream append(@NotNull String name, long offset) throws IOException {
-		return new FileOutputStream(resolve(name).toFile(), true);
+		checkArgument(offset >= 0, "Offset cannot be less than 0");
+
+		Path path = resolve(name);
+		FileChannel channel;
+		if (offset == 0) {
+			channel = ensureTarget(null, path, () -> FileChannel.open(path, CREATE, WRITE));
+		} else {
+			channel = FileChannel.open(path, WRITE);
+		}
+		if (channel.size() < offset) {
+			throw new IOException("Offset exceeds file size");
+		}
+		channel.position(offset);
+		return Channels.newOutputStream(channel);
 	}
 
 	@Override
 	public InputStream download(@NotNull String name, long offset, long limit) throws IOException {
 		Path path = resolve(name);
-		if (offset > Files.size(path)){
+		if (!Files.exists(path)) {
+			throw new FileNotFoundException(name);
+		}
+		if (offset > Files.size(path)) {
 			throw new IOException("Offset exceeds file size");
 		}
 		FileInputStream fileInputStream = new FileInputStream(path.toFile());
@@ -176,7 +212,6 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			}
 			return null;
 		});
-
 	}
 
 	@Override
@@ -263,5 +298,4 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			return null;
 		});
 	}
-
 }

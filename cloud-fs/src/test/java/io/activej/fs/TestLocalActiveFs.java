@@ -3,6 +3,7 @@ package io.activej.fs;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.MemSize;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.ExpectedException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -11,6 +12,7 @@ import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.exception.scalar.FileNotFoundException;
+import io.activej.fs.exception.scalar.IllegalOffsetException;
 import io.activej.fs.exception.scalar.IsADirectoryException;
 import io.activej.fs.exception.scalar.MalformedGlobException;
 import io.activej.promise.Promises;
@@ -25,8 +27,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,9 +36,10 @@ import java.util.stream.IntStream;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
+import static io.activej.fs.Utils.createEmptyDirectories;
+import static io.activej.fs.Utils.initTempDir;
 import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_DATA;
 import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
-import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -50,7 +51,6 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class TestLocalActiveFs {
-	private static final MemSize BUFFER_SIZE = MemSize.of(2);
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -116,7 +116,7 @@ public final class TestLocalActiveFs {
 
 		await(client.upload("1/c.txt")
 				.then(consumer -> ChannelFileReader.open(newCachedThreadPool(), path)
-						.then(file -> file.withBufferSize(BUFFER_SIZE).streamTo(consumer))));
+						.then(file -> file.withBufferSize(MemSize.of(2)).streamTo(consumer))));
 
 		assertArrayEquals(Files.readAllBytes(path), Files.readAllBytes(storagePath.resolve("1/c.txt")));
 	}
@@ -131,6 +131,30 @@ public final class TestLocalActiveFs {
 	public void testAppendToDirectory() {
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.append("1", 0)));
 		assertThat(exception, instanceOf(IsADirectoryException.class));
+	}
+
+	@Test
+	public void testAppendToEmptyDirectory() throws IOException {
+		Path empty = CollectionUtils.getLast(createEmptyDirectories(storagePath));
+		assertTrue(Files.isDirectory(empty));
+		assertEquals(0, Files.list(empty).count());
+
+		await(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.append(storagePath.relativize(empty).toString(), 0)));
+
+		assertTrue(Files.isRegularFile(empty));
+		assertArrayEquals("data".getBytes(), Files.readAllBytes(empty));
+	}
+
+	@Test
+	public void testAppendOffsetExceedsSize() throws IOException {
+		String path = "1/a.txt";
+		long size = Files.size(storagePath.resolve(path));
+		assertTrue(size > 0);
+
+		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("appended"))
+				.streamTo(client.append(path, size * 2)));
+
+		assertThat(exception, instanceOf(IllegalOffsetException.class));
 	}
 
 	@Test
@@ -183,13 +207,42 @@ public final class TestLocalActiveFs {
 	}
 
 	@Test
-	public void testDoDownload() throws IOException {
+	public void testDownload() throws IOException {
 		Path outputFile = clientPath.resolve("d.txt");
 
 		ChannelSupplier<ByteBuf> supplier = await(client.download("2/b/d.txt"));
 		await(supplier.streamTo(ChannelFileWriter.open(newCachedThreadPool(), outputFile)));
 
 		assertArrayEquals(Files.readAllBytes(storagePath.resolve("2/b/d.txt")), Files.readAllBytes(outputFile));
+	}
+
+	@Test
+	public void testDownloadWithOffset() {
+		String filename = "filename";
+		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
+
+		String result = await(await(client.download(filename, 3, Long.MAX_VALUE))
+				.toCollector(ByteBufQueue.collector())).asString(UTF_8);
+		assertEquals("defgh", result);
+	}
+
+	@Test
+	public void testDownloadWithOffsetExceedingFileSize() {
+		String filename = "filename";
+		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
+
+		Throwable exception = awaitException(client.download(filename, 100, Long.MAX_VALUE));
+		assertThat(exception, instanceOf(IllegalOffsetException.class));
+	}
+
+	@Test
+	public void testDownloadWithLimit() {
+		String filename = "filename";
+		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
+
+		String result = await(await(client.download(filename, 3, 2))
+				.toCollector(ByteBufQueue.collector())).asString(UTF_8);
+		assertEquals("de", result);
 	}
 
 	@Test
@@ -201,6 +254,8 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testDeleteFile() {
+		assertTrue(Files.exists(storagePath.resolve("2/3/a.txt")));
+
 		await(client.delete("2/3/a.txt"));
 
 		assertFalse(Files.exists(storagePath.resolve("2/3/a.txt")));
@@ -336,6 +391,18 @@ public final class TestLocalActiveFs {
 	}
 
 	@Test
+	public void testAppendInTheMiddle() {
+		String filename = "test";
+
+		// Creating file
+		await(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.upload(filename)));
+		await(ChannelSupplier.of(wrapUtf8("d")).streamTo(client.append(filename, 2)));
+
+		String result = await(await(client.download(filename)).toCollector(ByteBufQueue.collector())).asString(UTF_8);
+		assertEquals("dada", result);
+	}
+
+	@Test
 	public void testConcurrentAppends() {
 		String filename = "test";
 
@@ -359,7 +426,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testEmptyDirectoryCleanupOnUpload() {
-		List<Path> emptyDirs = createEmptyDirectories();
+		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
 		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
 
@@ -372,7 +439,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testEmptyDirectoryCleanupOnAppend() {
-		List<Path> emptyDirs = createEmptyDirectories();
+		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
 		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.append("empty", 0)));
 
@@ -385,7 +452,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testEmptyDirectoryCleanupOnMove() {
-		List<Path> emptyDirs = createEmptyDirectories();
+		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
 		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("source")));
 		await(client.move("source", "empty"));
@@ -399,7 +466,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testEmptyDirectoryCleanupOnCopy() {
-		List<Path> emptyDirs = createEmptyDirectories();
+		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
 		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("source")));
 		await(client.copy("source", "empty"));
@@ -413,7 +480,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testEmptyDirectoryCleanupWithOneFile() throws IOException {
-		List<Path> emptyDirs = createEmptyDirectories();
+		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		Path randomPath = emptyDirs.get(ThreadLocalRandom.current().nextInt(emptyDirs.size()));
 		Files.createFile(randomPath.resolve("file"));
 		String data = "test";
@@ -437,33 +504,6 @@ public final class TestLocalActiveFs {
 		for (FileMetadata meta : files.values()) {
 			assertEquals(0, meta.getSize());
 		}
-	}
-
-	private List<Path> createEmptyDirectories() {
-		List<Path> result = new ArrayList<>();
-		Path root = storagePath.resolve(Paths.get("empty"));
-		result.add(root);
-		ThreadLocalRandom random = ThreadLocalRandom.current();
-		for (int i1 = 0; i1 < random.nextInt(10); i1++) {
-			Path empty1 = root.resolve(Paths.get("empty_" + i1));
-			result.add(empty1);
-			for (int i2 = 0; i2 < random.nextInt(10); i2++) {
-				Path empty2 = empty1.resolve(Paths.get("empty_" + i2));
-				result.add(empty2);
-				for (int i3 = 0; i3 < random.nextInt(10); i3++) {
-					Path empty3 = empty2.resolve(Paths.get("empty_" + i3));
-					result.add(empty3);
-				}
-			}
-		}
-		for (Path path : result) {
-			try {
-				Files.createDirectories(path);
-			} catch (IOException e) {
-				throw new AssertionError(e);
-			}
-		}
-		return result;
 	}
 
 }

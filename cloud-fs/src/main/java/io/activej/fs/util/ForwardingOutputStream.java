@@ -16,6 +16,7 @@
 
 package io.activej.fs.util;
 
+import io.activej.fs.LocalFileUtils.IORunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -30,38 +31,62 @@ public class ForwardingOutputStream extends OutputStream {
 
 	@Override
 	public final void write(int b) throws IOException {
-		onBytes(1);
-		peer.write(b);
+		run(() -> {
+			onBytes(1);
+			peer.write(b);
+		});
 	}
 
 	@Override
 	public final void write(@NotNull byte[] b) throws IOException {
-		onBytes(b.length);
-		peer.write(b);
+		run(() -> {
+			onBytes(b.length);
+			peer.write(b);
+		});
 	}
 
 	@Override
 	public final void write(@NotNull byte[] b, int off, int len) throws IOException {
-		onBytes(len);
-		peer.write(b, off, len);
+		run(() -> {
+			onBytes(len);
+			peer.write(b, off, len);
+		});
 	}
 
 	@Override
 	public final void flush() throws IOException {
-		super.flush();
+		run(peer::flush);
 	}
 
 	@Override
 	public final void close() throws IOException {
-		super.close();
-		onClose();
+		run(() -> {
+			peer.close();
+			onClose();
+		});
 	}
 
 	protected void onBytes(int len) throws IOException {
+	}
 
+	protected void onInternalError(IOException e) throws IOException {
 	}
 
 	protected void onClose() throws IOException {
+	}
+
+	private void run(IORunnable runnable) throws IOException {
+		try {
+			runnable.run();
+		} catch (IOException e) {
+			try {
+				onInternalError(e);
+			} catch (IOException e2) {
+				e2.addSuppressed(e);
+				throw e2;
+			}
+			throw e;
+		}
 	}
 
 }

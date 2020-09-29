@@ -42,7 +42,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-final class LocalFileUtils {
+public final class LocalFileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(LocalFileUtils.class);
 
 	static void init(Path storage, Path tempDir) throws IOException {
@@ -90,7 +90,7 @@ final class LocalFileUtils {
 		});
 	}
 
-	static <V> V ensureTarget(@Nullable Path source, Path target, FsCallable<V> afterCreation) throws IOException {
+	static <V> V ensureTarget(@Nullable Path source, Path target, IOCallable<V> afterCreation) throws IOException {
 		Path parent = target.getParent();
 		while (true) {
 			try {
@@ -256,17 +256,22 @@ final class LocalFileUtils {
 		try {
 			return fileSystem.getPathMatcher("glob:" + glob);
 		} catch (PatternSyntaxException | UnsupportedOperationException e) {
-			throw new GlobException();
+			throw new GlobException("Glob: " + glob);
 		}
 	}
 
 	@FunctionalInterface
-	interface FsCallable<V> {
+	public interface IOCallable<V> {
 		V call() throws IOException;
 	}
 
 	@FunctionalInterface
-	interface FsRunnable {
+	public interface IORunnable {
+		void run() throws IOException;
+	}
+
+	@FunctionalInterface
+	public interface IOScalarRunnable {
 		void run() throws IOException, FsScalarException;
 	}
 

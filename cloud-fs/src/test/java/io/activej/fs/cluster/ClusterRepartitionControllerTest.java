@@ -31,9 +31,9 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import static io.activej.fs.Utils.initTempDir;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
-import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;

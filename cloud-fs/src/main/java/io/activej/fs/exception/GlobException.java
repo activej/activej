@@ -19,4 +19,7 @@ package io.activej.fs.exception;
 import java.io.IOException;
 
 public final class GlobException extends IOException {
+	public GlobException(String message) {
+		super(message);
+	}
 }

@@ -464,7 +464,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	private <V> V ensureTarget(@Nullable Path source, Path target, FsCallable<V> afterCreation) throws IOException, FsScalarException {
+	private <V> V ensureTarget(@Nullable Path source, Path target, IOCallable<V> afterCreation) throws IOException, FsScalarException {
 		try {
 			return LocalFileUtils.ensureTarget(source, target, afterCreation);
 		} catch (NoSuchFileException e) {
@@ -516,7 +516,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			} else if (e instanceof NoSuchFileException) {
 				return Promise.ofException(new FileNotFoundException(LocalActiveFs.class));
 			} else if (e instanceof GlobException) {
-				return Promise.ofException(new MalformedGlobException(LocalActiveFs.class));
+				return Promise.ofException(new MalformedGlobException(LocalActiveFs.class, e.getMessage()));
 			}
 			return execute(() -> {
 				if (name != null && Files.isDirectory(resolve(name))) throw dirEx(name);
@@ -529,7 +529,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		};
 	}
 
-	private void translateBatchErrors(Map.Entry<String, String> entry, FsRunnable runnable) throws FsBatchException, FsIOException {
+	private void translateBatchErrors(Map.Entry<String, String> entry, IOScalarRunnable runnable) throws FsBatchException, FsIOException {
 		String first = entry.getKey();
 		String second = entry.getValue();
 		try {
@@ -551,7 +551,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	private void translateBatchErrors(@NotNull String first, FsRunnable runnable) throws FsBatchException, FsIOException {
+	private void translateBatchErrors(@NotNull String first, IOScalarRunnable runnable) throws FsBatchException, FsIOException {
 		translateBatchErrors(new AbstractMap.SimpleEntry<>(first, null), runnable);
 	}
 

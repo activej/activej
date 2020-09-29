@@ -13,6 +13,7 @@ import java.util.Set;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
+import static java.util.stream.Collectors.toSet;
 
 @SuppressWarnings("unused")
 public interface BlockingFs {
@@ -45,9 +46,10 @@ public interface BlockingFs {
 	 * @param target file name of copy
 	 */
 	default void copy(@NotNull String name, @NotNull String target) throws IOException {
-		InputStream from = download(name);
-		OutputStream to = upload(target);
-		LocalFileUtils.copy(from, to);
+		try (InputStream from = download(name);
+				OutputStream to = upload(target)) {
+			LocalFileUtils.copy(from, to);
+		}
 	}
 
 	default void copyAll(Map<String, String> sourceToTarget) throws IOException {
@@ -59,7 +61,9 @@ public interface BlockingFs {
 
 	default void move(@NotNull String name, @NotNull String target) throws IOException {
 		copy(name, target);
-		delete(name);
+		if (!name.equals(target)) {
+			delete(name);
+		}
 	}
 
 	default void moveAll(Map<String, String> sourceToTarget) throws IOException {
@@ -67,7 +71,10 @@ public interface BlockingFs {
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			copy(entry.getKey(), entry.getValue());
 		}
-		deleteAll(sourceToTarget.keySet());
+		deleteAll(sourceToTarget.entrySet().stream()
+				.filter(entry -> !entry.getKey().equals(entry.getValue()))
+				.map(Map.Entry::getKey)
+				.collect(toSet()));
 	}
 
 	Map<String, FileMetadata> list(@NotNull String glob) throws IOException;

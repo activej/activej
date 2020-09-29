@@ -46,7 +46,7 @@ import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
-import static io.activej.fs.util.Utils.initTempDir;
+import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertComplete;

@@ -37,7 +37,7 @@ import java.util.stream.IntStream;
 
 import static io.activej.common.collection.CollectionUtils.keysToMap;
 import static io.activej.common.collection.CollectionUtils.union;
-import static io.activej.fs.util.Utils.initTempDir;
+import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;

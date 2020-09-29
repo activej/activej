@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static io.activej.common.collection.CollectionUtils.map;
-import static io.activej.fs.util.Utils.initTempDir;
+import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;

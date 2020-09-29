@@ -22,8 +22,8 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import static io.activej.fs.Utils.initTempDir;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
-import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
 import static java.util.stream.Collectors.toList;
