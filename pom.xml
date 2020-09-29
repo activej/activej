@@ -57,6 +57,7 @@
     <module>launchers</module>
     <module>util-codec</module>
     <module>util-common</module>
+    <module>util-state</module>
     <module>uikernel</module>
     <module>test</module>
   </modules>
