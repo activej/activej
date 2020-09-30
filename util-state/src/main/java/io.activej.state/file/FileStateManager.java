@@ -72,7 +72,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	@Override
 	public @Nullable Long getLastDiffRevision(@NotNull Long currentRevision) throws IOException {
 		Map<String, FileMetadata> list = fs.list(fileNamingScheme.diffGlob(currentRevision));
-		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeSnapshot).filter(Objects::nonNull).mapToLong(v -> v).max();
+		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeDiff).filter(Objects::nonNull).mapToLong(FileNamingScheme.Diff::getTo).max();
 		return max.isPresent() ? max.getAsLong() : null;
 	}
 
@@ -80,8 +80,9 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	public @NotNull T loadSnapshot(@NotNull Long revision) throws IOException, DeserializeException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		InputStream inputStream = fs.download(filename);
-		DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream);
-		return decoder.decode(inputStreamEx);
+		try (DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream)) {
+			return decoder.decode(inputStreamEx);
+		}
 	}
 
 	@Override
@@ -91,25 +92,27 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 		}
 		String filename = fileNamingScheme.encodeDiff(revisionFrom, revisionTo);
 		InputStream inputStream = fs.download(filename);
-		DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream);
-		return ((DiffDataStreamDecoder<T>) this.decoder).decodeDiff(inputStreamEx, state);
+		try (DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream)) {
+			return ((DiffDataStreamDecoder<T>) this.decoder).decodeDiff(inputStreamEx, state);
+		}
 	}
 
 	@Override
 	public void saveSnapshot(@NotNull T state, @NotNull Long revision) throws IOException, SerializeException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		OutputStream outputStream = fs.upload(filename);
-		DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream);
-		encoder.encode(outputStreamEx, state);
+		try (DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream)) {
+			encoder.encode(outputStreamEx, state);
+		}
 	}
 
 	@Override
 	public void saveDiff(@NotNull T state, @NotNull Long revision, @NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
 		OutputStream outputStreamDiff = fs.upload(filenameDiff);
-		DataOutputStreamEx outputStreamExDiff = DataOutputStreamEx.create(outputStreamDiff);
-
-		((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStreamExDiff, state, stateFrom);
+		try (DataOutputStreamEx outputStreamExDiff = DataOutputStreamEx.create(outputStreamDiff)) {
+			((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStreamExDiff, stateFrom, state);
+		}
 	}
 
 	public @NotNull FileState<T> load() throws IOException, DeserializeException {
@@ -154,21 +157,24 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 			for (long revisionFrom : revisionsFrom) {
 				String filenameFrom = fileNamingScheme.encodeSnapshot(revisionFrom);
 				InputStream inputStream = fs.download(filenameFrom);
-				DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream);
-				T stateFrom = decoder.decode(inputStreamEx);
+				T stateFrom;
+				try (DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream)) {
+					stateFrom = decoder.decode(inputStreamEx);
+				}
 
 				String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
 				OutputStream outputStreamDiff = fs.upload(filenameDiff);
-				DataOutputStreamEx outputStreamExDiff = DataOutputStreamEx.create(outputStreamDiff);
-
-				((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStreamExDiff, state, stateFrom);
+				try (DataOutputStreamEx outputStreamExDiff = DataOutputStreamEx.create(outputStreamDiff)) {
+					((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStreamExDiff, state, stateFrom);
+				}
 			}
 		}
 
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		OutputStream outputStream = fs.upload(filename);
-		DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream);
-		encoder.encode(outputStreamEx, state);
+		try (DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream)) {
+			encoder.encode(outputStreamEx, state);
+		}
 
 		return revision;
 	}

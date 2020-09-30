@@ -15,7 +15,6 @@ import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
 import static java.util.stream.Collectors.toSet;
 
-@SuppressWarnings("unused")
 public interface BlockingFs {
 	String SEPARATOR = ActiveFs.SEPARATOR;
 

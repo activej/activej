@@ -38,12 +38,12 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Boolean> ofBoolean() {
 		return new DataStreamCodec<Boolean>() {
 			@Override
-			public Boolean decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Boolean decode(DataInputStreamEx stream) throws IOException {
 				return stream.readBoolean();
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Boolean item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Boolean item) throws IOException {
 				stream.writeBoolean(item);
 			}
 		};
@@ -52,12 +52,12 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Character> ofChar() {
 		return new DataStreamCodec<Character>() {
 			@Override
-			public Character decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Character decode(DataInputStreamEx stream) throws IOException {
 				return stream.readChar();
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Character item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Character item) throws IOException {
 				stream.writeChar(item);
 			}
 		};
@@ -66,12 +66,12 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Byte> ofByte() {
 		return new DataStreamCodec<Byte>() {
 			@Override
-			public Byte decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Byte decode(DataInputStreamEx stream) throws IOException {
 				return stream.readByte();
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Byte item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Byte item) throws IOException {
 				stream.writeByte(item);
 			}
 		};
@@ -80,12 +80,12 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Short> ofShort() {
 		return new DataStreamCodec<Short>() {
 			@Override
-			public Short decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Short decode(DataInputStreamEx stream) throws IOException {
 				return stream.readShort();
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Short item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Short item) throws IOException {
 				stream.writeShort(item);
 			}
 		};
@@ -94,12 +94,12 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Integer> ofInt() {
 		return new DataStreamCodec<Integer>() {
 			@Override
-			public Integer decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Integer decode(DataInputStreamEx stream) throws IOException {
 				return stream.readInt();
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Integer item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Integer item) throws IOException {
 				stream.writeInt(item);
 			}
 		};
@@ -113,7 +113,7 @@ public final class DataStreamCodecs {
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Integer item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Integer item) throws IOException {
 				stream.writeVarInt(item);
 			}
 		};
@@ -122,12 +122,12 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Long> ofLong() {
 		return new DataStreamCodec<Long>() {
 			@Override
-			public Long decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Long decode(DataInputStreamEx stream) throws IOException {
 				return stream.readLong();
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Long item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Long item) throws IOException {
 				stream.writeLong(item);
 			}
 		};
@@ -141,7 +141,7 @@ public final class DataStreamCodecs {
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Long item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Long item) throws IOException {
 				stream.writeVarLong(item);
 			}
 		};
@@ -150,12 +150,12 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Float> ofFloat() {
 		return new DataStreamCodec<Float>() {
 			@Override
-			public Float decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Float decode(DataInputStreamEx stream) throws IOException {
 				return stream.readFloat();
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Float item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Float item) throws IOException {
 				stream.writeFloat(item);
 			}
 		};
@@ -164,12 +164,12 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Double> ofDouble() {
 		return new DataStreamCodec<Double>() {
 			@Override
-			public Double decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Double decode(DataInputStreamEx stream) throws IOException {
 				return stream.readDouble();
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Double item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, Double item) throws IOException {
 				stream.writeDouble(item);
 			}
 		};
@@ -183,7 +183,7 @@ public final class DataStreamCodecs {
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, @Nullable String item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, @Nullable String item) throws IOException {
 				stream.writeString(item);
 			}
 		};
