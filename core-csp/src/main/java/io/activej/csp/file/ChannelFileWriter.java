@@ -103,7 +103,11 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 
 	@Override
 	protected void onClosed(@NotNull Throwable e) {
-		closeFile();
+		try {
+			closeFile();
+		} catch (IOException ex) {
+			logger.error("{}: failed to close file", this, ex);
+		}
 	}
 
 	@Override
@@ -113,7 +117,11 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 		}
 		started = true;
 		if (buf == null) {
-			closeFile();
+			try {
+				closeFile();
+			} catch (IOException e) {
+				return Promise.ofException(e);
+			}
 			close();
 			return Promise.of(null);
 		}
@@ -135,21 +143,17 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 				});
 	}
 
-	private void closeFile() {
+	private void closeFile() throws IOException {
 		if (!channel.isOpen()) {
 			return;
 		}
 
-		try {
-			if (forceOnClose) {
-				channel.force(forceMetadata);
-			}
-
-			channel.close();
-			logger.trace("{}: closed file", this);
-		} catch (IOException e) {
-			logger.error("{}: failed to close file", this, e);
+		if (forceOnClose) {
+			channel.force(forceMetadata);
 		}
+
+		channel.close();
+		logger.trace("{}: closed file", this);
 	}
 
 	@Override

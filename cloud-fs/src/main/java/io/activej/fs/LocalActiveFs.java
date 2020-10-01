@@ -18,8 +18,10 @@ package io.activej.fs;
 
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.CollectorsEx;
 import io.activej.common.MemSize;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
@@ -48,10 +50,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.time.Duration;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -68,8 +67,7 @@ import static io.activej.fs.util.RemoteFsUtils.batchEx;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singleton;
+import static java.util.Collections.*;
 
 /**
  * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
@@ -82,6 +80,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
+	public static final boolean DEFAULT_SYNCED = ApplicationSettings.getBoolean(LocalActiveFs.class, "synced", false);
+	public static final boolean DEFAULT_SYNCED_APPEND = ApplicationSettings.getBoolean(LocalActiveFs.class, "syncedAppend", false);
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -96,9 +96,13 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private final Path storage;
 	private final Executor executor;
 
+	private final Set<OpenOption> appendOptions = CollectionUtils.set(WRITE);
+	private final Set<OpenOption> appendNewOptions = CollectionUtils.set(WRITE, CREATE);
+
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
 	private boolean hardlinkOnCopy = false;
 	private Path tempDir;
+	private boolean synced = DEFAULT_SYNCED;
 
 	CurrentTimeProvider now;
 
@@ -128,6 +132,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		this.tempDir = storage.resolve(DEFAULT_TEMP_DIR);
 
 		now = eventloop;
+
+		if (DEFAULT_SYNCED_APPEND) {
+			appendOptions.add(SYNC);
+			appendNewOptions.add(SYNC);
+		}
 	}
 
 	public static LocalActiveFs create(Eventloop eventloop, Executor executor, Path storageDir) {
@@ -158,17 +167,43 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		this.tempDir = tempDir;
 		return this;
 	}
+
+	/**
+	 * If set to {@code true}, all newly created files (via move, copy, upload) will be synchronously persisted to the storage device.
+	 * <p>
+	 * <b>Note: may be slow when there are a lot of new files created</b>
+	 */
+	public LocalActiveFs withSynced(boolean synced) {
+		this.synced = synced;
+		return this;
+	}
+
+	/**
+	 * If set to {@code true}, each write to {@link #append)} consumer will be synchronously written to the storage device.
+	 * <p>
+	 * <b>Note: significantly slows down appends</b>
+	 */
+	public LocalActiveFs withSyncedAppend(boolean syncedAppend) {
+		if (syncedAppend) {
+			appendOptions.add(SYNC);
+			appendNewOptions.add(SYNC);
+		} else {
+			appendOptions.remove(SYNC);
+			appendNewOptions.remove(SYNC);
+		}
+		return this;
+	}
 	// endregion
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return doUpload(name, identity())
+		return uploadImpl(name, identity())
 				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		return doUpload(name, ofFixedSize(size))
+		return uploadImpl(name, ofFixedSize(size))
 				.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
 	}
 
@@ -180,9 +215,12 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					Path path = resolve(name);
 					FileChannel channel;
 					if (offset == 0) {
-						channel = ensureTarget(null, path, () -> FileChannel.open(path, CREATE, WRITE));
+						channel = ensureTarget(null, path, () -> FileChannel.open(path, appendNewOptions));
+						if (synced) {
+							fsync(path.getParent());
+						}
 					} else {
-						channel = FileChannel.open(path, WRITE);
+						channel = FileChannel.open(path, appendOptions);
 					}
 					if (channel.size() < offset) {
 						throw new IllegalOffsetException(LocalActiveFs.class);
@@ -191,12 +229,18 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				})
 				.thenEx(translateScalarErrors(name))
 				.whenComplete(appendBeginPromise.recordStats())
-				.map(channel -> ChannelFileWriter.create(executor, channel)
-						.withOffset(offset)
-						.withAcknowledgement(ack -> ack
-								.thenEx(translateScalarErrors(name))
-								.whenComplete(appendFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this))))
+				.map(channel -> {
+					ChannelFileWriter writer = ChannelFileWriter.create(executor, channel)
+							.withOffset(offset);
+					if (synced && !appendOptions.contains(SYNC)) {
+						writer.withForceOnClose(true);
+					}
+					return writer
+							.withAcknowledgement(ack -> ack
+									.thenEx(translateScalarErrors(name))
+									.whenComplete(appendFinishPromise.recordStats())
+									.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)));
+				})
 				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
 	}
 
@@ -259,7 +303,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		return execute(() -> doCopy(map(name, target)))
+		return execute(() -> copyImpl(singletonMap(name, target)))
 				.thenEx(translateScalarErrors())
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
@@ -270,14 +314,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return execute(() -> doCopy(sourceToTarget))
+		return execute(() -> copyImpl(sourceToTarget))
 				.whenComplete(toLogger(logger, TRACE, "copyAll", toLimitedString(sourceToTarget, 50), this))
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return execute(() -> doMove(map(name, target)))
+		return execute(() -> moveImpl(singletonMap(name, target)))
 				.thenEx(translateScalarErrors())
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
@@ -288,14 +332,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return execute(() -> doMove(sourceToTarget))
+		return execute(() -> moveImpl(sourceToTarget))
 				.whenComplete(toLogger(logger, TRACE, "moveAll", toLimitedString(sourceToTarget, 50), this))
 				.whenComplete(moveAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
-		return execute(() -> doDelete(singleton(name)))
+		return execute(() -> deleteImpl(singleton(name)))
 				.thenEx(translateScalarErrors(name))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
@@ -305,7 +349,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		if (toDelete.isEmpty()) return Promise.complete();
 
-		return execute(() -> doDelete(toDelete))
+		return execute(() -> deleteImpl(toDelete))
 				.whenComplete(toLogger(logger, TRACE, "deleteAll", toDelete, this))
 				.whenComplete(deleteAllPromise.recordStats());
 	}
@@ -350,7 +394,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		return execute(() -> LocalFileUtils.init(storage, tempDir));
+		return execute(() -> LocalFileUtils.init(storage, tempDir, synced));
 	}
 
 	@NotNull
@@ -380,64 +424,102 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	private Promise<ChannelConsumer<ByteBuf>> doUpload(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
+	private Promise<ChannelConsumer<ByteBuf>> uploadImpl(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
 				() -> {
 					Path tempPath = Files.createTempFile(tempDir, "", "");
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
-				.map(pathAndChannel -> ChannelFileWriter.create(executor, pathAndChannel.getValue2())
-						.transformWith(transformer)
-						.withAcknowledgement(ack -> ack
-								.then(() -> execute(() -> doMove(pathAndChannel.getValue1(), resolve(name))))
-								.thenEx(translateScalarErrors(name))
-								.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
-								.whenComplete(uploadFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this))))
+				.map(pathAndChannel -> {
+					ChannelFileWriter writer = ChannelFileWriter.create(executor, pathAndChannel.getValue2());
+					if (synced) {
+						writer.withForceOnClose(true);
+					}
+					return writer
+							.transformWith(transformer)
+							.withAcknowledgement(ack -> ack
+									.then(() -> execute(() -> {
+										Path target = resolve(name);
+										doMove(pathAndChannel.getValue1(), target);
+										if (synced) {
+											fsync(target.getParent());
+										}
+									}))
+									.thenEx(translateScalarErrors(name))
+									.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
+									.whenComplete(uploadFinishPromise.recordStats())
+									.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this)));
+				})
 				.thenEx(translateScalarErrors(name))
 				.whenComplete(uploadBeginPromise.recordStats());
 	}
 
-	private void doCopy(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException {
-		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
-			translateBatchErrors(entry, () -> {
-				Path path = resolve(entry.getKey());
-				if (!Files.isRegularFile(path)) {
-					throw new FileNotFoundException(LocalActiveFs.class, "File '" + entry.getKey() + "' not found");
-				}
-				Path targetPath = resolve(entry.getValue());
-
-				if (path.equals(targetPath)) {
-					touch(path, now);
-					return;
-				}
-
-				ensureTarget(path, targetPath, () -> {
-					if (hardlinkOnCopy) {
-						LocalFileUtils.copyViaHardlink(path, targetPath, now);
-					} else {
-						Files.copy(path, targetPath, REPLACE_EXISTING);
+	private void copyImpl(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException, IOException {
+		Set<Path> toFSync = new HashSet<>();
+		try {
+			for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
+				translateBatchErrors(entry, () -> {
+					Path path = resolve(entry.getKey());
+					if (!Files.isRegularFile(path)) {
+						throw new FileNotFoundException(LocalActiveFs.class, "File '" + entry.getKey() + "' not found");
 					}
-					return null;
+					Path targetPath = resolve(entry.getValue());
+
+					if (path.equals(targetPath)) {
+						touch(path, now);
+						if (synced) {
+							toFSync.add(path);
+						}
+						return;
+					}
+
+					ensureTarget(path, targetPath, () -> {
+						if (hardlinkOnCopy) {
+							LocalFileUtils.copyViaHardlink(path, targetPath, now);
+						} else {
+							Files.copy(path, targetPath, REPLACE_EXISTING);
+						}
+						if (synced) {
+							toFSync.add(targetPath.getParent());
+						}
+						return null;
+					});
 				});
-			});
+			}
+		} finally {
+			for (Path path : toFSync) {
+				fsync(path);
+			}
 		}
 	}
 
-	private void doMove(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException {
-		for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
-			translateBatchErrors(entry, () -> {
-				Path path = resolve(entry.getKey());
-				if (!Files.isRegularFile(path)) {
-					throw new FileNotFoundException(LocalActiveFs.class, "File '" + entry.getKey() + "' not found");
-				}
-				Path targetPath = resolve(entry.getValue());
-				if (path.equals(targetPath)) {
-					touch(path, now);
-					return;
-				}
-				doMove(path, targetPath);
-			});
+	private void moveImpl(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException, IOException {
+		Set<Path> toFSync = new HashSet<>();
+		try {
+			for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
+				translateBatchErrors(entry, () -> {
+					Path path = resolve(entry.getKey());
+					if (!Files.isRegularFile(path)) {
+						throw new FileNotFoundException(LocalActiveFs.class, "File '" + entry.getKey() + "' not found");
+					}
+					Path targetPath = resolve(entry.getValue());
+					if (path.equals(targetPath)) {
+						touch(path, now);
+						if (synced) {
+							toFSync.add(path);
+						}
+						return;
+					}
+					doMove(path, targetPath);
+					if (synced) {
+						toFSync.add(targetPath.getParent());
+					}
+				});
+			}
+		} finally {
+			for (Path path : toFSync) {
+				fsync(path);
+			}
 		}
 	}
 
@@ -448,7 +530,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		});
 	}
 
-	private void doDelete(Set<String> toDelete) throws FsBatchException, FsIOException {
+	private void deleteImpl(Set<String> toDelete) throws FsBatchException, FsIOException {
 		for (String name : toDelete) {
 			translateBatchErrors(name, () -> {
 				Path path = resolve(name);

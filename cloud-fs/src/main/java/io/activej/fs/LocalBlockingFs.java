@@ -16,12 +16,15 @@
 
 package io.activej.fs;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.CollectorsEx;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.fs.util.ForwardingOutputStream;
 import io.activej.fs.util.LimitedInputStream;
+import io.activej.fs.util.UploadOutputStream;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.service.BlockingService;
 import org.jetbrains.annotations.NotNull;
@@ -34,24 +37,30 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.nio.file.StandardOpenOption.CREATE;
-import static java.nio.file.StandardOpenOption.WRITE;
+import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 
 public final class LocalBlockingFs implements BlockingFs, BlockingService, ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(LocalBlockingFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
+	public static final boolean DEFAULT_SYNCED = ApplicationSettings.getBoolean(LocalActiveFs.class, "synced", false);
+	public static final boolean DEFAULT_SYNCED_APPEND = ApplicationSettings.getBoolean(LocalActiveFs.class, "syncedAppend", false);
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -64,8 +73,12 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	private final Path storage;
 
+	private final Set<OpenOption> appendOptions = CollectionUtils.set(WRITE);
+	private final Set<OpenOption> appendNewOptions = CollectionUtils.set(WRITE, CREATE);
+
 	private boolean hardlinkOnCopy = false;
 	private Path tempDir;
+	private boolean synced = DEFAULT_SYNCED;
 
 	CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -73,6 +86,11 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	private LocalBlockingFs(Path storage) {
 		this.storage = storage;
 		this.tempDir = storage.resolve(DEFAULT_TEMP_DIR);
+
+		if (DEFAULT_SYNCED_APPEND) {
+			appendOptions.add(SYNC);
+			appendNewOptions.add(SYNC);
+		}
 	}
 
 	public static LocalBlockingFs create(Path storageDir) {
@@ -95,63 +113,54 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		this.tempDir = tempDir;
 		return this;
 	}
+
+	/**
+	 * If set to {@code true}, all newly created files (via move, copy, upload) will be synchronously persisted to the storage device.
+	 * <p>
+	 * <b>Note: may be slow when there are a lot of new files created</b>
+	 */
+	public LocalBlockingFs withSynced(boolean synced) {
+		this.synced = synced;
+		return this;
+	}
+
+	/**
+	 * If set to {@code true}, each write to {@link #append)} consumer will be synchronously written to the storage device.
+	 * <p>
+	 * <b>Note: significantly slows down appends</b>
+	 */
+	public LocalBlockingFs withSyncedAppend(boolean syncedAppend) {
+		if (syncedAppend) {
+			appendOptions.add(SYNC);
+			appendNewOptions.add(SYNC);
+		} else {
+			appendOptions.remove(SYNC);
+			appendNewOptions.remove(SYNC);
+		}
+		return this;
+	}
 	// endregion
 
 	@Override
 	public OutputStream upload(@NotNull String name) throws IOException {
 		Path tempPath = Files.createTempFile(tempDir, "", "");
-		return new ForwardingOutputStream(new FileOutputStream(tempPath.toFile())) {
-			boolean closed;
-
-			@Override
-			protected void onInternalError(IOException e) throws IOException {
-				Files.deleteIfExists(tempPath);
-			}
-
-			@Override
-			protected void onClose() throws IOException {
-				if (closed) return;
-				closed = true;
-				try {
-					doMove(tempPath, resolve(name));
-				} catch (IOException e) {
-					Files.deleteIfExists(tempPath);
-					throw e;
-				}
-			}
-		};
+		return new UploadOutputStream(tempPath, resolve(name), synced, this::doMove);
 	}
 
 	@Override
 	public OutputStream upload(@NotNull String name, long size) throws IOException {
 		Path tempPath = Files.createTempFile(tempDir, "", "");
-		return new ForwardingOutputStream(new FileOutputStream(tempPath.toFile())) {
+		return new UploadOutputStream(tempPath, resolve(name), synced, this::doMove) {
 			long totalSize;
-			boolean closed;
 
 			@Override
 			protected void onBytes(int len) throws IOException {
-				if ((totalSize += len) > size) throwOnSizeMismatch();
-			}
-
-			@Override
-			protected void onInternalError(IOException e) throws IOException {
-				Files.deleteIfExists(tempPath);
+				if ((totalSize += len) > size) throw new IOException("Size mismatch");
 			}
 
 			@Override
 			protected void onClose() throws IOException {
-				if (totalSize != size) throwOnSizeMismatch();
-
-				if (closed) return;
-				closed = true;
-				doMove(tempPath, resolve(name));
-			}
-
-			private void throwOnSizeMismatch() throws IOException {
-				peer.close();
-				Files.deleteIfExists(tempPath);
-				throw new IOException("Size mismatch");
+				if (totalSize != size) throw new IOException("Size mismatch");
 			}
 		};
 	}
@@ -163,15 +172,30 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		Path path = resolve(name);
 		FileChannel channel;
 		if (offset == 0) {
-			channel = ensureTarget(null, path, () -> FileChannel.open(path, CREATE, WRITE));
+			channel = ensureTarget(null, path, () -> FileChannel.open(path, appendNewOptions));
+			if (synced) {
+				fsync(path.getParent());
+			}
 		} else {
-			channel = FileChannel.open(path, WRITE);
+			channel = FileChannel.open(path, appendOptions);
 		}
 		if (channel.size() < offset) {
 			throw new IOException("Offset exceeds file size");
 		}
 		channel.position(offset);
-		return Channels.newOutputStream(channel);
+		return new ForwardingOutputStream(Channels.newOutputStream(channel)) {
+			boolean closed;
+
+			@Override
+			public void close() throws IOException {
+				if (closed) return;
+				closed = true;
+				peer.close();
+				if (synced && !appendOptions.contains(SYNC)) {
+					fsync(path);
+				}
+			}
+		};
 	}
 
 	@Override
@@ -201,39 +225,24 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public void copy(@NotNull String name, @NotNull String target) throws IOException {
-		Path path = resolve(name);
-		if (!Files.isRegularFile(path)) {
-			throw new FileNotFoundException("File '" + name + "' not found");
-		}
-		Path targetPath = resolve(target);
+		copyImpl(singletonMap(name, target));
+	}
 
-		if (path.equals(targetPath)) {
-			touch(path, now);
-			return;
-		}
-
-		ensureTarget(path, targetPath, () -> {
-			if (hardlinkOnCopy) {
-				LocalFileUtils.copyViaHardlink(path, targetPath, now);
-			} else {
-				Files.copy(path, targetPath, REPLACE_EXISTING);
-			}
-			return null;
-		});
+	@Override
+	public void copyAll(Map<String, String> sourceToTarget) throws IOException {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
+		copyImpl(sourceToTarget);
 	}
 
 	@Override
 	public void move(@NotNull String name, @NotNull String target) throws IOException {
-		Path path = resolve(name);
-		if (!Files.isRegularFile(path)) {
-			throw new FileNotFoundException("File '" + name + "' not found");
-		}
-		Path targetPath = resolve(target);
-		if (path.equals(targetPath)) {
-			touch(path, now);
-			return;
-		}
-		doMove(path, targetPath);
+		moveImpl(singletonMap(name, target));
+	}
+
+	@Override
+	public void moveAll(Map<String, String> sourceToTarget) throws IOException {
+		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
+		moveImpl(sourceToTarget);
 	}
 
 	@Override
@@ -271,7 +280,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public void start() throws IOException {
-		LocalFileUtils.init(storage, tempDir);
+		LocalFileUtils.init(storage, tempDir, synced);
 	}
 
 	@Override
@@ -297,6 +306,71 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			return LocalFileUtils.resolve(storage, tempDir, toLocalName.apply(name));
 		} catch (ForbiddenPathException e) {
 			throw new FileSystemException(name, null, e.getMessage());
+		}
+	}
+
+	private void moveImpl(Map<String, String> sourceToTargetMap) throws IOException {
+		Set<Path> toFSync = new HashSet<>();
+		try {
+			for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
+				Path path = resolve(entry.getKey());
+				if (!Files.isRegularFile(path)) {
+					throw new FileNotFoundException("File '" + entry.getKey() + "' not found");
+				}
+				Path targetPath = resolve(entry.getValue());
+				if (path.equals(targetPath)) {
+					touch(path, now);
+					if (synced) {
+						toFSync.add(path);
+					}
+					continue;
+				}
+				doMove(path, targetPath);
+				if (synced) {
+					toFSync.add(targetPath.getParent());
+				}
+			}
+		} finally {
+			for (Path path : toFSync) {
+				fsync(path);
+			}
+		}
+	}
+
+	private void copyImpl(Map<String, String> sourceToTargetMap) throws IOException {
+		Set<Path> toFSync = new HashSet<>();
+		try {
+			for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
+				Path path = resolve(entry.getKey());
+				if (!Files.isRegularFile(path)) {
+					throw new FileNotFoundException("File '" + entry.getKey() + "' not found");
+				}
+				Path targetPath = resolve(entry.getValue());
+
+				if (path.equals(targetPath)) {
+					touch(path, now);
+					if (synced) {
+						toFSync.add(path);
+					}
+					continue;
+				}
+
+				ensureTarget(path, targetPath, () -> {
+					if (hardlinkOnCopy) {
+						LocalFileUtils.copyViaHardlink(path, targetPath, now);
+					} else {
+						Files.copy(path, targetPath, REPLACE_EXISTING);
+					}
+					return null;
+				});
+				if (synced) {
+					toFSync.add(targetPath.getParent());
+				}
+			}
+		} finally {
+			for (Path path : toFSync) {
+				fsync(path);
+			}
 		}
 	}
 

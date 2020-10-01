@@ -557,7 +557,6 @@ public final class TestLocalBlockingFsInvariants {
 				assertThat(e.getMessage(), containsString("Path '../new' is forbidden"));
 			}
 		});
-		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
@@ -695,7 +694,6 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"directory", "newDirectory"
 				))));
-		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
@@ -705,7 +703,6 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"nonexistent", "newFile2"
 				))));
-		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
@@ -715,7 +712,6 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"", "newRoot"
 				))));
-		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
@@ -725,7 +721,6 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"file2", ""
 				))));
-		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
@@ -740,7 +735,6 @@ public final class TestLocalBlockingFsInvariants {
 				assertThat(e.getMessage(), containsString("Path '../new' is forbidden"));
 			}
 		});
-		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
@@ -755,7 +749,6 @@ public final class TestLocalBlockingFsInvariants {
 				assertThat(e.getMessage(), containsString("Path '../new' is forbidden"));
 			}
 		});
-		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
@@ -823,7 +816,6 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"nonexistent", "nonexistent"
 				))));
-		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
@@ -833,7 +825,6 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"directory", "directory"
 				))));
-		assertFilesAreSame(firstPath, secondPath);
 	}
 	//endregion
 

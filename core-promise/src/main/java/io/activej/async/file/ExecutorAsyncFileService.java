@@ -16,11 +16,9 @@
 
 package io.activej.async.file;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.Executor;
@@ -41,15 +39,11 @@ public final class ExecutorAsyncFileService implements AsyncFileService {
 			long pos = position;
 
 			do {
-				try {
-					int readBytes = channel.read(buffer, pos);
-					if (readBytes == -1) {
-						break;
-					}
-					pos += readBytes;
-				} catch (IOException e) {
-					throw new UncheckedException(e);
+				int readBytes = channel.read(buffer, pos);
+				if (readBytes == -1) {
+					break;
 				}
+				pos += readBytes;
 			} while (buffer.position() < buffer.limit());
 			return Math.toIntExact(pos - position);
 		});
@@ -61,13 +55,9 @@ public final class ExecutorAsyncFileService implements AsyncFileService {
 			ByteBuffer buffer = ByteBuffer.wrap(array, offset, size);
 			long pos = position;
 
-			try {
-				do {
-					pos += channel.write(buffer, pos);
-				} while (buffer.position() < buffer.limit());
-			} catch (IOException e) {
-				throw new UncheckedException(e);
-			}
+			do {
+				pos += channel.write(buffer, pos);
+			} while (buffer.position() < buffer.limit());
 			return Math.toIntExact(pos - position);
 		});
 	}

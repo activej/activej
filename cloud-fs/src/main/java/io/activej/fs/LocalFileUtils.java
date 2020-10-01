@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
@@ -45,10 +46,10 @@ import static java.util.Collections.singletonList;
 public final class LocalFileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(LocalFileUtils.class);
 
-	static void init(Path storage, Path tempDir) throws IOException {
-		Files.createDirectories(tempDir);
+	static void init(Path storage, Path tempDir, boolean sync) throws IOException {
+		createDirectories(tempDir, sync);
 		if (!tempDir.startsWith(storage)) {
-			Files.createDirectories(storage);
+			createDirectories(storage, sync);
 		}
 	}
 
@@ -260,6 +261,44 @@ public final class LocalFileUtils {
 		}
 	}
 
+	public static void createDirectories(Path path, boolean sync) throws IOException {
+		createDirectories(path, path.getRoot(), sync);
+	}
+
+	public static void createDirectories(Path path, Path root, boolean sync) throws IOException {
+		Path parent = path;
+		while (!parent.equals(root)) {
+			if (Files.exists(parent)) break;
+			parent = parent.getParent();
+		}
+
+		Path child = parent;
+		for (Path name : parent.relativize(path)) {
+			Path newChild = child.resolve(name);
+			if (createDir(newChild) && sync) {
+				fsync(child);
+			}
+			child = newChild;
+		}
+	}
+
+	private static boolean createDir(Path path) throws IOException {
+		try {
+			Files.createDirectory(path);
+			return true;
+		} catch (FileAlreadyExistsException e) {
+			if (!Files.isDirectory(path))
+				throw e;
+		}
+		return false;
+	}
+
+	public static void fsync(Path path) throws IOException {
+		try (FileChannel channel = FileChannel.open(path)) {
+			channel.force(true);
+		}
+	}
+
 	@FunctionalInterface
 	public interface IOCallable<V> {
 		V call() throws IOException;
@@ -278,6 +317,11 @@ public final class LocalFileUtils {
 	@FunctionalInterface
 	private interface Walker {
 		void accept(Path path) throws IOException;
+	}
+
+	@FunctionalInterface
+	public interface FileTransporter {
+		void transport(Path from, Path to) throws IOException;
 	}
 
 }

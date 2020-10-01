@@ -16,13 +16,12 @@
 
 package io.activej.fs.util;
 
-import io.activej.fs.LocalFileUtils.IORunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class ForwardingOutputStream extends OutputStream {
+public class ForwardingOutputStream extends OutputStream{
 	protected final OutputStream peer;
 
 	public ForwardingOutputStream(OutputStream peer) {
@@ -30,63 +29,27 @@ public class ForwardingOutputStream extends OutputStream {
 	}
 
 	@Override
-	public final void write(int b) throws IOException {
-		run(() -> {
-			onBytes(1);
-			peer.write(b);
-		});
+	public void write(@NotNull byte[] b) throws IOException {
+		peer.write(b);
 	}
 
 	@Override
-	public final void write(@NotNull byte[] b) throws IOException {
-		run(() -> {
-			onBytes(b.length);
-			peer.write(b);
-		});
+	public void write(@NotNull byte[] b, int off, int len) throws IOException {
+		peer.write(b, off, len);
 	}
 
 	@Override
-	public final void write(@NotNull byte[] b, int off, int len) throws IOException {
-		run(() -> {
-			onBytes(len);
-			peer.write(b, off, len);
-		});
+	public void flush() throws IOException {
+		peer.flush();
 	}
 
 	@Override
-	public final void flush() throws IOException {
-		run(peer::flush);
+	public void write(int b) throws IOException {
+		peer.write(b);
 	}
 
 	@Override
-	public final void close() throws IOException {
-		run(() -> {
-			peer.close();
-			onClose();
-		});
+	public void close() throws IOException {
+		peer.close();
 	}
-
-	protected void onBytes(int len) throws IOException {
-	}
-
-	protected void onInternalError(IOException e) throws IOException {
-	}
-
-	protected void onClose() throws IOException {
-	}
-
-	private void run(IORunnable runnable) throws IOException {
-		try {
-			runnable.run();
-		} catch (IOException e) {
-			try {
-				onInternalError(e);
-			} catch (IOException e2) {
-				e2.addSuppressed(e);
-				throw e2;
-			}
-			throw e;
-		}
-	}
-
 }
