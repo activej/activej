@@ -18,6 +18,7 @@ package io.activej.cube;
 
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.AggregationPredicates;
+import io.activej.common.api.WithInitializer;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -26,7 +27,7 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 
-public final class CubeQuery {
+public final class CubeQuery implements WithInitializer<CubeQuery> {
 	private Set<String> attributes = new LinkedHashSet<>();
 	private Set<String> measures = new LinkedHashSet<>();
 	private AggregationPredicate where = AggregationPredicates.alwaysTrue();

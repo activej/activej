@@ -21,7 +21,6 @@ import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamSplitter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +36,6 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 		private final List<LogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();
 		private Iterator<? extends StreamDataAcceptor<?>> acceptors;
 
-		@Nullable
 		public final <X> StreamDataAcceptor<X> addOutput(LogDataConsumer<X, D> logDataConsumer) {
 			if (acceptors == null) {
 				// initial run, recording scheme

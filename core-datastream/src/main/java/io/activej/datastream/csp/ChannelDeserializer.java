@@ -18,7 +18,6 @@ package io.activej.datastream.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.MemSize;
 import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelInput;
@@ -39,7 +38,6 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 
 	private final ByteBufQueue queue = new ByteBufQueue();
 
-	private MemSize maxMessageSize = ChannelSerializer.MAX_SIZE;
 	private boolean explicitEndOfStream = false;
 
 	private ChannelDeserializer(BinarySerializer<T> valueSerializer) {
@@ -51,11 +49,6 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 	 */
 	public static <T> ChannelDeserializer<T> create(BinarySerializer<T> valueSerializer) {
 		return new ChannelDeserializer<>(valueSerializer);
-	}
-
-	public ChannelDeserializer<T> withMaxMessageSize(MemSize maxMessageSize) {
-		this.maxMessageSize = maxMessageSize;
-		return this;
 	}
 
 	public ChannelDeserializer<T> withExplicitEndOfStream() {
@@ -82,9 +75,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 		final boolean endOfStream;
 
 		try {
-			endOfStream = maxMessageSize.toInt() <= ChannelSerializer.MAX_SIZE_1.toInt() ?
-					process1() :
-					process3();
+			endOfStream = process();
 		} catch (Exception e) {
 			closeEx(new UnknownFormatException(ChannelDeserializer.class, format("Parse exception, %s : %s", this, queue), e));
 			return;
@@ -135,80 +126,25 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 		}
 	}
 
-	private boolean process1() {
+	private boolean process() {
 		ByteBuf firstBuf;
 		while (isReady() && (firstBuf = queue.peekBuf()) != null) {
-			int size;
-
-			byte[] array = firstBuf.array();
-			int pos = firstBuf.head();
-			byte b = array[pos];
-			if (b > 0) {
-				size = 1 + b;
-			} else if (b < 0) {
-				throw new IllegalArgumentException("Invalid header size");
-			} else {
-				return true;
-			}
-
-			int firstBufRemaining = firstBuf.readRemaining();
-			if (firstBufRemaining >= size) {
-				T item = valueSerializer.decode(array, pos + 1);
-				send(item);
-				if (firstBufRemaining != size) {
-					firstBuf.moveHead(size);
-				} else {
-					queue.take().recycle();
-				}
-				continue;
-			}
-
-			if (!queue.hasRemainingBytes(size))
-				break;
-
-			queue.consume(size, buf -> {
-				T item = valueSerializer.decode(buf.array(), buf.head() + 1);
-				send(item);
-			});
-		}
-
-		return false;
-	}
-
-	private boolean process3() {
-		ByteBuf firstBuf;
-		while (isReady() && (firstBuf = queue.peekBuf()) != null) {
-			int dataSize;
-			int headerSize;
-			int size;
 			int firstBufRemaining = firstBuf.readRemaining();
 			if (firstBufRemaining >= 3) {
 				byte[] array = firstBuf.array();
 				int pos = firstBuf.head();
 				byte b = array[pos];
+				int size;
+				int headerSize;
 				if (b > 0) {
-					dataSize = b;
+					size = b + 1;
 					headerSize = 1;
-				} else if (b < 0) {
-					dataSize = b & 0x7f;
-					b = array[pos + 1];
-					if (b >= 0) {
-						dataSize += (b << 7);
-						headerSize = 2;
-					} else {
-						dataSize += ((b & 0x7f) << 7);
-						b = array[pos + 2];
-						if (b >= 0) {
-							dataSize += (b << 14);
-							headerSize = 3;
-						} else {
-							throw new IllegalArgumentException("Invalid header size");
-						}
-					}
 				} else {
-					return true;
+					int encodedSize = readEncodedSize(array, pos, b);
+					if (encodedSize == 0) return true;
+					size = encodedSize & 0x0FFFFFFF;
+					headerSize = encodedSize >>> 28;
 				}
-				size = headerSize + dataSize;
 
 				if (firstBufRemaining >= size) {
 					T item = valueSerializer.decode(array, pos + headerSize);
@@ -220,47 +156,78 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 					}
 					continue;
 				}
-
-			} else {
-				byte b = queue.peekByte();
-				if (b >= 0) {
-					if (b == 0) return true;
-					dataSize = b;
-					headerSize = 1;
-				} else if (queue.hasRemainingBytes(2)) {
-					dataSize = b & 0x7f;
-					b = queue.peekByte(1);
-					if (b >= 0) {
-						dataSize += (b << 7);
-						headerSize = 2;
-					} else if (queue.hasRemainingBytes(3)) {
-						dataSize += ((b & 0x7f) << 7);
-						b = queue.peekByte(2);
-						if (b >= 0) {
-							dataSize += (b << 14);
-							headerSize = 3;
-						} else {
-							throw new IllegalArgumentException("Invalid header size");
-						}
-					} else {
-						break;
-					}
-				} else {
-					break;
-				}
-				size = headerSize + dataSize;
 			}
 
-			if (!queue.hasRemainingBytes(size))
-				break;
-
-			queue.consume(size, buf -> {
-				T item = valueSerializer.decode(buf.array(), buf.head() + headerSize);
-				send(item);
-			});
+			int r = doProcess();
+			if (r == 0) return true;
+			if (r < 0) break;
 		}
 
 		return false;
+	}
+
+	private int doProcess() {
+		int encodedSize = readEncodedSize();
+		if (encodedSize == 0) return 0;
+		int size = encodedSize & 0x0FFFFFFF;
+		int headerSize = encodedSize >>> 28;
+
+		if (!queue.hasRemainingBytes(size)) {
+			return -1;
+		}
+
+		queue.consume(size, buf -> {
+			T item = valueSerializer.decode(buf.array(), buf.head() + headerSize);
+			send(item);
+		});
+
+		return 1;
+	}
+
+	private static int readEncodedSize(byte[] array, int pos, byte b) {
+		if (b < 0) {
+			int dataSize = b & 0x7f;
+			b = array[pos + 1];
+			if (b >= 0) {
+				dataSize += (b << 7);
+				return dataSize + 2 + (2 << 28);
+			} else {
+				dataSize += ((b & 0x7f) << 7);
+				b = array[pos + 2];
+				if (b >= 0) {
+					dataSize += (b << 14);
+					return dataSize + 3 + (3 << 28);
+				} else {
+					throw new AssertionError("Invalid header size");
+				}
+			}
+		}
+		return 0;
+	}
+
+	private int readEncodedSize() {
+		byte b = queue.peekByte();
+		if (b > 0) return b + 1 + (1 << 28);
+		if (b == 0) return 0;
+		if (queue.hasRemainingBytes(2)) {
+			int dataSize = b & 0x7f;
+			b = queue.peekByte(1);
+			if (b >= 0) {
+				dataSize += (b << 7);
+				return dataSize + 2 + (2 << 28);
+			}
+			if (queue.hasRemainingBytes(3)) {
+				dataSize += ((b & 0x7f) << 7);
+				b = queue.peekByte(2);
+				if (b >= 0) {
+					dataSize += (b << 14);
+					return dataSize + 3 + (3 << 28);
+				}
+				throw new AssertionError("Invalid header size");
+			}
+			return Integer.MAX_VALUE;
+		}
+		return Integer.MAX_VALUE;
 	}
 
 	@Override
