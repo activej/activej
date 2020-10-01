@@ -1,6 +1,5 @@
 package io.activej.serializer.datastream;
 
-import io.activej.serializer.SerializeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -108,7 +107,7 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Integer> ofVarInt() {
 		return new DataStreamCodec<Integer>() {
 			@Override
-			public Integer decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Integer decode(DataInputStreamEx stream) throws IOException {
 				return stream.readVarInt();
 			}
 
@@ -136,7 +135,7 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Long> ofVarLong() {
 		return new DataStreamCodec<Long>() {
 			@Override
-			public Long decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public Long decode(DataInputStreamEx stream) throws IOException {
 				return stream.readVarLong();
 			}
 
@@ -178,7 +177,7 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<String> ofString() {
 		return new DataStreamCodec<String>() {
 			@Override
-			public @Nullable String decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public @Nullable String decode(DataInputStreamEx stream) throws IOException {
 				return stream.readString();
 			}
 
@@ -192,13 +191,13 @@ public final class DataStreamCodecs {
 	public static <T> DataStreamCodec<@Nullable T> ofNullable(DataStreamCodec<@NotNull T> codec) {
 		return new DataStreamCodec<T>() {
 			@Override
-			public @Nullable T decode(DataInputStreamEx stream) throws IOException, DeserializeException {
+			public @Nullable T decode(DataInputStreamEx stream) throws IOException {
 				if (stream.readByte() == 0) return null;
 				return codec.decode(stream);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, @Nullable T item) throws IOException, SerializeException {
+			public void encode(DataOutputStreamEx stream, @Nullable T item) throws IOException {
 				if (item == null) {
 					stream.writeByte((byte) 0);
 				} else {

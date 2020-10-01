@@ -1,7 +1,5 @@
 package io.activej.state;
 
-import io.activej.serializer.SerializeException;
-import io.activej.serializer.datastream.DeserializeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,11 +12,11 @@ public interface StateManager<T, R extends Comparable<R>> {
 
 	@Nullable R getLastDiffRevision(@NotNull R currentRevision) throws IOException;
 
-	@NotNull T loadSnapshot(@NotNull R revision) throws IOException, DeserializeException;
+	@NotNull T loadSnapshot(@NotNull R revision) throws IOException;
 
 	@NotNull T loadDiff(@NotNull T state, @NotNull R revisionFrom, @NotNull R revisionTo) throws IOException;
 
-	void saveSnapshot(@NotNull T state, @NotNull R revision) throws IOException, SerializeException;
+	void saveSnapshot(@NotNull T state, @NotNull R revision) throws IOException;
 
 	void saveDiff(@NotNull T state, @NotNull R revision, @NotNull T stateFrom, @NotNull R revisionFrom) throws IOException;
 }

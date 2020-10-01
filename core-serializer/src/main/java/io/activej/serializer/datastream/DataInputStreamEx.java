@@ -106,20 +106,16 @@ public class DataInputStreamEx implements Closeable {
 		}
 	}
 
-	public final <T> T deserialize(BinarySerializer<T> serializer) throws IOException, DeserializeException {
+	public final <T> T deserialize(BinarySerializer<T> serializer) throws IOException {
 		int messageSize = readSize();
 
 		ensureRead(messageSize);
 
 		int oldPos = in.pos();
 		T item;
-		try {
-			item = serializer.decode(in);
-		} catch (Exception e) {
-			throw new DeserializeException(e);
-		}
+		item = serializer.decode(in);
 		if (in.pos() - oldPos != messageSize) {
-			throw new DeserializeException("Deserialized size != parsed data size");
+			throw new AssertionError("Deserialized size != parsed data size");
 		}
 		return item;
 	}
@@ -192,7 +188,7 @@ public class DataInputStreamEx implements Closeable {
 		return in.readLong();
 	}
 
-	public final int readVarInt() throws IOException, DeserializeException {
+	public final int readVarInt() throws IOException {
 		int result;
 		byte b = readByte();
 		if (b >= 0) {
@@ -215,7 +211,7 @@ public class DataInputStreamEx implements Closeable {
 							result |= b << 28;
 						} else {
 							recycle();
-							throw new DeserializeException();
+							throw new AssertionError();
 						}
 					}
 				}
@@ -224,7 +220,7 @@ public class DataInputStreamEx implements Closeable {
 		return result;
 	}
 
-	public final long readVarLong() throws IOException, DeserializeException {
+	public final long readVarLong() throws IOException {
 		long result = 0;
 		for (int offset = 0; offset < 64; offset += 7) {
 			byte b = readByte();
@@ -233,7 +229,7 @@ public class DataInputStreamEx implements Closeable {
 				return result;
 		}
 		recycle();
-		throw new DeserializeException();
+		throw new AssertionError();
 	}
 
 	public final float readFloat() throws IOException {
@@ -251,11 +247,11 @@ public class DataInputStreamEx implements Closeable {
 		return in.readChar();
 	}
 
-	public final @Nullable String readString() throws IOException, DeserializeException {
+	public final @Nullable String readString() throws IOException {
 		return readUTF8Nullable();
 	}
 
-	public final @NotNull String readUTF8() throws IOException, DeserializeException {
+	public final @NotNull String readUTF8() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
 		ensureRead(length);
@@ -264,7 +260,7 @@ public class DataInputStreamEx implements Closeable {
 		return str;
 	}
 
-	public final @NotNull String readIso88591() throws IOException, DeserializeException {
+	public final @NotNull String readIso88591() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
 		ensureRead(length);
@@ -277,7 +273,7 @@ public class DataInputStreamEx implements Closeable {
 		return new String(chars, 0, length);
 	}
 
-	public final @NotNull String readUTF16() throws IOException, DeserializeException {
+	public final @NotNull String readUTF16() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
 		ensureRead(length * 2);
@@ -292,7 +288,7 @@ public class DataInputStreamEx implements Closeable {
 		return new String(chars, 0, length);
 	}
 
-	public final @Nullable String readUTF8Nullable() throws IOException, DeserializeException {
+	public final @Nullable String readUTF8Nullable() throws IOException {
 		int length = readVarInt();
 		if (length-- == 0) return null;
 		if (length == 0) return "";
@@ -302,7 +298,7 @@ public class DataInputStreamEx implements Closeable {
 		return str;
 	}
 
-	public final @Nullable String readIso88591Nullable() throws IOException, DeserializeException {
+	public final @Nullable String readIso88591Nullable() throws IOException {
 		int length = readVarInt();
 		if (length-- == 0) return null;
 		if (length == 0) return "";
@@ -316,7 +312,7 @@ public class DataInputStreamEx implements Closeable {
 		return new String(chars, 0, length);
 	}
 
-	public final @Nullable String readUTF16Nullable() throws IOException, DeserializeException {
+	public final @Nullable String readUTF16Nullable() throws IOException {
 		int length = readVarInt();
 		if (length-- == 0) return null;
 		if (length == 0) return "";

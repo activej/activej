@@ -2,7 +2,6 @@ package io.activej.state.file;
 
 import io.activej.fs.BlockingFs;
 import io.activej.fs.FileMetadata;
-import io.activej.serializer.SerializeException;
 import io.activej.serializer.datastream.*;
 import io.activej.state.StateManager;
 import org.jetbrains.annotations.NotNull;
@@ -77,7 +76,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	}
 
 	@Override
-	public @NotNull T loadSnapshot(@NotNull Long revision) throws IOException, DeserializeException {
+	public @NotNull T loadSnapshot(@NotNull Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		InputStream inputStream = fs.download(filename);
 		try (DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream)) {
@@ -98,7 +97,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	}
 
 	@Override
-	public void saveSnapshot(@NotNull T state, @NotNull Long revision) throws IOException, SerializeException {
+	public void saveSnapshot(@NotNull T state, @NotNull Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		OutputStream outputStream = fs.upload(filename);
 		try (DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream)) {
@@ -115,7 +114,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 		}
 	}
 
-	public @NotNull FileState<T> load() throws IOException, DeserializeException {
+	public @NotNull FileState<T> load() throws IOException {
 		Long lastRevision = getLastSnapshotRevision();
 		if (lastRevision != null) {
 			return new FileState<>(loadSnapshot(lastRevision), lastRevision);
@@ -123,7 +122,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 		throw new IOException();
 	}
 
-	public @NotNull FileState<T> load(@NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException, DeserializeException {
+	public @NotNull FileState<T> load(@NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
 		Long lastRevision = getLastSnapshotRevision();
 		if (decoder instanceof DiffDataStreamDecoder) {
 			Long lastDiffRevision = getLastDiffRevision(revisionFrom);
@@ -139,7 +138,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 		throw new IOException();
 	}
 
-	public @NotNull Long save(@NotNull T state) throws IOException, SerializeException, DeserializeException {
+	public @NotNull Long save(@NotNull T state) throws IOException {
 		long revision = newRevision();
 
 		if (maxSaveDiffs != 0) {

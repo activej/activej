@@ -2,7 +2,6 @@ package io.activej.serializer.datastream;
 
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,12 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class DataOutputStreamEx implements Closeable {
-	private static final SerializeException SIZE_EXCEPTION = new SerializeException("Message size of out range");
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
-
-	public static final int MAX_SIZE_127 = 1; // (1 << (1 * 7)) - 1
-	public static final int MAX_SIZE_16K = 2; // (1 << (2 * 7)) - 1
-	public static final int MAX_SIZE_2M = 3; // (1 << (3 * 7)) - 1
 
 	private BinaryOutput out;
 	private final OutputStream outputStream;
@@ -78,11 +72,15 @@ public class DataOutputStreamEx implements Closeable {
 		}
 	}
 
-	public final <T> void serialize(BinarySerializer<T> serializer, T value) throws IOException, SerializeException {
+	public final <T> void serialize(BinarySerializer<T> serializer, T value) throws IOException {
 		serialize(serializer, value, 3);
 	}
 
-	public final <T> void serialize(BinarySerializer<T> serializer, T value, int headerSize) throws IOException, SerializeException {
+	public final <T> void serialize(BinarySerializer<T> serializer, T value, int headerSize) throws IOException {
+		if (headerSize < 1 || headerSize > 3) {
+			throw new IllegalArgumentException("Only header sizes 1, 2 and 3 are supported");
+		}
+
 		int positionBegin;
 		int positionItem;
 		for (; ; ) {
@@ -97,17 +95,13 @@ public class DataOutputStreamEx implements Closeable {
 				out.pos(positionBegin);
 				estimatedMessageSize = messageSize + 1 + (messageSize >>> 1);
 				continue;
-			} catch (Exception e) {
-				out.pos(positionBegin);
-				throw new SerializeException(e);
 			}
 			break;
 		}
 		int positionEnd = out.pos();
 		int messageSize = positionEnd - positionItem;
 		if (messageSize >= 1 << headerSize * 7) {
-			out.pos(positionBegin);
-			throw SIZE_EXCEPTION;
+			throw new IllegalStateException("Message size of out range");
 		}
 		writeSize(out.array(), positionBegin, messageSize, headerSize);
 		messageSize += messageSize >>> 2;

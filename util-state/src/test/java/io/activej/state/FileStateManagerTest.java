@@ -1,10 +1,8 @@
 package io.activej.state;
 
 import io.activej.fs.LocalBlockingFs;
-import io.activej.serializer.SerializeException;
 import io.activej.serializer.datastream.DataInputStreamEx;
 import io.activej.serializer.datastream.DataOutputStreamEx;
-import io.activej.serializer.datastream.DeserializeException;
 import io.activej.serializer.datastream.DiffDataStreamCodec;
 import io.activej.state.file.FileNamingScheme;
 import io.activej.state.file.FileNamingSchemes;
@@ -38,7 +36,7 @@ public class FileStateManagerTest {
 	}
 
 	@Test
-	public void saveAndLoad() throws IOException, DeserializeException, SerializeException {
+	public void saveAndLoad() throws IOException {
 		long revision = manager.save(100);
 		FileState<Integer> loaded = manager.load();
 
@@ -47,7 +45,7 @@ public class FileStateManagerTest {
 	}
 
 	@Test
-	public void saveAndLoadWithRevisions() throws IOException, DeserializeException, SerializeException {
+	public void saveAndLoadWithRevisions() throws IOException {
 		manager.withMaxSaveDiffs(3);
 
 		manager.save(100);
@@ -63,7 +61,7 @@ public class FileStateManagerTest {
 	}
 
 	@Test
-	public void newRevision() throws IOException, SerializeException {
+	public void newRevision() throws IOException {
 		assertEquals(1, (long) manager.newRevision());
 		long newRevision = manager.newRevision();
 
@@ -74,7 +72,7 @@ public class FileStateManagerTest {
 	}
 
 	@Test
-	public void getLastSnapshotRevision() throws IOException, SerializeException {
+	public void getLastSnapshotRevision() throws IOException {
 		manager.saveSnapshot(12, 3L);
 		manager.saveSnapshot(13, 123L);
 		manager.saveSnapshot(11, 12L);
@@ -84,7 +82,7 @@ public class FileStateManagerTest {
 	}
 
 	@Test
-	public void getLastDiffRevision() throws SerializeException, DeserializeException, IOException {
+	public void getLastDiffRevision() throws IOException {
 		int maxSaveDiffs = 3;
 		manager.withMaxSaveDiffs(maxSaveDiffs);
 
@@ -99,7 +97,7 @@ public class FileStateManagerTest {
 	}
 
 	@Test
-	public void saveAndLoadSnapshot() throws IOException, SerializeException, DeserializeException {
+	public void saveAndLoadSnapshot() throws IOException {
 		manager.saveSnapshot(123, 10L);
 		manager.saveSnapshot(345, 112L);
 		manager.saveSnapshot(-3245, 99999L);
