@@ -4,12 +4,17 @@ import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 
 public class DataOutputStreamEx implements Closeable {
+	private static final Logger logger = LoggerFactory.getLogger(DataOutputStreamEx.class);
+
+	public static final IllegalStateException SIZE_EXCEPTION = new IllegalStateException("Message size exceeds 2MB");
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
 	private BinaryOutput out;
@@ -101,7 +106,7 @@ public class DataOutputStreamEx implements Closeable {
 		int positionEnd = out.pos();
 		int messageSize = positionEnd - positionItem;
 		if (messageSize >= 1 << headerSize * 7) {
-			throw new IllegalStateException("Message size of out range");
+			headerSize = onUnderEstimate(headerSize, positionItem, positionEnd, messageSize);
 		}
 		writeSize(out.array(), positionBegin, messageSize, headerSize);
 		messageSize += messageSize >>> 2;
@@ -109,6 +114,32 @@ public class DataOutputStreamEx implements Closeable {
 			estimatedMessageSize = messageSize;
 		else
 			estimatedMessageSize -= estimatedMessageSize >>> 10;
+	}
+
+	private int onUnderEstimate(int headerSize, int positionItem, int positionEnd, int messageSize) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("Underestimated message size to be less than {}, actual size was {} bytes",
+					headerSize == 1 ? "128 bytes" : "16 KBytes", messageSize);
+		}
+
+		int nextHeaderSize = 1 + (31 - Integer.numberOfLeadingZeros(messageSize)) / 7;
+		if (nextHeaderSize > 3) throw SIZE_EXCEPTION;
+		int headerDelta = nextHeaderSize - headerSize;
+		headerSize = nextHeaderSize;
+		try {
+			System.arraycopy(out.array(), positionItem, out.array(), positionItem + headerDelta, messageSize);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// rare case when array does not have spare 'headerDelta' bytes
+			byte[] oldArray = out.array();
+
+			// ensured size without flush
+			this.out = new BinaryOutput(allocate(headerSize + messageSize));
+			System.arraycopy(oldArray, 0, out.array(), 0, positionItem);
+			System.arraycopy(oldArray, positionItem, out.array(), positionItem + headerDelta, messageSize);
+			recycle(oldArray);
+		}
+		out.pos(positionEnd + headerDelta);
+		return headerSize;
 	}
 
 	private static void writeSize(byte[] buf, int pos, int size, int headerSize) {
