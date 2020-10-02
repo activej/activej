@@ -18,6 +18,7 @@ import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -84,8 +85,7 @@ public final class RpcBinaryProtocolTest {
 
 		StreamSupplier<RpcMessage> supplier = StreamSupplier.ofIterable(sourceList)
 				.transformWith(ChannelSerializer.create(binarySerializer)
-						.withInitialBufferSize(MemSize.of(1))
-						.withMaxMessageSize(MemSize.of(64)))
+						.withInitialBufferSize(MemSize.of(1)))
 				.transformWith(ChannelLZ4Compressor.createFastCompressor())
 				.transformWith(ChannelLZ4Decompressor.create())
 				.transformWith(ChannelDeserializer.create(binarySerializer));
@@ -100,12 +100,13 @@ public final class RpcBinaryProtocolTest {
 	}
 
 	@Test
+	@Ignore("Large string")
 	public void testSerializationErrorOnClient() throws IOException {
-		String testMessage = "12345";
+		String testMessage = new String(new byte[ChannelSerializer.MAX_SIZE.toInt() + 1]);
 
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStreamProtocol(MemSize.bytes(1), MemSize.bytes(3), false)
+				.withStreamProtocol(MemSize.bytes(1), false)
 				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
 
 		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
@@ -125,11 +126,9 @@ public final class RpcBinaryProtocolTest {
 	}
 
 	@Test
+	@Ignore("Large string")
 	public void testSerializationErrorOnServer() throws IOException {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < 1000; i++) {
-			sb.append("test");
-		}
+		String testMessage = new String(new byte[ChannelSerializer.MAX_SIZE.toInt() + 1]);
 
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
@@ -137,13 +136,13 @@ public final class RpcBinaryProtocolTest {
 
 		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStreamProtocol(MemSize.bytes(100), MemSize.bytes(1000), false)
+				.withStreamProtocol(MemSize.bytes(100), false)
 				.withHandler(String.class, Promise::of)
 				.withListenPort(LISTEN_PORT);
 		server.listen();
 
 		RpcRemoteException e = awaitException(client.start()
-				.then($ -> client.<String, String>sendRequest(sb.toString()))
+				.then($ -> client.<String, String>sendRequest(testMessage))
 				.whenComplete(() -> {
 					client.stop();
 					server.close();

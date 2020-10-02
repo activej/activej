@@ -14,13 +14,13 @@ import java.io.OutputStream;
 public class DataOutputStreamEx implements Closeable {
 	private static final Logger logger = LoggerFactory.getLogger(DataOutputStreamEx.class);
 
-	public static final IllegalStateException SIZE_EXCEPTION = new IllegalStateException("Message size exceeds 2MB");
+	public static final IllegalStateException SIZE_EXCEPTION = new IllegalStateException("Size of data exceeds 2MB");
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
 	private BinaryOutput out;
 	private final OutputStream outputStream;
 
-	private int estimatedMessageSize = 1;
+	private int estimatedDataSize = 1;
 
 	private DataOutputStreamEx(OutputStream outputStream, int initialBufferSize) {
 		this.outputStream = outputStream;
@@ -87,59 +87,61 @@ public class DataOutputStreamEx implements Closeable {
 		}
 
 		int positionBegin;
-		int positionItem;
+		int positionData;
 		for (; ; ) {
-			ensureSize(headerSize + estimatedMessageSize);
+			ensureSize(headerSize + estimatedDataSize);
 			positionBegin = out.pos();
-			positionItem = positionBegin + headerSize;
-			out.pos(positionItem);
+			positionData = positionBegin + headerSize;
+			out.pos(positionData);
 			try {
 				serializer.encode(out, value);
 			} catch (ArrayIndexOutOfBoundsException e) {
-				int messageSize = out.array().length - positionItem;
+				int dataSize = out.array().length - positionData;
 				out.pos(positionBegin);
-				estimatedMessageSize = messageSize + 1 + (messageSize >>> 1);
+				estimatedDataSize = dataSize + 1 + (dataSize >>> 1);
 				continue;
 			}
 			break;
 		}
 		int positionEnd = out.pos();
-		int messageSize = positionEnd - positionItem;
-		if (messageSize >= 1 << headerSize * 7) {
-			headerSize = onUnderEstimate(headerSize, positionItem, positionEnd, messageSize);
+		int dataSize = positionEnd - positionData;
+		if (dataSize >= 1 << headerSize * 7) {
+			headerSize = onUnderEstimate(headerSize, positionData, dataSize);
 		}
-		writeSize(out.array(), positionBegin, messageSize, headerSize);
-		messageSize += messageSize >>> 2;
-		if (messageSize > estimatedMessageSize)
-			estimatedMessageSize = messageSize;
+		writeSize(out.array(), positionBegin, dataSize, headerSize);
+		dataSize += dataSize >>> 2;
+		if (dataSize > estimatedDataSize)
+			estimatedDataSize = dataSize;
 		else
-			estimatedMessageSize -= estimatedMessageSize >>> 10;
+			estimatedDataSize -= estimatedDataSize >>> 10;
 	}
 
-	private int onUnderEstimate(int headerSize, int positionItem, int positionEnd, int messageSize) {
+	private int onUnderEstimate(int headerSize, int positionData, int dataSize) {
 		if (logger.isTraceEnabled()) {
-			logger.trace("Underestimated message size to be less than {}, actual size was {} bytes",
-					headerSize == 1 ? "128 bytes" : "16 KBytes", messageSize);
+			logger.trace("Underestimated data size to be less than {}, actual size was {} bytes",
+					headerSize == 1 ? "128 bytes" : "16 KBytes", dataSize);
 		}
 
-		int nextHeaderSize = 1 + (31 - Integer.numberOfLeadingZeros(messageSize)) / 7;
+		int nextHeaderSize = 1 + (31 - Integer.numberOfLeadingZeros(dataSize)) / 7;
 		if (nextHeaderSize > 3) throw SIZE_EXCEPTION;
 		int headerDelta = nextHeaderSize - headerSize;
-		headerSize = nextHeaderSize;
+		int newPositionData = positionData + headerDelta;
+		int newPositionEnd = newPositionData + dataSize;
+
 		try {
-			System.arraycopy(out.array(), positionItem, out.array(), positionItem + headerDelta, messageSize);
+			System.arraycopy(out.array(), positionData, out.array(), newPositionData, dataSize);
 		} catch (ArrayIndexOutOfBoundsException e) {
-			// rare case when array does not have spare 'headerDelta' bytes
+			// rare case when data overflows array
 			byte[] oldArray = out.array();
 
 			// ensured size without flush
-			this.out = new BinaryOutput(allocate(headerSize + messageSize));
-			System.arraycopy(oldArray, 0, out.array(), 0, positionItem);
-			System.arraycopy(oldArray, positionItem, out.array(), positionItem + headerDelta, messageSize);
+			this.out = new BinaryOutput(allocate(newPositionEnd));
+			System.arraycopy(oldArray, 0, out.array(), 0, positionData);
+			System.arraycopy(oldArray, positionData, out.array(), newPositionData, dataSize);
 			recycle(oldArray);
 		}
-		out.pos(positionEnd + headerDelta);
-		return headerSize;
+		out.pos(newPositionEnd);
+		return nextHeaderSize;
 	}
 
 	private static void writeSize(byte[] buf, int pos, int size, int headerSize) {

@@ -103,7 +103,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private final Map<InetSocketAddress, RpcClientConnection> connections = new HashMap<>();
 
 	private MemSize defaultPacketSize = DEFAULT_PACKET_SIZE;
-	private MemSize maxPacketSize = MAX_PACKET_SIZE;
 	private boolean compression = false;
 	private Duration autoFlushInterval = Duration.ZERO;
 	private Duration keepAliveInterval = Duration.ZERO;
@@ -222,9 +221,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		return this;
 	}
 
-	public RpcClient withStreamProtocol(MemSize defaultPacketSize, MemSize maxPacketSize, boolean compression) {
+	public RpcClient withStreamProtocol(MemSize defaultPacketSize, boolean compression) {
 		this.defaultPacketSize = defaultPacketSize;
-		this.maxPacketSize = maxPacketSize;
 		this.compression = compression;
 		return this;
 	}
@@ -339,7 +337,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					AsyncTcpSocket socket = sslContext == null ?
 							asyncTcpSocketImpl :
 							wrapClientSocket(asyncTcpSocketImpl, sslContext, sslExecutor);
-					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize, maxPacketSize,
+					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize,
 							autoFlushInterval, compression, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 					RpcClientConnection connection = new RpcClientConnection(eventloop, this, address, stream, keepAliveInterval.toMillis());
 					stream.setListener(connection);

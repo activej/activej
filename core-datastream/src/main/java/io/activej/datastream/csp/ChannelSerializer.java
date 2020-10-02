@@ -35,7 +35,6 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.function.BiConsumer;
 
-import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullify;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.max;
@@ -48,43 +47,22 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	private static final Logger logger = LoggerFactory.getLogger(ChannelSerializer.class);
 
 	/**
-	 * Binary format: 1-byte varlen message size + message, for messages with max size up to 128 bytes
-	 * This is the most efficient and fast binary representation for both serializer and deserializer.
+	 * Maximum allowed data size.
+	 * Messages with data whose size exceeds 256MB are not supported
 	 * <p>
-	 * It is still possible to change max size at any time, switching from 1-byte to 2-byte or 3-byte header size or vice versa,
-	 * because varlen encoding of message size is fully backward and forward compatible.
+	 * Because varlen encoding of data size is fully backward and forward compatible,
+	 * even for smaller data it is possible to start with smallest max data size (128 bytes),
+	 * and fine-tune performance by switching to up to 4-byte encoding at later time.
 	 */
-	public static final MemSize MAX_SIZE_1 = MemSize.bytes(128); // (1 << (1 * 7))
+	public static final MemSize MAX_SIZE = MemSize.megabytes(256);
+	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = MemSize.kilobytes(16);
 
-	/**
-	 * Binary format: 2-byte varlen message size + message, for messages with max size up to 16KB
-	 */
-	public static final MemSize MAX_SIZE_2 = MemSize.kilobytes(16); // (1 << (2 * 7))
-
-	/**
-	 * Binary format: 3-byte varlen message size + message, for messages with max size up to 2MB
-	 * Messages with size >2MB are not supported
-	 */
-	public static final MemSize MAX_SIZE_3 = MemSize.megabytes(2); // (1 << (3 * 7))
-
-	/**
-	 * Default setting for max message size (2MB).
-	 * Messages with size >2MB are not supported
-	 * <p>
-	 * Because varlen encoding of message size is fully backward and forward compatible,
-	 * even for smaller messages it is possible to start with default max message size (2MB),
-	 * and fine-tune performance by switching to 1-byte or 2-byte encoding at later time.
-	 */
-	public static final MemSize MAX_SIZE = MAX_SIZE_3;
+	private static final ArrayIndexOutOfBoundsException OUT_OF_BOUNDS_EXCEPTION = new ArrayIndexOutOfBoundsException("Size of data exceeds 256 megabytes");
+	private static final int MAX_SIZE_INT = MAX_SIZE.toInt();
 
 	private final BinarySerializer<T> serializer;
 
-	private static final ArrayIndexOutOfBoundsException OUT_OF_BOUNDS_EXCEPTION = new ArrayIndexOutOfBoundsException("Message overflow");
-
-	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = MemSize.kilobytes(16);
-
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
-	private MemSize maxMessageSize = MAX_SIZE;
 	private boolean explicitEndOfStream = false;
 
 	@Nullable
@@ -117,19 +95,6 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	 */
 	public ChannelSerializer<T> withInitialBufferSize(MemSize bufferSize) {
 		this.initialBufferSize = bufferSize;
-		return this;
-	}
-
-	/**
-	 * Sets the max message size - when a single message takes more
-	 * than this amount of memory to be serialized, this transformer
-	 * will be closed with {@link #OUT_OF_BOUNDS_EXCEPTION out of bounds excetion}
-	 * unless {@link #withSkipSerializationErrors} was used to ignore such errors.
-	 */
-	public ChannelSerializer<T> withMaxMessageSize(MemSize maxMessageSize) {
-		checkArgument(maxMessageSize.compareTo(MemSize.ZERO) > 0 && maxMessageSize.compareTo(MAX_SIZE_3) <= 0,
-				"Maximum message size cannot be less than 0 bytes or larger than 2 megabytes");
-		this.maxMessageSize = maxMessageSize;
 		return this;
 	}
 
@@ -181,7 +146,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 
 	@Override
 	protected void onInit() {
-		input = new Input(serializer, initialBufferSize.toInt(), maxMessageSize.toInt(), autoFlushInterval, serializationErrorHandler);
+		input = new Input(serializer, initialBufferSize.toInt(), autoFlushInterval, serializationErrorHandler);
 	}
 
 	@Override
@@ -238,22 +203,20 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 		private final BinarySerializer<T> serializer;
 
 		private ByteBuf buf = ByteBuf.empty();
-		private int estimatedMessageSize;
+		private int estimatedDataSize;
+		private int estimatedHeaderSize;
 
-		private final int headerSize;
-		private final int maxMessageSize;
 		private final int initialBufferSize;
 
 		private final int autoFlushIntervalMillis;
 		private boolean flushPosted;
 		private final BiConsumer<T, Throwable> serializationErrorHandler;
 
-		public Input(@NotNull BinarySerializer<T> serializer, int initialBufferSize, int maxMessageSize, @Nullable Duration autoFlushInterval, BiConsumer<T, Throwable> serializationErrorHandler) {
+		public Input(@NotNull BinarySerializer<T> serializer, int initialBufferSize, @Nullable Duration autoFlushInterval, BiConsumer<T, Throwable> serializationErrorHandler) {
 			this.serializationErrorHandler = serializationErrorHandler;
 			this.serializer = serializer;
-			this.maxMessageSize = maxMessageSize;
-			this.headerSize = varIntSize(maxMessageSize - 1);
-			this.estimatedMessageSize = 1;
+			this.estimatedDataSize = 1;
+			this.estimatedHeaderSize = 1;
 			this.initialBufferSize = initialBufferSize;
 			this.autoFlushIntervalMillis = autoFlushInterval == null ? -1 : (int) autoFlushInterval.toMillis();
 		}
@@ -261,14 +224,14 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 		@Override
 		public void accept(T item) {
 			int positionBegin;
-			int positionItem;
+			int positionData;
 			for (; ; ) {
-				if (buf.writeRemaining() < headerSize + estimatedMessageSize + (estimatedMessageSize >>> 2)) {
+				if (buf.writeRemaining() < estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2)) {
 					onFullBuffer();
 				}
 				positionBegin = buf.tail();
-				positionItem = positionBegin + headerSize;
-				buf.tail(positionItem);
+				positionData = positionBegin + estimatedHeaderSize;
+				buf.tail(positionData);
 				try {
 					buf.tail(serializer.encode(buf.array(), buf.tail(), item));
 				} catch (ArrayIndexOutOfBoundsException e) {
@@ -281,39 +244,76 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 				break;
 			}
 			int positionEnd = buf.tail();
-			int messageSize = positionEnd - positionItem;
-			if (messageSize > estimatedMessageSize) {
-				if (messageSize < maxMessageSize) {
-					estimatedMessageSize = messageSize;
-				} else {
-					onSerializationError(item, positionBegin, OUT_OF_BOUNDS_EXCEPTION);
-					return;
-				}
+			int dataSize = positionEnd - positionData;
+			if (dataSize > estimatedDataSize) {
+				if (!tryEstimateMore(item, positionBegin, positionData, dataSize)) return;
 			}
-			writeSize(buf.array(), positionBegin, messageSize);
+			writeSize(buf.array(), positionBegin, dataSize);
+		}
+
+		private boolean tryEstimateMore(T item, int positionBegin, int positionData, int dataSize) {
+			if (dataSize < MAX_SIZE_INT) {
+				estimatedDataSize = dataSize;
+				estimatedHeaderSize = varIntSize(estimatedDataSize);
+				ensureHeaderSize(positionBegin, positionData, dataSize);
+				return true;
+			} else {
+				onSerializationError(item, positionBegin, OUT_OF_BOUNDS_EXCEPTION);
+				return false;
+			}
 		}
 
 		private void writeSize(byte[] buf, int pos, int size) {
-			if (headerSize == 1) {
+			if (estimatedHeaderSize == 1) {
 				buf[pos] = (byte) size;
 				return;
 			}
 
 			buf[pos] = (byte) ((size & 0x7F) | 0x80);
 			size >>>= 7;
-			if (headerSize == 2) {
+			if (estimatedHeaderSize == 2) {
 				buf[pos + 1] = (byte) size;
 				return;
 			}
 
-			assert headerSize == 3;
 			buf[pos + 1] = (byte) ((size & 0x7F) | 0x80);
 			size >>>= 7;
-			buf[pos + 2] = (byte) size;
+			if (estimatedHeaderSize == 3) {
+				buf[pos + 2] = (byte) size;
+				return;
+			}
+
+			assert estimatedHeaderSize == 4;
+			buf[pos + 2] = (byte) ((size & 0x7F) | 0x80);
+			size >>>= 7;
+			buf[pos + 3] = (byte) size;
 		}
 
 		private ByteBuf allocateBuffer() {
-			return ByteBufPool.allocate(max(initialBufferSize, headerSize + estimatedMessageSize + (estimatedMessageSize >>> 2)));
+			return ByteBufPool.allocate(max(initialBufferSize, estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2)));
+		}
+
+		private void ensureHeaderSize(int positionBegin, int positionData, int dataSize) {
+			int previousHeaderSize = positionData - positionBegin;
+			if (previousHeaderSize == estimatedHeaderSize) return; // offset is enough for header
+
+			int headerDelta = estimatedHeaderSize - previousHeaderSize;
+			assert headerDelta > 0;
+			int newPositionData = positionData + headerDelta;
+			int newPositionEnd = newPositionData + dataSize;
+			if (newPositionEnd < buf.array().length) {
+				System.arraycopy(buf.array(), positionData, buf.array(), newPositionData, dataSize);
+			} else {
+				// rare case when data overflows array
+				ByteBuf old = buf;
+
+				// ensured size without flush
+				this.buf = ByteBufPool.allocate(max(initialBufferSize, newPositionEnd));
+				System.arraycopy(old.array(), 0, buf.array(), 0, positionData);
+				System.arraycopy(old.array(), positionData, buf.array(), positionData + headerDelta, dataSize);
+				old.recycle();
+			}
+			buf.tail(newPositionEnd);
 		}
 
 		private void onFullBuffer() {
@@ -343,7 +343,8 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 					suspend();
 				}
 				bufs.add(buf);
-				estimatedMessageSize -= estimatedMessageSize >>> 8;
+				estimatedDataSize -= estimatedDataSize >>> 8;
+				estimatedHeaderSize = varIntSize(estimatedDataSize);
 			} else {
 				buf.recycle();
 			}

@@ -14,7 +14,6 @@ import java.net.InetSocketAddress;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
-import static io.activej.rpc.server.RpcServer.DEFAULT_MAX_MESSAGE_SIZE;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -31,7 +30,6 @@ public class JmxMessagesRpcServerTest {
 	public void setup() throws IOException {
 		server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStreamProtocol(DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE, true)
 				.withHandler(String.class, request ->
 						Promise.of("Hello, " + request + "!"))
 				.withListenPort(LISTEN_PORT)
@@ -43,7 +41,6 @@ public class JmxMessagesRpcServerTest {
 	public void testWithoutProtocolError() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStreamProtocol(DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE, true)
 				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
 		await(client.start().whenResult(() ->
 				client.sendRequest("msg", 1000)

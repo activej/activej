@@ -78,14 +78,13 @@ public final class RpcStream {
 
 	public RpcStream(AsyncTcpSocket socket,
 			BinarySerializer<RpcMessage> messageSerializer,
-			MemSize initialBufferSize, MemSize maxMessageSize,
+			MemSize initialBufferSize,
 			Duration autoFlushInterval, boolean compression, boolean server) {
 		this.server = server;
 		this.socket = socket;
 
 		ChannelSerializer<RpcMessage> serializer = ChannelSerializer.create(messageSerializer)
 				.withInitialBufferSize(initialBufferSize)
-				.withMaxMessageSize(maxMessageSize)
 				.withAutoFlushInterval(autoFlushInterval)
 				.withSerializationErrorHandler((message, e) -> listener.onSerializationError(message, e));
 		ChannelDeserializer<RpcMessage> deserializer = ChannelDeserializer.create(messageSerializer);

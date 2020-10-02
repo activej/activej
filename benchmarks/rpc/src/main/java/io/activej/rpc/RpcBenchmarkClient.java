@@ -55,7 +55,6 @@ public class RpcBenchmarkClient extends Launcher {
 		return RpcClient.create(eventloop)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						MemSize.bytes(128),
 						config.get(ofBoolean(), "rpc.compression", false))
 				.withMessageTypes(Integer.class)
 				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))));

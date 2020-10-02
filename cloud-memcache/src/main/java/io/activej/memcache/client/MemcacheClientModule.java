@@ -51,7 +51,6 @@ public class MemcacheClientModule extends AbstractModule {
 						.withSerializer(Slice.class, new SerializerDefSlice()))
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
-						config.get(ofMemSize(), "protocol.packetSizeMax", kilobytes(64)),
 						config.get(ofBoolean(), "protocol.compression", false))
 				.withSocketSettings(config.get(ofSocketSettings(), "client.socketSettings", DEFAULT_SOCKET_SETTINGS))
 				.withConnectTimeout(config.get(ofDuration(), "client.connectSettings.connectTimeout", Duration.ofSeconds(10)))

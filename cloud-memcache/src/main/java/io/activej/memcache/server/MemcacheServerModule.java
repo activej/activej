@@ -66,7 +66,6 @@ public class MemcacheServerModule extends AbstractModule {
 				.withMessageTypes(MESSAGE_TYPES)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
-						config.get(ofMemSize(), "protocol.packetSizeMax", kilobytes(64)),
 						config.get(ofBoolean(), "protocol.compression", false))
 				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", DEFAULT_SERVER_SOCKET_SETTINGS))
 				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", DEFAULT_SOCKET_SETTINGS))

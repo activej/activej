@@ -79,10 +79,8 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(16384);
 
 	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
-	public static final MemSize DEFAULT_MAX_MESSAGE_SIZE = ChannelSerializer.MAX_SIZE;
 
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
-	private MemSize maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE;
 	private boolean compression = false;
 	private Duration autoFlushInterval = Duration.ZERO;
 
@@ -159,9 +157,8 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 		return this;
 	}
 
-	public RpcServer withStreamProtocol(MemSize defaultPacketSize, MemSize maxPacketSize, boolean compression) {
+	public RpcServer withStreamProtocol(MemSize defaultPacketSize, boolean compression) {
 		this.initialBufferSize = defaultPacketSize;
-		this.maxMessageSize = maxPacketSize;
 		this.compression = compression;
 		return this;
 	}
@@ -192,7 +189,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
-		RpcStream stream = new RpcStream(socket, serializer, initialBufferSize, maxMessageSize,
+		RpcStream stream = new RpcStream(socket, serializer, initialBufferSize,
 				autoFlushInterval, compression, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 		RpcServerConnection connection = new RpcServerConnection(this, remoteAddress, handlers, stream);
 		stream.setListener(connection);

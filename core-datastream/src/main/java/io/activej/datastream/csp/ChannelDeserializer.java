@@ -130,27 +130,27 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 		ByteBuf firstBuf;
 		while (isReady() && (firstBuf = queue.peekBuf()) != null) {
 			int firstBufRemaining = firstBuf.readRemaining();
-			if (firstBufRemaining >= 3) {
+			if (firstBufRemaining >= 4) {
 				byte[] array = firstBuf.array();
 				int pos = firstBuf.head();
 				byte b = array[pos];
-				int size;
+				int messageSize;
 				int headerSize;
 				if (b > 0) {
-					size = b + 1;
+					messageSize = b + 1;
 					headerSize = 1;
 				} else {
 					int encodedSize = readEncodedSize(array, pos, b);
 					if (encodedSize == 0) return true;
-					size = encodedSize & 0x0FFFFFFF;
+					messageSize = encodedSize & 0x0FFFFFFF;
 					headerSize = encodedSize >>> 28;
 				}
 
-				if (firstBufRemaining >= size) {
+				if (firstBufRemaining >= messageSize) {
 					T item = valueSerializer.decode(array, pos + headerSize);
 					send(item);
-					if (firstBufRemaining != size) {
-						firstBuf.moveHead(size);
+					if (firstBufRemaining != messageSize) {
+						firstBuf.moveHead(messageSize);
 					} else {
 						queue.take().recycle();
 					}
@@ -169,14 +169,14 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 	private int doProcess() {
 		int encodedSize = readEncodedSize();
 		if (encodedSize == 0) return 0;
-		int size = encodedSize & 0x0FFFFFFF;
+		int messageSize = encodedSize & 0x0FFFFFFF;
 		int headerSize = encodedSize >>> 28;
 
-		if (!queue.hasRemainingBytes(size)) {
+		if (!queue.hasRemainingBytes(messageSize)) {
 			return -1;
 		}
 
-		queue.consume(size, buf -> {
+		queue.consume(messageSize, buf -> {
 			T item = valueSerializer.decode(buf.array(), buf.head() + headerSize);
 			send(item);
 		});
@@ -198,6 +198,12 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 					dataSize += (b << 14);
 					return dataSize + 3 + (3 << 28);
 				} else {
+					dataSize += ((b & 0x7f) << 14);
+					b = array[pos + 3];
+					if (b >= 0) {
+						dataSize += (b << 21);
+						return dataSize + 4 + (4 << 28);
+					}
 					throw new AssertionError("Invalid header size");
 				}
 			}
@@ -223,7 +229,15 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 					dataSize += (b << 14);
 					return dataSize + 3 + (3 << 28);
 				}
-				throw new AssertionError("Invalid header size");
+				if (queue.hasRemainingBytes(4)) {
+					dataSize += ((b & 0x7f) << 14);
+					b = queue.peekByte(3);
+					if (b >= 0) {
+						dataSize += (b << 21);
+						return dataSize + 4 + (4 << 28);
+					}
+					throw new AssertionError("Invalid header size");
+				}
 			}
 			return Integer.MAX_VALUE;
 		}
