@@ -4,23 +4,21 @@ import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 
 public class DataOutputStreamEx implements Closeable {
-	private static final Logger logger = LoggerFactory.getLogger(DataOutputStreamEx.class);
+	private static final int MAX_SIZE = 1 << 28; // 256MB
 
-	public static final IllegalStateException SIZE_EXCEPTION = new IllegalStateException("Size of data exceeds 2MB");
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
 	private BinaryOutput out;
 	private final OutputStream outputStream;
 
 	private int estimatedDataSize = 1;
+	private int estimatedHeaderSize = 1;
 
 	private DataOutputStreamEx(OutputStream outputStream, int initialBufferSize) {
 		this.outputStream = outputStream;
@@ -78,90 +76,91 @@ public class DataOutputStreamEx implements Closeable {
 	}
 
 	public final <T> void serialize(BinarySerializer<T> serializer, T value) throws IOException {
-		serialize(serializer, value, 3);
-	}
-
-	public final <T> void serialize(BinarySerializer<T> serializer, T value, int headerSize) throws IOException {
-		if (headerSize < 1 || headerSize > 3) {
-			throw new IllegalArgumentException("Only header sizes 1, 2 and 3 are supported");
-		}
-
 		int positionBegin;
 		int positionData;
+		ensureSize(estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2));
 		for (; ; ) {
-			ensureSize(headerSize + estimatedDataSize);
 			positionBegin = out.pos();
-			positionData = positionBegin + headerSize;
+			positionData = positionBegin + estimatedHeaderSize;
 			out.pos(positionData);
 			try {
 				serializer.encode(out, value);
 			} catch (ArrayIndexOutOfBoundsException e) {
 				int dataSize = out.array().length - positionData;
 				out.pos(positionBegin);
-				estimatedDataSize = dataSize + 1 + (dataSize >>> 1);
+				ensureSize(estimatedHeaderSize + dataSize + 1 + (dataSize >>> 1));
 				continue;
 			}
 			break;
 		}
+
 		int positionEnd = out.pos();
 		int dataSize = positionEnd - positionData;
-		if (dataSize >= 1 << headerSize * 7) {
-			headerSize = onUnderEstimate(headerSize, positionData, dataSize);
+		if (dataSize > estimatedDataSize) {
+			estimateMore(positionBegin, positionData, dataSize);
 		}
-		writeSize(out.array(), positionBegin, dataSize, headerSize);
-		dataSize += dataSize >>> 2;
-		if (dataSize > estimatedDataSize)
-			estimatedDataSize = dataSize;
-		else
-			estimatedDataSize -= estimatedDataSize >>> 10;
+		writeSize(out.array(), positionBegin, dataSize);
 	}
 
-	private int onUnderEstimate(int headerSize, int positionData, int dataSize) {
-		if (logger.isTraceEnabled()) {
-			logger.trace("Underestimated data size to be less than {}, actual size was {} bytes",
-					headerSize == 1 ? "128 bytes" : "16 KBytes", dataSize);
-		}
+	private void ensureHeaderSize(int positionBegin, int positionData, int dataSize) {
+		int previousHeaderSize = positionData - positionBegin;
+		if (previousHeaderSize == estimatedHeaderSize) return; // offset is enough for header
 
-		int nextHeaderSize = 1 + (31 - Integer.numberOfLeadingZeros(dataSize)) / 7;
-		if (nextHeaderSize > 3) throw SIZE_EXCEPTION;
-		int headerDelta = nextHeaderSize - headerSize;
+		int headerDelta = estimatedHeaderSize - previousHeaderSize;
+		assert headerDelta > 0;
 		int newPositionData = positionData + headerDelta;
 		int newPositionEnd = newPositionData + dataSize;
-
-		try {
+		if (newPositionEnd < out.array().length) {
 			System.arraycopy(out.array(), positionData, out.array(), newPositionData, dataSize);
-		} catch (ArrayIndexOutOfBoundsException e) {
+		} else {
 			// rare case when data overflows array
 			byte[] oldArray = out.array();
 
 			// ensured size without flush
 			this.out = new BinaryOutput(allocate(newPositionEnd));
-			System.arraycopy(oldArray, 0, out.array(), 0, positionData);
+			System.arraycopy(oldArray, 0, out.array(), 0, positionBegin);
 			System.arraycopy(oldArray, positionData, out.array(), newPositionData, dataSize);
 			recycle(oldArray);
 		}
 		out.pos(newPositionEnd);
-		return nextHeaderSize;
 	}
 
-	private static void writeSize(byte[] buf, int pos, int size, int headerSize) {
-		if (headerSize == 1) {
+	private void estimateMore(int positionBegin, int positionData, int dataSize) {
+		assert dataSize < MAX_SIZE;
+
+		estimatedDataSize = dataSize;
+		estimatedHeaderSize = varIntSize(estimatedDataSize);
+		ensureHeaderSize(positionBegin, positionData, dataSize);
+	}
+
+	private static int varIntSize(int dataSize) {
+		return 1 + (31 - Integer.numberOfLeadingZeros(dataSize)) / 7;
+	}
+
+	private void writeSize(byte[] buf, int pos, int size) {
+		if (estimatedHeaderSize == 1) {
 			buf[pos] = (byte) size;
-		} else {
-			buf[pos] = (byte) (size | 0x80);
-			size >>>= 7;
-
-			if (headerSize == 2) {
-				buf[pos + 1] = (byte) size;
-			} else {
-				buf[pos + 1] = (byte) (size | 0x80);
-				size >>>= 7;
-
-				assert headerSize == 3;
-
-				buf[pos + 2] = (byte) size;
-			}
+			return;
 		}
+
+		buf[pos] = (byte) ((size & 0x7F) | 0x80);
+		size >>>= 7;
+		if (estimatedHeaderSize == 2) {
+			buf[pos + 1] = (byte) size;
+			return;
+		}
+
+		buf[pos + 1] = (byte) ((size & 0x7F) | 0x80);
+		size >>>= 7;
+		if (estimatedHeaderSize == 3) {
+			buf[pos + 2] = (byte) size;
+			return;
+		}
+
+		assert estimatedHeaderSize == 4;
+		buf[pos + 2] = (byte) ((size & 0x7F) | 0x80);
+		size >>>= 7;
+		buf[pos + 3] = (byte) size;
 	}
 
 	public final void write(byte[] b) throws IOException {

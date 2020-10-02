@@ -18,6 +18,7 @@ package io.activej.datastream.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
@@ -35,6 +36,7 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.function.BiConsumer;
 
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.max;
@@ -45,20 +47,20 @@ import static java.lang.Math.max;
  */
 public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implements WithStreamToChannel<ChannelSerializer<T>, T, ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelSerializer.class);
+	private static final boolean CHECK = Checks.isEnabled(ChannelSerializer.class);
 
 	/**
-	 * Maximum allowed data size.
+	 * Maximum allowed data size (256MB).
 	 * Messages with data whose size exceeds 256MB are not supported
 	 * <p>
 	 * Because varlen encoding of data size is fully backward and forward compatible,
 	 * even for smaller data it is possible to start with smallest max data size (128 bytes),
 	 * and fine-tune performance by switching to up to 4-byte encoding at later time.
 	 */
-	public static final MemSize MAX_SIZE = MemSize.megabytes(256);
-	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = MemSize.kilobytes(16);
+	private static final int MAX_SIZE_INT = 1 << 28;
+	private static final IllegalStateException SIZE_EXCEPTION = new IllegalStateException("Size of data exceeds 256MB");
 
-	private static final ArrayIndexOutOfBoundsException OUT_OF_BOUNDS_EXCEPTION = new ArrayIndexOutOfBoundsException("Size of data exceeds 256 megabytes");
-	private static final int MAX_SIZE_INT = MAX_SIZE.toInt();
+	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = MemSize.kilobytes(16);
 
 	private final BinarySerializer<T> serializer;
 
@@ -246,21 +248,20 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			int positionEnd = buf.tail();
 			int dataSize = positionEnd - positionData;
 			if (dataSize > estimatedDataSize) {
-				if (!tryEstimateMore(item, positionBegin, positionData, dataSize)) return;
+				estimateMore(positionBegin, positionData, dataSize);
 			}
 			writeSize(buf.array(), positionBegin, dataSize);
 		}
 
-		private boolean tryEstimateMore(T item, int positionBegin, int positionData, int dataSize) {
-			if (dataSize < MAX_SIZE_INT) {
-				estimatedDataSize = dataSize;
-				estimatedHeaderSize = varIntSize(estimatedDataSize);
-				ensureHeaderSize(positionBegin, positionData, dataSize);
-				return true;
-			} else {
-				onSerializationError(item, positionBegin, OUT_OF_BOUNDS_EXCEPTION);
-				return false;
+		private void estimateMore(int positionBegin, int positionData, int dataSize) {
+			if (CHECK) checkState(dataSize < MAX_SIZE_INT, "Serialized data size exceeds 256MB");
+
+			if (dataSize >= MAX_SIZE_INT) {
+				throw SIZE_EXCEPTION;
 			}
+			estimatedDataSize = dataSize;
+			estimatedHeaderSize = varIntSize(estimatedDataSize);
+			ensureHeaderSize(positionBegin, positionData, dataSize);
 		}
 
 		private void writeSize(byte[] buf, int pos, int size) {
@@ -309,8 +310,8 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 
 				// ensured size without flush
 				this.buf = ByteBufPool.allocate(max(initialBufferSize, newPositionEnd));
-				System.arraycopy(old.array(), 0, buf.array(), 0, positionData);
-				System.arraycopy(old.array(), positionData, buf.array(), positionData + headerDelta, dataSize);
+				System.arraycopy(old.array(), 0, buf.array(), 0, positionBegin);
+				System.arraycopy(old.array(), positionData, buf.array(), newPositionData, dataSize);
 				old.recycle();
 			}
 			buf.tail(newPositionEnd);

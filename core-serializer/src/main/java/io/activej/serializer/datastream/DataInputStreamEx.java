@@ -134,8 +134,13 @@ public class DataInputStreamEx implements Closeable {
 				if ((b = readByte()) >= 0) {
 					result |= b << 14;
 				} else {
-					close();
-					throw new IOException();
+					result |= (b & 0x7f) << 14;
+					if ((b = readByte()) >= 0) {
+						result |= b << 21;
+					} else {
+						close();
+						throw new IllegalStateException("Invalid size");
+					}
 				}
 			}
 		}

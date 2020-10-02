@@ -86,7 +86,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = Duration.ofSeconds(1);
 	public static final MemSize DEFAULT_PACKET_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
-	public static final MemSize MAX_PACKET_SIZE = ChannelSerializer.MAX_SIZE;
 	public static final StacklessException START_EXCEPTION = new StacklessException("Could not establish initial connection");
 
 	private Logger logger = getLogger(getClass());

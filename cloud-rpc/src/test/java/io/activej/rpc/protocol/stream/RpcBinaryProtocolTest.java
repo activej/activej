@@ -11,23 +11,19 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcMessage;
-import io.activej.rpc.protocol.RpcRemoteException;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import static io.activej.promise.TestUtils.await;
-import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.ClassLoader.getSystemClassLoader;
@@ -98,58 +94,4 @@ public final class RpcBinaryProtocolTest {
 			assertEquals(testMessage, data);
 		}
 	}
-
-	@Test
-	@Ignore("Large string")
-	public void testSerializationErrorOnClient() throws IOException {
-		String testMessage = new String(new byte[ChannelSerializer.MAX_SIZE.toInt() + 1]);
-
-		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
-				.withMessageTypes(String.class)
-				.withStreamProtocol(MemSize.bytes(1), false)
-				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
-
-		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
-				.withMessageTypes(String.class)
-				.withHandler(String.class, Promise::of)
-				.withListenPort(LISTEN_PORT);
-		server.listen();
-
-		ArrayIndexOutOfBoundsException e = awaitException(client.start()
-				.then($ -> client.<String, String>sendRequest(testMessage))
-				.whenComplete(() -> {
-					client.stop();
-					server.close();
-				}));
-
-		assertEquals("Message overflow", e.getMessage());
-	}
-
-	@Test
-	@Ignore("Large string")
-	public void testSerializationErrorOnServer() throws IOException {
-		String testMessage = new String(new byte[ChannelSerializer.MAX_SIZE.toInt() + 1]);
-
-		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
-				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
-
-		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
-				.withMessageTypes(String.class)
-				.withStreamProtocol(MemSize.bytes(100), false)
-				.withHandler(String.class, Promise::of)
-				.withListenPort(LISTEN_PORT);
-		server.listen();
-
-		RpcRemoteException e = awaitException(client.start()
-				.then($ -> client.<String, String>sendRequest(testMessage))
-				.whenComplete(() -> {
-					client.stop();
-					server.close();
-				}));
-
-		assertEquals("Message overflow", e.getCauseMessage());
-		assertEquals(ArrayIndexOutOfBoundsException.class.getName(), e.getCauseClassName());
-	}
-
 }

@@ -1,7 +1,6 @@
 package io.activej.datastream.csp;
 
 import io.activej.common.MemSize;
-import io.activej.csp.ChannelConsumers;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.serializer.BinarySerializers;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.await;
-import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -42,7 +40,7 @@ public final class ChannelSerializerDeserializerTest {
 
 	@Test
 	public void largeMessageSize() {
-		List<byte[]> byteArrays = asList(new byte[1024], new  byte[32 * 1024], new byte[10 * 1024 * 1024]);
+		List<byte[]> byteArrays = asList(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024]);
 		for (byte[] byteArray : byteArrays) {
 			ThreadLocalRandom.current().nextBytes(byteArray);
 		}
@@ -59,15 +57,5 @@ public final class ChannelSerializerDeserializerTest {
 		for (int i = 0; i < deserialized.size(); i++) {
 			assertArrayEquals(byteArrays.get(i), deserialized.get(i));
 		}
-	}
-
-	@Test
-	public void sizeIsOutOfBounds() {
-		ArrayIndexOutOfBoundsException exception = awaitException(StreamSupplier.of(new byte[ChannelSerializer.MAX_SIZE.toInt() + 1])
-				.transformWith(ChannelSerializer.create(BinarySerializers.BYTES_SERIALIZER)
-						.withInitialBufferSize(MemSize.bytes(1)))
-				.streamTo(ChannelConsumers.recycling()));
-
-		assertEquals("Size of data exceeds 256 megabytes", exception.getMessage());
 	}
 }

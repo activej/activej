@@ -10,7 +10,8 @@ import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public final class DataStreamExTest {
 	@Test
@@ -54,14 +55,14 @@ public final class DataStreamExTest {
 	}
 
 	@Test
-	public void initialHeaderSizeIsLessThanActual() throws IOException {
-		for (byte[] array : asList(new byte[1024], new byte[32 * 1024])) {
+	public void largeItems() throws IOException {
+		for (byte[] array : asList(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024])) {
 			BinarySerializer<byte[]> serializer = BinarySerializers.BYTES_SERIALIZER;
 			ThreadLocalRandom.current().nextBytes(array);
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try (DataOutputStreamEx dataOutputStream = DataOutputStreamEx.create(baos, 1)) {
-				dataOutputStream.serialize(serializer, array, 1);
+				dataOutputStream.serialize(serializer, array);
 			}
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
@@ -70,19 +71,4 @@ public final class DataStreamExTest {
 			}
 		}
 	}
-
-	@Test
-	public void actualSizeIsOutOfBounds() throws IOException {
-		BinarySerializer<byte[]> serializer = BinarySerializers.BYTES_SERIALIZER;
-		byte[] array = new byte[2 * 1024 * 1024 + 1];
-		ThreadLocalRandom.current().nextBytes(array);
-
-		try (DataOutputStreamEx dataOutputStream = DataOutputStreamEx.create(new ByteArrayOutputStream(), 1)) {
-			dataOutputStream.serialize(serializer, array, 1);
-			fail();
-		} catch (IllegalStateException e){
-			assertSame(DataOutputStreamEx.SIZE_EXCEPTION, e);
-		}
-	}
-
 }
