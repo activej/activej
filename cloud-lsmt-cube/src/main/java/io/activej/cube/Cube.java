@@ -30,8 +30,6 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.api.WithInitializer;
-import io.activej.common.record.Record;
-import io.activej.common.record.RecordScheme;
 import io.activej.common.ref.Ref;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.attributes.AttributeResolver;
@@ -56,6 +54,8 @@ import io.activej.jmx.stats.ValueStats;
 import io.activej.ot.OTState;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -912,13 +912,14 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		RecordScheme createRecordScheme() {
-			RecordScheme recordScheme = RecordScheme.create();
+			RecordScheme recordScheme = RecordScheme.create(classLoader);
 			for (String attribute : recordAttributes) {
 				recordScheme.addField(attribute, getAttributeType(attribute));
 			}
 			for (String measure : recordMeasures) {
 				recordScheme.addField(measure, getMeasureType(measure));
 			}
+			recordScheme.build();
 			return recordScheme;
 		}
 
@@ -930,7 +931,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 								for (String field : recordScheme.getFields()) {
 									int fieldIndex = recordScheme.getFieldIndex(field);
 									if (dimensionTypes.containsKey(field)) {
-										expressions.add(call(arg(1), "put", value(fieldIndex),
+										expressions.add(call(arg(1), "set", value(fieldIndex),
 												cast(dimensionTypes.get(field).toValue(
 														property(cast(arg(0), resultClass), field)), Object.class)));
 									}
@@ -943,11 +944,11 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 									if (!dimensionTypes.containsKey(field)) {
 										if (measures.containsKey(field)) {
 											Variable fieldValue = property(cast(arg(0), resultClass), field);
-											expressions.add(call(arg(1), "put", value(fieldIndex),
+											expressions.add(call(arg(1), "set", value(fieldIndex),
 													cast(measures.get(field).getFieldType().toValue(
 															measures.get(field).valueOfAccumulator(fieldValue)), Object.class)));
 										} else {
-											expressions.add(call(arg(1), "put", value(fieldIndex),
+											expressions.add(call(arg(1), "set", value(fieldIndex),
 													cast(property(cast(arg(0), resultClass), field.replace('.', '$')), Object.class)));
 										}
 									}
@@ -1035,7 +1036,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				totalsFunction.computeMeasures(totals);
 			}
 
-			Record totalRecord = Record.create(recordScheme);
+			Record totalRecord = recordScheme.record();
 			recordFunction.copyMeasures(totals, totalRecord);
 
 			List<Promise<Void>> tasks = new ArrayList<>();
@@ -1068,7 +1069,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 			List<Record> resultRecords = new ArrayList<>(results.size());
 			for (R result : results) {
-				Record record = Record.create(recordScheme);
+				Record record = recordScheme.record();
 				recordFunction.copyAttributes(result, record);
 				recordFunction.copyMeasures(result, record);
 				resultRecords.add(record);
@@ -1084,7 +1085,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			}
 
 			if (query.getReportType() == ReportType.DATA_WITH_TOTALS) {
-				Record totalRecord = Record.create(recordScheme);
+				Record totalRecord = recordScheme.record();
 				recordFunction.copyMeasures(totals, totalRecord);
 				return QueryResult.createForDataWithTotals(recordScheme,
 						resultRecords,

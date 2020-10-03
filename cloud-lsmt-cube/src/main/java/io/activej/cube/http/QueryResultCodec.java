@@ -18,11 +18,12 @@ package io.activej.cube.http;
 
 import io.activej.codec.*;
 import io.activej.codec.registry.CodecFactory;
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.common.record.Record;
-import io.activej.common.record.RecordScheme;
 import io.activej.common.reflection.RecursiveType;
 import io.activej.cube.QueryResult;
+import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -51,14 +52,19 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 
 	private static final StructuredCodec<List<String>> STRING_CODEC = StructuredCodecs.STRING_CODEC.ofList();
 
-	public QueryResultCodec(Map<String, StructuredCodec<?>> attributeCodecs, Map<String, StructuredCodec<?>> measureCodecs, Map<String, Class<?>> attributeTypes, Map<String, Class<?>> measureTypes) {
+	private final DefiningClassLoader classLoader;
+
+	public QueryResultCodec(DefiningClassLoader classLoader,
+			Map<String, StructuredCodec<?>> attributeCodecs, Map<String, StructuredCodec<?>> measureCodecs, Map<String, Class<?>> attributeTypes, Map<String, Class<?>> measureTypes) {
+		this.classLoader = classLoader;
 		this.attributeCodecs = attributeCodecs;
 		this.measureCodecs = measureCodecs;
 		this.attributeTypes = attributeTypes;
 		this.measureTypes = measureTypes;
 	}
 
-	public static QueryResultCodec create(CodecFactory mapping, Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
+	public static QueryResultCodec create(DefiningClassLoader classLoader,
+			CodecFactory mapping, Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
 		Map<String, StructuredCodec<?>> attributeCodecs = new LinkedHashMap<>();
 		Map<String, StructuredCodec<?>> measureCodecs = new LinkedHashMap<>();
 		Map<String, Class<?>> attributeRawTypes = new LinkedHashMap<>();
@@ -73,7 +79,7 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 			measureCodecs.put(entry.getKey(), mapping.get(token.getType()));
 			measureRawTypes.put(entry.getKey(), token.getRawType());
 		}
-		return new QueryResultCodec(attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
+		return new QueryResultCodec(classLoader, attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
 	}
 
 	@Override
@@ -124,7 +130,7 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 			return QueryResult.create(recordScheme, attributes, measures,
 					nullToEmpty(sortedBy),
 					nullToEmpty(records),
-					nullToDefault(totals, Record.create(recordScheme)),
+					nullToDefault(totals, recordScheme.record()),
 					totalCount,
 					nullToEmpty(filterAttributes),
 					totals != null ?
@@ -138,10 +144,10 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 	private List<Record> readRecords(StructuredInput reader, RecordScheme recordScheme) throws ParseException {
 		StructuredCodec<?>[] fieldStructuredCodecs = getStructuredCodecs(recordScheme);
 		StructuredDecoder<Record> recordDecoder = in -> {
-			Record record = Record.create(recordScheme);
+			Record record = recordScheme.record();
 			for (int i = 0; i < fieldStructuredCodecs.length; i++) {
 				Object fieldValue = fieldStructuredCodecs[i].decode(in);
-				record.put(i, fieldValue);
+				record.set(i, fieldValue);
 			}
 			return record;
 		};
@@ -156,14 +162,14 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 
 	private Record readTotals(StructuredInput reader, RecordScheme recordScheme) throws ParseException {
 		return reader.readTuple($ -> {
-			Record totals = Record.create(recordScheme);
+			Record totals = recordScheme.record();
 			for (int i = 0; i < recordScheme.getFields().size(); i++) {
 				String field = recordScheme.getField(i);
 				StructuredCodec<?> fieldStructuredCodec = measureCodecs.get(field);
 				if (fieldStructuredCodec == null)
 					continue;
 				Object fieldValue = fieldStructuredCodec.decode(reader);
-				totals.put(i, fieldValue);
+				totals.set(i, fieldValue);
 			}
 			return totals;
 		});
@@ -256,13 +262,14 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 	}
 
 	public RecordScheme recordScheme(List<String> attributes, List<String> measures) {
-		RecordScheme recordScheme = RecordScheme.create();
+		RecordScheme recordScheme = RecordScheme.create(classLoader);
 		for (String attribute : attributes) {
 			recordScheme.withField(attribute, attributeTypes.get(attribute));
 		}
 		for (String measure : measures) {
 			recordScheme.withField(measure, measureTypes.get(measure));
 		}
+		recordScheme.build();
 		return recordScheme;
 	}
 

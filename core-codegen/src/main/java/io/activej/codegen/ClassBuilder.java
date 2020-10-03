@@ -307,7 +307,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				getInternalName(superclass),
 				interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
 
-		{
+
+		if (Arrays.stream(superclass.getDeclaredConstructors()).anyMatch(c -> c.getParameterCount() == 0)) {
 			Method m = getMethod("void <init> ()");
 			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC, m, null, null, cw);
 			g.loadThis();
@@ -352,7 +353,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 			for (Method m : newMethods) {
 				try {
-					GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_FINAL, m, null, null, cw);
+					GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + (m.getName().equals("<init>") ? 0 : ACC_FINAL), m, null, null, cw);
 
 					Context ctx = new Context(classLoader, this, g, classType, m);
 

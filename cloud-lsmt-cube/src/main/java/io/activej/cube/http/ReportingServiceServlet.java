@@ -20,6 +20,7 @@ import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.QueryException;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.registry.CodecFactory;
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.time.Stopwatch;
 import io.activej.cube.CubeQuery;
@@ -54,6 +55,8 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 	private StructuredCodec<QueryResult> queryResultCodec;
 	private StructuredCodec<AggregationPredicate> aggregationPredicateCodec;
 
+	private DefiningClassLoader classLoader = DefiningClassLoader.create();
+
 	private ReportingServiceServlet(Eventloop eventloop, ICube cube, CodecFactory mapping) {
 		super(eventloop);
 		this.cube = cube;
@@ -78,6 +81,11 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 				.map(GET, "/", reportingServiceServlet);
 	}
 
+	public ReportingServiceServlet withClassLoader(DefiningClassLoader classLoader) {
+		this.classLoader = classLoader;
+		return this;
+	}
+
 	private StructuredCodec<AggregationPredicate> getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
 			aggregationPredicateCodec = AggregationPredicateCodec.create(mapping, cube.getAttributeTypes(), cube.getMeasureTypes());
@@ -87,7 +95,7 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 
 	private StructuredCodec<QueryResult> getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultCodec.create(mapping, cube.getAttributeTypes(), cube.getMeasureTypes());
+			queryResultCodec = QueryResultCodec.create(classLoader, mapping, cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return queryResultCodec;
 	}

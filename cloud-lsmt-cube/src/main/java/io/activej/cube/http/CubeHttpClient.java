@@ -19,6 +19,7 @@ package io.activej.cube.http;
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.registry.CodecFactory;
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
@@ -50,6 +51,8 @@ public final class CubeHttpClient implements ICube {
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
 	private final Map<String, Type> measureTypes = new LinkedHashMap<>();
 
+	private DefiningClassLoader classLoader = DefiningClassLoader.create();
+
 	private CubeHttpClient(IAsyncHttpClient httpClient, String url, CodecFactory mapping) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
@@ -62,6 +65,11 @@ public final class CubeHttpClient implements ICube {
 
 	public static CubeHttpClient create(AsyncHttpClient httpClient, URI cubeServletUrl) {
 		return create(httpClient, cubeServletUrl.toString());
+	}
+
+	public CubeHttpClient withClassLoader(DefiningClassLoader classLoader) {
+		this.classLoader = classLoader;
+		return this;
 	}
 
 	public CubeHttpClient withAttribute(String attribute, Type type) {
@@ -83,7 +91,7 @@ public final class CubeHttpClient implements ICube {
 
 	private StructuredCodec<QueryResult> getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultCodec.create(mapping, attributeTypes, measureTypes);
+			queryResultCodec = QueryResultCodec.create(classLoader, mapping, attributeTypes, measureTypes);
 		}
 		return queryResultCodec;
 	}

@@ -16,8 +16,8 @@
 
 package io.activej.cube;
 
-import io.activej.common.record.Record;
-import io.activej.common.record.RecordScheme;
+import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 
 import java.util.Collections;
 import java.util.List;
@@ -60,14 +60,14 @@ public final class QueryResult {
 
 	public static QueryResult createForMetadata(RecordScheme recordScheme, List<String> attributes,
 			List<String> measures) {
-		return create(recordScheme, attributes, measures, Collections.emptyList(), Collections.emptyList(), Record.create(recordScheme), 0,
+		return create(recordScheme, attributes, measures, Collections.emptyList(), Collections.emptyList(), recordScheme.record(), 0,
 				Collections.emptyMap(), ReportType.METADATA);
 	}
 
 	public static QueryResult createForData(RecordScheme recordScheme, List<Record> records, List<String> attributes,
 			List<String> measures, List<String> sortedBy,
 			Map<String, Object> filterAttributes) {
-		return create(recordScheme, attributes, measures, sortedBy, records, Record.create(recordScheme), 0,
+		return create(recordScheme, attributes, measures, sortedBy, records, recordScheme.record(), 0,
 				filterAttributes, ReportType.DATA);
 	}
 

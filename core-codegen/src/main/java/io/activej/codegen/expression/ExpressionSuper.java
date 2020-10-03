@@ -14,12 +14,29 @@
  * limitations under the License.
  */
 
-package io.activej.cube.function;
+package io.activej.codegen.expression;
 
-import io.activej.record.Record;
+import io.activej.codegen.Context;
+import org.objectweb.asm.Type;
 
-public interface RecordFunction {
-	void copyAttributes(Object result, Record record);
+import java.util.List;
 
-	void copyMeasures(Object result, Record record);
+import static org.objectweb.asm.Type.getType;
+
+/**
+ * Defines methods for using constructors from other classes
+ */
+final class ExpressionSuper implements Expression {
+	private final Class<?> type;
+	private final List<Expression> fields;
+
+	ExpressionSuper(Class<?> type, List<Expression> fields) {
+		this.type = type;
+		this.fields = fields;
+	}
+
+	@Override
+	public Type load(Context ctx) {
+		return ctx.invokeSuper(getType(type), fields);
+	}
 }

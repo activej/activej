@@ -483,8 +483,12 @@ public class Expressions {
 	 * @param fields fields for constructor
 	 * @return new instance of the ExpressionConstructor
 	 */
-	public static ExpressionConstructor constructor(Class<?> type, Expression... fields) {
+	public static Expression constructor(Class<?> type, Expression... fields) {
 		return new ExpressionConstructor(type, asList(fields));
+	}
+
+	public static Expression callSuper(Class<?> type, Expression... fields) {
+		return new ExpressionSuper(type, asList(fields));
 	}
 
 	/**

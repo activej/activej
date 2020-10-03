@@ -197,6 +197,12 @@ public final class Context {
 			return;
 		}
 
+		if (!isPrimitiveType(typeFrom) && !isWrapperType(typeFrom) && isPrimitiveType(typeTo)) {
+			Type typeToWrapped = wrap(typeTo);
+			g.checkCast(typeToWrapped);
+			typeFrom = typeToWrapped;
+		}
+
 		if ((isPrimitiveType(typeFrom) || isWrapperType(typeFrom)) &&
 				(isPrimitiveType(typeTo) || isWrapperType(typeTo))) {
 
@@ -312,16 +318,28 @@ public final class Context {
 	}
 
 	public Type invokeConstructor(Type ownerType, Type... argumentTypes) {
-		Class<?>[] arguments = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
 		if (ownerType.equals(getSelfType()))
 			throw new IllegalArgumentException();
 		Method foundMethod = findMethod(
-				Arrays.stream(toJavaType(ownerType).getConstructors())
-						.map(Method::getMethod),
+				Arrays.stream(toJavaType(ownerType).getConstructors()).map(Method::getMethod),
 				"<init>",
-				arguments);
+				Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new));
 		g.invokeConstructor(ownerType, foundMethod);
 		return ownerType;
+	}
+
+	public Type invokeSuper(Type ownerType, List<Expression> arguments) {
+		g.loadThis();
+		Type[] argumentTypes = new Type[arguments.size()];
+		for (int i = 0; i < arguments.size(); i++) {
+			argumentTypes[i] = arguments.get(i).load(this);
+		}
+		Method foundMethod = findMethod(
+				Arrays.stream(toJavaType(ownerType).getDeclaredConstructors()).map(Method::getMethod),
+				"<init>",
+				Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new));
+		g.invokeConstructor(ownerType, foundMethod);
+		return VOID_TYPE;
 	}
 
 	@SuppressWarnings("StatementWithEmptyBody")
