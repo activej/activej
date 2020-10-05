@@ -16,23 +16,26 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class FileStateManagerTest {
 
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
+	public static final FileNamingScheme NAMING_SCHEME = FileNamingSchemes.create("", "", "", "", '-');
+
 	private FileStateManager<Integer> manager;
+
+	private LocalBlockingFs fs;
 
 	@Before
 	public void setUp() throws Exception {
 		Path storage = tmpFolder.newFolder().toPath();
-		LocalBlockingFs fs = LocalBlockingFs.create(storage);
+		fs = LocalBlockingFs.create(storage);
 		fs.start();
 
-		FileNamingScheme namingScheme = FileNamingSchemes.create("", "", "", "", '-');
-		manager = FileStateManager.create(fs, namingScheme, new IntegerCodec());
+		manager = FileStateManager.create(fs, NAMING_SCHEME, new IntegerCodec());
 	}
 
 	@Test
@@ -113,6 +116,33 @@ public class FileStateManagerTest {
 
 		int integer = manager.loadDiff(25, 1L, 10L);
 		assertEquals(100, integer);
+	}
+
+	@Test
+	public void uploadsAreAtomic() throws IOException {
+		IOException expectedException = new IOException("Failed");
+		manager = FileStateManager.create(fs, NAMING_SCHEME, (stream, item) -> {
+			stream.writeInt(1); // some header
+			if (item <= 100) {
+				stream.writeInt(item);
+			} else {
+				throw expectedException;
+			}
+		});
+
+		manager.save(50);
+		assertEquals(1, fs.list("**").size());
+
+		manager.save(75);
+		assertEquals(2, fs.list("**").size());
+
+		try {
+			manager.save(125);
+			fail();
+		} catch (IOException e) {
+			assertSame(expectedException, e);
+			assertEquals(2, fs.list("**").size()); // no new files are created
+		}
 	}
 
 	private static class IntegerCodec implements DiffDataStreamCodec<Integer> {

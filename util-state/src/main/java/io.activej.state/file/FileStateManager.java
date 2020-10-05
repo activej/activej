@@ -13,14 +13,21 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalLong;
+import java.util.UUID;
+
+import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings({"unused", "unchecked"})
 public final class FileStateManager<T> implements StateManager<T, Long> {
+	public static final String DEFAULT_TEMP_DIR = ".temp/";
+
 	private final BlockingFs fs;
 	private final FileNamingScheme fileNamingScheme;
 	private final DataStreamEncoder<T> encoder;
 	private final DataStreamDecoder<T> decoder;
+
 	private int maxSaveDiffs = 0;
+	private String tempDir = DEFAULT_TEMP_DIR;
 
 	private FileStateManager(BlockingFs fs, FileNamingScheme fileNamingScheme,
 			DataStreamEncoder<T> encoder, DataStreamDecoder<T> decoder) {
@@ -52,6 +59,12 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 	public FileStateManager<T> withMaxSaveDiffs(int maxSaveDiffs) {
 		this.maxSaveDiffs = maxSaveDiffs;
+		return this;
+	}
+
+	public FileStateManager<T> withTempDir(String tempDir) {
+		checkArgument(!tempDir.isEmpty() && !tempDir.equals("/"), "Temporary directory cannot be same as main directory");
+		this.tempDir = tempDir.endsWith("/") ? tempDir : tempDir + '/';
 		return this;
 	}
 
@@ -99,19 +112,13 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	@Override
 	public void saveSnapshot(@NotNull T state, @NotNull Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
-		OutputStream outputStream = fs.upload(filename);
-		try (DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream)) {
-			encoder.encode(outputStreamEx, state);
-		}
+		safeUpload(filename, outputStream -> encoder.encode(outputStream, state));
 	}
 
 	@Override
 	public void saveDiff(@NotNull T state, @NotNull Long revision, @NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
-		OutputStream outputStreamDiff = fs.upload(filenameDiff);
-		try (DataOutputStreamEx outputStreamExDiff = DataOutputStreamEx.create(outputStreamDiff)) {
-			((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStreamExDiff, stateFrom, state);
-		}
+		safeUpload(filenameDiff, outputStream -> ((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStream, stateFrom, state));
 	}
 
 	public @NotNull FileState<T> load() throws IOException {
@@ -162,20 +169,35 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 				}
 
 				String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
-				OutputStream outputStreamDiff = fs.upload(filenameDiff);
-				try (DataOutputStreamEx outputStreamExDiff = DataOutputStreamEx.create(outputStreamDiff)) {
-					((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStreamExDiff, state, stateFrom);
-				}
+				safeUpload(filenameDiff, outputStream -> ((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStream, state, stateFrom));
 			}
 		}
 
 		String filename = fileNamingScheme.encodeSnapshot(revision);
-		OutputStream outputStream = fs.upload(filename);
-		try (DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream)) {
-			encoder.encode(outputStreamEx, state);
-		}
+		safeUpload(filename, outputStream -> encoder.encode(outputStream, state));
 
 		return revision;
+	}
+
+	private void safeUpload(String filename, DataOutputStreamExConsumer consumer) throws IOException {
+		String tempFilename = tempDir + UUID.randomUUID().toString();
+		OutputStream outputStream = fs.upload(tempFilename);
+		try (DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream)) {
+			consumer.accept(outputStreamEx);
+		} catch (IOException e) {
+			try {
+				fs.delete(tempFilename);
+			} catch (IOException e1) {
+				e.addSuppressed(e1);
+			}
+			throw e;
+		}
+
+		fs.move(tempFilename, filename);
+	}
+
+	private interface DataOutputStreamExConsumer {
+		void accept(DataOutputStreamEx outputStream) throws IOException;
 	}
 
 }
