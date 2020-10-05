@@ -225,7 +225,7 @@ public final class BinaryInput {
 				return result | (long) b << offset;
 			result |= (long) (b & 0x7F) << offset;
 		}
-		throw new IllegalStateException("Read varlong was too long");
+		throw new CorruptedDataException("Read varlong was too long");
 	}
 
 	public float readFloat() {

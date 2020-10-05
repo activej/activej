@@ -8,7 +8,13 @@ public final class Utils {
 	public static <T> T doTest(Class<T> type, T testData1) {
 		BinarySerializer<T> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 				.build(type);
-		return doTest(testData1, serializer, serializer);
+		return doTest(testData1, serializer);
+	}
+
+	public static <T> T doTest(T testData1, BinarySerializer<T> serializer) {
+		byte[] array = new byte[1000];
+		serializer.encode(array, 0, testData1);
+		return serializer.decode(array, 0);
 	}
 
 	public static <T> T doTest(T testData1, BinarySerializer<T> serializer, BinarySerializer<T> deserializer) {

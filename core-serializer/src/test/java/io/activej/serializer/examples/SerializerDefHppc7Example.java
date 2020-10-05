@@ -7,18 +7,13 @@ import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import static io.activej.serializer.Utils.doTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public final class SerializerDefHppc7Example {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	private static <T> T doTest(T testData1, BinarySerializer<T> serializer) {
-		byte[] array = new byte[1000];
-		serializer.encode(array, 0, testData1);
-		return serializer.decode(array, 0);
-	}
 
 	private static <T> BinarySerializer<T> getBufferSerializer(Class<T> collectionType) {
 		return SerializerBuilderUtils.createWithHppc7Support(DefiningClassLoader.create())

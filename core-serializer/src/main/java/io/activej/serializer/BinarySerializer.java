@@ -26,11 +26,11 @@ public interface BinarySerializer<T> {
 		return out.pos();
 	}
 
-	default T decode(byte[] array, int pos) {
+	default T decode(byte[] array, int pos) throws CorruptedDataException {
 		return decode(new BinaryInput(array, pos));
 	}
 
 	void encode(BinaryOutput out, T item);
 
-	T decode(BinaryInput in);
+	T decode(BinaryInput in) throws CorruptedDataException;
 }

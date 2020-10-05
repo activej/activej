@@ -2,6 +2,7 @@ package io.activej.serializer.datastream;
 
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinarySerializer;
+import io.activej.serializer.CorruptedDataException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,8 +65,10 @@ public class DataInputStreamEx implements Closeable {
 			while (tail - in.pos() < size) {
 				ensureWriteRemaining(size);
 				int bytesRead = inputStream.read(in.array(), tail, in.array().length - tail);
-				if (bytesRead == -1)
-					throw new IOException("Could not read message");
+				if (bytesRead == -1) {
+					close();
+					throw new CorruptedDataException("Unexpected end of data");
+				}
 				tail += bytesRead;
 			}
 		} catch (IOException e) {
@@ -112,12 +115,16 @@ public class DataInputStreamEx implements Closeable {
 		ensureRead(messageSize);
 
 		int oldPos = in.pos();
-		T item;
-		item = serializer.decode(in);
-		if (in.pos() - oldPos != messageSize) {
-			throw new AssertionError("Deserialized size != parsed data size");
+		try {
+			T item = serializer.decode(in);
+			if (in.pos() - oldPos != messageSize) {
+				throw new CorruptedDataException("Deserialized size != parsed data size");
+			}
+			return item;
+		} catch (CorruptedDataException e) {
+			close();
+			throw e;
 		}
-		return item;
 	}
 
 	private int readSize() throws IOException {
@@ -139,7 +146,7 @@ public class DataInputStreamEx implements Closeable {
 						result |= b << 21;
 					} else {
 						close();
-						throw new IllegalStateException("Invalid size");
+						throw new CorruptedDataException("Invalid size");
 					}
 				}
 			}
@@ -215,8 +222,8 @@ public class DataInputStreamEx implements Closeable {
 						if ((b = readByte()) >= 0) {
 							result |= b << 28;
 						} else {
-							recycle();
-							throw new AssertionError();
+							close();
+							throw new CorruptedDataException("VarInt value takes more than 5 bytes");
 						}
 					}
 				}
@@ -233,8 +240,8 @@ public class DataInputStreamEx implements Closeable {
 			if ((b & 0x80) == 0)
 				return result;
 		}
-		recycle();
-		throw new AssertionError();
+		close();
+		throw new CorruptedDataException("VarLong value takes more than 10 bytes");
 	}
 
 	public final float readFloat() throws IOException {

@@ -12,6 +12,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.activej.serializer.BinarySerializers.*;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static io.activej.serializer.Utils.doTest;
 import static java.lang.ClassLoader.getSystemClassLoader;
@@ -867,17 +868,17 @@ public class BinarySerializerTest {
 
 		TestDataProfiles testData2;
 
-		testData2 = doTest(testData1, serializer, serializer);
+		testData2 = doTest(testData1, serializer);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(0, testData2.c);
 
-		testData2 = doTest(testData1, serializer1, serializer1);
+		testData2 = doTest(testData1, serializer1);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(testData2.c, testData2.c);
 
-		testData2 = doTest(testData1, serializer2, serializer2);
+		testData2 = doTest(testData1, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
@@ -1045,7 +1046,7 @@ public class BinarySerializerTest {
 		BinarySerializer<TestDataExtraSubclasses> serializer = SerializerBuilder.create(getSystemClassLoader())
 				.withSubclasses("extraSubclasses1", Integer.class)
 				.build(TestDataExtraSubclasses.class);
-		TestDataExtraSubclasses testData2 = doTest(testData1, serializer, serializer);
+		TestDataExtraSubclasses testData2 = doTest(testData1, serializer);
 
 		assertEquals(testData1.object1, testData2.object1);
 		assertEquals(testData1.object2, testData2.object2);
@@ -1073,7 +1074,7 @@ public class BinarySerializerTest {
 		BinarySerializer<TestDataExtraSubclassesInterface> serializer = SerializerBuilder.create(getSystemClassLoader())
 				.withSubclasses("extraSubclasses", TestDataExtraSubclasses2.class)
 				.build(TestDataExtraSubclassesInterface.class);
-		TestDataExtraSubclassesInterface testData2 = doTest(testData1, serializer, serializer);
+		TestDataExtraSubclassesInterface testData2 = doTest(testData1, serializer);
 
 		assertEquals(testData1.i, ((TestDataExtraSubclasses2) testData2).i);
 	}
@@ -1137,7 +1138,7 @@ public class BinarySerializerTest {
 
 		BinarySerializer<TestInheritAnnotationsInterface3> serializer = SerializerBuilder.create(getSystemClassLoader())
 				.build(TestInheritAnnotationsInterface3.class);
-		TestInheritAnnotationsInterface3 testData2 = doTest(testData1, serializer, serializer);
+		TestInheritAnnotationsInterface3 testData2 = doTest(testData1, serializer);
 
 		assertEquals(testData1.getIntValue(), testData2.getIntValue());
 		assertEquals(testData1.getDoubleValue(), testData2.getDoubleValue(), Double.MIN_VALUE);
@@ -1145,7 +1146,7 @@ public class BinarySerializerTest {
 
 		BinarySerializer<TestInheritAnnotationsInterfacesImpl> serializer2 = SerializerBuilder.create(getSystemClassLoader())
 				.build(TestInheritAnnotationsInterfacesImpl.class);
-		TestInheritAnnotationsInterfacesImpl testData3 = doTest(testData1, serializer2, serializer2);
+		TestInheritAnnotationsInterfacesImpl testData3 = doTest(testData1, serializer2);
 
 		assertEquals(0, testData3.getIntValue());
 		assertEquals(0.0, testData3.getDoubleValue(), Double.MIN_VALUE);
@@ -1601,11 +1602,11 @@ public class BinarySerializerTest {
 				.withVersion(1)
 				.build(TestConstructorWithBoolean.class);
 
-		TestConstructorWithBoolean _test = doTest(test, serializer1, serializer1);
+		TestConstructorWithBoolean _test = doTest(test, serializer1);
 		assertEquals(test.resolve, _test.resolve);
 		assertEquals(test.url, _test.url);
 
-		TestConstructorWithBoolean _test2 = doTest(test, serializer2, serializer2);
+		TestConstructorWithBoolean _test2 = doTest(test, serializer2);
 		assertEquals(test.url, _test2.url);
 	}
 
@@ -1840,7 +1841,7 @@ public class BinarySerializerTest {
 				.withVersion(1)
 				.build(TestGetterVersion.class);
 
-		TestGetterVersion _testV1 = doTest(test, serializerV1, serializerV1);
+		TestGetterVersion _testV1 = doTest(test, serializerV1);
 
 		assertEquals(test.getStr(), _testV1.getStr());
 
@@ -1849,7 +1850,7 @@ public class BinarySerializerTest {
 				.withVersion(2)
 				.build(TestGetterVersion.class);
 
-		TestGetterVersion _testV2 = doTest(test, serializerV2, serializerV2);
+		TestGetterVersion _testV2 = doTest(test, serializerV2);
 
 		assertEquals(test.getStrings(), _testV2.getStrings());
 		assertEquals(test.getStr(), _testV2.getStr());
@@ -1908,7 +1909,7 @@ public class BinarySerializerTest {
 				.build(CustomArrayHolder.class);
 		StringWrapper[] array = {new StringWrapper("str"), new StringWrapper("abc")};
 		CustomArrayHolder holder = new CustomArrayHolder(array);
-		CustomArrayHolder _holder = doTest(holder, serializer, serializer);
+		CustomArrayHolder _holder = doTest(holder, serializer);
 
 		assertArrayEquals(holder.getStringWrappers(), _holder.getStringWrappers());
 	}
@@ -1938,7 +1939,7 @@ public class BinarySerializerTest {
 		BinarySerializer<Imp> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(Imp.class);
 		Imp object = new Imp();
 		object.setValue(100);
-		Imp deserialized = doTest(object, serializer, serializer);
+		Imp deserialized = doTest(object, serializer);
 		assertEquals(100, deserialized.getValue().intValue());
 	}
 
@@ -1967,8 +1968,26 @@ public class BinarySerializerTest {
 		BinarySerializer<GenericImp> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(GenericImp.class);
 		GenericImp object = new GenericImp();
 		object.setValue(100);
-		GenericImp deserialized = doTest(object, serializer, serializer);
+		GenericImp deserialized = doTest(object, serializer);
 		assertEquals(100, deserialized.getValue().intValue());
 	}
 
+	@Test
+	public void testWithExplicitEndOfMessage() {
+		BinarySerializer<List<Integer>> serializer = withExplicitEndOfMessage(ofList(INT_SERIALIZER));
+		List<Integer> ints = asList(1, 2, 3, 4, 5);
+
+		byte[] bytes = new byte[100];
+		int len = serializer.encode(bytes, 0, ints);
+		assertEquals(END_OF_MESSAGE_BYTE, bytes[len - 1]);
+		assertEquals(ints, serializer.decode(bytes, 0));
+
+		bytes[len - 1] = 0;
+		try {
+			serializer.decode(bytes, 0);
+			fail();
+		} catch (CorruptedDataException e) {
+			assertEquals("Message does not end with byte '1'", e.getMessage());
+		}
+	}
 }

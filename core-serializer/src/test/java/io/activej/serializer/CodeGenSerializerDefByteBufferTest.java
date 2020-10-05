@@ -24,7 +24,7 @@ public class CodeGenSerializerDefByteBufferTest {
 
 		BinarySerializer<ByteBuffer> serializerByteBuffer = SerializerBuilder.create(ClassLoader.getSystemClassLoader())
 				.build(ByteBuffer.class);
-		ByteBuffer testBuffer2 = doTest(testBuffer1, serializerByteBuffer, serializerByteBuffer);
+		ByteBuffer testBuffer2 = doTest(testBuffer1, serializerByteBuffer);
 
 		assertNotNull(testBuffer2);
 		assertEquals(testBuffer1, testBuffer2);
@@ -42,7 +42,7 @@ public class CodeGenSerializerDefByteBufferTest {
 				.withSerializer(ByteBuffer.class, new SerializerDefByteBuffer(true))
 				.build(ByteBuffer.class);
 
-		ByteBuffer testBuffer2 = doTest(testBuffer1, serializerByteBuffer, serializerByteBuffer);
+		ByteBuffer testBuffer2 = doTest(testBuffer1, serializerByteBuffer);
 
 		assertNotNull(testBuffer2);
 		assertEquals(testBuffer1, testBuffer2);
@@ -175,14 +175,14 @@ public class CodeGenSerializerDefByteBufferTest {
 			BinarySerializer<TestByteBuffer> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 					.withCompatibilityLevel(CompatibilityLevel.LEVEL_2)
 					.build(TestByteBuffer.class);
-			TestByteBuffer deserialized = doTest(object, serializer, serializer);
+			TestByteBuffer deserialized = doTest(object, serializer);
 			assertNull(deserialized.buffer);
 		}
 
 		{
 			BinarySerializer<TestByteBuffer> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 					.build(TestByteBuffer.class);
-			TestByteBuffer deserialized = doTest(object, serializer, serializer);
+			TestByteBuffer deserialized = doTest(object, serializer);
 			assertNull(deserialized.buffer);
 		}
 	}
