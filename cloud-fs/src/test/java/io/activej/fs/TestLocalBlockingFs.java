@@ -507,4 +507,25 @@ public final class TestLocalBlockingFs {
 		}
 	}
 
+	@Test
+	public void testUploadCloseIdempotence() throws IOException {
+		OutputStream outputStream = client.upload("somefile");
+		outputStream.close();
+		outputStream.close();
+	}
+
+	@Test
+	public void testUploadWithSizeCloseIdempotence() throws IOException {
+		OutputStream outputStream = client.upload("somefile", 5);
+		outputStream.write(new byte[]{1,2,3,4,5});
+		outputStream.close();
+		outputStream.close();
+	}
+
+	@Test
+	public void testAppendCloseIdempotence() throws IOException {
+		OutputStream outputStream = client.append("somefile", 0);
+		outputStream.close();
+		outputStream.close();
+	}
 }

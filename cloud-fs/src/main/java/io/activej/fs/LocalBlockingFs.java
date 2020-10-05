@@ -101,6 +101,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	public OutputStream upload(@NotNull String name) throws IOException {
 		Path tempPath = Files.createTempFile(tempDir, "", "");
 		return new ForwardingOutputStream(new FileOutputStream(tempPath.toFile())) {
+			boolean closed;
+
 			@Override
 			protected void onInternalError(IOException e) throws IOException {
 				Files.deleteIfExists(tempPath);
@@ -108,6 +110,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 			@Override
 			protected void onClose() throws IOException {
+				if (closed) return;
+				closed = true;
 				try {
 					doMove(tempPath, resolve(name));
 				} catch (IOException e) {
@@ -123,6 +127,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		Path tempPath = Files.createTempFile(tempDir, "", "");
 		return new ForwardingOutputStream(new FileOutputStream(tempPath.toFile())) {
 			long totalSize;
+			boolean closed;
 
 			@Override
 			protected void onBytes(int len) throws IOException {
@@ -137,6 +142,9 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			@Override
 			protected void onClose() throws IOException {
 				if (totalSize != size) throwOnSizeMismatch();
+
+				if (closed) return;
+				closed = true;
 				doMove(tempPath, resolve(name));
 			}
 
