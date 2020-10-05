@@ -99,6 +99,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 	@Override
 	public @NotNull T loadDiff(@NotNull T state, @NotNull Long revisionFrom, @NotNull Long revisionTo) throws IOException {
+		if (revisionFrom.equals(revisionTo)) return state;
 		if (!(this.decoder instanceof DiffDataStreamDecoder)) {
 			throw new UnsupportedOperationException();
 		}
@@ -131,6 +132,9 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 	public @NotNull FileState<T> load(@NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
 		Long lastRevision = getLastSnapshotRevision();
+		if (revisionFrom.equals(lastRevision)) {
+			return new FileState<>(stateFrom, revisionFrom);
+		}
 		if (decoder instanceof DiffDataStreamDecoder) {
 			Long lastDiffRevision = getLastDiffRevision(revisionFrom);
 			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
