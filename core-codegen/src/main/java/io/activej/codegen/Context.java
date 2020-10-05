@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.*;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
@@ -328,17 +329,24 @@ public final class Context {
 		return ownerType;
 	}
 
-	public Type invokeSuper(Type ownerType, List<Expression> arguments) {
+	public Type invokeSuperConstructor(List<Expression> arguments) {
 		g.loadThis();
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			argumentTypes[i] = arguments.get(i).load(this);
 		}
 		Method foundMethod = findMethod(
-				Arrays.stream(toJavaType(ownerType).getDeclaredConstructors()).map(Method::getMethod),
+				Arrays.stream(classBuilder.superclass.getDeclaredConstructors()).map(Method::getMethod),
 				"<init>",
 				Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new));
-		g.invokeConstructor(ownerType, foundMethod);
+		g.invokeConstructor(getType(classBuilder.superclass), foundMethod);
+
+		for (String field : classBuilder.fieldExpressions.keySet()) {
+			if (classBuilder.fieldsStatic.contains(field)) continue;
+			Expression expression = classBuilder.fieldExpressions.get(field);
+			set(property(self(), field), expression).load(this);
+		}
+
 		return VOID_TYPE;
 	}
 

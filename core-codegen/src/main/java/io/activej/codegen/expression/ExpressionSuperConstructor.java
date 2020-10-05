@@ -21,22 +21,18 @@ import org.objectweb.asm.Type;
 
 import java.util.List;
 
-import static org.objectweb.asm.Type.getType;
-
 /**
  * Defines methods for using constructors from other classes
  */
-final class ExpressionSuper implements Expression {
-	private final Class<?> type;
+final class ExpressionSuperConstructor implements Expression {
 	private final List<Expression> fields;
 
-	ExpressionSuper(Class<?> type, List<Expression> fields) {
-		this.type = type;
+	ExpressionSuperConstructor(List<Expression> fields) {
 		this.fields = fields;
 	}
 
 	@Override
 	public Type load(Context ctx) {
-		return ctx.invokeSuper(getType(type), fields);
+		return ctx.invokeSuperConstructor(fields);
 	}
 }

@@ -68,8 +68,8 @@ public abstract class RecordProjection implements Function<Record, Record>, BiCo
 		ClassBuilder<RecordProjection> builder = ClassBuilder.create(classLoader, RecordProjection.class)
 				.withClassKey(classKey)
 //				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
-				.withMethod("<init>", void.class, asList(RecordScheme.class, RecordScheme.class),
-						callSuper(RecordProjection.class, arg(0), arg(1)));
+				.withConstructor(asList(RecordScheme.class, RecordScheme.class),
+						superConstructor(arg(0), arg(1)));
 
 		builder.withMethod("accept", void.class, asList(Record.class, Record.class), sequence(
 				expressions -> {

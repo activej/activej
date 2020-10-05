@@ -487,8 +487,8 @@ public class Expressions {
 		return new ExpressionConstructor(type, asList(fields));
 	}
 
-	public static Expression callSuper(Class<?> type, Expression... fields) {
-		return new ExpressionSuper(type, asList(fields));
+	public static Expression superConstructor(Expression... fields) {
+		return new ExpressionSuperConstructor(asList(fields));
 	}
 
 	/**

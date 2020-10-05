@@ -40,10 +40,10 @@ import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Type.getInternalName;
-import static org.objectweb.asm.Type.getType;
+import static org.objectweb.asm.Type.*;
 import static org.objectweb.asm.commons.Method.getMethod;
 
 /**
@@ -69,18 +69,18 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	private ClassKey classKey;
 	private Path bytecodeSaveDir;
 
-	private String className;
+	protected String className;
 
 	protected final Map<String, Class<?>> fields = new LinkedHashMap<>();
-	private final Set<String> fieldsFinal = new HashSet<>();
-	private final Set<String> fieldsStatic = new HashSet<>();
-	private final Map<String, Expression> fieldExpressions = new HashMap<>();
+	protected final Set<String> fieldsFinal = new HashSet<>();
+	protected final Set<String> fieldsStatic = new HashSet<>();
+	protected final Map<String, Expression> fieldExpressions = new HashMap<>();
 
 	protected final Map<Method, Expression> methods = new LinkedHashMap<>();
 	protected final Map<Method, Expression> staticMethods = new LinkedHashMap<>();
 
-	private final List<Expression> initializers = new ArrayList<>();
-	private final List<Expression> staticInitializers = new ArrayList<>();
+	protected final Map<Method, Expression> constructors = new LinkedHashMap<>();
+	protected final List<Expression> staticInitializers = new ArrayList<>();
 
 	// region builders
 
@@ -137,7 +137,11 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 
 	public ClassBuilder<T> withConstructor(Expression expression) {
-		initializers.add(expression);
+		return withConstructor(emptyList(), expression);
+	}
+
+	public ClassBuilder<T> withConstructor(List<? extends Class<?>> argumentTypes, Expression expression) {
+		constructors.put(new Method("<init>", VOID_TYPE, argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
 		return this;
 	}
 
@@ -307,26 +311,19 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				getInternalName(superclass),
 				interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
 
+		Map<Method, Expression> constructors = new LinkedHashMap<>(this.constructors);
+		if (constructors.isEmpty()) {
+			constructors.put(new Method("<init>", VOID_TYPE, new Type[]{}), superConstructor());
+		}
 
-		if (Arrays.stream(superclass.getDeclaredConstructors()).anyMatch(c -> c.getParameterCount() == 0)) {
-			Method m = getMethod("void <init> ()");
+		for (Method m : constructors.keySet()) {
+			Expression expression = constructors.get(m);
+
 			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC, m, null, null, cw);
-			g.loadThis();
-			g.invokeConstructor(getType(superclass), m);
-
 			Context ctx = new Context(classLoader, this, g, classType, m);
-
-			for (String field : this.fieldExpressions.keySet()) {
-				if (this.fieldsStatic.contains(field)) continue;
-				Expression expression = this.fieldExpressions.get(field);
-				set(property(self(), field), expression).load(ctx);
-			}
-
-			for (Expression initializer : initializers) {
-				initializer.load(ctx);
-			}
-
+			ctx.cast(expression.load(ctx), m.getReturnType());
 			g.returnValue();
+
 			g.endMethod();
 		}
 
@@ -352,35 +349,27 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 			}
 
 			for (Method m : newMethods) {
-				try {
-					GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + (m.getName().equals("<init>") ? 0 : ACC_FINAL), m, null, null, cw);
+				GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_FINAL, m, null, null, cw);
 
-					Context ctx = new Context(classLoader, this, g, classType, m);
+				Context ctx = new Context(classLoader, this, g, classType, m);
 
-					Expression expression = this.methods.get(m);
-					ctx.cast(expression.load(ctx), m.getReturnType());
-					g.returnValue();
+				Expression expression = this.methods.get(m);
+				ctx.cast(expression.load(ctx), m.getReturnType());
+				g.returnValue();
 
-					g.endMethod();
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
+				g.endMethod();
 			}
 
 			for (Method m : newStaticMethods) {
-				try {
-					GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC + ACC_FINAL, m, null, null, cw);
+				GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC + ACC_FINAL, m, null, null, cw);
 
-					Context ctx = new Context(classLoader, this, g, classType, m);
+				Context ctx = new Context(classLoader, this, g, classType, m);
 
-					Expression expression = this.staticMethods.get(m);
-					ctx.cast(expression.load(ctx), m.getReturnType());
-					g.returnValue();
+				Expression expression = this.staticMethods.get(m);
+				ctx.cast(expression.load(ctx), m.getReturnType());
+				g.returnValue();
 
-					g.endMethod();
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
+				g.endMethod();
 			}
 
 			fields.addAll(newFields);

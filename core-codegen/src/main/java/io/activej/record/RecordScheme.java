@@ -167,8 +167,8 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		ClassBuilder<Record> builder = ClassBuilder.create(this.classLoader, Record.class)
 				.withClassKey(this)
 //				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
-				.withMethod("<init>", void.class, asList(RecordScheme.class),
-						callSuper(Record.class, arg(0)))
+				.withConstructor(asList(RecordScheme.class),
+						superConstructor(arg(0)))
 				.withMethod("hashCode",
 						hash(Arrays.stream(fields).map(this::getClassField).map(f -> Expressions.property(self(), f)).collect(toList())))
 				.withMethod("equals",
