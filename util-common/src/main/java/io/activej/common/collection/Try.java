@@ -16,7 +16,6 @@
 
 package io.activej.common.collection;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -61,28 +60,20 @@ public final class Try<T> {
 	}
 
 	public static <T> Try<T> wrap(@NotNull Supplier<T> computation) {
-		try {
-			return new Try<>(computation.get(), null);
-		} catch (UncheckedException u) {
-			return new Try<>(null, u.getCause());
-		}
+		return getTry(computation);
 	}
 
 	public static <T> Try<T> wrap(@NotNull Runnable computation) {
-		try {
+		return getTry(() -> {
 			computation.run();
-			return new Try<>(null, null);
-		} catch (UncheckedException u) {
-			return new Try<>(null, u.getCause());
-		}
+			return null;
+		});
 	}
 
 	public static <T> Try<T> wrap(@NotNull Callable<? extends T> computation) {
 		try {
 			@Nullable T result = computation.call();
 			return new Try<>(result, null);
-		} catch (UncheckedException u) {
-			return new Try<>(null, u.getCause());
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
@@ -237,11 +228,7 @@ public final class Try<T> {
 	@NotNull
 	public <U> Try<U> map(@NotNull Function<T, U> function) {
 		if (throwable == null) {
-			try {
-				return new Try<>(function.apply(result), null);
-			} catch (UncheckedException u) {
-				return new Try<>(null, u.getCause());
-			}
+			return getTry(() -> function.apply(result));
 		}
 		return mold();
 	}
@@ -277,5 +264,15 @@ public final class Try<T> {
 	@Override
 	public String toString() {
 		return "{" + (isSuccess() ? "" + result : "" + throwable) + "}";
+	}
+
+	private static <T> Try<T> getTry(Supplier<T> resultSupplier) {
+		try {
+			return new Try<>(resultSupplier.get(), null);
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return new Try<>(null, e);
+		}
 	}
 }

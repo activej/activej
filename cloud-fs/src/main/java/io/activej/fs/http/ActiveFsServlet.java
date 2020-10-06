@@ -18,7 +18,6 @@ package io.activej.fs.http;
 
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
@@ -33,6 +32,7 @@ import java.util.function.Function;
 
 import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.Codecs.*;
 import static io.activej.fs.util.RemoteFsUtils.*;
@@ -170,7 +170,7 @@ public final class ActiveFsServlet {
 	private static String decodePath(HttpRequest request) {
 		String value = UrlParser.urlDecode(request.getRelativePath());
 		if (value == null) {
-			throw new UncheckedException(HttpException.ofCode(400, "Path contains invalid UTF"));
+			sneakyThrow(HttpException.ofCode(400, "Path contains invalid UTF"));
 		}
 		return value;
 	}
@@ -178,7 +178,7 @@ public final class ActiveFsServlet {
 	private static String getQueryParameter(HttpRequest request, String parameterName) {
 		String value = request.getQueryParameter(parameterName);
 		if (value == null) {
-			throw new UncheckedException(HttpException.ofCode(400, "No '" + parameterName + "' query parameter"));
+			sneakyThrow(HttpException.ofCode(400, "No '" + parameterName + "' query parameter"));
 		}
 		return value;
 	}
@@ -195,7 +195,7 @@ public final class ActiveFsServlet {
 			}
 			return val;
 		} catch (NumberFormatException ignored) {
-			throw new UncheckedException(HttpException.ofCode(400, "Invalid '" + parameterName + "' value"));
+			return sneakyThrow(HttpException.ofCode(400, "Invalid '" + parameterName + "' value"));
 		}
 	}
 

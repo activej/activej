@@ -20,7 +20,6 @@ import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
-import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Contract;
@@ -98,8 +97,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		SettablePromise<T> cb = new SettablePromise<>();
 		try {
 			callbackConsumer.accept(cb);
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 		return cb;
 	}
@@ -242,8 +243,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					try {
 						T result = callable.call();
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
-					} catch (UncheckedException u) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(u.getCause())));
 					} catch (RuntimeException e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, callable));
 					} catch (Exception e) {
@@ -280,8 +279,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					try {
 						runnable.run();
 						eventloop.execute(wrapContext(cb, () -> cb.set(null)));
-					} catch (UncheckedException u) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(u.getCause())));
 					} catch (RuntimeException e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, runnable));
 					} catch (Exception e) {

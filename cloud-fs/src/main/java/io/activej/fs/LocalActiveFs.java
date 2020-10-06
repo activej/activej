@@ -22,7 +22,6 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.CollectorsEx;
 import io.activej.common.MemSize;
 import io.activej.common.collection.CollectionUtils;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
@@ -60,6 +59,7 @@ import java.util.stream.Collector;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.LocalFileUtils.*;
@@ -564,7 +564,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {
 			logger.warn("Failed to retrieve metadata for {}", path, e);
-			throw new UncheckedException(new FsIOException(LocalActiveFs.class, "Failed to retrieve metadata"));
+			return sneakyThrow(new FsIOException(LocalActiveFs.class, "Failed to retrieve metadata"));
 		}
 	}
 

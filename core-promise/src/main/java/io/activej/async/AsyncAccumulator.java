@@ -17,7 +17,6 @@
 package io.activej.async;
 
 import io.activej.async.process.AsyncCloseable;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -80,8 +79,10 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 			if (e == null) {
 				try {
 					consumer.accept(accumulator, v);
-				} catch (UncheckedException u) {
-					resultPromise.setException(u.getCause());
+				} catch (RuntimeException e2) {
+					throw e2;
+				} catch (Exception e2) {
+					resultPromise.setException(e2);
 					Recyclers.recycle(accumulator);
 					return;
 				}

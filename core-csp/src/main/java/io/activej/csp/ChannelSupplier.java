@@ -20,7 +20,6 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.queue.ChannelQueue;
@@ -338,9 +337,11 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 							if (value != null) {
 								try {
 									return fn.apply(value);
-								} catch (UncheckedException u) {
-									ChannelSupplier.this.closeEx(u.getCause());
-									throw u;
+								} catch (RuntimeException e) {
+									throw e;
+								} catch (Exception e) {
+									ChannelSupplier.this.closeEx(e);
+									throw e;
 								}
 							} else {
 								return null;

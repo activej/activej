@@ -18,7 +18,6 @@ package io.activej.promise;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
@@ -91,8 +90,10 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public <U> Promise<U> mapEx(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 	}
 
@@ -115,8 +116,10 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public <U> Promise<U> thenEx(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 	}
 

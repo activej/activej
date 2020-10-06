@@ -1,7 +1,6 @@
 import io.activej.async.file.AsyncFileService;
 import io.activej.async.file.ExecutorAsyncFileService;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -13,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.common.collection.CollectionUtils.set;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.delete;
@@ -29,7 +29,8 @@ public final class AsyncFileServiceExample {
 		try {
 			PATH = Files.createTempFile("NewFile", ".txt");
 		} catch (IOException e) {
-			throw new UncheckedException(e);
+			sneakyThrow(e);
+			throw new AssertionError();
 		}
 	}
 

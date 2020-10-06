@@ -22,7 +22,6 @@ import io.activej.common.Checks;
 import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
@@ -57,6 +56,7 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.*;
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.emptySet;
@@ -406,7 +406,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private void checkEnoughAlivePartitions() {
 		if (partitions.getAlivePartitions().size() < replicationCount) {
-			throw new UncheckedException(new FsIOException(ClusterRepartitionController.class, "Not enough alive partitions"));
+			sneakyThrow(new FsIOException(ClusterRepartitionController.class, "Not enough alive partitions"));
 		}
 	}
 

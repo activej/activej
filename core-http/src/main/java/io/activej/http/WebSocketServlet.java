@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.promise.Promisable;
@@ -53,7 +52,7 @@ public abstract class WebSocketServlet implements AsyncServlet {
 
 	@NotNull
 	@Override
-	public final Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public final Promisable<HttpResponse> serve(@NotNull HttpRequest request) {
 		return validateHeaders(request)
 				.then(() -> processAnswer(request))
 				.then(answer -> {

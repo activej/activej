@@ -19,7 +19,6 @@ package io.activej.ot;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.EventloopService;
-import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.exceptions.OTTransformException;
 import io.activej.ot.system.OTSystem;
@@ -42,6 +41,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullToEmpty;
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.promise.Promises.sequence;
 import static java.util.Collections.singletonList;
@@ -221,7 +221,8 @@ public final class OTStateManager<K, D> implements EventloopService {
 					otSystem.squash(fetchedDiffs));
 		} catch (OTTransformException e) {
 			invalidateInternalState();
-			throw new UncheckedException(e);
+			sneakyThrow(e);
+			return;
 		}
 
 		apply(transformed.left);

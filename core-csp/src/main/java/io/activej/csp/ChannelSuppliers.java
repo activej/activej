@@ -23,7 +23,6 @@ import io.activej.common.MemSize;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.StacklessException;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.queue.ChannelBuffer;
 import io.activej.csp.queue.ChannelZeroBuffer;
@@ -46,6 +45,7 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.nullify;
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
@@ -136,10 +136,11 @@ public final class ChannelSuppliers {
 			if (item != null) {
 				try {
 					accumulator.accept(accumulatedValue, item);
-				} catch (UncheckedException u) {
-					Throwable cause = u.getCause();
-					supplier.closeEx(cause);
-					cb.setException(cause);
+				} catch (RuntimeException e) {
+					throw e;
+				} catch (Exception e) {
+					supplier.closeEx(e);
+					cb.setException(e);
 					return;
 				}
 				continue;
@@ -151,10 +152,11 @@ public final class ChannelSuppliers {
 				if (value != null) {
 					try {
 						accumulator.accept(accumulatedValue, value);
-					} catch (UncheckedException u) {
-						Throwable cause = u.getCause();
-						supplier.closeEx(cause);
-						cb.setException(cause);
+					} catch (RuntimeException e2) {
+						throw e2;
+					} catch (Exception e2) {
+						supplier.closeEx(e2);
+						cb.setException(e2);
 						return;
 					}
 					toCollectorImpl(supplier, accumulatedValue, accumulator, finisher, cb);
@@ -308,7 +310,7 @@ public final class ChannelSuppliers {
 					try {
 						readBytes = inputStream.read(buf.array(), 0, bufSize);
 					} catch (IOException e) {
-						throw new UncheckedException(e);
+						return sneakyThrow(e);
 					}
 					if (readBytes != -1) {
 						buf.moveTail(readBytes);
@@ -487,7 +489,7 @@ public final class ChannelSuppliers {
 		private final Iterator<? extends ChannelSupplier<? extends T>> iterator;
 		private final boolean ownership;
 
-		public ChannelSupplierConcat (Iterator<? extends ChannelSupplier<? extends T>> iterator, boolean ownership) {
+		public ChannelSupplierConcat(Iterator<? extends ChannelSupplier<? extends T>> iterator, boolean ownership) {
 			this.iterator = iterator;
 			this.ownership = ownership;
 		}

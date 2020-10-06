@@ -22,7 +22,6 @@ import io.activej.common.Checks;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.StacklessException;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.reflection.ReflectionUtils;
 import io.activej.common.time.CurrentTimeProvider;
@@ -1097,8 +1096,10 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		execute(() -> {
 			try {
 				computation.run();
-			} catch (UncheckedException u) {
-				future.completeExceptionally(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				future.completeExceptionally(e);
 				return;
 			}
 			future.complete(null);
@@ -1119,8 +1120,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 						future.completeExceptionally(e);
 					}
 				});
-			} catch (UncheckedException u) {
-				future.completeExceptionally(u.getCause());
 			} catch (RuntimeException e) {
 				throw e;
 			} catch (Exception e) {
@@ -1168,9 +1167,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	}
 
 	public void recordFatalError(@NotNull Throwable e, @Nullable Object context) {
-		while (e instanceof UncheckedException) {
-			e = e.getCause();
-		}
 		logger.error("Fatal Error in {}", context, e);
 		if (fatalErrorHandler != null) {
 			handleFatalError(fatalErrorHandler, e, context);
@@ -1181,8 +1177,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			if (inEventloopThread()) {
 				inspector.onFatalError(e, context);
 			} else {
-				Throwable finalE = e;
-				execute(() -> inspector.onFatalError(finalE, context));
+				execute(() -> inspector.onFatalError(e, context));
 			}
 		}
 	}

@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -35,10 +34,10 @@ import static io.activej.promise.Promises.isResult;
 @FunctionalInterface
 public interface AsyncServlet {
 	@NotNull
-	Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException;
+	Promisable<HttpResponse> serve(@NotNull HttpRequest request);
 
 	@NotNull
-	default Promise<HttpResponse> serveAsync(@NotNull HttpRequest request) throws UncheckedException {
+	default Promise<HttpResponse> serveAsync(@NotNull HttpRequest request) {
 		return serve(request).promise();
 	}
 

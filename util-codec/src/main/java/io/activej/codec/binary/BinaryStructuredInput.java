@@ -19,7 +19,6 @@ package io.activej.codec.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.StructuredInput;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
@@ -141,23 +140,15 @@ public final class BinaryStructuredInput implements StructuredInput {
 	@Nullable
 	@Override
 	public <T> T readNullable(StructuredDecoder<T> decoder) throws ParseException {
-		try {
-			return readBoolean() ? decoder.decode(this) : null;
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
-		}
+		return readBoolean() ? decoder.decode(this) : null;
 	}
 
 	@Override
 	public <T> List<T> readList(StructuredDecoder<T> decoder) throws ParseException {
 		int size = readInt();
 		List<T> list = new ArrayList<>(size);
-		try {
-			for (int i = 0; i < size; i++) {
-				list.add(decoder.decode(this));
-			}
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
+		for (int i = 0; i < size; i++) {
+			list.add(decoder.decode(this));
 		}
 		return list;
 	}
@@ -166,32 +157,20 @@ public final class BinaryStructuredInput implements StructuredInput {
 	public <K, V> Map<K, V> readMap(StructuredDecoder<K> keyDecoder, StructuredDecoder<V> valueDecoder) throws ParseException {
 		int size = readInt();
 		Map<K, V> map = new LinkedHashMap<>();
-		try {
-			for (int i = 0; i < size; i++) {
-				map.put(keyDecoder.decode(this), valueDecoder.decode(this));
-			}
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
+		for (int i = 0; i < size; i++) {
+			map.put(keyDecoder.decode(this), valueDecoder.decode(this));
 		}
 		return map;
 	}
 
 	@Override
 	public <T> T readTuple(StructuredDecoder<T> decoder) throws ParseException {
-		try {
-			return decoder.decode(this);
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
-		}
+		return decoder.decode(this);
 	}
 
 	@Override
 	public <T> T readObject(StructuredDecoder<T> decoder) throws ParseException {
-		try {
-			return decoder.decode(this);
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
-		}
+		return decoder.decode(this);
 	}
 
 	@Override

@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
@@ -80,7 +79,7 @@ public final class BasicAuth implements AsyncServlet {
 
 	@NotNull
 	@Override
-	public Promise<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public Promise<HttpResponse> serve(@NotNull HttpRequest request) {
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
 			return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));

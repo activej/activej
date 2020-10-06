@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.common.MemSize;
-import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -199,13 +198,15 @@ public interface AsyncServletDecorator {
 						}));
 	}
 
-	static AsyncServletDecorator catchUncheckedExceptions() {
+	static AsyncServletDecorator catchSneakyExceptions() {
 		return servlet ->
 				request -> {
 					try {
 						return servlet.serve(request);
-					} catch (UncheckedException u) {
-						return Promise.ofException(u.getCause());
+					} catch (RuntimeException e) {
+						throw e;
+					} catch (Exception e) {
+						return Promise.ofException(e);
 					}
 				};
 	}
@@ -215,9 +216,7 @@ public interface AsyncServletDecorator {
 				request -> {
 					try {
 						return servlet.serve(request);
-					} catch (UncheckedException u) {
-						return Promise.ofException(u.getCause());
-					} catch (RuntimeException e) {
+					} catch (Exception e) {
 						return Promise.ofException(e);
 					}
 				};

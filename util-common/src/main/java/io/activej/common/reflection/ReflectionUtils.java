@@ -16,7 +16,6 @@
 
 package io.activej.common.reflection;
 
-import io.activej.common.exception.UncheckedException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +28,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.sneakyThrow;
 import static java.util.stream.Collectors.toList;
 
 public final class ReflectionUtils {
@@ -139,7 +139,7 @@ public final class ReflectionUtils {
 				try {
 					return (T) method.invoke(null);
 				} catch (IllegalAccessException | InvocationTargetException e) {
-					throw new UncheckedException(e);
+					return sneakyThrow(e);
 				}
 			};
 		}
@@ -150,7 +150,7 @@ public final class ReflectionUtils {
 					try {
 						return (T) c.newInstance();
 					} catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
-						throw new UncheckedException(e);
+						return sneakyThrow(e);
 					}
 				})
 				.orElse(null);
@@ -165,7 +165,9 @@ public final class ReflectionUtils {
 		try {
 			Supplier<T> supplier = getConstructorOrFactory(cls, factoryMethodNames);
 			return supplier != null ? supplier.get() : null;
-		} catch (UncheckedException u) {
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
 			return null;
 		}
 	}

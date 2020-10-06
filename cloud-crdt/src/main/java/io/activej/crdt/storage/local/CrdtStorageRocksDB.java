@@ -20,7 +20,6 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.common.exception.UncheckedException;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
@@ -122,56 +121,33 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 	}
 
 	public Promise<Void> flush() {
-		return Promise.ofBlockingRunnable(executor, () -> {
-			try {
-				db.flush(flushOptions);
-			} catch (RocksDBException e) {
-				throw new UncheckedException(e);
-			}
-		});
+		return Promise.ofBlockingRunnable(executor, () -> db.flush(flushOptions));
 	}
 
-	private void doPut(K key, S state) {
+	private void doPut(K key, S state) throws RocksDBException {
 		ByteBuf buf = ByteBufPool.allocate(bufferSize);
 		buf.tail(keySerializer.encode(buf.array(), buf.tail(), key));
 		byte[] keyBytes = buf.getArray();
-		byte[] possibleState;
-		try {
-			possibleState = db.get(keyBytes);
-		} catch (RocksDBException e) {
-			throw new UncheckedException(e);
-		}
+		byte[] possibleState = db.get(keyBytes);
 
 		// custom merge operators in RocksJava are yet to come
 		if (possibleState != null) {
 			state = function.merge(state, stateSerializer.decode(possibleState, 0));
 			if (!filter.test(state)) {
-				try {
-					db.delete(keyBytes);
-				} catch (RocksDBException e) {
-					throw new UncheckedException(e);
-				}
+				db.delete(keyBytes);
 				buf.recycle();
 				return;
 			}
 		}
 		buf.rewind();
 		buf.tail(stateSerializer.encode(buf.array(), buf.tail(), state));
-		try {
-			db.put(writeOptions, keyBytes, buf.asArray());
-		} catch (RocksDBException e) {
-			throw new UncheckedException(e);
-		}
+		db.put(writeOptions, keyBytes, buf.asArray());
 	}
 
-	private void doRemove(K key) {
+	private void doRemove(K key) throws RocksDBException {
 		ByteBuf buf = ByteBufPool.allocate(bufferSize);
 		buf.tail(keySerializer.encode(buf.array(), buf.tail(), key));
-		try {
-			db.delete(writeOptions, buf.asArray());
-		} catch (RocksDBException e) {
-			throw new UncheckedException(e);
-		}
+		db.delete(writeOptions, buf.asArray());
 	}
 
 	@Override

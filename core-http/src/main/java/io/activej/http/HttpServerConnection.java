@@ -19,7 +19,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
@@ -278,8 +277,10 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		Promise<HttpResponse> servletResult;
 		try {
 			servletResult = servlet.serveAsync(request);
-		} catch (UncheckedException u) {
-			servletResult = Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			servletResult = Promise.ofException(e);
 		}
 		servletResult.whenComplete((response, e) -> {
 			if (CHECK) checkState(eventloop.inEventloopThread());

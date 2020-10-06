@@ -20,7 +20,6 @@ import io.activej.async.callback.Callback;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.NotNull;
@@ -186,8 +185,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return isResult() ? Promise.of(fn.apply(result)) : (Promise<U>) this;
-			} catch (UncheckedException u) {
-				return Promise.ofException(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				return Promise.ofException(e);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -197,8 +198,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					U newResult;
 					try {
 						newResult = fn.apply(result);
-					} catch (UncheckedException u) {
-						completeExceptionally(u.getCause());
+					} catch (RuntimeException e2) {
+						throw e2;
+					} catch (Exception e2) {
+						completeExceptionally(e2);
 						return;
 					}
 					complete(newResult);
@@ -222,8 +225,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return Promise.of(fn.apply(result, exception));
-			} catch (UncheckedException u) {
-				return Promise.ofException(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				return Promise.ofException(e);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -233,8 +238,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					U newResult;
 					try {
 						newResult = fn.apply(result, null);
-					} catch (UncheckedException u) {
-						completeExceptionally(u.getCause());
+					} catch (RuntimeException e2) {
+						throw e2;
+					} catch (Exception e2) {
+						completeExceptionally(e2);
 						return;
 					}
 					complete(newResult);
@@ -242,8 +249,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					U newResult;
 					try {
 						newResult = fn.apply(null, e);
-					} catch (UncheckedException u) {
-						completeExceptionally(u.getCause());
+					} catch (RuntimeException e2) {
+						throw e2;
+					} catch (Exception e2) {
+						completeExceptionally(e2);
 						return;
 					}
 					complete(newResult);
@@ -265,8 +274,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return isResult() ? (Promise<U>) fn.apply(result) : (Promise<U>) this;
-			} catch (UncheckedException u) {
-				return Promise.ofException(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				return Promise.ofException(e);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -276,8 +287,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(result);
-					} catch (UncheckedException u) {
-						completeExceptionally(u.getCause());
+					} catch (RuntimeException e2) {
+						throw e2;
+					} catch (Exception e2) {
+						completeExceptionally(e2);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -300,8 +313,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return isResult() ? (Promise<U>) fn.get() : (Promise<U>) this;
-			} catch (UncheckedException u) {
-				return Promise.ofException(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				return Promise.ofException(e);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -311,8 +326,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.get();
-					} catch (UncheckedException u) {
-						completeExceptionally(u.getCause());
+					} catch (RuntimeException e2) {
+						throw e2;
+					} catch (Exception e2) {
+						completeExceptionally(e2);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -336,8 +353,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return (Promise<U>) fn.apply(result, exception);
-			} catch (UncheckedException u) {
-				return Promise.ofException(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				return Promise.ofException(e);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -347,8 +366,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(result, null);
-					} catch (UncheckedException u) {
-						completeExceptionally(u.getCause());
+					} catch (RuntimeException e2) {
+						throw e2;
+					} catch (Exception e2) {
+						completeExceptionally(e2);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -356,8 +377,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(null, e);
-					} catch (UncheckedException u) {
-						completeExceptionally(u.getCause());
+					} catch (RuntimeException e2) {
+						throw e2;
+					} catch (Exception e2) {
+						completeExceptionally(e2);
 						return;
 					}
 					promise.whenComplete(this::complete);

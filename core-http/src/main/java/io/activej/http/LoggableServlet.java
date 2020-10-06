@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +60,7 @@ public final class LoggableServlet implements AsyncServlet {
 	}
 
 	@Override
-	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) {
 		Promise<HttpResponse> httpResponsePromise = rootServlet.serve(request).promise();
 		if (!httpResponsePromise.isComplete()) {
 			logger.trace(loggerFunction.apply(request, null));

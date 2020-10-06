@@ -21,7 +21,6 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.api.ParserFunction;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.recycle.Recyclable;
@@ -38,6 +37,7 @@ import java.util.*;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.csp.ChannelConsumers.recycling;
 import static java.util.Collections.emptySet;
 
@@ -272,7 +272,7 @@ public abstract class HttpMessage {
 					if (maxBodySize != 0 && queue.hasRemainingBytes(maxBodySize)) {
 						queue.recycle();
 						buf.recycle();
-						throw new UncheckedException(new InvalidSizeException(HttpMessage.class,
+						sneakyThrow(new InvalidSizeException(HttpMessage.class,
 								"HTTP body size exceeds load limit " + maxBodySize));
 					}
 					queue.add(buf);

@@ -21,7 +21,6 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.MalformedJsonException;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.StructuredInput;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 
 import java.io.EOFException;
@@ -152,8 +151,6 @@ public final class JsonStructuredInput implements StructuredInput {
 			return decoder.decode(this);
 		} catch (EOFException | MalformedJsonException | IllegalStateException e) {
 			throw new ParseException(e);
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
 		} catch (IOException e) {
 			throw new AssertionError();
 		}
@@ -168,8 +165,6 @@ public final class JsonStructuredInput implements StructuredInput {
 			return result;
 		} catch (EOFException | MalformedJsonException | IllegalStateException e) {
 			throw new ParseException(e);
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
 		} catch (IOException e) {
 			throw new AssertionError();
 		}
@@ -184,8 +179,6 @@ public final class JsonStructuredInput implements StructuredInput {
 			return result;
 		} catch (EOFException | MalformedJsonException | IllegalStateException e) {
 			throw new ParseException(e);
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
 		} catch (IOException e) {
 			throw new AssertionError();
 		}
@@ -204,8 +197,6 @@ public final class JsonStructuredInput implements StructuredInput {
 			return list;
 		} catch (EOFException | MalformedJsonException | IllegalStateException e) {
 			throw new ParseException(e);
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
 		} catch (IOException e) {
 			throw new AssertionError();
 		}
@@ -238,8 +229,6 @@ public final class JsonStructuredInput implements StructuredInput {
 			return map;
 		} catch (EOFException | NumberFormatException | MalformedJsonException | IllegalStateException e) {
 			throw new ParseException(e);
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
 		} catch (IOException e) {
 			throw new AssertionError();
 		}

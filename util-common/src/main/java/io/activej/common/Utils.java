@@ -33,10 +33,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
 import static java.util.Collections.*;
 
 public class Utils {
+	private static final boolean CHECK = Checks.isEnabled(Utils.class);
 
 	public static <T> T of(Supplier<T> supplier) {
 		return supplier.get();
@@ -213,4 +215,10 @@ public class Utils {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T, E extends Exception> T sneakyThrow(Exception e) throws E {
+		if (CHECK) checkArgument(!(e instanceof RuntimeException), "Sneakily throwing runtime exception");
+
+		throw (E) e;
+	}
 }

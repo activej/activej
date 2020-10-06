@@ -17,7 +17,6 @@
 package io.activej.codec;
 
 import io.activej.common.api.ParserFunction;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.tuple.*;
 import org.jetbrains.annotations.Nullable;
@@ -302,11 +301,7 @@ public final class StructuredCodecs {
 			@Override
 			public R decode(StructuredInput in) throws ParseException {
 				T result = codec.decode(in);
-				try {
-					return reader.parse(result);
-				} catch (UncheckedException u) {
-					throw u.propagate(ParseException.class);
-				}
+				return reader.parse(result);
 			}
 		};
 	}

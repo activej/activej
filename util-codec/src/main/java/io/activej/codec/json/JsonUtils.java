@@ -24,7 +24,6 @@ import com.google.gson.stream.MalformedJsonException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.codec.*;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 
 import java.io.*;
@@ -33,12 +32,7 @@ public class JsonUtils {
 
 	public static <T> T fromJson(StructuredDecoder<T> decoder, String string) throws ParseException {
 		JsonReader reader = new JsonReader(new StringReader(string));
-		T result;
-		try {
-			result = decoder.decode(new JsonStructuredInput(reader));
-		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
-		}
+		T result = decoder.decode(new JsonStructuredInput(reader));
 
 		try {
 			if (reader.peek() != JsonToken.END_DOCUMENT) {
@@ -77,10 +71,10 @@ public class JsonUtils {
 	 * Encodes a given value as a JSON using {@link StructuredEncoder} and appends the result to the {@link Appendable}.
 	 * Passed {@link Appendable} should not perform any blocking I/O operations
 	 *
-	 * @param encoder structured encoder
-	 * @param value a value to be encoded to JSON
+	 * @param encoder    structured encoder
+	 * @param value      a value to be encoded to JSON
 	 * @param appendable nonblocking appendable where an encoded as json value will be appended
-	 * @param <T> type of value to be encoded
+	 * @param <T>        type of value to be encoded
 	 */
 	public static <T> void toJson(StructuredEncoder<? super T> encoder, T value, Appendable appendable) {
 		toJson(encoder, value, Streams.writerForAppendable(appendable));

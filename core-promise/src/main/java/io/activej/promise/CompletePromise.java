@@ -18,7 +18,6 @@ package io.activej.promise;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
@@ -80,8 +79,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> map(@NotNull Function<? super T, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult()));
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 	}
 
@@ -90,8 +91,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> mapEx(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult(), null));
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 	}
 
@@ -101,8 +104,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 	}
 
@@ -110,8 +115,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public @NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.get();
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 	}
 
@@ -121,8 +128,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> thenEx(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 	}
 

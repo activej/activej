@@ -18,7 +18,6 @@ package io.activej.dataflow.http;
 
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.exception.UncheckedException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
@@ -192,7 +191,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 
 	@Override
 	@NotNull
-	public Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public Promisable<HttpResponse> serve(@NotNull HttpRequest request) {
 		return servlet.serve(request);
 	}
 }

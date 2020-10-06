@@ -17,7 +17,6 @@
 package io.activej.eventloop.executor;
 
 import io.activej.async.callback.AsyncComputation;
-import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
 
@@ -109,8 +108,10 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 		post(() -> {
 			try {
 				computation.run();
-			} catch (UncheckedException u) {
-				future.completeExceptionally(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				future.completeExceptionally(e);
 				return;
 			} finally {
 				complete();
@@ -133,8 +134,6 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 						future.completeExceptionally(e);
 					}
 				});
-			} catch (UncheckedException u) {
-				future.completeExceptionally(u.getCause());
 			} catch (RuntimeException e) {
 				throw e;
 			} catch (Exception e) {

@@ -18,7 +18,6 @@ package io.activej.bytebuf;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.recycle.Recyclable;
 import org.jetbrains.annotations.Contract;
@@ -31,6 +30,7 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.common.collection.CollectionUtils.emptyIterator;
 import static java.lang.System.arraycopy;
 
@@ -95,7 +95,7 @@ public final class ByteBufQueue implements Recyclable {
 					if (size > maxSize || queue.hasRemainingBytes(maxSize - size + 1)) {
 						queue.recycle();
 						buf.recycle();
-						throw new UncheckedException(new InvalidSizeException(ByteBufQueue.class,
+						sneakyThrow(new InvalidSizeException(ByteBufQueue.class,
 								"ByteBufQueue exceeds maximum size of " + maxSize + " bytes"));
 					}
 					queue.add(buf);

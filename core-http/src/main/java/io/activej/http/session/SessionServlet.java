@@ -16,7 +16,6 @@
 
 package io.activej.http.session;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
@@ -60,7 +59,7 @@ public final class SessionServlet<T> implements AsyncServlet {
 	}
 
 	@Override
-	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) {
 		String id = sessionIdExtractor.apply(request);
 
 		if (id == null) {

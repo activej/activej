@@ -19,7 +19,6 @@ package io.activej.fs;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.CollectorsEx;
 import io.activej.common.collection.CollectionUtils;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.fs.util.ForwardingOutputStream;
@@ -48,6 +47,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -297,7 +297,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {
 			logger.warn("Failed to retrieve metadata for {}", path, e);
-			throw new UncheckedException(e);
+			return sneakyThrow(e);
 		}
 	}
 

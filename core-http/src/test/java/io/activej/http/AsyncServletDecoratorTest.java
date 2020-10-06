@@ -2,7 +2,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
@@ -10,9 +9,11 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.activej.common.Utils.sneakyThrow;
 import static io.activej.http.AsyncServletDecorator.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -169,13 +170,11 @@ public class AsyncServletDecoratorTest {
 	}
 
 	@Test
-	public void testCatchUncheckedException() {
-		AsyncServlet servlet = AsyncServletDecorator.catchUncheckedExceptions()
-				.serve(request -> {
-					throw new UncheckedException(new NullPointerException());
-				});
+	public void testCatchSneakyException() {
+		AsyncServlet servlet = AsyncServletDecorator.catchSneakyExceptions()
+				.serve(request -> sneakyThrow(new IOException()));
 
-		NullPointerException throwable = awaitException(servlet.serveAsync(HttpRequest.get("http://test.com")));
+		IOException throwable = awaitException(servlet.serveAsync(HttpRequest.get("http://test.com")));
 		assertNotNull(throwable);
 	}
 

@@ -16,11 +16,12 @@
 
 package io.activej.common.api;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
+
+import static io.activej.common.Utils.sneakyThrow;
 
 @FunctionalInterface
 public interface ParserFunction<T, R> {
@@ -31,7 +32,7 @@ public interface ParserFunction<T, R> {
 			try {
 				return fn.parse(item);
 			} catch (ParseException e) {
-				throw new UncheckedException(e);
+				return sneakyThrow(e);
 			}
 		};
 	}
@@ -51,7 +52,8 @@ public interface ParserFunction<T, R> {
 			if (value != null) {
 				return parse(value);
 			}
-		} catch (ParseException ignore) {}
+		} catch (ParseException ignore) {
+		}
 
 		return defaultResult;
 	}
