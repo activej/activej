@@ -1990,4 +1990,38 @@ public class BinarySerializerTest {
 			assertEquals("Message does not end with byte '1'", e.getMessage());
 		}
 	}
+
+	public static class TestDataFromVersion3 {
+		@Serialize(order = 0, added = 3)
+		public int a;
+
+		@Serialize(order = 1, added = 4, removed = 5)
+		public int b;
+
+		@Serialize(order = 2, added = 5)
+		public int c;
+	}
+
+	@Test
+	public void testUnsupportedVersion() {
+		SerializerBuilder builder = SerializerBuilder.create(getSystemClassLoader());
+		BinarySerializer<TestDataFromVersion3> serializer = builder.build(TestDataFromVersion3.class);
+
+		TestDataFromVersion3 testDataBefore = new TestDataFromVersion3();
+		testDataBefore.a = 10;
+		testDataBefore.b = 20;
+		testDataBefore.c = 30;
+
+		byte[] array = new byte[1000];
+		serializer.encode(array, 0, testDataBefore);
+		assertEquals(5, array[0]);
+		array[0] = 0; // overriding version
+
+		try {
+			serializer.decode(array, 0);
+			fail();
+		} catch (CorruptedDataException e) {
+			assertEquals("Unsupported version", e.getMessage());
+		}
+	}
 }

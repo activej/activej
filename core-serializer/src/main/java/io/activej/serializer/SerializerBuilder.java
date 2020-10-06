@@ -911,7 +911,7 @@ public final class SerializerBuilder {
 						listKey.add(value((byte) version));
 						listValue.add(call(self(), "decodeVersion" + version, arg(0)));
 					}
-					return switchByKey(arg(1), listKey, listValue);
+					return switchByKey(arg(1), listKey, listValue, throwException(CorruptedDataException.class, value("Unsupported version")));
 				}));
 
 		for (int i = allVersions.size() - 2; i >= 0; i--) {
