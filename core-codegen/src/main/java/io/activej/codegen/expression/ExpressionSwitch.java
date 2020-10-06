@@ -23,12 +23,12 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.List;
 
-import static io.activej.codegen.expression.Expressions.exception;
+import static io.activej.codegen.expression.Expressions.throwException;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Type.getType;
 
 final class ExpressionSwitch implements Expression {
-	public static final Expression DEFAULT_EXPRESSION = exception(IllegalArgumentException.class);
+	public static final Expression DEFAULT_EXPRESSION = throwException(IllegalArgumentException.class);
 
 	private final Expression value;
 	private final List<Expression> matchCases;

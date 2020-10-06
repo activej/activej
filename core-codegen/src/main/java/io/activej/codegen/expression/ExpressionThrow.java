@@ -17,36 +17,21 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.commons.Method;
 
 import static org.objectweb.asm.Type.VOID_TYPE;
-import static org.objectweb.asm.Type.getType;
 
 final class ExpressionThrow implements Expression {
-	private final Class<? extends Throwable> exceptionClass;
-	@Nullable
-	private final Expression message;
+	private final Expression exceptionExpression;
 
-	ExpressionThrow(Class<? extends Throwable> exceptionClass, @Nullable Expression message) {
-		this.exceptionClass = exceptionClass;
-		this.message = message;
+	ExpressionThrow(Expression exceptionExpression) {
+		this.exceptionExpression = exceptionExpression;
 	}
 
 	@Override
 	public Type load(Context ctx) {
-		GeneratorAdapter g = ctx.getGeneratorAdapter();
-		g.newInstance(getType(exceptionClass));
-		g.dup();
-		if (message == null) {
-			g.invokeConstructor(getType(exceptionClass), new Method("<init>", VOID_TYPE, new Type[]{}));
-		} else {
-			message.load(ctx);
-			g.invokeConstructor(getType(exceptionClass), new Method("<init>", VOID_TYPE, new Type[]{getType(String.class)}));
-		}
-		g.throwException();
+		exceptionExpression.load(ctx);
+		ctx.getGeneratorAdapter().throwException();
 		return VOID_TYPE;
 	}
 }

@@ -18,6 +18,7 @@ import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 @SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
@@ -960,4 +961,57 @@ public class ExpressionTest {
 	public static class StaticFieldHolder {
 		public static int field;
 	}
+
+	public interface ErrorThrower {
+		void throwChecked(String message) throws Exception;
+
+		void throwUnchecked();
+
+		void throwCheckedWithSuppressed() throws Exception;
+	}
+
+	@org.junit.Test
+	public void testExceptionThrowing() {
+		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
+		ErrorThrower errorThrower = (ErrorThrower) ClassBuilder.create(definingClassLoader, Object.class, ErrorThrower.class)
+				.withMethod("throwChecked", throwException(IOException.class, arg(0)))
+				.withMethod("throwUnchecked", throwException(RuntimeException.class))
+				.withMethod("throwCheckedWithSuppressed",
+						throwException(let(constructor(Exception.class, value("main")), exception ->
+								sequence(
+										call(exception, "addSuppressed", constructor(Exception.class, value("first"))),
+										call(exception, "addSuppressed", constructor(Exception.class, value("second"))),
+										call(exception, "addSuppressed", constructor(Exception.class, value("third"))),
+										exception
+								))))
+				.buildClassAndCreateNewInstance();
+
+		try {
+			errorThrower.throwChecked("Fail");
+			fail();
+		} catch (Exception e) {
+			assertThat(e, instanceOf(IOException.class));
+			assertEquals("Fail", e.getMessage());
+		}
+
+		try {
+			errorThrower.throwUnchecked();
+			fail();
+		} catch (RuntimeException ignored) {
+		}
+
+		try {
+			errorThrower.throwCheckedWithSuppressed();
+			fail();
+		} catch (Exception e) {
+			assertEquals("main", e.getMessage());
+
+			Throwable[] suppressed = e.getSuppressed();
+			assertEquals(3, suppressed.length);
+			assertEquals("first", suppressed[0].getMessage());
+			assertEquals("second", suppressed[1].getMessage());
+			assertEquals("third", suppressed[2].getMessage());
+		}
+	}
+
 }

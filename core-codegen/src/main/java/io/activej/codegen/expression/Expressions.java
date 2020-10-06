@@ -548,12 +548,24 @@ public class Expressions {
 		return ExpressionVoid.INSTANCE;
 	}
 
-	public static Expression exception(Class<? extends Throwable> exception) {
-		return new ExpressionThrow(exception, null);
+	public static Expression throwException(Expression exception) {
+		return new ExpressionThrow(exception);
 	}
 
-	public static Expression exception(Class<? extends Throwable> exception, Expression message) {
-		return new ExpressionThrow(exception, message);
+	public static Expression throwException(Class<? extends Throwable> exceptionClass) {
+		return new ExpressionThrow(constructor(exceptionClass));
+	}
+
+	public static Expression throwException(Class<? extends Throwable> exceptionClass, Expression message) {
+		return new ExpressionThrow(constructor(exceptionClass, message));
+	}
+
+	public static Expression throwException(Class<? extends Throwable> exceptionClass, String message) {
+		return new ExpressionThrow(constructor(exceptionClass, value(message)));
+	}
+
+	public static Expression throwException(Throwable exception) {
+		return new ExpressionThrow(value(exception));
 	}
 
 	public static Expression switchByIndex(Expression index, Expression... expressions) {
