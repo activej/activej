@@ -20,10 +20,8 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.arg;
 
@@ -51,25 +49,21 @@ public interface SerializerDef {
 	 */
 	Class<?> getEncodeType();
 
-	default Map<Object, Expression> getEncoderInitializer() {
-		return Collections.emptyMap();
-	}
+	Class<?> getDecodeType();
 
-	default Map<Object, Expression> getDecoderInitializer() {
-		return Collections.emptyMap();
-	}
+	Map<Object, Expression> getEncoderInitializer();
 
-	default Map<Object, Expression> getEncoderFinalizer() {
-		return Collections.emptyMap();
-	}
+	Map<Object, Expression> getDecoderInitializer();
 
-	default Map<Object, Expression> getDecoderFinalizer() {
-		return Collections.emptyMap();
-	}
+	Map<Object, Expression> getEncoderFinalizer();
 
-	default Class<?> getDecodeType() {
-		return getEncodeType();
-	}
+	Map<Object, Expression> getDecoderFinalizer();
+
+	boolean isInline(int version, CompatibilityLevel compatibilityLevel);
+
+	Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel);
+
+	Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel);
 
 	interface StaticEncoders {
 		Expression BUF = arg(0);
@@ -77,6 +71,14 @@ public interface SerializerDef {
 		Variable VALUE = arg(2);
 
 		Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel);
+	}
+
+	interface StaticDecoders {
+		Variable IN = arg(0);
+
+		Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression in, int version, CompatibilityLevel compatibilityLevel);
+
+		<T> ClassBuilder<T> buildClass(Class<T> type);
 	}
 
 	/**
@@ -88,19 +90,11 @@ public interface SerializerDef {
 	 * @param compatibilityLevel defines the {@link CompatibilityLevel compatibility level} of the serializer
 	 * @return serialized to byte array value
 	 */
-	default Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return encoder(staticEncoders, buf, pos, value, version, compatibilityLevel);
-	}
-
-	Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel);
-
-	interface StaticDecoders {
-		Variable IN = arg(0);
-
-		Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression in, int version, CompatibilityLevel compatibilityLevel);
-
-		<T> ClassBuilder<T> buildClass(Class<T> type);
-	}
+	 default Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		 return isInline(version, compatibilityLevel) ?
+				 encoder(staticEncoders, buf, pos, value, version, compatibilityLevel) :
+				 staticEncoders.define(this, getEncodeType(), buf, pos, value, version, compatibilityLevel);
+	 }
 
 	/**
 	 * Deserializes object from byte array
@@ -110,13 +104,8 @@ public interface SerializerDef {
 	 * @return deserialized {@code Expression} object of provided targetType
 	 */
 	default Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return decoder(staticDecoders, in, version, compatibilityLevel);
-	}
-
-	Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel);
-
-	default Expression decoderEx(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel,
-			Function<Expression, Expression> extraInitializer) {
-		return decoder(staticDecoders, in, version, compatibilityLevel);
+		return isInline(version, compatibilityLevel) ?
+				decoder(staticDecoders, in, version, compatibilityLevel) :
+				staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
 	}
 }

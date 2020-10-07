@@ -18,18 +18,17 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
-import static java.util.Collections.emptySet;
 
-public abstract class AbstractSerializerDefCollection implements SerializerDefWithNullable {
+public abstract class AbstractSerializerDefCollection extends AbstractSerializerDef implements SerializerDefWithNullable {
 	protected final SerializerDef valueSerializer;
 	protected final Class<?> encodeType;
 	protected final Class<?> decodeType;
@@ -58,8 +57,8 @@ public abstract class AbstractSerializerDefCollection implements SerializerDefWi
 	}
 
 	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
+	public boolean isInline(int version, CompatibilityLevel compatibilityLevel) {
+		return false;
 	}
 
 	@Override
@@ -70,11 +69,6 @@ public abstract class AbstractSerializerDefCollection implements SerializerDefWi
 	@Override
 	public Class<?> getDecodeType() {
 		return decodeType;
-	}
-
-	@Override
-	public final Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return staticEncoders.define(this, encodeType, buf, pos, value, version, compatibilityLevel);
 	}
 
 	@Override
@@ -93,11 +87,6 @@ public abstract class AbstractSerializerDefCollection implements SerializerDefWi
 							writeVarInt(buf, pos, inc(call(value, "size"))),
 							forEach));
 		}
-	}
-
-	@Override
-	public final Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
 	}
 
 	@Override
@@ -121,4 +110,5 @@ public abstract class AbstractSerializerDefCollection implements SerializerDefWi
 														voidExp())),
 										instance))));
 	}
+
 }

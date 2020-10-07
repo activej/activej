@@ -22,6 +22,8 @@ import org.jetbrains.annotations.NotNull;
 @FunctionalInterface
 public interface SerializerDefBuilder {
 
+	SerializerDef serializer(Class<?> type, SerializerForType[] generics, SerializerDef target);
+
 	final class SerializerForType {
 		public final Class<?> rawType;
 		public final SerializerDef serializer;
@@ -57,8 +59,6 @@ public interface SerializerDefBuilder {
 			return rawType.getName();
 		}
 	}
-
-	SerializerDef serializer(Class<?> type, SerializerForType[] generics, SerializerDef target);
 
 	static SerializerDefBuilder of(SerializerDef serializer) {
 		return (type, generics, target) -> {

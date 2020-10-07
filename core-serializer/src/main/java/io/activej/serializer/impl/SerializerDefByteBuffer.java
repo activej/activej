@@ -18,6 +18,7 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
@@ -28,7 +29,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 import static java.util.Collections.emptySet;
 
-public final class SerializerDefByteBuffer implements SerializerDefWithNullable {
+public final class SerializerDefByteBuffer extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final boolean wrapped;
 	private final boolean nullable;
 

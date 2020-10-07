@@ -17,7 +17,6 @@
 package io.activej.serializer.annotations;
 
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.SerializerBuilder.Helper;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.impl.SerializerDefBuilder;
 import io.activej.serializer.impl.SerializerDefString;
@@ -25,9 +24,9 @@ import io.activej.serializer.impl.SerializerDefString;
 public class SerializeStringFormatHandler implements AnnotationHandler<SerializeStringFormat, SerializeStringFormatEx> {
 	@SuppressWarnings("deprecation") // compatibility
 	@Override
-	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializeStringFormat annotation, CompatibilityLevel compatibilityLevel) {
+	public SerializerDefBuilder createBuilder(Context context, SerializeStringFormat annotation) {
 		return (type, generics, target) -> {
-			if (compatibilityLevel == CompatibilityLevel.LEVEL_1) {
+			if (context.getCompatibilityLevel() == CompatibilityLevel.LEVEL_1) {
 				if (annotation.value() == StringFormat.ISO_8859_1 || annotation.value() == StringFormat.UTF8) {
 					return ((SerializerDefString) target).encoding(StringFormat.UTF8_MB3);
 				}

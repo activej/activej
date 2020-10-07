@@ -21,7 +21,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
 		ElementType.FIELD,
-		ElementType.METHOD})
+		ElementType.METHOD,
+		ElementType.TYPE})
 @Repeatable(SerializeReferenceEx.class)
 public @interface SerializeReference {
 	int[] path() default {};

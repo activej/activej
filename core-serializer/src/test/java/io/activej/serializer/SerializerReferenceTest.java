@@ -41,16 +41,21 @@ public class SerializerReferenceTest {
 		testData.string = "string";
 
 		testData.list = new ArrayList<>();
-		testData.list.add("listString1");
+		testData.list.add("string");
 		testData.list.add(null);
 		testData.map = new LinkedHashMap<>();
-		testData.map.put("1", "mapString1");
+		testData.map.put("1", "string");
 		testData.map.put("2", null);
-		testData.map.put("3", "mapString3");
+		testData.map.put("3", "string");
 
 		TestDataReferences testData1 = doTest(TestDataReferences.class, testData);
 
 		assertEquals(testData.string, testData1.string);
+		assertEquals(testData.list, testData1.list);
+		assertEquals(testData.map, testData1.map);
+		assertSame(testData1.string, testData1.list.get(0));
+		assertSame(testData1.string, testData1.map.get("1"));
+		assertSame(testData1.string, testData1.map.get("3"));
 	}
 
 	public static class Container {
@@ -122,6 +127,27 @@ public class SerializerReferenceTest {
 		assertSame(container1.cyclicReferenceA, container1.cyclicReferenceA.cyclicReferenceB.cyclicReferenceA);
 		assertSame(container1.node, container1.node.nodes.get(0).nodes.get(0));
 		assertSame(container1.node.nodes.get(0), container1.node.nodes.get(0).nodes.get(0).nodes.get(0));
+	}
+
+	@SerializeNullable
+	@SerializeReference
+	public static class ContainerCyclicReference {
+		@Serialize(order = 0)
+		public ContainerCyclicReference ref;
+	}
+
+	@Test
+	public void testContainerCyclicReference() {
+		assertNull(doTest(ContainerCyclicReference.class, (ContainerCyclicReference) null));
+
+		ContainerCyclicReference container = new ContainerCyclicReference();
+
+		ContainerCyclicReference container1 = doTest(ContainerCyclicReference.class, container);
+		assertNull(container1.ref);
+
+		container.ref = container;
+		ContainerCyclicReference container2 = doTest(ContainerCyclicReference.class, container);
+		assertSame(container2, container2.ref);
 	}
 
 }

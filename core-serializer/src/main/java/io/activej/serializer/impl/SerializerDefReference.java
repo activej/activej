@@ -18,6 +18,7 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
@@ -25,15 +26,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonMap;
 
-public final class SerializerDefReference implements SerializerDef {
+public final class SerializerDefReference extends AbstractSerializerDef implements SerializerDef {
 	public static final ThreadLocal<IdentityHashMap<Object, Integer>> MAP_ENCODE = ThreadLocal.withInitial(IdentityHashMap::new);
 	public static final ThreadLocal<HashMap<Integer, Object>> MAP_DECODE = ThreadLocal.withInitial(HashMap::new);
 
@@ -49,8 +48,8 @@ public final class SerializerDefReference implements SerializerDef {
 	}
 
 	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
+	public boolean isInline(int version, CompatibilityLevel compatibilityLevel) {
+		return false;
 	}
 
 	@Override
@@ -71,16 +70,6 @@ public final class SerializerDefReference implements SerializerDef {
 	}
 
 	@Override
-	public final Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return staticEncoders.define(this, getEncodeType(), buf, pos, value, version, compatibilityLevel);
-	}
-
-	@Override
-	public final Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
-	}
-
-	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return let(cast(call(staticField(SerializerDefReference.class, "MAP_ENCODE"), "get"), IdentityHashMap.class),
 				map -> let(call(map, "get", value),
@@ -98,21 +87,16 @@ public final class SerializerDefReference implements SerializerDef {
 		return let(cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), HashMap.class),
 				map -> let(readVarInt(in),
 						index -> {
-							Function<Expression, Expression> extraInitializer = new Function<Expression, Expression>() {
-								boolean initialized;
-								@Override
-								public Expression apply(Expression value) {
-									if (initialized) return sequence();
-									initialized = true;
-									return call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), value);
-								}
-							};
+							Function<Expression, Expression> instanceInitializer = instance -> call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), instance);
 							return ifThenElse(cmpEq(index, value(0)),
-									let(serializer.decoderEx(staticDecoders, in, version, compatibilityLevel, extraInitializer),
-											value -> sequence(
-													extraInitializer.apply(value),
-													value)),
+									serializer instanceof SerializerDefClass ?
+											((SerializerDefClass) serializer).decoderEx(staticDecoders, in, version, compatibilityLevel, instanceInitializer) :
+											let(serializer.decoder(staticDecoders, in, version, compatibilityLevel),
+													item -> sequence(
+															instanceInitializer.apply(item),
+															item)),
 									cast(call(map, "get", cast(index, Integer.class)), serializer.getDecodeType()));
 						}));
 	}
+
 }

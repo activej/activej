@@ -18,17 +18,14 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import java.util.Set;
-
 import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.codegen.util.Primitives.wrap;
-import static java.util.Collections.emptySet;
 
-public abstract class SerializerDefPrimitive implements SerializerDef {
-
+public abstract class SerializerDefPrimitive extends AbstractSerializerDef implements SerializerDef {
 	protected final Class<?> primitiveType;
 	protected final Class<?> wrappedType;
 	protected final boolean wrapped;
@@ -39,15 +36,6 @@ public abstract class SerializerDefPrimitive implements SerializerDef {
 		this.primitiveType = primitiveType;
 		this.wrappedType = wrap(primitiveType);
 		this.wrapped = wrapped;
-	}
-
-	@Override
-	public void accept(Visitor visitor) {
-	}
-
-	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
 	}
 
 	@Override

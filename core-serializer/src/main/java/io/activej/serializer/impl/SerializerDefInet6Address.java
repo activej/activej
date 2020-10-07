@@ -18,28 +18,17 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.SerializerDef;
 
 import java.net.Inet6Address;
 import java.net.NetworkInterface;
-import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.readBytes;
 import static io.activej.serializer.impl.SerializerExpressions.writeBytes;
-import static java.util.Collections.emptySet;
 
-public final class SerializerDefInet6Address implements SerializerDef {
-	@Override
-	public void accept(Visitor visitor) {
-	}
-
-	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
-	}
-
+public final class SerializerDefInet6Address extends AbstractSerializerDef {
 	@Override
 	public Class<?> getEncodeType() {
 		return Inet6Address.class;

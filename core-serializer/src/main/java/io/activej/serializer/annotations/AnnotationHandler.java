@@ -17,13 +17,24 @@
 package io.activej.serializer.annotations;
 
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.SerializerBuilder.Helper;
+import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.SerializerDefBuilder;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public interface AnnotationHandler<A extends Annotation, P extends Annotation> {
-	SerializerDefBuilder createBuilder(Helper serializerBuilder, A annotation, CompatibilityLevel compatibilityLevel);
+	interface Context {
+		SerializerDef createSerializerDef(Class<?> type, SerializerDefBuilder.SerializerForType[] generics, List<SerializerDefBuilder> mods);
+
+		CompatibilityLevel getCompatibilityLevel();
+
+		Map<String, Collection<Class<?>>> getExtraSubclassesMap();
+	}
+
+	SerializerDefBuilder createBuilder(Context context, A annotation);
 
 	int[] extractPath(A annotation);
 

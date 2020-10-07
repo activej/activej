@@ -19,19 +19,17 @@ package io.activej.memcache.protocol;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.SerializerDefWithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
-import java.util.Set;
-
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Collections.emptySet;
 
 @SuppressWarnings("unused")
-public class SerializerDefSlice implements SerializerDefWithNullable {
+public class SerializerDefSlice extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final boolean nullable;
 
 	public SerializerDefSlice() {
@@ -40,15 +38,6 @@ public class SerializerDefSlice implements SerializerDefWithNullable {
 
 	SerializerDefSlice(boolean nullable) {
 		this.nullable = nullable;
-	}
-
-	@Override
-	public void accept(Visitor visitor) {
-	}
-
-	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
 	}
 
 	@Override

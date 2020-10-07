@@ -18,20 +18,23 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.of;
-import static java.util.Collections.emptySet;
 import static org.objectweb.asm.Type.getType;
 
-public final class SerializerDefSubclass implements SerializerDefWithNullable {
+public final class SerializerDefSubclass extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final Class<?> dataType;
 	private final LinkedHashMap<Class<?>, SerializerDef> subclassSerializers;
 	private final boolean nullable;
@@ -64,18 +67,13 @@ public final class SerializerDefSubclass implements SerializerDefWithNullable {
 	}
 
 	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
+	public boolean isInline(int version, CompatibilityLevel compatibilityLevel) {
+		return false;
 	}
 
 	@Override
 	public Class<?> getEncodeType() {
 		return dataType;
-	}
-
-	@Override
-	public Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return staticEncoders.define(this, dataType, buf, pos, value, version, compatibilityLevel);
 	}
 
 	@Override
@@ -107,11 +105,6 @@ public final class SerializerDefSubclass implements SerializerDefWithNullable {
 	}
 
 	@Override
-	public Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
-	}
-
-	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(startIndex != 0 ? sub(readByte(in), value(startIndex)) : cast(readByte(in), int.class),
 				idx -> cast(
@@ -126,4 +119,5 @@ public final class SerializerDefSubclass implements SerializerDefWithNullable {
 								})),
 						dataType));
 	}
+
 }

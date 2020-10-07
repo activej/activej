@@ -16,14 +16,12 @@
 
 package io.activej.serializer.annotations;
 
-import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.SerializerBuilder.Helper;
 import io.activej.serializer.impl.SerializerDefBuilder;
 import io.activej.serializer.impl.SerializerDefWithFixedSize;
 
 public final class SerializeFixedSizeHandler implements AnnotationHandler<SerializeFixedSize, SerializeFixedSizeEx> {
 	@Override
-	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializeFixedSize annotation, CompatibilityLevel compatibilityLevel) {
+	public SerializerDefBuilder createBuilder(Context context, SerializeFixedSize annotation) {
 		return (type, generics, target) -> {
 			if (target instanceof SerializerDefWithFixedSize) {
 				return ((SerializerDefWithFixedSize) target).ensureFixedSize(annotation.value());

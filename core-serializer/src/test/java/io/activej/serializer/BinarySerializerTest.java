@@ -12,7 +12,6 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.activej.serializer.BinarySerializers.*;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static io.activej.serializer.Utils.doTest;
 import static java.lang.ClassLoader.getSystemClassLoader;
@@ -784,10 +783,11 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testVersions() {
-		SerializerBuilder builder = SerializerBuilder.create(getSystemClassLoader());
-		BinarySerializer<TestDataVersions> serializer0 = builder.withVersion(0).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer1 = builder.withVersion(1).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer2 = builder.withVersion(2).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer0 = SerializerBuilder.create().withEncodeVersion(0).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer1 = SerializerBuilder.create().withEncodeVersion(1).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer11 = SerializerBuilder.create().withVersions(1, 1, 1).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer2 = SerializerBuilder.create().withEncodeVersion(2).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer22 = SerializerBuilder.create().withVersions(2, 2, 2).build(TestDataVersions.class);
 
 		TestDataVersions testData1 = new TestDataVersions();
 		testData1.a = 10;
@@ -837,6 +837,30 @@ public class BinarySerializerTest {
 		assertEquals(testData1.c, testData2.c);
 
 		testData2 = doTest(testData1, serializer2, serializer2);
+		assertEquals(testData1.a, testData2.a);
+		assertEquals(0, testData2.b);
+		assertEquals(testData1.c, testData2.c);
+
+		testData2 = doTest(testData1, serializer11, serializer11);
+		assertEquals(testData1.a, testData2.a);
+		assertEquals(testData1.b, testData2.b);
+		assertEquals(0, testData2.c);
+
+		try {
+			testData2 = doTest(testData1, serializer0, serializer11);
+			fail();
+			assertEquals(testData1.a, testData2.a);
+			assertEquals(testData1.b, testData2.b);
+			assertEquals(0, testData2.c);
+		} catch (Exception e) {
+		}
+
+		testData2 = doTest(testData1, serializer2, serializer22);
+		assertEquals(testData1.a, testData2.a);
+		assertEquals(0, testData2.b);
+		assertEquals(testData1.c, testData2.c);
+
+		testData2 = doTest(testData1, serializer22, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
@@ -910,17 +934,17 @@ public class BinarySerializerTest {
 	public void testProfilesVersions() {
 		Class<TestDataProfiles2> type = TestDataProfiles2.class;
 		BinarySerializer<TestDataProfiles2> serializer1 = SerializerBuilder.create(getSystemClassLoader())
-				.withVersion(1)
+				.withEncodeVersion(1)
 				.build(type);
 		BinarySerializer<TestDataProfiles2> serializer2 = SerializerBuilder.create(getSystemClassLoader())
-				.withVersion(2)
+				.withEncodeVersion(2)
 				.build(type);
 
 		BinarySerializer<TestDataProfiles2> serializer1Profile = SerializerBuilder.create("profile", getSystemClassLoader())
-				.withVersion(1)
+				.withEncodeVersion(1)
 				.build(type);
 		BinarySerializer<TestDataProfiles2> serializer2Profile = SerializerBuilder.create("profile", getSystemClassLoader())
-				.withVersion(2)
+				.withEncodeVersion(2)
 				.build(type);
 
 		TestDataProfiles2 testData1 = new TestDataProfiles2();
@@ -1599,7 +1623,7 @@ public class BinarySerializerTest {
 
 		BinarySerializer<TestConstructorWithBoolean> serializer2 = SerializerBuilder
 				.create(DEFINING_CLASS_LOADER)
-				.withVersion(1)
+				.withEncodeVersion(1)
 				.build(TestConstructorWithBoolean.class);
 
 		TestConstructorWithBoolean _test = doTest(test, serializer1);
@@ -1838,7 +1862,7 @@ public class BinarySerializerTest {
 		TestGetterVersion test = TestGetterVersion.of("test", asList("a", "b"));
 		BinarySerializer<TestGetterVersion> serializerV1 = SerializerBuilder
 				.create(DEFINING_CLASS_LOADER)
-				.withVersion(1)
+				.withEncodeVersion(1)
 				.build(TestGetterVersion.class);
 
 		TestGetterVersion _testV1 = doTest(test, serializerV1);
@@ -1847,7 +1871,7 @@ public class BinarySerializerTest {
 
 		BinarySerializer<TestGetterVersion> serializerV2 = SerializerBuilder
 				.create(DEFINING_CLASS_LOADER)
-				.withVersion(2)
+				.withEncodeVersion(2)
 				.build(TestGetterVersion.class);
 
 		TestGetterVersion _testV2 = doTest(test, serializerV2);
@@ -1972,25 +1996,6 @@ public class BinarySerializerTest {
 		assertEquals(100, deserialized.getValue().intValue());
 	}
 
-	@Test
-	public void testWithExplicitEndOfMessage() {
-		BinarySerializer<List<Integer>> serializer = withExplicitEndOfMessage(ofList(INT_SERIALIZER));
-		List<Integer> ints = asList(1, 2, 3, 4, 5);
-
-		byte[] bytes = new byte[100];
-		int len = serializer.encode(bytes, 0, ints);
-		assertEquals(END_OF_MESSAGE_BYTE, bytes[len - 1]);
-		assertEquals(ints, serializer.decode(bytes, 0));
-
-		bytes[len - 1] = 0;
-		try {
-			serializer.decode(bytes, 0);
-			fail();
-		} catch (CorruptedDataException e) {
-			assertEquals("Message does not end with byte '1'", e.getMessage());
-		}
-	}
-
 	public static class TestDataFromVersion3 {
 		@Serialize(order = 0, added = 3)
 		public int a;
@@ -2024,4 +2029,23 @@ public class BinarySerializerTest {
 			assertEquals("Unsupported version", e.getMessage());
 		}
 	}
+
+	@SerializeNullable
+	public static class NullableContainer {
+		@Serialize(order = 0)
+		public int v;
+	}
+
+	@Test
+	public void testNullableContainer() {
+		NullableContainer testData1 = new NullableContainer();
+		testData1.v = 123;
+		NullableContainer testData2 = doTest(NullableContainer.class, testData1);
+		assertEquals(testData1.v, testData2.v);
+
+		testData1 = null;
+		testData2 = doTest(NullableContainer.class, testData1);
+		assertNull(testData2);
+	}
+
 }

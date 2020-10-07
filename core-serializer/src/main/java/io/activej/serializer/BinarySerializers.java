@@ -23,8 +23,6 @@ import java.util.function.Supplier;
 
 public final class BinarySerializers {
 
-	public static final byte END_OF_MESSAGE_BYTE = 1;
-
 	public static final BinarySerializer<Byte> BYTE_SERIALIZER = new BinarySerializer<Byte>() {
 		@Override
 		public int encode(byte[] array, int pos, Byte item) {
@@ -367,25 +365,6 @@ public final class BinarySerializers {
 					map.put(key.decode(in), value.decode(in));
 				}
 				return map;
-			}
-		};
-	}
-
-	public static <T> BinarySerializer<T> withExplicitEndOfMessage(BinarySerializer<T> codec) {
-		return new BinarySerializer<T>() {
-			@Override
-			public void encode(BinaryOutput out, T item) {
-				codec.encode(out, item);
-				out.writeByte(END_OF_MESSAGE_BYTE);
-			}
-
-			@Override
-			public T decode(BinaryInput in) throws CorruptedDataException {
-				T item = codec.decode(in);
-				if (in.readByte() != END_OF_MESSAGE_BYTE) {
-					throw new CorruptedDataException("Message does not end with byte '1'");
-				}
-				return item;
 			}
 		};
 	}

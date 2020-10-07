@@ -18,19 +18,17 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.util.BinaryOutputUtils;
-
-import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.StringFormat.UTF8;
 import static io.activej.serializer.util.Utils.of;
-import static java.util.Collections.emptySet;
 
-public final class SerializerDefString implements SerializerDefWithNullable {
+public final class SerializerDefString extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final StringFormat format;
 	private final boolean nullable;
 
@@ -54,15 +52,6 @@ public final class SerializerDefString implements SerializerDefWithNullable {
 
 	public SerializerDefString encoding(StringFormat format) {
 		return new SerializerDefString(format, nullable);
-	}
-
-	@Override
-	public void accept(Visitor visitor) {
-	}
-
-	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
 	}
 
 	@Override

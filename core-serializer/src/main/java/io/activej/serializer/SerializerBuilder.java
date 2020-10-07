@@ -47,7 +47,9 @@ import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.newSetFromMap;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Scans fields of classes for serialization.
@@ -56,7 +58,9 @@ import static java.util.Collections.newSetFromMap;
 public final class SerializerBuilder {
 	private final DefiningClassLoader classLoader;
 	private String profile;
-	private int version = Integer.MAX_VALUE;
+	private @Nullable Integer encodeVersion;
+	private int decodeVersionMin = 0;
+	private int decodeVersionMax = Integer.MAX_VALUE;
 	private Path saveBytecodePath;
 	private CompatibilityLevel compatibilityLevel = CompatibilityLevel.LEVEL_3;
 	private Object[] classKey = null;
@@ -69,12 +73,22 @@ public final class SerializerBuilder {
 	private final Map<Key, SerializerDef> cachedSerializers = new HashMap<>();
 	private final List<Runnable> initTasks = new ArrayList<>();
 
-	@FunctionalInterface
-	public interface Helper {
-		SerializerDef createSubclassesSerializer(Class<?> type, SerializeSubclasses serializeSubclasses);
-	}
+	private final AnnotationHandler.Context context = new AnnotationHandler.Context() {
+		@Override
+		public SerializerDef createSerializerDef(Class<?> type, SerializerForType[] generics, List<SerializerDefBuilder> mods) {
+			return SerializerBuilder.this.createSerializerDef(type, generics, mods);
+		}
 
-	private final Helper helper = this::createSubclassesSerializer;
+		@Override
+		public CompatibilityLevel getCompatibilityLevel() {
+			return compatibilityLevel;
+		}
+
+		@Override
+		public Map<String, Collection<Class<?>>> getExtraSubclassesMap() {
+			return extraSubclassesMap;
+		}
+	};
 
 	private SerializerBuilder(DefiningClassLoader classLoader) {
 		this.classLoader = classLoader;
@@ -109,9 +123,9 @@ public final class SerializerBuilder {
 				throw new IllegalArgumentException("Number of type parameters should be equal to number of generics");
 			if (target != null)
 				throw new IllegalArgumentException("Target must be null");
-			SerializeInterface annotation = type.getAnnotation(SerializeInterface.class);
-			SerializerDefClass serializer = annotation != null && annotation.impl() != void.class ?
-					SerializerDefClass.of(type, annotation.impl()) :
+			SerializeInterface serializeInterface = type.getAnnotation(SerializeInterface.class);
+			SerializerDefClass serializer = serializeInterface != null && serializeInterface.impl() != void.class ?
+					SerializerDefClass.of(type, serializeInterface.impl()) :
 					SerializerDefClass.of(type);
 			builder.initTasks.add(() -> builder.scanAnnotations(type, generics, serializer));
 			return serializer;
@@ -207,8 +221,21 @@ public final class SerializerBuilder {
 		return this;
 	}
 
-	public SerializerBuilder withVersion(int version) {
-		this.version = version;
+	public SerializerBuilder withEncodeVersion(int encodeVersion) {
+		this.encodeVersion = encodeVersion;
+		return this;
+	}
+
+	public SerializerBuilder withDecodeVersions(int decodeVersionMin, int decodeVersionMax) {
+		this.decodeVersionMin = decodeVersionMin;
+		this.decodeVersionMax = decodeVersionMax;
+		return this;
+	}
+
+	public SerializerBuilder withVersions(int encodeVersion, int decodeVersionMin, int decodeVersionMax) {
+		this.encodeVersion = encodeVersion;
+		this.decodeVersionMin = decodeVersionMin;
+		this.decodeVersionMax = decodeVersionMax;
 		return this;
 	}
 
@@ -257,56 +284,49 @@ public final class SerializerBuilder {
 		return withSubclasses(extraSubclassesId, Arrays.asList(subclasses));
 	}
 
-	public <T> void setSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
-		LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(subclasses);
-		if (subclassesSet.size() != subclasses.size())
-			throw new IllegalArgumentException("Subclasses should be unique");
-		SerializerDef subclassesSerializer = createSubclassesSerializer(type, subclassesSet, 0);
-		setSerializer(type, subclassesSerializer);
-	}
-
-	@SafeVarargs
-	public final <T> void setSubclasses(Class<T> type, Class<? extends T>... subclasses) {
-		setSubclasses(type, Arrays.asList(subclasses));
-	}
-
-	public <T> SerializerBuilder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
-		setSubclasses(type, subclasses);
-		return this;
-	}
-
-	@SafeVarargs
-	public final <T> SerializerBuilder withSubclasses(Class<T> type, Class<? extends T>... subclasses) {
-		setSubclasses(type, subclasses);
-		return this;
-	}
-
 	/**
 	 * Creates a {@code BinarySerializer} for the given type token.
 	 *
 	 * @return {@code BinarySerializer} for the given type token
 	 */
 	public <T> BinarySerializer<T> build(Class<T> type) {
-		SerializerForType[] serializerForTypes = new SerializerForType[0];
-		return build(type, serializerForTypes);
+		return build(type, new SerializerForType[0]);
 	}
 
 	public <T> BinarySerializer<T> build(Class<?> type, SerializerForType[] generics) {
-		SerializerDef serializer = createSerializerDef(type, generics, Collections.emptyList());
+		SerializerDef serializer = createSerializerDef(type, generics, emptyList());
 		//noinspection unchecked
-		return (BinarySerializer<T>) buildImpl(serializer, version);
+		return (BinarySerializer<T>) buildImpl(serializer);
 	}
 
 	public <T> BinarySerializer<T> build(SerializerDef serializer) {
 		//noinspection unchecked
-		return (BinarySerializer<T>) buildImpl(serializer, version);
+		return (BinarySerializer<T>) buildImpl(serializer);
 	}
 
+	@SuppressWarnings("rawtypes")
 	private SerializerDef createSerializerDef(Class<?> type, SerializerForType[] generics, List<SerializerDefBuilder> mods) {
+		List<SerializerDefBuilder> mods2 = new ArrayList<>(mods);
+
+		Annotation[] annotations = type.getAnnotations();
+		for (Class<? extends Annotation> annotationType : annotationsMap.keySet()) {
+			AnnotationHandler annotationHandler = annotationsMap.get(annotationType);
+			for (Annotation annotation : annotations) {
+				if (annotation.annotationType() == annotationType) {
+					SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(context, annotation);
+					mods2.add(serializerDefBuilder);
+				}
+			}
+		}
+
+		return createSerializerDef2(type, generics, mods2);
+	}
+
+	private SerializerDef createSerializerDef2(Class<?> type, SerializerForType[] generics, List<SerializerDefBuilder> mods) {
 		Key key = new Key(type, generics, mods);
 		SerializerDef serializer = cachedSerializers.get(key);
 		if (serializer == null) {
-			serializer = createNewSerializer(type, generics, mods);
+			serializer = createSerializerDef3(type, generics, mods);
 			cachedSerializers.put(key, serializer);
 		}
 		while (!initTasks.isEmpty()) {
@@ -315,9 +335,9 @@ public final class SerializerBuilder {
 		return serializer;
 	}
 
-	private SerializerDef createNewSerializer(Class<?> type, SerializerForType[] generics, List<SerializerDefBuilder> mods) {
+	private SerializerDef createSerializerDef3(Class<?> type, SerializerForType[] generics, List<SerializerDefBuilder> mods) {
 		if (!mods.isEmpty()) {
-			SerializerDef serializer = createSerializerDef(type, generics, mods.subList(0, mods.size() - 1));
+			SerializerDef serializer = createSerializerDef2(type, generics, mods.subList(0, mods.size() - 1));
 			SerializerDefBuilder last = mods.get(mods.size() - 1);
 			return last.serializer(type, generics, serializer);
 		}
@@ -329,11 +349,6 @@ public final class SerializerBuilder {
 			return new SerializerDefArray(itemSerializer, type);
 		}
 
-		SerializeSubclasses serializeSubclasses = type.getAnnotation(SerializeSubclasses.class);
-		if (serializeSubclasses != null) {
-			return createSubclassesSerializer(type, serializeSubclasses);
-		}
-
 		Class<?> key = findKey(type, typeMap.keySet());
 		SerializerDefBuilder builder = typeMap.get(key);
 		if (builder == null) {
@@ -343,38 +358,6 @@ public final class SerializerBuilder {
 		if (serializer == null)
 			throw new NullPointerException();
 		return serializer;
-	}
-
-	private SerializerDef createSubclassesSerializer(Class<?> type, SerializeSubclasses serializeSubclasses) {
-		LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(Arrays.asList(serializeSubclasses.value()));
-		if (subclassesSet.size() != serializeSubclasses.value().length)
-			throw new IllegalArgumentException("Subclasses should be unique");
-
-		if (!serializeSubclasses.extraSubclassesId().isEmpty()) {
-			Collection<Class<?>> registeredSubclasses = extraSubclassesMap.get(serializeSubclasses.extraSubclassesId());
-			if (registeredSubclasses != null) {
-				subclassesSet.addAll(registeredSubclasses);
-			}
-		}
-		return createSubclassesSerializer(type, subclassesSet, serializeSubclasses.startIndex());
-	}
-
-	private SerializerDef createSubclassesSerializer(Class<?> type, @NotNull LinkedHashSet<Class<?>> subclassesSet,
-			int startIndex) {
-		if (subclassesSet.isEmpty()) throw new IllegalArgumentException("Set of subclasses should not be empty");
-		LinkedHashMap<Class<?>, SerializerDef> subclasses = new LinkedHashMap<>();
-		for (Class<?> subclass : subclassesSet) {
-			if (subclass.getTypeParameters().length != 0)
-				throw new IllegalArgumentException("Subclass should have no type parameters");
-			if (!type.isAssignableFrom(subclass))
-				throw new IllegalArgumentException(format("Unrelated subclass '%s' for '%s'", subclass, type));
-
-			subclasses.put(subclass, createSerializerDef(
-					subclass,
-					new SerializerForType[]{},
-					Collections.emptyList()));
-		}
-		return new SerializerDefSubclass(type, subclasses, startIndex);
 	}
 
 	@Nullable
@@ -401,7 +384,7 @@ public final class SerializerBuilder {
 			AnnotationHandler annotationHandler = entry.getValue();
 			for (Annotation annotation : annotations) {
 				if (annotation.annotationType() == entry.getKey()) {
-					SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(helper, annotation, compatibilityLevel);
+					SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(context, annotation);
 					Builder child = rootBuilder.ensureChild(annotationHandler.extractPath(annotation));
 					child.add(serializerDefBuilder);
 				}
@@ -409,7 +392,7 @@ public final class SerializerBuilder {
 			for (Annotation annotationEx : annotations) {
 				if (annotationEx.annotationType() == annotationExType) {
 					for (Annotation annotation : annotationHandler.extractList(annotationEx)) {
-						SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(helper, annotation, compatibilityLevel);
+						SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(context, annotation);
 						Builder child = rootBuilder.ensureChild(annotationHandler.extractPath(annotation));
 						child.add(serializerDefBuilder);
 					}
@@ -420,7 +403,7 @@ public final class SerializerBuilder {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public SerializerForType resolveSerializer(Class<?> classType, SerializerForType[] classGenerics, Type genericType, TypedModsMap typedModsMap) {
+	private SerializerForType resolveSerializer(Class<?> classType, SerializerForType[] classGenerics, Type genericType, TypedModsMap typedModsMap) {
 		if (genericType instanceof TypeVariable) {
 			String typeVariableName = ((TypeVariable) genericType).getName();
 
@@ -806,10 +789,7 @@ public final class SerializerBuilder {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private BinarySerializer<?> buildImpl(SerializerDef serializer, int serializeVersion) {
-		if (serializeVersion < 0)
-			throw new IllegalArgumentException("serializerVersion is negative");
-
+	private BinarySerializer<?> buildImpl(SerializerDef serializer) {
 		ClassBuilder<BinarySerializer> classBuilder = ClassBuilder.create(classLoader, BinarySerializer.class).withClassKey(classKey);
 		if (saveBytecodePath != null) {
 			classBuilder.withBytecodeSaveDir(saveBytecodePath);
@@ -835,32 +815,34 @@ public final class SerializerBuilder {
 		};
 		visitor.visit(serializer);
 
-		List<Integer> versions = new ArrayList<>(collectedVersions);
-		List<Integer> allVersions = new ArrayList<>(collectedVersions);
-		versions.removeIf(v -> v > serializeVersion);
-		Collections.sort(versions);
-		Collections.sort(allVersions);
-		Integer currentVersion = !allVersions.isEmpty() && versions.isEmpty() ?
-				Integer.valueOf(serializeVersion) :
-				getLatestVersion(versions);
+		Integer encodeVersion = this.encodeVersion != null ?
+				this.encodeVersion :
+				collectedVersions.isEmpty() ?
+						null :
+						collectedVersions.stream().mapToInt(Integer::intValue).max().getAsInt();
 
-		defineEncoders(classBuilder, serializer, currentVersion,
+		List<Integer> decodeVersions = collectedVersions.stream()
+				.filter(v -> v >= decodeVersionMin && v <= decodeVersionMax)
+				.sorted()
+				.collect(toList());
+
+		defineEncoders(classBuilder, serializer, encodeVersion,
 				new ArrayList<>(encoderInitializers.values()), new ArrayList<>(encoderFinalizers.values()));
 
-		defineDecoders(classBuilder, serializer, allVersions,
+		defineDecoders(classBuilder, serializer, decodeVersions,
 				new ArrayList<>(decoderInitializers.values()), new ArrayList<>(decoderFinalizers.values()));
 
 		return classBuilder.buildClassAndCreateNewInstance();
 	}
 
-	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer currentVersion,
+	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer encodeVersion,
 			List<Expression> encoderInitializers, List<Expression> encoderFinalizers) {
 		StaticEncoders staticEncoders = staticEncoders(classBuilder);
 
 		classBuilder.withMethod("encode", int.class, asList(byte[].class, int.class, Object.class), methodBody(
 				encoderInitializers, encoderFinalizers,
 				let(cast(arg(2), serializer.getEncodeType()), data ->
-						encoderImpl(classBuilder, serializer, currentVersion, staticEncoders, arg(0), arg(1), data))));
+						encoderImpl(classBuilder, serializer, encodeVersion, staticEncoders, arg(0), arg(1), data))));
 
 		classBuilder.withMethod("encode", void.class, asList(BinaryOutput.class, Object.class), methodBody(
 				encoderInitializers, encoderFinalizers,
@@ -868,29 +850,29 @@ public final class SerializerBuilder {
 						let(call(arg(0), "pos"), pos ->
 								let(cast(arg(1), serializer.getEncodeType()), data ->
 										sequence(
-												encoderImpl(classBuilder, serializer, currentVersion, staticEncoders, buf, pos, data),
+												encoderImpl(classBuilder, serializer, encodeVersion, staticEncoders, buf, pos, data),
 												call(arg(0), "pos", pos)))))));
 	}
 
-	private Expression encoderImpl(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer currentVersion, StaticEncoders staticEncoders, Expression buf, Variable pos, Expression data) {
+	private Expression encoderImpl(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer encodeVersion, StaticEncoders staticEncoders, Expression buf, Variable pos, Expression data) {
 		return sequence(
-				currentVersion != null ?
-						writeByte(buf, pos, value((byte) (int) currentVersion)) :
+				encodeVersion != null ?
+						writeByte(buf, pos, value((byte) (int) encodeVersion)) :
 						sequence(),
 
 				serializer.encoder(staticEncoders,
 						buf, pos, data,
-						currentVersion != null ? currentVersion : 0,
+						encodeVersion != null ? encodeVersion : 0,
 						compatibilityLevel),
 
 				pos);
 	}
 
-	private void defineDecoders(ClassBuilder<?> classBuilder, SerializerDef serializer, List<Integer> allVersions,
+	private void defineDecoders(ClassBuilder<?> classBuilder, SerializerDef serializer, List<Integer> decodeVersions,
 			List<Expression> decoderInitializers, List<Expression> decoderFinalizers) {
 		StaticDecoders staticDecoders = staticDecoders(classBuilder);
 
-		Integer latestVersion = getLatestVersion(allVersions);
+		Integer latestVersion = decodeVersions.isEmpty() ? null : decodeVersions.get(decodeVersions.size() - 1);
 		classBuilder.withMethod("decode", Object.class, asList(BinaryInput.class), methodBody(
 				decoderInitializers, decoderFinalizers,
 				decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, arg(0))));
@@ -906,16 +888,16 @@ public final class SerializerBuilder {
 				of(() -> {
 					List<Expression> listKey = new ArrayList<>();
 					List<Expression> listValue = new ArrayList<>();
-					for (int i = allVersions.size() - 2; i >= 0; i--) {
-						int version = allVersions.get(i);
+					for (int i = decodeVersions.size() - 2; i >= 0; i--) {
+						int version = decodeVersions.get(i);
 						listKey.add(value((byte) version));
 						listValue.add(call(self(), "decodeVersion" + version, arg(0)));
 					}
 					return switchByKey(arg(1), listKey, listValue, throwException(CorruptedDataException.class, value("Unsupported version")));
 				}));
 
-		for (int i = allVersions.size() - 2; i >= 0; i--) {
-			int version = allVersions.get(i);
+		for (int i = decodeVersions.size() - 2; i >= 0; i--) {
+			int version = decodeVersions.get(i);
 			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), asList(BinaryInput.class),
 					sequence(serializer.defineDecoder(staticDecoders,
 							arg(0), version, compatibilityLevel)));
@@ -926,7 +908,7 @@ public final class SerializerBuilder {
 		if (initializers.isEmpty() && finalizers.isEmpty()) return body;
 		return finalizers.isEmpty() ?
 				sequence(sequence(initializers), body) :
-				sequence(sequence(initializers), let(body, v -> sequence(body, sequence(finalizers), v)));
+				sequence(sequence(initializers), let(body, v -> sequence(sequence(finalizers), v)));
 	}
 
 	private Expression decodeImpl(ClassBuilder<?> classBuilder, SerializerDef serializer, Integer latestVersion, StaticDecoders staticDecoders,
@@ -1001,11 +983,6 @@ public final class SerializerBuilder {
 				return ClassBuilder.create(classLoader, type);
 			}
 		};
-	}
-
-	@Nullable
-	private Integer getLatestVersion(List<Integer> versions) {
-		return versions.isEmpty() ? null : versions.get(versions.size() - 1);
 	}
 
 	private static final class Key {

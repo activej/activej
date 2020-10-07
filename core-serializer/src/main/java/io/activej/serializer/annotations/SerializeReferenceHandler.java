@@ -16,14 +16,12 @@
 
 package io.activej.serializer.annotations;
 
-import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.SerializerBuilder.Helper;
 import io.activej.serializer.impl.SerializerDefBuilder;
 import io.activej.serializer.impl.SerializerDefReference;
 
 public final class SerializeReferenceHandler implements AnnotationHandler<SerializeReference, SerializeReferenceEx> {
 	@Override
-	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializeReference annotation, CompatibilityLevel compatibilityLevel) {
+	public SerializerDefBuilder createBuilder(Context context, SerializeReference annotation) {
 		return (type, generics, target) -> {
 			if (type.isPrimitive())
 				throw new IllegalArgumentException("Type must not represent a primitive type");

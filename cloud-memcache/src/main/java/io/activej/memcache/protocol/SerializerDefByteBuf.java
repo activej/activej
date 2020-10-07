@@ -20,19 +20,17 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.SerializerDefWithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
-import java.util.Set;
-
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Collections.emptySet;
 
 @SuppressWarnings("unused")
-public class SerializerDefByteBuf implements SerializerDefWithNullable {
+public class SerializerDefByteBuf extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final boolean writeWithRecycle;
 	private final boolean wrap;
 	private final boolean nullable;
@@ -50,15 +48,6 @@ public class SerializerDefByteBuf implements SerializerDefWithNullable {
 	@Override
 	public SerializerDef ensureNullable() {
 		return new SerializerDefByteBuf(writeWithRecycle, wrap, true);
-	}
-
-	@Override
-	public void accept(Visitor visitor) {
-	}
-
-	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
 	}
 
 	@Override

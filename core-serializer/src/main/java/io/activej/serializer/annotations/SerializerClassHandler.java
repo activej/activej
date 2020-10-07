@@ -16,8 +16,6 @@
 
 package io.activej.serializer.annotations;
 
-import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.SerializerBuilder.Helper;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.SerializerDefBuilder;
 
@@ -25,7 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public final class SerializerClassHandler implements AnnotationHandler<SerializerClass, SerializerClassEx> {
 	@Override
-	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializerClass annotation, CompatibilityLevel compatibilityLevel) {
+	public SerializerDefBuilder createBuilder(Context context, SerializerClass annotation) {
 		try {
 			SerializerDef serializer = annotation.value().getDeclaredConstructor().newInstance();
 			return SerializerDefBuilder.of(serializer);

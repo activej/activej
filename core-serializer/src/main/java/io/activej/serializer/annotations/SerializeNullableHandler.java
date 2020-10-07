@@ -16,8 +16,6 @@
 
 package io.activej.serializer.annotations;
 
-import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.SerializerBuilder.Helper;
 import io.activej.serializer.impl.SerializerDefBuilder;
 import io.activej.serializer.impl.SerializerDefNullable;
 import io.activej.serializer.impl.SerializerDefString;
@@ -27,13 +25,13 @@ import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 public final class SerializeNullableHandler implements AnnotationHandler<SerializeNullable, SerializeNullableEx> {
 	@Override
-	public SerializerDefBuilder createBuilder(Helper serializerBuilder, SerializeNullable annotation, CompatibilityLevel compatibilityLevel) {
+	public SerializerDefBuilder createBuilder(Context context, SerializeNullable annotation) {
 		return (type, generics, target) -> {
 			if (type.isPrimitive())
 				throw new IllegalArgumentException("Type must not represent a primitive type");
 			if (target instanceof SerializerDefString)
 				return ((SerializerDefString) target).ensureNullable();
-			if (compatibilityLevel.compareTo(LEVEL_3) >= 0 && target instanceof SerializerDefWithNullable) {
+			if (context.getCompatibilityLevel().compareTo(LEVEL_3) >= 0 && target instanceof SerializerDefWithNullable) {
 				return ((SerializerDefWithNullable) target).ensureNullable();
 			}
 			return new SerializerDefNullable(target);

@@ -18,17 +18,15 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
-
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
-import static java.util.Collections.emptySet;
 
-public final class SerializerDefArray implements SerializerDefWithNullable, SerializerDefWithFixedSize {
+public final class SerializerDefArray extends AbstractSerializerDef implements SerializerDefWithNullable, SerializerDefWithFixedSize {
 	private final SerializerDef valueSerializer;
 	private final int fixedSize;
 	private final Class<?> type;
@@ -64,22 +62,13 @@ public final class SerializerDefArray implements SerializerDefWithNullable, Seri
 	}
 
 	@Override
-	public Set<Integer> getVersions() {
-		return emptySet();
+	public boolean isInline(int version, CompatibilityLevel compatibilityLevel) {
+		return type.getComponentType() == Byte.TYPE;
 	}
 
 	@Override
 	public Class<?> getEncodeType() {
 		return Object.class;
-	}
-
-	@Override
-	public Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		if (type.getComponentType() == Byte.TYPE) {
-			return encoder(staticEncoders, buf, pos, value, version, compatibilityLevel);
-		} else {
-			return staticEncoders.define(this, type, buf, pos, value, version, compatibilityLevel);
-		}
 	}
 
 	@Override
@@ -117,15 +106,6 @@ public final class SerializerDefArray implements SerializerDefWithNullable, Seri
 								writeVarInt(buf, pos, inc(methodLength)),
 								writeCollection));
 			}
-		}
-	}
-
-	@Override
-	public Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		if (type.getComponentType() == Byte.TYPE) {
-			return decoder(staticDecoders, in, version, compatibilityLevel);
-		} else {
-			return staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
 		}
 	}
 
