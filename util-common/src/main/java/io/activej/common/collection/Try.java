@@ -61,14 +61,20 @@ public final class Try<T> {
 	}
 
 	public static <T> Try<T> wrap(@NotNull Supplier<T> computation) {
-		return getTry(computation);
+		try {
+			return new Try<>(computation.get(), null);
+		} catch (Exception e) {
+			return sneakyCatch(e, () -> new Try<>(null, e));
+		}
 	}
 
 	public static <T> Try<T> wrap(@NotNull Runnable computation) {
-		return getTry(() -> {
+		try {
 			computation.run();
-			return null;
-		});
+			return new Try<>(null, null);
+		} catch (Exception e) {
+			return sneakyCatch(e, () -> new Try<>(null, e));
+		}
 	}
 
 	public static <T> Try<T> wrap(@NotNull Callable<? extends T> computation) {
@@ -227,7 +233,11 @@ public final class Try<T> {
 	@NotNull
 	public <U> Try<U> map(@NotNull Function<T, U> function) {
 		if (throwable == null) {
-			return getTry(() -> function.apply(result));
+			try {
+				return new Try<>(function.apply(result), null);
+			} catch (Exception e) {
+				return sneakyCatch(e, () -> new Try<>(null, e));
+			}
 		}
 		return mold();
 	}
@@ -263,13 +273,5 @@ public final class Try<T> {
 	@Override
 	public String toString() {
 		return "{" + (isSuccess() ? "" + result : "" + throwable) + "}";
-	}
-
-	private static <T> Try<T> getTry(Supplier<T> resultSupplier) {
-		try {
-			return new Try<>(resultSupplier.get(), null);
-		} catch (Exception e) {
-			return sneakyCatch(e, () -> new Try<>(null, e));
-		}
 	}
 }

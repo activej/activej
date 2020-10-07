@@ -27,9 +27,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static io.activej.common.Utils.sneakyCatch;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-import static io.activej.promise.Promises.sneakyCatch;
 
 /**
  * Represents a completed {@code Promise} with a result of unspecified type.
@@ -78,30 +78,50 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@NotNull
 	@Override
 	public final <U> Promise<U> map(@NotNull Function<? super T, ? extends U> fn) {
-		return sneakyCatch(() -> Promise.of(fn.apply(getResult())));
+		try {
+			return Promise.of(fn.apply(getResult()));
+		} catch (Exception e) {
+			return sneakyCatch(e, () -> Promise.ofException(e));
+		}
 	}
 
 	@NotNull
 	@Override
 	public final <U> Promise<U> mapEx(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
-		return sneakyCatch(() -> Promise.of(fn.apply(getResult(), null)));
+		try {
+			return Promise.of(fn.apply(getResult(), null));
+		} catch (Exception e) {
+			return sneakyCatch(e, () -> Promise.ofException(e));
+		}
 	}
 
 	@NotNull
 	@Override
 	public final <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn) {
-		return sneakyCatch(() -> fn.apply(getResult()));
+		try {
+			return (Promise<U>) fn.apply(getResult());
+		} catch (Exception e) {
+			return sneakyCatch(e, () -> Promise.ofException(e));
+		}
 	}
 
 	@Override
 	public @NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn) {
-		return sneakyCatch(fn::get);
+		try {
+			return (Promise<U>) fn.get();
+		} catch (Exception e) {
+			return sneakyCatch(e, () -> Promise.ofException(e));
+		}
 	}
 
 	@NotNull
 	@Override
 	public final <U> Promise<U> thenEx(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
-		return sneakyCatch(() -> fn.apply(getResult(), null));
+		try {
+			return (Promise<U>) fn.apply(getResult(), null);
+		} catch (Exception e) {
+			return sneakyCatch(e, () -> Promise.ofException(e));
+		}
 	}
 
 	@NotNull

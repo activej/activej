@@ -111,7 +111,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 			try {
 				computation.run();
 			} catch (Exception e) {
-				sneakyCatch(e ,future::completeExceptionally);
+				sneakyCatch(e, future::completeExceptionally);
 				return;
 			} finally {
 				complete();

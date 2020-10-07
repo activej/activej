@@ -437,7 +437,7 @@ public final class Promises {
 			if (promise.isComplete()) {
 				T result = promise.getResult();
 				if (predicate.test(result, promise.getException())) {
-					if (ownership){
+					if (ownership) {
 						promises.forEachRemaining(Recyclers::recycle);
 					} else {
 						Recyclers.recycle(promises);
@@ -1288,16 +1288,6 @@ public final class Promises {
 			}
 			return promise;
 		};
-	}
-
-	static <T> Promise<T> sneakyCatch(Supplier<Promise<? extends T>> promiseSupplier){
-		try{
-			return (Promise<T>) promiseSupplier.get();
-		} catch (RuntimeException e){
-			throw e;
-		} catch (Exception e){
-			return Promise.ofException(e);
-		}
 	}
 
 	// region helper classes
