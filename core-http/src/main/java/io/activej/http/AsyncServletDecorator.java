@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.*;
 
+import static io.activej.common.Utils.sneakyCatch;
 import static io.activej.http.AsyncServlet.firstSuccessful;
 import static java.util.Arrays.asList;
 
@@ -203,10 +204,8 @@ public interface AsyncServletDecorator {
 				request -> {
 					try {
 						return servlet.serve(request);
-					} catch (RuntimeException e) {
-						throw e;
 					} catch (Exception e) {
-						return Promise.ofException(e);
+						return sneakyCatch(e, () -> Promise.ofException(e));
 					}
 				};
 	}

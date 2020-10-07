@@ -36,6 +36,7 @@ import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.promise.Promises.sneakyCatch;
 
 /**
  * Replacement of default Java {@link CompletionStage} interface with
@@ -95,14 +96,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull
 	static <T> Promise<T> ofCallback(@NotNull Consumer<@NotNull SettablePromise<T>> callbackConsumer) {
 		SettablePromise<T> cb = new SettablePromise<>();
-		try {
+		return sneakyCatch(() -> {
 			callbackConsumer.accept(cb);
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			return Promise.ofException(e);
-		}
-		return cb;
+			return cb;
+		});
 	}
 
 	/**

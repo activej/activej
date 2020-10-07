@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collector;
 
 import static io.activej.common.Utils.nullify;
+import static io.activej.common.Utils.sneakyCatch;
 
 final class StreamConsumers {
 
@@ -65,10 +66,8 @@ final class StreamConsumers {
 			resume(item -> {
 				try {
 					consumer.accept(item);
-				} catch (RuntimeException e) {
-					throw e;
 				} catch (Exception e) {
-					closeEx(e);
+					sneakyCatch(e, this::closeEx);
 				}
 			});
 		}

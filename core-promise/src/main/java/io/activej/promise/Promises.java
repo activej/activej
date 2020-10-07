@@ -1290,6 +1290,16 @@ public final class Promises {
 		};
 	}
 
+	static <T> Promise<T> sneakyCatch(Supplier<Promise<? extends T>> promiseSupplier){
+		try{
+			return (Promise<T>) promiseSupplier.get();
+		} catch (RuntimeException e){
+			throw e;
+		} catch (Exception e){
+			return Promise.ofException(e);
+		}
+	}
+
 	// region helper classes
 	private static final class PromiseAll<T> extends NextPromise<T, Void> {
 		int countdown = 1;

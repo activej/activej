@@ -19,6 +19,7 @@ package io.activej.promise;
 import io.activej.async.callback.Callback;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
+import io.activej.common.Utils;
 import io.activej.common.collection.Try;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Async;
@@ -36,6 +37,7 @@ import java.util.regex.Pattern;
 import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.promise.Promises.sneakyCatch;
 
 @SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
 abstract class AbstractPromise<T> implements Promise<T> {
@@ -183,13 +185,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@Override
 	public <U> Promise<U> map(@NotNull Function<? super T, ? extends U> fn) {
 		if (isComplete()) {
-			try {
-				return isResult() ? Promise.of(fn.apply(result)) : (Promise<U>) this;
-			} catch (RuntimeException e) {
-				throw e;
-			} catch (Exception e) {
-				return Promise.ofException(e);
-			}
+			return isResult() ? sneakyCatch(() -> Promise.of(fn.apply(result))) : (Promise<U>) this;
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
 			@Override
@@ -198,10 +194,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					U newResult;
 					try {
 						newResult = fn.apply(result);
-					} catch (RuntimeException e2) {
-						throw e2;
 					} catch (Exception e2) {
-						completeExceptionally(e2);
+						Utils.sneakyCatch(e2, this::completeExceptionally);
 						return;
 					}
 					complete(newResult);
@@ -223,13 +217,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@Override
 	public <U> Promise<U> mapEx(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
 		if (isComplete()) {
-			try {
-				return Promise.of(fn.apply(result, exception));
-			} catch (RuntimeException e) {
-				throw e;
-			} catch (Exception e) {
-				return Promise.ofException(e);
-			}
+			return sneakyCatch(() -> Promise.of(fn.apply(result, exception)));
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
 			@Override
@@ -238,10 +226,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					U newResult;
 					try {
 						newResult = fn.apply(result, null);
-					} catch (RuntimeException e2) {
-						throw e2;
 					} catch (Exception e2) {
-						completeExceptionally(e2);
+						Utils.sneakyCatch(e2, this::completeExceptionally);
 						return;
 					}
 					complete(newResult);
@@ -249,10 +235,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					U newResult;
 					try {
 						newResult = fn.apply(null, e);
-					} catch (RuntimeException e2) {
-						throw e2;
 					} catch (Exception e2) {
-						completeExceptionally(e2);
+						Utils.sneakyCatch(e2, this::completeExceptionally);
 						return;
 					}
 					complete(newResult);
@@ -272,13 +256,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@Override
 	public <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn) {
 		if (isComplete()) {
-			try {
-				return isResult() ? (Promise<U>) fn.apply(result) : (Promise<U>) this;
-			} catch (RuntimeException e) {
-				throw e;
-			} catch (Exception e) {
-				return Promise.ofException(e);
-			}
+			return isResult() ? sneakyCatch(() -> fn.apply(result)) : (Promise<U>) this;
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
 			@Override
@@ -287,10 +265,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(result);
-					} catch (RuntimeException e2) {
-						throw e2;
 					} catch (Exception e2) {
-						completeExceptionally(e2);
+						Utils.sneakyCatch(e2, this::completeExceptionally);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -311,13 +287,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@Override
 	public @NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn) {
 		if (isComplete()) {
-			try {
-				return isResult() ? (Promise<U>) fn.get() : (Promise<U>) this;
-			} catch (RuntimeException e) {
-				throw e;
-			} catch (Exception e) {
-				return Promise.ofException(e);
-			}
+			return isResult() ? sneakyCatch(fn::get) : (Promise<U>) this;
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
 			@Override
@@ -326,10 +296,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.get();
-					} catch (RuntimeException e2) {
-						throw e2;
 					} catch (Exception e2) {
-						completeExceptionally(e2);
+						Utils.sneakyCatch(e2, this::completeExceptionally);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -351,13 +319,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@Override
 	public <U> Promise<U> thenEx(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		if (isComplete()) {
-			try {
-				return (Promise<U>) fn.apply(result, exception);
-			} catch (RuntimeException e) {
-				throw e;
-			} catch (Exception e) {
-				return Promise.ofException(e);
-			}
+			return sneakyCatch(() -> fn.apply(result, exception));
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
 			@Override
@@ -366,10 +328,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(result, null);
-					} catch (RuntimeException e2) {
-						throw e2;
 					} catch (Exception e2) {
-						completeExceptionally(e2);
+						Utils.sneakyCatch(e2, this::completeExceptionally);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -377,10 +337,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(null, e);
-					} catch (RuntimeException e2) {
-						throw e2;
 					} catch (Exception e2) {
-						completeExceptionally(e2);
+						Utils.sneakyCatch(e2, this::completeExceptionally);
 						return;
 					}
 					promise.whenComplete(this::complete);

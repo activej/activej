@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.BiConsumer;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.sneakyCatch;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class AsyncAccumulator<A> implements AsyncCloseable {
@@ -79,10 +80,8 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 			if (e == null) {
 				try {
 					consumer.accept(accumulator, v);
-				} catch (RuntimeException e2) {
-					throw e2;
 				} catch (Exception e2) {
-					resultPromise.setException(e2);
+					sneakyCatch(e2, resultPromise::setException);
 					Recyclers.recycle(accumulator);
 					return;
 				}

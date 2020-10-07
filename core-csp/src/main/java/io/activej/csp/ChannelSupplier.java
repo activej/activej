@@ -40,6 +40,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.activej.common.Utils.sneakyCatch;
 import static java.util.Arrays.asList;
 
 /**
@@ -337,10 +338,8 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 							if (value != null) {
 								try {
 									return fn.apply(value);
-								} catch (RuntimeException e) {
-									throw e;
 								} catch (Exception e) {
-									ChannelSupplier.this.closeEx(e);
+									sneakyCatch(e, ChannelSupplier.this::closeEx);
 									throw e;
 								}
 							} else {

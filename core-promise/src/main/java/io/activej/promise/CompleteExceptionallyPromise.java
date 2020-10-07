@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.promise.Promises.sneakyCatch;
 
 /**
  * Represents a {@code Promise} which is completed with an exception.
@@ -88,13 +89,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@NotNull
 	@Override
 	public <U> Promise<U> mapEx(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
-		try {
-			return Promise.of(fn.apply(null, exception));
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			return Promise.ofException(e);
-		}
+		return sneakyCatch(() -> Promise.of(fn.apply(null, exception)));
 	}
 
 	@NotNull
@@ -110,17 +105,10 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		return (Promise<U>) this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@NotNull
 	@Override
 	public <U> Promise<U> thenEx(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
-		try {
-			return (Promise<U>) fn.apply(null, exception);
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			return Promise.ofException(e);
-		}
+		return sneakyCatch(() -> fn.apply(null, exception));
 	}
 
 	@NotNull

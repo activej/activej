@@ -30,6 +30,7 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.sneakyCatch;
 
 public final class Try<T> {
 	static {
@@ -74,10 +75,8 @@ public final class Try<T> {
 		try {
 			@Nullable T result = computation.call();
 			return new Try<>(result, null);
-		} catch (RuntimeException e) {
-			throw e;
 		} catch (Exception e) {
-			return new Try<>(null, e);
+			return sneakyCatch(e, () -> new Try<>(null, e));
 		}
 	}
 
@@ -269,10 +268,8 @@ public final class Try<T> {
 	private static <T> Try<T> getTry(Supplier<T> resultSupplier) {
 		try {
 			return new Try<>(resultSupplier.get(), null);
-		} catch (RuntimeException e) {
-			throw e;
 		} catch (Exception e) {
-			return new Try<>(null, e);
+			return sneakyCatch(e, () -> new Try<>(null, e));
 		}
 	}
 }

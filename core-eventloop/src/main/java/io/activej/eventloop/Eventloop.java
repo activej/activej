@@ -63,6 +63,7 @@ import java.util.function.Supplier;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullToSupplier;
+import static io.activej.common.Utils.sneakyCatch;
 import static io.activej.eventloop.util.Utils.tryToOptimizeSelector;
 import static java.util.Collections.emptyIterator;
 
@@ -1096,10 +1097,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		execute(() -> {
 			try {
 				computation.run();
-			} catch (RuntimeException e) {
-				throw e;
 			} catch (Exception e) {
-				future.completeExceptionally(e);
+				sneakyCatch(e, future::completeExceptionally);
 				return;
 			}
 			future.complete(null);
@@ -1120,10 +1119,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 						future.completeExceptionally(e);
 					}
 				});
-			} catch (RuntimeException e) {
-				throw e;
 			} catch (Exception e) {
-				future.completeExceptionally(e);
+				sneakyCatch(e, future::completeExceptionally);
 			}
 		});
 		return future;

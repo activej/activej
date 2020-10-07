@@ -36,6 +36,7 @@ import java.util.Arrays;
 import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.sneakyCatch;
 import static io.activej.csp.ChannelSupplier.ofLazyProvider;
 import static io.activej.csp.ChannelSuppliers.concat;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -277,10 +278,8 @@ final class HttpServerConnection extends AbstractHttpConnection {
 		Promise<HttpResponse> servletResult;
 		try {
 			servletResult = servlet.serveAsync(request);
-		} catch (RuntimeException e) {
-			throw e;
 		} catch (Exception e) {
-			servletResult = Promise.ofException(e);
+			servletResult = sneakyCatch(e, () -> Promise.ofException(e));
 		}
 		servletResult.whenComplete((response, e) -> {
 			if (CHECK) checkState(eventloop.inEventloopThread());

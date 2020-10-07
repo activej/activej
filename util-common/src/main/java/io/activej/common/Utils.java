@@ -221,4 +221,19 @@ public class Utils {
 
 		throw (E) e;
 	}
+
+	public static <T, E extends Exception> T sneakyCatch(E e, Supplier<T> resultSupplier) {
+		if (e instanceof RuntimeException) throw (RuntimeException) e;
+		return resultSupplier.get();
+	}
+
+	public static <E extends Exception> void sneakyCatch(E e, Consumer<E> exceptionConsumer) {
+		if (e instanceof RuntimeException) throw (RuntimeException) e;
+		exceptionConsumer.accept(e);
+	}
+
+	public static <E extends Exception> void sneakyCatch(E e, Runnable runnable) {
+		if (e instanceof RuntimeException) throw (RuntimeException) e;
+		runnable.run();
+	}
 }

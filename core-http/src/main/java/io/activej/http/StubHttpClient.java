@@ -21,6 +21,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 
+import static io.activej.common.Utils.sneakyCatch;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
@@ -43,10 +44,8 @@ public final class StubHttpClient implements IAsyncHttpClient {
 		Promise<HttpResponse> servletResult;
 		try {
 			servletResult = servlet.serveAsync(request);
-		} catch (RuntimeException e) {
-			throw e;
 		} catch (Exception e) {
-			servletResult = Promise.ofException(e);
+			servletResult = sneakyCatch(e, () -> Promise.ofException(e));
 		}
 		return servletResult.thenEx((res, e) -> {
 			request.recycle();

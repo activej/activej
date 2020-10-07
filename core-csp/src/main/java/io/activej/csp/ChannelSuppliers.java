@@ -44,8 +44,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
-import static io.activej.common.Utils.nullify;
-import static io.activej.common.Utils.sneakyThrow;
+import static io.activej.common.Utils.*;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
@@ -136,11 +135,11 @@ public final class ChannelSuppliers {
 			if (item != null) {
 				try {
 					accumulator.accept(accumulatedValue, item);
-				} catch (RuntimeException e) {
-					throw e;
 				} catch (Exception e) {
-					supplier.closeEx(e);
-					cb.setException(e);
+					sneakyCatch(e, () -> {
+						supplier.closeEx(e);
+						cb.setException(e);
+					});
 					return;
 				}
 				continue;
@@ -152,11 +151,11 @@ public final class ChannelSuppliers {
 				if (value != null) {
 					try {
 						accumulator.accept(accumulatedValue, value);
-					} catch (RuntimeException e2) {
-						throw e2;
 					} catch (Exception e2) {
-						supplier.closeEx(e2);
-						cb.setException(e2);
+						sneakyCatch(e2, () -> {
+							supplier.closeEx(e2);
+							cb.setException(e2);
+						});
 						return;
 					}
 					toCollectorImpl(supplier, accumulatedValue, accumulator, finisher, cb);

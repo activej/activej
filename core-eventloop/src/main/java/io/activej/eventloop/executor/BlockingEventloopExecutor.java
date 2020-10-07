@@ -27,6 +27,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
+import static io.activej.common.Utils.sneakyCatch;
+
 /**
  * An implementation of the {@link EventloopExecutor} which posts
  * only some tasks at a time to some underlying {@link Eventloop},
@@ -108,10 +110,8 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 		post(() -> {
 			try {
 				computation.run();
-			} catch (RuntimeException e) {
-				throw e;
 			} catch (Exception e) {
-				future.completeExceptionally(e);
+				sneakyCatch(e ,future::completeExceptionally);
 				return;
 			} finally {
 				complete();
@@ -134,10 +134,8 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 						future.completeExceptionally(e);
 					}
 				});
-			} catch (RuntimeException e) {
-				throw e;
 			} catch (Exception e) {
-				future.completeExceptionally(e);
+				sneakyCatch(e, future::completeExceptionally);
 			} finally {
 				complete();
 			}
