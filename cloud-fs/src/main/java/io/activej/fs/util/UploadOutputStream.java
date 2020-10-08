@@ -27,7 +27,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static io.activej.fs.LocalFileUtils.fsync;
+import static io.activej.fs.LocalFileUtils.tryFsync;
 
 public class UploadOutputStream extends OutputStream {
 	private final Path tempPath;
@@ -83,11 +83,11 @@ public class UploadOutputStream extends OutputStream {
 			onClose();
 			peer.close();
 			if (synced) {
-				fsync(tempPath);
+				tryFsync(tempPath);
 			}
 			transporter.transport(tempPath, targetPath);
 			if (synced) {
-				fsync(targetPath.getParent());
+				tryFsync(targetPath.getParent());
 			}
 		});
 	}

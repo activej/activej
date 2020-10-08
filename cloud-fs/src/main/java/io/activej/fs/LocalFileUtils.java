@@ -276,7 +276,7 @@ public final class LocalFileUtils {
 		for (Path name : parent.relativize(path)) {
 			Path newChild = child.resolve(name);
 			if (createDir(newChild) && sync) {
-				fsync(child);
+				tryFsync(child);
 			}
 			child = newChild;
 		}
@@ -293,9 +293,10 @@ public final class LocalFileUtils {
 		return false;
 	}
 
-	public static void fsync(Path path) throws IOException {
+	public static void tryFsync(Path path) {
 		try (FileChannel channel = FileChannel.open(path)) {
 			channel.force(true);
+		} catch (IOException ignored){
 		}
 	}
 

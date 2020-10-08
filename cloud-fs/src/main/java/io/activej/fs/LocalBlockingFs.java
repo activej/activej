@@ -174,7 +174,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		if (offset == 0) {
 			channel = ensureTarget(null, path, () -> FileChannel.open(path, appendNewOptions));
 			if (synced) {
-				fsync(path.getParent());
+				tryFsync(path.getParent());
 			}
 		} else {
 			channel = FileChannel.open(path, appendOptions);
@@ -192,7 +192,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 				closed = true;
 				peer.close();
 				if (synced && !appendOptions.contains(SYNC)) {
-					fsync(path);
+					tryFsync(path);
 				}
 			}
 		};
@@ -332,7 +332,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			}
 		} finally {
 			for (Path path : toFSync) {
-				fsync(path);
+				tryFsync(path);
 			}
 		}
 	}
@@ -369,7 +369,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			}
 		} finally {
 			for (Path path : toFSync) {
-				fsync(path);
+				tryFsync(path);
 			}
 		}
 	}

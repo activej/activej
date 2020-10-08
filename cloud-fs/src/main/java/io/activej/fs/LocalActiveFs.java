@@ -217,7 +217,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					if (offset == 0) {
 						channel = ensureTarget(null, path, () -> FileChannel.open(path, appendNewOptions));
 						if (synced) {
-							fsync(path.getParent());
+							tryFsync(path.getParent());
 						}
 					} else {
 						channel = FileChannel.open(path, appendOptions);
@@ -442,7 +442,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 										Path target = resolve(name);
 										doMove(pathAndChannel.getValue1(), target);
 										if (synced) {
-											fsync(target.getParent());
+											tryFsync(target.getParent());
 										}
 									}))
 									.thenEx(translateScalarErrors(name))
@@ -488,7 +488,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			}
 		} finally {
 			for (Path path : toFSync) {
-				fsync(path);
+				tryFsync(path);
 			}
 		}
 	}
@@ -518,7 +518,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			}
 		} finally {
 			for (Path path : toFSync) {
-				fsync(path);
+				tryFsync(path);
 			}
 		}
 	}
