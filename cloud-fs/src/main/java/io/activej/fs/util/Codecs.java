@@ -40,7 +40,6 @@ public final class Codecs {
 	public static final StructuredCodec<Map<String, String>> SOURCE_TO_TARGET_CODEC = ofMap(STRING_CODEC, STRING_CODEC);
 
 	// Components are serialized as ActiveFs.class to hide implementation details
-	private static final StructuredCodec<Class<?>> COMPONENT_CODEC = StructuredCodec.ofObject(() -> ActiveFs.class);
 	private static final StructuredCodec<FsScalarException> SCALAR_EXCEPTIONS_CODEC = simpleFsExceptionCodec(FsScalarException::new);
 	public static final CodecSubtype<FsException> FS_EXCEPTION_CODEC = CodecSubtype.<FsException>create()
 			.with(FsException.class, simpleFsExceptionCodec(FsException::new))
@@ -49,17 +48,17 @@ public final class Codecs {
 			.with(FsScalarException.class, SCALAR_EXCEPTIONS_CODEC)
 			.with(MalformedGlobException.class, simpleFsExceptionCodec(MalformedGlobException::new))
 			.with(ForbiddenPathException.class, simpleFsExceptionCodec(ForbiddenPathException::new))
-			.with(IllegalOffsetException.class, simpleFsExceptionCodec(IllegalOffsetException::new))
+			.with(IllegalOffsetException.class, object((fileSize, message) -> new IllegalOffsetException(ActiveFs.class, fileSize, message),
+					"fileSize", IllegalOffsetException::getFileSize, LONG_CODEC,
+					"message", IllegalOffsetException::getMessage, STRING_CODEC))
 			.with(IsADirectoryException.class, simpleFsExceptionCodec(IsADirectoryException::new))
 			.with(PathContainsFileException.class, simpleFsExceptionCodec(PathContainsFileException::new))
 			.with(FileNotFoundException.class, simpleFsExceptionCodec(FileNotFoundException::new))
-			.with(FsBatchException.class, object(FsBatchException::new,
-					"component", FsBatchException::getComponent, COMPONENT_CODEC,
+			.with(FsBatchException.class, object(exceptions -> new FsBatchException(ActiveFs.class, exceptions),
 					"exceptions", FsBatchException::getExceptions, StructuredCodecs.ofMap(STRING_CODEC, SCALAR_EXCEPTIONS_CODEC)));
 
 	private static <T extends FsException> StructuredCodec<T> simpleFsExceptionCodec(TupleParser2<Class<?>, String, T> constructor) {
-		return object(constructor,
-				"component", FsException::getComponent, COMPONENT_CODEC,
+		return object(message -> constructor.create(ActiveFs.class, message),
 				"message", FsException::getMessage, STRING_CODEC);
 	}
 

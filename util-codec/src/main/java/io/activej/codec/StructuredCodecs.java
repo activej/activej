@@ -596,7 +596,7 @@ public final class StructuredCodecs {
 	 * This is the main combinator for POJO codecs
 	 */
 	public static <R, T1, T2, T3> StructuredCodec<R> object(TupleParser3<T1, T2, T3, R> constructor,
-			String field1, Function<R, T1> getter1, StructuredCodec<? extends T1> codec1,
+			String field1, Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			String field2, Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			String field3, Function<R, T3> getter3, StructuredCodec<T3> codec3) {
 		return ofObjectMap(map(field1, codec1, field2, codec2, field3, codec3))

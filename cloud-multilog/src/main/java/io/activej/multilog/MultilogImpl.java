@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.common.time.Stopwatch;
+import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.process.ChannelLZ4Compressor;
 import io.activej.csp.process.ChannelLZ4Decompressor;
 import io.activej.datastream.StreamConsumer;
@@ -33,6 +34,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
+import io.activej.fs.exception.scalar.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.serializer.BinarySerializer;
@@ -63,6 +65,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 
 	private MemSize bufferSize = DEFAULT_BUFFER_SIZE;
 	private Duration autoFlushInterval = null;
+	private boolean ignoreMalformedLogs;
 
 	private final StreamRegistry<String> streamReads = StreamRegistry.create();
 	private final StreamRegistry<String> streamWrites = StreamRegistry.create();
@@ -95,6 +98,11 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 
 	public MultilogImpl<T> withAutoFlushInterval(Duration autoFlushInterval) {
 		this.autoFlushInterval = autoFlushInterval;
+		return this;
+	}
+
+	public MultilogImpl<T> withIgnoreMalformedLogs(boolean ignore) {
+		this.ignoreMalformedLogs = ignore;
 		return this;
 	}
 
@@ -173,10 +181,23 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 
 				return StreamSupplier.ofPromise(
 						fs.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
-								.map(fileStream -> {
+								.thenEx((fileStream, e) -> {
+									if (e != null) {
+										if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
+											if (logger.isWarnEnabled()) {
+												logger.warn("Ignoring log file whose size {} is less than log position {} {}:`{}` in {}, previous position: {}",
+														((IllegalOffsetException) e).getFileSize(), position,
+														fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+														sw, inputStreamPosition, e);
+											}
+											return Promise.of(StreamSupplier.closing());
+										}
+										return Promise.ofException(e);
+									}
+
 									inputStreamPosition = 0L;
 									sw.reset().start();
-									return fileStream
+									return Promise.of(fileStream
 											.transformWith(streamReads.register(logPartition + ":" + currentLogFile + "@" + position))
 											.transformWith(streamReadStats)
 											.transformWith(ChannelLZ4Decompressor.create()
@@ -193,12 +214,26 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 													}))
 											.transformWith(supplier ->
 													supplier.withEndOfStream(eos ->
-															eos.thenEx(($, e) -> (e == null || e instanceof TruncatedDataException) ?
-																	Promise.complete() :
-																	Promise.ofException(e))))
+															eos.thenEx(($, e2) -> {
+																if (e2 == null) {
+																	return Promise.complete();
+																}
+																if (ignoreMalformedLogs &&
+																		e2 instanceof TruncatedDataException ||
+																		e2 == ChannelLZ4Decompressor.STREAM_IS_CORRUPTED ||
+																		e2 == BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION) {
+																	if (logger.isWarnEnabled()) {
+																		logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
+																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+																				sw, inputStreamPosition, e2);
+																	}
+																	return Promise.complete();
+																}
+																return Promise.ofException(e2);
+															})))
 											.transformWith(ChannelDeserializer.create(serializer))
 											.withEndOfStream(eos ->
-													eos.whenComplete(($, e) -> log(e)));
+													eos.whenComplete(($, e2) -> log(e2))));
 								}));
 			}
 

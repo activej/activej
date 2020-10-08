@@ -222,8 +222,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					} else {
 						channel = FileChannel.open(path, appendOptions);
 					}
-					if (channel.size() < offset) {
-						throw new IllegalOffsetException(LocalActiveFs.class);
+					long size = channel.size();
+					if (size < offset) {
+						throw new IllegalOffsetException(LocalActiveFs.class, size);
 					}
 					return channel;
 				})
@@ -252,8 +253,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return resolveAsync(name)
 				.then(path -> execute(() -> {
 					FileChannel channel = FileChannel.open(path, READ);
-					if (channel.size() < offset) {
-						throw new IllegalOffsetException(LocalActiveFs.class);
+					long size = channel.size();
+					if (size < offset) {
+						throw new IllegalOffsetException(LocalActiveFs.class, size);
 					}
 					return channel;
 				}))
