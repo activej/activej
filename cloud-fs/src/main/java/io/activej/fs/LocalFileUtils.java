@@ -17,7 +17,6 @@
 package io.activej.fs;
 
 import io.activej.common.time.CurrentTimeProvider;
-import io.activej.fs.exception.FsScalarException;
 import io.activej.fs.exception.GlobException;
 import io.activej.fs.exception.scalar.ForbiddenPathException;
 import org.jetbrains.annotations.Nullable;
@@ -102,8 +101,9 @@ public final class LocalFileUtils {
 				}
 				Files.createDirectories(parent);
 			} catch (FileSystemException e) {
-				if (source != null && !Files.isRegularFile(source)) {
-					throw new NoSuchFileException(null);
+				if (source != null) {
+					if (!Files.exists(source)) throw new NoSuchFileException(null);
+					if (Files.isDirectory(source)) throw new DirectoryNotEmptyException(source.toString());
 				}
 				LocalFileUtils.tryDelete(target);
 			}
@@ -296,7 +296,7 @@ public final class LocalFileUtils {
 	public static void tryFsync(Path path) {
 		try (FileChannel channel = FileChannel.open(path)) {
 			channel.force(true);
-		} catch (IOException ignored){
+		} catch (IOException ignored) {
 		}
 	}
 
@@ -308,11 +308,6 @@ public final class LocalFileUtils {
 	@FunctionalInterface
 	public interface IORunnable {
 		void run() throws IOException;
-	}
-
-	@FunctionalInterface
-	public interface IOScalarRunnable {
-		void run() throws IOException, FsScalarException;
 	}
 
 	@FunctionalInterface

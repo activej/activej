@@ -18,11 +18,17 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -42,6 +48,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("ConstantConditions")
+@RunWith(Parameterized.class)
 public final class TestLocalActiveFsInvariants {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -51,6 +58,12 @@ public final class TestLocalActiveFsInvariants {
 
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
+
+	@Parameter()
+	public String testName;
+
+	@Parameter(1)
+	public Consumer<LocalActiveFs> initializer;
 
 	private Path firstPath;
 	private Path secondPath;
@@ -85,6 +98,19 @@ public final class TestLocalActiveFsInvariants {
 				"directory/file.txt",
 				"directory2/file2.txt"
 		));
+	}
+
+	@Parameters(name = "{0}")
+	public static Collection<Object[]> getParameters() {
+		return Arrays.asList(
+				new Object[]{
+						"Regular",
+						(Consumer<LocalActiveFs>) $ -> {}},
+				new Object[]{
+						"With Hard Link On Copy",
+						(Consumer<LocalActiveFs>) fs -> fs.withHardLinkOnCopy(true)
+				}
+		);
 	}
 
 	private void initializeDirs(List<String> paths) {
@@ -137,7 +163,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveDirectory() {
 		List<Path> before = listPaths(firstPath);
-		both(client -> assertThat(awaitException(client.move("directory", "newDirectory")), instanceOf(FileNotFoundException.class)));
+		both(client -> assertThat(awaitException(client.move("directory", "newDirectory")), instanceOf(IsADirectoryException.class)));
 
 		assertFilesAreSame(firstPath, secondPath);
 		assertEquals(before, listPaths(firstPath));
@@ -204,14 +230,14 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void moveSelfDirectories() {
-		both(client -> assertThat(awaitException(client.move("directory", "directory")), instanceOf(FileNotFoundException.class)));
+		both(client -> assertThat(awaitException(client.move("directory", "directory")), instanceOf(IsADirectoryException.class)));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
 	public void moveFromEmptyFilename() {
 		Map<String, FileMetadata> before = await(first.list("**"));
-		both(client -> assertThat(awaitException(client.move("", "newFile")), instanceOf(FileNotFoundException.class)));
+		both(client -> assertThat(awaitException(client.move("", "newFile")), instanceOf(IsADirectoryException.class)));
 		both(client -> assertMetadataEquals(before, await(client.list("**"))));
 	}
 
@@ -265,7 +291,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void copyDirectory() {
-		both(client -> assertThat(awaitException(client.copy("directory", "newDirectory")), instanceOf(FileNotFoundException.class)));
+		both(client -> assertThat(awaitException(client.copy("directory", "newDirectory")), instanceOf(IsADirectoryException.class)));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
@@ -310,7 +336,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void copyFromEmptyFilename() {
 		Map<String, FileMetadata> before = await(first.list("**"));
-		both(client -> assertThat(awaitException(client.copy("", "newFile")), instanceOf(FileNotFoundException.class)));
+		both(client -> assertThat(awaitException(client.copy("", "newFile")), instanceOf(IsADirectoryException.class)));
 		both(client -> assertMetadataEquals(before, await(client.list("**"))));
 	}
 
@@ -477,7 +503,7 @@ public final class TestLocalActiveFsInvariants {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
 			Throwable exception = awaitException(client.copyAll(map("directory", "newFile")));
-			assertBatchException(exception, map("directory", FileNotFoundException.class));
+			assertBatchException(exception, map("directory", IsADirectoryException.class));
 		});
 
 		assertEquals(before, listPaths(firstPath));
@@ -505,7 +531,7 @@ public final class TestLocalActiveFsInvariants {
 							"directory", "newDirectory",
 							"directory2", "newDirectory2"
 					))));
-			assertBatchException(exception, map("directory", FileNotFoundException.class));
+			assertBatchException(exception, map("directory", IsADirectoryException.class));
 		});
 
 		assertEquals(before, listPaths(firstPath));
@@ -520,7 +546,7 @@ public final class TestLocalActiveFsInvariants {
 							"file", "newFile",
 							"directory", "newDirectory"
 					)));
-			assertBatchException(exception, map("directory", FileNotFoundException.class));
+			assertBatchException(exception, map("directory", IsADirectoryException.class));
 		});
 		assertFilesAreSame(firstPath, secondPath);
 	}
@@ -547,7 +573,7 @@ public final class TestLocalActiveFsInvariants {
 							"file", "newFile",
 							"", "newRoot"
 					)));
-			assertBatchException(exception, map("", FileNotFoundException.class));
+			assertBatchException(exception, map("", IsADirectoryException.class));
 		});
 
 		assertFilesAreSame(firstPath, secondPath);
@@ -679,7 +705,7 @@ public final class TestLocalActiveFsInvariants {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
 			Throwable exception = awaitException(client.moveAll(map("directory", "newFile")));
-			assertBatchException(exception, map("directory", FileNotFoundException.class));
+			assertBatchException(exception, map("directory", IsADirectoryException.class));
 		});
 
 		assertEquals(before, listPaths(firstPath));
@@ -707,7 +733,7 @@ public final class TestLocalActiveFsInvariants {
 							"directory", "newDirectory",
 							"directory2", "newDirectory2"
 					))));
-			assertBatchException(exception, map("directory", FileNotFoundException.class));
+			assertBatchException(exception, map("directory", IsADirectoryException.class));
 		});
 
 		assertEquals(before, listPaths(firstPath));
@@ -722,7 +748,7 @@ public final class TestLocalActiveFsInvariants {
 							"file", "newFile",
 							"directory", "newDirectory"
 					)));
-			assertBatchException(exception, map("directory", FileNotFoundException.class));
+			assertBatchException(exception, map("directory", IsADirectoryException.class));
 		});
 	}
 
@@ -746,7 +772,7 @@ public final class TestLocalActiveFsInvariants {
 							"file", "newFile",
 							"", "newRoot"
 					)));
-			assertBatchException(exception, map("", FileNotFoundException.class));
+			assertBatchException(exception, map("", IsADirectoryException.class));
 		});
 	}
 
@@ -863,7 +889,7 @@ public final class TestLocalActiveFsInvariants {
 							"file", "newFile",
 							"directory", "directory"
 					)));
-			assertBatchException(exception, map("directory", FileNotFoundException.class));
+			assertBatchException(exception, map("directory", IsADirectoryException.class));
 		});
 	}
 	//endregion

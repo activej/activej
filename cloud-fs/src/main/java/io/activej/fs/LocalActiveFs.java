@@ -49,6 +49,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -251,9 +252,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 		return resolveAsync(name)
 				.then(path -> execute(() -> {
-					if (!Files.isRegularFile(path)) {
-						throw new FileNotFoundException(LocalActiveFs.class);
-					}
 					FileChannel channel = FileChannel.open(path, READ);
 					if (channel.size() < offset) {
 						throw new IllegalOffsetException(LocalActiveFs.class);
@@ -303,7 +301,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		return execute(() -> copyImpl(singletonMap(name, target)))
+		return execute(() -> forEachPair(singletonMap(name, target), this::doCopy))
 				.thenEx(translateScalarErrors())
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
@@ -314,14 +312,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return execute(() -> copyImpl(sourceToTarget))
+		return execute(() -> forEachPair(sourceToTarget, this::doCopy))
 				.whenComplete(toLogger(logger, TRACE, "copyAll", toLimitedString(sourceToTarget, 50), this))
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return execute(() -> moveImpl(singletonMap(name, target)))
+		return execute(() -> forEachPair(singletonMap(name, target), this::doMove))
 				.thenEx(translateScalarErrors())
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
@@ -332,7 +330,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return execute(() -> moveImpl(sourceToTarget))
+		return execute(() -> forEachPair(sourceToTarget, this::doMove))
 				.whenComplete(toLogger(logger, TRACE, "moveAll", toLimitedString(sourceToTarget, 50), this))
 				.whenComplete(moveAllPromise.recordStats());
 	}
@@ -454,53 +452,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				.whenComplete(uploadBeginPromise.recordStats());
 	}
 
-	private void copyImpl(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException, IOException {
+	private void forEachPair(Map<String, String> sourceToTargetMap, IOScalarBiConsumer consumer) throws FsBatchException, FsIOException {
 		Set<Path> toFSync = new HashSet<>();
 		try {
 			for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
 				translateBatchErrors(entry, () -> {
 					Path path = resolve(entry.getKey());
-					if (!Files.isRegularFile(path)) {
-						throw new FileNotFoundException(LocalActiveFs.class, "File '" + entry.getKey() + "' not found");
-					}
-					Path targetPath = resolve(entry.getValue());
-
-					if (path.equals(targetPath)) {
-						touch(path, now);
-						if (synced) {
-							toFSync.add(path);
-						}
-						return;
-					}
-
-					ensureTarget(path, targetPath, () -> {
-						if (hardlinkOnCopy) {
-							LocalFileUtils.copyViaHardlink(path, targetPath, now);
-						} else {
-							Files.copy(path, targetPath, REPLACE_EXISTING);
-						}
-						if (synced) {
-							toFSync.add(targetPath.getParent());
-						}
-						return null;
-					});
-				});
-			}
-		} finally {
-			for (Path path : toFSync) {
-				tryFsync(path);
-			}
-		}
-	}
-
-	private void moveImpl(Map<String, String> sourceToTargetMap) throws FsBatchException, FsIOException, IOException {
-		Set<Path> toFSync = new HashSet<>();
-		try {
-			for (Map.Entry<String, String> entry : sourceToTargetMap.entrySet()) {
-				translateBatchErrors(entry, () -> {
-					Path path = resolve(entry.getKey());
-					if (!Files.isRegularFile(path)) {
-						throw new FileNotFoundException(LocalActiveFs.class, "File '" + entry.getKey() + "' not found");
+					if (Files.readAttributes(path, BasicFileAttributes.class).isDirectory()) {
+						throw new IsADirectoryException(LocalActiveFs.class, "File '" + entry.getKey() + "' is a directory");
 					}
 					Path targetPath = resolve(entry.getValue());
 					if (path.equals(targetPath)) {
@@ -510,7 +469,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						}
 						return;
 					}
-					doMove(path, targetPath);
+
+					consumer.accept(path, targetPath);
 					if (synced) {
 						toFSync.add(targetPath.getParent());
 					}
@@ -526,6 +486,17 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private void doMove(Path path, Path targetPath) throws IOException, FsScalarException {
 		ensureTarget(path, targetPath, () -> {
 			moveViaHardlink(path, targetPath, now);
+			return null;
+		});
+	}
+
+	private void doCopy(Path path, Path targetPath) throws IOException, FsScalarException {
+		ensureTarget(path, targetPath, () -> {
+			if (hardlinkOnCopy) {
+				LocalFileUtils.copyViaHardlink(path, targetPath, now);
+			} else {
+				Files.copy(path, targetPath, REPLACE_EXISTING);
+			}
 			return null;
 		});
 	}
@@ -601,7 +572,12 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				return Promise.ofException(new MalformedGlobException(LocalActiveFs.class, e.getMessage()));
 			}
 			return execute(() -> {
-				if (name != null && Files.isDirectory(resolve(name))) throw dirEx(name);
+				if (name != null) {
+					Path path = resolve(name);
+					if (!Files.exists(path))
+						throw new FileNotFoundException(LocalActiveFs.class, "File '" + name + "' not found");
+					if (Files.isDirectory(path)) throw dirEx(name);
+				}
 				logger.warn("Operation failed", e);
 				if (e instanceof IOException) {
 					throw new FsIOException(LocalActiveFs.class, "IO Error");
@@ -624,6 +600,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		} catch (NoSuchFileException e) {
 			throw batchEx(LocalActiveFs.class, first, new FileNotFoundException(LocalActiveFs.class));
 		} catch (IOException e) {
+			checkIfExists(first);
 			checkIfDirectories(first, second);
 			logger.warn("Operation failed", e);
 			throw new FsIOException(LocalActiveFs.class, "IO Error");
@@ -652,6 +629,26 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		} catch (ForbiddenPathException e) {
 			throw batchEx(LocalActiveFs.class, first, e);
 		}
+	}
+
+	private void checkIfExists(@NotNull String file) throws FsBatchException {
+		try {
+			if (!Files.exists(resolve(file))) {
+				throw batchEx(LocalActiveFs.class, file, new FileNotFoundException(LocalActiveFs.class, "File '" + file + "' not found"));
+			}
+		} catch (ForbiddenPathException e) {
+			throw batchEx(LocalActiveFs.class, file, e);
+		}
+	}
+
+	@FunctionalInterface
+	private interface IOScalarRunnable {
+		void run() throws IOException, FsScalarException;
+	}
+
+	@FunctionalInterface
+	private interface IOScalarBiConsumer {
+		void accept(Path first, Path second) throws IOException, FsScalarException;
 	}
 
 	//region JMX

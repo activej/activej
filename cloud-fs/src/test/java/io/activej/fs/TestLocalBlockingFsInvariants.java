@@ -7,14 +7,19 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.*;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.fs.Utils.*;
@@ -27,6 +32,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("ConstantConditions")
+@RunWith(Parameterized.class)
 public final class TestLocalBlockingFsInvariants {
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
@@ -36,6 +42,12 @@ public final class TestLocalBlockingFsInvariants {
 
 	private BlockingFs first;
 	private BlockingFs second;
+
+	@Parameterized.Parameter()
+	public String testName;
+
+	@Parameterized.Parameter(1)
+	public Consumer<LocalBlockingFs> initializer;
 
 	@Before
 	public void setUp() throws Exception {
@@ -64,6 +76,19 @@ public final class TestLocalBlockingFsInvariants {
 				"directory/file.txt",
 				"directory2/file2.txt"
 		));
+	}
+
+	@Parameterized.Parameters(name = "{0}")
+	public static Collection<Object[]> getParameters() {
+		return Arrays.asList(
+				new Object[]{
+						"Regular",
+						(Consumer<LocalBlockingFs>) $ -> {}},
+				new Object[]{
+						"With Hard Link On Copy",
+						(Consumer<LocalBlockingFs>) fs -> fs.withHardLinkOnCopy(true)
+				}
+		);
 	}
 
 	private void initializeDirs(List<String> paths) {
