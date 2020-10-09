@@ -338,8 +338,11 @@ public final class ByteBufQueue implements Recyclable {
 		} else {
 			buf = ByteBufPool.allocate(size);
 			drainTo(buf, size);
-			consumer.accept(buf);
-			buf.recycle();
+			try {
+				consumer.accept(buf);
+			} finally {
+				buf.recycle();
+			}
 		}
 	}
 

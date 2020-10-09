@@ -209,7 +209,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 						dataSize += (b << 21);
 						return dataSize + 4 + (4 << 28);
 					}
-					throw new AssertionError("Invalid header size");
+					throw new CorruptedDataException("Invalid header size");
 				}
 			}
 		}
@@ -241,7 +241,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 						dataSize += (b << 21);
 						return dataSize + 4 + (4 << 28);
 					}
-					throw new AssertionError("Invalid header size");
+					throw new CorruptedDataException("Invalid header size");
 				}
 			}
 			return Integer.MAX_VALUE;

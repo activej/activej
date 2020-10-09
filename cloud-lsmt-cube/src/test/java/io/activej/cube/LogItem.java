@@ -3,6 +3,9 @@ package io.activej.cube;
 import io.activej.aggregation.annotation.Key;
 import io.activej.aggregation.annotation.Measures;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeNullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +51,12 @@ public class LogItem {
 	@Serialize(order = 7)
 	public double revenue;
 
+	@Measures
+	@SerializeNullable
+	@Nullable
+	@Serialize(order = 8)
+	public String testString;
+
 	public LogItem() {
 	}
 
@@ -68,6 +77,10 @@ public class LogItem {
 		this.clicks = clicks;
 		this.conversions = conversions;
 		this.revenue = revenue;
+	}
+
+	public LogItem(@NotNull String testString) {
+		this.testString = testString;
 	}
 
 	/* Static factory methods for random facts */
