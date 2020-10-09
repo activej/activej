@@ -148,6 +148,10 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return fieldTypes.get(field);
 	}
 
+	public Type getFieldType(int field) {
+		return types[field];
+	}
+
 	public int getFieldIndex(String field) {
 		return fieldIndices.get(field);
 	}
