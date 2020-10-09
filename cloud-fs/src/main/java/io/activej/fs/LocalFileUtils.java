@@ -32,13 +32,13 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.PatternSyntaxException;
 
 import static io.activej.fs.ActiveFs.SEPARATOR;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -117,12 +117,24 @@ public final class LocalFileUtils {
 	}
 
 	static void copyViaHardlink(Path from, Path to, CurrentTimeProvider timeProvider) throws IOException {
-		try {
-			Files.createLink(to, from);
-			touch(to, timeProvider);
-		} catch (UnsupportedOperationException | SecurityException | FileAlreadyExistsException e) {
-			// if couldn't, then just actually copy it
-			Files.copy(from, to, REPLACE_EXISTING);
+		Files.createLink(to, from);
+		touch(to, timeProvider);
+	}
+
+	static void copyViaTempDir(Path from, Path to, CurrentTimeProvider timeProvider, Path tempDir) throws IOException {
+		while (true) {
+			Path tempFile = tempDir.resolve("copy" + ThreadLocalRandom.current().nextLong());
+			try {
+				Files.copy(from, tempFile);
+			} catch (FileAlreadyExistsException ignored) {
+				continue;
+			}
+			try {
+				moveViaHardlink(tempFile, to, timeProvider);
+			} finally {
+				Files.deleteIfExists(tempFile);
+			}
+			return;
 		}
 	}
 

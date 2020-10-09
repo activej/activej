@@ -66,7 +66,6 @@ import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.LocalFileUtils.*;
 import static io.activej.fs.util.RemoteFsUtils.batchEx;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.*;
 
@@ -425,7 +424,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private Promise<ChannelConsumer<ByteBuf>> uploadImpl(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
 				() -> {
-					Path tempPath = Files.createTempFile(tempDir, "", "");
+					Path tempPath = Files.createTempFile(tempDir, "upload", "");
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
 				.map(pathAndChannel -> {
@@ -493,9 +492,19 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private void doCopy(Path path, Path targetPath) throws IOException, FsScalarException {
 		ensureTarget(path, targetPath, () -> {
 			if (hardlinkOnCopy) {
-				LocalFileUtils.copyViaHardlink(path, targetPath, now);
+				try {
+					copyViaHardlink(path, targetPath, now);
+				} catch (IOException e) {
+					logger.warn("Could not copy via hard link, trying to copy via temporary directory", e);
+					try {
+						copyViaTempDir(path, targetPath, now, tempDir);
+					} catch (IOException e2) {
+						e.addSuppressed(e2);
+						throw e;
+					}
+				}
 			} else {
-				Files.copy(path, targetPath, REPLACE_EXISTING);
+				copyViaTempDir(path, targetPath, now, tempDir);
 			}
 			return null;
 		});

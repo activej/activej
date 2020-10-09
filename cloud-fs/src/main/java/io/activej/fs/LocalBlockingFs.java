@@ -50,7 +50,6 @@ import java.util.stream.Collector;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.fs.LocalFileUtils.*;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
@@ -149,7 +148,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public OutputStream upload(@NotNull String name, long size) throws IOException {
-		Path tempPath = Files.createTempFile(tempDir, "", "");
+		Path tempPath = Files.createTempFile(tempDir, "upload", "");
 		return new UploadOutputStream(tempPath, resolve(name), synced, this::doMove) {
 			long totalSize;
 
@@ -357,9 +356,19 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 				ensureTarget(path, targetPath, () -> {
 					if (hardlinkOnCopy) {
-						LocalFileUtils.copyViaHardlink(path, targetPath, now);
+						try {
+							copyViaHardlink(path, targetPath, now);
+						} catch (IOException e) {
+							logger.warn("Could not copy via hard link, trying to copy via temporary directory", e);
+							try {
+								copyViaTempDir(path, targetPath, now, tempDir);
+							} catch (IOException e2) {
+								e.addSuppressed(e2);
+								throw e;
+							}
+						}
 					} else {
-						Files.copy(path, targetPath, REPLACE_EXISTING);
+						copyViaTempDir(path, targetPath, now, tempDir);
 					}
 					return null;
 				});
