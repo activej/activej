@@ -48,9 +48,7 @@ public final class Codecs {
 			.with(FsScalarException.class, SCALAR_EXCEPTIONS_CODEC)
 			.with(MalformedGlobException.class, simpleFsExceptionCodec(MalformedGlobException::new))
 			.with(ForbiddenPathException.class, simpleFsExceptionCodec(ForbiddenPathException::new))
-			.with(IllegalOffsetException.class, object((fileSize, message) -> new IllegalOffsetException(ActiveFs.class, fileSize, message),
-					"fileSize", IllegalOffsetException::getFileSize, LONG_CODEC,
-					"message", IllegalOffsetException::getMessage, STRING_CODEC))
+			.with(IllegalOffsetException.class, simpleFsExceptionCodec(IllegalOffsetException::new))
 			.with(IsADirectoryException.class, simpleFsExceptionCodec(IsADirectoryException::new))
 			.with(PathContainsFileException.class, simpleFsExceptionCodec(PathContainsFileException::new))
 			.with(FileNotFoundException.class, simpleFsExceptionCodec(FileNotFoundException::new))

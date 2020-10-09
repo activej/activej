@@ -224,7 +224,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					}
 					long size = channel.size();
 					if (size < offset) {
-						throw new IllegalOffsetException(LocalActiveFs.class, size);
+						throw new IllegalOffsetException(LocalActiveFs.class, "Offset " + offset + " exceeds file size " + size);
 					}
 					return channel;
 				})
@@ -255,7 +255,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					FileChannel channel = FileChannel.open(path, READ);
 					long size = channel.size();
 					if (size < offset) {
-						throw new IllegalOffsetException(LocalActiveFs.class, size);
+						throw new IllegalOffsetException(LocalActiveFs.class, "Offset " + offset + " exceeds file size " + size);
 					}
 					return channel;
 				}))

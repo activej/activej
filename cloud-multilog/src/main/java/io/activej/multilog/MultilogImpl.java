@@ -185,9 +185,8 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 									if (e != null) {
 										if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
 											if (logger.isWarnEnabled()) {
-												logger.warn("Ignoring log file whose size {} is less than log position {} {}:`{}` in {}, previous position: {}",
-														((IllegalOffsetException) e).getFileSize(), position,
-														fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+												logger.warn("Ignoring log file whose size is less than log position {} {}:`{}` in {}, previous position: {}",
+														position, fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
 														sw, inputStreamPosition, e);
 											}
 											return Promise.of(StreamSupplier.closing());
