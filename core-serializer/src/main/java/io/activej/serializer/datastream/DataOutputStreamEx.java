@@ -231,8 +231,8 @@ public class DataOutputStreamEx implements Closeable {
 		out.writeChar(v);
 	}
 
-	public final void writeString(@Nullable String s) throws IOException {
-		writeUTF8Nullable(s);
+	public final void writeString(@NotNull String s) throws IOException {
+		writeUTF8(s);
 	}
 
 	public final void writeUTF8(@NotNull String s) throws IOException {

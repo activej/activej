@@ -4,46 +4,22 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static java.util.Collections.unmodifiableMap;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.IntFunction;
 
 public final class DataStreamCodecs {
-	public static final Map<Class<?>, DataStreamCodec<?>> REGISTRY;
-
-	static {
-		Map<Class<?>, DataStreamCodec<?>> map = new HashMap<>();
-		map.put(boolean.class, ofBoolean());
-		map.put(char.class, ofChar());
-		map.put(byte.class, ofByte());
-		map.put(int.class, ofVarInt());
-		map.put(short.class, ofShort());
-		map.put(long.class, ofVarLong());
-		map.put(float.class, ofFloat());
-		map.put(double.class, ofDouble());
-		map.put(Boolean.class, ofNullable(ofBoolean()));
-		map.put(Character.class, ofNullable(ofChar()));
-		map.put(Byte.class, ofNullable(ofByte()));
-		map.put(Integer.class, ofNullable(ofInt()));
-		map.put(Short.class, ofNullable(ofShort()));
-		map.put(Long.class, ofNullable(ofLong()));
-		map.put(Float.class, ofNullable(ofFloat()));
-		map.put(Double.class, ofNullable(ofDouble()));
-		map.put(String.class, ofString());
-		REGISTRY = unmodifiableMap(map);
-	}
 
 	public static DataStreamCodec<Boolean> ofBoolean() {
 		return new DataStreamCodec<Boolean>() {
 			@Override
-			public Boolean decode(DataInputStreamEx stream) throws IOException {
-				return stream.readBoolean();
+			public void encode(DataOutputStreamEx stream, Boolean item) throws IOException {
+				stream.writeBoolean(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Boolean item) throws IOException {
-				stream.writeBoolean(item);
+			public Boolean decode(DataInputStreamEx stream) throws IOException {
+				return stream.readBoolean();
 			}
 		};
 	}
@@ -51,13 +27,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Character> ofChar() {
 		return new DataStreamCodec<Character>() {
 			@Override
-			public Character decode(DataInputStreamEx stream) throws IOException {
-				return stream.readChar();
+			public void encode(DataOutputStreamEx stream, Character item) throws IOException {
+				stream.writeChar(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Character item) throws IOException {
-				stream.writeChar(item);
+			public Character decode(DataInputStreamEx stream) throws IOException {
+				return stream.readChar();
 			}
 		};
 	}
@@ -65,13 +41,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Byte> ofByte() {
 		return new DataStreamCodec<Byte>() {
 			@Override
-			public Byte decode(DataInputStreamEx stream) throws IOException {
-				return stream.readByte();
+			public void encode(DataOutputStreamEx stream, Byte item) throws IOException {
+				stream.writeByte(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Byte item) throws IOException {
-				stream.writeByte(item);
+			public Byte decode(DataInputStreamEx stream) throws IOException {
+				return stream.readByte();
 			}
 		};
 	}
@@ -79,13 +55,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Short> ofShort() {
 		return new DataStreamCodec<Short>() {
 			@Override
-			public Short decode(DataInputStreamEx stream) throws IOException {
-				return stream.readShort();
+			public void encode(DataOutputStreamEx stream, Short item) throws IOException {
+				stream.writeShort(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Short item) throws IOException {
-				stream.writeShort(item);
+			public Short decode(DataInputStreamEx stream) throws IOException {
+				return stream.readShort();
 			}
 		};
 	}
@@ -93,13 +69,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Integer> ofInt() {
 		return new DataStreamCodec<Integer>() {
 			@Override
-			public Integer decode(DataInputStreamEx stream) throws IOException {
-				return stream.readInt();
+			public void encode(DataOutputStreamEx stream, Integer item) throws IOException {
+				stream.writeInt(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Integer item) throws IOException {
-				stream.writeInt(item);
+			public Integer decode(DataInputStreamEx stream) throws IOException {
+				return stream.readInt();
 			}
 		};
 	}
@@ -107,13 +83,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Integer> ofVarInt() {
 		return new DataStreamCodec<Integer>() {
 			@Override
-			public Integer decode(DataInputStreamEx stream) throws IOException {
-				return stream.readVarInt();
+			public void encode(DataOutputStreamEx stream, Integer item) throws IOException {
+				stream.writeVarInt(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Integer item) throws IOException {
-				stream.writeVarInt(item);
+			public Integer decode(DataInputStreamEx stream) throws IOException {
+				return stream.readVarInt();
 			}
 		};
 	}
@@ -121,13 +97,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Long> ofLong() {
 		return new DataStreamCodec<Long>() {
 			@Override
-			public Long decode(DataInputStreamEx stream) throws IOException {
-				return stream.readLong();
+			public void encode(DataOutputStreamEx stream, Long item) throws IOException {
+				stream.writeLong(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Long item) throws IOException {
-				stream.writeLong(item);
+			public Long decode(DataInputStreamEx stream) throws IOException {
+				return stream.readLong();
 			}
 		};
 	}
@@ -135,13 +111,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Long> ofVarLong() {
 		return new DataStreamCodec<Long>() {
 			@Override
-			public Long decode(DataInputStreamEx stream) throws IOException {
-				return stream.readVarLong();
+			public void encode(DataOutputStreamEx stream, Long item) throws IOException {
+				stream.writeVarLong(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Long item) throws IOException {
-				stream.writeVarLong(item);
+			public Long decode(DataInputStreamEx stream) throws IOException {
+				return stream.readVarLong();
 			}
 		};
 	}
@@ -149,13 +125,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Float> ofFloat() {
 		return new DataStreamCodec<Float>() {
 			@Override
-			public Float decode(DataInputStreamEx stream) throws IOException {
-				return stream.readFloat();
+			public void encode(DataOutputStreamEx stream, Float item) throws IOException {
+				stream.writeFloat(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Float item) throws IOException {
-				stream.writeFloat(item);
+			public Float decode(DataInputStreamEx stream) throws IOException {
+				return stream.readFloat();
 			}
 		};
 	}
@@ -163,13 +139,13 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<Double> ofDouble() {
 		return new DataStreamCodec<Double>() {
 			@Override
-			public Double decode(DataInputStreamEx stream) throws IOException {
-				return stream.readDouble();
+			public void encode(DataOutputStreamEx stream, Double item) throws IOException {
+				stream.writeDouble(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, Double item) throws IOException {
-				stream.writeDouble(item);
+			public Double decode(DataInputStreamEx stream) throws IOException {
+				return stream.readDouble();
 			}
 		};
 	}
@@ -177,25 +153,118 @@ public final class DataStreamCodecs {
 	public static DataStreamCodec<String> ofString() {
 		return new DataStreamCodec<String>() {
 			@Override
-			public @Nullable String decode(DataInputStreamEx stream) throws IOException {
-				return stream.readString();
+			public void encode(DataOutputStreamEx stream, @NotNull String item) throws IOException {
+				stream.writeString(item);
 			}
 
 			@Override
-			public void encode(DataOutputStreamEx stream, @Nullable String item) throws IOException {
-				stream.writeString(item);
+			public @NotNull String decode(DataInputStreamEx stream) throws IOException {
+				return stream.readString();
 			}
 		};
 	}
 
-	public static <T> DataStreamCodec<@Nullable T> ofNullable(DataStreamCodec<@NotNull T> codec) {
-		return new DataStreamCodec<T>() {
+	public static <E extends Enum<E>> DataStreamCodec<E> ofEnum(Class<E> enumType) {
+		return new DataStreamCodec<E>() {
 			@Override
-			public @Nullable T decode(DataInputStreamEx stream) throws IOException {
-				if (stream.readByte() == 0) return null;
-				return codec.decode(stream);
+			public void encode(DataOutputStreamEx out, E value) throws IOException {
+				out.writeVarInt(value.ordinal());
 			}
 
+			@Override
+			public E decode(DataInputStreamEx in) throws IOException {
+				return enumType.getEnumConstants()[in.readVarInt()];
+			}
+		};
+	}
+
+	public static <T> DataStreamCodec<Optional<T>> ofOptional(DataStreamCodec<T> codec) {
+		return new DataStreamCodec<Optional<T>>() {
+			@Override
+			public void encode(DataOutputStreamEx stream, Optional<T> item) throws IOException {
+				if (!item.isPresent()) {
+					stream.writeByte((byte) 0);
+				} else {
+					stream.writeByte((byte) 1);
+					codec.encode(stream, item.get());
+				}
+			}
+
+			@Override
+			public Optional<T> decode(DataInputStreamEx in) throws IOException {
+				if (in.readByte() == 0) return Optional.empty();
+				return Optional.of(codec.decode(in));
+			}
+		};
+	}
+
+	public static <T> DataStreamCodec<List<T>> ofList(DataStreamCodec<T> itemCodec) {
+		return ofList($ -> itemCodec);
+	}
+
+	public static <T> DataStreamCodec<List<T>> ofList(IntFunction<? extends DataStreamCodec<? extends T>> itemCodecFn) {
+		return new DataStreamCodec<List<T>>() {
+			@Override
+			public void encode(DataOutputStreamEx out, List<T> list) throws IOException {
+				out.writeVarInt(list.size());
+				for (int i = 0; i < list.size(); i++) {
+					//noinspection unchecked
+					DataStreamCodec<T> codec = (DataStreamCodec<T>) itemCodecFn.apply(i);
+					codec.encode(out, list.get(i));
+				}
+			}
+
+			@Override
+			public List<T> decode(DataInputStreamEx in) throws IOException {
+				Object[] array = new Object[in.readVarInt()];
+				for (int i = 0; i < array.length; i++) {
+					array[i] = itemCodecFn.apply(i).decode(in);
+				}
+				//noinspection unchecked
+				return (List<T>) Arrays.asList(array);
+			}
+		};
+	}
+
+	public static <K, V> DataStreamCodec<Map<K, V>> ofMap(DataStreamCodec<K> keyCodec, DataStreamCodec<V> valueCodec) {
+		return ofMap(keyCodec, $ -> valueCodec);
+	}
+
+	public static <K, V> DataStreamCodec<Map<K, V>> ofMap(DataStreamCodec<K> keyCodec,
+			Function<? super K, ? extends DataStreamCodec<? extends V>> valueCodecFn) {
+		return new DataStreamCodec<Map<K, V>>() {
+			@Override
+			public void encode(DataOutputStreamEx out, Map<K, V> map) throws IOException {
+				out.writeVarInt(map.size());
+				for (Map.Entry<K, V> entry : map.entrySet()) {
+					keyCodec.encode(out, entry.getKey());
+					//noinspection unchecked
+					DataStreamCodec<V> codec = (DataStreamCodec<V>) valueCodecFn.apply(entry.getKey());
+					codec.encode(out, entry.getValue());
+				}
+			}
+
+			@Override
+			public Map<K, V> decode(DataInputStreamEx in) throws IOException {
+				int size = in.readVarInt();
+				LinkedHashMap<K, V> map = new LinkedHashMap<>(size * 4 / 3);
+				for (int i = 0; i < size; i++) {
+					K key = keyCodec.decode(in);
+					V value = valueCodecFn.apply(key).decode(in);
+					map.put(key, value);
+				}
+				return map;
+			}
+		};
+
+	}
+
+	public static <T> DataStreamCodec<Set<T>> ofSet(DataStreamCodec<T> codec) {
+		return transform(ofList(codec), LinkedHashSet::new, ArrayList::new);
+	}
+
+	public static <T> DataStreamCodec<@Nullable T> ofNullable(DataStreamCodec<@NotNull T> codec) {
+		return new DataStreamCodec<T>() {
 			@Override
 			public void encode(DataOutputStreamEx stream, @Nullable T item) throws IOException {
 				if (item == null) {
@@ -204,6 +273,28 @@ public final class DataStreamCodecs {
 					stream.writeByte((byte) 1);
 					codec.encode(stream, item);
 				}
+			}
+
+			@Override
+			public @Nullable T decode(DataInputStreamEx stream) throws IOException {
+				if (stream.readByte() == 0) return null;
+				return codec.decode(stream);
+			}
+		};
+	}
+
+	public static <T, R> DataStreamCodec<R> transform(DataStreamCodec<T> codec, Function<T, ? extends R> reader, Function<R, T> writer) {
+		return new DataStreamCodec<R>() {
+			@Override
+			public void encode(DataOutputStreamEx out, R value) throws IOException {
+				T result = writer.apply(value);
+				codec.encode(out, result);
+			}
+
+			@Override
+			public R decode(DataInputStreamEx in) throws IOException {
+				T result = codec.decode(in);
+				return reader.apply(result);
 			}
 		};
 	}

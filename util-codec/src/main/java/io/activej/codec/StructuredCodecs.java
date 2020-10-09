@@ -265,28 +265,28 @@ public final class StructuredCodecs {
 	public static <T> StructuredCodec<Optional<T>> ofOptional(StructuredCodec<T> codec) {
 		return new StructuredCodec<Optional<T>>() {
 			@Override
-			public Optional<T> decode(StructuredInput in) throws ParseException {
-				return Optional.ofNullable(in.readNullable(codec));
+			public void encode(StructuredOutput out, Optional<T> item) {
+				out.writeNullable(codec, item.orElse(null));
 			}
 
 			@Override
-			public void encode(StructuredOutput out, Optional<T> item) {
-				out.writeNullable(codec, item.orElse(null));
+			public Optional<T> decode(StructuredInput in) throws ParseException {
+				return Optional.ofNullable(in.readNullable(codec));
 			}
 		};
 	}
 
 	public static <T> StructuredCodec<@Nullable T> ofNullable(StructuredCodec<T> codec) {
 		return new StructuredCodec<T>() {
+			@Override
+			public void encode(StructuredOutput out, T item) {
+				out.writeNullable(codec, item);
+			}
+
 			@Nullable
 			@Override
 			public T decode(StructuredInput in) throws ParseException {
 				return in.readNullable(codec);
-			}
-
-			@Override
-			public void encode(StructuredOutput out, T item) {
-				out.writeNullable(codec, item);
 			}
 		};
 	}
@@ -318,13 +318,13 @@ public final class StructuredCodecs {
 	public static <T> StructuredCodec<List<T>> ofList(StructuredCodec<T> valueAdapters) {
 		return new StructuredCodec<List<T>>() {
 			@Override
-			public List<T> decode(StructuredInput in) throws ParseException {
-				return in.readList(valueAdapters);
+			public void encode(StructuredOutput out, List<T> item) {
+				out.writeList(valueAdapters, item);
 			}
 
 			@Override
-			public void encode(StructuredOutput out, List<T> item) {
-				out.writeList(valueAdapters, item);
+			public List<T> decode(StructuredInput in) throws ParseException {
+				return in.readList(valueAdapters);
 			}
 		};
 	}

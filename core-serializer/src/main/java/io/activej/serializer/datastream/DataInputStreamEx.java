@@ -259,8 +259,8 @@ public class DataInputStreamEx implements Closeable {
 		return in.readChar();
 	}
 
-	public final @Nullable String readString() throws IOException {
-		return readUTF8Nullable();
+	public final @NotNull String readString() throws IOException {
+		return readUTF8();
 	}
 
 	public final @NotNull String readUTF8() throws IOException {
