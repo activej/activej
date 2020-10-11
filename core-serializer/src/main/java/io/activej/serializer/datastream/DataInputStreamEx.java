@@ -54,7 +54,11 @@ public class DataInputStreamEx implements Closeable {
 	protected void recycle(byte[] array) {
 	}
 
-	private void ensureRead(int size) throws IOException {
+	public BinaryInput getBinaryInput() {
+		return in;
+	}
+
+	public void ensure(int size) throws IOException {
 		if (tail - in.pos() < size) {
 			doEnsureRead(size);
 		}
@@ -112,7 +116,7 @@ public class DataInputStreamEx implements Closeable {
 	public final <T> T deserialize(BinarySerializer<T> serializer) throws IOException {
 		int messageSize = readSize();
 
-		ensureRead(messageSize);
+		ensure(messageSize);
 
 		int oldPos = in.pos();
 		try {
@@ -166,7 +170,7 @@ public class DataInputStreamEx implements Closeable {
 	}
 
 	public final int read(byte[] b, int off, int len) throws IOException {
-		ensureRead(len);
+		ensure(len);
 		in.read(b, off, len);
 		return len;
 	}
@@ -181,22 +185,22 @@ public class DataInputStreamEx implements Closeable {
 	}
 
 	public final boolean readBoolean() throws IOException {
-		ensureRead(1);
+		ensure(1);
 		return in.readBoolean();
 	}
 
 	public final short readShort() throws IOException {
-		ensureRead(2);
+		ensure(2);
 		return in.readShort();
 	}
 
 	public final int readInt() throws IOException {
-		ensureRead(4);
+		ensure(4);
 		return in.readInt();
 	}
 
 	public final long readLong() throws IOException {
-		ensureRead(8);
+		ensure(8);
 		return in.readLong();
 	}
 
@@ -245,17 +249,17 @@ public class DataInputStreamEx implements Closeable {
 	}
 
 	public final float readFloat() throws IOException {
-		ensureRead(4);
+		ensure(4);
 		return in.readFloat();
 	}
 
 	public final double readDouble() throws IOException {
-		ensureRead(8);
+		ensure(8);
 		return in.readDouble();
 	}
 
 	public final char readChar() throws IOException {
-		ensureRead(2);
+		ensure(2);
 		return in.readChar();
 	}
 
@@ -266,7 +270,7 @@ public class DataInputStreamEx implements Closeable {
 	public final @NotNull String readUTF8() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
-		ensureRead(length);
+		ensure(length);
 		String str = new String(in.array(), in.pos(), length, UTF_8);
 		in.pos(in.pos() + length);
 		return str;
@@ -275,7 +279,7 @@ public class DataInputStreamEx implements Closeable {
 	public final @NotNull String readIso88591() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
-		ensureRead(length);
+		ensure(length);
 
 		char[] chars = ensureCharArray(length);
 		for (int i = 0; i < length; i++) {
@@ -288,7 +292,7 @@ public class DataInputStreamEx implements Closeable {
 	public final @NotNull String readUTF16() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
-		ensureRead(length * 2);
+		ensure(length * 2);
 
 		char[] chars = ensureCharArray(length);
 		for (int i = 0; i < length; i++) {
@@ -304,7 +308,7 @@ public class DataInputStreamEx implements Closeable {
 		int length = readVarInt();
 		if (length-- == 0) return null;
 		if (length == 0) return "";
-		ensureRead(length);
+		ensure(length);
 		String str = new String(in.array(), in.pos(), length, UTF_8);
 		in.pos(in.pos() + length);
 		return str;
@@ -314,7 +318,7 @@ public class DataInputStreamEx implements Closeable {
 		int length = readVarInt();
 		if (length-- == 0) return null;
 		if (length == 0) return "";
-		ensureRead(length);
+		ensure(length);
 
 		char[] chars = ensureCharArray(length);
 		for (int i = 0; i < length; i++) {
@@ -328,7 +332,7 @@ public class DataInputStreamEx implements Closeable {
 		int length = readVarInt();
 		if (length-- == 0) return null;
 		if (length == 0) return "";
-		ensureRead(length * 2);
+		ensure(length * 2);
 
 		char[] chars = ensureCharArray(length);
 		for (int i = 0; i < length; i++) {

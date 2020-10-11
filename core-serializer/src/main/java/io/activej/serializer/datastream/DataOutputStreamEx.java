@@ -41,7 +41,11 @@ public class DataOutputStreamEx implements Closeable {
 		out = null;
 	}
 
-	private void ensureSize(int size) throws IOException {
+	public BinaryOutput getBinaryOutput() {
+		return out;
+	}
+
+	public void ensure(int size) throws IOException {
 		if (out.array().length - out.pos() < size) {
 			doEnsureSize(size);
 		}
@@ -78,7 +82,7 @@ public class DataOutputStreamEx implements Closeable {
 	public final <T> void serialize(BinarySerializer<T> serializer, T value) throws IOException {
 		int positionBegin;
 		int positionData;
-		ensureSize(estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2));
+		ensure(estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2));
 		for (; ; ) {
 			positionBegin = out.pos();
 			positionData = positionBegin + estimatedHeaderSize;
@@ -88,7 +92,7 @@ public class DataOutputStreamEx implements Closeable {
 			} catch (ArrayIndexOutOfBoundsException e) {
 				int dataSize = out.array().length - positionData;
 				out.pos(positionBegin);
-				ensureSize(estimatedHeaderSize + dataSize + 1 + (dataSize >>> 1));
+				ensure(estimatedHeaderSize + dataSize + 1 + (dataSize >>> 1));
 				continue;
 			}
 			break;
@@ -164,17 +168,17 @@ public class DataOutputStreamEx implements Closeable {
 	}
 
 	public final void write(byte[] b) throws IOException {
-		ensureSize(b.length);
+		ensure(b.length);
 		out.write(b);
 	}
 
 	public final void write(byte[] b, int off, int len) throws IOException {
-		ensureSize(len);
+		ensure(len);
 		out.write(b, off, len);
 	}
 
 	public final void writeBoolean(boolean v) throws IOException {
-		ensureSize(1);
+		ensure(1);
 		out.writeBoolean(v);
 	}
 
@@ -192,42 +196,42 @@ public class DataOutputStreamEx implements Closeable {
 	}
 
 	public final void writeShort(short v) throws IOException {
-		ensureSize(2);
+		ensure(2);
 		out.writeShort(v);
 	}
 
 	public final void writeInt(int v) throws IOException {
-		ensureSize(4);
+		ensure(4);
 		out.writeInt(v);
 	}
 
 	public final void writeLong(long v) throws IOException {
-		ensureSize(8);
+		ensure(8);
 		out.writeLong(v);
 	}
 
 	public final void writeVarInt(int v) throws IOException {
-		ensureSize(5);
+		ensure(5);
 		out.writeVarInt(v);
 	}
 
 	public final void writeVarLong(long v) throws IOException {
-		ensureSize(9);
+		ensure(9);
 		out.writeVarLong(v);
 	}
 
 	public final void writeFloat(float v) throws IOException {
-		ensureSize(4);
+		ensure(4);
 		out.writeFloat(v);
 	}
 
 	public final void writeDouble(double v) throws IOException {
-		ensureSize(8);
+		ensure(8);
 		out.writeDouble(v);
 	}
 
 	public final void writeChar(char v) throws IOException {
-		ensureSize(2);
+		ensure(2);
 		out.writeChar(v);
 	}
 
@@ -236,33 +240,32 @@ public class DataOutputStreamEx implements Closeable {
 	}
 
 	public final void writeUTF8(@NotNull String s) throws IOException {
-		ensureSize(5 + s.length() * 3);
+		ensure(5 + s.length() * 3);
 		out.writeUTF8(s);
 	}
 
 	public final void writeIso88591(@NotNull String s) throws IOException {
-		ensureSize(5 + s.length() * 3);
+		ensure(5 + s.length() * 3);
 		out.writeIso88591(s);
 	}
 
 	public final void writeUTF16(@NotNull String s) throws IOException {
-		ensureSize(5 + s.length() * 2);
+		ensure(5 + s.length() * 2);
 		out.writeUTF16(s);
 	}
 
 	public final void writeUTF8Nullable(@Nullable String s) throws IOException {
-		ensureSize(s != null ? 5 + s.length() * 3 : 1);
+		ensure(s != null ? 5 + s.length() * 3 : 1);
 		out.writeUTF8Nullable(s);
 	}
 
 	public final void writeIso88591Nullable(@Nullable String s) throws IOException {
-		ensureSize(s != null ? 5 + s.length() * 3 : 5 + 1);
+		ensure(s != null ? 5 + s.length() * 3 : 5 + 1);
 		out.writeIso88591Nullable(s);
 	}
 
 	public final void writeUTF16Nullable(@Nullable String s) throws IOException {
-		ensureSize(s != null ? 5 + s.length() * 2 : 5 + 1);
+		ensure(s != null ? 5 + s.length() * 2 : 5 + 1);
 		out.writeUTF16Nullable(s);
 	}
-
 }
