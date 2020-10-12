@@ -2,7 +2,7 @@ package io.activej.state.file;
 
 import io.activej.fs.BlockingFs;
 import io.activej.fs.FileMetadata;
-import io.activej.serializer.datastream.*;
+import io.activej.serializer.stream.*;
 import io.activej.state.StateManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,14 +23,14 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 	private final BlockingFs fs;
 	private final FileNamingScheme fileNamingScheme;
-	private final DataStreamEncoder<T> encoder;
-	private final DataStreamDecoder<T> decoder;
+	private final StreamEncoder<T> encoder;
+	private final StreamDecoder<T> decoder;
 
 	private int maxSaveDiffs = 0;
 	private String tempDir = DEFAULT_TEMP_DIR;
 
 	private FileStateManager(BlockingFs fs, FileNamingScheme fileNamingScheme,
-			DataStreamEncoder<T> encoder, DataStreamDecoder<T> decoder) {
+			StreamEncoder<T> encoder, StreamDecoder<T> decoder) {
 		this.fs = fs;
 		this.fileNamingScheme = fileNamingScheme;
 		this.encoder = encoder;
@@ -38,22 +38,22 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	}
 
 	public static <T> FileStateManager<T> create(BlockingFs fs, FileNamingScheme fileNamingScheme,
-			DataStreamCodec<T> codec) {
+			StreamCodec<T> codec) {
 		return new FileStateManager<>(fs, fileNamingScheme, codec, codec);
 	}
 
 	public static <T> FileStateManager<T> create(BlockingFs fs, FileNamingScheme fileNamingScheme,
-			DataStreamEncoder<T> encoder, DataStreamDecoder<T> decoder) {
+			StreamEncoder<T> encoder, StreamDecoder<T> decoder) {
 		return new FileStateManager<>(fs, fileNamingScheme, encoder, decoder);
 	}
 
 	public static <T> FileStateManager<T> create(BlockingFs fs, FileNamingScheme fileNamingScheme,
-			DataStreamEncoder<T> encoder) {
+			StreamEncoder<T> encoder) {
 		return new FileStateManager<>(fs, fileNamingScheme, encoder, null);
 	}
 
 	public static <T> FileStateManager<T> create(BlockingFs fs, FileNamingScheme fileNamingScheme,
-			DataStreamDecoder<T> decoder) {
+			StreamDecoder<T> decoder) {
 		return new FileStateManager<>(fs, fileNamingScheme, null, decoder);
 	}
 
@@ -92,34 +92,34 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	public @NotNull T loadSnapshot(@NotNull Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		InputStream inputStream = fs.download(filename);
-		try (DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream)) {
-			return decoder.decode(inputStreamEx);
+		try (StreamInput input = StreamInput.create(inputStream)) {
+			return decoder.decode(input);
 		}
 	}
 
 	@Override
 	public @NotNull T loadDiff(@NotNull T state, @NotNull Long revisionFrom, @NotNull Long revisionTo) throws IOException {
 		if (revisionFrom.equals(revisionTo)) return state;
-		if (!(this.decoder instanceof DiffDataStreamDecoder)) {
+		if (!(this.decoder instanceof DiffStreamDecoder)) {
 			throw new UnsupportedOperationException();
 		}
 		String filename = fileNamingScheme.encodeDiff(revisionFrom, revisionTo);
 		InputStream inputStream = fs.download(filename);
-		try (DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream)) {
-			return ((DiffDataStreamDecoder<T>) this.decoder).decodeDiff(inputStreamEx, state);
+		try (StreamInput input = StreamInput.create(inputStream)) {
+			return ((DiffStreamDecoder<T>) this.decoder).decodeDiff(input, state);
 		}
 	}
 
 	@Override
 	public void saveSnapshot(@NotNull T state, @NotNull Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
-		safeUpload(filename, outputStream -> encoder.encode(outputStream, state));
+		safeUpload(filename, output -> encoder.encode(output, state));
 	}
 
 	@Override
 	public void saveDiff(@NotNull T state, @NotNull Long revision, @NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
-		safeUpload(filenameDiff, outputStream -> ((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStream, stateFrom, state));
+		safeUpload(filenameDiff, output -> ((DiffStreamEncoder<T>) this.encoder).encodeDiff(output, stateFrom, state));
 	}
 
 	public @NotNull FileState<T> load() throws IOException {
@@ -135,7 +135,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 		if (revisionFrom.equals(lastRevision)) {
 			return new FileState<>(stateFrom, revisionFrom);
 		}
-		if (decoder instanceof DiffDataStreamDecoder) {
+		if (decoder instanceof DiffStreamDecoder) {
 			Long lastDiffRevision = getLastDiffRevision(revisionFrom);
 			if (lastDiffRevision != null && (lastRevision == null || lastDiffRevision.compareTo(lastRevision) >= 0)) {
 				T state = loadDiff(stateFrom, revisionFrom, lastDiffRevision);
@@ -168,17 +168,17 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 				String filenameFrom = fileNamingScheme.encodeSnapshot(revisionFrom);
 				InputStream inputStream = fs.download(filenameFrom);
 				T stateFrom;
-				try (DataInputStreamEx inputStreamEx = DataInputStreamEx.create(inputStream)) {
-					stateFrom = decoder.decode(inputStreamEx);
+				try (StreamInput input = StreamInput.create(inputStream)) {
+					stateFrom = decoder.decode(input);
 				}
 
 				String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
-				safeUpload(filenameDiff, outputStream -> ((DiffDataStreamEncoder<T>) this.encoder).encodeDiff(outputStream, state, stateFrom));
+				safeUpload(filenameDiff, output -> ((DiffStreamEncoder<T>) this.encoder).encodeDiff(output, state, stateFrom));
 			}
 		}
 
 		String filename = fileNamingScheme.encodeSnapshot(revision);
-		safeUpload(filename, outputStream -> encoder.encode(outputStream, state));
+		safeUpload(filename, output -> encoder.encode(output, state));
 
 		return revision;
 	}
@@ -186,7 +186,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	private void safeUpload(String filename, DataOutputStreamExConsumer consumer) throws IOException {
 		String tempFilename = tempDir + UUID.randomUUID().toString();
 		OutputStream outputStream = fs.upload(tempFilename);
-		try (DataOutputStreamEx outputStreamEx = DataOutputStreamEx.create(outputStream)) {
+		try (StreamOutput outputStreamEx = StreamOutput.create(outputStream)) {
 			consumer.accept(outputStreamEx);
 		} catch (IOException e) {
 			try {
@@ -201,7 +201,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	}
 
 	private interface DataOutputStreamExConsumer {
-		void accept(DataOutputStreamEx outputStream) throws IOException;
+		void accept(StreamOutput outputStream) throws IOException;
 	}
 
 }

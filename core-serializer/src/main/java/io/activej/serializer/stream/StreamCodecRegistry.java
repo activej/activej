@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.serializer.datastream;
+package io.activej.serializer.stream;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -22,31 +22,31 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.activej.serializer.datastream.DataStreamCodecs.*;
+import static io.activej.serializer.stream.StreamCodecs.*;
 
 /**
  * A registry which stores codecs by their type and allows dynamic dispatch of them.
  * <p>
  * Also it allows dynamic construction of codecs for generic types.
  */
-public final class DataStreamCodecRegistry implements DataStreamCodecFactory {
-	private final Map<Class<?>, BiFunction<DataStreamCodecFactory, DataStreamCodec<?>[], DataStreamCodec<?>>> map = new LinkedHashMap<>();
+public final class StreamCodecRegistry implements StreamCodecFactory {
+	private final Map<Class<?>, BiFunction<StreamCodecFactory, StreamCodec<?>[], StreamCodec<?>>> map = new LinkedHashMap<>();
 
-	private DataStreamCodecRegistry() {
+	private StreamCodecRegistry() {
 	}
 
 	/**
 	 * Creates a new completely empty registry.
 	 * You are advised to use {@link #createDefault()} factory method instead.
 	 */
-	public static DataStreamCodecRegistry create() {
-		return new DataStreamCodecRegistry();
+	public static StreamCodecRegistry create() {
+		return new StreamCodecRegistry();
 	}
 
 	/**
 	 * Creates a registry with a set of default codecs - primitives, some Java types, collections, ActiveJ tuples.
 	 */
-	public static DataStreamCodecRegistry createDefault() {
+	public static StreamCodecRegistry createDefault() {
 		return create()
 				.with(void.class, ofVoid())
 				.with(boolean.class, ofBoolean())
@@ -97,25 +97,25 @@ public final class DataStreamCodecRegistry implements DataStreamCodecFactory {
 				;
 	}
 
-	public <T> DataStreamCodecRegistry with(Class<T> type, DataStreamCodec<T> codec) {
+	public <T> StreamCodecRegistry with(Class<T> type, StreamCodec<T> codec) {
 		return withGeneric(type, (self, $) -> codec);
 	}
 
-	public <T> DataStreamCodecRegistry with(Class<T> type, Function<DataStreamCodecFactory, DataStreamCodec<T>> codec) {
+	public <T> StreamCodecRegistry with(Class<T> type, Function<StreamCodecFactory, StreamCodec<T>> codec) {
 		return withGeneric(type, (self, $) -> codec.apply(self));
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public <T> DataStreamCodecRegistry withGeneric(Class<T> type, BiFunction<DataStreamCodecFactory, DataStreamCodec<Object>[], DataStreamCodec<? extends T>> fn) {
+	public <T> StreamCodecRegistry withGeneric(Class<T> type, BiFunction<StreamCodecFactory, StreamCodec<Object>[], StreamCodec<? extends T>> fn) {
 		map.put(type, (BiFunction) fn);
 		return this;
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
-	public <T> DataStreamCodec<T> get(Type type) {
+	public <T> StreamCodec<T> get(Type type) {
 		Class<?> rawType;
-		DataStreamCodec<Object>[] subCodecs = null;
+		StreamCodec<Object>[] subCodecs = null;
 
 		if (type instanceof Class) {
 			rawType = (Class<?>) type;
@@ -126,16 +126,16 @@ public final class DataStreamCodecRegistry implements DataStreamCodecFactory {
 			if (rawType.isArray() && !map.containsKey(rawType)) {
 				Class<?> componentClazz = rawType.getComponentType();
 
-				DataStreamCodec<Object> componentCodec = this.get((Type) componentClazz);
-				DataStreamCodec<Object[]> codec = ofArray(componentCodec);
-				return (DataStreamCodec<T>) codec;
+				StreamCodec<Object> componentCodec = this.get((Type) componentClazz);
+				StreamCodec<Object[]> codec = ofArray(componentCodec);
+				return (StreamCodec<T>) codec;
 			}
 
 		} else if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
 			rawType = (Class) parameterizedType.getRawType();
 
-			subCodecs = new DataStreamCodec[parameterizedType.getActualTypeArguments().length];
+			subCodecs = new StreamCodec[parameterizedType.getActualTypeArguments().length];
 
 			for (int i = 0; i < subCodecs.length; i++) {
 				subCodecs[i] = get(parameterizedType.getActualTypeArguments()[i]);
@@ -145,8 +145,8 @@ public final class DataStreamCodecRegistry implements DataStreamCodecFactory {
 			throw new IllegalArgumentException(type.getTypeName());
 		}
 
-		BiFunction<DataStreamCodecFactory, DataStreamCodec<?>[], DataStreamCodec<?>> fn = map.get(rawType);
-		return (DataStreamCodec<T>) fn.apply(this, subCodecs);
+		BiFunction<StreamCodecFactory, StreamCodec<?>[], StreamCodec<?>> fn = map.get(rawType);
+		return (StreamCodec<T>) fn.apply(this, subCodecs);
 
 	}
 

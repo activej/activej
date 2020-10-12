@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.serializer.datastream;
+package io.activej.serializer.stream;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,11 +22,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 @SuppressWarnings("unused")
-public abstract class DataStreamCodecT<T> {
+public abstract class StreamCodecT<T> {
 	@NotNull
 	private final Type type;
 
-	public DataStreamCodecT() {
+	public StreamCodecT() {
 		this.type = getSuperclassTypeParameter(this.getClass());
 	}
 

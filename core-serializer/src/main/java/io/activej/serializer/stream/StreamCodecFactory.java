@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package io.activej.serializer.datastream;
+package io.activej.serializer.stream;
 
 import java.lang.reflect.Type;
 
 /**
  * This is an interface for something that can create or retrieve a codec for a given type.
  */
-public interface DataStreamCodecFactory {
-	default <T> DataStreamCodec<T> get(Class<T> type) {
+public interface StreamCodecFactory {
+	default <T> StreamCodec<T> get(Class<T> type) {
 		return get((Type) type);
 	}
 
-	default <T> DataStreamCodec<T> get(DataStreamCodecT<T> type) {
+	default <T> StreamCodec<T> get(StreamCodecT<T> type) {
 		return get(type.getType());
 	}
 
-	<T> DataStreamCodec<T> get(Type type);
+	<T> StreamCodec<T> get(Type type);
 
 }

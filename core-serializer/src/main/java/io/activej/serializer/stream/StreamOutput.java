@@ -1,4 +1,4 @@
-package io.activej.serializer.datastream;
+package io.activej.serializer.stream;
 
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
@@ -9,7 +9,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class DataOutputStreamEx implements Closeable {
+public class StreamOutput implements Closeable {
 	private static final int MAX_SIZE = 1 << 28; // 256MB
 
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
@@ -20,17 +20,17 @@ public class DataOutputStreamEx implements Closeable {
 	private int estimatedDataSize = 1;
 	private int estimatedHeaderSize = 1;
 
-	private DataOutputStreamEx(OutputStream outputStream, int initialBufferSize) {
+	private StreamOutput(OutputStream outputStream, int initialBufferSize) {
 		this.outputStream = outputStream;
 		this.out = new BinaryOutput(allocate(initialBufferSize));
 	}
 
-	public static DataOutputStreamEx create(OutputStream output) {
-		return new DataOutputStreamEx(output, DEFAULT_BUFFER_SIZE);
+	public static StreamOutput create(OutputStream output) {
+		return new StreamOutput(output, DEFAULT_BUFFER_SIZE);
 	}
 
-	public static DataOutputStreamEx create(OutputStream outputStream, int bufferSize) {
-		return new DataOutputStreamEx(outputStream, bufferSize);
+	public static StreamOutput create(OutputStream outputStream, int bufferSize) {
+		return new StreamOutput(outputStream, bufferSize);
 	}
 
 	@Override

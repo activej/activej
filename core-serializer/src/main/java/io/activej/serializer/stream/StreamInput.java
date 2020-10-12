@@ -1,4 +1,4 @@
-package io.activej.serializer.datastream;
+package io.activej.serializer.stream;
 
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinarySerializer;
@@ -13,7 +13,7 @@ import java.io.InputStream;
 import static java.lang.Math.max;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class DataInputStreamEx implements Closeable {
+public class StreamInput implements Closeable {
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
 	private BinaryInput in;
@@ -22,17 +22,17 @@ public class DataInputStreamEx implements Closeable {
 
 	private char[] charArray = new char[128];
 
-	private DataInputStreamEx(InputStream inputStream, int initialBufferSize) {
+	private StreamInput(InputStream inputStream, int initialBufferSize) {
 		this.inputStream = inputStream;
 		this.in = new BinaryInput(allocate(initialBufferSize));
 	}
 
-	public static DataInputStreamEx create(InputStream inputStream) {
-		return new DataInputStreamEx(inputStream, DEFAULT_BUFFER_SIZE);
+	public static StreamInput create(InputStream inputStream) {
+		return new StreamInput(inputStream, DEFAULT_BUFFER_SIZE);
 	}
 
-	public static DataInputStreamEx create(InputStream inputStream, int bufferSize) {
-		return new DataInputStreamEx(inputStream, bufferSize);
+	public static StreamInput create(InputStream inputStream, int bufferSize) {
+		return new StreamInput(inputStream, bufferSize);
 	}
 
 	@Override

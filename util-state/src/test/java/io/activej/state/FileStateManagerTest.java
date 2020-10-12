@@ -1,9 +1,9 @@
 package io.activej.state;
 
 import io.activej.fs.LocalBlockingFs;
-import io.activej.serializer.datastream.DataInputStreamEx;
-import io.activej.serializer.datastream.DataOutputStreamEx;
-import io.activej.serializer.datastream.DiffDataStreamCodec;
+import io.activej.serializer.stream.DiffStreamCodec;
+import io.activej.serializer.stream.StreamInput;
+import io.activej.serializer.stream.StreamOutput;
 import io.activej.state.file.FileNamingScheme;
 import io.activej.state.file.FileNamingSchemes;
 import io.activej.state.file.FileState;
@@ -145,25 +145,25 @@ public class FileStateManagerTest {
 		}
 	}
 
-	private static class IntegerCodec implements DiffDataStreamCodec<Integer> {
+	private static class IntegerCodec implements DiffStreamCodec<Integer> {
 		@Override
-		public Integer decode(DataInputStreamEx stream) throws IOException {
-			return stream.readInt();
+		public Integer decode(StreamInput input) throws IOException {
+			return input.readInt();
 		}
 
 		@Override
-		public void encode(DataOutputStreamEx stream, Integer item) throws IOException {
-			stream.writeInt(item);
+		public void encode(StreamOutput output, Integer item) throws IOException {
+			output.writeInt(item);
 		}
 
 		@Override
-		public Integer decodeDiff(DataInputStreamEx stream, Integer from) throws IOException {
-			return from + stream.readInt();
+		public Integer decodeDiff(StreamInput input, Integer from) throws IOException {
+			return from + input.readInt();
 		}
 
 		@Override
-		public void encodeDiff(DataOutputStreamEx stream, Integer from, Integer to) throws IOException {
-			stream.writeInt(to - from);
+		public void encodeDiff(StreamOutput output, Integer from, Integer to) throws IOException {
+			output.writeInt(to - from);
 		}
 	}
 }

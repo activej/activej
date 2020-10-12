@@ -1,4 +1,4 @@
-package io.activej.serializer.datastream;
+package io.activej.serializer.stream;
 
 import org.junit.Test;
 
@@ -12,21 +12,21 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public class DataStreamCodecRegistryTest {
+public class StreamCodecRegistryTest {
 
 	@Test
 	public void test1() throws IOException {
-		DataStreamCodecRegistry registry = DataStreamCodecRegistry.createDefault();
-		DataStreamCodec<List<String>> codec = registry.get(new DataStreamCodecT<List<String>>() {});
+		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
+		StreamCodec<List<String>> codec = registry.get(new StreamCodecT<List<String>>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DataOutputStreamEx dataOutputStream = DataOutputStreamEx.create(baos, 1)) {
-			codec.encode(dataOutputStream, asList("a", "b", "c"));
+		try (StreamOutput output = StreamOutput.create(baos, 1)) {
+			codec.encode(output, asList("a", "b", "c"));
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (DataInputStreamEx dataInputStream = DataInputStreamEx.create(bais)) {
-			assertEquals(asList("a", "b", "c"), codec.decode(dataInputStream));
+		try (StreamInput input = StreamInput.create(bais)) {
+			assertEquals(asList("a", "b", "c"), codec.decode(input));
 		}
 	}
 
@@ -48,59 +48,59 @@ public class DataStreamCodecRegistryTest {
 
 	@Test
 	public void test2() throws IOException {
-		DataStreamCodecRegistry registry = DataStreamCodecRegistry.createDefault()
-				.with(A.class, DataStreamCodecs.ofNullable(new DataStreamCodec<A>() {
+		StreamCodecRegistry registry = StreamCodecRegistry.createDefault()
+				.with(A.class, StreamCodecs.ofNullable(new StreamCodec<A>() {
 					@Override
-					public A decode(DataInputStreamEx stream) throws IOException {
-						return new A(stream.readVarInt());
+					public A decode(StreamInput input) throws IOException {
+						return new A(input.readVarInt());
 					}
 
 					@Override
-					public void encode(DataOutputStreamEx stream, A item) throws IOException {
-						stream.writeVarInt(item.x);
+					public void encode(StreamOutput output, A item) throws IOException {
+						output.writeVarInt(item.x);
 					}
 				}));
-		DataStreamCodec<List<A>> codec = registry.get(new DataStreamCodecT<List<A>>() {});
+		StreamCodec<List<A>> codec = registry.get(new StreamCodecT<List<A>>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DataOutputStreamEx output = DataOutputStreamEx.create(baos, 1)) {
+		try (StreamOutput output = StreamOutput.create(baos, 1)) {
 			codec.encode(output, asList(new A(1), new A(2), null, new A(3)));
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (DataInputStreamEx input = DataInputStreamEx.create(bais)) {
+		try (StreamInput input = StreamInput.create(bais)) {
 			assertEquals(asList(new A(1), new A(2), null, new A(3)), codec.decode(input));
 		}
 	}
 
 	@Test
 	public void test3() throws IOException {
-		DataStreamCodecRegistry registry = DataStreamCodecRegistry.createDefault();
-		DataStreamCodec<int[]> codec = registry.get(new DataStreamCodecT<int[]>() {});
+		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
+		StreamCodec<int[]> codec = registry.get(new StreamCodecT<int[]>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DataOutputStreamEx output = DataOutputStreamEx.create(baos, 1)) {
+		try (StreamOutput output = StreamOutput.create(baos, 1)) {
 			codec.encode(output, new int[]{1, 2, 3});
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (DataInputStreamEx input = DataInputStreamEx.create(bais)) {
+		try (StreamInput input = StreamInput.create(bais)) {
 			assertArrayEquals(new int[]{1, 2, 3}, codec.decode(input));
 		}
 	}
 
 	@Test
 	public void test4() throws IOException {
-		DataStreamCodecRegistry registry = DataStreamCodecRegistry.createDefault();
-		DataStreamCodec<int[][]> codec = registry.get(new DataStreamCodecT<int[][]>() {});
+		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
+		StreamCodec<int[][]> codec = registry.get(new StreamCodecT<int[][]>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DataOutputStreamEx output = DataOutputStreamEx.create(baos, 1)) {
+		try (StreamOutput output = StreamOutput.create(baos, 1)) {
 			codec.encode(output, new int[][]{new int[]{1, 2, 3}, new int[]{4, 5}});
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (DataInputStreamEx input = DataInputStreamEx.create(bais)) {
+		try (StreamInput input = StreamInput.create(bais)) {
 			assertArrayEquals(new int[][]{new int[]{1, 2, 3}, new int[]{4, 5}}, codec.decode(input));
 		}
 	}
