@@ -63,13 +63,13 @@ public class DataStreamCodecRegistryTest {
 		DataStreamCodec<List<A>> codec = registry.get(new DataStreamCodecT<List<A>>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DataOutputStreamEx dataOutputStream = DataOutputStreamEx.create(baos, 1)) {
-			codec.encode(dataOutputStream, asList(new A(1), new A(2), null, new A(3)));
+		try (DataOutputStreamEx output = DataOutputStreamEx.create(baos, 1)) {
+			codec.encode(output, asList(new A(1), new A(2), null, new A(3)));
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (DataInputStreamEx dataInputStream = DataInputStreamEx.create(bais)) {
-			assertEquals(asList(new A(1), new A(2), null, new A(3)), codec.decode(dataInputStream));
+		try (DataInputStreamEx input = DataInputStreamEx.create(bais)) {
+			assertEquals(asList(new A(1), new A(2), null, new A(3)), codec.decode(input));
 		}
 	}
 
@@ -79,13 +79,13 @@ public class DataStreamCodecRegistryTest {
 		DataStreamCodec<int[]> codec = registry.get(new DataStreamCodecT<int[]>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DataOutputStreamEx dataOutputStream = DataOutputStreamEx.create(baos, 1)) {
-			codec.encode(dataOutputStream, new int[]{1, 2, 3});
+		try (DataOutputStreamEx output = DataOutputStreamEx.create(baos, 1)) {
+			codec.encode(output, new int[]{1, 2, 3});
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (DataInputStreamEx dataInputStream = DataInputStreamEx.create(bais)) {
-			assertArrayEquals(new int[]{1, 2, 3}, codec.decode(dataInputStream));
+		try (DataInputStreamEx input = DataInputStreamEx.create(bais)) {
+			assertArrayEquals(new int[]{1, 2, 3}, codec.decode(input));
 		}
 	}
 
@@ -95,13 +95,13 @@ public class DataStreamCodecRegistryTest {
 		DataStreamCodec<int[][]> codec = registry.get(new DataStreamCodecT<int[][]>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DataOutputStreamEx dataOutputStream = DataOutputStreamEx.create(baos, 1)) {
-			codec.encode(dataOutputStream, new int[][]{new int[]{1, 2, 3}, new int[]{4, 5}});
+		try (DataOutputStreamEx output = DataOutputStreamEx.create(baos, 1)) {
+			codec.encode(output, new int[][]{new int[]{1, 2, 3}, new int[]{4, 5}});
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (DataInputStreamEx dataInputStream = DataInputStreamEx.create(bais)) {
-			assertArrayEquals(new int[][]{new int[]{1, 2, 3}, new int[]{4, 5}}, codec.decode(dataInputStream));
+		try (DataInputStreamEx input = DataInputStreamEx.create(bais)) {
+			assertArrayEquals(new int[][]{new int[]{1, 2, 3}, new int[]{4, 5}}, codec.decode(input));
 		}
 	}
 

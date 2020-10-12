@@ -45,16 +45,32 @@ public class DataOutputStreamEx implements Closeable {
 		return out;
 	}
 
-	public void ensure(int size) throws IOException {
-		if (out.array().length - out.pos() < size) {
-			doEnsureSize(size);
+	public byte[] array() {
+		return out.array();
+	}
+
+	public int pos() {
+		return out.pos();
+	}
+
+	public int limit() {
+		return out.array().length;
+	}
+
+	public int remaining() {
+		return limit() - pos();
+	}
+
+	public void ensure(int bytes) throws IOException {
+		if (remaining() < bytes) {
+			doEnsureSize(bytes);
 		}
 	}
 
 	private void doEnsureSize(int size) throws IOException {
 		// flush previous values before resize
 		doFlush();
-		if (out.array().length - out.pos() < size) {
+		if (remaining() < size) {
 			recycle(out.array());
 			this.out = new BinaryOutput(allocate(size));
 		}

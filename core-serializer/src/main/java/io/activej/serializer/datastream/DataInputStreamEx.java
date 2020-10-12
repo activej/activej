@@ -17,7 +17,7 @@ public class DataInputStreamEx implements Closeable {
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
 	private BinaryInput in;
-	private int tail;
+	private int limit;
 	private final InputStream inputStream;
 
 	private char[] charArray = new char[128];
@@ -58,22 +58,38 @@ public class DataInputStreamEx implements Closeable {
 		return in;
 	}
 
-	public void ensure(int size) throws IOException {
-		if (tail - in.pos() < size) {
-			doEnsureRead(size);
+	public byte[] array() {
+		return in.array();
+	}
+
+	public int pos() {
+		return in.pos();
+	}
+
+	public int limit() {
+		return limit;
+	}
+
+	public int remaining() {
+		return limit() - pos();
+	}
+
+	public void ensure(int bytes) throws IOException {
+		if (remaining() < bytes) {
+			doEnsureRead(bytes);
 		}
 	}
 
 	private void doEnsureRead(int size) throws IOException {
 		try {
-			while (tail - in.pos() < size) {
+			while (remaining() < size) {
 				ensureWriteRemaining(size);
-				int bytesRead = inputStream.read(in.array(), tail, in.array().length - tail);
+				int bytesRead = inputStream.read(in.array(), limit, in.array().length - limit);
 				if (bytesRead == -1) {
 					close();
 					throw new CorruptedDataException("Unexpected end of data");
 				}
-				tail += bytesRead;
+				limit += bytesRead;
 			}
 		} catch (IOException e) {
 			recycle();
@@ -82,33 +98,33 @@ public class DataInputStreamEx implements Closeable {
 	}
 
 	private void ensureWriteRemaining(int size) {
-		int writeRemaining = in.array().length - tail;
+		int writeRemaining = in.array().length - limit;
 		if (writeRemaining < size) {
-			int readRemaining = tail - in.pos;
+			int readRemaining = remaining();
 			if (in.array.length - readRemaining >= size) {
 				System.arraycopy(in.array(), in.pos(), in.array(), 0, readRemaining);
-				tail = readRemaining;
+				limit = readRemaining;
 				in.pos = 0;
 			} else {
-				byte[] bytes = allocate(max(in.array.length, tail - in.pos() + size));
-				System.arraycopy(in.array(), in.pos(), bytes, 0, tail - in.pos());
-				tail -= in.pos();
+				byte[] bytes = allocate(max(in.array.length, remaining() + size));
+				System.arraycopy(in.array(), in.pos(), bytes, 0, remaining());
+				limit -= in.pos();
 				in = new BinaryInput(bytes);
 			}
 		}
 	}
 
 	public final boolean isEndOfStream() throws IOException {
-		if (tail != in.pos()) {
+		if (limit != in.pos()) {
 			return false;
 		} else {
 			ensureWriteRemaining(1);
-			int bytesRead = inputStream.read(in.array(), tail, tail - in.pos());
+			int bytesRead = inputStream.read(in.array(), limit, remaining());
 			if (bytesRead == -1) {
 				recycle();
 				return true;
 			}
-			tail += bytesRead;
+			limit += bytesRead;
 			return false;
 		}
 	}
@@ -176,7 +192,7 @@ public class DataInputStreamEx implements Closeable {
 	}
 
 	public final byte readByte() throws IOException {
-		return in.pos < tail ? in.readByte() : readByteImpl();
+		return in.pos < limit ? in.readByte() : readByteImpl();
 	}
 
 	private byte readByteImpl() throws IOException {

@@ -3,6 +3,8 @@ package io.activej.serializer.datastream;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Variable;
+import io.activej.serializer.BinaryInput;
+import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.CorruptedDataException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -164,38 +166,62 @@ public final class DataStreamCodecs {
 		return new DataStreamCodec<int[]>() {
 			@Override
 			public void encode(DataOutputStreamEx stream, int[] array) throws IOException {
-				stream.writeVarInt(array.length);
+				stream.ensure((array.length + 1) * 5);
+				BinaryOutput out = stream.getBinaryOutput();
+				out.writeVarInt(array.length);
 				for (int i = 0; i < array.length; i++) {
-					stream.writeVarInt(array[i]);
+					out.writeVarInt(array[i]);
 				}
 			}
 
 			@Override
 			public int[] decode(DataInputStreamEx stream) throws IOException {
 				int[] array = new int[stream.readVarInt()];
-				for (int i = 0; i < array.length; i++) {
-					array[i] = stream.readVarInt();
+				BinaryInput in = stream.getBinaryInput();
+				int idx = 0;
+				while (idx < array.length) {
+					stream.ensure(array.length - idx);
+					int safeReadCount = stream.remaining() / 5;
+					if (safeReadCount == 0) break;
+					for (int i = 0; i < safeReadCount; i++) {
+						array[idx++] = in.readVarInt();
+					}
+				}
+				for (; idx < array.length; idx++) {
+					array[idx] = stream.readVarInt();
 				}
 				return array;
 			}
 		};
 	}
 
-	public static DataStreamCodec<int[]> ofVarLongArray() {
-		return new DataStreamCodec<int[]>() {
+	public static DataStreamCodec<long[]> ofVarLongArray() {
+		return new DataStreamCodec<long[]>() {
 			@Override
-			public void encode(DataOutputStreamEx stream, int[] array) throws IOException {
-				stream.writeVarInt(array.length);
+			public void encode(DataOutputStreamEx stream, long[] array) throws IOException {
+				stream.ensure((array.length + 1) * 10);
+				BinaryOutput out = stream.getBinaryOutput();
+				out.writeVarInt(array.length);
 				for (int i = 0; i < array.length; i++) {
-					stream.writeVarInt(array[i]);
+					out.writeVarLong(array[i]);
 				}
 			}
 
 			@Override
-			public int[] decode(DataInputStreamEx stream) throws IOException {
-				int[] array = new int[stream.readVarInt()];
-				for (int i = 0; i < array.length; i++) {
-					array[i] = stream.readVarInt();
+			public long[] decode(DataInputStreamEx stream) throws IOException {
+				long[] array = new long[stream.readVarInt()];
+				BinaryInput in = stream.getBinaryInput();
+				int idx = 0;
+				while (idx < array.length) {
+					stream.ensure(array.length - idx);
+					int safeReadCount = stream.remaining() / 10;
+					if (safeReadCount == 0) break;
+					for (int i = 0; i < safeReadCount; i++) {
+						array[idx++] = in.readVarLong();
+					}
+				}
+				for (; idx < array.length; idx++) {
+					array[idx] = stream.readVarLong();
 				}
 				return array;
 			}
