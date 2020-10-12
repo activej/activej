@@ -1,8 +1,10 @@
 package io.activej.rpc.protocol.stream;
 
 import io.activej.common.MemSize;
-import io.activej.csp.process.ChannelLZ4Compressor;
-import io.activej.csp.process.ChannelLZ4Decompressor;
+import io.activej.csp.process.compression.ChannelFrameDecoder;
+import io.activej.csp.process.compression.ChannelFrameEncoder;
+import io.activej.csp.process.compression.FrameFormat;
+import io.activej.csp.process.compression.LZ4LegacyFrameFormat;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -79,11 +81,12 @@ public final class RpcBinaryProtocolTest {
 		String testMessage = "Test";
 		List<RpcMessage> sourceList = IntStream.range(0, countRequests).mapToObj(i -> RpcMessage.of(i, testMessage)).collect(toList());
 
+		FrameFormat frameFormat = LZ4LegacyFrameFormat.fastest();
 		StreamSupplier<RpcMessage> supplier = StreamSupplier.ofIterable(sourceList)
 				.transformWith(ChannelSerializer.create(binarySerializer)
 						.withInitialBufferSize(MemSize.of(1)))
-				.transformWith(ChannelLZ4Compressor.createFastCompressor())
-				.transformWith(ChannelLZ4Decompressor.create())
+				.transformWith(ChannelFrameEncoder.create(frameFormat))
+				.transformWith(ChannelFrameDecoder.create(frameFormat))
 				.transformWith(ChannelDeserializer.create(binarySerializer));
 
 		List<RpcMessage> list = await(supplier.toList());

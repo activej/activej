@@ -26,8 +26,10 @@ import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
-import io.activej.csp.process.ChannelLZ4Compressor;
-import io.activej.csp.process.ChannelLZ4Decompressor;
+import io.activej.csp.process.compression.ChannelFrameDecoder;
+import io.activej.csp.process.compression.ChannelFrameEncoder;
+import io.activej.csp.process.compression.FrameFormat;
+import io.activej.csp.process.compression.LZ4FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -80,6 +82,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	public static final String SUCCESSFUL_BACKUP_FILE = "_0_SUCCESSFUL_BACKUP";
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
+	public static final FrameFormat DEFAULT_FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private final Eventloop eventloop;
 	private final ChunkIdCodec<C> chunkIdCodec;
@@ -91,6 +94,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	private String backupPath = DEFAULT_BACKUP_PATH;
 
 	private MemSize bufferSize = DEFAULT_BUFFER_SIZE;
+	private FrameFormat frameFormat = DEFAULT_FRAME_FORMAT;
 
 	private final ValueStats chunksCount = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseIdGenerator = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -157,6 +161,11 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 		return this;
 	}
 
+	public ActiveFsChunkStorage<C> withFrameFormat(FrameFormat frameFormat){
+		this.frameFormat = frameFormat;
+		return this;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields,
@@ -166,7 +175,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 				.whenComplete(promiseOpenR.recordStats())
 				.map(supplier -> supplier
 						.transformWith(readFile)
-						.transformWith(ChannelLZ4Decompressor.create())
+						.transformWith(ChannelFrameDecoder.create(frameFormat))
 						.transformWith(readDecompress)
 						.transformWith(ChannelDeserializer.create(
 								createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader)))
@@ -187,7 +196,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 										createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader))
 										.withInitialBufferSize(bufferSize))
 								.transformWith(writeCompress)
-								.transformWith(ChannelLZ4Compressor.createFastCompressor())
+								.transformWith(ChannelFrameEncoder.create(frameFormat))
 								.transformWith(writeChunker)
 								.transformWith(ChannelByteChunker.create(
 										bufferSize.map(bytes -> bytes / 2),

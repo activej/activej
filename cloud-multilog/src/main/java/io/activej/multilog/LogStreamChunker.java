@@ -26,11 +26,14 @@ import io.activej.fs.ActiveFs;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.UnaryOperator;
+
 final class LogStreamChunker extends AbstractCommunicatingProcess implements ChannelInput<ByteBuf> {
 	private final CurrentTimeProvider currentTimeProvider;
 	private final ActiveFs fs;
 	private final LogNamingScheme namingScheme;
 	private final String logPartition;
+	private final UnaryOperator<ChannelConsumer<ByteBuf>> consumerTransformer;
 
 	private ChannelSupplier<ByteBuf> input;
 	@Nullable
@@ -38,11 +41,12 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 
 	private LogFile currentChunk;
 
-	public LogStreamChunker(CurrentTimeProvider currentTimeProvider, ActiveFs fs, LogNamingScheme namingScheme, String logPartition) {
+	public LogStreamChunker(CurrentTimeProvider currentTimeProvider, ActiveFs fs, LogNamingScheme namingScheme, String logPartition, UnaryOperator<ChannelConsumer<ByteBuf>> consumerTransformer) {
 		this.currentTimeProvider = currentTimeProvider;
 		this.fs = fs;
 		this.namingScheme = namingScheme;
 		this.logPartition = logPartition;
+		this.consumerTransformer = consumerTransformer;
 	}
 
 	@Override
@@ -80,8 +84,7 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 					this.currentChunk = (currentChunk == null) ? newChunkName : new LogFile(newChunkName.getName(), 0);
 					return fs.append(namingScheme.path(logPartition, currentChunk), 0)
 							.thenEx(this::sanitize)
-							.whenResult(newConsumer ->
-									this.currentConsumer = sanitize(newConsumer))
+							.whenResult(newConsumer -> this.currentConsumer = consumerTransformer.apply(sanitize(newConsumer)))
 							.toVoid();
 				});
 	}

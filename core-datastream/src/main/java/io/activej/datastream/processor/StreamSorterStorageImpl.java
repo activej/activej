@@ -20,8 +20,7 @@ import io.activej.common.MemSize;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.ChannelByteChunker;
-import io.activej.csp.process.ChannelLZ4Compressor;
-import io.activej.csp.process.ChannelLZ4Decompressor;
+import io.activej.csp.process.compression.*;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -54,6 +53,7 @@ public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T> 
 
 	public static final String DEFAULT_FILE_PATTERN = "%d";
 	public static final MemSize DEFAULT_SORTER_BLOCK_SIZE = MemSize.kilobytes(256);
+	public static final FrameFormat DEFAULT_FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private static final AtomicInteger PARTITION = new AtomicInteger();
 
@@ -64,7 +64,7 @@ public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T> 
 	private String filePattern = DEFAULT_FILE_PATTERN;
 	private MemSize readBlockSize = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 	private MemSize writeBlockSize = DEFAULT_SORTER_BLOCK_SIZE;
-	private int compressionLevel = 0;
+	private FrameFormat frameFormat = DEFAULT_FRAME_FORMAT;
 
 	// region creators
 	private StreamSorterStorageImpl(Executor executor, BinarySerializer<T> serializer,
@@ -108,8 +108,14 @@ public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T> 
 		return this;
 	}
 
+	@Deprecated
 	public StreamSorterStorageImpl<T> withCompressionLevel(int compressionLevel) {
-		this.compressionLevel = compressionLevel;
+		this.frameFormat = LZ4LegacyFrameFormat.ofCompressionLevel(compressionLevel);
+		return this;
+	}
+
+	public StreamSorterStorageImpl<T> withFrameFormat(FrameFormat frameFormat) {
+		this.frameFormat = frameFormat;
 		return this;
 	}
 
@@ -132,7 +138,7 @@ public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T> 
 						.transformWith(ChannelSerializer.create(serializer)
 								.withInitialBufferSize(readBlockSize))
 						.transformWith(ChannelByteChunker.create(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
-						.transformWith(ChannelLZ4Compressor.create(compressionLevel))
+						.transformWith(ChannelFrameEncoder.create(frameFormat))
 						.transformWith(ChannelByteChunker.create(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
 						.streamTo(ChannelFileWriter.open(executor, path))));
 	}
@@ -149,7 +155,7 @@ public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T> 
 
 		return ChannelFileReader.open(executor, path)
 				.map(file -> file
-						.transformWith(ChannelLZ4Decompressor.create())
+						.transformWith(ChannelFrameDecoder.create(frameFormat))
 						.transformWith(ChannelDeserializer.create(serializer)));
 	}
 

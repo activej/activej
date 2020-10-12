@@ -3,6 +3,7 @@ package io.activej.cube;
 import io.activej.aggregation.*;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.csp.process.compression.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeOT;
@@ -99,6 +100,7 @@ public class CubeMeasureRemovalTest {
 		await(localFs.start());
 		multilog = MultilogImpl.create(eventloop,
 				localFs,
+				LZ4FrameFormat.create(),
 				serializer,
 				NAME_PARTITION_REMAINDER_SEQ);
 	}
@@ -139,6 +141,7 @@ public class CubeMeasureRemovalTest {
 		await(localFs.start());
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
 				localFs,
+				LZ4FrameFormat.create(),
 				SerializerBuilder.create(classLoader).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

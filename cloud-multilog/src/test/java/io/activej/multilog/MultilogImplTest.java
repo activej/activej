@@ -3,6 +3,7 @@ package io.activej.multilog;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.process.ChannelByteRanger;
+import io.activej.csp.process.compression.LZ4FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -12,6 +13,7 @@ import io.activej.fs.LocalActiveFs;
 import io.activej.serializer.BinarySerializers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.jetbrains.annotations.Nullable;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,6 +46,7 @@ public class MultilogImplTest {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		Multilog<String> multilog = MultilogImpl.create(eventloop,
 				LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath()),
+				LZ4FrameFormat.create(),
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
@@ -62,7 +65,11 @@ public class MultilogImplTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
+		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
+				LZ4FrameFormat.create(),
+				BinarySerializers.UTF8_SERIALIZER,
+				NAME_PARTITION_REMAINDER_SEQ)
+				.withBufferSize(1);
 
 		String partition = "partition";
 
@@ -76,11 +83,11 @@ public class MultilogImplTest {
 					String filename = first(map.keySet());
 					return fs.download(filename)
 							.then(supplier -> supplier
-									.transformWith(ChannelByteRanger.range(0, map.get(filename).getSize() / 2))
+									.transformWith(ChannelByteRanger.range(0, 32))
 									.streamTo(fs.upload(filename)));
 				}));
 
-		assertTrue(readLog(multilog, partition).isEmpty());
+		assertEquals(asList("test1", "test2"), readLog(multilog, partition));
 	}
 
 	@Test
@@ -89,7 +96,10 @@ public class MultilogImplTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
+		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
+				LZ4FrameFormat.create(),
+				BinarySerializers.UTF8_SERIALIZER,
+				NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
 
 		String partition1 = "partition1";
@@ -126,7 +136,9 @@ public class MultilogImplTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
+		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
+				LZ4FrameFormat.create(),
+				BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
 
 		String partition = "partition";
@@ -149,6 +161,29 @@ public class MultilogImplTest {
 
 		assertTrue(listConsumer.getList().isEmpty());
 	}
+
+	private static final LogNamingScheme EACH_ITEM_NEW_FILE_SCHEME = new LogNamingScheme() {
+		@Override
+		public String path(String logPartition, LogFile logFile) {
+			return NAME_PARTITION_REMAINDER_SEQ.path(logPartition, logFile);
+		}
+
+		@Override
+		public @Nullable PartitionAndFile parse(String name) {
+			return NAME_PARTITION_REMAINDER_SEQ.parse(name);
+		}
+
+		@Override
+		public LogFile format(long currentTimeMillis) {
+			LogFile format = NAME_PARTITION_REMAINDER_SEQ.format(currentTimeMillis);
+			return new LogFile(format.getName() + currentTimeMillis, format.getRemainder());
+		}
+
+		@Override
+		public String getListGlob(String logPartition) {
+			return NAME_PARTITION_REMAINDER_SEQ.getListGlob(logPartition);
+		}
+	};
 
 	private static <T> List<T> readLog(Multilog<T> multilog, String partition) {
 		StreamConsumerToList<T> listConsumer = StreamConsumerToList.create();

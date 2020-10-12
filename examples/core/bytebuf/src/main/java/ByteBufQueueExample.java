@@ -39,24 +39,9 @@ public final class ByteBufQueueExample {
 		System.out.println();
 	}
 
-	private static void drainingQueue() {
-		//[START REGION_3]
-		QUEUE.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4}));
-		QUEUE.add(ByteBuf.wrapForReading(new byte[]{5, 6, 7, 8}));
-
-		// Draining queue to some ByteBuf consumer
-		QUEUE.drainTo(buf -> System.out.println(Arrays.toString(buf.getArray())));
-
-		// Queue is empty after draining
-		//[END REGION_3]
-		System.out.println("Is queue empty? " + QUEUE.isEmpty());
-		System.out.println();
-	}
-
 	public static void main(String[] args) {
 		addingBufsToQueue();
 		takingBufOutOfQueue();
 		takingEverythingOutOfQueue();
-		drainingQueue();
 	}
 }

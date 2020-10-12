@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception.parse;
+package io.activej.csp.process.compression;
 
-public class UnknownFormatException extends ParseException {
-	public UnknownFormatException(Class<?> component) {
-		super(component, "Unknown format");
-	}
+import io.activej.common.exception.parse.TruncatedDataException;
 
-	public UnknownFormatException(Class<?> component, String message) {
-		super(component, message);
-	}
-
-	public UnknownFormatException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
+/**
+ * Exception indicates a stream that either is empty or ends with a complete Data Block (with no trailing data),
+ * missing End-Of-Stream Block
+ */
+public final class MissingEndOfStreamBlockException extends TruncatedDataException {
+	public MissingEndOfStreamBlockException(Class<?> component) {
+		super(component, "Stream ends with data block, not end-of-stream block");
 	}
 }

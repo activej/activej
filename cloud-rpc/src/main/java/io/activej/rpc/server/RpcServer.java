@@ -18,6 +18,8 @@ package io.activej.rpc.server;
 
 import io.activej.common.MemSize;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.csp.process.compression.FrameFormat;
+import io.activej.csp.process.compression.LZ4FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.ServerSocketSettings;
@@ -38,6 +40,7 @@ import io.activej.rpc.protocol.RpcStream;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
 import java.time.Duration;
@@ -77,11 +80,12 @@ import static java.util.Arrays.asList;
  */
 public final class RpcServer extends AbstractServer<RpcServer> {
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(16384);
-
+	public static final FrameFormat DEFAULT_FRAME_FORMAT = LZ4FrameFormat.create();
 	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
-	private boolean compression = false;
+	@Nullable
+	private FrameFormat frameFormat;
 	private Duration autoFlushInterval = Duration.ZERO;
 
 	private final Map<Class<?>, RpcRequestHandler<?, ?>> handlers = new LinkedHashMap<>();
@@ -159,7 +163,13 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 
 	public RpcServer withStreamProtocol(MemSize defaultPacketSize, boolean compression) {
 		this.initialBufferSize = defaultPacketSize;
-		this.compression = compression;
+		this.frameFormat = compression ? DEFAULT_FRAME_FORMAT : null;
+		return this;
+	}
+
+	public RpcServer withStreamProtocol(MemSize defaultPacketSize, FrameFormat frameFormat) {
+		this.initialBufferSize = defaultPacketSize;
+		this.frameFormat = frameFormat;
 		return this;
 	}
 
@@ -190,7 +200,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		RpcStream stream = new RpcStream(socket, serializer, initialBufferSize,
-				autoFlushInterval, compression, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
+				autoFlushInterval, frameFormat, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 		RpcServerConnection connection = new RpcServerConnection(this, remoteAddress, handlers, stream);
 		stream.setListener(connection);
 		add(connection);

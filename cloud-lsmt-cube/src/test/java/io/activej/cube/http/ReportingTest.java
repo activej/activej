@@ -6,6 +6,7 @@ import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.csp.process.compression.LZ4FrameFormat;
 import io.activej.cube.*;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
@@ -315,6 +316,7 @@ public final class ReportingTest {
 		await(activeFs.start());
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
 				activeFs,
+				LZ4FrameFormat.create(),
 				SerializerBuilder.create(classLoader).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

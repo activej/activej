@@ -20,8 +20,9 @@ import io.activej.common.MemSize;
 import io.activej.common.exception.CloseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.csp.process.ChannelLZ4Compressor;
-import io.activej.csp.process.ChannelLZ4Decompressor;
+import io.activej.csp.process.compression.ChannelFrameDecoder;
+import io.activej.csp.process.compression.ChannelFrameEncoder;
+import io.activej.csp.process.compression.FrameFormat;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamDataAcceptor;
@@ -30,6 +31,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
@@ -79,7 +81,7 @@ public final class RpcStream {
 	public RpcStream(AsyncTcpSocket socket,
 			BinarySerializer<RpcMessage> messageSerializer,
 			MemSize initialBufferSize,
-			Duration autoFlushInterval, boolean compression, boolean server) {
+			Duration autoFlushInterval, @Nullable FrameFormat frameFormat, boolean server) {
 		this.server = server;
 		this.socket = socket;
 
@@ -89,9 +91,9 @@ public final class RpcStream {
 				.withSerializationErrorHandler((message, e) -> listener.onSerializationError(message, e));
 		ChannelDeserializer<RpcMessage> deserializer = ChannelDeserializer.create(messageSerializer);
 
-		if (compression) {
-			ChannelLZ4Decompressor decompressor = ChannelLZ4Decompressor.create();
-			ChannelLZ4Compressor compressor = ChannelLZ4Compressor.createFastCompressor();
+		if (frameFormat != null) {
+			ChannelFrameDecoder decompressor = ChannelFrameDecoder.create(frameFormat);
+			ChannelFrameEncoder compressor = ChannelFrameEncoder.create(frameFormat);
 
 			ChannelSupplier.ofSocket(socket).bindTo(decompressor.getInput());
 			decompressor.getOutput().bindTo(deserializer.getInput());

@@ -22,6 +22,8 @@ import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.StacklessException;
+import io.activej.csp.process.compression.FrameFormat;
+import io.activej.csp.process.compression.LZ4FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
@@ -86,6 +88,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = Duration.ofSeconds(1);
 	public static final MemSize DEFAULT_PACKET_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
+	public static final FrameFormat DEFAULT_FRAME_FORMAT = LZ4FrameFormat.create();
 	public static final StacklessException START_EXCEPTION = new StacklessException("Could not establish initial connection");
 
 	private Logger logger = getLogger(getClass());
@@ -102,7 +105,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private final Map<InetSocketAddress, RpcClientConnection> connections = new HashMap<>();
 
 	private MemSize defaultPacketSize = DEFAULT_PACKET_SIZE;
-	private boolean compression = false;
+	@Nullable
+	private FrameFormat frameFormat;
 	private Duration autoFlushInterval = Duration.ZERO;
 	private Duration keepAliveInterval = Duration.ZERO;
 
@@ -222,7 +226,13 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	public RpcClient withStreamProtocol(MemSize defaultPacketSize, boolean compression) {
 		this.defaultPacketSize = defaultPacketSize;
-		this.compression = compression;
+		this.frameFormat = compression ? DEFAULT_FRAME_FORMAT : null;
+		return this;
+	}
+
+	public RpcClient withStreamProtocol(MemSize defaultPacketSize, FrameFormat frameFormat) {
+		this.defaultPacketSize = defaultPacketSize;
+		this.frameFormat = frameFormat;
 		return this;
 	}
 
@@ -337,7 +347,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 							asyncTcpSocketImpl :
 							wrapClientSocket(asyncTcpSocketImpl, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize,
-							autoFlushInterval, compression, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
+							autoFlushInterval, frameFormat, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 					RpcClientConnection connection = new RpcClientConnection(eventloop, this, address, stream, keepAliveInterval.toMillis());
 					stream.setListener(connection);
 

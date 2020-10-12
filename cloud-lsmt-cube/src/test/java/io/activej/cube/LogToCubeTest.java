@@ -4,6 +4,7 @@ import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.csp.process.compression.LZ4FrameFormat;
 import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
 import io.activej.cube.ot.CubeDiff;
@@ -94,8 +95,8 @@ public final class LogToCubeTest {
 
 		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
 		await(localFs.start());
-		Multilog<TestPubRequest> multilog = MultilogImpl.create(eventloop,
-				localFs,
+		Multilog<TestPubRequest> multilog = MultilogImpl.create(eventloop, localFs,
+				LZ4FrameFormat.create(),
 				SerializerBuilder.create(classLoader).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

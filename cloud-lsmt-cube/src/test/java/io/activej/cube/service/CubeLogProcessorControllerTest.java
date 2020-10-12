@@ -8,8 +8,9 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
-import io.activej.csp.process.ChannelLZ4Compressor;
-import io.activej.csp.process.ChannelLZ4Decompressor;
+import io.activej.csp.process.compression.ChannelFrameDecoder;
+import io.activej.csp.process.compression.ChannelFrameEncoder;
+import io.activej.csp.process.compression.LZ4FrameFormat;
 import io.activej.cube.Cube;
 import io.activej.cube.IdGeneratorStub;
 import io.activej.cube.LogItem;
@@ -121,7 +122,7 @@ public final class CubeLogProcessorControllerTest {
 		await(logsFs.start());
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(classLoader)
 				.build(LogItem.class);
-		multilog = MultilogImpl.create(eventloop, logsFs, serializer, NAME_PARTITION_REMAINDER_SEQ);
+		multilog = MultilogImpl.create(eventloop, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
 				eventloop,
@@ -150,9 +151,11 @@ public final class CubeLogProcessorControllerTest {
 		Map<String, FileMetadata> files = await(logsFs.list("**"));
 		assertEquals(1, files.size());
 
+
 		String logFile = first(files.keySet());
 		ByteBuf serializedData = await(logsFs.download(logFile).then(supplier -> supplier
-				.transformWith(ChannelLZ4Decompressor.create())
+				.transformWith(ChannelFrameDecoder.create(LZ4FrameFormat.create())
+						.withDecoderResets())
 				.toCollector(ByteBufQueue.collector())));
 
 		// offset right before string
@@ -162,7 +165,8 @@ public final class CubeLogProcessorControllerTest {
 		byte[] malformed = new byte[bufSize - 49];
 		malformed[0] = 127; // exceeds message size
 		await(ChannelSupplier.of(serializedData, ByteBuf.wrapForReading(malformed))
-				.transformWith(ChannelLZ4Compressor.createFastCompressor())
+				.transformWith(ChannelFrameEncoder.create(LZ4FrameFormat.create())
+						.withEncoderResets())
 				.streamTo(logsFs.upload(logFile)));
 
 		UnknownFormatException exception = awaitException(controller.process());

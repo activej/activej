@@ -18,10 +18,14 @@ package io.activej.multilog;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.TruncatedDataException;
+import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.Stopwatch;
-import io.activej.csp.process.ChannelLZ4Compressor;
-import io.activej.csp.process.ChannelLZ4Decompressor;
+import io.activej.csp.ChannelSupplier;
+import io.activej.csp.process.compression.ChannelFrameDecoder;
+import io.activej.csp.process.compression.ChannelFrameEncoder;
+import io.activej.csp.process.compression.FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
@@ -48,8 +52,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
-import static io.activej.csp.process.ChannelLZ4Decompressor.STREAM_IS_CORRUPTED;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -67,6 +69,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 	private MemSize bufferSize = DEFAULT_BUFFER_SIZE;
 	private Duration autoFlushInterval = null;
 	private boolean ignoreMalformedLogs;
+	private final FrameFormat frameFormat;
 
 	private final StreamRegistry<String> streamReads = StreamRegistry.create();
 	private final StreamRegistry<String> streamWrites = StreamRegistry.create();
@@ -74,17 +77,18 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 	private final StreamStatsDetailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
 	private final StreamStatsDetailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
 
-	private MultilogImpl(Eventloop eventloop, ActiveFs fs, BinarySerializer<T> serializer,
+	private MultilogImpl(Eventloop eventloop, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		this.eventloop = eventloop;
 		this.fs = fs;
+		this.frameFormat = frameFormat;
 		this.serializer = serializer;
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> MultilogImpl<T> create(Eventloop eventloop, ActiveFs fs,
-			BinarySerializer<T> serializer, LogNamingScheme namingScheme) {
-		return new MultilogImpl<>(eventloop, fs, serializer, namingScheme);
+	public static <T> MultilogImpl<T> create(Eventloop eventloop, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+			LogNamingScheme namingScheme) {
+		return new MultilogImpl<>(eventloop, fs, frameFormat, serializer, namingScheme);
 	}
 
 	public MultilogImpl<T> withBufferSize(int bufferSize) {
@@ -117,10 +121,12 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 								.withAutoFlushInterval(autoFlushInterval)
 								.withInitialBufferSize(bufferSize)
 								.withSkipSerializationErrors())
-						.transformWith(ChannelLZ4Compressor.createFastCompressor())
 						.transformWith(streamWrites.register(logPartition))
 						.transformWith(streamWriteStats)
-						.bindTo(new LogStreamChunker(eventloop, fs, namingScheme, logPartition))));
+						.bindTo(new LogStreamChunker(eventloop, fs, namingScheme, logPartition,
+								consumer -> consumer.transformWith(
+										ChannelFrameEncoder.create(frameFormat)
+												.withEncoderResets())))));
 	}
 
 	@Override
@@ -137,26 +143,37 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 								.filter(partitionAndFile -> partitionAndFile.getLogPartition().equals(logPartition))
 								.map(PartitionAndFile::getLogFile)
 								.collect(toList()))
-				.map(logFiles ->
-						logFiles.stream()
-								.filter(logFile -> isFileInRange(logFile, startPosition, endLogFile))
-								.map(logFile -> logFile.equals(startPosition.getLogFile()) ?
-										startPosition : LogPosition.create(logFile, 0)
-								)
-								.sorted()
-								.collect(toList()))
-				.map(logFilesToRead -> readLogFiles(logPartition, startPosition, logFilesToRead));
+				.map(logFiles -> {
+					RefBoolean lastFileRef = new RefBoolean(true);
+					return readLogFiles(logPartition, startPosition, logFiles.stream()
+							.filter(logFile -> {
+								if (logFile.compareTo(startPosition.getLogFile()) < 0)
+									return false;
+
+								if (endLogFile == null || logFile.compareTo(endLogFile) <= 0) {
+									return true;
+								}
+
+								lastFileRef.set(false);
+								return false;
+							})
+							.map(logFile -> logFile.equals(startPosition.getLogFile()) ?
+									startPosition : LogPosition.create(logFile, 0)
+							)
+							.sorted()
+							.collect(toList()), lastFileRef.get());
+				});
 	}
 
-	private StreamSupplierWithResult<T, LogPosition> readLogFiles(@NotNull String logPartition, @NotNull LogPosition startPosition, @NotNull List<LogPosition> logFiles) {
+	private StreamSupplierWithResult<T, LogPosition> readLogFiles(@NotNull String logPartition, @NotNull LogPosition startPosition, @NotNull List<LogPosition> logFiles, boolean lastFile) {
 		SettablePromise<LogPosition> positionPromise = new SettablePromise<>();
 
 		Iterator<StreamSupplier<T>> logFileStreams = new Iterator<StreamSupplier<T>>() {
 			final Stopwatch sw = Stopwatch.createUnstarted();
 
 			final Iterator<LogPosition> it = logFiles.iterator();
+			final CountingFrameFormat countingFormat = new CountingFrameFormat(frameFormat);
 			LogPosition currentPosition;
-			long inputStreamPosition;
 
 			@Override
 			public boolean hasNext() {
@@ -169,7 +186,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 				if (currentPosition == null)
 					return startPosition;
 
-				return LogPosition.create(currentPosition.getLogFile(), currentPosition.getPosition() + inputStreamPosition);
+				return LogPosition.create(currentPosition.getLogFile(), currentPosition.getPosition() + countingFormat.getCount());
 			}
 
 			@Override
@@ -188,54 +205,43 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 											if (logger.isWarnEnabled()) {
 												logger.warn("Ignoring log file whose size is less than log position {} {}:`{}` in {}, previous position: {}",
 														position, fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
-														sw, inputStreamPosition, e);
+														sw, countingFormat.getCount(), e);
 											}
-											return Promise.of(StreamSupplier.closing());
+											return Promise.of(ChannelSupplier.<ByteBuf>of());
 										}
-										return Promise.ofException(e);
 									}
-
-									inputStreamPosition = 0L;
+									return Promise.of(fileStream, e);
+								})
+								.map(fileStream -> {
+									countingFormat.resetCount();
 									sw.reset().start();
-									return Promise.of(fileStream
+									return fileStream
 											.transformWith(streamReads.register(logPartition + ":" + currentLogFile + "@" + position))
 											.transformWith(streamReadStats)
-											.transformWith(ChannelLZ4Decompressor.create()
-													.withInspector(new ChannelLZ4Decompressor.Inspector() {
-														@Override
-														public <Q extends ChannelLZ4Decompressor.Inspector> Q lookup(Class<Q> type) {
-															throw new UnsupportedOperationException();
-														}
-
-														@Override
-														public void onBlock(ChannelLZ4Decompressor self, ChannelLZ4Decompressor.Header header, ByteBuf inputBuf, ByteBuf outputBuf) {
-															inputStreamPosition += ChannelLZ4Decompressor.HEADER_LENGTH + header.compressedLen;
-														}
-													}))
+											.transformWith(
+													ChannelFrameDecoder.create(countingFormat)
+															.withDecoderResets())
 											.transformWith(supplier ->
 													supplier.withEndOfStream(eos ->
-															eos.thenEx(($, e2) -> {
-																if (e2 == null) {
+															eos.thenEx(($, e) -> {
+																if (e == null ||
+																		e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
 																	return Promise.complete();
 																}
-																if (e2 instanceof TruncatedDataException) {
-																	return Promise.complete();
-																}
-																if (ignoreMalformedLogs &&
-																		(e2 == STREAM_IS_CORRUPTED ||
-																				e2 == UNEXPECTED_DATA_EXCEPTION)) {
+
+																if (ignoreMalformedLogs && e instanceof ParseException) {
 																	if (logger.isWarnEnabled()) {
 																		logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
 																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
-																				sw, inputStreamPosition, e2);
+																				sw, countingFormat.getCount(), e);
 																	}
 																	return Promise.complete();
 																}
-																return Promise.ofException(e2);
+																return Promise.ofException(e);
 															})))
 											.transformWith(ChannelDeserializer.create(serializer))
 											.withEndOfStream(eos ->
-													eos.whenComplete(($, e2) -> log(e2))));
+													eos.whenComplete(($, e) -> log(e)));
 								}));
 			}
 
@@ -243,11 +249,11 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 				if (e == null && logger.isTraceEnabled()) {
 					logger.trace("Finish log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
 							fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
-							sw, inputStreamPosition, inputStreamPosition / Math.max(sw.elapsed(SECONDS), 1));
+							sw, countingFormat.getCount(), countingFormat.getCount() / Math.max(sw.elapsed(SECONDS), 1));
 				} else if (e != null && logger.isErrorEnabled()) {
 					logger.error("Error on log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
 							fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
-							sw, inputStreamPosition, inputStreamPosition / Math.max(sw.elapsed(SECONDS), 1), e);
+							sw, countingFormat.getCount(), countingFormat.getCount() / Math.max(sw.elapsed(SECONDS), 1), e);
 				}
 			}
 		};
@@ -257,13 +263,6 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 
 	private static void validateLogPartition(@NotNull String logPartition) {
 		checkArgument(!logPartition.contains("-"), "Using dash (-) in log partition name is not allowed");
-	}
-
-	private static boolean isFileInRange(@NotNull LogFile logFile, @NotNull LogPosition startPosition, @Nullable LogFile endFile) {
-		if (logFile.compareTo(startPosition.getLogFile()) < 0)
-			return false;
-
-		return endFile == null || logFile.compareTo(endFile) <= 0;
 	}
 
 	@NotNull
