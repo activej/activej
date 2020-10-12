@@ -1,5 +1,7 @@
 package io.activej.serializer.stream;
 
+import io.activej.serializer.BinarySerializer;
+
 import java.io.IOException;
 
 public interface StreamCodec<T> extends StreamEncoder<T>, StreamDecoder<T> {
@@ -14,6 +16,20 @@ public interface StreamCodec<T> extends StreamEncoder<T>, StreamDecoder<T> {
 			@Override
 			public T decode(StreamInput input) throws IOException {
 				return decoder.decode(input);
+			}
+		};
+	}
+
+	static <T> StreamCodec<T> of(BinarySerializer<T> binarySerializer) {
+		return new StreamCodec<T>() {
+			@Override
+			public void encode(StreamOutput output, T item) throws IOException {
+				output.serialize(binarySerializer, item);
+			}
+
+			@Override
+			public T decode(StreamInput input) throws IOException {
+				return input.deserialize(binarySerializer);
 			}
 		};
 	}

@@ -27,8 +27,10 @@ public class RecordProjectionTest {
 
 		Record record2 = projection.apply(record1);
 
-		assertEquals(record2.get("int"), 10);
-		assertEquals(record2.get("Integer"), 100);
+		assertEquals(10, record2.getInt("int"));
+		assertEquals((Integer) 10, record2.get("int"));
+		assertEquals(100, record2.getInt("Integer"));
+		assertEquals((Integer) 100, record2.get("Integer"));
 
 		RecordProjection projection2 = RecordProjection.projection(schemeFrom.getClassLoader(), schemeFrom, "int", "Integer");
 		RecordProjection projection3 = RecordProjection.projection(schemeFrom.getClassLoader(), schemeFrom, "int", "Integer");
@@ -55,14 +57,14 @@ public class RecordProjectionTest {
 
 		Record record2 = projection.apply(record1);
 
-		assertEquals(110, record2.get("x"));
+		assertEquals(110, record2.getInt("x"));
 
 		Function<Record, Record> fn = projection;
 		Record record3 = fn.apply(record1);
-		assertEquals(110, record3.get("x"));
+		assertEquals(110, record3.getInt("x"));
 		record3.set("x", 0);
-		assertEquals(0, record3.get("x"));
+		assertEquals(0, record3.getInt("x"));
 		((BiConsumer<Record, Record>) projection).accept(record1, record3);
-		assertEquals(110, record3.get("x"));
+		assertEquals(110, record3.getInt("x"));
 	}
 }

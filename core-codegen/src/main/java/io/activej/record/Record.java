@@ -14,11 +14,11 @@ public abstract class Record {
 		return scheme;
 	}
 
-	public Object get(String field) {
+	public <T> T get(String field) {
 		return scheme.get(this, field);
 	}
 
-	public Object get(int field) {
+	public <T> T get(int field) {
 		return scheme.get(this, field);
 	}
 
@@ -54,11 +54,11 @@ public abstract class Record {
 		return scheme.getDouble(this, field);
 	}
 
-	public void set(String field, Object value) {
+	public <T> void set(String field, T value) {
 		scheme.set(this, field, value);
 	}
 
-	public void set(int field, Object value) {
+	public <T> void set(int field, T value) {
 		scheme.set(this, field, value);
 	}
 

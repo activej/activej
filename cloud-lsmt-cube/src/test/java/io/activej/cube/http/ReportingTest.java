@@ -711,8 +711,8 @@ public final class ReportingTest {
 		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
 		assertEquals(2, in.getTotalCount());
 
-		assertEquals(1, in.getRecords().get(0).get("advertiser"));
-		assertEquals(2, in.getRecords().get(1).get("advertiser"));
+		assertEquals(1, in.getRecords().get(0).getInt("advertiser"));
+		assertEquals(2, in.getRecords().get(1).getInt("advertiser"));
 	}
 
 	@Test

@@ -1,7 +1,7 @@
 package io.activej.record;
 
-public interface RecordSetter {
-	void set(Record record, Object value);
+public interface RecordSetter<T> {
+	void set(Record record, T value);
 
 	default void setInt(Record record, int value) {
 		throw new UnsupportedOperationException();

@@ -18,7 +18,7 @@ public class RecordSchemeTest {
 		assertSame(scheme, scheme1);
 
 		record1.set("id", 10);
-		assertEquals(10, record1.get("id"));
+		assertEquals(10, record1.getInt("id"));
 
 		record1.set("name", "abc");
 		assertEquals("abc", record1.get("name"));
@@ -71,22 +71,22 @@ public class RecordSchemeTest {
 		assertEquals(true, record.get("Boolean"));
 
 		record.set("int", 1);
-		assertEquals(1, record.get("int"));
+		assertEquals(1, record.getInt("int"));
 		assertEquals(1, scheme.getter("int").getInt(record));
 		assertEquals(1, scheme.getter("int").getLong(record));
 		assertEquals(1, scheme.getter("int").getFloat(record), 1E-6);
 		assertEquals(1, scheme.getter("int").getDouble(record), 1E-6);
 		scheme.setter("int").setInt(record, 2);
-		assertEquals(2, record.get("int"));
+		assertEquals(2, record.getInt("int"));
 
 		record.set("Integer", 1);
-		assertEquals(1, record.get("Integer"));
+		assertEquals(1, record.getInt("Integer"));
 		assertEquals(1, scheme.getter("Integer").getInt(record));
 		assertEquals(1, scheme.getter("Integer").getLong(record));
 		assertEquals(1, scheme.getter("Integer").getFloat(record), 1E-6);
 		assertEquals(1, scheme.getter("Integer").getDouble(record), 1E-6);
 		scheme.setter("Integer").setInt(record, 2);
-		assertEquals(2, record.get("Integer"));
+		assertEquals(2, record.getInt("Integer"));
 
 		assertSame(scheme, scheme.setter("int").getScheme());
 		assertEquals("int", scheme.setter("int").getField());

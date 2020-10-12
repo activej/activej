@@ -1,7 +1,7 @@
 package io.activej.record;
 
-public interface RecordGetter {
-	Object get(Record record);
+public interface RecordGetter<T> {
+	T get(Record record);
 
 	default int getInt(Record record) {
 		throw new UnsupportedOperationException();

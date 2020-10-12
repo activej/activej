@@ -36,11 +36,11 @@ import static java.util.stream.Collectors.toList;
 public final class RecordScheme implements WithInitializer<RecordScheme> {
 	private RecordFactory factory;
 
-	protected RecordGetter[] recordGetters;
-	protected RecordSetter[] recordSetters;
+	protected RecordGetter<?>[] recordGetters;
+	protected RecordSetter<?>[] recordSetters;
 
-	protected final HashMap<String, RecordGetter> recordGettersMap = new HashMap<>();
-	protected final HashMap<String, RecordSetter> recordSettersMap = new HashMap<>();
+	protected final HashMap<String, RecordGetter<?>> recordGettersMap = new HashMap<>();
+	protected final HashMap<String, RecordSetter<?>> recordSettersMap = new HashMap<>();
 
 	protected final LinkedHashMap<String, Type> fieldTypes = new LinkedHashMap<>();
 	protected final LinkedHashMap<String, Integer> fieldIndices = new LinkedHashMap<>();
@@ -180,6 +180,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 						;
 		for (String field : fieldTypes.keySet()) {
 			Type type = fieldTypes.get(field);
+			//noinspection rawtypes
 			builder.withField(getClassField(field), type instanceof Class ? ((Class) type) : Object.class);
 		}
 		generatedClass = builder.build();
@@ -189,7 +190,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		for (String field : fieldTypes.keySet()) {
 			Type fieldType = fieldTypes.get(field);
 			Variable property = this.property(cast(arg(0), generatedClass), field);
-			RecordGetter recordGetter = ClassBuilder.create(this.classLoader, RecordGetter.class)
+			RecordGetter<?> recordGetter = ClassBuilder.create(this.classLoader, RecordGetter.class)
 					.withClassKey(this, field)
 //					.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 					.withMethod("get", property)
@@ -210,7 +211,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			recordGettersMap.put(field, recordGetter);
 
 			Expression set = Expressions.set(property, arg(1));
-			RecordSetter recordSetter = ClassBuilder.create(this.classLoader, RecordSetter.class)
+			RecordSetter<?> recordSetter = ClassBuilder.create(this.classLoader, RecordSetter.class)
 					.withClassKey(this, field)
 //					.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 					.withMethod("set", set)
@@ -240,20 +241,24 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 				.buildClassAndCreateNewInstance();
 	}
 
-	public RecordGetter getter(String field) {
-		return recordGettersMap.get(field);
+	public <T> RecordGetter<T> getter(String field) {
+		//noinspection unchecked
+		return (RecordGetter<T>) recordGettersMap.get(field);
 	}
 
-	public RecordGetter getter(int field) {
-		return recordGetters[field];
+	public <T> RecordGetter<T> getter(int field) {
+		//noinspection unchecked
+		return (RecordGetter<T>) recordGetters[field];
 	}
 
-	public Object get(Record record, String field) {
-		return getter(field).get(record);
+	public <T> T get(Record record, String field) {
+		//noinspection unchecked
+		return (T) getter(field).get(record);
 	}
 
-	public Object get(Record record, int field) {
-		return getter(field).get(record);
+	public <T> T get(Record record, int field) {
+		//noinspection unchecked
+		return (T) getter(field).get(record);
 	}
 
 	public int getInt(Record record, String field) {
@@ -288,19 +293,21 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return getter(field).getDouble(record);
 	}
 
-	public RecordSetter setter(String field) {
-		return recordSettersMap.get(field);
+	public <T> RecordSetter<T> setter(String field) {
+		//noinspection unchecked
+		return (RecordSetter<T>) recordSettersMap.get(field);
 	}
 
-	public RecordSetter setter(int field) {
-		return recordSetters[field];
+	public <T> RecordSetter<T> setter(int field) {
+		//noinspection unchecked
+		return (RecordSetter<T>) recordSetters[field];
 	}
 
-	public void set(Record record, String field, Object value) {
+	public <T> void set(Record record, String field, T value) {
 		setter(field).set(record, value);
 	}
 
-	public void set(Record record, int field, Object value) {
+	public <T> void set(Record record, int field, T value) {
 		setter(field).set(record, value);
 	}
 
