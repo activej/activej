@@ -44,19 +44,11 @@ public final class StreamCodecRegistry implements StreamCodecFactory {
 	}
 
 	/**
-	 * Creates a registry with a set of default codecs - primitives, some Java types, collections, ActiveJ tuples.
+	 * Creates a registry with a set of default codecs - primitives, some Java types and collections.
 	 */
 	public static StreamCodecRegistry createDefault() {
 		return create()
 				.with(void.class, ofVoid())
-				.with(boolean.class, ofBoolean())
-				.with(char.class, ofChar())
-				.with(byte.class, ofByte())
-				.with(int.class, ofInt())
-				.with(long.class, ofLong())
-				.with(float.class, ofFloat())
-				.with(double.class, ofDouble())
-
 				.with(boolean.class, ofBoolean())
 				.with(char.class, ofChar())
 				.with(byte.class, ofByte())

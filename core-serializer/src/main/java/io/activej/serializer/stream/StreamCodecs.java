@@ -27,11 +27,11 @@ public final class StreamCodecs {
 	public static StreamCodec<Void> ofVoid() {
 		return new StreamCodec<Void>() {
 			@Override
-			public void encode(StreamOutput output, Void item) throws IOException {
+			public void encode(StreamOutput output, Void item) {
 			}
 
 			@Override
-			public Void decode(StreamInput input) throws IOException {
+			public Void decode(StreamInput input) {
 				return null;
 			}
 		};
@@ -140,7 +140,7 @@ public final class StreamCodecs {
 		Variable stream = arg(0);
 		//noinspection unchecked
 		return (StreamCodec<T>) CODECS.computeIfAbsent(arrayType, $ ->
-				(StreamCodec<T>) ClassBuilder.create(CLASS_LOADER, Object.class, StreamCodec.class)
+				(StreamCodec<T>) ClassBuilder.create(CLASS_LOADER, StreamCodec.class)
 //						.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 						.withMethod("encode", let(cast(arg(1), arrayType),
 								array -> sequence(
@@ -339,7 +339,7 @@ public final class StreamCodecs {
 			@Override
 			public Map<K, V> decode(StreamInput input) throws IOException {
 				int size = input.readVarInt();
-				LinkedHashMap<K, V> map = new LinkedHashMap<>(size * 4 / 3);
+				Map<K, V> map = new LinkedHashMap<>(size * 4 / 3);
 				for (int i = 0; i < size; i++) {
 					K key = keyCodec.decode(input);
 					V value = valueCodecFn.apply(key).decode(input);
@@ -366,14 +366,13 @@ public final class StreamCodecs {
 	}
 
 	public static <T> StreamCodec<? extends T> ofSubtype(LinkedHashMap<Class<? extends T>, StreamCodec<? extends T>> codecs) {
-		HashMap<Class<? extends T>, SubclassEntry<T>> encoders = new HashMap<>();
+		Map<Class<? extends T>, SubclassEntry<T>> encoders = new HashMap<>();
 		//noinspection unchecked
 		StreamDecoder<? extends T>[] decoders = new StreamDecoder[codecs.size()];
-		for (Class<? extends T> aClass : codecs.keySet()) {
-			StreamCodec<? extends T> codec = codecs.get(aClass);
+		for (Map.Entry<Class<? extends T>, StreamCodec<? extends T>> entry : codecs.entrySet()) {
 			int idx = encoders.size();
-			encoders.put(aClass, new SubclassEntry<>(idx, codec));
-			decoders[idx] = codec;
+			encoders.put(entry.getKey(), new SubclassEntry<>(idx, entry.getValue()));
+			decoders[idx] = entry.getValue();
 		}
 		return new StreamCodec<T>() {
 			@Override

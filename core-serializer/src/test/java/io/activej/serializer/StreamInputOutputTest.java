@@ -13,7 +13,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public final class DataStreamExTest {
+public final class StreamInputOutputTest {
 	@Test
 	public void bufferSizeOne() throws IOException {
 		int int1 = 123;
