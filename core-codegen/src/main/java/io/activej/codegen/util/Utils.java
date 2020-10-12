@@ -23,6 +23,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -144,5 +146,14 @@ public final class Utils {
 						|| from.getSort() > DOUBLE
 						|| to.getSort() < BOOLEAN
 						|| to.getSort() > DOUBLE);
+	}
+
+	public static String getStringSetting(Class<?> cls, String key, String defaultValue){
+		return System.getProperty(cls.getSimpleName() + '.' + key, defaultValue);
+	}
+
+	public static Path getPathSetting(Class<?> cls, String key, Path defaultValue){
+		String setting = getStringSetting(cls, key, null);
+		return setting == null ? defaultValue : Paths.get(setting);
 	}
 }

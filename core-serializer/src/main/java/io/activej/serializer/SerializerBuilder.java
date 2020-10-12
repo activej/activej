@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.Utils.getPathSetting;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.findAnnotation;
@@ -56,12 +57,14 @@ import static java.util.stream.Collectors.toList;
  */
 @SuppressWarnings({"ArraysAsListWithZeroOrOneArgument", "unused"})
 public final class SerializerBuilder {
+	private static final Path DEFAULT_SAVE_DIR = getPathSetting(SerializerBuilder.class, "saveDir", null);
+
 	private final DefiningClassLoader classLoader;
 	private String profile;
 	private @Nullable Integer encodeVersion;
 	private int decodeVersionMin = 0;
 	private int decodeVersionMax = Integer.MAX_VALUE;
-	private Path saveBytecodePath;
+	private Path saveBytecodePath = DEFAULT_SAVE_DIR;
 	private CompatibilityLevel compatibilityLevel = CompatibilityLevel.LEVEL_3;
 	private Object[] classKey = null;
 

@@ -21,6 +21,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionConstant;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.codegen.util.WithInitializer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -39,6 +40,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.Utils.getPathSetting;
+import static io.activej.codegen.util.Utils.getStringSetting;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -56,20 +59,22 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final String CLASS_BUILDER_MARKER = "$GENERATED";
-	public static final String DEFAULT_CLASS_NAME = ClassBuilder.class.getPackage().getName() + ".Class";
-	private static final AtomicInteger COUNTER = new AtomicInteger();
+	public static final String PACKAGE_PREFIX = getStringSetting(ClassBuilder.class, "packagePrefix", "io.activej.codegen.");
+	public static final Path DEFAULT_SAVE_DIR = getPathSetting(ClassBuilder.class, "saveDir", null);
 
+	private static final AtomicInteger COUNTER = new AtomicInteger();
 	private static final ConcurrentHashMap<Integer, Object> STATIC_CONSTANTS = new ConcurrentHashMap<>();
 
 	private final DefiningClassLoader classLoader;
+	private final String className;
 
 	protected final Class<?> superclass;
 	protected final List<Class<?>> interfaces;
 	@Nullable
 	private ClassKey classKey;
-	private Path bytecodeSaveDir;
-
-	protected String className;
+	private Path bytecodeSaveDir = DEFAULT_SAVE_DIR;
+	@Nullable
+	private String customClassName;
 
 	protected final Map<String, Class<?>> fields = new LinkedHashMap<>();
 	protected final Set<String> fieldsFinal = new HashSet<>();
@@ -85,15 +90,16 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	// region builders
 
 	/**
-	 * Creates a new instance of AsmFunctionFactory
+	 * Creates a new instance of ClassBuilder
 	 *
 	 * @param classLoader class loader
 	 * @param superclass  type of dynamic class
 	 */
-	private ClassBuilder(DefiningClassLoader classLoader, Class<?> superclass, List<Class<?>> types) {
+	private ClassBuilder(DefiningClassLoader classLoader, Class<?> superclass, List<Class<?>> interfaces, @NotNull String className) {
 		this.classLoader = classLoader;
 		this.superclass = superclass;
-		this.interfaces = types;
+		this.interfaces = interfaces;
+		this.className = PACKAGE_PREFIX + className;
 		this.classKey = null;
 		withStaticField(CLASS_BUILDER_MARKER, Void.class);
 	}
@@ -108,11 +114,13 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		if (implementation.isInterface()) {
 			return new ClassBuilder<>(classLoader,
 					Object.class,
-					Stream.concat(Stream.of(implementation), interfaces.stream()).collect(toList()));
+					Stream.concat(Stream.of(implementation), interfaces.stream()).collect(toList()),
+					implementation.getName());
 		} else {
 			return new ClassBuilder<>(classLoader,
 					implementation,
-					interfaces);
+					interfaces,
+					implementation.getName());
 		}
 	}
 
@@ -127,7 +135,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 
 	public ClassBuilder<T> withClassName(String name) {
-		this.className = name;
+		this.customClassName = name;
 		return this;
 	}
 
@@ -259,8 +267,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	public static Object getStaticConstant(int id) {
 		return STATIC_CONSTANTS.get(id);
 	}
-
 	// endregion
+
 	public Class<T> build() {
 		if (classKey != null) {
 			Class<?> cachedClass = classLoader.getCachedClass(classKey);
@@ -271,7 +279,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		}
 
 		try {
-			byte[] bytecode = defineNewClass(className != null ? className : DEFAULT_CLASS_NAME + COUNTER.incrementAndGet());
+			String actualClassName = customClassName != null ? customClassName : className + '_' + COUNTER.incrementAndGet();
+			byte[] bytecode = defineNewClass(actualClassName);
 
 			synchronized (classLoader) {
 				if (classKey != null) {
@@ -281,7 +290,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 						return (Class<T>) cachedClass;
 					}
 				}
-				Class<T> aClass = (Class<T>) classLoader.defineAndCacheClass(classKey, className, bytecode);
+				Class<T> aClass = (Class<T>) classLoader.defineAndCacheClass(classKey, actualClassName, bytecode);
 				try {
 					Field field = aClass.getField(CLASS_BUILDER_MARKER);
 					//noinspection ResultOfMethodCallIgnored
@@ -406,7 +415,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		}
 
 		if (bytecodeSaveDir != null) {
-			try (FileOutputStream fos = new FileOutputStream(bytecodeSaveDir.resolve(actualClassName + ".class").toFile())) {
+			String classFileName = customClassName != null ? actualClassName : actualClassName.substring(PACKAGE_PREFIX.length());
+			try (FileOutputStream fos = new FileOutputStream(bytecodeSaveDir.resolve(classFileName + ".class").toFile())) {
 				fos.write(cw.toByteArray());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
