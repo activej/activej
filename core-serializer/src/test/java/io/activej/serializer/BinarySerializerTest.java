@@ -16,6 +16,7 @@ import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static io.activej.serializer.Utils.doTest;
 import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("unused")
@@ -282,7 +283,7 @@ public class BinarySerializerTest {
 		testData1.nestedList = asList(new TestDataNested(1), new TestDataNested(2));
 		testData1.nestedListList = asList(
 				asList(new TestDataNested(20), new TestDataNested(21)),
-				Collections.singletonList(new TestDataNested(22)));
+				singletonList(new TestDataNested(22)));
 
 		TestDataComplex testData2 = doTest(TestDataComplex.class, testData1);
 
@@ -881,7 +882,7 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testProfiles() {
-		BinarySerializer<TestDataProfiles> serializer = SerializerBuilder.create(getSystemClassLoader()).build(TestDataProfiles.class);
+		BinarySerializer<TestDataProfiles> serializer = SerializerBuilder.create().build(TestDataProfiles.class);
 		BinarySerializer<TestDataProfiles> serializer1 = SerializerBuilder.create("profile1", getSystemClassLoader()).build(TestDataProfiles.class);
 		BinarySerializer<TestDataProfiles> serializer2 = SerializerBuilder.create("profile2", getSystemClassLoader()).build(TestDataProfiles.class);
 
@@ -933,10 +934,10 @@ public class BinarySerializerTest {
 	@Test
 	public void testProfilesVersions() {
 		Class<TestDataProfiles2> type = TestDataProfiles2.class;
-		BinarySerializer<TestDataProfiles2> serializer1 = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<TestDataProfiles2> serializer1 = SerializerBuilder.create()
 				.withEncodeVersion(1)
 				.build(type);
-		BinarySerializer<TestDataProfiles2> serializer2 = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<TestDataProfiles2> serializer2 = SerializerBuilder.create()
 				.withEncodeVersion(2)
 				.build(type);
 
@@ -1067,13 +1068,21 @@ public class BinarySerializerTest {
 		testData1.object1 = 10;
 		testData1.object2 = "object2";
 
-		BinarySerializer<TestDataExtraSubclasses> serializer = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<TestDataExtraSubclasses> serializer = SerializerBuilder.create()
 				.withSubclasses("extraSubclasses1", Integer.class)
+				.withSubclasses(Object.class, Boolean.class)
 				.build(TestDataExtraSubclasses.class);
 		TestDataExtraSubclasses testData2 = doTest(testData1, serializer);
 
 		assertEquals(testData1.object1, testData2.object1);
 		assertEquals(testData1.object2, testData2.object2);
+
+		testData1.object1 = true;
+		testData1.object2 = true;
+
+		TestDataExtraSubclasses testData3 = doTest(testData1, serializer);
+		assertEquals(testData1.object1, testData3.object1);
+		assertEquals(testData1.object2, testData3.object2);
 	}
 
 	@SerializeSubclasses(value = TestDataExtraSubclasses1.class, extraSubclassesId = "extraSubclasses")
@@ -1090,17 +1099,70 @@ public class BinarySerializerTest {
 		public int i;
 	}
 
+	public static class TestDataExtraSubclasses3 implements TestDataExtraSubclassesInterface {
+		@Serialize(order = 1)
+		public String s;
+	}
+
 	@Test
 	public void testDataExtraSubclassesInterface() {
-		TestDataExtraSubclasses2 testData1 = new TestDataExtraSubclasses2();
-		testData1.i = 10;
+		TestDataExtraSubclassesInterface testData1 = new TestDataExtraSubclasses2();
+		((TestDataExtraSubclasses2) testData1).i = 10;
 
-		BinarySerializer<TestDataExtraSubclassesInterface> serializer = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<TestDataExtraSubclassesInterface> serializer = SerializerBuilder.create()
 				.withSubclasses("extraSubclasses", TestDataExtraSubclasses2.class)
+				.withSubclasses(TestDataExtraSubclassesInterface.class, TestDataExtraSubclasses3.class)
 				.build(TestDataExtraSubclassesInterface.class);
 		TestDataExtraSubclassesInterface testData2 = doTest(testData1, serializer);
 
-		assertEquals(testData1.i, ((TestDataExtraSubclasses2) testData2).i);
+		assertEquals(((TestDataExtraSubclasses2) testData1).i, ((TestDataExtraSubclasses2) testData2).i);
+
+		testData1 = new TestDataExtraSubclasses3();
+		((TestDataExtraSubclasses3) testData1).s = "abc";
+
+		TestDataExtraSubclassesInterface testData3 = doTest(testData1, serializer);
+
+		assertEquals(((TestDataExtraSubclasses3) testData1).s, ((TestDataExtraSubclasses3) testData3).s);
+	}
+
+	@SerializeSubclasses
+	public static abstract class TestDataAbstract {
+		private final int position;
+
+		TestDataAbstract(int position) {
+			this.position = position;
+		}
+
+		@SerializeVarLength
+		@Serialize(order = 0, added = 1)
+		public int getPosition() {
+			return position;
+		}
+	}
+
+	public static class TestDataAbstractImpl extends TestDataAbstract {
+		public TestDataAbstractImpl(@Deserialize("position") int position) {
+			super(position);
+		}
+	}
+
+	public static class TestDataContainerOfAbstractData {
+		@Serialize(order = 0)
+		public TestDataAbstract data;
+	}
+
+	@Test
+	public void testDataExtraSubclasses2() {
+		TestDataAbstractImpl testImpl = new TestDataAbstractImpl(123);
+		TestDataContainerOfAbstractData testData1 = new TestDataContainerOfAbstractData();
+		testData1.data = testImpl;
+
+		BinarySerializer<TestDataContainerOfAbstractData> serializer = SerializerBuilder.create(getSystemClassLoader())
+				.withSubclasses(TestDataAbstract.class, TestDataAbstractImpl.class)
+				.build(TestDataContainerOfAbstractData.class);
+		TestDataContainerOfAbstractData testData2 = doTest(testData1, serializer);
+
+		assertEquals(testData1.data.getPosition(), testData2.data.getPosition());
 	}
 
 	public interface TestInheritAnnotationsInterface1 {
@@ -1160,7 +1222,7 @@ public class BinarySerializerTest {
 		testData1.setDoubleValue(1.23);
 		testData1.setStringValue("test");
 
-		BinarySerializer<TestInheritAnnotationsInterface3> serializer = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<TestInheritAnnotationsInterface3> serializer = SerializerBuilder.create()
 				.build(TestInheritAnnotationsInterface3.class);
 		TestInheritAnnotationsInterface3 testData2 = doTest(testData1, serializer);
 
@@ -1168,7 +1230,7 @@ public class BinarySerializerTest {
 		assertEquals(testData1.getDoubleValue(), testData2.getDoubleValue(), Double.MIN_VALUE);
 		assertEquals(testData1.getStringValue(), testData2.getStringValue());
 
-		BinarySerializer<TestInheritAnnotationsInterfacesImpl> serializer2 = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<TestInheritAnnotationsInterfacesImpl> serializer2 = SerializerBuilder.create()
 				.build(TestInheritAnnotationsInterfacesImpl.class);
 		TestInheritAnnotationsInterfacesImpl testData3 = doTest(testData1, serializer2);
 
@@ -2009,7 +2071,7 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testUnsupportedVersion() {
-		SerializerBuilder builder = SerializerBuilder.create(getSystemClassLoader());
+		SerializerBuilder builder = SerializerBuilder.create();
 		BinarySerializer<TestDataFromVersion3> serializer = builder.build(TestDataFromVersion3.class);
 
 		TestDataFromVersion3 testDataBefore = new TestDataFromVersion3();

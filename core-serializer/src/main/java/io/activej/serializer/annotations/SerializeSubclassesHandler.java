@@ -41,6 +41,8 @@ public final class SerializeSubclassesHandler implements AnnotationHandler<Seria
 			if (subclassesSet.size() != annotation.value().length)
 				throw new IllegalArgumentException("Subclasses should be unique");
 
+			subclassesSet.addAll(context.getExtraSubclassesMap().getOrDefault(superclass, emptyList()));
+
 			if (!annotation.extraSubclassesId().isEmpty()) {
 				Collection<Class<?>> registeredSubclasses = context.getExtraSubclassesMap().get(annotation.extraSubclassesId());
 				if (registeredSubclasses != null) {

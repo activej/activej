@@ -71,7 +71,7 @@ public final class SerializerBuilder {
 	private final Map<Class<?>, SerializerDefBuilder> typeMap = new LinkedHashMap<>();
 	private final Map<Class<? extends Annotation>, Class<? extends Annotation>> annotationsExMap = new LinkedHashMap<>();
 	private final Map<Class<? extends Annotation>, AnnotationHandler<?, ?>> annotationsMap = new LinkedHashMap<>();
-	private final Map<String, Collection<Class<?>>> extraSubclassesMap = new HashMap<>();
+	private final Map<Object, List<Class<?>>> extraSubclassesMap = new HashMap<>();
 
 	private final Map<Key, SerializerDef> cachedSerializers = new HashMap<>();
 	private final List<Runnable> initTasks = new ArrayList<>();
@@ -88,7 +88,7 @@ public final class SerializerBuilder {
 		}
 
 		@Override
-		public Map<String, Collection<Class<?>>> getExtraSubclassesMap() {
+		public Map<Object, List<Class<?>>> getExtraSubclassesMap() {
 			return extraSubclassesMap;
 		}
 	};
@@ -274,6 +274,10 @@ public final class SerializerBuilder {
 		return withSerializer(type, SerializerDefBuilder.of(serializer));
 	}
 
+	public SerializerBuilder withSubclasses(String extraSubclassesId, Class<?>... subclasses) {
+		return withSubclasses(extraSubclassesId, Arrays.asList(subclasses));
+	}
+
 	public SerializerBuilder withSubclasses(String subclassesId, List<Class<?>> subclasses) {
 		extraSubclassesMap.put(subclassesId, subclasses);
 		return this;
@@ -283,8 +287,19 @@ public final class SerializerBuilder {
 		extraSubclassesMap.put(subclassesId, subclasses);
 	}
 
-	public SerializerBuilder withSubclasses(String extraSubclassesId, Class<?>... subclasses) {
-		return withSubclasses(extraSubclassesId, Arrays.asList(subclasses));
+	@SafeVarargs
+	public final <T> SerializerBuilder withSubclasses(Class<T> type, Class<? extends T>... subclasses) {
+		return withSubclasses(type, asList(subclasses));
+	}
+
+	public <T> SerializerBuilder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
+		setSubclasses(type, subclasses);
+		return this;
+	}
+
+	public <T> void setSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
+		//noinspection unchecked,rawtypes
+		extraSubclassesMap.put(type, (List) subclasses);
 	}
 
 	/**
@@ -316,6 +331,7 @@ public final class SerializerBuilder {
 			AnnotationHandler annotationHandler = annotationsMap.get(annotationType);
 			for (Annotation annotation : annotations) {
 				if (annotation.annotationType() == annotationType) {
+					//noinspection unchecked
 					SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(context, annotation);
 					mods2.add(serializerDefBuilder);
 				}
@@ -603,7 +619,7 @@ public final class SerializerBuilder {
 	}
 
 	private void scanAnnotations(Class<?> classType, SerializerForType[] classGenerics, SerializerDefClass serializer) {
-		if (classType.isInterface()) {
+		if (classType.isInterface() || (Modifier.isAbstract(classType.getModifiers()))) {
 			SerializeInterface annotation = classType.getAnnotation(SerializeInterface.class);
 			scanInterface(classType, classGenerics, serializer, (annotation != null) && annotation.inherit());
 			if (annotation != null) {

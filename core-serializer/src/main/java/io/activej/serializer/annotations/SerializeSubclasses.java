@@ -27,7 +27,7 @@ import java.lang.annotation.*;
 public @interface SerializeSubclasses {
 	int[] path() default {};
 
-	Class<?>[] value();
+	Class<?>[] value() default {};
 
 	String extraSubclassesId() default "";
 
