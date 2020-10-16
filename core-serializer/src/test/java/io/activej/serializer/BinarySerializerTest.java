@@ -2092,22 +2092,28 @@ public class BinarySerializerTest {
 		}
 	}
 
-	@SerializeNullable
-	public static class NullableContainer {
-		@Serialize(order = 0)
-		public int v;
+	@SerializeSubclasses(value = {TestNullableInterfaceImpl.class})
+	public interface TestNullableInterface {
+	}
+
+	public static class TestNullableInterfaceImpl implements TestNullableInterface {
+	}
+
+	public static class Container {
+		@Serialize(order = 1)
+		@SerializeNullable
+		public TestNullableInterface obj;
 	}
 
 	@Test
-	public void testNullableContainer() {
-		NullableContainer testData1 = new NullableContainer();
-		testData1.v = 123;
-		NullableContainer testData2 = doTest(NullableContainer.class, testData1);
-		assertEquals(testData1.v, testData2.v);
+	public void testNullableSubclass() {
+		BinarySerializer<Container> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(Container.class);
 
-		testData1 = null;
-		testData2 = doTest(NullableContainer.class, testData1);
-		assertNull(testData2);
+		Container container = new Container();
+		//container.obj = null;
+		byte[] buffer = new byte[20];
+		serializer.encode(buffer, 0, container);
+		assertEquals(container.obj, serializer.decode(buffer, 0).obj);
 	}
 
 }

@@ -129,17 +129,15 @@ public class SerializerReferenceTest {
 		assertSame(container1.node.nodes.get(0), container1.node.nodes.get(0).nodes.get(0).nodes.get(0));
 	}
 
-	@SerializeNullable
 	@SerializeReference
 	public static class ContainerCyclicReference {
 		@Serialize(order = 0)
+		@SerializeNullable
 		public ContainerCyclicReference ref;
 	}
 
 	@Test
 	public void testContainerCyclicReference() {
-		assertNull(doTest(ContainerCyclicReference.class, (ContainerCyclicReference) null));
-
 		ContainerCyclicReference container = new ContainerCyclicReference();
 
 		ContainerCyclicReference container1 = doTest(ContainerCyclicReference.class, container);

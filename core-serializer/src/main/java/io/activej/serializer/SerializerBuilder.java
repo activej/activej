@@ -22,7 +22,6 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.SerializerDef.StaticDecoders;
 import io.activej.serializer.SerializerDef.StaticEncoders;
-import io.activej.serializer.TypedModsMap.Builder;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.serializer.impl.SerializerDefBuilder.SerializerForType;
@@ -322,20 +321,20 @@ public final class SerializerBuilder {
 		return (BinarySerializer<T>) buildImpl(serializer);
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private SerializerDef createSerializerDef(Class<?> type, SerializerForType[] generics, List<SerializerDefBuilder> mods) {
 		List<SerializerDefBuilder> mods2 = new ArrayList<>(mods);
 
-		Annotation[] annotations = type.getAnnotations();
-		for (Class<? extends Annotation> annotationType : annotationsMap.keySet()) {
-			AnnotationHandler annotationHandler = annotationsMap.get(annotationType);
-			for (Annotation annotation : annotations) {
-				if (annotation.annotationType() == annotationType) {
-					//noinspection unchecked
-					SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(context, annotation);
-					mods2.add(serializerDefBuilder);
-				}
-			}
+		SerializeSubclasses serializeSubclasses = findAnnotation(SerializeSubclasses.class, type.getAnnotations());
+		if (serializeSubclasses != null) {
+			AnnotationHandler annotationHandler = annotationsMap.get(SerializeSubclasses.class);
+			mods2.add(0, annotationHandler.createBuilder(context, serializeSubclasses));
+		}
+
+		SerializeReference serializeReference = findAnnotation(SerializeReference.class, type.getAnnotations());
+		if (serializeReference != null) {
+			AnnotationHandler annotationHandler = annotationsMap.get(SerializeReference.class);
+			mods2.add(0, annotationHandler.createBuilder(context, serializeReference));
 		}
 
 		return createSerializerDef2(type, generics, mods2);
@@ -394,7 +393,7 @@ public final class SerializerBuilder {
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	private TypedModsMap extractMods(Annotation[] annotations) {
-		Builder rootBuilder = TypedModsMap.builder();
+		TypedModsMap.Builder rootBuilder = TypedModsMap.builder();
 		if (annotations.length == 0) {
 			return rootBuilder.build();
 		}
@@ -404,7 +403,7 @@ public final class SerializerBuilder {
 			for (Annotation annotation : annotations) {
 				if (annotation.annotationType() == entry.getKey()) {
 					SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(context, annotation);
-					Builder child = rootBuilder.ensureChild(annotationHandler.extractPath(annotation));
+					TypedModsMap.Builder child = rootBuilder.ensureChild(annotationHandler.extractPath(annotation));
 					child.add(serializerDefBuilder);
 				}
 			}
@@ -412,7 +411,7 @@ public final class SerializerBuilder {
 				if (annotationEx.annotationType() == annotationExType) {
 					for (Annotation annotation : annotationHandler.extractList(annotationEx)) {
 						SerializerDefBuilder serializerDefBuilder = annotationHandler.createBuilder(context, annotation);
-						Builder child = rootBuilder.ensureChild(annotationHandler.extractPath(annotation));
+						TypedModsMap.Builder child = rootBuilder.ensureChild(annotationHandler.extractPath(annotation));
 						child.add(serializerDefBuilder);
 					}
 				}

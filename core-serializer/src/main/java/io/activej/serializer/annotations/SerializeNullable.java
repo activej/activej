@@ -21,8 +21,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
 		ElementType.FIELD,
-		ElementType.METHOD,
-		ElementType.TYPE})
+		ElementType.METHOD})
 @Repeatable(SerializeNullableEx.class)
 public @interface SerializeNullable {
 	int[] path() default {};
