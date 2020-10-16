@@ -485,31 +485,25 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private void doMove(Path path, Path targetPath) throws IOException, FsScalarException {
-		ensureTarget(path, targetPath, () -> {
-			moveViaHardlink(path, targetPath, now);
-			return null;
-		});
+		ensureTarget(path, targetPath, () -> moveViaHardlink(path, targetPath, now));
 	}
 
 	private void doCopy(Path path, Path targetPath) throws IOException, FsScalarException {
-		ensureTarget(path, targetPath, () -> {
-			if (hardlinkOnCopy) {
+		if (hardlinkOnCopy) {
+			try {
+				ensureTarget(path, targetPath, () -> copyViaHardlink(path, targetPath, now));
+			} catch (IOException | FsScalarException e) {
+				logger.warn("Could not copy via hard link, trying to copy via temporary directory", e);
 				try {
-					copyViaHardlink(path, targetPath, now);
-				} catch (IOException e) {
-					logger.warn("Could not copy via hard link, trying to copy via temporary directory", e);
-					try {
-						copyViaTempDir(path, targetPath, now, tempDir);
-					} catch (IOException e2) {
-						e.addSuppressed(e2);
-						throw e;
-					}
+					ensureTarget(path, targetPath, () -> copyViaTempDir(path, targetPath, now, tempDir));
+				} catch (IOException e2) {
+					e.addSuppressed(e2);
+					throw e;
 				}
-			} else {
-				copyViaTempDir(path, targetPath, now, tempDir);
 			}
-			return null;
-		});
+		} else {
+			ensureTarget(path, targetPath, () -> copyViaTempDir(path, targetPath, now, tempDir));
+		}
 	}
 
 	private void deleteImpl(Set<String> toDelete) throws FsBatchException, FsIOException {
@@ -530,7 +524,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private <V> V ensureTarget(@Nullable Path source, Path target, IOCallable<V> afterCreation) throws IOException, FsScalarException {
 		try {
-			return LocalFileUtils.ensureTarget(source, target, afterCreation);
+			return LocalFileUtils.ensureTarget(source, target, synced, afterCreation);
 		} catch (NoSuchFileException e) {
 			throw e;
 		} catch (DirectoryNotEmptyException e) {
@@ -538,6 +532,13 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		} catch (FileSystemException e) {
 			throw new PathContainsFileException(LocalActiveFs.class);
 		}
+	}
+
+	private void ensureTarget(@Nullable Path source, Path target, IORunnable afterCreation) throws IOException, FsScalarException {
+		ensureTarget(source, target, () -> {
+			afterCreation.run();
+			return null;
+		});
 	}
 
 	@Nullable

@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
@@ -63,7 +64,7 @@ public final class TestLocalActiveFsInvariants {
 	public String testName;
 
 	@Parameter(1)
-	public Consumer<LocalActiveFs> initializer;
+	public UnaryOperator<LocalActiveFs> initializer;
 
 	private Path firstPath;
 	private Path secondPath;
@@ -85,8 +86,8 @@ public final class TestLocalActiveFsInvariants {
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		first = LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), firstPath);
-		second = new DefaultActiveFs(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), secondPath));
+		first = initializer.apply(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), firstPath));
+		second = new DefaultActiveFs(initializer.apply(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), secondPath)));
 
 		initTempDir(firstPath);
 		initTempDir(secondPath);
@@ -105,10 +106,10 @@ public final class TestLocalActiveFsInvariants {
 		return Arrays.asList(
 				new Object[]{
 						"Regular",
-						(Consumer<LocalActiveFs>) $ -> {}},
+						(UnaryOperator<LocalActiveFs>) fs -> fs},
 				new Object[]{
 						"With Hard Link On Copy",
-						(Consumer<LocalActiveFs>) fs -> fs.withHardLinkOnCopy(true)
+						(UnaryOperator<LocalActiveFs>) fs -> fs.withHardLinkOnCopy(true)
 				}
 		);
 	}

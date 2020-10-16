@@ -90,7 +90,7 @@ public final class LocalFileUtils {
 		});
 	}
 
-	static <V> V ensureTarget(@Nullable Path source, Path target, IOCallable<V> afterCreation) throws IOException {
+	static <V> V ensureTarget(@Nullable Path source, Path target, boolean sync, IOCallable<V> afterCreation) throws IOException {
 		Path parent = target.getParent();
 		while (true) {
 			try {
@@ -99,7 +99,7 @@ public final class LocalFileUtils {
 				if (source != null && !Files.exists(source)) {
 					throw e;
 				}
-				Files.createDirectories(parent);
+				createDirectories(parent, sync);
 			} catch (FileSystemException e) {
 				if (source != null) {
 					if (!Files.exists(source)) throw new NoSuchFileException(null);

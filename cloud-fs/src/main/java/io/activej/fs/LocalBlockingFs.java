@@ -171,7 +171,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		Path path = resolve(name);
 		FileChannel channel;
 		if (offset == 0) {
-			channel = ensureTarget(null, path, () -> FileChannel.open(path, appendNewOptions));
+			channel = ensureTarget(path, () -> FileChannel.open(path, appendNewOptions));
 			if (synced) {
 				tryFsync(path.getParent());
 			}
@@ -354,24 +354,21 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 					continue;
 				}
 
-				ensureTarget(path, targetPath, () -> {
-					if (hardlinkOnCopy) {
+				if (hardlinkOnCopy) {
+					try {
+						ensureTarget(path, targetPath, () -> copyViaHardlink(path, targetPath, now));
+					} catch (IOException e) {
+						logger.warn("Could not copy via hard link, trying to copy via temporary directory", e);
 						try {
-							copyViaHardlink(path, targetPath, now);
-						} catch (IOException e) {
-							logger.warn("Could not copy via hard link, trying to copy via temporary directory", e);
-							try {
-								copyViaTempDir(path, targetPath, now, tempDir);
-							} catch (IOException e2) {
-								e.addSuppressed(e2);
-								throw e;
-							}
+							ensureTarget(path, targetPath, () -> copyViaTempDir(path, targetPath, now, tempDir));
+						} catch (IOException e2) {
+							e.addSuppressed(e2);
+							throw e;
 						}
-					} else {
-						copyViaTempDir(path, targetPath, now, tempDir);
 					}
-					return null;
-				});
+				} else {
+					ensureTarget(path, targetPath, () -> copyViaTempDir(path, targetPath, now, tempDir));
+				}
 				if (synced) {
 					toFSync.add(targetPath.getParent());
 				}
@@ -384,8 +381,16 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	private void doMove(Path path, Path targetPath) throws IOException {
-		ensureTarget(path, targetPath, () -> {
-			LocalFileUtils.moveViaHardlink(path, targetPath, now);
+		ensureTarget(path, targetPath, () -> LocalFileUtils.moveViaHardlink(path, targetPath, now));
+	}
+
+	private <V> V ensureTarget(Path target, IOCallable<V> afterCreation) throws IOException {
+		return LocalFileUtils.ensureTarget(null, target, synced, afterCreation);
+	}
+
+	private void ensureTarget(@Nullable Path source, Path target, IORunnable afterCreation) throws IOException {
+		LocalFileUtils.ensureTarget(source, target, synced, () -> {
+			afterCreation.run();
 			return null;
 		});
 	}

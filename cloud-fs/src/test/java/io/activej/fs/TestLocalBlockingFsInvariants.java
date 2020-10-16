@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.fs.Utils.*;
@@ -47,7 +47,7 @@ public final class TestLocalBlockingFsInvariants {
 	public String testName;
 
 	@Parameterized.Parameter(1)
-	public Consumer<LocalBlockingFs> initializer;
+	public UnaryOperator<LocalBlockingFs> initializer;
 
 	@Before
 	public void setUp() throws Exception {
@@ -63,8 +63,8 @@ public final class TestLocalBlockingFsInvariants {
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		first = LocalBlockingFs.create(firstPath);
-		second = new DefaultBlockingFs(LocalBlockingFs.create(secondPath));
+		first = initializer.apply(LocalBlockingFs.create(firstPath));
+		second = new DefaultBlockingFs(initializer.apply(LocalBlockingFs.create(secondPath)));
 
 		initTempDir(firstPath);
 		initTempDir(secondPath);
@@ -83,10 +83,10 @@ public final class TestLocalBlockingFsInvariants {
 		return Arrays.asList(
 				new Object[]{
 						"Regular",
-						(Consumer<LocalBlockingFs>) $ -> {}},
+						(UnaryOperator<LocalBlockingFs>) fs -> fs},
 				new Object[]{
 						"With Hard Link On Copy",
-						(Consumer<LocalBlockingFs>) fs -> fs.withHardLinkOnCopy(true)
+						(UnaryOperator<LocalBlockingFs>) fs -> fs.withHardLinkOnCopy(true)
 				}
 		);
 	}
