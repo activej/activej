@@ -57,33 +57,21 @@ public class MultilogImplTest {
 	}
 
 	@Test
-	public void testIgnoringMalformedLogs() {
+	public void testIgnoringTruncatedLogs() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
-				.withIgnoreMalformedLogs(true);
+		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 
-		String testPartition1 = "partition1";
-		String testPartition2 = "partition2";
-		String testPartition3 = "partition3";
+		String partition = "partition";
 
 		List<String> values = asList("test1", "test2", "test3");
 
-		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(testPartition1)));
-		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(testPartition2)));
-		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(testPartition3)));
-
-		// malformed data
-		await(fs.list("*" + testPartition1 + "*")
-				.then(map -> {
-					String filename = first(map.keySet());
-					return ChannelSupplier.of(wrapUtf8("MALFORMED")).streamTo(fs.upload(filename));
-				}));
+		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition)));
 
 		// Truncated data
-		await(fs.list("*" + testPartition2 + "*")
+		await(fs.list("*" + partition + "*")
 				.then(map -> {
 					String filename = first(map.keySet());
 					return fs.download(filename)
@@ -92,8 +80,35 @@ public class MultilogImplTest {
 									.streamTo(fs.upload(filename)));
 				}));
 
+		assertTrue(readLog(multilog, partition).isEmpty());
+	}
+
+	@Test
+	public void testIgnoringMalformedLogs() {
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Path storage = temporaryFolder.getRoot().toPath();
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
+		await(fs.start());
+		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
+				.withIgnoreMalformedLogs(true);
+
+		String partition1 = "partition1";
+		String partition2 = "partition2";
+
+		List<String> values = asList("test1", "test2", "test3");
+
+		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition1)));
+		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition2)));
+
+		// malformed data
+		await(fs.list("*" + partition1 + "*")
+				.then(map -> {
+					String filename = first(map.keySet());
+					return ChannelSupplier.of(wrapUtf8("MALFORMED")).streamTo(fs.upload(filename));
+				}));
+
 		// Unexpected data
-		await(fs.list("*" + testPartition3 + "*")
+		await(fs.list("*" + partition2 + "*")
 				.then(map -> {
 					String filename = first(map.keySet());
 					return fs.download(filename)
@@ -101,9 +116,8 @@ public class MultilogImplTest {
 									.streamTo(fs.upload(filename)));
 				}));
 
-		assertTrue(readLog(multilog, testPartition1).isEmpty());
-		assertTrue(readLog(multilog, testPartition2).isEmpty());
-		assertEquals(values, readLog(multilog, testPartition3));
+		assertTrue(readLog(multilog, partition1).isEmpty());
+		assertEquals(values, readLog(multilog, partition2));
 	}
 
 	@Test
@@ -115,20 +129,20 @@ public class MultilogImplTest {
 		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
 
-		String testPartition = "partition";
+		String partition = "partition";
 
 		List<String> values = asList("test1", "test2", "test3");
 
-		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(testPartition)));
+		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition)));
 
 		StreamConsumerToList<String> listConsumer = StreamConsumerToList.create();
-		await(fs.list("*" + testPartition + "*")
+		await(fs.list("*" + partition + "*")
 				.then(map -> {
 					PartitionAndFile partitionAndFile = NAME_PARTITION_REMAINDER_SEQ.parse(first(map.keySet()));
 					assert partitionAndFile != null;
 					LogFile logFile = partitionAndFile.getLogFile();
 					return StreamSupplierWithResult.ofPromise(
-							multilog.read(testPartition, logFile, first(map.values()).getSize()  * 2, null))
+							multilog.read(partition, logFile, first(map.values()).getSize() * 2, null))
 							.getSupplier()
 							.streamTo(listConsumer);
 				}));

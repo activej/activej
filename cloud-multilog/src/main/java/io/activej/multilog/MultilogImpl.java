@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.common.time.Stopwatch;
-import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.process.ChannelLZ4Compressor;
 import io.activej.csp.process.ChannelLZ4Decompressor;
 import io.activej.datastream.StreamConsumer;
@@ -49,6 +48,8 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
+import static io.activej.csp.process.ChannelLZ4Decompressor.STREAM_IS_CORRUPTED;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -217,10 +218,12 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 																if (e2 == null) {
 																	return Promise.complete();
 																}
+																if (e2 instanceof TruncatedDataException) {
+																	return Promise.complete();
+																}
 																if (ignoreMalformedLogs &&
-																		e2 instanceof TruncatedDataException ||
-																		e2 == ChannelLZ4Decompressor.STREAM_IS_CORRUPTED ||
-																		e2 == BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION) {
+																		(e2 == STREAM_IS_CORRUPTED ||
+																				e2 == UNEXPECTED_DATA_EXCEPTION)) {
 																	if (logger.isWarnEnabled()) {
 																		logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
 																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
