@@ -20,15 +20,15 @@ public final class StreamInputOutputTest {
 		int int2 = -567;
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (StreamOutput dataOutputStream = StreamOutput.create(baos, 1)) {
-			dataOutputStream.writeInt(int1);
-			dataOutputStream.writeInt(int2);
+		try (StreamOutput streamOutput = StreamOutput.create(baos, 1)) {
+			streamOutput.writeInt(int1);
+			streamOutput.writeInt(int2);
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (StreamInput dataInputStream = StreamInput.create(bais)) {
-			assertEquals(int1, dataInputStream.readInt());
-			assertEquals(int2, dataInputStream.readInt());
+		try (StreamInput streamInput = StreamInput.create(bais)) {
+			assertEquals(int1, streamInput.readInt());
+			assertEquals(int2, streamInput.readInt());
 		}
 	}
 
@@ -40,17 +40,17 @@ public final class StreamInputOutputTest {
 		byte[] array = new byte[10 * 1024];
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (StreamOutput dataOutputStream = StreamOutput.create(baos, 1)) {
-			dataOutputStream.writeInt(int1);
-			dataOutputStream.writeInt(int2);
-			dataOutputStream.serialize(serializer, array);
+		try (StreamOutput streamOutput = StreamOutput.create(baos, 1)) {
+			streamOutput.writeInt(int1);
+			streamOutput.writeInt(int2);
+			streamOutput.serialize(serializer, array);
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (StreamInput dataInputStream = StreamInput.create(bais)) {
-			assertEquals(int1, dataInputStream.readInt());
-			assertEquals(int2, dataInputStream.readInt());
-			assertArrayEquals(array, dataInputStream.deserialize(serializer));
+		try (StreamInput streamInput = StreamInput.create(bais)) {
+			assertEquals(int1, streamInput.readInt());
+			assertEquals(int2, streamInput.readInt());
+			assertArrayEquals(array, streamInput.deserialize(serializer));
 		}
 	}
 
@@ -61,13 +61,13 @@ public final class StreamInputOutputTest {
 			ThreadLocalRandom.current().nextBytes(array);
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try (StreamOutput dataOutputStream = StreamOutput.create(baos, 1)) {
-				dataOutputStream.serialize(serializer, array);
+			try (StreamOutput streamOutput = StreamOutput.create(baos, 1)) {
+				streamOutput.serialize(serializer, array);
 			}
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-			try (StreamInput dataInputStream = StreamInput.create(bais)) {
-				assertArrayEquals(array, dataInputStream.deserialize(serializer));
+			try (StreamInput streamInput = StreamInput.create(bais)) {
+				assertArrayEquals(array, streamInput.deserialize(serializer));
 			}
 		}
 	}

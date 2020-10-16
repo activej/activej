@@ -183,7 +183,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 		return revision;
 	}
 
-	private void safeUpload(String filename, DataOutputStreamExConsumer consumer) throws IOException {
+	private void safeUpload(String filename, StreamOutputConsumer consumer) throws IOException {
 		String tempFilename = tempDir + UUID.randomUUID().toString();
 		OutputStream outputStream = fs.upload(tempFilename);
 		try (StreamOutput outputStreamEx = StreamOutput.create(outputStream)) {
@@ -200,7 +200,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 		fs.move(tempFilename, filename);
 	}
 
-	private interface DataOutputStreamExConsumer {
+	private interface StreamOutputConsumer {
 		void accept(StreamOutput outputStream) throws IOException;
 	}
 
