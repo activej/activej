@@ -2116,4 +2116,77 @@ public class BinarySerializerTest {
 		assertEquals(container.obj, serializer.decode(buffer, 0).obj);
 	}
 
+	@DeserializeFactory(DataHolder.DeserializeFactoryTest.class)
+	public static abstract class DataHolder {
+		@SerializeSubclasses({ConstData.class, ValueData.class})
+		public static abstract class Data {
+		}
+
+		@Serialize(order = 1)
+		public abstract Data getData();
+
+		public static final class ConstData extends Data {
+			private static final Data INSTANCE = new ConstData();
+
+			public static Data instance() {
+				return INSTANCE;
+			}
+		}
+
+		public static final class ValueData extends Data {
+			@Serialize(order = 1)
+			public final int value;
+
+			public ValueData(@Deserialize("value") int value) {
+				this.value = value;
+			}
+		}
+
+		public static final class ConstDataHolder extends DataHolder {
+			private static final ConstDataHolder INSTANCE = new ConstDataHolder();
+
+			@Override
+			public Data getData() {
+				return ConstData.instance();
+			}
+		}
+
+		public static final class ValueDataHolder extends DataHolder {
+			private final ValueData data;
+
+			public ValueDataHolder(ValueData data) {this.data = data;}
+
+			@Override
+			public Data getData() {
+				return data;
+			}
+		}
+
+		public static final class DeserializeFactoryTest {
+			public static DataHolder create(@Deserialize("data") Data data) {
+				if (data instanceof ConstData) {
+					return ConstDataHolder.INSTANCE;
+				} else if (data instanceof ValueData) {
+					ValueData valueData = (ValueData) data;
+					return new ValueDataHolder(valueData);
+				} else {
+					throw new CorruptedDataException("Unsupported type " + data);
+				}
+			}
+		}
+	}
+
+	@Test
+	public void testDeserializeFactoryTest() {
+		DataHolder resultTestData0 = doTest(DataHolder.class, DataHolder.ConstDataHolder.INSTANCE);
+		assertSame(DataHolder.ConstDataHolder.INSTANCE, resultTestData0);
+
+		DataHolder.ValueData value = new DataHolder.ValueData(123);
+		DataHolder.ValueDataHolder testData1 = new DataHolder.ValueDataHolder(value);
+		DataHolder testData2 = doTest(DataHolder.class, testData1);
+		assertTrue(testData2 instanceof DataHolder.ValueDataHolder);
+		assertTrue(testData2.getData() instanceof DataHolder.ValueData);
+		assertEquals(testData1.data.value, ((DataHolder.ValueData) testData2.getData()).value);
+	}
+
 }

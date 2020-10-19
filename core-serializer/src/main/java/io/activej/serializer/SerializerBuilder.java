@@ -618,7 +618,7 @@ public final class SerializerBuilder {
 	}
 
 	private void scanAnnotations(Class<?> classType, SerializerForType[] classGenerics, SerializerDefClass serializer) {
-		if (classType.isInterface() || (Modifier.isAbstract(classType.getModifiers()))) {
+		if (classType.isInterface()) {
 			SerializeInterface annotation = classType.getAnnotation(SerializeInterface.class);
 			scanInterface(classType, classGenerics, serializer, (annotation != null) && annotation.inherit());
 			if (annotation != null) {
@@ -640,7 +640,9 @@ public final class SerializerBuilder {
 		scanClass(classType, classGenerics, serializer);
 		scanFactories(classType, serializer);
 		scanConstructors(classType, serializer);
-		serializer.addMatchingSetters();
+		if (!Modifier.isAbstract(classType.getModifiers())) {
+			serializer.addMatchingSetters();
+		}
 	}
 
 	private void scanInterface(Class<?> classType, SerializerForType[] classGenerics, SerializerDefClass serializer, boolean inheritSerializers) {
