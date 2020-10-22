@@ -85,6 +85,8 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
+		Object onAccept(HttpServerConnection connection);
+
 		void onHttpRequest(HttpRequest request);
 
 		void onHttpResponse(HttpRequest request, HttpResponse httpResponse);
@@ -92,16 +94,27 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		void onServletException(HttpRequest request, Throwable e);
 
 		void onHttpError(HttpServerConnection connection, Throwable e);
+
+		void onDisconnect(HttpServerConnection connection);
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
 		private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
+		private final EventStats totalConnections = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats totalRequests = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats totalResponses = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats httpTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final ExceptionStats httpErrors = ExceptionStats.create();
 		private final ExceptionStats servletExceptions = ExceptionStats.create();
+		private long activeConnections;
+
+		@Override
+		public Object onAccept(HttpServerConnection connection) {
+			totalConnections.recordEvent();
+			activeConnections++;
+			return null;
+		}
 
 		@Override
 		public void onHttpRequest(HttpRequest request) {
@@ -125,6 +138,16 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 			} else {
 				httpErrors.recordException(e);
 			}
+		}
+
+		@Override
+		public void onDisconnect(HttpServerConnection connection) {
+			activeConnections--;
+		}
+
+		@JmxAttribute(extraSubAttributes = "totalCount")
+		public EventStats getTotalConnections() {
+			return totalConnections;
 		}
 
 		@JmxAttribute(extraSubAttributes = "totalCount")
@@ -153,6 +176,11 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 				"(responses with 4xx and 5xx HTTP status codes)")
 		public ExceptionStats getServletExceptions() {
 			return servletExceptions;
+		}
+
+		@JmxAttribute
+		public long getActiveConnections() {
+			return activeConnections;
 		}
 	}
 

@@ -104,6 +104,8 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private final AsyncHttpClient client;
 	@Nullable
 	private final Inspector inspector;
+	@Nullable
+	Object inspectorData;
 
 	final InetSocketAddress remoteAddress;
 	@Nullable HttpClientConnection addressPrev;
@@ -124,6 +126,11 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	public InetSocketAddress getRemoteAddress() {
 		return remoteAddress;
+	}
+
+	@Nullable
+	public Object getInspectorData() {
+		return inspectorData;
 	}
 
 	@Override
@@ -412,7 +419,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	protected void onClosed() {
 		if (promise != null) {
-			if (inspector != null) inspector.onHttpError(this, CONNECTION_CLOSED);
+			if (inspector != null) inspector.onDisconnect(this);
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
 			promise.setException(CONNECTION_CLOSED);

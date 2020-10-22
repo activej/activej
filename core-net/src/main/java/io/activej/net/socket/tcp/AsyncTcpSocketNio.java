@@ -94,24 +94,27 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	@Nullable
 	private Inspector inspector;
 
+	@Nullable
+	private Object inspectorData;
+
 	public interface Inspector extends BaseInspector<Inspector> {
-		void onConnect(InetSocketAddress remoteAddress);
+		Object onConnect(AsyncTcpSocketNio socket);
 
-		void onReadTimeout(InetSocketAddress remoteAddress);
+		void onReadTimeout(AsyncTcpSocketNio socket);
 
-		void onRead(InetSocketAddress remoteAddress, ByteBuf buf);
+		void onRead(AsyncTcpSocketNio socket, ByteBuf buf);
 
-		void onReadEndOfStream(InetSocketAddress remoteAddress);
+		void onReadEndOfStream(AsyncTcpSocketNio socket);
 
-		void onReadError(InetSocketAddress remoteAddress, IOException e);
+		void onReadError(AsyncTcpSocketNio socket, IOException e);
 
-		void onWriteTimeout(InetSocketAddress remoteAddress);
+		void onWriteTimeout(AsyncTcpSocketNio socket);
 
-		void onWrite(InetSocketAddress remoteAddress, ByteBuf buf, int bytes);
+		void onWrite(AsyncTcpSocketNio socket, ByteBuf buf, int bytes);
 
-		void onWriteError(InetSocketAddress remoteAddress, IOException e);
+		void onWriteError(AsyncTcpSocketNio socket, IOException e);
 
-		void onClose(InetSocketAddress remoteAddress);
+		void onDisconnect(AsyncTcpSocketNio socket);
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
@@ -126,53 +129,54 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		private final ExceptionStats writeErrors = ExceptionStats.create();
 		private final EventStats writeTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats writeOverloaded = EventStats.create(SMOOTHING_WINDOW);
-		private final EventStats closes = EventStats.create(SMOOTHING_WINDOW);
+		private final EventStats disconnects = EventStats.create(SMOOTHING_WINDOW);
 
 		@Override
-		public void onConnect(InetSocketAddress remoteAddress) {
+		public Object onConnect(AsyncTcpSocketNio socket) {
 			connects.recordEvent();
+			return null;
 		}
 
 		@Override
-		public void onReadTimeout(InetSocketAddress remoteAddress) {
+		public void onReadTimeout(AsyncTcpSocketNio socket) {
 			readTimeouts.recordEvent();
 		}
 
 		@Override
-		public void onRead(InetSocketAddress remoteAddress, ByteBuf buf) {
+		public void onRead(AsyncTcpSocketNio socket, ByteBuf buf) {
 			reads.recordValue(buf.readRemaining());
 		}
 
 		@Override
-		public void onReadEndOfStream(InetSocketAddress remoteAddress) {
+		public void onReadEndOfStream(AsyncTcpSocketNio socket) {
 			readEndOfStreams.recordEvent();
 		}
 
 		@Override
-		public void onReadError(InetSocketAddress remoteAddress, IOException e) {
-			readErrors.recordException(e, remoteAddress);
+		public void onReadError(AsyncTcpSocketNio socket, IOException e) {
+			readErrors.recordException(e, socket.getRemoteAddress());
 		}
 
 		@Override
-		public void onWriteTimeout(InetSocketAddress remoteAddress) {
+		public void onWriteTimeout(AsyncTcpSocketNio socket) {
 			writeTimeouts.recordEvent();
 		}
 
 		@Override
-		public void onWrite(InetSocketAddress remoteAddress, ByteBuf buf, int bytes) {
+		public void onWrite(AsyncTcpSocketNio socket, ByteBuf buf, int bytes) {
 			writes.recordValue(bytes);
 			if (buf.readRemaining() != bytes)
 				writeOverloaded.recordEvent();
 		}
 
 		@Override
-		public void onWriteError(InetSocketAddress remoteAddress, IOException e) {
-			writeErrors.recordException(e, remoteAddress);
+		public void onWriteError(AsyncTcpSocketNio socket, IOException e) {
+			writeErrors.recordException(e, socket.getRemoteAddress());
 		}
 
 		@Override
-		public void onClose(InetSocketAddress remoteAddress) {
-			closes.recordEvent();
+		public void onDisconnect(AsyncTcpSocketNio socket) {
+			disconnects.recordEvent();
 		}
 
 		@JmxAttribute
@@ -221,8 +225,13 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 
 		@JmxAttribute
-		public EventStats getCloses() {
-			return closes;
+		public EventStats getDisconnects() {
+			return disconnects;
+		}
+
+		@JmxAttribute
+		public long getActiveSockets() {
+			return connects.getTotalCount() - disconnects.getTotalCount();
 		}
 	}
 
@@ -269,7 +278,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	public AsyncTcpSocketNio withInspector(Inspector inspector) {
 		this.inspector = inspector;
-		if (inspector != null) inspector.onConnect(remoteAddress);
+		if (inspector != null) inspectorData = inspector.onConnect(this);
 		return this;
 	}
 
@@ -284,11 +293,20 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		return CONNECTION_COUNT.get();
 	}
 
+	public InetSocketAddress getRemoteAddress() {
+		return remoteAddress;
+	}
+
+	@Nullable
+	public Object getInspectorData() {
+		return inspectorData;
+	}
+
 	// timeouts management
 	private void scheduleReadTimeout() {
 		assert scheduledReadTimeout == null && readTimeout != NO_TIMEOUT;
 		scheduledReadTimeout = eventloop.delayBackground(readTimeout, wrapContext(this, () -> {
-			if (inspector != null) inspector.onReadTimeout(remoteAddress);
+			if (inspector != null) inspector.onReadTimeout(this);
 			scheduledReadTimeout = null;
 			closeEx(TIMEOUT_EXCEPTION);
 		}));
@@ -297,7 +315,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private void scheduleWriteTimeout() {
 		assert scheduledWriteTimeout == null && writeTimeout != NO_TIMEOUT;
 		scheduledWriteTimeout = eventloop.delayBackground(writeTimeout, wrapContext(this, () -> {
-			if (inspector != null) inspector.onWriteTimeout(remoteAddress);
+			if (inspector != null) inspector.onWriteTimeout(this);
 			scheduledWriteTimeout = null;
 			closeEx(TIMEOUT_EXCEPTION);
 		}));
@@ -376,12 +394,12 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 			buf.ofWriteByteBuffer(buffer);
 		} catch (IOException e) {
 			buf.recycle();
-			if (inspector != null) inspector.onReadError(remoteAddress, e);
+			if (inspector != null) inspector.onReadError(this, e);
 			throw e;
 		}
 
 		if (numRead == 0) {
-			if (inspector != null) inspector.onRead(remoteAddress, buf);
+			if (inspector != null) inspector.onRead(this, buf);
 			buf.recycle();
 			return;
 		}
@@ -390,7 +408,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 		if (numRead == -1) {
 			buf.recycle();
-			if (inspector != null) inspector.onReadEndOfStream(remoteAddress);
+			if (inspector != null) inspector.onReadEndOfStream(this);
 			readEndOfStream = true;
 			if (writeEndOfStream && writeBuf == null) {
 				doClose();
@@ -398,7 +416,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 			return;
 		}
 
-		if (inspector != null) inspector.onRead(remoteAddress, buf);
+		if (inspector != null) inspector.onRead(this, buf);
 
 		if (readBuf == null) {
 			readBuf = buf;
@@ -489,11 +507,11 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 			try {
 				channel.write(buffer);
 			} catch (IOException e) {
-				if (inspector != null) inspector.onWriteError(remoteAddress, e);
+				if (inspector != null) inspector.onWriteError(this, e);
 				throw e;
 			}
 
-			if (inspector != null) inspector.onWrite(remoteAddress, buf, buffer.position() - buf.head());
+			if (inspector != null) inspector.onWrite(this, buf, buffer.position() - buf.head());
 
 			buf.ofReadByteBuffer(buffer);
 
@@ -533,7 +551,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		eventloop.closeChannel(channel, key);
 		channel = null;
 		CONNECTION_COUNT.decrementAndGet();
-		if (inspector != null) inspector.onClose(remoteAddress);
+		if (inspector != null) inspector.onDisconnect(this);
 	}
 
 	@Override

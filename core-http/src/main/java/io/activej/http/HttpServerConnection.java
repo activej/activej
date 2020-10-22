@@ -78,13 +78,15 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private final InetAddress remoteAddress;
 
-	@Nullable
-	private HttpRequest request;
 	private final AsyncHttpServer server;
-	@Nullable
-	private final Inspector inspector;
 	private final AsyncServlet servlet;
 	private final char[] charBuffer;
+	@Nullable
+	private HttpRequest request;
+	@Nullable
+	private final Inspector inspector;
+	@Nullable
+	private Object inspectorData;
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
 	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");
@@ -108,6 +110,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	void serve() {
+		if (inspector != null) inspectorData = inspector.onAccept(this);
 		(pool = server.poolNew).addLastNode(this);
 		poolTimestamp = eventloop.currentTimeMillis();
 		socket.read().whenComplete(startLineConsumer);
@@ -123,6 +126,11 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	public InetAddress getRemoteAddress() {
 		return remoteAddress;
+	}
+
+	@Nullable
+	public Object getInspectorData() {
+		return inspectorData;
 	}
 
 	@Override
@@ -400,6 +408,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			request.recycle();
 			request = null;
 		}
+		if (inspector != null) inspector.onDisconnect(this);
 		//noinspection ConstantConditions
 		pool.removeNode(this);
 		//noinspection AssertWithSideEffects,ConstantConditions

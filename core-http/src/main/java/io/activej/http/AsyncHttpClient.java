@@ -127,13 +127,15 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onResolveError(HttpRequest request, Throwable e);
 
-		void onConnect(HttpRequest request, HttpClientConnection connection);
+		Object onConnect(HttpRequest request, HttpClientConnection connection);
 
 		void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e);
 
 		void onHttpResponse(HttpResponse response);
 
 		void onHttpError(HttpClientConnection connection, Throwable e);
+
+		void onDisconnect(HttpClientConnection connection);
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -149,6 +151,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		private final ExceptionStats httpErrors = ExceptionStats.create();
 		private long responsesErrors;
 		private final EventStats sslErrors = EventStats.create(SMOOTHING_WINDOW);
+		private long activeConnections;
 
 		@Override
 		public void onRequest(HttpRequest request) {
@@ -165,8 +168,10 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onConnect(HttpRequest request, HttpClientConnection connection) {
+		public Object onConnect(HttpRequest request, HttpClientConnection connection) {
+			activeConnections++;
 			connected.recordEvent();
+			return null;
 		}
 
 		@Override
@@ -194,6 +199,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 			if (!connection.isKeepAlive()) {
 				responsesErrors++;
 			}
+		}
+
+		@Override
+		public void onDisconnect(HttpClientConnection connection) {
+			activeConnections--;
 		}
 
 		@JmxAttribute(extraSubAttributes = "totalCount", description = "all requests that were sent (both successful and failed)")
@@ -240,6 +250,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		@JmxAttribute
 		public EventStats getSslErrors() {
 			return sslErrors;
+		}
+
+		@JmxAttribute
+		public long getActiveConnections() {
+			return activeConnections;
 		}
 	}
 
@@ -472,7 +487,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
 
-						if (inspector != null) inspector.onConnect(request, connection);
+						if (inspector != null) connection.inspectorData = inspector.onConnect(request, connection);
 
 						if (expiredConnectionsCheck == null)
 							scheduleExpiredConnectionsCheck();
