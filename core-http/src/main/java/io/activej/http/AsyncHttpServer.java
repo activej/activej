@@ -85,16 +85,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
-		/**
-		 * A method is called when new connection is accepted
-		 *
-		 * @return <b>inspectorData</b> that is stored inside {@link HttpServerConnection}
-		 * and can be used for collecting statistics per connection.
-		 * <p>
-		 * <b>inspectorData</b> can be modified in other {@link Inspector} methods
-		 */
-		@Nullable
-		Object onAccept(HttpServerConnection connection);
+		void onAccept(HttpServerConnection connection);
 
 		void onHttpRequest(HttpRequest request);
 
@@ -119,10 +110,9 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		private long activeConnections;
 
 		@Override
-		public Object onAccept(HttpServerConnection connection) {
+		public void onAccept(HttpServerConnection connection) {
 			totalConnections.recordEvent();
 			activeConnections++;
-			return null;
 		}
 
 		@Override

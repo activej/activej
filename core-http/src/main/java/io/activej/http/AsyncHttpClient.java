@@ -127,16 +127,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onResolveError(HttpRequest request, Throwable e);
 
-		/**
-		 * A method is called after successful connection to the remote host is made
-		 *
-		 * @return <b>inspectorData</b> that is stored inside {@link HttpClientConnection}
-		 * and can be used for collecting statistics per connection.
-		 * <p>
-		 * <b>inspectorData</b> can be modified in other {@link Inspector} methods
-		 */
-		@Nullable
-		Object onConnect(HttpRequest request, HttpClientConnection connection);
+		void onConnect(HttpRequest request, HttpClientConnection connection);
 
 		void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e);
 
@@ -177,10 +168,9 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public Object onConnect(HttpRequest request, HttpClientConnection connection) {
+		public void onConnect(HttpRequest request, HttpClientConnection connection) {
 			activeConnections++;
 			connected.recordEvent();
-			return null;
 		}
 
 		@Override
@@ -496,7 +486,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
 
-						if (inspector != null) connection.inspectorData = inspector.onConnect(request, connection);
+						if (inspector != null) inspector.onConnect(request, connection);
 
 						if (expiredConnectionsCheck == null)
 							scheduleExpiredConnectionsCheck();

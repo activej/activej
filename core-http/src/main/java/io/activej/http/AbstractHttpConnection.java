@@ -104,7 +104,7 @@ public abstract class AbstractHttpConnection {
 	protected int contentLength;
 
 	@Nullable
-	protected Object inspectorData;
+	private Object userData;
 
 	protected final ReadConsumer startLineConsumer = new ReadConsumer() {
 		@Override
@@ -187,13 +187,22 @@ public abstract class AbstractHttpConnection {
 		return (flags & WEB_SOCKET) != 0;
 	}
 
+	/**
+	 * Sets an arbitrary object as a user-defined context for connection
+	 * <p>
+	 * It may be used e.g. by HTTP inspector for collecting statistics per connection.
+	 */
+	public void setUserData(@Nullable Object userData) {
+		this.userData = userData;
+	}
+
 	public Duration getPoolTimestamp() {
 		return Duration.ofMillis(poolTimestamp);
 	}
 
 	@Nullable
-	public Object getInspectorData() {
-		return inspectorData;
+	public Object getUserData() {
+		return userData;
 	}
 
 	public MemSize getContentLength() {
