@@ -127,6 +127,15 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onResolveError(HttpRequest request, Throwable e);
 
+		/**
+		 * A method is called after successful connection to the remote host is made
+		 *
+		 * @return <b>inspectorData</b> that is stored inside {@link HttpClientConnection}
+		 * and can be used for collecting statistics per connection.
+		 * <p>
+		 * <b>inspectorData</b> can be modified in other {@link Inspector} methods
+		 */
+		@Nullable
 		Object onConnect(HttpRequest request, HttpClientConnection connection);
 
 		void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e);

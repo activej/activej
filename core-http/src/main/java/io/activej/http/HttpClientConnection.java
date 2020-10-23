@@ -104,8 +104,6 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private final AsyncHttpClient client;
 	@Nullable
 	private final Inspector inspector;
-	@Nullable
-	Object inspectorData;
 
 	final InetSocketAddress remoteAddress;
 	@Nullable HttpClientConnection addressPrev;
@@ -126,11 +124,6 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	public InetSocketAddress getRemoteAddress() {
 		return remoteAddress;
-	}
-
-	@Nullable
-	public Object getInspectorData() {
-		return inspectorData;
 	}
 
 	@Override

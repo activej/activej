@@ -103,6 +103,9 @@ public abstract class AbstractHttpConnection {
 
 	protected int contentLength;
 
+	@Nullable
+	protected Object inspectorData;
+
 	protected final ReadConsumer startLineConsumer = new ReadConsumer() {
 		@Override
 		public void thenRun() throws ParseException {
@@ -186,6 +189,11 @@ public abstract class AbstractHttpConnection {
 
 	public Duration getPoolTimestamp() {
 		return Duration.ofMillis(poolTimestamp);
+	}
+
+	@Nullable
+	public Object getInspectorData() {
+		return inspectorData;
 	}
 
 	public MemSize getContentLength() {

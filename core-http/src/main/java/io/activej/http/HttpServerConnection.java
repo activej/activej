@@ -85,8 +85,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private HttpRequest request;
 	@Nullable
 	private final Inspector inspector;
-	@Nullable
-	private Object inspectorData;
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
 	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");
@@ -126,11 +124,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	public InetAddress getRemoteAddress() {
 		return remoteAddress;
-	}
-
-	@Nullable
-	public Object getInspectorData() {
-		return inspectorData;
 	}
 
 	@Override
@@ -191,7 +184,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		request = new HttpRequest(version, method,
 				UrlParser.parse(decodeAscii(line, urlStart, urlEnd - urlStart, ThreadLocalCharArray.ensure(charBuffer, urlEnd - urlStart))), this);
-		numberOfRequests++;
 		request.maxBodySize = maxBodySize;
 
 		if (method == GET || method == DELETE) {
@@ -299,6 +291,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 		request.setRemoteAddress(remoteAddress);
 
+		numberOfRequests++;
 		if (inspector != null) inspector.onHttpRequest(request);
 
 		switchPool(server.poolServing);
