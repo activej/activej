@@ -191,6 +191,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		request = new HttpRequest(version, method,
 				UrlParser.parse(decodeAscii(line, urlStart, urlEnd - urlStart, ThreadLocalCharArray.ensure(charBuffer, urlEnd - urlStart))), this);
+		numberOfRequests++;
 		request.maxBodySize = maxBodySize;
 
 		if (method == GET || method == DELETE) {
@@ -260,7 +261,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (!isWebSocket || httpResponse.getCode() != 101) {
 			HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
 			if (server.keepAliveTimeoutMillis == 0 ||
-					++numberOfKeepAliveRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0) {
+					numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0) {
 				connectionHeader = CONNECTION_CLOSE_HEADER;
 			}
 			httpResponse.addHeader(CONNECTION, connectionHeader);

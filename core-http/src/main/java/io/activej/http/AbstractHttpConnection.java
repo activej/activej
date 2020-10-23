@@ -99,7 +99,7 @@ public abstract class AbstractHttpConnection {
 	protected AbstractHttpConnection next;
 	protected long poolTimestamp;
 
-	protected int numberOfKeepAliveRequests;
+	protected int numberOfRequests;
 
 	protected int contentLength;
 
@@ -196,8 +196,8 @@ public abstract class AbstractHttpConnection {
 		return MemSize.bytes(maxBodySize);
 	}
 
-	public int getNumberOfKeepAliveRequests() {
-		return numberOfKeepAliveRequests;
+	public int getNumberOfRequests() {
+		return numberOfRequests;
 	}
 
 	protected void closeWebSocketConnection(Throwable e) {
