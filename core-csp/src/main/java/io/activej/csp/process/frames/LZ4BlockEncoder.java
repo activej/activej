@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process.compression;
+package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -22,7 +22,7 @@ import io.activej.common.Checks;
 import net.jpountz.lz4.LZ4Compressor;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.csp.process.compression.LZ4FrameFormat.*;
+import static io.activej.csp.process.frames.LZ4FrameFormat.*;
 
 final class LZ4BlockEncoder implements BlockEncoder {
 	private static final boolean CHECK = Checks.isEnabled(LZ4BlockEncoder.class);

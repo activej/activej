@@ -1,10 +1,10 @@
 package io.activej.rpc.protocol.stream;
 
 import io.activej.common.MemSize;
-import io.activej.csp.process.compression.ChannelFrameDecoder;
-import io.activej.csp.process.compression.ChannelFrameEncoder;
-import io.activej.csp.process.compression.FrameFormat;
-import io.activej.csp.process.compression.LZ4LegacyFrameFormat;
+import io.activej.csp.process.frames.ChannelFrameDecoder;
+import io.activej.csp.process.frames.ChannelFrameEncoder;
+import io.activej.csp.process.frames.FrameFormat;
+import io.activej.csp.process.frames.LZ4LegacyFrameFormat;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process.compression;
+package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -24,7 +24,7 @@ import net.jpountz.xxhash.StreamingXXHash32;
 import net.jpountz.xxhash.XXHashFactory;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.csp.process.compression.LZ4LegacyFrameFormat.*;
+import static io.activej.csp.process.frames.LZ4LegacyFrameFormat.*;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 

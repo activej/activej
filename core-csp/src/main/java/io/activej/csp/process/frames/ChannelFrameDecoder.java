@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process.compression;
+package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
@@ -30,7 +30,7 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
-import static io.activej.csp.process.compression.BlockDecoder.END_OF_STREAM;
+import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {

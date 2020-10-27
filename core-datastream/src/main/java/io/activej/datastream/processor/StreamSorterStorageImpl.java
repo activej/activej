@@ -20,7 +20,7 @@ import io.activej.common.MemSize;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.ChannelByteChunker;
-import io.activej.csp.process.compression.*;
+import io.activej.csp.process.frames.*;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;

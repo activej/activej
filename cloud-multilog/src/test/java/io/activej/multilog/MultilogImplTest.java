@@ -3,7 +3,7 @@ package io.activej.multilog;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.process.ChannelByteRanger;
-import io.activej.csp.process.compression.LZ4FrameFormat;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;

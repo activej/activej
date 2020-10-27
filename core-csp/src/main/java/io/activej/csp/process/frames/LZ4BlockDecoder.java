@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process.compression;
+package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 
-import static io.activej.csp.process.compression.LZ4FrameFormat.*;
+import static io.activej.csp.process.frames.LZ4FrameFormat.*;
 
 final class LZ4BlockDecoder implements BlockDecoder {
 	private static final ParseException STREAM_IS_CORRUPTED = new ParseException(LZ4BlockDecoder.class, "Stream is corrupted");

@@ -18,8 +18,8 @@ package io.activej.rpc.server;
 
 import io.activej.common.MemSize;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.csp.process.compression.FrameFormat;
-import io.activej.csp.process.compression.LZ4FrameFormat;
+import io.activej.csp.process.frames.FrameFormat;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.ServerSocketSettings;

@@ -4,7 +4,7 @@ import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.csp.process.compression.LZ4FrameFormat;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeOT;

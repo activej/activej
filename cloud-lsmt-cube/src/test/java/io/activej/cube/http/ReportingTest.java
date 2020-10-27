@@ -6,7 +6,7 @@ import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.csp.process.compression.LZ4FrameFormat;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.*;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;

@@ -3,7 +3,7 @@ package io.activej.cube;
 import io.activej.aggregation.*;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.csp.process.compression.LZ4FrameFormat;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeOT;

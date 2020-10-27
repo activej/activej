@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process.compression;
+package io.activej.csp.process.frames;
 
 import io.activej.common.exception.parse.TruncatedDataException;
 
 /**
- * Exception indicates a stream that either is empty or ends with a complete Data Block (with no trailing data),
- * missing End-Of-Stream Block
+ * Exception indicates a stream that ends with an incomplete Data Block
  */
-public final class MissingEndOfStreamBlockException extends TruncatedDataException {
-	public MissingEndOfStreamBlockException(Class<?> component) {
-		super(component, "Stream ends with data block, not end-of-stream block");
+public final class TruncatedBlockException extends TruncatedDataException {
+	public TruncatedBlockException(Class<?> component) {
+		super(component, "Next block is truncated");
 	}
 }

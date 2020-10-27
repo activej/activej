@@ -19,9 +19,9 @@ package io.activej.multilog;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.csp.process.compression.BlockDecoder;
-import io.activej.csp.process.compression.BlockEncoder;
-import io.activej.csp.process.compression.FrameFormat;
+import io.activej.csp.process.frames.BlockDecoder;
+import io.activej.csp.process.frames.BlockEncoder;
+import io.activej.csp.process.frames.FrameFormat;
 import org.jetbrains.annotations.Nullable;
 
 final class CountingFrameFormat implements FrameFormat {
