@@ -19,6 +19,7 @@ import java.util.List;
 import static io.activej.csp.ChannelConsumers.channelConsumerAsOutputStream;
 import static io.activej.csp.ChannelConsumers.outputStreamAsChannelConsumer;
 import static io.activej.eventloop.Eventloop.initWithEventloop;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -154,7 +155,7 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testOfAnotherEventloop() {
-		Eventloop anotherEventloop = Eventloop.create();
+		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
 		List<Integer> expectedList = asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(actualList::add));
@@ -169,7 +170,7 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testOfAnotherEventloopException() {
-		Eventloop anotherEventloop = Eventloop.create();
+		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
 		ExpectedException expectedException = new ExpectedException();
 		List<Integer> list = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(list::add));

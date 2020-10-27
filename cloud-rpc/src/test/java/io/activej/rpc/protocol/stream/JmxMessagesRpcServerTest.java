@@ -13,7 +13,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.rpc.client.RpcClient.DEFAULT_PACKET_SIZE;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -30,6 +32,7 @@ public class JmxMessagesRpcServerTest {
 	public void setup() throws IOException {
 		server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
+				.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, true)
 				.withHandler(String.class, request ->
 						Promise.of("Hello, " + request + "!"))
 				.withListenPort(LISTEN_PORT)
@@ -41,13 +44,12 @@ public class JmxMessagesRpcServerTest {
 	public void testWithoutProtocolError() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
+				.withStreamProtocol(DEFAULT_PACKET_SIZE, true)
 				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
 		await(client.start().whenResult(() ->
 				client.sendRequest("msg", 1000)
-						.whenComplete(() -> {
-							assertEquals(0, server.getFailedRequests().getTotalCount());
-							client.stop();
-						})));
+						.whenComplete(client::stop)));
+		assertEquals(0, server.getFailedRequests().getTotalCount());
 	}
 
 	@Test
@@ -57,10 +59,8 @@ public class JmxMessagesRpcServerTest {
 				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
 		await(client.start()
 				.whenResult(() -> client.sendRequest("msg", 10000)
-						.whenComplete(() -> {
-							assertTrue(server.getLastProtocolError().getTotal() > 0);
-							client.stop();
-						})));
+						.whenComplete(client::stop)));
+		assertTrue(server.getLastProtocolError().getTotal() > 0);
 	}
 
 	@Test
@@ -70,9 +70,7 @@ public class JmxMessagesRpcServerTest {
 				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
 		await(client.start()
 				.whenResult(() -> client.sendRequest("Message larger than LZ4 header", 1000)
-						.whenComplete(() -> {
-							assertTrue(server.getLastProtocolError().getTotal() > 0);
-							client.stop();
-						})));
+						.whenComplete(client::stop)));
+		assertTrue(server.getLastProtocolError().getTotal() > 0);
 	}
 }

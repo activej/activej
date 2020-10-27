@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
@@ -94,7 +95,7 @@ public final class RpcNoServerTest {
 	}
 
 	private void doTest(boolean startServerAfterConnectTimeout) throws UnknownHostException, InterruptedException {
-		Eventloop eventloopServer = Eventloop.create();
+		Eventloop eventloopServer = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
 		RpcServer server = createServer(eventloopServer);
 		eventloopServer.submit(() -> {
 			try {
@@ -107,7 +108,7 @@ public final class RpcNoServerTest {
 			serverThread.start();
 		}
 
-		Eventloop eventloopClient = Eventloop.create().withCurrentThread();
+		Eventloop eventloopClient = Eventloop.getCurrentEventloop();
 
 		RpcClient rpcClient = RpcClient.create(eventloopClient)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)

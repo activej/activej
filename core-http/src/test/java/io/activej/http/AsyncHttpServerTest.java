@@ -8,6 +8,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -34,6 +35,9 @@ import static org.junit.Assert.*;
 public final class AsyncHttpServerTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@ClassRule
+	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	public static AsyncHttpServer blockingHttpServer(Eventloop primaryEventloop, int port) {
 		return AsyncHttpServer.create(primaryEventloop,
@@ -78,7 +82,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testKeepAlive_Http_1_0() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		int port = getFreePort();
 
@@ -114,7 +118,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testKeepAlive_Http_1_1() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		int port = getFreePort();
 
@@ -150,7 +154,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testClosed() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		int port = getFreePort();
 		AsyncHttpServer server = blockingHttpServer(eventloop, port);
@@ -170,7 +174,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testBodySupplierClosingOnDisconnect() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		int port = getFreePort();
 		SettablePromise<Throwable> throwablePromise = new SettablePromise<>();
@@ -195,7 +199,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testNoKeepAlive_Http_1_0() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		int port = getFreePort();
 		AsyncHttpServer server = blockingHttpServer(eventloop, port);
@@ -218,7 +222,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testNoKeepAlive_Http_1_1() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		int port = getFreePort();
 		AsyncHttpServer server = blockingHttpServer(eventloop, port);
@@ -241,7 +245,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testPipelining() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		int port = getFreePort();
 //		doTestPipelining(eventloop, blockingHttpServer(eventloop));
 //		doTestPipelining(eventloop, asyncHttpServer(eventloop));
@@ -287,7 +291,7 @@ public final class AsyncHttpServerTest {
 	@Test
 	@Ignore("does not work")
 	public void testPipelining2() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		int port = getFreePort();
 //		doTestPipelining(eventloop, blockingHttpServer(eventloop));
 //		doTestPipelining(eventloop, asyncHttpServer(eventloop));
@@ -333,7 +337,7 @@ public final class AsyncHttpServerTest {
 	@Test
 	public void testBigHttpMessage() throws Exception {
 		int port = getFreePort();
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		byte[] body = encodeAscii("Test big HTTP message body");
 		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
@@ -366,7 +370,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testExpectContinue() throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		int port = getFreePort();
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 				request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())))
@@ -398,7 +402,7 @@ public final class AsyncHttpServerTest {
 	public void testBodyRecycledOnce() throws IOException, InterruptedException {
 		int port = getFreePort();
 
-		Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrowOnAnyError());
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 				request -> {
