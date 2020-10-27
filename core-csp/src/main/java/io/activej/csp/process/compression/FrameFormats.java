@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static io.activej.common.Checks.checkArgument;
@@ -44,6 +45,20 @@ public class FrameFormats {
 	 */
 	public static FrameFormat compound(FrameFormat mainFormat, FrameFormat... otherFormats) {
 		return new Compound(mainFormat, asList(otherFormats));
+	}
+
+	/**
+	 * A frame format that does not change incoming data in any way.
+	 * <p>
+	 * <b>Should be used in {@link #compound(FrameFormat, FrameFormat...)} method only as the last frame format
+	 * as it determines any data to have a correct format
+	 * <p>
+	 * You can wrap this frame format using {@link #withMagicNumber(FrameFormat, byte[])}
+	 * by specifying custom magic number to be used
+	 * </b>
+	 */
+	public static FrameFormat identity() {
+		return IdentityFrameFormat.getInstance();
 	}
 
 	/**
@@ -86,10 +101,10 @@ public class FrameFormats {
 
 		@Override
 		public BlockDecoder createDecoder() {
-			final BlockDecoder[] decoders = formats.stream().map(FrameFormat::createDecoder).toArray(BlockDecoder[]::new);
-
 			return new BlockDecoder() {
 				BlockDecoder decoder;
+				BlockDecoder possibleDecoder;
+				Iterator<FrameFormat> possibleDecoders = formats.iterator();
 
 				@Override
 				public void reset() {
@@ -99,41 +114,97 @@ public class FrameFormats {
 				}
 
 				@Override
-				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
-					if (decoder != null) return decoder.decode(bufs);
-					return findDecoder(bufs);
-				}
-
-				@Override
 				public boolean ignoreMissingEndOfStreamBlock() {
 					if (decoder != null) return decoder.ignoreMissingEndOfStreamBlock();
 
 					// rare case of empty stream
-					return Arrays.stream(decoders).anyMatch(BlockDecoder::ignoreMissingEndOfStreamBlock);
+					return formats.stream().map(FrameFormat::createDecoder).anyMatch(BlockDecoder::ignoreMissingEndOfStreamBlock);
 				}
 
-				private ByteBuf findDecoder(ByteBufQueue bufs) throws ParseException {
-					boolean needMoreData = false;
-					for (int i = 0; i < decoders.length; i++) {
-						BlockDecoder decoder = decoders[i];
-						if (decoder == null) continue;
+				@Override
+				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+					if (decoder != null) return decoder.decode(bufs);
+					return tryNextDecoder(bufs);
+				}
+
+				private ByteBuf tryNextDecoder(ByteBufQueue bufs) throws ParseException {
+					while (true) {
+						if (possibleDecoder == null) {
+							if (!possibleDecoders.hasNext()) throw UNKNOWN_FORMAT_EXCEPTION;
+							possibleDecoder = possibleDecoders.next().createDecoder();
+						}
+
 						try {
 							int bytesBeforeDecoding = bufs.remainingBytes();
-							ByteBuf buf = decoder.decode(bufs);
+							ByteBuf buf = possibleDecoder.decode(bufs);
 							if (buf != null || bytesBeforeDecoding != bufs.remainingBytes()) {
-								this.decoder = decoder;
-								return buf;
-							} else {
-								needMoreData = true;
+								decoder = possibleDecoder;
+								possibleDecoders = null;
 							}
+							return buf;
 						} catch (ParseException ignored) {
-							decoders[i] = null;
 						}
+
+						possibleDecoder = null;
 					}
-					if (needMoreData) {
-						return null;
+				}
+			};
+		}
+	}
+
+	private static final class IdentityFrameFormat implements FrameFormat {
+		private static volatile IdentityFrameFormat instance = null;
+
+		private IdentityFrameFormat() {
+			if (instance != null) throw new AssertionError("Already created");
+		}
+
+		static IdentityFrameFormat getInstance() {
+			if (instance == null) {
+				synchronized (IdentityFrameFormat.class) {
+					if (instance == null) {
+						instance = new IdentityFrameFormat();
 					}
-					throw UNKNOWN_FORMAT_EXCEPTION;
+				}
+			}
+			return instance;
+		}
+
+		@Override
+		public BlockEncoder createEncoder() {
+			return new BlockEncoder() {
+				@Override
+				public ByteBuf encode(ByteBuf inputBuf) {
+					return inputBuf.slice();
+				}
+
+				@Override
+				public void reset() {
+				}
+
+				@Override
+				public ByteBuf encodeEndOfStreamBlock() {
+					return ByteBuf.empty();
+				}
+			};
+		}
+
+		@Override
+		public BlockDecoder createDecoder() {
+			return new BlockDecoder() {
+
+				@Override
+				public @Nullable ByteBuf decode(ByteBufQueue bufs) {
+					return bufs.hasRemaining() ? bufs.takeRemaining() : null;
+				}
+
+				@Override
+				public void reset() {
+				}
+
+				@Override
+				public boolean ignoreMissingEndOfStreamBlock() {
+					return true;
 				}
 			};
 		}
@@ -193,6 +264,7 @@ public class FrameFormats {
 				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
 					int len = peekVarInt(bufs);
 					if (len == -1) return null;
+
 					int lenSize = varIntSize(len);
 					if (!bufs.hasRemainingBytes(len + lenSize)) return null;
 					if (len == 0) {
@@ -217,9 +289,10 @@ public class FrameFormats {
 
 		private int peekVarInt(ByteBufQueue bufs) throws ParseException {
 			ByteBuf buf = bufs.peekBuf();
+			if (buf == null) return -1;
+
 			byte[] array;
 			int off, limit;
-			//noinspection ConstantConditions
 			if (buf.readRemaining() >= varIntArray.length) {
 				array = buf.array();
 				off = buf.head();
@@ -255,7 +328,7 @@ public class FrameFormats {
 							if ((b = array[off]) >= 0) {
 								result |= b << 28;
 							} else {
-								throw new ParseException("Could not read var int");
+								throw new InvalidSizeException(SizePrefixedFrameFormat.class, "Could not read var int");
 							}
 						}
 					}
@@ -331,7 +404,6 @@ public class FrameFormats {
 					if (validateMagicNumber) {
 						if (!validateMagicNumber(bufs)) return null;
 						validateMagicNumber = false;
-						if (bufs.isEmpty()) return null;
 					}
 					return peer.decode(bufs);
 				}
@@ -347,25 +419,30 @@ public class FrameFormats {
 				}
 
 				private boolean validateMagicNumber(ByteBufQueue bufs) throws UnknownFormatException {
-					if (!bufs.hasRemainingBytes(magicNumberLength)) return false;
 					final ByteBuf firstBuf = bufs.peekBuf();
-					assert firstBuf != null; // ensured in ChannelFrameDecoder
+					if (firstBuf == null) return false;
+
 					byte[] array = firstBuf.array();
 					int head = firstBuf.head();
 					int tail = firstBuf.tail();
 
+					int limit;
 					if (tail - head < magicNumberLength) {
-						bufs.peekTo(magicNumberHolder, 0, magicNumberLength);
+						limit = bufs.peekTo(magicNumberHolder, 0, magicNumberLength);
 						array = magicNumberHolder;
 						head = 0;
+					} else {
+						limit = magicNumberLength;
 					}
 
-					for (int i = 0; i < magicNumber.length; i++) {
-						if (array[head + i] != magicNumber[i]){
+					for (int i = 0; i < limit; i++) {
+						if (array[head + i] != magicNumber[i]) {
 							throw new UnknownFormatException(MagicNumberAdapter.class,
 									"Expected stream to start with bytes: " + Arrays.toString(magicNumber));
 						}
 					}
+
+					if (limit != magicNumberLength) return false;
 
 					bufs.skip(magicNumberLength);
 					return true;

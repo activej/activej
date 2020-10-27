@@ -16,10 +16,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
@@ -30,6 +27,7 @@ import static io.activej.promise.TestUtils.awaitException;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assume.assumeFalse;
 
 @RunWith(Parameterized.class)
 public class FrameFormatTest {
@@ -53,22 +51,32 @@ public class FrameFormatTest {
 	@Parameter(1)
 	public FrameFormat frameFormat;
 
+	@Parameter(2)
+	public boolean hasNoTrailingData;
+
+	@Parameter(3)
+	public boolean resetsAllowed;
+
+
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return Arrays.asList(
-				new Object[]{"LZ4 format", LZ4FrameFormat.create()},
-				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.fastest()},
+				new Object[]{"LZ4 format", LZ4FrameFormat.create(), false, true},
+				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.fastest(), false, true},
 
-				new Object[]{"Size prefixed", FrameFormats.sizePrefixed()},
+				new Object[]{"Size prefixed", FrameFormats.sizePrefixed(), false, true},
+				new Object[]{"Identity", FrameFormats.identity(), true, true},
 
-				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", compound(LZ4FrameFormat.create(), LZ4LegacyFrameFormat.fastest())},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", compound(LZ4LegacyFrameFormat.fastest(), LZ4FrameFormat.create())},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", compound(LZ4LegacyFrameFormat.fastest(), LZ4LegacyFrameFormat.fastest())},
-				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", compound(LZ4FrameFormat.create(), LZ4FrameFormat.create())},
+				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", testCompound(LZ4FrameFormat.create(), LZ4LegacyFrameFormat.fastest()), false, true},
+				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", testCompound(LZ4LegacyFrameFormat.fastest(), LZ4FrameFormat.create()), false, true},
+				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", testCompound(LZ4LegacyFrameFormat.fastest(), LZ4LegacyFrameFormat.fastest()), false, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", testCompound(LZ4FrameFormat.create(), LZ4FrameFormat.create()), false, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with identity", testCompound(LZ4FrameFormat.create(), FrameFormats.identity()), true, true},
 
-				new Object[]{"With random magic number: Size prefixed", withMagicNumber(sizePrefixed(), RANDOM_MAGIC_NUMBER)},
-				new Object[]{"With random magic number: LZ4", withMagicNumber(LZ4FrameFormat.create(), RANDOM_MAGIC_NUMBER)},
-				new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(LZ4LegacyFrameFormat.fastest(), RANDOM_MAGIC_NUMBER)}
+				new Object[]{"With random magic number: Size prefixed", withMagicNumber(sizePrefixed(), RANDOM_MAGIC_NUMBER), false, true},
+				new Object[]{"With random magic number: Identity", withMagicNumber(identity(), RANDOM_MAGIC_NUMBER), true, false},
+				new Object[]{"With random magic number: LZ4", withMagicNumber(LZ4FrameFormat.create(), RANDOM_MAGIC_NUMBER), false, true},
+				new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(LZ4LegacyFrameFormat.fastest(), RANDOM_MAGIC_NUMBER), false, true}
 		);
 	}
 
@@ -135,6 +143,8 @@ public class FrameFormatTest {
 
 	@Test
 	public void trailingData() {
+		assumeFalse(hasNoTrailingData);
+
 		ChannelFrameEncoder compressor = ChannelFrameEncoder.create(frameFormat);
 		ChannelFrameDecoder decompressor = ChannelFrameDecoder.create(frameFormat);
 		ByteBufQueue queue = new ByteBufQueue();
@@ -153,6 +163,8 @@ public class FrameFormatTest {
 	}
 
 	private void doTest(byte[] data, boolean singleByteChunks, boolean resets) {
+		if (!resetsAllowed) return;
+
 		MemSize chunkSizeMin = singleByteChunks ?
 				MemSize.of(1) :
 				MemSize.bytes(ThreadLocalRandom.current().nextInt(1000) + 500);
@@ -177,6 +189,26 @@ public class FrameFormatTest {
 
 		ByteBuf collected = await(supplier.toCollector(ByteBufQueue.collector()));
 		assertArrayEquals(data, collected.asArray());
+	}
+
+	// encodes with random, decodes in order
+	private static FrameFormat testCompound(FrameFormat mainFormat, FrameFormat... formats) {
+		List<FrameFormat> allFormats = new ArrayList<>();
+		allFormats.add(mainFormat);
+		allFormats.addAll(Arrays.asList(formats));
+
+		FrameFormat compound = compound(mainFormat, formats);
+		return new FrameFormat() {
+			@Override
+			public BlockEncoder createEncoder() {
+				return allFormats.get(ThreadLocalRandom.current().nextInt(allFormats.size())).createEncoder();
+			}
+
+			@Override
+			public BlockDecoder createDecoder() {
+				return compound.createDecoder();
+			}
+		};
 	}
 
 	private static ByteBuf createRandomByteBuf() {

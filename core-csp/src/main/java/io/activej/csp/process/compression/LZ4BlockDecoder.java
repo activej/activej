@@ -38,7 +38,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 	private final LZ4FastDecompressor decompressor;
 
-	private final byte[] headerBuf = new byte[MAGIC.length];
+	private final byte[] headerBuf = new byte[MAGIC_LENGTH];
 	private final byte[] intBuf = new byte[4];
 
 	private boolean readHeader = true;
@@ -56,7 +56,8 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	@Override
 	public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
 		final ByteBuf firstBuf = bufs.peekBuf();
-		assert firstBuf != null; // ensured in ChannelFrameDecoder
+		if (firstBuf == null) return null;
+
 		final byte[] bytes = firstBuf.array();
 		final int tail = firstBuf.tail();
 		int head = firstBuf.head();
@@ -64,7 +65,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		if (readHeader) {
 			if (!readHeader(bufs, bytes, head, tail)) return null;
 			readHeader = false;
-			head += MAGIC.length;
+			head += MAGIC_LENGTH;
 		}
 
 		if (!bufs.hasRemainingBytes(4)) return null;
@@ -90,19 +91,24 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	}
 
 	private boolean readHeader(ByteBufQueue bufs, byte[] array, int head, int tail) throws UnknownFormatException {
-		if (!bufs.hasRemainingBytes(MAGIC.length)) return false;
-
-		if (tail - head < MAGIC.length) {
-			bufs.peekTo(headerBuf, 0, MAGIC.length);
+		int limit;
+		if (tail - head < MAGIC_LENGTH) {
+			limit = bufs.peekTo(headerBuf, 0, MAGIC_LENGTH);
 			array = headerBuf;
 			head = 0;
+		} else {
+			limit = MAGIC_LENGTH;
 		}
 
-		if (array[head] != MAGIC[0] || array[head + 1] != MAGIC[1] || array[head + 2] != MAGIC[2] || array[head + 3] != MAGIC[3]) {
-			throw UNKNOWN_FORMAT_EXCEPTION;
+		for (int i = 0; i < limit; i++) {
+			if (array[head + i] != MAGIC[i]) {
+				throw UNKNOWN_FORMAT_EXCEPTION;
+			}
 		}
 
-		bufs.skip(MAGIC.length);
+		if (limit != MAGIC_LENGTH) return false;
+
+		bufs.skip(MAGIC_LENGTH);
 		return true;
 	}
 

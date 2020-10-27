@@ -41,7 +41,7 @@ final class LZ4BlockEncoder implements BlockEncoder {
 
 	@Override
 	public ByteBuf encode(ByteBuf inputBuf) {
-		int headerSize = writeHeader ? MAGIC.length : 0;
+		int headerSize = writeHeader ? MAGIC_LENGTH : 0;
 		writeHeader = false;
 
 		int off = inputBuf.head();
@@ -53,8 +53,8 @@ final class LZ4BlockEncoder implements BlockEncoder {
 		ByteBuf outputBuf = ByteBufPool.allocate(headerSize + 2 * 4 + compressor.maxCompressedLength(len) + 1);
 
 		if (headerSize != 0) {
-			System.arraycopy(MAGIC, 0, outputBuf.array(), 0, MAGIC.length);
-			outputBuf.moveTail(MAGIC.length);
+			System.arraycopy(MAGIC, 0, outputBuf.array(), 0, MAGIC_LENGTH);
+			outputBuf.moveTail(MAGIC_LENGTH);
 		}
 
 		int compressedLength = compressor.compress(array, off, len, outputBuf.array(), headerSize + 2 * 4);

@@ -22,6 +22,7 @@ public final class LZ4FrameFormat implements FrameFormat {
 	static final byte[] MAGIC = {'L', 'Z', '4', 1};
 	static final byte[] LAST_BLOCK_BYTES = {(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff};
 	static final byte[] MAGIC_AND_LAST_BLOCK_BYTES;
+	static final int MAGIC_LENGTH = MAGIC.length;
 
 	static {
 		MAGIC_AND_LAST_BLOCK_BYTES = new byte[MAGIC.length + LAST_BLOCK_BYTES.length];

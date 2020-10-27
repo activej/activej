@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 
 import static io.activej.csp.process.compression.LZ4LegacyFrameFormat.*;
+import static java.lang.Math.min;
 
 @Deprecated
 final class LZ4LegacyBlockDecoder implements BlockDecoder {
@@ -47,6 +48,8 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	private int check;
 	private boolean endOfStream;
 
+	private boolean shouldReadHeader = true;
+
 	LZ4LegacyBlockDecoder(LZ4FastDecompressor decompressor, StreamingXXHash32 checksum, boolean ignoreMissingEndOfStreamBlock) {
 		this.decompressor = decompressor;
 		this.checksum = checksum;
@@ -60,16 +63,17 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 
 	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufQueue queue) throws ParseException {
-		if (!queue.hasRemainingBytes(HEADER_LENGTH)) return null;
+	public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+		if (shouldReadHeader) {
+			if (!readHeader(bufs)) return null;
+			shouldReadHeader = false;
+		}
 
-		readHeader(queue);
+		if (!bufs.hasRemainingBytes(compressedLen)) return null;
+		shouldReadHeader = true;
 
-		if (!queue.hasRemainingBytes(HEADER_LENGTH + compressedLen)) return null;
-
-		queue.skip(HEADER_LENGTH);
 		if (endOfStream) return END_OF_STREAM;
-		return decompressBody(queue);
+		return decompressBody(bufs);
 	}
 
 	@Override
@@ -77,25 +81,30 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		return ignoreMissingEndOfStreamBlock;
 	}
 
-	private void readHeader(ByteBufQueue bufs) throws ParseException {
+	private boolean readHeader(ByteBufQueue bufs) throws ParseException {
 		ByteBuf buf = bufs.peekBuf();
+		if (buf == null) return false;
+
 		byte[] array;
-		int off;
-		//noinspection ConstantConditions
+		int off, limit;
 		if (buf.readRemaining() >= HEADER_LENGTH) {
 			array = buf.array();
 			off = buf.head();
+			limit = HEADER_LENGTH;
 		} else {
-			bufs.peekTo(headerBuf, 0, HEADER_LENGTH);
+			limit = bufs.peekTo(headerBuf, 0, HEADER_LENGTH);
 			array = headerBuf;
 			off = 0;
 		}
 
-		for (int i = 0; i < MAGIC_LENGTH; i++) {
+		int magicLimit = min(MAGIC_LENGTH, limit);
+		for (int i = 0; i < magicLimit; i++) {
 			if (array[off + i] != MAGIC[i]) {
 				throw UNKNOWN_FORMAT_EXCEPTION;
 			}
 		}
+
+		if (limit != HEADER_LENGTH) return false;
 
 		int token = array[off + MAGIC_LENGTH] & 0xFF;
 		compressionMethod = token & 0xF0;
@@ -120,6 +129,9 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 			}
 			endOfStream = true;
 		}
+
+		bufs.skip(HEADER_LENGTH);
+		return true;
 	}
 
 	private static int readIntLE(byte[] buf, int offset) {
