@@ -19,10 +19,12 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
+import static io.activej.csp.process.compression.FrameFormats.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.stream.Collectors.toList;
@@ -37,6 +39,14 @@ public class FrameFormatTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
+	private static final byte[] RANDOM_MAGIC_NUMBER;
+
+	static {
+		Random random = ThreadLocalRandom.current();
+		RANDOM_MAGIC_NUMBER = new byte[random.nextInt(20) + 1];
+		random.nextBytes(RANDOM_MAGIC_NUMBER);
+	}
+
 	@Parameter()
 	public String testName;
 
@@ -49,10 +59,16 @@ public class FrameFormatTest {
 				new Object[]{"LZ4 format", LZ4FrameFormat.create()},
 				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.fastest()},
 
-				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", FrameFormats.compound(LZ4FrameFormat.create(), LZ4LegacyFrameFormat.fastest())},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", FrameFormats.compound(LZ4LegacyFrameFormat.fastest(), LZ4FrameFormat.create())},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", FrameFormats.compound(LZ4LegacyFrameFormat.fastest(), LZ4LegacyFrameFormat.fastest())},
-				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", FrameFormats.compound(LZ4FrameFormat.create(), LZ4FrameFormat.create())}
+				new Object[]{"Size prefixed", FrameFormats.sizePrefixed()},
+
+				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", compound(LZ4FrameFormat.create(), LZ4LegacyFrameFormat.fastest())},
+				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", compound(LZ4LegacyFrameFormat.fastest(), LZ4FrameFormat.create())},
+				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", compound(LZ4LegacyFrameFormat.fastest(), LZ4LegacyFrameFormat.fastest())},
+				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", compound(LZ4FrameFormat.create(), LZ4FrameFormat.create())},
+
+				new Object[]{"With random magic number: Size prefixed", withMagicNumber(sizePrefixed(), RANDOM_MAGIC_NUMBER)},
+				new Object[]{"With random magic number: LZ4", withMagicNumber(LZ4FrameFormat.create(), RANDOM_MAGIC_NUMBER)},
+				new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(LZ4LegacyFrameFormat.fastest(), RANDOM_MAGIC_NUMBER)}
 		);
 	}
 
