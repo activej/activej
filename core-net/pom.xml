@@ -36,12 +36,6 @@
     </dependency>
 
     <dependency>
-      <groupId>net.jpountz.lz4</groupId>
-      <artifactId>lz4</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-test</artifactId>
       <version>${project.version}</version>

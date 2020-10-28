@@ -36,14 +36,14 @@
     </dependency>
 
     <dependency>
-      <groupId>net.jpountz.lz4</groupId>
-      <artifactId>lz4</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-test</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.jpountz.lz4</groupId>
+      <artifactId>lz4</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

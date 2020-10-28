@@ -3,7 +3,7 @@ package io.activej.datastream.processor;
 import io.activej.common.MemSize;
 import io.activej.common.exception.ExpectedException;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.FrameFormats;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -46,7 +46,7 @@ public final class StreamSorterTest {
 	@ClassRule
 	public static final ByteBufRule byteBufPool = new ByteBufRule();
 
-	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
+	private static final FrameFormat FRAME_FORMAT = FrameFormats.sizePrefixed();
 
 	@Test
 	public void testStreamStorage() {
