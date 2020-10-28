@@ -26,6 +26,9 @@ public final class DnsQuery {
 	private final String domainName;
 	private final DnsProtocol.RecordType recordType;
 
+	@Nullable
+	private Object userData;
+
 	private DnsQuery(@NotNull String domainName, @NotNull DnsProtocol.RecordType recordType) {
 		this.domainName = domainName;
 		this.recordType = recordType;
@@ -55,6 +58,20 @@ public final class DnsQuery {
 
 	public DnsProtocol.RecordType getRecordType() {
 		return recordType;
+	}
+
+	@Nullable
+	public Object getUserData() {
+		return userData;
+	}
+
+	/**
+	 * Sets an arbitrary object as a user-defined context for this query
+	 * <p>
+	 * It may be used e.g. by DNS client inspector for collecting statistics per DNS query.
+	 */
+	public void setUserData(@Nullable Object userData) {
+		this.userData = userData;
 	}
 
 	@Override

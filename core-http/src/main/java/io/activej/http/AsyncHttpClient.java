@@ -468,8 +468,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 				.thenEx((asyncTcpSocketImpl, e) -> {
 					if (e == null) {
 						boolean isSecure = request.getProtocol().isSecure();
-						asyncTcpSocketImpl
-								.withInspector(isSecure ? socketInspector : socketSslInspector);
+						AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
+						if (socketInspector != null) {
+							socketInspector.onConnect(asyncTcpSocketImpl);
+							asyncTcpSocketImpl.setInspector(socketInspector);
+						}
 
 						if (isSecure && sslContext == null) {
 							throw new IllegalArgumentException("Cannot send Secure Request without SSL enabled");

@@ -331,8 +331,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 						asyncTcpSocketImpl.close();
 						return;
 					}
-					asyncTcpSocketImpl
-							.withInspector(statsSocket);
+					statsSocket.onConnect(asyncTcpSocketImpl);
+					asyncTcpSocketImpl.setInspector(statsSocket);
 					AsyncTcpSocket socket = sslContext == null ?
 							asyncTcpSocketImpl :
 							wrapClientSocket(asyncTcpSocketImpl, sslContext, sslExecutor);

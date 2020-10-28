@@ -344,8 +344,13 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
 		AsyncTcpSocket asyncTcpSocket;
 		try {
-			asyncTcpSocket = wrapChannel(eventloop, socketChannel, remoteSocketAddress, socketSettings)
-					.withInspector(ssl ? socketSslInspector : socketInspector);
+			AsyncTcpSocketNio socketNio = wrapChannel(eventloop, socketChannel, remoteSocketAddress, socketSettings);
+			Inspector inspector = ssl ? socketSslInspector : socketInspector;
+			if (inspector != null){
+				inspector.onConnect(socketNio);
+				socketNio.setInspector(inspector);
+			}
+			asyncTcpSocket = socketNio;
 		} catch (IOException e) {
 			logger.warn("Failed to wrap channel {}", socketChannel, e);
 			eventloop.closeChannel(socketChannel, null);

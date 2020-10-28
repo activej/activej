@@ -73,46 +73,69 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	private Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
-		void onReceive(UdpPacket packet);
+		void onCreate(AsyncUdpSocketNio socket);
 
-		void onReceiveError(IOException e);
+		void onReceive(AsyncUdpSocketNio socket, UdpPacket packet);
 
-		void onSend(UdpPacket packet);
+		void onReceiveError(AsyncUdpSocketNio socket, IOException e);
 
-		void onSendError(IOException e);
+		void onSend(AsyncUdpSocketNio socket, UdpPacket packet);
+
+		void onSendError(AsyncUdpSocketNio socket, IOException e);
+
+		void onClose(AsyncUdpSocketNio socket);
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
+		private final EventStats creates;
 		private final ValueStats receives;
 		private final EventStats receiveErrors;
 		private final ValueStats sends;
 		private final EventStats sendErrors;
+		private final EventStats closes;
 
 		public JmxInspector(Duration smoothingWindow) {
+			this.creates = EventStats.create(smoothingWindow);
 			this.receives = ValueStats.create(smoothingWindow).withUnit("bytes").withRate();
 			this.receiveErrors = EventStats.create(smoothingWindow);
 			this.sends = ValueStats.create(smoothingWindow).withUnit("bytes").withRate();
 			this.sendErrors = EventStats.create(smoothingWindow);
+			this.closes = EventStats.create(smoothingWindow);
 		}
 
 		@Override
-		public void onReceive(UdpPacket packet) {
+		public void onCreate(AsyncUdpSocketNio socket) {
+			creates.recordEvent();
+		}
+
+		@Override
+		public void onReceive(AsyncUdpSocketNio socket, UdpPacket packet) {
 			receives.recordValue(packet.getBuf().readRemaining());
 		}
 
 		@Override
-		public void onReceiveError(IOException e) {
+		public void onReceiveError(AsyncUdpSocketNio socket, IOException e) {
 			receiveErrors.recordEvent();
 		}
 
 		@Override
-		public void onSend(UdpPacket packet) {
+		public void onSend(AsyncUdpSocketNio socket, UdpPacket packet) {
 			sends.recordValue(packet.getBuf().readRemaining());
 		}
 
 		@Override
-		public void onSendError(IOException e) {
+		public void onSendError(AsyncUdpSocketNio socket, IOException e) {
 			sendErrors.recordEvent();
+		}
+
+		@Override
+		public void onClose(AsyncUdpSocketNio socket) {
+			closes.recordEvent();
+		}
+
+		@JmxAttribute
+		public EventStats getCreates() {
+			return creates;
 		}
 
 		@JmxAttribute(description = "Received packet size")
@@ -134,6 +157,11 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		public EventStats getSendErrors() {
 			return sendErrors;
 		}
+
+		@JmxAttribute
+		public EventStats getCloses() {
+			return closes;
+		}
 	}
 	// endregion
 
@@ -151,9 +179,8 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 		}
 	}
 
-	public AsyncUdpSocketNio withInspector(Inspector inspector) {
+	public void setInspector(@Nullable Inspector inspector) {
 		this.inspector = inspector;
-		return this;
 	}
 
 	public void setReceiveBufferSize(int receiveBufferSize) {
@@ -190,7 +217,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 				sourceAddress = (InetSocketAddress) channel.receive(buffer);
 			} catch (IOException e) {
 				if (inspector != null) {
-					inspector.onReceiveError(e);
+					inspector.onReceiveError(this, e);
 				}
 			}
 
@@ -202,7 +229,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 			buf.ofWriteByteBuffer(buffer);
 			UdpPacket packet = UdpPacket.of(buf, sourceAddress);
 			if (inspector != null) {
-				inspector.onReceive(packet);
+				inspector.onReceive(this, packet);
 			}
 
 			// at this point the packet is *received* so we either
@@ -245,7 +272,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 				}
 			} catch (IOException e) {
 				if (inspector != null) {
-					inspector.onSendError(e);
+					inspector.onSendError(this, e);
 				}
 				break;
 			}
@@ -253,7 +280,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 			entry.getValue2().set(null);
 
 			if (inspector != null) {
-				inspector.onSend(packet);
+				inspector.onSend(this, packet);
 			}
 
 			writeQueue.poll();
@@ -288,6 +315,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 			return;
 		}
 		this.key = null;
+		if (inspector != null) inspector.onClose(this);
 		eventloop.closeChannel(channel, key);
 		Recyclers.recycle(writeQueue);
 	}

@@ -95,10 +95,10 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private Inspector inspector;
 
 	@Nullable
-	private Object inspectorData;
+	private Object userData;
 
 	public interface Inspector extends BaseInspector<Inspector> {
-		Object onConnect(AsyncTcpSocketNio socket);
+		void onConnect(AsyncTcpSocketNio socket);
 
 		void onReadTimeout(AsyncTcpSocketNio socket);
 
@@ -132,9 +132,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		private final EventStats disconnects = EventStats.create(SMOOTHING_WINDOW);
 
 		@Override
-		public Object onConnect(AsyncTcpSocketNio socket) {
+		public void onConnect(AsyncTcpSocketNio socket) {
 			connects.recordEvent();
-			return null;
 		}
 
 		@Override
@@ -276,10 +275,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 				});
 	}
 
-	public AsyncTcpSocketNio withInspector(Inspector inspector) {
+	public void setInspector(@Nullable Inspector inspector) {
 		this.inspector = inspector;
-		if (inspector != null) inspectorData = inspector.onConnect(this);
-		return this;
 	}
 
 	private AsyncTcpSocketNio(Eventloop eventloop, @NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
@@ -298,8 +295,17 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	}
 
 	@Nullable
-	public Object getInspectorData() {
-		return inspectorData;
+	public Object getUserData() {
+		return userData;
+	}
+
+	/**
+	 * Sets an arbitrary object as a user-defined context for this socket
+	 * <p>
+	 * It may be used e.g. by socket inspector for collecting statistics per socket.
+	 */
+	public void setUserData(@Nullable Object userData) {
+		this.userData = userData;
 	}
 
 	// timeouts management
