@@ -2,6 +2,8 @@ package io.activej.datastream.processor;
 
 import io.activej.common.MemSize;
 import io.activej.common.exception.ExpectedException;
+import io.activej.csp.process.frames.FrameFormat;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -44,13 +46,15 @@ public final class StreamSorterTest {
 	@ClassRule
 	public static final ByteBufRule byteBufPool = new ByteBufRule();
 
+	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
+
 	@Test
 	public void testStreamStorage() {
 		StreamSupplier<Integer> source1 = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7);
 		//		StreamSupplier<Integer> source2 = StreamSupplier.of(111);
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		StreamSorterStorageImpl<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, tempFolder.getRoot().toPath())
+		StreamSorterStorageImpl<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.getRoot().toPath())
 				.withWriteBlockSize(MemSize.of(64));
 
 		StreamConsumer<Integer> writer1 = storage.writeStream(1);
@@ -80,7 +84,7 @@ public final class StreamSorterTest {
 		StreamSupplier<Integer> source = StreamSupplier.of(3, 1, 3, 2, 5, 1, 4, 3, 2);
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, tempFolder.newFolder().toPath());
+		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(storage, Function.identity(), Integer::compareTo, true, 2);
 
 		StreamConsumerToList<Integer> consumerToList = StreamConsumerToList.create();
@@ -98,7 +102,7 @@ public final class StreamSorterTest {
 		StreamSupplier<Integer> source = StreamSupplier.of(3, 1, 3, 2, 5, 1, 4, 3, 2);
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, tempFolder.newFolder().toPath());
+		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(
 				storage, Function.identity(), Integer::compareTo, true, 2);
 
@@ -130,7 +134,7 @@ public final class StreamSorterTest {
 				StreamSupplier.closingWithError(exception)
 		);
 
-		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, tempFolder.newFolder().toPath());
+		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(
 				storage, Function.identity(), Integer::compareTo, true, 10);
 
@@ -151,7 +155,7 @@ public final class StreamSorterTest {
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		Path storagePath = tempFolder.newFolder().toPath();
-		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, storagePath);
+		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, FRAME_FORMAT, storagePath);
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(storage, Function.identity(), Integer::compareTo, true, 0);
 
 		List<Integer> list = new ArrayList<>();
@@ -215,7 +219,7 @@ public final class StreamSorterTest {
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		Path path = tempFolder.newFolder().toPath();
-		failingStorage.setStorage(StreamSorterStorageImpl.create(executor, INT_SERIALIZER, path));
+		failingStorage.setStorage(StreamSorterStorageImpl.create(executor, INT_SERIALIZER, FRAME_FORMAT, path));
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(failingStorage, Function.identity(), Integer::compareTo, true, 2);
 
 		StreamConsumerToList<Integer> consumerToList = StreamConsumerToList.create();

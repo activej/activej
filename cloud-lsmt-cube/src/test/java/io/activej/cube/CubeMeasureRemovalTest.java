@@ -3,6 +3,7 @@ package io.activej.cube;
 import io.activej.aggregation.*;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
@@ -74,6 +75,8 @@ public class CubeMeasureRemovalTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
+	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
+
 	private Eventloop eventloop;
 	private Executor executor;
 	private DefiningClassLoader classLoader;
@@ -94,7 +97,7 @@ public class CubeMeasureRemovalTest {
 		dataSource = dataSource("test.properties");
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
 		await(fs.start());
-		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
+		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(classLoader).build(LogItem.class);
 		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
 		await(localFs.start());
@@ -109,7 +112,7 @@ public class CubeMeasureRemovalTest {
 	public void test() throws Exception {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())

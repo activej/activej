@@ -27,6 +27,7 @@ import io.activej.serializer.SerializerBuilder;
 
 import static io.activej.common.MemSize.kilobytes;
 import static io.activej.config.converter.ConfigConverters.*;
+import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.*;
 import static io.activej.rpc.server.RpcServer.DEFAULT_SERVER_SOCKET_SETTINGS;
 import static io.activej.rpc.server.RpcServer.DEFAULT_SOCKET_SETTINGS;
@@ -66,7 +67,7 @@ public class MemcacheServerModule extends AbstractModule {
 				.withMessageTypes(MESSAGE_TYPES)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
-						config.get(ofBoolean(), "protocol.compression", false))
+						config.get(ofFrameFormat(), "protocol.frameFormat", null))
 				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", DEFAULT_SERVER_SOCKET_SETTINGS))
 				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", DEFAULT_SOCKET_SETTINGS))
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "server.listenAddresses"));

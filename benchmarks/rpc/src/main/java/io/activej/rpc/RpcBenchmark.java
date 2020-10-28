@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.inject.module.Modules.combine;
+import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 
@@ -66,7 +67,7 @@ public class RpcBenchmark extends Launcher {
 		return RpcClient.create(eventloop)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						config.get(ofBoolean(), "rpc.compression", false))
+						config.get(ofFrameFormat(), "rpc.compression", null))
 				.withMessageTypes(Integer.class)
 				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))));
 	}
@@ -77,7 +78,7 @@ public class RpcBenchmark extends Launcher {
 		return RpcServer.create(eventloop)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						config.get(ofBoolean(), "rpc.compression", false))
+						config.get(ofFrameFormat(), "rpc.compression", null))
 				.withListenPort(config.get(ofInteger(), "rpc.server.port"))
 				.withMessageTypes(Integer.class)
 				.withHandler(Integer.class, req -> Promise.of(req * 2));

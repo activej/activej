@@ -4,6 +4,7 @@ import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
@@ -72,7 +73,8 @@ public final class LogToCubeTest {
 
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
+		FrameFormat frameFormat = LZ4FrameFormat.create();
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
@@ -96,7 +98,7 @@ public final class LogToCubeTest {
 		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
 		await(localFs.start());
 		Multilog<TestPubRequest> multilog = MultilogImpl.create(eventloop, localFs,
-				LZ4FrameFormat.create(),
+				frameFormat,
 				SerializerBuilder.create(classLoader).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

@@ -21,7 +21,6 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.Checks;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.xxhash.StreamingXXHash32;
-import net.jpountz.xxhash.XXHashFactory;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.csp.process.frames.LZ4LegacyFrameFormat.*;
@@ -36,10 +35,11 @@ final class LZ4LegacyBlockEncoder implements BlockEncoder {
 	private static final int MAX_BLOCK_SIZE = 1 << (COMPRESSION_LEVEL_BASE + 0x0F);
 
 	private final LZ4Compressor compressor;
-	private final StreamingXXHash32 checksum = XXHashFactory.fastestInstance().newStreamingHash32(DEFAULT_SEED);
+	private final StreamingXXHash32 checksum;
 
-	LZ4LegacyBlockEncoder(LZ4Compressor compressor) {
+	LZ4LegacyBlockEncoder(LZ4Compressor compressor, StreamingXXHash32 checksum) {
 		this.compressor = compressor;
+		this.checksum = checksum;
 	}
 
 	@Override

@@ -18,9 +18,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.config.converter.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofMemSize;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.inject.module.Modules.combine;
+import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 
@@ -55,7 +57,7 @@ public class RpcBenchmarkClient extends Launcher {
 		return RpcClient.create(eventloop)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						config.get(ofBoolean(), "rpc.compression", false))
+						config.get(ofFrameFormat(), "rpc.frameFormat", null))
 				.withMessageTypes(Integer.class)
 				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))));
 	}

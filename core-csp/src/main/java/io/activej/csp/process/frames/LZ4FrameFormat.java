@@ -16,7 +16,10 @@
 
 package io.activej.csp.process.frames;
 
+import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
+
+import static io.activej.common.Checks.checkArgument;
 
 public final class LZ4FrameFormat implements FrameFormat {
 	static final byte[] MAGIC = {'L', 'Z', '4', 1};
@@ -33,18 +36,41 @@ public final class LZ4FrameFormat implements FrameFormat {
 	static final int COMPRESSED_LENGTH_MASK = 0x7fffffff;
 	static final byte END_OF_BLOCK = 1;
 
-	private final LZ4Factory factory = LZ4Factory.fastestInstance();
+	private final LZ4Factory factory;
 
-	private LZ4FrameFormat() {
+	private int compressionLevel;
+
+	private LZ4FrameFormat(LZ4Factory factory) {
+		this.factory = factory;
 	}
 
 	public static LZ4FrameFormat create() {
-		return new LZ4FrameFormat();
+		return new LZ4FrameFormat(LZ4Factory.fastestInstance());
+	}
+
+	public static LZ4FrameFormat create(LZ4Factory factory) {
+		return new LZ4FrameFormat(factory);
+	}
+
+	public LZ4FrameFormat withHighCompression() {
+		this.compressionLevel = -1;
+		return this;
+	}
+
+	public LZ4FrameFormat withCompressionLevel(int compressionLevel) {
+		checkArgument(compressionLevel >= -1);
+		this.compressionLevel = compressionLevel;
+		return this;
 	}
 
 	@Override
 	public BlockEncoder createEncoder() {
-		return new LZ4BlockEncoder(factory.fastCompressor());
+		LZ4Compressor compressor = compressionLevel == 0 ?
+				factory.fastCompressor() :
+				compressionLevel == -1 ?
+						factory.highCompressor() :
+						factory.highCompressor(compressionLevel);
+		return new LZ4BlockEncoder(compressor);
 	}
 
 	@Override

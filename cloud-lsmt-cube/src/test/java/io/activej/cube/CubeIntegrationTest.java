@@ -4,6 +4,7 @@ import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
@@ -77,7 +78,8 @@ public class CubeIntegrationTest {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
-		ActiveFsChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
+		FrameFormat frameFormat = LZ4FrameFormat.create();
+		ActiveFsChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
@@ -113,7 +115,7 @@ public class CubeIntegrationTest {
 		await(localFs.start());
 		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
 				localFs,
-				LZ4FrameFormat.create(),
+				frameFormat,
 				SerializerBuilder.create(classLoader).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

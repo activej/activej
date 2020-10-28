@@ -275,7 +275,8 @@ public final class ReportingTest {
 
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop,
+				ChunkIdCodec.ofLong(), new IdGeneratorStub(), LZ4FrameFormat.create(), fs);
 		cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(classLoader, 5))
 				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
@@ -409,16 +410,16 @@ public final class ReportingTest {
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(5, (long) records.get(0).get("clicks"));
 		assertEquals(65, (long) records.get(0).get("impressions"));
-		assertEquals(5.0 / 65.0 * 100.0, (double) records.get(0).get("ctr"), DELTA);
+		assertEquals(5.0 / 65.0 * 100.0, records.get(0).get("ctr"), DELTA);
 		assertEquals(LocalDate.parse("2000-01-02"), records.get(1).get("date"));
 		assertEquals(33, (long) records.get(1).get("clicks"));
 		assertEquals(435, (long) records.get(1).get("impressions"));
-		assertEquals(33.0 / 435.0 * 100.0, (double) records.get(1).get("ctr"), DELTA);
+		assertEquals(33.0 / 435.0 * 100.0, records.get(1).get("ctr"), DELTA);
 		assertEquals(2, queryResult.getTotalCount());
 		Record totals = queryResult.getTotals();
 		assertEquals(38, (long) totals.get("clicks"));
 		assertEquals(500, (long) totals.get("impressions"));
-		assertEquals(38.0 / 500.0 * 100.0, (double) totals.get("ctr"), DELTA);
+		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
 		assertEquals(set("date"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
@@ -440,16 +441,16 @@ public final class ReportingTest {
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(5, (long) records.get(0).get("clicks"));
 		assertEquals(65, (long) records.get(0).get("impressions"));
-		assertEquals(5.0 / 65.0 * 100.0, (double) records.get(0).get("ctr"), DELTA);
+		assertEquals(5.0 / 65.0 * 100.0, records.get(0).get("ctr"), DELTA);
 		assertEquals(LocalDate.parse("2000-01-02"), records.get(1).get("date"));
 		assertEquals(33, (long) records.get(1).get("clicks"));
 		assertEquals(435, (long) records.get(1).get("impressions"));
-		assertEquals(33.0 / 435.0 * 100.0, (double) records.get(1).get("ctr"), DELTA);
+		assertEquals(33.0 / 435.0 * 100.0, records.get(1).get("ctr"), DELTA);
 		assertEquals(2, queryResult.getTotalCount());
 		Record totals = queryResult.getTotals();
 		assertEquals(38, (long) totals.get("clicks"));
 		assertEquals(500, (long) totals.get("impressions"));
-		assertEquals(38.0 / 500.0 * 100.0, (double) totals.get("ctr"), DELTA);
+		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
 		assertEquals(set("date"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
@@ -474,16 +475,16 @@ public final class ReportingTest {
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(2, (long) records.get(0).get("clicks"));
 		assertEquals(15, (long) records.get(0).get("impressions"));
-		assertEquals(2.0 / 15.0 * 100.0, (double) records.get(0).get("ctr"), DELTA);
+		assertEquals(2.0 / 15.0 * 100.0, records.get(0).get("ctr"), DELTA);
 		assertEquals(LocalDate.parse("2000-01-02"), records.get(1).get("date"));
 		assertEquals(3, (long) records.get(1).get("clicks"));
 		assertEquals(20, (long) records.get(1).get("impressions"));
-		assertEquals(3.0 / 20.0 * 100.0, (double) records.get(1).get("ctr"), DELTA);
+		assertEquals(3.0 / 20.0 * 100.0, records.get(1).get("ctr"), DELTA);
 		assertEquals(2, queryResult.getTotalCount());
 		Record totals = queryResult.getTotals();
 		assertEquals(35, (long) totals.get("impressions"));
 		assertEquals(5, (long) totals.get("clicks"));
-		assertEquals(5.0 / 35.0 * 100.0, (double) totals.get("ctr"), DELTA);
+		assertEquals(5.0 / 35.0 * 100.0, totals.get("ctr"), DELTA);
 		assertEquals(set("ctr"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
@@ -641,34 +642,34 @@ public final class ReportingTest {
 
 		Record r1 = records.get(0);
 		assertEquals(LocalDate.parse("2000-01-02"), r1.get("date"));
-		assertEquals(0.12, (double) r1.get("minRevenue"), DELTA);
-		assertEquals(0.6, (double) r1.get("maxRevenue"), DELTA);
+		assertEquals(0.12, r1.get("minRevenue"), DELTA);
+		assertEquals(0.6, r1.get("maxRevenue"), DELTA);
 		assertEquals(8, (int) r1.get("eventCount"));
 		assertEquals(4, (int) r1.get("uniqueUserIdsCount"));
-		assertEquals(50.0, (double) r1.get("uniqueUserPercent"), DELTA);
+		assertEquals(50.0, r1.get("uniqueUserPercent"), DELTA);
 
 		Record r2 = records.get(1);
 		assertEquals(LocalDate.parse("2000-01-03"), r2.get("date"));
-		assertEquals(0.22, (double) r2.get("minRevenue"), DELTA);
-		assertEquals(0.9, (double) r2.get("maxRevenue"), DELTA);
+		assertEquals(0.22, r2.get("minRevenue"), DELTA);
+		assertEquals(0.9, r2.get("maxRevenue"), DELTA);
 		assertEquals(3, (int) r2.get("eventCount"));
 		assertEquals(2, (int) r2.get("uniqueUserIdsCount"));
-		assertEquals(2.0 / 3.0 * 100, (double) r2.get("uniqueUserPercent"), DELTA);
+		assertEquals(2.0 / 3.0 * 100, r2.get("uniqueUserPercent"), DELTA);
 
 		Record r3 = records.get(2);
 		assertEquals(LocalDate.parse("2000-01-04"), r3.get("date"));
-		assertEquals(0.30, (double) r3.get("minRevenue"), DELTA);
-		assertEquals(1.0, (double) r3.get("maxRevenue"), DELTA);
+		assertEquals(0.30, r3.get("minRevenue"), DELTA);
+		assertEquals(1.0, r3.get("maxRevenue"), DELTA);
 		assertEquals(2, (int) r3.get("eventCount"));
 		assertEquals(2, (int) r3.get("uniqueUserIdsCount"));
-		assertEquals(100.0, (double) r3.get("uniqueUserPercent"), DELTA);
+		assertEquals(100.0, r3.get("uniqueUserPercent"), DELTA);
 
 		Record totals = queryResult.getTotals();
-		assertEquals(0.12, (double) totals.get("minRevenue"), DELTA);
-		assertEquals(1.0, (double) totals.get("maxRevenue"), DELTA);
+		assertEquals(0.12, totals.get("minRevenue"), DELTA);
+		assertEquals(1.0, totals.get("maxRevenue"), DELTA);
 		assertEquals(13, (int) totals.get("eventCount"));
 		assertEquals(5, (int) totals.get("uniqueUserIdsCount"));
-		assertEquals(5 / 13.0 * 100, (double) totals.get("uniqueUserPercent"), DELTA);
+		assertEquals(5 / 13.0 * 100, totals.get("uniqueUserPercent"), DELTA);
 		assertEquals(46, (long) totals.get("clicks"));
 	}
 
@@ -774,10 +775,10 @@ public final class ReportingTest {
 		QueryResult resultByAdvertisers = await(cubeHttpClient.query(queryAdvertisers));
 
 		Record advertisersTotals = resultByAdvertisers.getTotals();
-		long advertisersImpressions = (long) advertisersTotals.get("impressions");
-		long advertisersClicks = (long) advertisersTotals.get("clicks");
-		double advertisersRevenue = (double) advertisersTotals.get("revenue");
-		long advertisersErrors = (long) advertisersTotals.get("errors");
+		long advertisersImpressions = advertisersTotals.get("impressions");
+		long advertisersClicks = advertisersTotals.get("clicks");
+		double advertisersRevenue = advertisersTotals.get("revenue");
+		long advertisersErrors = advertisersTotals.get("errors");
 		assertEquals(200, advertisersImpressions);
 		assertEquals(13, advertisersClicks);
 		assertEquals(1.08, advertisersRevenue, Double.MIN_VALUE);
@@ -796,10 +797,10 @@ public final class ReportingTest {
 		QueryResult resultByAffiliates = await(cubeHttpClient.query(queryAffiliates));
 
 		Record affiliatesTotals = resultByAffiliates.getTotals();
-		long affiliatesImpressions = (long) affiliatesTotals.get("impressions");
-		long affiliatesClicks = (long) affiliatesTotals.get("clicks");
-		double affiliatesRevenue = (double) affiliatesTotals.get("revenue");
-		long affiliatesErrors = (long) affiliatesTotals.get("errors");
+		long affiliatesImpressions = affiliatesTotals.get("impressions");
+		long affiliatesClicks = affiliatesTotals.get("clicks");
+		double affiliatesRevenue = affiliatesTotals.get("revenue");
+		long affiliatesErrors = affiliatesTotals.get("errors");
 		assertEquals(235, affiliatesImpressions);
 		assertEquals(20, affiliatesClicks);
 		assertEquals(1.60, affiliatesRevenue, Double.MIN_VALUE);
@@ -817,10 +818,10 @@ public final class ReportingTest {
 		QueryResult resultByDate = await(cubeHttpClient.query(queryDate));
 
 		Record dailyTotals = resultByDate.getTotals();
-		long dailyImpressions = (long) dailyTotals.get("impressions");
-		long dailyClicks = (long) dailyTotals.get("clicks");
-		double dailyRevenue = (double) dailyTotals.get("revenue");
-		long dailyErrors = (long) dailyTotals.get("errors");
+		long dailyImpressions = dailyTotals.get("impressions");
+		long dailyClicks = dailyTotals.get("clicks");
+		double dailyRevenue = dailyTotals.get("revenue");
+		long dailyErrors = dailyTotals.get("errors");
 		assertEquals(435, dailyImpressions);
 		assertEquals(33, dailyClicks);
 		assertEquals(2.68, dailyRevenue, DELTA);
@@ -845,10 +846,10 @@ public final class ReportingTest {
 		assertEquals(measures, resultByDate.getMeasures());
 
 		Record dailyTotals = resultByDate.getTotals();
-		long dailyImpressions = (long) dailyTotals.get("impressions");
-		long dailyClicks = (long) dailyTotals.get("clicks");
-		double dailyRevenue = (double) dailyTotals.get("revenue");
-		long dailyErrors = (long) dailyTotals.get("errors");
+		long dailyImpressions = dailyTotals.get("impressions");
+		long dailyClicks = dailyTotals.get("clicks");
+		double dailyRevenue = dailyTotals.get("revenue");
+		long dailyErrors = dailyTotals.get("errors");
 		assertEquals(435, dailyImpressions);
 		assertEquals(33, dailyClicks);
 		assertEquals(2.68, dailyRevenue, DELTA);
@@ -872,10 +873,10 @@ public final class ReportingTest {
 		assertEquals("date", resultByDate.getAttributes().get(0));
 		assertEquals(resultByDate.getMeasures(), measures);
 		Record dailyTotals = resultByDate.getTotals();
-		long dailyImpressions = (long) dailyTotals.get("impressions");
-		long dailyClicks = (long) dailyTotals.get("clicks");
-		double dailyRevenue = (double) dailyTotals.get("revenue");
-		long dailyErrors = (long) dailyTotals.get("errors");
+		long dailyImpressions = dailyTotals.get("impressions");
+		long dailyClicks = dailyTotals.get("clicks");
+		double dailyRevenue = dailyTotals.get("revenue");
+		long dailyErrors = dailyTotals.get("errors");
 		assertEquals(435, dailyImpressions);
 		assertEquals(33, dailyClicks);
 		assertEquals(2.68, dailyRevenue, DELTA);

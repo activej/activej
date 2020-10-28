@@ -31,6 +31,8 @@ import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.ref.Ref;
+import io.activej.csp.process.frames.FrameFormat;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.attributes.AttributeResolver;
 import io.activej.cube.function.MeasuresFunction;
@@ -100,11 +102,14 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
+	public static final FrameFormat DEFAULT_SORT_FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private final Eventloop eventloop;
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
 	private final AggregationChunkStorage aggregationChunkStorage;
+
+	private FrameFormat sortFrameFormat = DEFAULT_SORT_FRAME_FORMAT;
 	private Path temporarySortDir;
 
 	private final Map<String, FieldType> fieldTypes = new LinkedHashMap<>();
@@ -242,6 +247,11 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		return this;
 	}
 
+	public Cube withSortFrameFormat(FrameFormat sortFrameFormat) {
+		this.sortFrameFormat = sortFrameFormat;
+		return this;
+	}
+
 	public static final class AggregationConfig implements WithInitializer<AggregationConfig> {
 		private final String id;
 		private final List<String> dimensions = new ArrayList<>();
@@ -364,7 +374,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				}))
 				.withPartitioningKey(config.partitioningKey);
 
-		Aggregation aggregation = Aggregation.create(eventloop, executor, classLoader, aggregationChunkStorage, structure)
+		Aggregation aggregation = Aggregation.create(eventloop, executor, classLoader, aggregationChunkStorage, sortFrameFormat, structure)
 				.withTemporarySortDir(temporarySortDir)
 				.withChunkSize(config.chunkSize != 0 ? config.chunkSize : aggregationsChunkSize)
 				.withReducerBufferSize(config.reducerBufferSize != 0 ? config.reducerBufferSize : aggregationsReducerBufferSize)

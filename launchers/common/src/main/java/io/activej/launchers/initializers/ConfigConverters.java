@@ -18,6 +18,10 @@ package io.activej.launchers.initializers;
 
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
+import io.activej.csp.process.frames.FrameFormat;
+import io.activej.csp.process.frames.FrameFormats;
+import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.LZ4LegacyFrameFormat;
 import io.activej.dns.DnsCache;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.Contract;
@@ -25,8 +29,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
-import static io.activej.config.converter.ConfigConverters.ofDuration;
+import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.dns.DnsCache.*;
 
 public final class ConfigConverters {
@@ -56,6 +62,64 @@ public final class ConfigConverters {
 				} else {
 					return get(config);
 				}
+			}
+		};
+	}
+
+	public static ConfigConverter<FrameFormat> ofFrameFormat() {
+		return new ConfigConverter<FrameFormat>() {
+			@NotNull
+			@Override
+			public FrameFormat get(Config config) {
+				return doGet(config, config.getValue());
+			}
+
+			private FrameFormat doGet(Config config, String formatName) {
+				switch (formatName) {
+					case "identity":
+						return FrameFormats.identity();
+					case "size-prefixed":
+						return FrameFormats.sizePrefixed();
+					case "lz4":
+						LZ4FrameFormat format = LZ4FrameFormat.create();
+						if (config.hasChild("compressionLevel")) {
+							return format.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
+						} else {
+							return format;
+						}
+					case "legacy-lz4":
+						LZ4LegacyFrameFormat legacyFormat = LZ4LegacyFrameFormat.create();
+						if (config.hasChild("compressionLevel")) {
+							legacyFormat.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
+						}
+						if (config.hasChild("ignoreMissingEndOfStream")) {
+							legacyFormat.withIgnoreMissingEndOfStream(config.get(ofBoolean(), "ignoreMissingEndOfStream"));
+						}
+						return legacyFormat;
+					case "compound":
+						Config compoundFormatsConfig = config.getChild("compoundFormats");
+						List<String> formatNames = ofList(ofString()).get(compoundFormatsConfig);
+						List<FrameFormat> formats = new ArrayList<>(formatNames.size());
+						for (String name : formatNames) {
+							if (compoundFormatsConfig.hasChild(name)) {
+								formats.add(doGet(compoundFormatsConfig.getChild(name), name));
+							} else {
+								formats.add(doGet(compoundFormatsConfig, name));
+							}
+						}
+
+						return FrameFormats.compound(formats.get(0), formats.subList(1, formats.size()).toArray(new FrameFormat[0]));
+					default:
+						throw new IllegalArgumentException("No frame format named " + config.getValue() + " exists");
+				}
+			}
+
+			@Override
+			public FrameFormat get(Config config, FrameFormat defaultValue) {
+				if (config.isEmpty()) {
+					return defaultValue;
+				}
+				return get(config);
 			}
 		};
 	}

@@ -13,9 +13,11 @@ import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
-import static io.activej.config.converter.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofMemSize;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.inject.module.Modules.combine;
+import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 
 public class RpcBenchmarkServer extends Launcher {
 	private static final int SERVICE_PORT = 25565;
@@ -33,7 +35,7 @@ public class RpcBenchmarkServer extends Launcher {
 		return RpcServer.create(eventloop)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						config.get(ofBoolean(), "rpc.compression", false))
+						config.get(ofFrameFormat(), "rpc.compression", null))
 				.withListenPort(config.get(ofInteger(), "rpc.server.port"))
 				.withMessageTypes(Integer.class)
 				.withHandler(Integer.class, req -> Promise.of(req * 2));

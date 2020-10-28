@@ -88,7 +88,8 @@ public final class CubeLogProcessorControllerTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		LocalActiveFs aggregationFs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
 		await(aggregationFs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), aggregationFs);
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+				LZ4FrameFormat.create(), aggregationFs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())

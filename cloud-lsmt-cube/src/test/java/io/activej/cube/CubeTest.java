@@ -2,6 +2,8 @@ package io.activej.cube;
 
 import io.activej.aggregation.*;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.csp.process.frames.FrameFormat;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
@@ -56,6 +58,8 @@ public final class CubeTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
+	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
+
 	private final DefiningClassLoader classLoader = create();
 	private final Executor executor = newSingleThreadExecutor();
 
@@ -66,7 +70,7 @@ public final class CubeTest {
 	public void setUp() throws Exception {
 		LocalActiveFs fs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
-		chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), fs);
+		chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
 		cube = newCube(executor, classLoader, chunkStorage);
 	}
 
@@ -136,7 +140,7 @@ public final class CubeTest {
 		AsyncHttpServer server1 = startServer(executor, serverStorage);
 		AsyncHttpClient httpClient = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
 		HttpActiveFs storage = HttpActiveFs.create("http://localhost:" + LISTEN_PORT, httpClient);
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
+		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = singletonList(new DataItemResult(1, 3, 10, 30, 20));
@@ -420,7 +424,7 @@ public final class CubeTest {
 
 		LocalActiveFs storage = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
+		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
@@ -436,7 +440,7 @@ public final class CubeTest {
 
 		LocalActiveFs storage = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), storage);
+		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,

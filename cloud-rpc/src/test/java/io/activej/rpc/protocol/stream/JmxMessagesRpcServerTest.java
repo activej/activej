@@ -1,5 +1,6 @@
 package io.activej.rpc.protocol.stream;
 
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;
@@ -21,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JmxMessagesRpcServerTest {
+	private static final LZ4FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
+
 	private final int LISTEN_PORT = getFreePort();
 
 	@ClassRule
@@ -32,7 +35,7 @@ public class JmxMessagesRpcServerTest {
 	public void setup() throws IOException {
 		server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, true)
+				.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, FRAME_FORMAT)
 				.withHandler(String.class, request ->
 						Promise.of("Hello, " + request + "!"))
 				.withListenPort(LISTEN_PORT)
@@ -44,7 +47,7 @@ public class JmxMessagesRpcServerTest {
 	public void testWithoutProtocolError() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStreamProtocol(DEFAULT_PACKET_SIZE, true)
+				.withStreamProtocol(DEFAULT_PACKET_SIZE, FRAME_FORMAT)
 				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
 		await(client.start().whenResult(() ->
 				client.sendRequest("msg", 1000)

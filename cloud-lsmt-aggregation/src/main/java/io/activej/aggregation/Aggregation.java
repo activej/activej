@@ -24,6 +24,7 @@ import io.activej.aggregation.util.Utils;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.api.WithInitializer;
+import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplier;
@@ -83,6 +84,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
 	private final AggregationChunkStorage<Object> aggregationChunkStorage;
+	private final FrameFormat frameFormat;
 	private Path temporarySortDir;
 
 	private final AggregationStructure structure;
@@ -105,12 +107,13 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private Throwable consolidationLastError;
 
 	private Aggregation(Eventloop eventloop, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage, AggregationStructure structure,
+			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
 			AggregationState state) {
 		this.eventloop = eventloop;
 		this.executor = executor;
 		this.classLoader = classLoader;
 		this.aggregationChunkStorage = aggregationChunkStorage;
+		this.frameFormat = frameFormat;
 		this.structure = structure;
 		this.state = state;
 	}
@@ -127,10 +130,11 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	 * @param executor                executor, that is used for asynchronous work with files
 	 * @param classLoader             class loader for defining dynamic classes
 	 * @param aggregationChunkStorage storage for data chunks
+	 * @param frameFormat			  frame format in which data is to be stored
 	 */
 	public static Aggregation create(Eventloop eventloop, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage, @NotNull AggregationStructure structure) {
-		return new Aggregation(eventloop, executor, classLoader, aggregationChunkStorage, structure, new AggregationState(structure));
+			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, @NotNull AggregationStructure structure) {
+		return new Aggregation(eventloop, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationState(structure));
 	}
 
 	public Aggregation withChunkSize(int chunkSize) {
@@ -300,7 +304,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		Path sortDir = nullToSupplier(temporarySortDir, this::createSortDir);
 		return unsortedStream
 				.transformWith(StreamSorter.create(
-						StreamSorterStorageImpl.create(executor, binarySerializer, sortDir),
+						StreamSorterStorageImpl.create(executor, binarySerializer, frameFormat, sortDir),
 						Function.identity(), keyComparator, false, sorterItemsInMemory))
 				.withEndOfStream(p -> p
 						.whenComplete(() -> {

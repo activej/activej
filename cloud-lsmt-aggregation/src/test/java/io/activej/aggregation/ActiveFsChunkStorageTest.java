@@ -2,6 +2,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
@@ -59,6 +60,7 @@ public class ActiveFsChunkStorageTest {
 				eventloop,
 				ChunkIdCodec.ofLong(),
 				new IdGeneratorStub(),
+				LZ4FrameFormat.create(),
 				fs);
 
 		int nChunks = 100;

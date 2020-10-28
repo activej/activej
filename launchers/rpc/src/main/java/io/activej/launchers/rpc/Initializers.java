@@ -22,7 +22,9 @@ import io.activej.rpc.server.RpcServer;
 
 import java.time.Duration;
 
-import static io.activej.config.converter.ConfigConverters.*;
+import static io.activej.config.converter.ConfigConverters.ofDuration;
+import static io.activej.config.converter.ConfigConverters.ofMemSize;
+import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
 
@@ -33,7 +35,7 @@ public final class Initializers {
 				.withInitializer(ofAbstractServer(config.getChild("rpc.server")))
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.streamProtocol.defaultPacketSize", DEFAULT_INITIAL_BUFFER_SIZE),
-						config.get(ofBoolean(), "rpc.streamProtocol.compression", false))
+						config.get(ofFrameFormat(), "rpc.streamProtocol.frameFormat", null))
 				.withAutoFlushInterval(config.get(ofDuration(), "rpc.flushDelay", Duration.ZERO));
 	}
 }

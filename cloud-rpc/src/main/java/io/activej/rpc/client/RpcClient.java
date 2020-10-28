@@ -23,7 +23,6 @@ import io.activej.common.MemSize;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.StacklessException;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
@@ -88,7 +87,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = Duration.ofSeconds(1);
 	public static final MemSize DEFAULT_PACKET_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
-	public static final FrameFormat DEFAULT_FRAME_FORMAT = LZ4FrameFormat.create();
 	public static final StacklessException START_EXCEPTION = new StacklessException("Could not establish initial connection");
 
 	private Logger logger = getLogger(getClass());
@@ -224,13 +222,12 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		return this;
 	}
 
-	public RpcClient withStreamProtocol(MemSize defaultPacketSize, boolean compression) {
+	public RpcClient withStreamProtocol(MemSize defaultPacketSize) {
 		this.defaultPacketSize = defaultPacketSize;
-		this.frameFormat = compression ? DEFAULT_FRAME_FORMAT : null;
 		return this;
 	}
 
-	public RpcClient withStreamProtocol(MemSize defaultPacketSize, FrameFormat frameFormat) {
+	public RpcClient withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
 		this.defaultPacketSize = defaultPacketSize;
 		this.frameFormat = frameFormat;
 		return this;

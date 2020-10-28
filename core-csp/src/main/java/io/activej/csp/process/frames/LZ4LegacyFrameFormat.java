@@ -54,39 +54,33 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 
 	private final LZ4Factory lz4Factory;
 	private final XXHashFactory hashFactory;
-	private final int compressionLevel;
+
+	private int compressionLevel;
 
 	private boolean ignoreMissingEndOfStreamBlock;
 
-	private LZ4LegacyFrameFormat(LZ4Factory factory, XXHashFactory hashFactory, int compressionLevel) {
-		checkArgument(compressionLevel >= -1);
+	private LZ4LegacyFrameFormat(LZ4Factory factory, XXHashFactory hashFactory) {
 		this.lz4Factory = factory;
 		this.hashFactory = hashFactory;
+	}
+
+	public static LZ4LegacyFrameFormat create() {
+		return new LZ4LegacyFrameFormat(LZ4Factory.fastestInstance(), XXHashFactory.fastestInstance());
+	}
+
+	public static LZ4LegacyFrameFormat create(LZ4Factory lz4Factory, XXHashFactory hashFactory) {
+		return new LZ4LegacyFrameFormat(lz4Factory, hashFactory);
+	}
+
+	public LZ4LegacyFrameFormat withHighCompression() {
+		this.compressionLevel = -1;
+		return this;
+	}
+
+	public LZ4LegacyFrameFormat withCompressionLevel(int compressionLevel) {
+		checkArgument(compressionLevel >= -1);
 		this.compressionLevel = compressionLevel;
-	}
-
-	public static LZ4LegacyFrameFormat fastest() {
-		return new LZ4LegacyFrameFormat(LZ4Factory.fastestInstance(), XXHashFactory.fastestInstance(), 0);
-	}
-
-	public static LZ4LegacyFrameFormat fastest(LZ4Factory lz4Factory, XXHashFactory hashFactory) {
-		return new LZ4LegacyFrameFormat(lz4Factory, hashFactory, 0);
-	}
-
-	public static LZ4LegacyFrameFormat highCompression() {
-		return new LZ4LegacyFrameFormat(LZ4Factory.fastestInstance(), XXHashFactory.fastestInstance(), -1);
-	}
-
-	public static LZ4LegacyFrameFormat highCompression(LZ4Factory lz4Factory, XXHashFactory hashFactory) {
-		return new LZ4LegacyFrameFormat(lz4Factory, hashFactory, -1);
-	}
-
-	public static LZ4LegacyFrameFormat ofCompressionLevel(int compressionLevel) {
-		return new LZ4LegacyFrameFormat(LZ4Factory.fastestInstance(), XXHashFactory.fastestInstance(), compressionLevel);
-	}
-
-	public static LZ4LegacyFrameFormat ofCompressionLevel(LZ4Factory lz4Factory, XXHashFactory hashFactory, int compressionLevel) {
-		return new LZ4LegacyFrameFormat(lz4Factory, hashFactory, compressionLevel);
+		return this;
 	}
 
 	public LZ4LegacyFrameFormat withIgnoreMissingEndOfStream(boolean ignore) {
@@ -101,7 +95,7 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 				compressionLevel == -1 ?
 						lz4Factory.highCompressor() :
 						lz4Factory.highCompressor(compressionLevel);
-		return new LZ4LegacyBlockEncoder(compressor);
+		return new LZ4LegacyBlockEncoder(compressor, hashFactory.newStreamingHash32(DEFAULT_SEED));
 	}
 
 	@Override

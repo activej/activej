@@ -29,7 +29,6 @@ import io.activej.csp.process.ChannelByteChunker;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -82,11 +81,11 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	public static final String SUCCESSFUL_BACKUP_FILE = "_0_SUCCESSFUL_BACKUP";
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
-	public static final FrameFormat DEFAULT_FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private final Eventloop eventloop;
 	private final ChunkIdCodec<C> chunkIdCodec;
 	private final IdGenerator<C> idGenerator;
+	private final FrameFormat frameFormat;
 
 	private final ActiveFs fs;
 	private String chunksPath = "";
@@ -94,7 +93,6 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	private String backupPath = DEFAULT_BACKUP_PATH;
 
 	private MemSize bufferSize = DEFAULT_BUFFER_SIZE;
-	private FrameFormat frameFormat = DEFAULT_FRAME_FORMAT;
 
 	private final ValueStats chunksCount = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseIdGenerator = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -128,17 +126,18 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 
 	private int finishChunks;
 
-	private ActiveFsChunkStorage(Eventloop eventloop, ChunkIdCodec<C> chunkIdCodec, IdGenerator<C> idGenerator, ActiveFs fs) {
+	private ActiveFsChunkStorage(Eventloop eventloop, ChunkIdCodec<C> chunkIdCodec, IdGenerator<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
 		this.eventloop = eventloop;
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
+		this.frameFormat = frameFormat;
 		this.fs = fs;
 	}
 
 	public static <C> ActiveFsChunkStorage<C> create(Eventloop eventloop,
 			ChunkIdCodec<C> chunkIdCodec,
-			IdGenerator<C> idGenerator, ActiveFs fs) {
-		return new ActiveFsChunkStorage<>(eventloop, chunkIdCodec, idGenerator, fs);
+			IdGenerator<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
+		return new ActiveFsChunkStorage<>(eventloop, chunkIdCodec, idGenerator, frameFormat, fs);
 	}
 
 	public ActiveFsChunkStorage<C> withBufferSize(MemSize bufferSize) {
@@ -158,11 +157,6 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 
 	public ActiveFsChunkStorage<C> withBackupPath(String path) {
 		this.backupPath = path;
-		return this;
-	}
-
-	public ActiveFsChunkStorage<C> withFrameFormat(FrameFormat frameFormat){
-		this.frameFormat = frameFormat;
 		return this;
 	}
 

@@ -19,7 +19,6 @@ package io.activej.rpc.server;
 import io.activej.common.MemSize;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.ServerSocketSettings;
@@ -80,7 +79,6 @@ import static java.util.Arrays.asList;
  */
 public final class RpcServer extends AbstractServer<RpcServer> {
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(16384);
-	public static final FrameFormat DEFAULT_FRAME_FORMAT = LZ4FrameFormat.create();
 	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
@@ -161,9 +159,8 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 		return this;
 	}
 
-	public RpcServer withStreamProtocol(MemSize defaultPacketSize, boolean compression) {
+	public RpcServer withStreamProtocol(MemSize defaultPacketSize) {
 		this.initialBufferSize = defaultPacketSize;
-		this.frameFormat = compression ? DEFAULT_FRAME_FORMAT : null;
 		return this;
 	}
 
