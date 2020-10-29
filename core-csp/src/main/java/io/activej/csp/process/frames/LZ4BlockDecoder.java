@@ -22,39 +22,32 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import net.jpountz.lz4.LZ4Exception;
-import net.jpountz.lz4.LZ4FastDecompressor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 
 import static io.activej.csp.process.frames.LZ4FrameFormat.*;
 
-final class LZ4BlockDecoder implements BlockDecoder {
-	private static final ParseException STREAM_IS_CORRUPTED = new ParseException(LZ4BlockDecoder.class, "Stream is corrupted");
-	private static final UnknownFormatException UNKNOWN_FORMAT_EXCEPTION = new UnknownFormatException(LZ4FrameFormat.class,
+abstract class LZ4BlockDecoder implements BlockDecoder {
+	protected static final UnknownFormatException UNKNOWN_FORMAT_EXCEPTION = new UnknownFormatException(LZ4FrameFormat.class,
 			"Expected stream to start with bytes: " + Arrays.toString(MAGIC));
+	protected static final ParseException STREAM_IS_CORRUPTED = new ParseException(LZ4BlockDecoder.class, "Stream is corrupted");
 
 	private static final int LAST_BLOCK_INT = 0xffffffff;
-
-	private final LZ4FastDecompressor decompressor;
 
 	private final byte[] headerBuf = new byte[MAGIC_LENGTH];
 	private final byte[] intBuf = new byte[4];
 
 	private boolean readHeader = true;
 
-	LZ4BlockDecoder(LZ4FastDecompressor decompressor) {
-		this.decompressor = decompressor;
-	}
-
 	@Override
-	public void reset() {
+	public final void reset() {
 		readHeader = true;
 	}
 
 	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+	public final ByteBuf decode(ByteBufQueue bufs) throws ParseException {
 		final ByteBuf firstBuf = bufs.peekBuf();
 		if (firstBuf == null) return null;
 
@@ -86,9 +79,11 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	}
 
 	@Override
-	public boolean ignoreMissingEndOfStreamBlock() {
+	public final boolean ignoreMissingEndOfStreamBlock() {
 		return false;
 	}
+
+	protected abstract void decompress(int compressedSize, int originalSize, ByteBuf compressedBuf, ByteBuf buf) throws ParseException;
 
 	private boolean readHeader(ByteBufQueue bufs, byte[] array, int head, int tail) throws UnknownFormatException {
 		int limit;
@@ -141,11 +136,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 		ByteBuf buf = ByteBufPool.allocate(originalSize);
 		try {
-			int readBytes = decompressor.decompress(compressedBuf.array(), compressedBuf.head(), buf.array(), 0, originalSize);
-			if (readBytes != compressedSize) {
-				buf.recycle();
-				throw STREAM_IS_CORRUPTED;
-			}
+			decompress(compressedSize, originalSize, compressedBuf, buf);
 			buf.tail(originalSize);
 		} catch (LZ4Exception e) {
 			buf.recycle();

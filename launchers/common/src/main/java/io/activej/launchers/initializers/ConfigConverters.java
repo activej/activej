@@ -84,9 +84,11 @@ public final class ConfigConverters {
 						LZ4FrameFormat format = LZ4FrameFormat.create();
 						if (config.hasChild("compressionLevel")) {
 							return format.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
-						} else {
-							return format;
 						}
+						if (config.hasChild("safeDecompressor")) {
+							format.withSafeDecompressor(config.get(ofBoolean(), "safeDecompressor"));
+						}
+						return format;
 					case "legacy-lz4":
 						LZ4LegacyFrameFormat legacyFormat = LZ4LegacyFrameFormat.create();
 						if (config.hasChild("compressionLevel")) {
@@ -94,6 +96,9 @@ public final class ConfigConverters {
 						}
 						if (config.hasChild("ignoreMissingEndOfStream")) {
 							legacyFormat.withIgnoreMissingEndOfStream(config.get(ofBoolean(), "ignoreMissingEndOfStream"));
+						}
+						if (config.hasChild("safeDecompressor")) {
+							legacyFormat.withSafeDecompressor(config.get(ofBoolean(), "safeDecompressor"));
 						}
 						return legacyFormat;
 					case "compound":

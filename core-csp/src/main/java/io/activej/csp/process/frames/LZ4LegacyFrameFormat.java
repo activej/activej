@@ -16,8 +16,13 @@
 
 package io.activej.csp.process.frames;
 
+import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.parse.ParseException;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.lz4.LZ4FastDecompressor;
+import net.jpountz.lz4.LZ4SafeDecompressor;
+import net.jpountz.xxhash.StreamingXXHash32;
 import net.jpountz.xxhash.XXHashFactory;
 
 import static io.activej.common.Checks.checkArgument;
@@ -56,8 +61,8 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 	private final XXHashFactory hashFactory;
 
 	private int compressionLevel;
-
 	private boolean ignoreMissingEndOfStreamBlock;
+	private boolean safeDecompressor;
 
 	private LZ4LegacyFrameFormat(LZ4Factory factory, XXHashFactory hashFactory) {
 		this.lz4Factory = factory;
@@ -88,6 +93,11 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 		return this;
 	}
 
+	public LZ4LegacyFrameFormat withSafeDecompressor(boolean safeDecompressor) {
+		this.safeDecompressor = safeDecompressor;
+		return this;
+	}
+
 	@Override
 	public BlockEncoder createEncoder() {
 		LZ4Compressor compressor = compressionLevel == 0 ?
@@ -100,6 +110,26 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 
 	@Override
 	public BlockDecoder createDecoder() {
-		return new LZ4LegacyBlockDecoder(lz4Factory.fastDecompressor(), hashFactory.newStreamingHash32(DEFAULT_SEED), ignoreMissingEndOfStreamBlock);
+		StreamingXXHash32 checksum = hashFactory.newStreamingHash32(DEFAULT_SEED);
+		return safeDecompressor ?
+				new LZ4LegacyBlockDecoder(checksum, ignoreMissingEndOfStreamBlock) {
+					final LZ4SafeDecompressor decompressor = lz4Factory.safeDecompressor();
+
+					@Override
+					protected void decompress(ByteBuf outputBuf, byte[] bytes, int off) {
+						decompressor.decompress(bytes, off, this.compressedLen, outputBuf.array(), 0, originalLen);
+					}
+				} :
+				new LZ4LegacyBlockDecoder(checksum, ignoreMissingEndOfStreamBlock) {
+					final LZ4FastDecompressor decompressor = lz4Factory.fastDecompressor();
+
+					@Override
+					protected void decompress(ByteBuf outputBuf, byte[] bytes, int off) throws ParseException {
+						int compressedLen = decompressor.decompress(bytes, off, outputBuf.array(), 0, originalLen);
+						if (compressedLen != this.compressedLen) {
+							throw STREAM_IS_CORRUPTED;
+						}
+					}
+				};
 	}
 }

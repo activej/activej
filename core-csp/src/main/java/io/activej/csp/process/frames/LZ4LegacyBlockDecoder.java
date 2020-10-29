@@ -22,7 +22,6 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import net.jpountz.lz4.LZ4Exception;
-import net.jpountz.lz4.LZ4FastDecompressor;
 import net.jpountz.xxhash.StreamingXXHash32;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,38 +31,36 @@ import static io.activej.csp.process.frames.LZ4LegacyFrameFormat.*;
 import static java.lang.Math.min;
 
 @Deprecated
-final class LZ4LegacyBlockDecoder implements BlockDecoder {
-	private static final ParseException STREAM_IS_CORRUPTED = new ParseException(LZ4LegacyBlockDecoder.class, "Stream is corrupted");
-	private static final UnknownFormatException UNKNOWN_FORMAT_EXCEPTION = new UnknownFormatException(LZ4LegacyFrameFormat.class,
+abstract class LZ4LegacyBlockDecoder implements BlockDecoder {
+	protected static final ParseException STREAM_IS_CORRUPTED = new ParseException(LZ4LegacyBlockDecoder.class, "Stream is corrupted");
+	protected static final UnknownFormatException UNKNOWN_FORMAT_EXCEPTION = new UnknownFormatException(LZ4LegacyFrameFormat.class,
 			"Expected stream to start with bytes: " + Arrays.toString(MAGIC));
 
-	private final LZ4FastDecompressor decompressor;
 	private final StreamingXXHash32 checksum;
 	private final byte[] headerBuf = new byte[HEADER_LENGTH];
 	private final boolean ignoreMissingEndOfStreamBlock;
 
-	private int originalLen;
-	private int compressedLen;
-	private int compressionMethod;
-	private int check;
-	private boolean endOfStream;
+	protected int originalLen;
+	protected int compressedLen;
+	protected int compressionMethod;
+	protected int check;
+	protected boolean endOfStream;
 
 	private boolean shouldReadHeader = true;
 
-	LZ4LegacyBlockDecoder(LZ4FastDecompressor decompressor, StreamingXXHash32 checksum, boolean ignoreMissingEndOfStreamBlock) {
-		this.decompressor = decompressor;
+	LZ4LegacyBlockDecoder(StreamingXXHash32 checksum, boolean ignoreMissingEndOfStreamBlock) {
 		this.checksum = checksum;
 		this.ignoreMissingEndOfStreamBlock = ignoreMissingEndOfStreamBlock;
 	}
 
 	@Override
-	public void reset() {
+	public final void reset() {
 		endOfStream = false;
 	}
 
 	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+	public final ByteBuf decode(ByteBufQueue bufs) throws ParseException {
 		if (shouldReadHeader) {
 			if (!readHeader(bufs)) return null;
 			shouldReadHeader = false;
@@ -77,9 +74,11 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	}
 
 	@Override
-	public boolean ignoreMissingEndOfStreamBlock() {
+	public final boolean ignoreMissingEndOfStreamBlock() {
 		return ignoreMissingEndOfStreamBlock;
 	}
+
+	protected abstract void decompress(ByteBuf outputBuf, byte[] bytes, int off) throws ParseException;
 
 	private boolean readHeader(ByteBufQueue bufs) throws ParseException {
 		ByteBuf buf = bufs.peekBuf();
@@ -154,10 +153,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 					break;
 				case COMPRESSION_METHOD_LZ4:
 					try {
-						int compressedLen = decompressor.decompress(bytes, off, outputBuf.array(), 0, originalLen);
-						if (compressedLen != this.compressedLen) {
-							throw STREAM_IS_CORRUPTED;
-						}
+						decompress(outputBuf, bytes, off);
 					} catch (LZ4Exception e) {
 						throw new ParseException(LZ4LegacyBlockDecoder.class, "Stream is corrupted", e);
 					}

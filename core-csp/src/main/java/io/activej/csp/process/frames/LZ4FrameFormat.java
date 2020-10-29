@@ -16,8 +16,12 @@
 
 package io.activej.csp.process.frames;
 
+import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.parse.ParseException;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.lz4.LZ4FastDecompressor;
+import net.jpountz.lz4.LZ4SafeDecompressor;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -39,6 +43,7 @@ public final class LZ4FrameFormat implements FrameFormat {
 	private final LZ4Factory factory;
 
 	private int compressionLevel;
+	private boolean safeDecompressor;
 
 	private LZ4FrameFormat(LZ4Factory factory) {
 		this.factory = factory;
@@ -63,6 +68,11 @@ public final class LZ4FrameFormat implements FrameFormat {
 		return this;
 	}
 
+	public LZ4FrameFormat withSafeDecompressor(boolean safeDecompressor) {
+		this.safeDecompressor = safeDecompressor;
+		return this;
+	}
+
 	@Override
 	public BlockEncoder createEncoder() {
 		LZ4Compressor compressor = compressionLevel == 0 ?
@@ -75,6 +85,26 @@ public final class LZ4FrameFormat implements FrameFormat {
 
 	@Override
 	public BlockDecoder createDecoder() {
-		return new LZ4BlockDecoder(factory.fastDecompressor());
+		return safeDecompressor ?
+				new LZ4BlockDecoder() {
+					final LZ4SafeDecompressor decompressor = factory.safeDecompressor();
+
+					@Override
+					protected void decompress(int compressedSize, int originalSize, ByteBuf compressedBuf, ByteBuf buf) {
+						decompressor.decompress(compressedBuf.array(), compressedBuf.head(), compressedSize, buf.array(), 0, originalSize);
+					}
+				} :
+				new LZ4BlockDecoder() {
+					final LZ4FastDecompressor decompressor = factory.fastDecompressor();
+
+					@Override
+					protected void decompress(int compressedSize, int originalSize, ByteBuf compressedBuf, ByteBuf buf) throws ParseException {
+						int readBytes = decompressor.decompress(compressedBuf.array(), compressedBuf.head(), buf.array(), 0, originalSize);
+						if (readBytes != compressedSize) {
+							buf.recycle();
+							throw STREAM_IS_CORRUPTED;
+						}
+					}
+				};
 	}
 }
