@@ -22,6 +22,7 @@
     "promise": "^7.0.4",
     "react": "^16.6.0",
     "react-dom": "^16.6.0",
+    "react-datepicker": "^3.3.0",
     "uikernel": "^1.0.0",
     "xhr": "^2.2.0"
   }
