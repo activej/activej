@@ -1,26 +1,36 @@
 package io.activej.multilog;
 
+import io.activej.common.MemSize;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.process.ChannelByteRanger;
+import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.LZ4LegacyFrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
 import io.activej.serializer.BinarySerializers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.jetbrains.annotations.Nullable;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.first;
@@ -31,6 +41,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(Parameterized.class)
 public class MultilogImplTest {
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -41,12 +52,29 @@ public class MultilogImplTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
+	@Parameter()
+	public String testName;
+
+	@Parameter(1)
+	public FrameFormat frameFormat;
+
+	@Parameter(2)
+	public int endOfStreamBlockSize;
+
+	@Parameters(name = "{0}")
+	public static Collection<Object[]> getParameters() {
+		return Arrays.asList(
+				new Object[]{"LZ4 format", LZ4FrameFormat.create(), 8},
+				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.create(), 21}
+		);
+	}
+
 	@Test
 	public void testConsumer() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		Multilog<String> multilog = MultilogImpl.create(eventloop,
 				LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath()),
-				LZ4FrameFormat.create(),
+				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
@@ -66,7 +94,7 @@ public class MultilogImplTest {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
-				LZ4FrameFormat.create(),
+				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
 				.withBufferSize(1);
@@ -80,14 +108,14 @@ public class MultilogImplTest {
 		// Truncated data
 		await(fs.list("*" + partition + "*")
 				.then(map -> {
-					String filename = first(map.keySet());
-					return fs.download(filename)
+					Entry<String, FileMetadata> entry = first(map.entrySet());
+					return fs.download(entry.getKey())
 							.then(supplier -> supplier
-									.transformWith(ChannelByteRanger.range(0, 32))
-									.streamTo(fs.upload(filename)));
+									.transformWith(ChannelByteRanger.range(0, entry.getValue().getSize() - endOfStreamBlockSize))
+									.streamTo(fs.upload(entry.getKey())));
 				}));
 
-		assertEquals(asList("test1", "test2"), readLog(multilog, partition));
+		assertEquals(values, readLog(multilog, partition));
 	}
 
 	@Test
@@ -97,7 +125,7 @@ public class MultilogImplTest {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
-				LZ4FrameFormat.create(),
+				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
@@ -137,7 +165,7 @@ public class MultilogImplTest {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
-				LZ4FrameFormat.create(),
+				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
 
@@ -162,28 +190,50 @@ public class MultilogImplTest {
 		assertTrue(listConsumer.getList().isEmpty());
 	}
 
-	private static final LogNamingScheme EACH_ITEM_NEW_FILE_SCHEME = new LogNamingScheme() {
-		@Override
-		public String path(String logPartition, LogFile logFile) {
-			return NAME_PARTITION_REMAINDER_SEQ.path(logPartition, logFile);
-		}
+	@Test
+	public void logPositionIsCountedCorrectly() {
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
-		@Override
-		public @Nullable PartitionAndFile parse(String name) {
-			return NAME_PARTITION_REMAINDER_SEQ.parse(name);
-		}
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
+				.withReaderBufferSize(MemSize.bytes(1));
 
-		@Override
-		public LogFile format(long currentTimeMillis) {
-			LogFile format = NAME_PARTITION_REMAINDER_SEQ.format(currentTimeMillis);
-			return new LogFile(format.getName() + currentTimeMillis, format.getRemainder());
-		}
+		Multilog<String> multilog = MultilogImpl.create(eventloop,
+				fs,
+				frameFormat,
+				BinarySerializers.UTF8_SERIALIZER,
+				NAME_PARTITION_REMAINDER_SEQ)
+				.withBufferSize(MemSize.bytes(1));
 
-		@Override
-		public String getListGlob(String logPartition) {
-			return NAME_PARTITION_REMAINDER_SEQ.getListGlob(logPartition);
-		}
-	};
+		String testPartition = "partition";
+
+		List<String> values = asList("test1", "test2", "test3");
+
+		await(StreamSupplier.ofIterable(values)
+				.streamTo(StreamConsumer.ofPromise(multilog.write(testPartition))));
+
+		StreamSupplierWithResult<String, LogPosition> supplierWithResult = StreamSupplierWithResult.ofPromise(
+				multilog.read(testPartition, new LogFile("", 0), 0, null));
+
+		StreamConsumerToList<String> consumerToList = StreamConsumerToList.create();
+		await(supplierWithResult.getSupplier().streamTo(consumerToList));
+
+		assertEquals(values, consumerToList.getList());
+
+		LogPosition pos = await(supplierWithResult.getResult());
+
+		long position = pos.getPosition();
+
+		// check that position does not change on second call
+		supplierWithResult = StreamSupplierWithResult.ofPromise(
+				multilog.read(testPartition, pos.getLogFile(), position, null));
+
+		consumerToList = StreamConsumerToList.create();
+		await(supplierWithResult.getSupplier().streamTo(consumerToList));
+
+		assertTrue(consumerToList.getList().isEmpty());
+
+		assertEquals(position, await(supplierWithResult.getResult()).getPosition());
+	}
 
 	private static <T> List<T> readLog(Multilog<T> multilog, String partition) {
 		StreamConsumerToList<T> listConsumer = StreamConsumerToList.create();
