@@ -27,18 +27,20 @@ import org.jetbrains.annotations.Nullable;
 final class CountingFrameFormat implements FrameFormat {
 	private final FrameFormat frameFormat;
 
-	private long count;
+	private long blockOffset;
+	private long innerOffset;
 
 	public CountingFrameFormat(FrameFormat frameFormat) {
 		this.frameFormat = frameFormat;
 	}
 
 	public long getCount() {
-		return count;
+		return blockOffset;
 	}
 
 	public void resetCount() {
-		count = 0;
+		blockOffset = 0;
+		innerOffset = 0;
 	}
 
 	@Override
@@ -58,8 +60,10 @@ final class CountingFrameFormat implements FrameFormat {
 			public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
 				int before = bufs.remainingBytes();
 				ByteBuf buf = decoder.decode(bufs);
+				innerOffset += (before - bufs.remainingBytes());
 				if (buf != null && buf != END_OF_STREAM) {
-					count += (before - bufs.remainingBytes());
+					blockOffset += innerOffset;
+					innerOffset = 0;
 				}
 				return buf;
 			}
