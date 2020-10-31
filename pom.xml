@@ -340,6 +340,7 @@
                 <configuration>
                   <source>8</source>
                   <doclint>none</doclint>
+                  <sourcepath>src/main/java</sourcepath>
                 </configuration>
               </execution>
             </executions>
