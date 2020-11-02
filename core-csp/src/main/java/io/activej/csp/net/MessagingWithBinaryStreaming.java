@@ -16,6 +16,7 @@
 
 package io.activej.csp.net;
 
+import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.csp.ChannelConsumer;
@@ -32,15 +33,13 @@ import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STRE
 /**
  * Represents a simple binary protocol over for communication a TCP connection.
  */
-public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O> {
+public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncCloseable implements Messaging<I, O> {
 	private final AsyncTcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;
 
 	private final ByteBufQueue bufs = new ByteBufQueue();
 	private final BinaryChannelSupplier bufsSupplier;
-
-	private Throwable closedException;
 
 	private boolean readDone;
 	private boolean writeDone;
@@ -130,9 +129,7 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 	}
 
 	@Override
-	public void closeEx(@NotNull Throwable e) {
-		if (isClosed()) return;
-		closedException = e;
+	protected void onClosed(@NotNull Throwable e) {
 		socket.closeEx(e);
 		bufs.recycle();
 	}
@@ -141,10 +138,6 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 		if (readDone && writeDone) {
 			close();
 		}
-	}
-
-	public boolean isClosed() {
-		return closedException != null;
 	}
 
 	@Override

@@ -16,8 +16,12 @@
 
 package io.activej.common;
 
+import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,6 +86,26 @@ public final class ApplicationSettings {
 
 	public static MemSize getMemSize(Class<?> type, String name, MemSize defValue) {
 		return get(MemSize::valueOf, type, name, defValue);
+	}
+
+	public static InetSocketAddress getInetSocketAddress(Class<?> type, String name, InetSocketAddress defValue) {
+		return get(address -> {
+			try {
+				return Utils.parseInetSocketAddress(address);
+			} catch (ParseException e) {
+				throw new RuntimeException("Malformed inet socket address: " + address, e);
+			}
+		}, type, name, defValue);
+	}
+
+	public static Charset getCharset(Class<?> type, String name, Charset defValue) {
+		return get(charset -> {
+			try {
+				return Charset.forName(charset);
+			} catch (UnsupportedCharsetException e) {
+				throw new RuntimeException("Unsupported charset: " + charset, e);
+			}
+		}, type, name, defValue);
 	}
 
 	@Nullable
