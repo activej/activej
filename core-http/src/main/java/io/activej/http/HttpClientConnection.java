@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.CloseException;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.parse.ParseException;
@@ -91,6 +92,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * </pre>
  */
 public final class HttpClientConnection extends AbstractHttpConnection {
+	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpClientConnection.class, "detailedErrorMessages", false);
+
 	public static final ParseException INVALID_RESPONSE = new UnknownFormatException(HttpClientConnection.class, "Invalid response");
 	public static final StacklessException CONNECTION_CLOSED = new CloseException(HttpClientConnection.class, "Connection closed");
 	public static final StacklessException NOT_ACCEPTED_RESPONSE = new StacklessException(HttpClientConnection.class, "Response was not accepted");
@@ -142,7 +145,11 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		boolean http1x = line[0] == 'H' && line[1] == 'T' && line[2] == 'T' && line[3] == 'P' && line[4] == '/' && line[5] == '1';
 		boolean http11 = line[6] == '.' && line[7] == '1' && line[8] == SP;
 
-		if (!http1x) throw INVALID_RESPONSE;
+		if (!http1x) {
+			if (!DETAILED_ERROR_MESSAGES) throw INVALID_RESPONSE;
+			throw new UnknownFormatException(HttpClientConnection.class,
+					"Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
+		}
 
 		int pos = 9;
 		HttpVersion version = HttpVersion.HTTP_1_1;
@@ -154,7 +161,9 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			version = HttpVersion.HTTP_1_0;
 			pos = 7;
 		} else {
-			throw new ParseException(HttpClientConnection.class, "Invalid response: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw INVALID_RESPONSE;
+			throw new ParseException(HttpClientConnection.class,
+					"Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int statusCode = decodePositiveInt(line, pos, 3);

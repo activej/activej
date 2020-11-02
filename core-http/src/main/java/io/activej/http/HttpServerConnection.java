@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.UncheckedException;
@@ -47,6 +48,7 @@ import static io.activej.http.HttpVersion.HTTP_1_0;
 import static io.activej.http.HttpVersion.HTTP_1_1;
 import static io.activej.http.Protocol.*;
 import static io.activej.http.WebSocketConstants.UPGRADE_WITH_BODY;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * It represents server connection. It can receive {@link HttpRequest requests}
@@ -55,6 +57,12 @@ import static io.activej.http.WebSocketConstants.UPGRADE_WITH_BODY;
  */
 public final class HttpServerConnection extends AbstractHttpConnection {
 	private static final boolean CHECK = Checks.isEnabled(HttpServerConnection.class);
+
+	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
+
+	public static final UnknownFormatException UNKNOWN_HTTP_METHOD = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP method");
+	public static final UnknownFormatException UNKNOWN_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP version");
+	public static final UnknownFormatException UNSUPPORTED_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unsupported HTTP version");
 
 	private static final int HEADERS_SLOTS = 256;
 	private static final int MAX_PROBINGS = 2;
@@ -145,8 +153,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		HttpMethod method = getHttpMethod(line);
 		if (method == null) {
+			if (!DETAILED_ERROR_MESSAGES) throw UNKNOWN_HTTP_METHOD;
 			throw new UnknownFormatException(HttpServerConnection.class,
-					"Unknown HTTP method. First Bytes: " + Arrays.toString(line));
+					"Unknown HTTP method. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int urlStart = method.size + 1;
@@ -174,12 +183,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			} else if (line[p + 7] == '0') {
 				version = HTTP_1_0;
 			} else {
+				if (!DETAILED_ERROR_MESSAGES) throw UNKNOWN_HTTP_VERSION;
 				throw new UnknownFormatException(HttpServerConnection.class,
-						"Unknown HTTP version. First Bytes: " + Arrays.toString(line));
+						"Unknown HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
 			}
 		} else {
+			if (!DETAILED_ERROR_MESSAGES) throw UNSUPPORTED_HTTP_VERSION;
 			throw new UnknownFormatException(HttpServerConnection.class,
-					"Unsupported HTTP version. First Bytes: " + Arrays.toString(line));
+					"Unsupported HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		request = new HttpRequest(version, method,
