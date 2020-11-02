@@ -1,5 +1,6 @@
 package io.activej.service;
 
+import io.activej.common.service.BlockingService;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Named;

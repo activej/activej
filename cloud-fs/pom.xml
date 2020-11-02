@@ -40,11 +40,6 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-servicegraph</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
       <artifactId>activej-jmxapi</artifactId>
       <version>${project.version}</version>
       <optional>true</optional>

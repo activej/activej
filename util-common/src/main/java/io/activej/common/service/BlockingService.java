@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package io.activej.service;
-
-import java.util.concurrent.CompletableFuture;
+package io.activej.common.service;
 
 /**
- * A service which provides non-blocking start and stop operations.
+ * It is service which blocks thread during operations start and stop.
  */
-public interface Service {
-	CompletableFuture<?> start();
+public interface BlockingService {
+	void start() throws Exception;
 
-	CompletableFuture<?> stop();
+	void stop() throws Exception;
 }

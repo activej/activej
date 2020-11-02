@@ -18,6 +18,7 @@ package io.activej.service;
 
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.CollectionUtils;
+import io.activej.common.service.Service;
 import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;

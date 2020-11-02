@@ -19,6 +19,8 @@ package io.activej.service;
 import io.activej.async.service.EventloopService;
 import io.activej.common.api.Initializer;
 import io.activej.common.api.WithInitializer;
+import io.activej.common.service.BlockingService;
+import io.activej.common.service.Service;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.BlockingSocketServer;
 import io.activej.inject.Injector;
