@@ -45,10 +45,10 @@ import static java.util.Collections.singletonList;
 public final class LocalFileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(LocalFileUtils.class);
 
-	static void init(Path storage, Path tempDir, boolean sync) throws IOException {
-		createDirectories(tempDir, sync);
+	static void init(Path storage, Path tempDir, boolean fsyncDirectories) throws IOException {
+		createDirectories(tempDir, fsyncDirectories);
 		if (!tempDir.startsWith(storage)) {
-			createDirectories(storage, sync);
+			createDirectories(storage, fsyncDirectories);
 		}
 	}
 
@@ -90,7 +90,7 @@ public final class LocalFileUtils {
 		});
 	}
 
-	static <V> V ensureTarget(@Nullable Path source, Path target, boolean sync, IOCallable<V> afterCreation) throws IOException {
+	static <V> V ensureTarget(@Nullable Path source, Path target, boolean fsyncDirectories, IOCallable<V> afterCreation) throws IOException {
 		Path parent = target.getParent();
 		while (true) {
 			try {
@@ -99,7 +99,7 @@ public final class LocalFileUtils {
 				if (source != null && !Files.exists(source)) {
 					throw e;
 				}
-				createDirectories(parent, sync);
+				createDirectories(parent, fsyncDirectories);
 			} catch (FileSystemException e) {
 				if (source != null) {
 					if (!Files.exists(source)) throw new NoSuchFileException(null);
@@ -273,11 +273,11 @@ public final class LocalFileUtils {
 		}
 	}
 
-	public static void createDirectories(Path path, boolean sync) throws IOException {
-		createDirectories(path, path.getRoot(), sync);
+	public static void createDirectories(Path path, boolean fsyncDirectories) throws IOException {
+		createDirectories(path, path.getRoot(), fsyncDirectories);
 	}
 
-	public static void createDirectories(Path path, Path root, boolean sync) throws IOException {
+	public static void createDirectories(Path path, Path root, boolean fsyncDirectories) throws IOException {
 		Path parent = path;
 		while (!parent.equals(root)) {
 			if (Files.exists(parent)) break;
@@ -287,7 +287,7 @@ public final class LocalFileUtils {
 		Path child = parent;
 		for (Path name : parent.relativize(path)) {
 			Path newChild = child.resolve(name);
-			if (createDir(newChild) && sync) {
+			if (createDir(newChild) && fsyncDirectories) {
 				tryFsync(child);
 			}
 			child = newChild;

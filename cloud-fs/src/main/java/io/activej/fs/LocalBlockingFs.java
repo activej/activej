@@ -58,8 +58,9 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	private static final Logger logger = LoggerFactory.getLogger(LocalBlockingFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
-	public static final boolean DEFAULT_SYNCED = ApplicationSettings.getBoolean(LocalActiveFs.class, "synced", false);
-	public static final boolean DEFAULT_SYNCED_APPEND = ApplicationSettings.getBoolean(LocalActiveFs.class, "syncedAppend", false);
+	public static final boolean DEFAULT_FSYNC_UPLOADS = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncUploads", false);
+	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncDirectories", false);
+	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncAppends", false);
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -77,7 +78,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	private boolean hardlinkOnCopy = false;
 	private Path tempDir;
-	private boolean synced = DEFAULT_SYNCED;
+	private boolean fsyncUploads = DEFAULT_FSYNC_UPLOADS;
+	private boolean fsyncDirectories = DEFAULT_FSYNC_DIRECTORIES;
 
 	CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -86,7 +88,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		this.storage = storage;
 		this.tempDir = storage.resolve(DEFAULT_TEMP_DIR);
 
-		if (DEFAULT_SYNCED_APPEND) {
+		if (DEFAULT_FSYNC_APPENDS) {
 			appendOptions.add(SYNC);
 			appendNewOptions.add(SYNC);
 		}
@@ -114,12 +116,24 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	/**
-	 * If set to {@code true}, all newly created files (via move, copy, upload) will be synchronously persisted to the storage device.
+	 * If set to {@code true}, all uploaded files will be synchronously persisted to the storage device.
 	 * <p>
-	 * <b>Note: may be slow when there are a lot of new files created</b>
+	 * <b>Note: may be slow when there are a lot of new files uploaded</b>
 	 */
-	public LocalBlockingFs withSynced(boolean synced) {
-		this.synced = synced;
+	public LocalBlockingFs withFSyncUploads(boolean fsync) {
+		this.fsyncUploads = fsync;
+		return this;
+	}
+
+	/**
+	 * If set to {@code true}, all newly created directories as well all changes to the directories
+	 * (e.g. adding new files, updating existing, etc.)
+	 * will be synchronously persisted to the storage device.
+	 * <p>
+	 * <b>Note: may be slow when there are a lot of new directories created or or changed</b>
+	 */
+	public LocalBlockingFs withFSyncDirectories(boolean fsync) {
+		this.fsyncDirectories = fsync;
 		return this;
 	}
 
@@ -128,8 +142,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	 * <p>
 	 * <b>Note: significantly slows down appends</b>
 	 */
-	public LocalBlockingFs withSyncedAppend(boolean syncedAppend) {
-		if (syncedAppend) {
+	public LocalBlockingFs withFSyncAppends(boolean fsync) {
+		if (fsync) {
 			appendOptions.add(SYNC);
 			appendNewOptions.add(SYNC);
 		} else {
@@ -138,18 +152,31 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		}
 		return this;
 	}
+
+	/**
+	 * Sets file persistence options
+	 *
+	 * @see #withFSyncUploads(boolean)
+	 * @see #withFSyncDirectories(boolean)
+	 * @see #withFSyncAppends(boolean)
+	 */
+	public LocalBlockingFs withFSync(boolean fsyncUploads, boolean fsyncDirectories, boolean fsyncAppends) {
+		this.fsyncUploads = fsyncUploads;
+		this.fsyncDirectories = fsyncDirectories;
+		return withFSyncAppends(fsyncAppends);
+	}
 	// endregion
 
 	@Override
 	public OutputStream upload(@NotNull String name) throws IOException {
 		Path tempPath = Files.createTempFile(tempDir, "", "");
-		return new UploadOutputStream(tempPath, resolve(name), synced, this::doMove);
+		return new UploadOutputStream(tempPath, resolve(name), fsyncUploads, fsyncDirectories, this::doMove);
 	}
 
 	@Override
 	public OutputStream upload(@NotNull String name, long size) throws IOException {
 		Path tempPath = Files.createTempFile(tempDir, "upload", "");
-		return new UploadOutputStream(tempPath, resolve(name), synced, this::doMove) {
+		return new UploadOutputStream(tempPath, resolve(name), fsyncUploads, fsyncDirectories, this::doMove) {
 			long totalSize;
 
 			@Override
@@ -172,7 +199,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		FileChannel channel;
 		if (offset == 0) {
 			channel = ensureTarget(path, () -> FileChannel.open(path, appendNewOptions));
-			if (synced) {
+			if (fsyncDirectories) {
 				tryFsync(path.getParent());
 			}
 		} else {
@@ -190,7 +217,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 				if (closed) return;
 				closed = true;
 				peer.close();
-				if (synced && !appendOptions.contains(SYNC)) {
+				if (fsyncUploads && !appendOptions.contains(SYNC)) {
 					tryFsync(path);
 				}
 			}
@@ -279,7 +306,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public void start() throws IOException {
-		LocalFileUtils.init(storage, tempDir, synced);
+		LocalFileUtils.init(storage, tempDir, fsyncDirectories);
 	}
 
 	@Override
@@ -319,13 +346,13 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 				Path targetPath = resolve(entry.getValue());
 				if (path.equals(targetPath)) {
 					touch(path, now);
-					if (synced) {
+					if (fsyncDirectories) {
 						toFSync.add(path);
 					}
 					continue;
 				}
 				doMove(path, targetPath);
-				if (synced) {
+				if (fsyncDirectories) {
 					toFSync.add(targetPath.getParent());
 				}
 			}
@@ -348,7 +375,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 				if (path.equals(targetPath)) {
 					touch(path, now);
-					if (synced) {
+					if (fsyncDirectories) {
 						toFSync.add(path);
 					}
 					continue;
@@ -369,7 +396,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 				} else {
 					ensureTarget(path, targetPath, () -> copyViaTempDir(path, targetPath, now, tempDir));
 				}
-				if (synced) {
+				if (fsyncDirectories) {
 					toFSync.add(targetPath.getParent());
 				}
 			}
@@ -385,11 +412,11 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	private <V> V ensureTarget(Path target, IOCallable<V> afterCreation) throws IOException {
-		return LocalFileUtils.ensureTarget(null, target, synced, afterCreation);
+		return LocalFileUtils.ensureTarget(null, target, fsyncDirectories, afterCreation);
 	}
 
 	private void ensureTarget(@Nullable Path source, Path target, IORunnable afterCreation) throws IOException {
-		LocalFileUtils.ensureTarget(source, target, synced, () -> {
+		LocalFileUtils.ensureTarget(source, target, fsyncDirectories, () -> {
 			afterCreation.run();
 			return null;
 		});

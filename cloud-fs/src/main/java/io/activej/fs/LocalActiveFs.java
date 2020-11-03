@@ -80,8 +80,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
-	public static final boolean DEFAULT_SYNCED = ApplicationSettings.getBoolean(LocalActiveFs.class, "synced", false);
-	public static final boolean DEFAULT_SYNCED_APPEND = ApplicationSettings.getBoolean(LocalActiveFs.class, "syncedAppend", false);
+	public static final boolean DEFAULT_FSYNC_UPLOADS = ApplicationSettings.getBoolean(LocalActiveFs.class, "fsyncUploads", false);
+	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(LocalActiveFs.class, "fsyncDirectories", false);
+	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(LocalActiveFs.class, "fsyncAppends", false);
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -102,7 +103,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
 	private boolean hardlinkOnCopy = false;
 	private Path tempDir;
-	private boolean synced = DEFAULT_SYNCED;
+	private boolean fsyncUploads = DEFAULT_FSYNC_UPLOADS;
+	private boolean fsyncDirectories = DEFAULT_FSYNC_DIRECTORIES;
 
 	CurrentTimeProvider now;
 
@@ -133,7 +135,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 		now = eventloop;
 
-		if (DEFAULT_SYNCED_APPEND) {
+		if (DEFAULT_FSYNC_APPENDS) {
 			appendOptions.add(SYNC);
 			appendNewOptions.add(SYNC);
 		}
@@ -169,12 +171,24 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	/**
-	 * If set to {@code true}, all newly created files (via move, copy, upload) will be synchronously persisted to the storage device.
+	 * If set to {@code true}, all uploaded files will be synchronously persisted to the storage device.
 	 * <p>
-	 * <b>Note: may be slow when there are a lot of new files created</b>
+	 * <b>Note: may be slow when there are a lot of new files uploaded</b>
 	 */
-	public LocalActiveFs withSynced(boolean synced) {
-		this.synced = synced;
+	public LocalActiveFs withFSyncUploads(boolean fsync) {
+		this.fsyncUploads = fsync;
+		return this;
+	}
+
+	/**
+	 * If set to {@code true}, all newly created directories as well all changes to the directories
+	 * (e.g. adding new files, updating existing, etc.)
+	 * will be synchronously persisted to the storage device.
+	 * <p>
+	 * <b>Note: may be slow when there are a lot of new directories created or or changed</b>
+	 */
+	public LocalActiveFs withFSyncDirectories(boolean fsync) {
+		this.fsyncDirectories = fsync;
 		return this;
 	}
 
@@ -183,8 +197,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	 * <p>
 	 * <b>Note: significantly slows down appends</b>
 	 */
-	public LocalActiveFs withSyncedAppend(boolean syncedAppend) {
-		if (syncedAppend) {
+	public LocalActiveFs withFSyncAppends(boolean fsync) {
+		if (fsync) {
 			appendOptions.add(SYNC);
 			appendNewOptions.add(SYNC);
 		} else {
@@ -192,6 +206,19 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			appendNewOptions.remove(SYNC);
 		}
 		return this;
+	}
+
+	/**
+	 * Sets file persistence options
+	 *
+	 * @see #withFSyncUploads(boolean)
+	 * @see #withFSyncDirectories(boolean)
+	 * @see #withFSyncAppends(boolean)
+	 */
+	public LocalActiveFs withFSync(boolean fsyncUploads, boolean fsyncDirectories, boolean fsyncAppends) {
+		this.fsyncUploads = fsyncUploads;
+		this.fsyncDirectories = fsyncDirectories;
+		return withFSyncAppends(fsyncAppends);
 	}
 	// endregion
 
@@ -216,7 +243,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					FileChannel channel;
 					if (offset == 0) {
 						channel = ensureTarget(null, path, () -> FileChannel.open(path, appendNewOptions));
-						if (synced) {
+						if (fsyncDirectories) {
 							tryFsync(path.getParent());
 						}
 					} else {
@@ -233,7 +260,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				.map(channel -> {
 					ChannelFileWriter writer = ChannelFileWriter.create(executor, channel)
 							.withOffset(offset);
-					if (synced && !appendOptions.contains(SYNC)) {
+					if (fsyncUploads && !appendOptions.contains(SYNC)) {
 						writer.withForceOnClose(true);
 					}
 					return writer
@@ -393,7 +420,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@NotNull
 	@Override
 	public Promise<Void> start() {
-		return execute(() -> LocalFileUtils.init(storage, tempDir, synced));
+		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories));
 	}
 
 	@NotNull
@@ -431,7 +458,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				})
 				.map(pathAndChannel -> {
 					ChannelFileWriter writer = ChannelFileWriter.create(executor, pathAndChannel.getValue2());
-					if (synced) {
+					if (fsyncUploads) {
 						writer.withForceOnClose(true);
 					}
 					return writer
@@ -440,7 +467,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 									.then(() -> execute(() -> {
 										Path target = resolve(name);
 										doMove(pathAndChannel.getValue1(), target);
-										if (synced) {
+										if (fsyncDirectories) {
 											tryFsync(target.getParent());
 										}
 									}))
@@ -465,14 +492,14 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					Path targetPath = resolve(entry.getValue());
 					if (path.equals(targetPath)) {
 						touch(path, now);
-						if (synced) {
+						if (fsyncDirectories) {
 							toFSync.add(path);
 						}
 						return;
 					}
 
 					consumer.accept(path, targetPath);
-					if (synced) {
+					if (fsyncDirectories) {
 						toFSync.add(targetPath.getParent());
 					}
 				});
@@ -524,7 +551,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private <V> V ensureTarget(@Nullable Path source, Path target, IOCallable<V> afterCreation) throws IOException, FsScalarException {
 		try {
-			return LocalFileUtils.ensureTarget(source, target, synced, afterCreation);
+			return LocalFileUtils.ensureTarget(source, target, fsyncDirectories, afterCreation);
 		} catch (NoSuchFileException e) {
 			throw e;
 		} catch (DirectoryNotEmptyException e) {

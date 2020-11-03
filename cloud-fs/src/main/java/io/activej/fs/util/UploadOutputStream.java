@@ -33,15 +33,17 @@ public class UploadOutputStream extends OutputStream {
 	private final Path tempPath;
 	private final Path targetPath;
 	private final boolean synced;
+	private final boolean syncedMetadata;
 	private final FileTransporter transporter;
 	private final OutputStream peer;
 
 	private boolean closed;
 
-	public UploadOutputStream(Path tempPath, Path targetPath, boolean synced, FileTransporter transporter) throws FileNotFoundException {
+	public UploadOutputStream(Path tempPath, Path targetPath, boolean synced, boolean syncedMetadata, FileTransporter transporter) throws FileNotFoundException {
 		this.tempPath = tempPath;
 		this.targetPath = targetPath;
 		this.synced = synced;
+		this.syncedMetadata = syncedMetadata;
 		this.transporter = transporter;
 		this.peer = new FileOutputStream(tempPath.toString());
 	}
@@ -86,7 +88,7 @@ public class UploadOutputStream extends OutputStream {
 				tryFsync(tempPath);
 			}
 			transporter.transport(tempPath, targetPath);
-			if (synced) {
+			if (syncedMetadata) {
 				tryFsync(targetPath.getParent());
 			}
 		});
