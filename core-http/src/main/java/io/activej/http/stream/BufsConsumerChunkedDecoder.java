@@ -99,9 +99,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		input.parse(
 				queue -> {
 					RefInt chunkLength = new RefInt(0);
-					RefInt index = new RefInt(0);
 
-					int lastIndex = bufs.scanBytes(c -> {
+					int lastIndex = bufs.scanBytes((index, c) -> {
 						if (c >= '0' && c <= '9') {
 							chunkLength.set((chunkLength.get() << 4) + (c - '0'));
 						} else if (c >= 'a' && c <= 'f') {
@@ -115,15 +114,15 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 							chunkLength.set(-1);
 							return true;
 						}
-						return index.inc() == MAX_CHUNK_LENGTH_DIGITS + 1;
+						return index == MAX_CHUNK_LENGTH_DIGITS + 1;
 					});
 
 					if (lastIndex == -1) return null;
-					if (index.get() == 0 || index.get() == MAX_CHUNK_LENGTH_DIGITS + 1 || chunkLength.get() < 0) {
+					if (lastIndex == 0 || lastIndex == MAX_CHUNK_LENGTH_DIGITS + 1 || chunkLength.get() < 0) {
 						throw MALFORMED_CHUNK_LENGTH;
 					}
 
-					queue.skip(index.get());
+					queue.skip(lastIndex);
 					return chunkLength.get();
 				})
 				.whenException(this::closeEx)
@@ -170,7 +169,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		int remainingBytes = bufs.remainingBytes();
 		if (remainingBytes >= 4) {
 			RefInt seqCount = new RefInt(0); // CR LF CR LF
-			int lastLfIndex = bufs.scanBytes(nextByte -> {
+			int lastLfIndex = bufs.scanBytes(($, nextByte) -> {
 				int remainder = nextByte == CR ? 0 : nextByte == LF ? 1 : -1;
 
 				if (seqCount.value % 2 == remainder) {

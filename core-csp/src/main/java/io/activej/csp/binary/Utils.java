@@ -18,25 +18,23 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.common.ref.RefInt;
+import io.activej.common.ref.RefBoolean;
 
 class Utils {
 
-	static final int FOUND = -1;
-
 	static ByteBufsDecoder<ByteBuf> parseUntilTerminatorByte(byte terminator, int maxSize) {
 		return bufs -> {
-			RefInt index = new RefInt(0);
-			int result = bufs.scanBytes(nextByte -> {
+			RefBoolean found = new RefBoolean(false);
+			int result = bufs.scanBytes((index, nextByte) -> {
 				if (nextByte == terminator) {
-					index.set(FOUND);
+					found.set(true);
 					return true;
 				}
-				return index.inc() >= maxSize;
+				return index == maxSize - 1;
 			});
 
 			if (result == -1) return null;
-			if (index.get() != FOUND) {
+			if (!found.get()) {
 				throw new ParseException(ByteBufsDecoder.class, "No terminator byte is found in " + maxSize + " bytes");
 			}
 

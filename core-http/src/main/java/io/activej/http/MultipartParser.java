@@ -164,7 +164,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 		while (true) {
 			RefBoolean crFound = new RefBoolean(false);
 
-			int lfIndex = bufs.scanBytes(nextByte -> {
+			int lfIndex = bufs.scanBytes(($, nextByte) -> {
 				if (crFound.get()) {
 					if (nextByte == LF) {
 						return true;

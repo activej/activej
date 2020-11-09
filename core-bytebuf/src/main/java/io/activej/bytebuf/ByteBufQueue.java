@@ -673,7 +673,7 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	public interface ByteScanner {
-		boolean consume(byte value);
+		boolean consume(int index, byte value);
 	}
 
 	public int scanBytes(ByteScanner byteScanner) {
@@ -683,11 +683,11 @@ public final class ByteBufQueue implements Recyclable {
 			byte[] array = buf.array();
 			int tail = buf.tail();
 			for (int i = buf.head(); i != tail; i++) {
-				if (byteScanner.consume(array[i])) {
-					return scanned + i - buf.head();
+				if (byteScanner.consume(scanned, array[i])) {
+					return scanned;
 				}
+				scanned++;
 			}
-			scanned += buf.readRemaining();
 		}
 		return -1;
 	}
@@ -702,6 +702,7 @@ public final class ByteBufQueue implements Recyclable {
 			int readRemaining = buf.readRemaining();
 			if (offset < readRemaining) {
 				i = buf.head() + offset;
+				scanned += offset;
 				break;
 			}
 			offset -= readRemaining;
@@ -711,11 +712,11 @@ public final class ByteBufQueue implements Recyclable {
 			byte[] array = buf.array();
 			int tail = buf.tail();
 			for (; i != tail; i++) {
-				if (byteScanner.consume(array[i])) {
-					return scanned + i - buf.head();
+				if (byteScanner.consume(scanned, array[i])) {
+					return scanned;
 				}
+				scanned++;
 			}
-			scanned += buf.readRemaining();
 			n = next(n);
 			if (n == last) break;
 			buf = bufs[n];

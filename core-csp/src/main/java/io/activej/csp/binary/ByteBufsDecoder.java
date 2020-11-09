@@ -27,7 +27,6 @@ import org.jetbrains.annotations.Nullable;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
-import static io.activej.csp.binary.Utils.FOUND;
 import static io.activej.csp.binary.Utils.parseUntilTerminatorByte;
 
 @FunctionalInterface
@@ -50,23 +49,19 @@ public interface ByteBufsDecoder<T> {
 		return bufs -> {
 			if (!bufs.hasRemainingBytes(data.length)) return null;
 
-			RefInt index = new RefInt(0);
 			RefBoolean differ = new RefBoolean(false);
 
-			int differAt = bufs.scanBytes(nextByte -> {
-				boolean differs = nextByte != data[index.get()];
-				if (!differs) {
-					index.inc();
-					return index.get() == data.length;
-				} else {
+			int differAt = bufs.scanBytes((index, nextByte) -> {
+				if (nextByte != data[index]) {
 					differ.set(true);
 					return true;
 				}
+				return index == data.length - 1;
 			});
 
 			if (differ.get()) {
 				throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + differAt +
-						"[Expected: " + data[index.get()] + ", actual: " + bufs.peekByte(index.get()) + ']');
+						"[Expected: " + data[differAt] + ", actual: " + bufs.peekByte(differAt) + ']');
 			}
 			bufs.skip(data.length);
 			return data;
@@ -103,17 +98,17 @@ public interface ByteBufsDecoder<T> {
 	static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes(int maxSize) {
 		return bufs -> {
 			RefBoolean crFound = new RefBoolean(false);
-			RefInt index = new RefInt(0);
+			RefBoolean crlfFound = new RefBoolean(false);
 
-			int lfIndex = bufs.scanBytes(nextByte -> {
+			int lfIndex = bufs.scanBytes((index, nextByte) -> {
 				if (crFound.get()) {
 					if (nextByte == LF) {
-						index.set(FOUND);
+						crlfFound.set(true);
 						return true;
 					}
 					crFound.set(false);
 				}
-				if (index.inc() >= maxSize) {
+				if (index == maxSize - 1) {
 					return true;
 				}
 				if (nextByte == CR) {
@@ -123,7 +118,7 @@ public interface ByteBufsDecoder<T> {
 			});
 
 			if (lfIndex == -1) return null;
-			if (index.get() != FOUND) {
+			if (!crlfFound.get()) {
 				throw new ParseException(ByteBufsDecoder.class, "No CRLF is found in " + maxSize + " bytes");
 			}
 
@@ -140,12 +135,11 @@ public interface ByteBufsDecoder<T> {
 	static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes(int maxSize) {
 		return bufs -> {
 			if (!bufs.hasRemainingBytes(4)) return null;
-			RefInt index = new RefInt(0);
 			RefInt sizeRef = new RefInt(0);
-			bufs.scanBytes(nextByte -> {
+			bufs.scanBytes((index, nextByte) -> {
 				sizeRef.value <<= 8;
 				sizeRef.value |= (nextByte & 0xFF);
-				return index.inc() == 4;
+				return index == 3;
 			});
 
 			int size = sizeRef.value;
