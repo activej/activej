@@ -125,7 +125,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		if (!bufs.hasRemainingBytes(2 * 4 + compressedSize + 1)) return null;
 		bufs.skip(4);
 		int originalSize = peekInt(bufs, bytes, head, tail);
-		if (originalSize < 0) {
+		if (originalSize < 0 || originalSize > MAX_BLOCK_SIZE.toInt()) {
 			throw STREAM_IS_CORRUPTED;
 		}
 		bufs.skip(4);
