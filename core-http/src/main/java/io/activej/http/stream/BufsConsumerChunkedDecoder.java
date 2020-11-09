@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -34,7 +35,6 @@ import static io.activej.bytebuf.ByteBufStrings.LF;
 import static io.activej.common.Checks.checkState;
 import static io.activej.csp.binary.ByteBufsDecoder.assertBytes;
 import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
-import static java.lang.Math.min;
 
 /**
  * This is a binary channel transformer, that converts channels of {@link ByteBuf ByteBufs}
@@ -98,33 +98,33 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	private void processLength() {
 		input.parse(
 				queue -> {
-					int chunkLength = 0;
-					int i;
-					for (i = 0; i < min(queue.remainingBytes(), MAX_CHUNK_LENGTH_DIGITS + 1); i++) {
-						byte c = queue.peekByte(i);
+					RefInt chunkLength = new RefInt(0);
+					RefInt index = new RefInt(0);
+
+					int lastIndex = bufs.scanBytes(c -> {
 						if (c >= '0' && c <= '9') {
-							chunkLength = (chunkLength << 4) + (c - '0');
+							chunkLength.set((chunkLength.get() << 4) + (c - '0'));
 						} else if (c >= 'a' && c <= 'f') {
-							chunkLength = (chunkLength << 4) + (c - 'a' + 10);
+							chunkLength.set((chunkLength.get() << 4) + (c - 'a' + 10));
 						} else if (c >= 'A' && c <= 'F') {
-							chunkLength = (chunkLength << 4) + (c - 'A' + 10);
+							chunkLength.set((chunkLength.get() << 4) + (c - 'A' + 10));
 						} else if (c == ';' || c == CR) {
 							// Success
-							if (i == 0 || chunkLength < 0) {
-								throw MALFORMED_CHUNK_LENGTH;
-							}
-							queue.skip(i);
-							return chunkLength;
+							return true;
 						} else {
-							throw MALFORMED_CHUNK_LENGTH;
+							chunkLength.set(-1);
+							return true;
 						}
-					}
+						return index.inc() == MAX_CHUNK_LENGTH_DIGITS + 1;
+					});
 
-					if (i == MAX_CHUNK_LENGTH_DIGITS + 1) {
+					if (lastIndex == -1) return null;
+					if (index.get() == 0 || index.get() == MAX_CHUNK_LENGTH_DIGITS + 1 || chunkLength.get() < 0) {
 						throw MALFORMED_CHUNK_LENGTH;
 					}
 
-					return null;
+					queue.skip(index.get());
+					return chunkLength.get();
 				})
 				.whenException(this::closeEx)
 				.whenResult(chunkLength -> {
@@ -169,23 +169,28 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	private void validateLastChunk() {
 		int remainingBytes = bufs.remainingBytes();
 		if (remainingBytes >= 4) {
-			for (int i = 0; i < remainingBytes - 3; i++) {
-				if (bufs.peekByte(i) == CR
-						&& bufs.peekByte(i + 1) == LF
-						&& bufs.peekByte(i + 2) == CR
-						&& bufs.peekByte(i + 3) == LF) {
-					bufs.skip(i + 4);
+			RefInt seqCount = new RefInt(0); // CR LF CR LF
+			int lastLfIndex = bufs.scanBytes(nextByte -> {
+				int remainder = nextByte == CR ? 0 : nextByte == LF ? 1 : -1;
 
-					input.endOfStream()
-							.then(output::acceptEndOfStream)
-							.whenResult(this::completeProcess);
-					return;
+				if (seqCount.value % 2 == remainder) {
+					seqCount.inc();
+				} else {
+					seqCount.set(0);
 				}
+				return seqCount.value == 4;
+			});
+
+			if (lastLfIndex == -1) {
+				bufs.skip(remainingBytes - 3);
+			} else {
+				bufs.skip(lastLfIndex + 1);
+				input.endOfStream()
+						.then(output::acceptEndOfStream)
+						.whenResult(this::completeProcess);
+				return;
 			}
-
-			bufs.skip(remainingBytes - 3);
 		}
-
 		input.needMoreData()
 				.whenResult(this::validateLastChunk);
 	}

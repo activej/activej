@@ -23,6 +23,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.StacklessException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
+import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
@@ -159,12 +160,27 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 		if (finished) {
 			return null;
 		}
-		for (int i = 0; i < bufs.remainingBytes() - 1; i++) {
-			if (bufs.peekByte(i) != CR || bufs.peekByte(i + 1) != LF) {
-				continue;
-			}
+
+		while (true) {
+			RefBoolean crFound = new RefBoolean(false);
+
+			int lfIndex = bufs.scanBytes(nextByte -> {
+				if (crFound.get()) {
+					if (nextByte == LF) {
+						return true;
+					}
+					crFound.set(false);
+				}
+				if (nextByte == CR) {
+					crFound.set(true);
+				}
+				return false;
+			});
+			if (lfIndex == -1) break;
+
+			int toTake = lfIndex - 1;
 			if (sawCrlf) {
-				ByteBuf term = bufs.takeExactSize(i);
+				ByteBuf term = bufs.takeExactSize(toTake);
 				if (readingHeaders == null) {
 					if (term.isContentEqual(lastBoundary)) {
 						bufs.skip(2);
@@ -173,7 +189,6 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 						return null;
 					} else if (term.isContentEqual(boundary)) {
 						bufs.skip(2);
-						i = -1; // fix the index (so that it's 0 on next iteration) because we've taken bytes from queue
 						term.recycle();
 						readingHeaders = new ArrayList<>();
 					} else {
@@ -182,8 +197,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 					}
 				} else {
 					bufs.skip(2);
-					if (i != 0) {
-						i = -1; // see above comment
+					if (toTake != 0) {
 						readingHeaders.add(term.asString(UTF_8));
 						continue;
 					}
@@ -200,7 +214,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 				}
 			} else {
 				sawCrlf = true;
-				ByteBuf tail = bufs.takeExactSize(i);
+				ByteBuf tail = bufs.takeExactSize(toTake);
 				bufs.skip(2);
 				return MultipartFrame.of(tail);
 			}

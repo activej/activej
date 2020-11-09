@@ -21,188 +21,225 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.api.ParserFunction;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.common.ref.RefBoolean;
+import io.activej.common.ref.RefInt;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
+import static io.activej.csp.binary.Utils.FOUND;
 import static io.activej.csp.binary.Utils.parseUntilTerminatorByte;
-import static java.lang.Math.min;
 
 @FunctionalInterface
 public interface ByteBufsDecoder<T> {
-    ParseException SIZE_EXCEEDS_MAX_SIZE = new InvalidSizeException(ByteBufsDecoder.class, "Size exceeds max size");
-    ParseException NEGATIVE_SIZE = new InvalidSizeException(ByteBufsDecoder.class, "Invalid size of bytes to be read, should be greater than 0");
+	ParseException SIZE_EXCEEDS_MAX_SIZE = new InvalidSizeException(ByteBufsDecoder.class, "Size exceeds max size");
+	ParseException NEGATIVE_SIZE = new InvalidSizeException(ByteBufsDecoder.class, "Invalid size of bytes to be read, should be greater than 0");
 
-    @Nullable
-    T tryDecode(ByteBufQueue bufs) throws ParseException;
+	@Nullable
+	T tryDecode(ByteBufQueue bufs) throws ParseException;
 
-    default <V> ByteBufsDecoder<V> andThen(ParserFunction<? super T, ? extends V> after) {
-        return bufs -> {
-            T maybeResult = tryDecode(bufs);
-            if (maybeResult == null) return null;
-            return after.parse(maybeResult);
-        };
-    }
+	default <V> ByteBufsDecoder<V> andThen(ParserFunction<? super T, ? extends V> after) {
+		return bufs -> {
+			T maybeResult = tryDecode(bufs);
+			if (maybeResult == null) return null;
+			return after.parse(maybeResult);
+		};
+	}
 
-    static ByteBufsDecoder<byte[]> assertBytes(byte[] data) {
-        return bufs -> {
-            if (!bufs.hasRemainingBytes(data.length)) return null;
-            for (int i = 0; i < data.length; i++) {
-                if (data[i] != bufs.peekByte(i)) {
-                    throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + i +
-                            "[Expected: " + data[i] + ", actual: " + bufs.peekByte(i) + ']');
-                }
-            }
-            bufs.skip(data.length);
-            return data;
-        };
-    }
+	static ByteBufsDecoder<byte[]> assertBytes(byte[] data) {
+		return bufs -> {
+			if (!bufs.hasRemainingBytes(data.length)) return null;
 
-    static ByteBufsDecoder<ByteBuf> ofFixedSize(int length) {
-        return bufs -> {
-            if (!bufs.hasRemainingBytes(length)) return null;
-            return bufs.takeExactSize(length);
-        };
-    }
+			RefInt index = new RefInt(0);
+			RefBoolean differ = new RefBoolean(false);
 
-    static ByteBufsDecoder<ByteBuf> ofNullTerminatedBytes() {
-        return ofNullTerminatedBytes(Integer.MAX_VALUE);
-    }
+			int differAt = bufs.scanBytes(nextByte -> {
+				boolean differs = nextByte != data[index.get()];
+				if (!differs) {
+					index.inc();
+					return index.get() == data.length;
+				} else {
+					differ.set(true);
+					return true;
+				}
+			});
 
-    static ByteBufsDecoder<ByteBuf> ofNullTerminatedBytes(int maxSize) {
-        return parseUntilTerminatorByte((byte) 0, maxSize);
-    }
+			if (differ.get()) {
+				throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + differAt +
+						"[Expected: " + data[index.get()] + ", actual: " + bufs.peekByte(index.get()) + ']');
+			}
+			bufs.skip(data.length);
+			return data;
+		};
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofCrTerminatedBytes() {
-        return ofCrTerminatedBytes(Integer.MAX_VALUE);
-    }
+	static ByteBufsDecoder<ByteBuf> ofFixedSize(int length) {
+		return bufs -> {
+			if (!bufs.hasRemainingBytes(length)) return null;
+			return bufs.takeExactSize(length);
+		};
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofCrTerminatedBytes(int maxSize) {
-        return parseUntilTerminatorByte(CR, maxSize);
-    }
+	static ByteBufsDecoder<ByteBuf> ofNullTerminatedBytes() {
+		return ofNullTerminatedBytes(Integer.MAX_VALUE);
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes() {
-        return ofCrlfTerminatedBytes(Integer.MAX_VALUE);
-    }
+	static ByteBufsDecoder<ByteBuf> ofNullTerminatedBytes(int maxSize) {
+		return parseUntilTerminatorByte((byte) 0, maxSize);
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes(int maxSize) {
-        return bufs -> {
-            for (int i = 0; i < min(bufs.remainingBytes() - 1, maxSize); i++) {
-                if (bufs.peekByte(i) == CR && bufs.peekByte(i + 1) == LF) {
-                    ByteBuf buf = bufs.takeExactSize(i);
-                    bufs.skip(2);
-                    return buf;
-                }
-            }
-            if (bufs.remainingBytes() >= maxSize) {
-                throw new ParseException(ByteBufsDecoder.class, "No CRLF is found in " + maxSize + " bytes");
-            }
-            return null;
-        };
-    }
+	static ByteBufsDecoder<ByteBuf> ofCrTerminatedBytes() {
+		return ofCrTerminatedBytes(Integer.MAX_VALUE);
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes() {
-        return ofIntSizePrefixedBytes(Integer.MAX_VALUE);
-    }
+	static ByteBufsDecoder<ByteBuf> ofCrTerminatedBytes(int maxSize) {
+		return parseUntilTerminatorByte(CR, maxSize);
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes(int maxSize) {
-        return bufs -> {
-            if (!bufs.hasRemainingBytes(4)) return null;
-            int size = (bufs.peekByte(0) & 0xFF) << 24
-                    | (bufs.peekByte(1) & 0xFF) << 16
-                    | (bufs.peekByte(2) & 0xFF) << 8
-                    | (bufs.peekByte(3) & 0xFF);
-            if (size < 0 || size > maxSize) {
-                throw new InvalidSizeException(ByteBufsDecoder.class,
-                        "Size is either less than 0 or greater than maxSize. Parsed size: " + size);
-            }
-            if (!bufs.hasRemainingBytes(4 + size)) return null;
-            bufs.skip(4);
-            return bufs.takeExactSize(size);
-        };
-    }
+	static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes() {
+		return ofCrlfTerminatedBytes(Integer.MAX_VALUE);
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofShortSizePrefixedBytes() {
-        return ofShortSizePrefixedBytes(Integer.MAX_VALUE);
-    }
+	static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes(int maxSize) {
+		return bufs -> {
+			RefBoolean crFound = new RefBoolean(false);
+			RefInt index = new RefInt(0);
 
-    static ByteBufsDecoder<ByteBuf> ofShortSizePrefixedBytes(int maxSize) {
-        return bufs -> {
-            if (!bufs.hasRemainingBytes(2)) return null;
-            int size = (bufs.peekByte(0) & 0xFF) << 8
-                    | (bufs.peekByte(1) & 0xFF);
-            if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
-            if (!bufs.hasRemainingBytes(2 + size)) return null;
-            bufs.skip(2);
-            return bufs.takeExactSize(size);
-        };
-    }
+			int lfIndex = bufs.scanBytes(nextByte -> {
+				if (crFound.get()) {
+					if (nextByte == LF) {
+						index.set(FOUND);
+						return true;
+					}
+					crFound.set(false);
+				}
+				if (index.inc() >= maxSize) {
+					return true;
+				}
+				if (nextByte == CR) {
+					crFound.set(true);
+				}
+				return false;
+			});
 
-    static ByteBufsDecoder<ByteBuf> ofByteSizePrefixedBytes() {
-        return ofByteSizePrefixedBytes(Integer.MAX_VALUE);
-    }
+			if (lfIndex == -1) return null;
+			if (index.get() != FOUND) {
+				throw new ParseException(ByteBufsDecoder.class, "No CRLF is found in " + maxSize + " bytes");
+			}
 
-    static ByteBufsDecoder<ByteBuf> ofByteSizePrefixedBytes(int maxSize) {
-        return bufs -> {
-            if (!bufs.hasRemaining()) return null;
-            int size = bufs.peekByte(0) & 0xFF;
-            if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
-            if (!bufs.hasRemainingBytes(1 + size)) return null;
-            bufs.skip(1);
-            return bufs.takeExactSize(size);
-        };
-    }
+			ByteBuf buf = bufs.takeExactSize(lfIndex - 1);
+			bufs.skip(2);
+			return buf;
+		};
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes() {
-        return ofVarIntSizePrefixedBytes(Integer.MAX_VALUE);
-    }
+	static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes() {
+		return ofIntSizePrefixedBytes(Integer.MAX_VALUE);
+	}
 
-    static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes(int maxSize) {
-        return bufs -> {
-            int size;
-            int prefixSize;
-            if (!bufs.hasRemainingBytes(1)) return null;
-            byte b = bufs.peekByte(0);
-            if (b >= 0) {
-                size = b;
-                prefixSize = 1;
-            } else {
-                if (!bufs.hasRemainingBytes(2)) return null;
-                size = b & 0x7f;
-                if ((b = bufs.peekByte(1)) >= 0) {
-                    size |= b << 7;
-                    prefixSize = 2;
-                } else {
-                    if (!bufs.hasRemainingBytes(3)) return null;
-                    size |= (b & 0x7f) << 7;
-                    if ((b = bufs.peekByte(2)) >= 0) {
-                        size |= b << 14;
-                        prefixSize = 3;
-                    } else {
-                        if (!bufs.hasRemainingBytes(4)) return null;
-                        size |= (b & 0x7f) << 14;
-                        if ((b = bufs.peekByte(3)) >= 0) {
-                            size |= b << 21;
-                            prefixSize = 4;
-                        } else {
-                            if (!bufs.hasRemainingBytes(5)) return null;
-                            size |= (b & 0x7f) << 21;
-                            if ((b = bufs.peekByte(4)) >= 0) {
-                                size |= b << 28;
-                                prefixSize = 5;
-                            } else {
-                                throw new ParseException(ByteBufsDecoder.class, "VarInt is too long for 32-bit integer");
-                            }
-                        }
-                    }
-                }
-            }
-            if (size < 0) throw NEGATIVE_SIZE;
-            if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
-            if (!bufs.hasRemainingBytes(prefixSize + size)) return null;
-            bufs.skip(prefixSize);
-            return bufs.takeExactSize(size);
-        };
-    }
+	static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes(int maxSize) {
+		return bufs -> {
+			if (!bufs.hasRemainingBytes(4)) return null;
+			RefInt index = new RefInt(0);
+			RefInt sizeRef = new RefInt(0);
+			bufs.scanBytes(nextByte -> {
+				sizeRef.value <<= 8;
+				sizeRef.value |= (nextByte & 0xFF);
+				return index.inc() == 4;
+			});
+
+			int size = sizeRef.value;
+			if (size < 0 || size > maxSize) {
+				throw new InvalidSizeException(ByteBufsDecoder.class,
+						"Size is either less than 0 or greater than maxSize. Parsed size: " + size);
+			}
+			if (!bufs.hasRemainingBytes(4 + size)) return null;
+			bufs.skip(4);
+			return bufs.takeExactSize(size);
+		};
+	}
+
+	static ByteBufsDecoder<ByteBuf> ofShortSizePrefixedBytes() {
+		return ofShortSizePrefixedBytes(Integer.MAX_VALUE);
+	}
+
+	static ByteBufsDecoder<ByteBuf> ofShortSizePrefixedBytes(int maxSize) {
+		return bufs -> {
+			if (!bufs.hasRemainingBytes(2)) return null;
+			int size = (bufs.peekByte(0) & 0xFF) << 8
+					| (bufs.peekByte(1) & 0xFF);
+			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (!bufs.hasRemainingBytes(2 + size)) return null;
+			bufs.skip(2);
+			return bufs.takeExactSize(size);
+		};
+	}
+
+	static ByteBufsDecoder<ByteBuf> ofByteSizePrefixedBytes() {
+		return ofByteSizePrefixedBytes(Integer.MAX_VALUE);
+	}
+
+	static ByteBufsDecoder<ByteBuf> ofByteSizePrefixedBytes(int maxSize) {
+		return bufs -> {
+			if (!bufs.hasRemaining()) return null;
+			int size = bufs.peekByte() & 0xFF;
+			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (!bufs.hasRemainingBytes(1 + size)) return null;
+			bufs.skip(1);
+			return bufs.takeExactSize(size);
+		};
+	}
+
+	static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes() {
+		return ofVarIntSizePrefixedBytes(Integer.MAX_VALUE);
+	}
+
+	static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes(int maxSize) {
+		return bufs -> {
+			int size;
+			int prefixSize;
+			if (!bufs.hasRemainingBytes(1)) return null;
+			byte b = bufs.peekByte(0);
+			if (b >= 0) {
+				size = b;
+				prefixSize = 1;
+			} else {
+				if (!bufs.hasRemainingBytes(2)) return null;
+				size = b & 0x7f;
+				if ((b = bufs.peekByte(1)) >= 0) {
+					size |= b << 7;
+					prefixSize = 2;
+				} else {
+					if (!bufs.hasRemainingBytes(3)) return null;
+					size |= (b & 0x7f) << 7;
+					if ((b = bufs.peekByte(2)) >= 0) {
+						size |= b << 14;
+						prefixSize = 3;
+					} else {
+						if (!bufs.hasRemainingBytes(4)) return null;
+						size |= (b & 0x7f) << 14;
+						if ((b = bufs.peekByte(3)) >= 0) {
+							size |= b << 21;
+							prefixSize = 4;
+						} else {
+							if (!bufs.hasRemainingBytes(5)) return null;
+							size |= (b & 0x7f) << 21;
+							if ((b = bufs.peekByte(4)) >= 0) {
+								size |= b << 28;
+								prefixSize = 5;
+							} else {
+								throw new ParseException(ByteBufsDecoder.class, "VarInt is too long for 32-bit integer");
+							}
+						}
+					}
+				}
+			}
+			if (size < 0) throw NEGATIVE_SIZE;
+			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (!bufs.hasRemainingBytes(prefixSize + size)) return null;
+			bufs.skip(prefixSize);
+			return bufs.takeExactSize(size);
+		};
+	}
 
 }

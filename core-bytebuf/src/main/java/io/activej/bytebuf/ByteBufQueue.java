@@ -677,26 +677,26 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	public int scanBytes(ByteScanner byteScanner) {
-		int skipped = 0;
+		int scanned = 0;
 		for (int n = first; n != last; n = next(n)) {
 			ByteBuf buf = bufs[n];
 			byte[] array = buf.array();
 			int tail = buf.tail();
 			for (int i = buf.head(); i != tail; i++) {
 				if (byteScanner.consume(array[i])) {
-					return skipped + i - buf.head();
+					return scanned + i - buf.head();
 				}
 			}
-			skipped += buf.readRemaining();
+			scanned += buf.readRemaining();
 		}
-		return skipped;
+		return -1;
 	}
 
 	public int scanBytes(int offset, ByteScanner byteScanner) {
 		ByteBuf buf = null;
 		int i = 0;
 		int n;
-		int skipped = 0;
+		int scanned = 0;
 		for (n = first; n != last; n = next(n)) {
 			buf = bufs[n];
 			int readRemaining = buf.readRemaining();
@@ -705,23 +705,23 @@ public final class ByteBufQueue implements Recyclable {
 				break;
 			}
 			offset -= readRemaining;
-			skipped += readRemaining;
+			scanned += readRemaining;
 		}
 		while (n != last) {
 			byte[] array = buf.array();
 			int tail = buf.tail();
 			for (; i != tail; i++) {
 				if (byteScanner.consume(array[i])) {
-					return skipped + i - buf.head();
+					return scanned + i - buf.head();
 				}
 			}
-			skipped += buf.readRemaining();
+			scanned += buf.readRemaining();
 			n = next(n);
 			if (n == last) break;
 			buf = bufs[n];
 			i = buf.head();
 		}
-		return skipped;
+		return -1;
 	}
 
 	@NotNull
