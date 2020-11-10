@@ -36,17 +36,6 @@ public final class BufsConsumerChunkedDecoderTest {
 
 	private static final StacklessException IGNORE_EXCEPTION = new StacklessException();
 
-	public final String[] plainText = {
-			"Suspendisse faucibus enim curabitur tempus leo viverra massa accumsan nisl nunc\n",
-			"Interdum sapien vehicula\nOrnare odio feugiat fringilla ",
-			"Auctor sodales elementum curabitur felis ut ",
-			"Ante sem orci rhoncus hendrerit commo",
-			"do, potenti cursus lorem ac pretium, netus\nSapien hendrerit leo ",
-			"Mollis volutpat nisi convallis accumsan eget praesent cursus urna ultricies nec habitasse nam\n",
-			"Inceptos nisl magna duis vel taciti volutpat nostra\n",
-			"Taciti sapien fringilla u\nVitae ",
-			"Etiam egestas ac augue dui dapibus, aliquam adipiscing porttitor magna at, libero elit faucibus purus"
-	};
 	public final AssertingConsumer consumer = new AssertingConsumer();
 	public final List<ByteBuf> list = new ArrayList<>();
 	public final BufsConsumerChunkedDecoder chunkedDecoder = BufsConsumerChunkedDecoder.create();

@@ -20,6 +20,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.InvalidSizeException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.common.recycle.Recyclable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -673,10 +674,14 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	public interface ByteScanner {
-		boolean consume(int index, byte value);
+		boolean consume(int index, byte value) throws ParseException;
 	}
 
-	public int scanBytes(ByteScanner byteScanner) {
+	public interface ByteParser<T> {
+		T parse(int index, byte value) throws ParseException;
+	}
+
+	public int scanBytes(ByteScanner byteScanner) throws ParseException {
 		int scanned = 0;
 		for (int n = first; n != last; n = next(n)) {
 			ByteBuf buf = bufs[n];
@@ -692,7 +697,7 @@ public final class ByteBufQueue implements Recyclable {
 		return -1;
 	}
 
-	public int scanBytes(int offset, ByteScanner byteScanner) {
+	public int scanBytes(int offset, ByteScanner byteScanner) throws ParseException {
 		ByteBuf buf = null;
 		int i = 0;
 		int n;
@@ -723,6 +728,63 @@ public final class ByteBufQueue implements Recyclable {
 			i = buf.head();
 		}
 		return -1;
+	}
+
+	public <T> T parseBytes(ByteParser<T> byteParser) throws ParseException {
+		int parsed = 0;
+		for (int n = first; n != last; n = next(n)) {
+			ByteBuf buf = bufs[n];
+			byte[] array = buf.array();
+			int tail = buf.tail();
+			for (int i = buf.head(); i != tail; i++) {
+				T result = byteParser.parse(parsed++, array[i]);
+				if (result != null) {
+					for (; first != n; first = next(first)) {
+						bufs[first].recycle();
+						if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
+					}
+					if (i == tail - 1) {
+						buf.recycle();
+						if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
+						first = next(first);
+					} else {
+						buf.head(i + 1);
+					}
+					return result;
+				}
+			}
+		}
+		return null;
+	}
+
+	public <T> T parseBytes(ByteParser<T> byteParser, Consumer<ByteBuf> recycledBufs) throws ParseException {
+		int parsed = 0;
+		for (int n = first; n != last; n = next(n)) {
+			ByteBuf buf = bufs[n];
+			byte[] array = buf.array();
+			int tail = buf.tail();
+			for (int i = buf.head(); i != tail; i++) {
+				T result = byteParser.parse(parsed++, array[i]);
+				if (result != null) {
+					for (; first != n; first = next(first)) {
+						ByteBuf bufToRecycle = bufs[first];
+						recycledBufs.accept(bufToRecycle);
+						bufToRecycle.recycle();
+						if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
+					}
+					if (i == tail - 1) {
+						recycledBufs.accept(buf);
+						buf.recycle();
+						if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
+						first = next(first);
+					} else {
+						buf.head(i + 1);
+					}
+					return result;
+				}
+			}
+		}
+		return null;
 	}
 
 	@NotNull

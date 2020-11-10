@@ -21,9 +21,10 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.StacklessException;
+import io.activej.common.exception.parse.InvalidSizeException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
-import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
@@ -42,7 +43,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
-import static io.activej.bytebuf.ByteBufStrings.LF;
 import static io.activej.common.MemSize.kilobytes;
 import static io.activej.common.Utils.nullify;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -53,6 +53,8 @@ import static java.util.stream.Collectors.toMap;
  */
 public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(MultipartParser.class, "maxMetaBuffer", kilobytes(4)).toInt();
+	private static final ByteBufsDecoder<ByteBuf> OF_CRLF_DECODER = ByteBufsDecoder.ofCrlfTerminatedBytes();
+	private static final InvalidSizeException HEADER_TOO_BIG = new InvalidSizeException(MultipartParser.class, "Header size exceeds max meta size");
 
 	@Nullable
 	private List<String> readingHeaders = null;
@@ -156,53 +158,34 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 
 	@Nullable
 	@Override
-	public MultipartFrame tryDecode(ByteBufQueue bufs) {
+	public MultipartFrame tryDecode(ByteBufQueue bufs) throws ParseException {
 		if (finished) {
 			return null;
 		}
 
 		while (true) {
-			RefBoolean crFound = new RefBoolean(false);
+			ByteBuf buf = OF_CRLF_DECODER.tryDecode(bufs);
 
-			int lfIndex = bufs.scanBytes(($, nextByte) -> {
-				if (crFound.get()) {
-					if (nextByte == LF) {
-						return true;
-					}
-					crFound.set(false);
-				}
-				if (nextByte == CR) {
-					crFound.set(true);
-				}
-				return false;
-			});
-			if (lfIndex == -1) break;
+			if (buf == null) break;
 
-			int toTake = lfIndex - 1;
 			if (sawCrlf) {
-				ByteBuf term = bufs.takeExactSize(toTake);
 				if (readingHeaders == null) {
-					if (term.isContentEqual(lastBoundary)) {
-						bufs.skip(2);
+					if (buf.isContentEqual(lastBoundary)) {
 						finished = true;
-						term.recycle();
-						return null;
-					} else if (term.isContentEqual(boundary)) {
-						bufs.skip(2);
-						term.recycle();
+						buf.recycle();
+					} else if (buf.isContentEqual(boundary)) {
+						buf.recycle();
 						readingHeaders = new ArrayList<>();
 					} else {
-						sawCrlf = false;
-						return getFalseTermFrame(term);
+						return getFalseTermFrame(buf);
 					}
 				} else {
-					bufs.skip(2);
-					if (toTake != 0) {
-						readingHeaders.add(term.asString(UTF_8));
+					if (buf.canRead()) {
+						readingHeaders.add(buf.asString(UTF_8));
 						continue;
 					}
 					sawCrlf = false;
-					term.recycle();
+					buf.recycle();
 					List<String> readingHeaders = this.readingHeaders;
 					this.readingHeaders = null;
 					if (readingHeaders.isEmpty()) {
@@ -214,17 +197,18 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 				}
 			} else {
 				sawCrlf = true;
-				ByteBuf tail = bufs.takeExactSize(toTake);
-				bufs.skip(2);
-				return MultipartFrame.of(tail);
+				return MultipartFrame.of(buf);
 			}
 		}
 
 		int remaining = bufs.remainingBytes();
 		if (sawCrlf) {
-			if (remaining >= MAX_META_SIZE) {
+			if (readingHeaders == null && cannotBeBoundary(bufs)) {
 				sawCrlf = false;
 				return getFalseTermFrame(bufs.takeRemaining());
+			}
+			if (remaining >= MAX_META_SIZE) {
+				throw HEADER_TOO_BIG;
 			}
 			return null;
 		}
@@ -244,6 +228,21 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 		term.drainTo(buf, term.readRemaining());
 		term.recycle();
 		return MultipartFrame.of(buf);
+	}
+
+	private boolean cannotBeBoundary(ByteBufQueue bufs) throws ParseException {
+		return bufs.scanBytes((index, nextByte) -> {
+			if (index == lastBoundary.length) {
+				return nextByte != CR;
+			} else if (index == lastBoundary.length - 1) {
+				return nextByte != '-';
+			} else if (index == boundary.length) {
+				return nextByte != '-' && nextByte != CR;
+			} else {
+				assert index < boundary.length;
+				return nextByte != boundary[index];
+			}
+		}) != -1;
 	}
 
 	public static final class MultipartFrame implements Recyclable {

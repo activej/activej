@@ -18,10 +18,10 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufQueue.ByteScanner;
 import io.activej.common.api.ParserFunction;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.common.ref.RefBoolean;
 import io.activej.common.ref.RefInt;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,26 +46,14 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<byte[]> assertBytes(byte[] data) {
-		return bufs -> {
-			if (!bufs.hasRemainingBytes(data.length)) return null;
-
-			RefBoolean differ = new RefBoolean(false);
-
-			int differAt = bufs.scanBytes((index, nextByte) -> {
-				if (nextByte != data[index]) {
-					differ.set(true);
-					return true;
-				}
-				return index == data.length - 1;
-			});
-
-			if (differ.get()) {
-				throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + differAt +
-						"[Expected: " + data[differAt] + ", actual: " + bufs.peekByte(differAt) + ']');
-			}
-			bufs.skip(data.length);
-			return data;
-		};
+		return bufs ->
+				bufs.parseBytes((index, nextByte) -> {
+					if (nextByte != data[index]) {
+						throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + index +
+								"[Expected: " + data[index] + ", actual: " + nextByte + ']');
+					}
+					return index == data.length - 1 ? data : null;
+				});
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofFixedSize(int length) {
@@ -97,30 +85,28 @@ public interface ByteBufsDecoder<T> {
 
 	static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes(int maxSize) {
 		return bufs -> {
-			RefBoolean crFound = new RefBoolean(false);
-			RefBoolean crlfFound = new RefBoolean(false);
+			int lfIndex = bufs.scanBytes(new ByteScanner() {
+				boolean crFound;
 
-			int lfIndex = bufs.scanBytes((index, nextByte) -> {
-				if (crFound.get()) {
-					if (nextByte == LF) {
-						crlfFound.set(true);
-						return true;
+				@Override
+				public boolean consume(int index, byte nextByte) throws ParseException {
+					if (crFound) {
+						if (nextByte == LF) {
+							return true;
+						}
+						crFound = false;
 					}
-					crFound.set(false);
+					if (index == maxSize - 1) {
+						throw new ParseException(ByteBufsDecoder.class, "No CRLF is found in " + maxSize + " bytes");
+					}
+					if (nextByte == CR) {
+						crFound = true;
+					}
+					return false;
 				}
-				if (index == maxSize - 1) {
-					return true;
-				}
-				if (nextByte == CR) {
-					crFound.set(true);
-				}
-				return false;
 			});
 
 			if (lfIndex == -1) return null;
-			if (!crlfFound.get()) {
-				throw new ParseException(ByteBufsDecoder.class, "No CRLF is found in " + maxSize + " bytes");
-			}
 
 			ByteBuf buf = bufs.takeExactSize(lfIndex - 1);
 			bufs.skip(2);

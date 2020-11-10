@@ -18,9 +18,9 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufQueue.ByteScanner;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -53,6 +53,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	private ByteBufQueue bufs;
 	private BinaryChannelSupplier input;
 	private ChannelConsumer<ByteBuf> output;
+
+	int chunkLength;
 
 	// region creators
 	private BufsConsumerChunkedDecoder() {
@@ -98,32 +100,31 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	private void processLength() {
 		input.parse(
 				queue -> {
-					RefInt chunkLength = new RefInt(0);
-
-					int lastIndex = bufs.scanBytes((index, c) -> {
+					chunkLength = 0;
+					int endIndex = bufs.scanBytes((index, c) -> {
 						if (c >= '0' && c <= '9') {
-							chunkLength.set((chunkLength.get() << 4) + (c - '0'));
+							chunkLength = (chunkLength << 4) + (c - '0');
 						} else if (c >= 'a' && c <= 'f') {
-							chunkLength.set((chunkLength.get() << 4) + (c - 'a' + 10));
+							chunkLength = (chunkLength << 4) + (c - 'a' + 10);
 						} else if (c >= 'A' && c <= 'F') {
-							chunkLength.set((chunkLength.get() << 4) + (c - 'A' + 10));
+							chunkLength = (chunkLength << 4) + (c - 'A' + 10);
 						} else if (c == ';' || c == CR) {
 							// Success
+							if (index == 0 || chunkLength < 0) {
+								throw MALFORMED_CHUNK_LENGTH;
+							}
 							return true;
 						} else {
-							chunkLength.set(-1);
-							return true;
+							throw MALFORMED_CHUNK_LENGTH;
 						}
-						return index == MAX_CHUNK_LENGTH_DIGITS + 1;
+						if (index == MAX_CHUNK_LENGTH_DIGITS + 1) {
+							throw MALFORMED_CHUNK_LENGTH;
+						}
+						return false;
 					});
-
-					if (lastIndex == -1) return null;
-					if (lastIndex == 0 || lastIndex == MAX_CHUNK_LENGTH_DIGITS + 1 || chunkLength.get() < 0) {
-						throw MALFORMED_CHUNK_LENGTH;
-					}
-
-					queue.skip(lastIndex);
-					return chunkLength.get();
+					if (endIndex == -1) return null;
+					bufs.skip(endIndex);
+					return chunkLength;
 				})
 				.whenException(this::closeEx)
 				.whenResult(chunkLength -> {
@@ -168,27 +169,33 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	private void validateLastChunk() {
 		int remainingBytes = bufs.remainingBytes();
 		if (remainingBytes >= 4) {
-			RefInt seqCount = new RefInt(0); // CR LF CR LF
-			int lastLfIndex = bufs.scanBytes(($, nextByte) -> {
-				int remainder = nextByte == CR ? 0 : nextByte == LF ? 1 : -1;
+			try {
+				int lastLfIndex = bufs.scanBytes(new ByteScanner() {
+					int crlfCrlfSequence;
 
-				if (seqCount.value % 2 == remainder) {
-					seqCount.inc();
-				} else {
-					seqCount.set(0);
+					@Override
+					public boolean consume(int index, byte nextByte) {
+						int remainder = nextByte == CR ? 0 : nextByte == LF ? 1 : -1;
+
+						if (crlfCrlfSequence % 2 == remainder) {
+							return ++crlfCrlfSequence == 4;
+						}
+						crlfCrlfSequence = 0;
+						return false;
+					}
+				});
+				if (lastLfIndex != -1) {
+					bufs.skip(lastLfIndex + 1);
+					input.endOfStream()
+							.then(output::acceptEndOfStream)
+							.whenResult(this::completeProcess);
+					return;
 				}
-				return seqCount.value == 4;
-			});
-
-			if (lastLfIndex == -1) {
-				bufs.skip(remainingBytes - 3);
-			} else {
-				bufs.skip(lastLfIndex + 1);
-				input.endOfStream()
-						.then(output::acceptEndOfStream)
-						.whenResult(this::completeProcess);
-				return;
+			} catch (ParseException ignored) {
+				throw new AssertionError("Parse exceptions cannot be caught here");
 			}
+
+			bufs.skip(remainingBytes - 3);
 		}
 		input.needMoreData()
 				.whenResult(this::validateLastChunk);
