@@ -8,6 +8,8 @@ import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
 import static org.junit.Assert.*;
@@ -83,7 +85,6 @@ public final class ByteBufsDecoderTest {
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void ofIntSizePrefixedBytes() throws ParseException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofIntSizePrefixedBytes();
 		ByteBuf buf = ByteBufPool.allocate(4);
@@ -93,6 +94,22 @@ public final class ByteBufsDecoderTest {
 		queue.add(ByteBuf.wrapForReading(bytes));
 
 		ByteBuf decoded = decoder.tryDecode(queue);
+		assertNotNull(decoded);
+		assertArrayEquals(bytes, decoded.asArray());
+	}
+
+	@Test
+	public void ofVarIntSizePrefixedBytes() throws ParseException {
+		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofVarIntSizePrefixedBytes();
+		ByteBuf buf = ByteBufPool.allocate(1005);
+		buf.writeVarInt(1000);
+		queue.add(buf);
+		byte[] bytes = new byte[1000];
+		ThreadLocalRandom.current().nextBytes(bytes);
+		queue.add(ByteBuf.wrapForReading(bytes));
+
+		ByteBuf decoded = decoder.tryDecode(queue);
+		assertNotNull(decoded);
 		assertArrayEquals(bytes, decoded.asArray());
 	}
 

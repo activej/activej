@@ -22,7 +22,8 @@ import io.activej.bytebuf.ByteBufQueue.ByteScanner;
 import io.activej.common.api.ParserFunction;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.common.ref.RefInt;
+import io.activej.csp.binary.Utils.IntScanner;
+import io.activej.csp.binary.Utils.VarIntScanner;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
@@ -120,19 +121,10 @@ public interface ByteBufsDecoder<T> {
 
 	static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes(int maxSize) {
 		return bufs -> {
-			if (!bufs.hasRemainingBytes(4)) return null;
-			RefInt sizeRef = new RefInt(0);
-			bufs.scanBytes((index, nextByte) -> {
-				sizeRef.value <<= 8;
-				sizeRef.value |= (nextByte & 0xFF);
-				return index == 3;
-			});
+			IntScanner scanner = new IntScanner(maxSize);
+			if (bufs.scanBytes(scanner) == -1) return null;
 
-			int size = sizeRef.value;
-			if (size < 0 || size > maxSize) {
-				throw new InvalidSizeException(ByteBufsDecoder.class,
-						"Size is either less than 0 or greater than maxSize. Parsed size: " + size);
-			}
+			int size = scanner.getResult();
 			if (!bufs.hasRemainingBytes(4 + size)) return null;
 			bufs.skip(4);
 			return bufs.takeExactSize(size);
@@ -176,46 +168,13 @@ public interface ByteBufsDecoder<T> {
 
 	static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes(int maxSize) {
 		return bufs -> {
-			int size;
-			int prefixSize;
-			if (!bufs.hasRemainingBytes(1)) return null;
-			byte b = bufs.peekByte(0);
-			if (b >= 0) {
-				size = b;
-				prefixSize = 1;
-			} else {
-				if (!bufs.hasRemainingBytes(2)) return null;
-				size = b & 0x7f;
-				if ((b = bufs.peekByte(1)) >= 0) {
-					size |= b << 7;
-					prefixSize = 2;
-				} else {
-					if (!bufs.hasRemainingBytes(3)) return null;
-					size |= (b & 0x7f) << 7;
-					if ((b = bufs.peekByte(2)) >= 0) {
-						size |= b << 14;
-						prefixSize = 3;
-					} else {
-						if (!bufs.hasRemainingBytes(4)) return null;
-						size |= (b & 0x7f) << 14;
-						if ((b = bufs.peekByte(3)) >= 0) {
-							size |= b << 21;
-							prefixSize = 4;
-						} else {
-							if (!bufs.hasRemainingBytes(5)) return null;
-							size |= (b & 0x7f) << 21;
-							if ((b = bufs.peekByte(4)) >= 0) {
-								size |= b << 28;
-								prefixSize = 5;
-							} else {
-								throw new ParseException(ByteBufsDecoder.class, "VarInt is too long for 32-bit integer");
-							}
-						}
-					}
-				}
-			}
-			if (size < 0) throw NEGATIVE_SIZE;
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			VarIntScanner scanner = new VarIntScanner(maxSize);
+			int lastIndex = bufs.scanBytes(scanner);
+
+			if (lastIndex == -1) return null;
+
+			int size = scanner.getResult();
+			int prefixSize = lastIndex + 1;
 			if (!bufs.hasRemainingBytes(prefixSize + size)) return null;
 			bufs.skip(prefixSize);
 			return bufs.takeExactSize(size);

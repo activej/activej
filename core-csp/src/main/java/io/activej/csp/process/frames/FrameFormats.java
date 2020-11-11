@@ -22,10 +22,10 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.csp.binary.ByteBufsDecoder;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -212,11 +212,10 @@ public class FrameFormats {
 
 	private static final class SizePrefixedFrameFormat implements FrameFormat {
 		private static final InvalidSizeException NEGATIVE_LENGTH = new InvalidSizeException(SizePrefixedFrameFormat.class, "Negative length");
+		private static final InvalidSizeException COULD_NOT_READ_VAR_INT = new InvalidSizeException(SizePrefixedFrameFormat.class, "Could not read var int");
 		private static final byte[] ZERO_BYTE_ARRAY = {0};
 
 		private static volatile SizePrefixedFrameFormat instance = null;
-
-		private final byte[] varIntArray = new byte[5];
 
 		private SizePrefixedFrameFormat() {
 			if (instance != null) throw new AssertionError("Already created");
@@ -259,20 +258,17 @@ public class FrameFormats {
 		@Override
 		public BlockDecoder createDecoder() {
 			return new BlockDecoder() {
+				@Nullable
+				Integer length;
 
 				@Override
 				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
-					int len = peekVarInt(bufs);
-					if (len == -1) return null;
+					if (length == null && (length = readLength(bufs)) == null) return null;
 
-					int lenSize = varIntSize(len);
-					if (!bufs.hasRemainingBytes(len + lenSize)) return null;
-					if (len == 0) {
-						bufs.skip(lenSize);
-						return END_OF_STREAM;
-					}
-					ByteBuf buf = bufs.takeExactSize(len + lenSize);
-					buf.moveHead(lenSize);
+					if (length == 0) return END_OF_STREAM;
+					if (!bufs.hasRemainingBytes(length)) return null;
+					ByteBuf buf = bufs.takeExactSize(length);
+					length = null;
 					return buf;
 				}
 
@@ -287,75 +283,34 @@ public class FrameFormats {
 			};
 		}
 
-		private int peekVarInt(ByteBufQueue bufs) throws ParseException {
-			ByteBuf buf = bufs.peekBuf();
-			if (buf == null) return -1;
+		@Nullable
+		private static Integer readLength(ByteBufQueue bufs) throws ParseException {
+			return bufs.parseBytes(new ByteBufQueue.ByteParser<Integer>() {
+				int result;
 
-			byte[] array;
-			int off, limit;
-			if (buf.readRemaining() >= varIntArray.length) {
-				array = buf.array();
-				off = buf.head();
-				limit = varIntArray.length;
-			} else {
-				limit = bufs.peekTo(varIntArray, 0, 5);
-				array = varIntArray;
-				off = 0;
-			}
-
-			int result;
-			byte b = array[off++];
-			if (b >= 0) {
-				result = b;
-			} else {
-				if (limit == 1) return -1;
-				result = b & 0x7f;
-				if ((b = array[off++]) >= 0) {
-					result |= b << 7;
-				} else {
-					if (limit == 2) return -1;
-					result |= (b & 0x7f) << 7;
-					if ((b = array[off++]) >= 0) {
-						result |= b << 14;
-					} else {
-						if (limit == 3) return -1;
-						result |= (b & 0x7f) << 14;
-						if ((b = array[off++]) >= 0) {
-							result |= b << 21;
-						} else {
-							if (limit == 4) return -1;
-							result |= (b & 0x7f) << 21;
-							if ((b = array[off]) >= 0) {
-								result |= b << 28;
-							} else {
-								throw new InvalidSizeException(SizePrefixedFrameFormat.class, "Could not read var int");
-							}
-						}
+				@Override
+				public Integer parse(int index, byte nextByte) throws ParseException {
+					result |= (nextByte & 0x7F) << index * 7;
+					if ((nextByte & 0x80) == 0) {
+						if (result < 0) throw NEGATIVE_LENGTH;
+						return result;
 					}
+					if (index == 4) throw COULD_NOT_READ_VAR_INT;
+					return null;
 				}
-			}
-			if (result < 0) {
-				throw NEGATIVE_LENGTH;
-			}
-			return result;
-		}
-
-		private static int varIntSize(int value) {
-			return 1 + (31 - Integer.numberOfLeadingZeros(value)) / 7;
+			});
 		}
 	}
 
 	private static final class MagicNumberAdapter implements FrameFormat {
 		private final FrameFormat peerFormat;
 		private final byte[] magicNumber;
-		private final int magicNumberLength;
-		private final byte[] magicNumberHolder;
+		private final ByteBufsDecoder<byte[]> magicNumberValidator;
 
 		private MagicNumberAdapter(FrameFormat peerFormat, byte[] magicNumber) {
 			this.peerFormat = peerFormat;
 			this.magicNumber = magicNumber;
-			this.magicNumberLength = magicNumber.length;
-			this.magicNumberHolder = new byte[magicNumberLength];
+			this.magicNumberValidator = ByteBufsDecoder.assertBytes(magicNumber);
 		}
 
 		@Override
@@ -402,7 +357,7 @@ public class FrameFormats {
 				@Override
 				public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
 					if (validateMagicNumber) {
-						if (!validateMagicNumber(bufs)) return null;
+						if (magicNumberValidator.tryDecode(bufs) == null) return null;
 						validateMagicNumber = false;
 					}
 					return peer.decode(bufs);
@@ -418,35 +373,6 @@ public class FrameFormats {
 					return peer.ignoreMissingEndOfStreamBlock();
 				}
 
-				private boolean validateMagicNumber(ByteBufQueue bufs) throws UnknownFormatException {
-					final ByteBuf firstBuf = bufs.peekBuf();
-					if (firstBuf == null) return false;
-
-					byte[] array = firstBuf.array();
-					int head = firstBuf.head();
-					int tail = firstBuf.tail();
-
-					int limit;
-					if (tail - head < magicNumberLength) {
-						limit = bufs.peekTo(magicNumberHolder, 0, magicNumberLength);
-						array = magicNumberHolder;
-						head = 0;
-					} else {
-						limit = magicNumberLength;
-					}
-
-					for (int i = 0; i < limit; i++) {
-						if (array[head + i] != magicNumber[i]) {
-							throw new UnknownFormatException(MagicNumberAdapter.class,
-									"Expected stream to start with bytes: " + Arrays.toString(magicNumber));
-						}
-					}
-
-					if (limit != magicNumberLength) return false;
-
-					bufs.skip(magicNumberLength);
-					return true;
-				}
 			};
 		}
 	}

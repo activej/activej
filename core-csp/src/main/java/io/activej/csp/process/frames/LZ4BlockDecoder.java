@@ -38,8 +38,8 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 	private final LZ4FastDecompressor decompressor;
 
-	private final byte[] headerBuf = new byte[MAGIC_LENGTH];
-	private final byte[] intBuf = new byte[4];
+	private @Nullable Integer compressedSize;
+	private int tempInt;
 
 	private boolean readHeader = true;
 
@@ -55,34 +55,25 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	@Nullable
 	@Override
 	public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
-		final ByteBuf firstBuf = bufs.peekBuf();
-		if (firstBuf == null) return null;
-
-		final byte[] bytes = firstBuf.array();
-		final int tail = firstBuf.tail();
-		int head = firstBuf.head();
-
 		if (readHeader) {
-			if (!readHeader(bufs, bytes, head, tail)) return null;
+			if (!readHeader(bufs)) return null;
 			readHeader = false;
-			head += MAGIC_LENGTH;
 		}
 
-		if (!bufs.hasRemainingBytes(4)) return null;
-		int compressedSize = peekInt(bufs, bytes, head, tail);
+		if (compressedSize == null && (compressedSize = readInt(bufs)) == null) return null;
+		if (compressedSize == LAST_BLOCK_INT) return END_OF_STREAM;
 
 		if (compressedSize >= 0) {
-			if (!bufs.hasRemainingBytes(4 + compressedSize + 1)) return null;
-			bufs.skip(4);
+			if (!bufs.hasRemainingBytes(compressedSize + 1)) return null;
 			ByteBuf result = bufs.takeExactSize(compressedSize + 1);
 			if (result.at(result.tail() - 1) != END_OF_BLOCK) {
 				throw STREAM_IS_CORRUPTED;
 			}
 			result.moveTail(-1);
+			compressedSize = null;
 			return result;
 		}
-
-		return decompress(bufs, compressedSize, bytes, head + 4, tail);
+		return decompress(bufs);
 	}
 
 	@Override
@@ -90,59 +81,39 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		return false;
 	}
 
-	private boolean readHeader(ByteBufQueue bufs, byte[] array, int head, int tail) throws UnknownFormatException {
-		int limit;
-		if (tail - head < MAGIC_LENGTH) {
-			limit = bufs.peekTo(headerBuf, 0, MAGIC_LENGTH);
-			array = headerBuf;
-			head = 0;
-		} else {
-			limit = MAGIC_LENGTH;
-		}
-
-		for (int i = 0; i < limit; i++) {
-			if (array[head + i] != MAGIC[i]) {
-				throw UNKNOWN_FORMAT_EXCEPTION;
-			}
-		}
-
-		if (limit != MAGIC_LENGTH) return false;
-
-		bufs.skip(MAGIC_LENGTH);
-		return true;
+	private boolean readHeader(ByteBufQueue bufs) throws ParseException {
+		return bufs.parseBytes((index, value) -> {
+			if (value != MAGIC[index]) throw UNKNOWN_FORMAT_EXCEPTION;
+			return index == MAGIC_LENGTH - 1 ? MAGIC : null;
+		}) != null;
 	}
 
 	@Nullable
-	private ByteBuf decompress(ByteBufQueue bufs, int compressedSize,
-			final byte[] bytes, final int head, final int tail) throws ParseException {
-		if (compressedSize == LAST_BLOCK_INT) {
-			bufs.skip(4);
-			return END_OF_STREAM;
-		}   // data is compressed
+	private ByteBuf decompress(ByteBufQueue bufs) throws ParseException {
+		assert compressedSize != null;
 
-		compressedSize = compressedSize & COMPRESSED_LENGTH_MASK;
+		int actualCompressedSize = compressedSize & COMPRESSED_LENGTH_MASK;
 
-		if (!bufs.hasRemainingBytes(2 * 4 + compressedSize + 1)) return null;
-		bufs.skip(4);
-		int originalSize = peekInt(bufs, bytes, head, tail);
+		if (!bufs.hasRemainingBytes(4 + actualCompressedSize + 1)) return null;
+		//noinspection ConstantConditions - cannot be null as 4 bytes in queue are asserted above
+		int originalSize = readInt(bufs);
 		if (originalSize < 0 || originalSize > MAX_BLOCK_SIZE.toInt()) {
 			throw STREAM_IS_CORRUPTED;
 		}
-		bufs.skip(4);
 
 		ByteBuf firstBuf = bufs.peekBuf();
 		assert firstBuf != null; // ensured above
 
-		ByteBuf compressedBuf = firstBuf.readRemaining() >= compressedSize + 1 ? firstBuf : bufs.takeExactSize(compressedSize + 1);
+		ByteBuf compressedBuf = firstBuf.readRemaining() >= actualCompressedSize + 1 ? firstBuf : bufs.takeExactSize(actualCompressedSize + 1);
 
-		if (compressedBuf.at(compressedBuf.head() + compressedSize) != END_OF_BLOCK) {
+		if (compressedBuf.at(compressedBuf.head() + actualCompressedSize) != END_OF_BLOCK) {
 			throw STREAM_IS_CORRUPTED;
 		}
 
 		ByteBuf buf = ByteBufPool.allocate(originalSize);
 		try {
 			int readBytes = decompressor.decompress(compressedBuf.array(), compressedBuf.head(), buf.array(), 0, originalSize);
-			if (readBytes != compressedSize) {
+			if (readBytes != actualCompressedSize) {
 				buf.recycle();
 				throw STREAM_IS_CORRUPTED;
 			}
@@ -155,23 +126,19 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		if (compressedBuf != firstBuf) {
 			compressedBuf.recycle();
 		} else {
-			bufs.skip(compressedSize + 1);
+			bufs.skip(actualCompressedSize + 1);
 		}
 
+		compressedSize = null;
 		return buf;
 	}
 
-	private int peekInt(ByteBufQueue bufs, byte[] bytes, int head, int tail) {
-		if (tail - head < 4) {
-			bufs.peekTo(intBuf, 0, 4);
-			bytes = intBuf;
-			head = 0;
-		}
-
-		return (bytes[head] & 0xFF) << 24
-				| ((bytes[head + 1] & 0xFF) << 16)
-				| ((bytes[head + 2] & 0xFF) << 8)
-				| (bytes[head + 3] & 0xFF);
+	@Nullable
+	private Integer readInt(ByteBufQueue bufs) throws ParseException {
+		return bufs.parseBytes((index, nextByte) -> {
+			tempInt <<= 8;
+			tempInt |= (nextByte & 0xFF);
+			return index == 3 ? tempInt : null;
+		});
 	}
-
 }

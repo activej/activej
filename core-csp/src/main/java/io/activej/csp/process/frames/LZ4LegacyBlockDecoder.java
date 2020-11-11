@@ -29,7 +29,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 
 import static io.activej.csp.process.frames.LZ4LegacyFrameFormat.*;
-import static java.lang.Math.min;
 
 @Deprecated
 final class LZ4LegacyBlockDecoder implements BlockDecoder {
@@ -39,7 +38,6 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 
 	private final LZ4FastDecompressor decompressor;
 	private final StreamingXXHash32 checksum;
-	private final byte[] headerBuf = new byte[HEADER_LENGTH];
 	private final boolean ignoreMissingEndOfStreamBlock;
 
 	private int originalLen;
@@ -82,40 +80,26 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	}
 
 	private boolean readHeader(ByteBufQueue bufs) throws ParseException {
-		ByteBuf buf = bufs.peekBuf();
-		if (buf == null) return false;
-
-		byte[] array;
-		int off, limit;
-		if (buf.readRemaining() >= HEADER_LENGTH) {
-			array = buf.array();
-			off = buf.head();
-			limit = HEADER_LENGTH;
-		} else {
-			limit = bufs.peekTo(headerBuf, 0, HEADER_LENGTH);
-			array = headerBuf;
-			off = 0;
-		}
-
-		int magicLimit = min(MAGIC_LENGTH, limit);
-		for (int i = 0; i < magicLimit; i++) {
-			if (array[off + i] != MAGIC[i]) {
+		bufs.scanBytes((index, value) -> {
+			if (value != MAGIC[index]) {
 				throw UNKNOWN_FORMAT_EXCEPTION;
 			}
-		}
+			return index == MAGIC_LENGTH - 1;
+		});
 
-		if (limit != HEADER_LENGTH) return false;
+		if (!bufs.hasRemainingBytes(HEADER_LENGTH)) return false;
+		bufs.skip(MAGIC_LENGTH);
 
-		int token = array[off + MAGIC_LENGTH] & 0xFF;
+		int token = bufs.getByte() & 0xFF;
 		compressionMethod = token & 0xF0;
 		int compressionLevel = COMPRESSION_LEVEL_BASE + (token & 0x0F);
 		if (compressionMethod != COMPRESSION_METHOD_RAW && compressionMethod != COMPRESSION_METHOD_LZ4) {
 			throw STREAM_IS_CORRUPTED;
 		}
 
-		compressedLen = readIntLE(array, off + MAGIC_LENGTH + 1);
-		originalLen = readIntLE(array, off + MAGIC_LENGTH + 5);
-		check = readIntLE(array, off + MAGIC_LENGTH + 9);
+		compressedLen = readIntLE(bufs);
+		originalLen = readIntLE(bufs);
+		check = readIntLE(bufs);
 		if (originalLen > 1 << compressionLevel
 				|| (originalLen < 0 || compressedLen < 0)
 				|| (originalLen == 0 && compressedLen != 0)
@@ -130,15 +114,20 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 			endOfStream = true;
 		}
 
-		bufs.skip(HEADER_LENGTH);
 		return true;
 	}
 
-	private static int readIntLE(byte[] buf, int offset) {
-		return (buf[offset] & 0xFF) |
-				((buf[offset + 1] & 0xFF) << 8) |
-				((buf[offset + 2] & 0xFF) << 16) |
-				((buf[offset + 3] & 0xFF) << 24);
+	/*
+	 Using 'check' as an accumulator as it will be set last.
+	 4 bytes in queue are asserted before call, hence warning suppression
+	*/
+	@SuppressWarnings("ConstantConditions")
+	private int readIntLE(ByteBufQueue bufs) throws ParseException {
+		check = 0;
+		return bufs.parseBytes((index, nextByte) -> {
+			check |= (nextByte & 0xFF) << 8 * index;
+			return index == 3 ? check : null;
+		});
 	}
 
 	private ByteBuf decompressBody(ByteBufQueue queue) throws ParseException {
