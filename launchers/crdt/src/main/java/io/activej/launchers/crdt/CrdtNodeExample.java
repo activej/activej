@@ -22,6 +22,8 @@ import io.activej.crdt.util.TimestampContainer;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
+import io.activej.http.AsyncHttpServer;
+import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
@@ -37,9 +39,17 @@ import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public final class CrdtNodeExample extends CrdtNodeLauncher<String, TimestampContainer<Integer>> {
+	@Inject
+	AsyncHttpServer httpServer;
+
 	@Override
 	protected CrdtNodeLogicModule<String, TimestampContainer<Integer>> getBusinessLogicModule() {
 		return new CrdtNodeLogicModule<String, TimestampContainer<Integer>>() {
+			@Override
+			protected void configure() {
+				install(new CrdtHttpModule<String, TimestampContainer<Integer>>() {});
+			}
+
 			@Provides
 			CrdtDescriptor<String, TimestampContainer<Integer>> descriptor() {
 				return new CrdtDescriptor<>(
@@ -75,6 +85,7 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, TimestampCon
 						.with("crdt.local.path", "/tmp/TESTS/crdt")
 						.with("crdt.cluster.localPartitionId", "local")
 						.with("crdt.cluster.partitions.noop", "localhost:9091")
+						.with("crdt.cluster.server.listenAddresses", "localhost:9000")
 						.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 						.overrideWith(Config.ofSystemProperties("config"));
 			}

@@ -16,7 +16,6 @@
 
 package io.activej.launchers.rpc;
 
-import io.activej.common.api.Initializer;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
@@ -32,8 +31,11 @@ import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
+import java.net.InetSocketAddress;
+
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
+import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 
@@ -54,6 +56,7 @@ public abstract class RpcServerLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
+				.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(9000)))
 				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(ofSystemProperties("config"));
 	}
@@ -84,8 +87,9 @@ public abstract class RpcServerLauncher extends Launcher {
 			protected Module getBusinessLogicModule() {
 				return new AbstractModule() {
 					@Provides
-					Initializer<RpcServer> rpcServerInitializer() {
-						return server -> server
+					RpcServer server(Eventloop eventloop, Config config) {
+						return RpcServer.create(eventloop)
+								.withListenAddress(config.get(ofInetSocketAddress(), "listenAddresses"))
 								.withMessageTypes(String.class)
 								.withHandler(String.class,
 										req -> Promise.of("Request: " + req));

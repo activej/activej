@@ -106,8 +106,4 @@ public abstract class DataflowClientLauncher extends Launcher {
 	protected void run() throws Exception {
 		awaitShutdown();
 	}
-
-	public static void main(String[] args) throws Exception {
-		new DataflowClientLauncher() {}.launch(args);
-	}
 }

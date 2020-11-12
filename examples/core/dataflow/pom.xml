@@ -33,13 +33,22 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-<!--            <id>ExampleName</id>-->
-<!--            <goals>-->
-<!--              <goal>java</goal>-->
-<!--            </goals>-->
-<!--            <configuration>-->
-<!--              <mainClass>ExampleMainClass</mainClass>-->
-<!--            </configuration>-->
+            <id>DataflowServerLauncherExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>DataflowServerLauncherExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>DataflowClientLauncherExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>DataflowClientLauncherExample</mainClass>
+            </configuration>
           </execution>
         </executions>
       </plugin>
