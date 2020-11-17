@@ -1,5 +1,6 @@
 package io.activej.redis;
 
+import io.activej.redis.api.ServerError;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;

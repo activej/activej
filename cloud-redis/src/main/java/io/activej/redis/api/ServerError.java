@@ -1,4 +1,4 @@
-package io.activej.redis;
+package io.activej.redis.api;
 
 import org.jetbrains.annotations.NotNull;
 

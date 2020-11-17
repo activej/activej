@@ -6,7 +6,6 @@ import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.CloseException;
-import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.eventloop.schedule.ScheduledRunnable;
@@ -168,12 +167,12 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 		active.remove(connection);
 	}
 
-	private Promise<MessagingWithBinaryStreaming<RedisResponse, RedisCommand>> connect() {
+	private Promise<RedisMessaging> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, null)
 				.map(socket -> {
 					ByteBufQueue tempQueue = new ByteBufQueue();
-					MessagingWithBinaryStreaming<RedisResponse, RedisCommand> messaging =
-							MessagingWithBinaryStreaming.create(socket, new RESPv2Codec(tempQueue, charset));
+					RedisMessaging messaging =
+							RedisMessaging.create(socket, new RESPv2(tempQueue, charset));
 					messaging.setCloseable($ -> tempQueue.recycle());
 					return messaging;
 				});

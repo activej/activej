@@ -1,4 +1,4 @@
-package io.activej.redis;
+package io.activej.redis.api;
 
 import java.time.Duration;
 import java.util.List;
@@ -8,17 +8,26 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 public final class SetModifier {
-	private static final String EX = "EX";
-	private static final String PX = "PX";
+	// TTL modifiers
+	public static final String EX = "EX";
+	public static final String PX = "PX";
+	public static final String KEEPTTL = "KEEPTTL";
 
-	private static final SetModifier NX = new SetModifier(singletonList("NX"));
-	private static final SetModifier XX = new SetModifier(singletonList("XX"));
-	private static final SetModifier KEEPTTL = new SetModifier(singletonList("KEEPTTL"));
-	private static final SetModifier GET = new SetModifier(singletonList("GET"));
+	// Key existence modifiers
+	public static final String NX = "NX";
+	public static final String XX = "XX";
+
+	// Return modifier
+	public static final String GET = "GET";
+
+	private static final SetModifier KEEPTTL_MODIFIER = new SetModifier(singletonList(KEEPTTL));
+	private static final SetModifier NX_MODIFIER = new SetModifier(singletonList(NX));
+	private static final SetModifier XX_MODIFIER = new SetModifier(singletonList(XX));
+	private static final SetModifier GET_MODIFIER = new SetModifier(singletonList(GET));
 
 	private final List<String> arguments;
 
-	public SetModifier(List<String> arguments) {
+	private SetModifier(List<String> arguments) {
 		this.arguments = arguments;
 	}
 
@@ -38,22 +47,22 @@ public final class SetModifier {
 	}
 
 	public static SetModifier setIfNotExists(){
-		return NX;
+		return NX_MODIFIER;
 	}
 
 	public static SetModifier setIfExists(){
-		return XX;
+		return XX_MODIFIER;
 	}
 
 	public static SetModifier retainTTL(){
-		return KEEPTTL;
+		return KEEPTTL_MODIFIER;
 	}
 
 	public static SetModifier returnOldValue(){
-		return GET;
+		return GET_MODIFIER;
 	}
 
-	List<String> getArguments() {
+	public List<String> getArguments() {
 		return arguments;
 	}
 }

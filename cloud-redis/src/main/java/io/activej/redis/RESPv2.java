@@ -5,12 +5,12 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.redis.api.Command;
+import io.activej.redis.api.ServerError;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -19,15 +19,11 @@ import static io.activej.bytebuf.ByteBufStrings.LF;
 import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
 import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
-public final class RESPv2Codec implements ByteBufsCodec<RedisResponse, RedisCommand> {
+public final class RESPv2 implements RedisProtocol {
 
-	private static final byte[] CR_LF = {13, 10};
-	private static final int CR_LF_LENGTH = CR_LF.length;
+	private static final int CR_LF_LENGTH = 2;
 	private static final int INTEGER_MAX_LEN = String.valueOf(Long.MIN_VALUE).length();
-	private static final int ARRAY_ESTIMATED_PADDING = 1 + CR_LF_LENGTH + INTEGER_MAX_LEN;
-	private static final int ARG_ESTIMATED_PADDING = 1 + 2 * CR_LF_LENGTH + INTEGER_MAX_LEN;
 	private static final int STRING_MAX_LEN = 512 * 1024 * 1024; // 512 MB
 
 	private static final byte STRING_MARKER = '+';
@@ -42,6 +38,7 @@ public final class RESPv2Codec implements ByteBufsCodec<RedisResponse, RedisComm
 	private final Charset charset;
 
 	private final ByteBufQueue tempQueue;
+	private final List<byte[]> args = new ArrayList<>();
 
 	private byte parsing;
 	private int remaining = -1;
@@ -50,40 +47,50 @@ public final class RESPv2Codec implements ByteBufsCodec<RedisResponse, RedisComm
 	@Nullable
 	private List<Object> arrayResult;
 
-	public RESPv2Codec(ByteBufQueue tempQueue, Charset charset) {
+	public RESPv2(ByteBufQueue tempQueue, Charset charset) {
 		this.tempQueue = tempQueue;
 		this.charset = charset;
 	}
 
 	@Override
-	public ByteBuf encode(RedisCommand item) {
+	public int encode(byte[] array, int offset, RedisCommand item) {
 		Command command = item.getCommand();
 
-		List<byte[]> arguments = Arrays.stream(command.name().split("_"))
-				.map(part -> part.getBytes(charset))
-				.collect(toList());
+		args.clear();
+		args.addAll(command.getParts());
+		args.addAll(item.getArguments());
 
-		arguments.addAll(item.getArguments());
+		array[offset++] = ARRAY_MARKER;
+		byte[] arrayLenBytes = String.valueOf(args.size()).getBytes(charset);
+		System.arraycopy(arrayLenBytes, 0, array, offset, arrayLenBytes.length);
+		offset += arrayLenBytes.length;
 
-		ByteBuf buf = ByteBufPool.allocate(estimateSize(arguments));
+		array[offset++] = CR;
+		array[offset++] = LF;
 
-		buf.put(ARRAY_MARKER);
-		buf.put(String.valueOf(arguments.size()).getBytes(charset));
-		buf.put(CR_LF);
+		for (byte[] argument : args) {
+			array[offset++] = BULK_STRING_MARKER;
 
-		for (byte[] argument : arguments) {
-			buf.put(BULK_STRING_MARKER);
-			buf.put(String.valueOf(argument.length).getBytes(charset));
-			buf.put(CR_LF);
-			buf.put(argument);
-			buf.put(CR_LF);
+			byte[] argLenBytes = String.valueOf(argument.length).getBytes(charset);
+			System.arraycopy(argLenBytes, 0, array, offset, argLenBytes.length);
+			offset += argLenBytes.length;
+
+			array[offset++] = CR;
+			array[offset++] = LF;
+
+			System.arraycopy(argument, 0, array, offset, argument.length);
+			offset += argument.length;
+
+			array[offset++] = CR;
+			array[offset++] = LF;
 		}
 
-		return buf;
+		return offset;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable RedisResponse tryDecode(ByteBufQueue bufs) throws ParseException {
+	public RedisResponse tryDecode(ByteBufQueue bufs) throws ParseException {
 		while (true) {
 			if (bufs.isEmpty()) return null;
 			if (parsing == 0) parsing = bufs.getByte();
@@ -115,7 +122,7 @@ public final class RESPv2Codec implements ByteBufsCodec<RedisResponse, RedisComm
 							long value = Long.parseLong(integer);
 							result = addToArrayOr(value, RedisResponse::integer);
 						} catch (NumberFormatException e) {
-							throw new ParseException(RESPv2Codec.class, "Malformed integer " + integer, e);
+							throw new ParseException(RESPv2.class, "Malformed integer " + integer, e);
 						}
 					} else {
 						return null;
@@ -144,17 +151,11 @@ public final class RESPv2Codec implements ByteBufsCodec<RedisResponse, RedisComm
 					}
 					break;
 				default:
-					throw new ParseException(RESPv2Codec.class, "Unknown first byte '" + (char) parsing + "'");
+					throw new ParseException(RESPv2.class, "Unknown first byte '" + (char) parsing + "'");
 			}
 
 			if (result != null) return result;
 		}
-	}
-
-	private static int estimateSize(List<byte[]> arguments) {
-		return ARRAY_ESTIMATED_PADDING +
-				ARG_ESTIMATED_PADDING * arguments.size() +
-				arguments.stream().mapToInt(array -> array.length).sum();
 	}
 
 	@Nullable
@@ -193,7 +194,7 @@ public final class RESPv2Codec implements ByteBufsCodec<RedisResponse, RedisComm
 				return null;
 			} else {
 				if (bufs.getByte() != CR || bufs.getByte() != LF) {
-					throw new ParseException(RESPv2Codec.class, "Missing CR LF");
+					throw new ParseException(RESPv2.class, "Missing CR LF");
 				}
 				remaining = -1;
 				return tempQueue.takeRemaining().asArray();
@@ -238,11 +239,11 @@ public final class RESPv2Codec implements ByteBufsCodec<RedisResponse, RedisComm
 		try {
 			len = Integer.parseInt(numString);
 		} catch (NumberFormatException e) {
-			throw new ParseException(RESPv2Codec.class, "Malformed length: '" + numString + '\'', e);
+			throw new ParseException(RESPv2.class, "Malformed length: '" + numString + '\'', e);
 		}
 
 		if (len < -1) {
-			throw new InvalidSizeException(RESPv2Codec.class, "Unsupported negative length: '" + len + '\'');
+			throw new InvalidSizeException(RESPv2.class, "Unsupported negative length: '" + len + '\'');
 		}
 
 		return len;

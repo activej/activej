@@ -7,6 +7,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.csp.process.ChannelByteChunker;
+import io.activej.redis.api.ServerError;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -23,7 +24,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
-public final class RESPv2CodecTest {
+public final class RESPv2Test {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -141,7 +142,7 @@ public final class RESPv2CodecTest {
 	}
 
 	private ByteBufsDecoder<RedisResponse> codec() {
-		RESPv2Codec protocolCodec = new RESPv2Codec(new ByteBufQueue(), UTF_8);
+		RESPv2 protocolCodec = new RESPv2(new ByteBufQueue(), UTF_8);
 		return protocolCodec::tryDecode;
 	}
 

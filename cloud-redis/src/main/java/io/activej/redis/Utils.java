@@ -1,13 +1,28 @@
 package io.activej.redis;
 
+import io.activej.redis.api.LposModifier;
+import io.activej.redis.api.SetModifier;
+import io.activej.redis.api.ZaddModifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.redis.api.SetModifier.*;
+import static io.activej.redis.api.ZaddModifier.GT;
+import static io.activej.redis.api.ZaddModifier.LT;
 
 final class Utils {
 	private Utils() {
 		throw new AssertionError();
 	}
+
+	static final String WEIGHTS = "WEIGHTS";
+	static final String AGGREGATE = "AGGREGATE";
+	static final String WITHSCORES = "WITHSCORES";
+	static final String LIMIT = "LIMIT";
 
 	@SafeVarargs
 	static <T> List<T> list(T main, T... otherArguments) {
@@ -33,6 +48,14 @@ final class Utils {
 		result.add(second);
 		result.add(third);
 		Collections.addAll(result, otherArguments);
+		return result;
+	}
+
+	static <T> List<T> list(T first, T[] otherArguments, T nextArgument) {
+		List<T> result = new ArrayList<>(otherArguments.length + 3);
+		result.add(first);
+		Collections.addAll(result, otherArguments);
+		result.add(nextArgument);
 		return result;
 	}
 
@@ -81,5 +104,51 @@ final class Utils {
 		}
 
 		return !thatIterator.hasNext();
+	}
+
+	static void checkSetModifiers(SetModifier... modifiers) {
+		Set<String> modifierTypes = new HashSet<>(modifiers.length);
+		for (SetModifier modifier : modifiers) {
+			String modifierType = modifier.getArguments().get(0);
+			if (!modifierTypes.add(modifierType)) {
+				throw new IllegalArgumentException("Multiple '" + modifierType + "' modifiers");
+			}
+		}
+
+		checkConflictingModifiers(modifierTypes, type -> EX.equals(type) || PX.equals(type) || KEEPTTL.equals(type));
+		checkConflictingModifiers(modifierTypes, type -> NX.equals(type) || XX.equals(type));
+	}
+
+	static void checkLposModifiers(LposModifier... modifiers) {
+		checkArgument(modifiers.length <= 2, () -> "Too many modifiers: " +
+				Arrays.stream(modifiers)
+						.map(LposModifier::getArguments)
+						.flatMap(Collection::stream)
+						.collect(Collectors.joining(" ")));
+
+		if (modifiers.length == 2) {
+			String firstModifier = modifiers[0].getArguments().get(0);
+			String secondModifier = modifiers[1].getArguments().get(0);
+			checkArgument(!firstModifier.equals(secondModifier), "Same modifier is set twice: '", firstModifier + '\'');
+		}
+	}
+
+	static void checkZaddModifiers(ZaddModifier... modifiers) {
+		Set<String> modifierTypes = new HashSet<>(modifiers.length);
+		for (ZaddModifier modifier : modifiers) {
+			String modifierType = modifier.getArgument();
+			if (!modifierTypes.add(modifierType)) {
+				throw new IllegalArgumentException("Multiple '" + modifierType + "' modifiers");
+			}
+		}
+
+		checkConflictingModifiers(modifierTypes, type -> GT.equals(type) || LT.equals(type) || NX.equals(type));
+		checkConflictingModifiers(modifierTypes, type -> NX.equals(type) || XX.equals(type));
+	}
+
+	private static void checkConflictingModifiers(Set<String> modifierTypes, Predicate<String> conflictingTypesPredicate) {
+		if (modifierTypes.stream().filter(conflictingTypesPredicate).count() > 1) {
+			throw new IllegalArgumentException("Conflicting modifiers: " + String.join(", ", modifierTypes));
+		}
 	}
 }

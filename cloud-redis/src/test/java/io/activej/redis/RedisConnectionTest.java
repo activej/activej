@@ -5,6 +5,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.TestUtils;
+import io.activej.redis.api.RedisAPI;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.Nullable;
@@ -439,13 +440,177 @@ public final class RedisConnectionTest {
 		assertArrayEquals(value3, await(redis -> redis.getAsBinary(key3)));
 	}
 
-	private void testExpiration(Duration ttl, Function<RedisAPI, Promise<Long>> expireCommand) {
+	@Test
+	public void psetex() {
+		testExpiration(TTL_MILLIS, redis -> redis.psetex(EXPIRATION_KEY, TTL_MILLIS.toMillis(), EXPIRATION_VALUE));
+	}
+
+	@Test
+	public void setex() {
+		testExpiration(TTL_SECONDS, redis -> redis.setex(EXPIRATION_KEY, TTL_SECONDS.getSeconds(), EXPIRATION_VALUE));
+	}
+
+	@Test
+	public void setexDefaults() {
+		testExpiration(TTL_MILLIS, redis -> redis.setex(EXPIRATION_KEY, TTL_MILLIS, EXPIRATION_VALUE));
+	}
+
+	@Test
+	public void setnx() {
+		assertEquals(1, (long) await(redis -> redis.setnx("key", "first")));
+		assertEquals(0, (long) await(redis -> redis.setnx("key", "second")));
+
+		assertEquals("first", await(redis -> redis.get("key")));
+	}
+
+	@Test
+	public void strlen() {
+		String key = "key";
+		String value = "value";
+
+		assertEquals(0, (long) await(redis -> redis.strlen(key)));
+		assertOk(await(redis -> redis.set(key, value)));
+		assertEquals(value.length(), (long) await(redis -> redis.strlen(key)));
+	}
+
+	@Test
+	public void lindex() {
+		String key = "list";
+
+		assertEquals(3, (long) await(redis -> redis.rpush(key, "a", "b", "c")));
+
+		assertEquals("a", await(redis -> redis.lindex(key, 0)));
+		assertArrayEquals(new byte[]{'c'}, await(redis -> redis.lindexAsBinary(key, -1)));
+		assertNull(await(redis -> redis.lindex(key, Integer.MAX_VALUE)));
+	}
+
+	@Test
+	public void llen() {
+		String key = "list";
+
+		assertEquals(3, (long) await(redis -> redis.lpush(key, "a", "b", "c")));
+		assertEquals(3, (long) await(redis -> redis.llen(key)));
+	}
+
+	@Test
+	public void lpop() {
+		String key = "list";
+
+		assertEquals(2, (long) await(redis -> redis.rpush(key, "a", "b")));
+		assertEquals("a", await(redis -> redis.lpop(key)));
+		assertArrayEquals(new byte[]{'b'}, await(redis -> redis.lpopAsBinary(key)));
+		assertNull(await(redis -> redis.lpop(key)));
+	}
+
+	@Test
+	public void lpush() {
+		String key = "list";
+
+		assertEquals(3, (long) await(redis -> redis.lpush(key, "a", "b", "c")));
+		assertEquals(6, (long) await(redis -> redis.lpush(key, "d", "e", "f")));
+
+		assertEquals(asList("f", "e", "d", "c", "b", "a"), await(redis -> redis.lrange(key)));
+
+		assertEquals(1, (long) await(redis -> redis.del(key)));
+
+		assertEquals(2, (long) await(redis -> redis.lpush(key, new byte[]{'a', 'b', 'c'}, new byte[]{'d', 'e', 'f'})));
+
+		List<byte[]> binaryList = await(redis -> redis.lrangeAsBinary(key));
+		assertEquals(2, binaryList.size());
+		assertArrayEquals(new byte[]{'d', 'e', 'f'}, binaryList.get(0));
+		assertArrayEquals(new byte[]{'a', 'b', 'c'}, binaryList.get(1));
+	}
+
+	@Test
+	public void lpushx() {
+		String key = "list";
+
+		assertEquals(3, (long) await(redis -> redis.lpush(key, "a", "b", "c")));
+		assertEquals(6, (long) await(redis -> redis.lpushx(key, "d", "e", "f")));
+		assertEquals(8, (long) await(redis -> redis.lpushx(key, new byte[]{'1', '2', '3'}, new byte[]{'4', '5', '6'})));
+
+		assertEquals(asList("456", "123", "f", "e", "d", "c", "b", "a"), await(redis -> redis.lrange(key)));
+
+		assertEquals(1, (long) await(redis -> redis.del(key)));
+
+		assertEquals(0, (long) await(redis -> redis.lpushx(key, "a")));
+	}
+
+	@Test
+	public void lrange() {
+		String key = "list";
+
+		assertTrue(await(redis -> redis.lrange(key)).isEmpty());
+
+		assertEquals(4, (long) await(redis -> redis.rpush(key, "a", "b", "c", "d")));
+		assertEquals(asList("a", "b", "c", "d"), await(redis -> redis.lrange(key)));
+		assertEquals(asList("b", "c", "d"), await(redis -> redis.lrange(key, 1)));
+		assertEquals(asList("b", "c"), await(redis -> redis.lrange(key, 1, 2)));
+
+		List<byte[]> binaryList = await(redis -> redis.lrangeAsBinary(key));
+		assertEquals(4, binaryList.size());
+		for (int i = 0; i < binaryList.size(); i++) {
+			assertArrayEquals(new byte[]{(byte) ('a' + i)}, binaryList.get(i));
+		}
+	}
+
+	@Test
+	public void lrem() {
+		String key = "list";
+
+		assertEquals(8, (long) await(redis -> redis.rpush(key, "a", "b", "c", "a", "c", "g", "c", "b")));
+		assertEquals(asList( "a", "b", "c", "a", "c", "g", "c", "b"), await(redis -> redis.lrange(key)));
+
+		assertEquals(1, (long) await(redis -> redis.lrem(key, 1, "a")));
+		assertEquals(asList("b", "c", "a", "c", "g", "c", "b"), await(redis -> redis.lrange(key)));
+
+		assertEquals(1, (long) await(redis -> redis.lrem(key, -1, "c")));
+		assertEquals(asList("b", "c", "a", "c", "g", "b"), await(redis -> redis.lrange(key)));
+
+		assertEquals(2, (long) await(redis -> redis.lrem(key, 0, "c")));
+		assertEquals(asList("b", "a", "g", "b"), await(redis -> redis.lrange(key)));
+
+		assertEquals(2, (long) await(redis -> redis.lrem(key, 10, "b")));
+		assertEquals(asList("a", "g"), await(redis -> redis.lrange(key)));
+	}
+
+	@Test
+	public void rpop() {
+		String key = "list";
+
+		assertEquals(2, (long) await(redis -> redis.rpush(key, "a", "b")));
+		assertEquals("b", await(redis -> redis.rpop(key)));
+		assertArrayEquals(new byte[]{'a'}, await(redis -> redis.rpopAsBinary(key)));
+		assertNull(await(redis -> redis.rpop(key)));
+	}
+
+	@Test
+	public void rpush() {
+		String key = "list";
+
+		assertEquals(3, (long) await(redis -> redis.rpush(key, "a", "b", "c")));
+		assertEquals(6, (long) await(redis -> redis.rpush(key, "d", "e", "f")));
+
+		assertEquals(asList("a", "b", "c", "d", "e", "f"), await(redis -> redis.lrange(key)));
+
+		assertEquals(1, (long) await(redis -> redis.del(key)));
+
+		assertEquals(2, (long) await(redis -> redis.rpush(key, new byte[]{'a', 'b', 'c'}, new byte[]{'d', 'e', 'f'})));
+
+		List<byte[]> binaryList = await(redis -> redis.lrangeAsBinary(key));
+		assertEquals(2, binaryList.size());
+		assertArrayEquals(new byte[]{'a', 'b', 'c'}, binaryList.get(0));
+		assertArrayEquals(new byte[]{'d', 'e', 'f'}, binaryList.get(1));
+	}
+
+	private void testExpiration(Duration ttl, Function<RedisAPI, Promise<?>> expireCommand) {
 		assertEquals(-2L, (long) await(redis -> redis.ttl(EXPIRATION_KEY)));
 
 		assertOk(await(redis -> redis.set(EXPIRATION_KEY, EXPIRATION_VALUE)));
 		assertEquals(-1L, (long) await(redis -> redis.ttl(EXPIRATION_KEY)));
 
-		assertEquals(1L, (long) await(expireCommand::apply));
+
+		await(expireCommand::apply);
 		long keyTtl = await(redis -> redis.pttl(EXPIRATION_KEY));
 		assertTrue(keyTtl > 0 && keyTtl <= ttl.toMillis());
 
