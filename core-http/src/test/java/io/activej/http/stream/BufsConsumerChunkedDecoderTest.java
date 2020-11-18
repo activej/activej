@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.http.TestUtils.AssertingConsumer;
+import static io.activej.http.TestUtils.chunkedByByte;
 import static io.activej.http.stream.BufsConsumerChunkedDecoder.MALFORMED_CHUNK_LENGTH;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -193,7 +194,7 @@ public final class BufsConsumerChunkedDecoderTest {
 	}
 
 	private void doTest(@Nullable Exception expectedException) {
-		chunkedDecoder.getInput().set(BinaryChannelSupplier.of(ChannelSupplier.ofList(list)));
+		chunkedDecoder.getInput().set(BinaryChannelSupplier.of(chunkedByByte(ChannelSupplier.ofList(list))));
 		Promise<?> processResult = chunkedDecoder.getProcessCompletion();
 		if (expectedException == null) {
 			await(processResult);

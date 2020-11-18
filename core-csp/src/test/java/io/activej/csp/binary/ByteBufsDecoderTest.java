@@ -17,21 +17,22 @@ import static org.junit.Assert.*;
 public final class ByteBufsDecoderTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-	public final ByteBufQueue queue = new ByteBufQueue();
 
-	@SuppressWarnings("ConstantConditions")
+	private final ByteBufQueue queue = new ByteBufQueue();
+	private final ByteBufQueue tempQueue = new ByteBufQueue();
+
 	@Test
 	public void testOfNullTerminatedBytes() throws ParseException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofNullTerminatedBytes();
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 0, 4, 5, 6}));
-		ByteBuf beforeNull = decoder.tryDecode(queue);
+		ByteBuf beforeNull = doDecode(decoder);
 		ByteBuf afterNull = queue.takeRemaining();
 
 		assertArrayEquals(new byte[]{1, 2, 3}, beforeNull.asArray());
 		assertArrayEquals(new byte[]{4, 5, 6}, afterNull.asArray());
 
 		queue.add(ByteBuf.wrapForReading(new byte[]{0, 1, 2, 3}));
-		beforeNull = decoder.tryDecode(queue);
+		beforeNull = doDecode(decoder);
 		afterNull = queue.takeRemaining();
 
 		assertArrayEquals(new byte[]{}, beforeNull.asArray());
@@ -39,18 +40,17 @@ public final class ByteBufsDecoderTest {
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void ofCrlfTerminatedBytes() throws ParseException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofCrlfTerminatedBytes();
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, CR, LF, 4, 5, 6}));
-		ByteBuf beforeCrlf = decoder.tryDecode(queue);
+		ByteBuf beforeCrlf = doDecode(decoder);
 		ByteBuf afterCrlf = queue.takeRemaining();
 
 		assertArrayEquals(new byte[]{1, 2, 3}, beforeCrlf.asArray());
 		assertArrayEquals(new byte[]{4, 5, 6}, afterCrlf.asArray());
 
 		queue.add(ByteBuf.wrapForReading(new byte[]{CR, LF, 1, 2, 3}));
-		beforeCrlf = decoder.tryDecode(queue);
+		beforeCrlf = doDecode(decoder);
 		afterCrlf = queue.takeRemaining();
 
 		assertArrayEquals(new byte[]{}, beforeCrlf.asArray());
@@ -58,18 +58,17 @@ public final class ByteBufsDecoderTest {
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void ofCrlfTerminatedBytesWithMaxSize() throws ParseException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofCrlfTerminatedBytes(5);
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, CR, LF, 3, 4}));
-		ByteBuf beforeCrlf = decoder.tryDecode(queue);
+		ByteBuf beforeCrlf = doDecode(decoder);
 		ByteBuf afterCrlf = queue.takeRemaining();
 
 		assertArrayEquals(new byte[]{1, 2}, beforeCrlf.asArray());
 		assertArrayEquals(new byte[]{3, 4}, afterCrlf.asArray());
 
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, CR, LF, 4}));
-		beforeCrlf = decoder.tryDecode(queue);
+		beforeCrlf = doDecode(decoder);
 		afterCrlf = queue.takeRemaining();
 
 		assertArrayEquals(new byte[]{1, 2, 3}, beforeCrlf.asArray());
@@ -77,7 +76,7 @@ public final class ByteBufsDecoderTest {
 
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4, CR, LF}));
 		try {
-			decoder.tryDecode(queue);
+			doDecode(decoder);
 			fail();
 		} catch (ParseException e) {
 			assertEquals("No CRLF is found in 5 bytes", e.getMessage());
@@ -93,7 +92,7 @@ public final class ByteBufsDecoderTest {
 		byte[] bytes = {1, 2, 3, 4, 5};
 		queue.add(ByteBuf.wrapForReading(bytes));
 
-		ByteBuf decoded = decoder.tryDecode(queue);
+		ByteBuf decoded = doDecode(decoder);
 		assertNotNull(decoded);
 		assertArrayEquals(bytes, decoded.asArray());
 	}
@@ -108,7 +107,7 @@ public final class ByteBufsDecoderTest {
 		ThreadLocalRandom.current().nextBytes(bytes);
 		queue.add(ByteBuf.wrapForReading(bytes));
 
-		ByteBuf decoded = decoder.tryDecode(queue);
+		ByteBuf decoded = doDecode(decoder);
 		assertNotNull(decoded);
 		assertArrayEquals(bytes, decoded.asArray());
 	}
@@ -121,17 +120,28 @@ public final class ByteBufsDecoderTest {
 		queue.add(ByteBuf.wrapForReading(otherBytes));
 
 		ByteBufsDecoder<byte[]> decoder = ByteBufsDecoder.assertBytes(bytes);
-		byte[] decoded = decoder.tryDecode(queue);
+		byte[] decoded = doDecode(decoder);
 		assertArrayEquals(bytes, decoded);
 		assertArrayEquals(otherBytes, queue.takeRemaining().asArray());
 
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4, 6, 7, 8, 9, 10, 11}));
 		try {
-			decoder.tryDecode(queue);
+			doDecode(decoder);
 			fail();
-		} catch (ParseException e){
+		} catch (ParseException e) {
 			assertEquals("Array of bytes differs at index " + 4 +
 					"[Expected: " + 5 + ", actual: " + 6 + ']', e.getMessage());
+		}
+	}
+
+	private <T> T doDecode(ByteBufsDecoder<T> decoder) throws ParseException {
+		while (true) {
+			T result = decoder.tryDecode(tempQueue);
+			if (result != null) {
+				assertTrue(tempQueue.isEmpty());
+				return result;
+			}
+			tempQueue.add(queue.takeExactSize(1));
 		}
 	}
 }

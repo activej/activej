@@ -1,5 +1,6 @@
 package io.activej.bytebuf;
 
+import io.activej.common.exception.parse.ParseException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,5 +80,35 @@ public class ByteBufQueueTest {
 		List<ByteBuf> actual = new ArrayList<>();
 		queue.asIterator().forEachRemaining(actual::add);
 		assertEquals(expected, actual);
+	}
+
+	@Test
+	public void scanEmptyQueue() throws ParseException {
+		assertTrue(queue.isEmpty());
+		assertEquals(-1, queue.scanBytes((index, value) -> {
+			throw new AssertionError();
+		}));
+	}
+
+	@Test
+	public void scanOverQueueSize() throws ParseException {
+		queue.add(ByteBuf.wrapForReading(new byte[5]));
+		assertEquals(-1, queue.scanBytes(queue.remainingBytes(), (index, value) -> {
+			throw new AssertionError();
+		}));
+	}
+
+	@Test
+	public void scanWithOffsetOnBufBorder() throws ParseException {
+		byte[] bytes = {1, 2, 3, 4, 5};
+		queue.add(ByteBuf.wrapForReading(bytes));
+		queue.add(ByteBuf.wrapForReading(bytes));
+
+		int expectedIndex = bytes.length;
+		assertEquals(expectedIndex, queue.scanBytes(bytes.length, (index, value) ->{
+			assertEquals(expectedIndex, index);
+			assertEquals(bytes[0], value);
+			return true;
+		}));
 	}
 }

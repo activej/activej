@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.csp.ChannelSupplier.ofList;
+import static io.activej.http.TestUtils.chunkedByByte;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertTrue;
 
@@ -45,7 +46,7 @@ public final class BufsConsumerIntegrationTest {
 	@Test
 	public void testEncodeDecodeSingleBuf() {
 		writeSingleBuf();
-		chunkedEncoder.getInput().set(ofList(list));
+		chunkedEncoder.getInput().set(chunkedByByte(ofList(list)));
 		doTest(chunkedEncoder, chunkedDecoder);
 	}
 
@@ -59,7 +60,7 @@ public final class BufsConsumerIntegrationTest {
 	@Test
 	public void testGzipGunzipSingleBuf() {
 		writeSingleBuf();
-		gzipDeflater.getInput().set(ofList(list));
+		gzipDeflater.getInput().set(chunkedByByte(ofList(list)));
 		doTest(gzipInflater, gzipDeflater);
 	}
 
@@ -99,6 +100,5 @@ public final class BufsConsumerIntegrationTest {
 	private void doTest(AsyncProcess process1, AsyncProcess process2) {
 		await(Promises.all(process1.getProcessCompletion(), process2.getProcessCompletion()));
 		assertTrue(consumer.executed);
-
 	}
 }

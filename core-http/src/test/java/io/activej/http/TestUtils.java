@@ -4,6 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.MemSize;
 import io.activej.csp.AbstractChannelConsumer;
+import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -178,5 +179,9 @@ public class TestUtils {
 
 	public static ByteBuf closeMasked() {
 		return ByteBuf.wrapForReading(new byte[]{(byte) 0x88, (byte) 0x82, 0x12, 0x34, 0x56, 0x78, 0x11, (byte) 0xdc});
+	}
+
+	public static ChannelSupplier<ByteBuf> chunkedByByte(ChannelSupplier<ByteBuf> supplier){
+		return supplier.transformWith(ChannelByteChunker.create(MemSize.bytes(1), MemSize.bytes(1)));
 	}
 }
