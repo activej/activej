@@ -24,7 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.junit.Assert.assertEquals;
 
-public final class StaticServletsTest {
+public final class StaticServletTest {
 	public static final String EXPECTED_CONTENT = "Test";
 
 	@Rule
@@ -112,5 +112,24 @@ public final class StaticServletsTest {
 		HttpException e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
 
 		assertEquals(404, e.getCode());
+	}
+
+	@Test
+	public void testCustomContentType() throws IOException {
+		String customExtension = "cstm";
+		String customContent = "Content of custom file";
+		String filename = "my-file." + customExtension;
+		Files.write(resourcesPath.resolve(filename), encodeAscii(customContent));
+
+		String customType = "test/custom-type";
+		MediaTypes.register(customType, customExtension);
+
+		StaticServlet staticServlet = StaticServlet.create(ofPath(newCachedThreadPool(), resourcesPath));
+		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/" + filename)));
+		await(response.loadBody());
+		ByteBuf body = response.getBody();
+
+		assertEquals(customContent, body.asString(UTF_8));
+		assertEquals(customType, response.getHeader(HttpHeaders.CONTENT_TYPE));
 	}
 }

@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,8 @@ import java.util.Map;
  */
 @SuppressWarnings({"unused", "SameParameterValue"})
 public final class MediaTypes {
-	static final CaseInsensitiveTokenMap<MediaType> mimes = new CaseInsensitiveTokenMap<>(2048, 2, MediaType.class, MediaType::new);
+	private static final int SLOTS_NUMBER = ApplicationSettings.getInt(MediaTypes.class, "slotsNumber", 2048);
+	private static final CaseInsensitiveTokenMap<MediaType> mimes = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, 2, MediaType.class, MediaType::new);
 	private static final Map<String, MediaType> ext2mime = new HashMap<>();
 
 	public static final MediaType ANY = register("*/*");
@@ -122,7 +124,7 @@ public final class MediaTypes {
 		return ext2mime.get(ext);
 	}
 
-	private static MediaType register(String name, String... ext) {
+	public static MediaType register(String name, String... ext) {
 		MediaType mime = mimes.register(name);
 		bindExts2mime(mime, ext);
 		return mime;
