@@ -603,4 +603,46 @@ public interface RedisAPI {
 
 	Promise<Void> pfmerge(String destKey, String sourceKey, String... otherSourceKeys);
 	// endregion
+
+	// region geo
+	Promise<Long> geoadd(String key, double longitude, double latitude, String member);
+
+	Promise<Long> geoadd(String key, double longitude, double latitude, byte[] member);
+
+	Promise<Long> geoadd(String key, Map<String, Coordinate> coordinates);
+
+	Promise<Long> geoaddBinary(String key, Map<byte[], Coordinate> coordinates);
+
+	Promise<List<String>> geohash(String key, String member, String... otherMembers);
+
+	Promise<List<String>> geohash(String key, byte[] member, byte[]... otherMembers);
+
+	Promise<List<@Nullable Coordinate>> geopos(String key, String member, String... otherMembers);
+
+	Promise<List<@Nullable Coordinate>> geopos(String key, byte[] member, byte[]... otherMembers);
+
+	Promise<@Nullable Double> geodist(String key, String member1, String member2, DistanceUnit unit);
+
+	Promise<@Nullable Double> geodist(String key, String member1, String member2);
+
+	Promise<@Nullable Double> geodist(String key, byte[] member1, byte[] member2, DistanceUnit unit);
+
+	Promise<@Nullable Double> geodist(String key, byte[] member1, byte[] member2);
+
+	Promise<Long> georadius(String key, Coordinate coordinate, double radius, DistanceUnit unit, GeoradiusModifier... modifiers);
+
+	default Promise<Long> georadius(String key, double longitude, double latitude, double radius, DistanceUnit unit, GeoradiusModifier... modifiers) {
+		return georadius(key, new Coordinate(longitude, latitude), radius, unit, modifiers);
+	}
+
+	Promise<List<GeoradiusResult>> georadiusReadOnly(String key, Coordinate coordinate, double radius, DistanceUnit unit, GeoradiusModifier... modifiers);
+
+	default Promise<List<GeoradiusResult>> georadiusReadOnly(String key, double longitude, double latitude, double radius, DistanceUnit unit, GeoradiusModifier... modifiers) {
+		return georadiusReadOnly(key, new Coordinate(longitude, latitude), radius, unit, modifiers);
+	}
+
+	Promise<Long> georadiusbymember(String key, String member, double radius, DistanceUnit unit, GeoradiusModifier... modifiers);
+
+	Promise<List<GeoradiusResult>> georadiusbymemberReadOnly(String key, String member, double radius, DistanceUnit unit, GeoradiusModifier... modifiers);
+	// endregion
 }

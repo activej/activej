@@ -1,5 +1,6 @@
 package io.activej.redis;
 
+import io.activej.redis.api.GeoradiusModifier;
 import io.activej.redis.api.LposModifier;
 import io.activej.redis.api.SetModifier;
 import io.activej.redis.api.ZaddModifier;
@@ -10,6 +11,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.redis.api.GeoradiusModifier.*;
 import static io.activej.redis.api.SetModifier.*;
 import static io.activej.redis.api.ZaddModifier.GT;
 import static io.activej.redis.api.ZaddModifier.LT;
@@ -144,6 +146,28 @@ final class Utils {
 
 		checkConflictingModifiers(modifierTypes, type -> GT.equals(type) || LT.equals(type) || NX.equals(type));
 		checkConflictingModifiers(modifierTypes, type -> NX.equals(type) || XX.equals(type));
+	}
+
+	static void checkGeoradiusModifiers(boolean readOnly, GeoradiusModifier... modifiers) {
+		Set<String> modifierTypes = new HashSet<>(modifiers.length);
+		for (GeoradiusModifier modifier : modifiers) {
+			String modifierType = modifier.getArguments().get(0);
+			if (!modifierTypes.add(modifierType)) {
+				throw new IllegalArgumentException("Multiple '" + modifierType + "' modifiers");
+			}
+		}
+
+		checkConflictingModifiers(modifierTypes, type -> ASC.equals(type) || DESC.equals(type));
+		if (readOnly && (modifierTypes.contains(STORE) || modifierTypes.contains(STOREDIST))) {
+			throw new IllegalArgumentException("Cannot use STORE or STOREDIST modifiers in Read-Only mode");
+		}
+		if (!readOnly)
+			if (!modifierTypes.contains(STORE) && !modifierTypes.contains(STOREDIST)){
+				throw new IllegalArgumentException("If you do not use STORE or STOREDIST, than use 'Read-Only' version of the command");
+			}
+			if (modifierTypes.contains(WITHHASH) || modifierTypes.contains(WITHCOORD) || modifierTypes.contains(WITHDIST)) {
+				throw new IllegalArgumentException("Cannot use WITHHASH, WITHCOORD or WITHDIST modifiers together with STORE or STOREDIR");
+			}
 	}
 
 	private static void checkConflictingModifiers(Set<String> modifierTypes, Predicate<String> conflictingTypesPredicate) {

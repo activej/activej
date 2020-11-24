@@ -41,7 +41,11 @@ public enum Command {
 
 
 	// HyperLogLog
-	PFADD, PFCOUNT, PFMERGE;
+	PFADD, PFCOUNT, PFMERGE,
+
+
+	// Geo
+	GEOADD, GEOHASH, GEOPOS, GEODIST, GEORADIUS, GEORADIUSBYMEMBER;
 
 	private final List<byte[]> parts;
 

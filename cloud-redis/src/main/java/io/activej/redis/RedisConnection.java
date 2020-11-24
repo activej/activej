@@ -1,6 +1,7 @@
 package io.activej.redis;
 
 import io.activej.common.api.ParserFunction;
+import io.activej.common.collection.Either;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.net.connection.Connection;
 import io.activej.promise.Promise;
@@ -20,6 +21,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.redis.Utils.*;
 import static io.activej.redis.api.BitOperator.NOT;
 import static io.activej.redis.api.Command.*;
+import static io.activej.redis.api.GeoradiusModifier.*;
 import static java.util.stream.Collectors.toList;
 
 public final class RedisConnection implements RedisAPI, Connection {
@@ -1305,6 +1307,108 @@ public final class RedisConnection implements RedisAPI, Connection {
 		return send(RedisCommand.of(PFMERGE, charset, list(destKey, sourceKey, otherSourceKeys)), this::expectOk);
 	}
 	// endregion
+
+	//region geo
+	@Override
+	public Promise<Long> geoadd(String key, double longitude, double latitude, String member) {
+		return send(RedisCommand.of(GEOADD, charset, key, String.valueOf(longitude), String.valueOf(latitude), member), RedisConnection::parseInteger);
+	}
+
+	@Override
+	public Promise<Long> geoadd(String key, double longitude, double latitude, byte[] member) {
+		return send(RedisCommand.of(GEOADD, key.getBytes(charset), String.valueOf(longitude).getBytes(charset),
+				String.valueOf(latitude).getBytes(charset), member),
+				RedisConnection::parseInteger);
+	}
+
+	@Override
+	public Promise<Long> geoadd(String key, Map<String, Coordinate> coordinates) {
+		checkArgument(!coordinates.isEmpty(), "Nothing to add");
+		List<String> arguments = new ArrayList<>(coordinates.size() * 2 + 1);
+		arguments.add(key);
+		for (Map.Entry<String, Coordinate> entry : coordinates.entrySet()) {
+			Coordinate coordinate = entry.getValue();
+			arguments.add(String.valueOf(coordinate.getLongitude()));
+			arguments.add(String.valueOf(coordinate.getLatitude()));
+			arguments.add(entry.getKey());
+		}
+		return send(RedisCommand.of(GEOADD, charset, arguments), RedisConnection::parseInteger);
+	}
+
+	@Override
+	public Promise<Long> geoaddBinary(String key, Map<byte[], Coordinate> coordinates) {
+		checkArgument(!coordinates.isEmpty(), "Nothing to add");
+		List<byte[]> arguments = new ArrayList<>(coordinates.size() * 2 + 1);
+		arguments.add(key.getBytes(charset));
+		for (Map.Entry<byte[], Coordinate> entry : coordinates.entrySet()) {
+			Coordinate coordinate = entry.getValue();
+			arguments.add(String.valueOf(coordinate.getLongitude()).getBytes(charset));
+			arguments.add(String.valueOf(coordinate.getLatitude()).getBytes(charset));
+			arguments.add(entry.getKey());
+		}
+		return send(RedisCommand.of(GEOADD, arguments), RedisConnection::parseInteger);
+	}
+
+	@Override
+	public Promise<List<String>> geohash(String key, String member, String... otherMembers) {
+		return send(RedisCommand.of(GEOHASH, charset, list(key, member, otherMembers)), this::parseNullableStrings);
+	}
+
+	@Override
+	public Promise<List<String>> geohash(String key, byte[] member, byte[]... otherMembers) {
+		return send(RedisCommand.of(GEOHASH, list(key.getBytes(charset), member, otherMembers)), this::parseNullableStrings);
+	}
+
+	@Override
+	public Promise<List<@Nullable Coordinate>> geopos(String key, String member, String... otherMembers) {
+		return send(RedisCommand.of(GEOPOS, charset, list(key, member, otherMembers)), this::parseCoordinates);
+	}
+
+	@Override
+	public Promise<List<@Nullable Coordinate>> geopos(String key, byte[] member, byte[]... otherMembers) {
+		return send(RedisCommand.of(GEOPOS, list(key.getBytes(charset), member, otherMembers)), this::parseCoordinates);
+	}
+
+	@Override
+	public Promise<@Nullable Double> geodist(String key, String member1, String member2, DistanceUnit unit) {
+		return send(RedisCommand.of(GEODIST, charset, key, member1, member2, unit.getArgument()), this::parseNullableDouble);
+	}
+
+	@Override
+	public Promise<@Nullable Double> geodist(String key, String member1, String member2) {
+		return send(RedisCommand.of(GEODIST, charset, key, member1, member2), this::parseNullableDouble);
+	}
+
+	@Override
+	public Promise<@Nullable Double> geodist(String key, byte[] member1, byte[] member2, DistanceUnit unit) {
+		return send(RedisCommand.of(GEODIST, key.getBytes(charset), member1, member2, unit.getArgument().getBytes(charset)), this::parseNullableDouble);
+	}
+
+	@Override
+	public Promise<@Nullable Double> geodist(String key, byte[] member1, byte[] member2) {
+		return send(RedisCommand.of(GEODIST, key.getBytes(charset), member1, member2), this::parseNullableDouble);
+	}
+
+	@Override
+	public Promise<Long> georadius(String key, Coordinate coordinate, double radius, DistanceUnit unit, GeoradiusModifier... modifiers) {
+		return doGeoradiusStore(key, Either.left(coordinate), radius, unit, modifiers);
+	}
+
+	@Override
+	public Promise<List<GeoradiusResult>> georadiusReadOnly(String key, Coordinate coordinate, double radius, DistanceUnit unit, GeoradiusModifier... modifiers) {
+		return doGeoradiusReadOnly(key, Either.left(coordinate), radius, unit, modifiers);
+	}
+
+	@Override
+	public Promise<Long> georadiusbymember(String key, String member, double radius, DistanceUnit unit, GeoradiusModifier... modifiers) {
+		return doGeoradiusStore(key, Either.right(member), radius, unit, modifiers);
+	}
+
+	@Override
+	public Promise<List<GeoradiusResult>> georadiusbymemberReadOnly(String key, String member, double radius, DistanceUnit unit, GeoradiusModifier... modifiers) {
+		return doGeoradiusReadOnly(key, Either.right(member), radius, unit, modifiers);
+	}
+	// endregion
 	// endregion
 
 	// region connection and pooling
@@ -1466,22 +1570,26 @@ public final class RedisConnection implements RedisAPI, Connection {
 								result.add(null);
 								continue;
 							}
-							if (element == null) return unexpectedTypeException(expectedClass);
+							if (element == null) return unexpectedType(expectedClass);
 
 							result.add(fn.apply(expectedClass.cast(element)));
 						}
 					} catch (ClassCastException e) {
-						return unexpectedTypeException(expectedClass);
+						return unexpectedType(expectedClass);
 					}
 
 					return Promise.of(result);
 				});
 	}
 
-	private static <T, U> Promise<@Nullable T> unexpectedTypeException(Class<U> expectedClass) {
-		return Promise.ofException(new RedisException(RedisConnection.class,
+	private static <T, U> Promise<@Nullable T> unexpectedType(Class<U> expectedClass) {
+		return Promise.ofException(unexpectedTypeException(expectedClass));
+	}
+
+	private static RedisException unexpectedTypeException(Class<?> expectedClass) {
+		return new RedisException(RedisConnection.class,
 				"Expected all array items to be of type '" + expectedClass.getSimpleName() +
-						"', but some elements were not"));
+						"', but some elements were not");
 	}
 
 	private <T> Promise<Map<String, T>> parseMap(RedisResponse response, ParserFunction<byte[], T> valueFn) {
@@ -1507,7 +1615,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 				}
 				return Promise.of(result);
 			} catch (ClassCastException e) {
-				return RedisConnection.unexpectedTypeException(byte[].class);
+				return RedisConnection.unexpectedType(byte[].class);
 			} catch (ParseException e) {
 				return Promise.ofException(new RedisException(RedisConnection.class, "Could not parse value", e));
 			}
@@ -1576,6 +1684,57 @@ public final class RedisConnection implements RedisAPI, Connection {
 				});
 	}
 
+	private Promise<List<GeoradiusResult>> parseGeoradiusResults(RedisResponse response, boolean withCoord, boolean withDist, boolean withHash) {
+		return parseArray(response)
+				.then(array -> {
+					if (array == null) return Promise.ofException(UNEXPECTED_NIL);
+					int subArrayLength = 1 + (withCoord ? 1 : 0) + (withDist ? 1 : 0) + (withHash ? 1 : 0);
+					List<GeoradiusResult> result = new ArrayList<>(array.size());
+					for (Object element : array) {
+						if (!(element instanceof List)) return unexpectedType(List.class);
+						List<?> subArray = (List<?>) element;
+						if (subArray.size() != subArrayLength) return Promise.ofException(UNEXPECTED_SIZE_OF_ARRAY);
+
+						int index = 0;
+						byte[] member;
+						try {
+							member = (byte[]) subArray.get(index++);
+						} catch (ClassCastException ignored) {
+							return unexpectedType(byte[].class);
+						}
+
+						Coordinate coordinate = null;
+						Double dist = null;
+						Long hash = null;
+						if (withDist) {
+							try {
+								dist = Double.parseDouble(new String((byte[]) subArray.get(index++), charset));
+							} catch (ClassCastException ignored) {
+								return unexpectedType(byte[].class);
+							}
+						}
+						if (withHash) {
+							try {
+								hash = (Long) subArray.get(index++);
+							} catch (ClassCastException ignored) {
+								return unexpectedType(Long.class);
+							}
+						}
+						if (withCoord) {
+							try {
+								coordinate = doParseCoordinate(subArray.get(index));
+							} catch (RedisException e) {
+								return Promise.ofException(e);
+							}
+						}
+
+						result.add(new GeoradiusResult(charset, member, coordinate, dist, hash));
+					}
+
+					return Promise.of(result);
+				});
+	}
+
 	private static <T> Promise<T> parseError(RedisResponse response) {
 		if (response.isError()) {
 			return Promise.ofException(response.getError());
@@ -1585,6 +1744,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	private Promise<List<String>> parseStrings(RedisResponse response) {
 		return parseArray(response, byte[].class, bytes -> new String(bytes, charset))
+				.then(RedisConnection::nonNull);
+	}
+
+	private Promise<List<String>> parseNullableStrings(RedisResponse response) {
+		return parseArray(response, byte[].class, bytes -> new String(bytes, charset), true)
 				.then(RedisConnection::nonNull);
 	}
 
@@ -1604,7 +1768,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	private Promise<Double> doParseDouble(RedisResponse response, boolean nullable) {
 		return parseBulkString(response)
 				.then(string -> {
-					if (string == null){
+					if (string == null) {
 						if (nullable) return Promise.of(null);
 						return Promise.ofException(UNEXPECTED_NIL);
 					}
@@ -1620,6 +1784,43 @@ public final class RedisConnection implements RedisAPI, Connection {
 		return parseString(response)
 				.then(result -> "OK".equals(result) ? Promise.complete() :
 						Promise.ofException(new RedisException(RedisConnection.class, "Expected result to be 'OK', was: " + result)));
+	}
+
+	private Promise<List<@Nullable Coordinate>> parseCoordinates(RedisResponse response) {
+		if (!response.isArray()) return parseError(response);
+		List<?> array = response.getArray();
+		List<@Nullable Coordinate> result = new ArrayList<>(array.size());
+		for (Object element : array) {
+			if (element == null) {
+				result.add(null);
+				continue;
+			}
+
+			try {
+				result.add(doParseCoordinate(element));
+			} catch (RedisException e) {
+				return Promise.ofException(e);
+			}
+		}
+		return Promise.of(result);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Coordinate doParseCoordinate(Object element) throws RedisException {
+		try {
+			List<byte[]> coordinatesList = (List<byte[]>) element;
+			if (coordinatesList.size() != 2) {
+				throw UNEXPECTED_SIZE_OF_ARRAY;
+			}
+
+			return new Coordinate(
+					Double.parseDouble(new String(coordinatesList.get(0), charset)),
+					Double.parseDouble(new String(coordinatesList.get(1), charset))
+			);
+		} catch (ClassCastException e) {
+			throw unexpectedTypeException(List.class);
+		}
+
 	}
 
 	private static <T> Promise<@NotNull T> nonNull(@Nullable T value) {
@@ -1662,4 +1863,56 @@ public final class RedisConnection implements RedisAPI, Connection {
 		}
 		return send(RedisCommand.of(storeCommand, args), RedisConnection::parseInteger);
 	}
+
+	private Promise<Long> doGeoradiusStore(String key, Either<Coordinate, String> eitherCoordOrMember, double radius, DistanceUnit unit, GeoradiusModifier[] modifiers) {
+		checkGeoradiusModifiers(false, modifiers);
+		List<String> arguments = new ArrayList<>(modifiers.length * 2 + 5);
+		arguments.add(key);
+		Command command;
+		if (eitherCoordOrMember.isLeft()){
+			command = GEORADIUS;
+			Coordinate coord = eitherCoordOrMember.getLeft();
+			arguments.add(String.valueOf(coord.getLongitude()));
+			arguments.add(String.valueOf(coord.getLatitude()));
+		} else {
+			command = GEORADIUSBYMEMBER;
+			arguments.add(eitherCoordOrMember.getRight());
+		}
+		arguments.add(String.valueOf(radius));
+		arguments.add(unit.getArgument());
+		for (GeoradiusModifier modifier : modifiers) {
+			arguments.addAll(modifier.getArguments());
+		}
+		return send(RedisCommand.of(command, charset, arguments), RedisConnection::parseInteger);
+	}
+
+	private Promise<List<GeoradiusResult>> doGeoradiusReadOnly(String key, Either<Coordinate, String> eitherCoordOrMember, double radius, DistanceUnit unit, GeoradiusModifier[] modifiers) {
+		checkGeoradiusModifiers(true, modifiers);
+		List<String> arguments = new ArrayList<>(modifiers.length * 2 + 5);
+		arguments.add(key);
+		Command command;
+		if (eitherCoordOrMember.isLeft()){
+			command = GEORADIUS;
+			Coordinate coord = eitherCoordOrMember.getLeft();
+			arguments.add(String.valueOf(coord.getLongitude()));
+			arguments.add(String.valueOf(coord.getLatitude()));
+		} else {
+			command = GEORADIUSBYMEMBER;
+			arguments.add(eitherCoordOrMember.getRight());
+		}
+		arguments.add(String.valueOf(radius));
+		arguments.add(unit.getArgument());
+		boolean withCoord = false, withDist = false, withHash = false;
+		for (GeoradiusModifier modifier : modifiers) {
+			List<String> args = modifier.getArguments();
+			String modifierType = args.get(0);
+			if (WITHCOORD.equals(modifierType)) withCoord = true;
+			else if (WITHDIST.equals(modifierType)) withDist = true;
+			else if (WITHHASH.equals(modifierType)) withHash = true;
+			arguments.addAll(args);
+		}
+		boolean finalWithCoord = withCoord, finalWithDist = withDist, finalWithHash = withHash;
+		return send(RedisCommand.of(command, charset, arguments), response -> parseGeoradiusResults(response, finalWithCoord, finalWithDist, finalWithHash));
+	}
+
 }
