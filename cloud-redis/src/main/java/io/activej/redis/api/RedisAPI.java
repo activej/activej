@@ -119,7 +119,7 @@ public interface RedisAPI {
 
 	Promise<@Nullable String> get(String key);
 
-	Promise<byte @Nullable []> getAsBinary(String key);
+	Promise<@Nullable byte[]> getAsBinary(String key);
 
 	Promise<Long> getbit(String key, int offset);
 
@@ -129,7 +129,7 @@ public interface RedisAPI {
 
 	Promise<@Nullable String> getset(String key, String value);
 
-	Promise<byte @Nullable []> getset(String key, byte[] value);
+	Promise<@Nullable byte[]> getset(String key, byte[] value);
 
 	Promise<Long> incr(String key);
 
@@ -139,13 +139,13 @@ public interface RedisAPI {
 
 	Promise<List<@Nullable String>> mget(String key, String... otherKeys);
 
-	Promise<List<byte @Nullable []>> mgetAsBinary(String key, String... otherKeys);
+	Promise<List<@Nullable byte[]>> mgetAsBinary(String key, String... otherKeys);
 
-	Promise<Void> mset(Map<@NotNull String, byte @NotNull []> entries);
+	Promise<Void> mset(Map<@NotNull String, @NotNull byte[]> entries);
 
 	Promise<Void> mset(String key, String value, String... otherKeysAndValues);
 
-	Promise<Long> msetnx(Map<@NotNull String, byte @NotNull []> entries);
+	Promise<Long> msetnx(Map<@NotNull String, @NotNull byte[]> entries);
 
 	Promise<Long> msetnx(String key, String value, String... otherKeysAndValues);
 
@@ -213,19 +213,19 @@ public interface RedisAPI {
 		return brpoplpush(source, target, 0);
 	}
 
-	Promise<byte @Nullable []> brpoplpushAsBinary(String source, String target, double timeoutSeconds);
+	Promise<@Nullable byte[]> brpoplpushAsBinary(String source, String target, double timeoutSeconds);
 
-	default Promise<byte @Nullable []> brpoplpushAsBinary(String source, String target, Duration timeout) {
+	default Promise<@Nullable byte[]> brpoplpushAsBinary(String source, String target, Duration timeout) {
 		return brpoplpushAsBinary(source, target, (double) timeout.toMillis() / 1000);
 	}
 
-	default Promise<byte @Nullable []> brpoplpushAsBinary(String source, String target) {
+	default Promise<@Nullable byte[]> brpoplpushAsBinary(String source, String target) {
 		return brpoplpushAsBinary(source, target, 0);
 	}
 
 	Promise<@Nullable String> lindex(String key, long index);
 
-	Promise<byte @Nullable []> lindexAsBinary(String key, long index);
+	Promise<@Nullable byte[]> lindexAsBinary(String key, long index);
 
 	Promise<Long> linsert(String key, InsertPosition position, String pivot, String element);
 
@@ -235,7 +235,7 @@ public interface RedisAPI {
 
 	Promise<@Nullable String> lpop(String key);
 
-	Promise<byte @Nullable []> lpopAsBinary(String key);
+	Promise<@Nullable byte[]> lpopAsBinary(String key);
 
 	Promise<@Nullable Long> lpos(String key, String element, LposModifier... modifiers);
 
@@ -285,11 +285,11 @@ public interface RedisAPI {
 
 	Promise<@Nullable String> rpop(String key);
 
-	Promise<byte @Nullable []> rpopAsBinary(String key);
+	Promise<@Nullable byte[]> rpopAsBinary(String key);
 
 	Promise<@Nullable String> rpoplpush(String source, String destination);
 
-	Promise<byte @Nullable []> rpoplpushAsBinary(String source, String destination);
+	Promise<@Nullable byte[]> rpoplpushAsBinary(String source, String destination);
 
 	Promise<Long> rpush(String key, String element, String... otherElements);
 
@@ -333,7 +333,7 @@ public interface RedisAPI {
 
 	Promise<@Nullable String> spop(String key);
 
-	Promise<byte @Nullable []> spopAsBinary(String key);
+	Promise<@Nullable byte[]> spopAsBinary(String key);
 
 	Promise<List<String>> spop(String key, long count);
 
@@ -341,7 +341,7 @@ public interface RedisAPI {
 
 	Promise<@Nullable String> srandmember(String key);
 
-	Promise<byte @Nullable []> srandmemberAsBinary(String key);
+	Promise<@Nullable byte[]> srandmemberAsBinary(String key);
 
 	Promise<List<String>> srandmember(String key, long count);
 
@@ -365,7 +365,7 @@ public interface RedisAPI {
 
 	Promise<@Nullable String> hget(String key, String field);
 
-	Promise<byte @Nullable []> hgetAsBinary(String key, String field);
+	Promise<@Nullable byte[]> hgetAsBinary(String key, String field);
 
 	Promise<Map<String, String>> hgetall(String key);
 
@@ -381,13 +381,13 @@ public interface RedisAPI {
 
 	Promise<List<@Nullable String>> hmget(String key, String field, String... otherFields);
 
-	Promise<List<byte @Nullable []>> hmgetAsBinary(String key, String field, String... otherFields);
+	Promise<List<@Nullable byte[]>> hmgetAsBinary(String key, String field, String... otherFields);
 
-	Promise<String> hmset(String key, Map<@NotNull String, byte @NotNull []> entries);
+	Promise<String> hmset(String key, Map<@NotNull String, @NotNull byte[]> entries);
 
 	Promise<String> hmset(String key, String field, String value, String... otherFieldsAndValues);
 
-	Promise<Long> hset(String key, Map<@NotNull String, byte @NotNull []> entries);
+	Promise<Long> hset(String key, Map<@NotNull String, @NotNull byte[]> entries);
 
 	Promise<Long> hset(String key, String field, String value, String... otherFieldsAndValues);
 
@@ -592,5 +592,15 @@ public interface RedisAPI {
 	Promise<Long> zunionstore(String destination, Aggregate aggregate, String key, String... otherKeys);
 
 	Promise<Long> zunionstore(String destination, String key, String... otherKeys);
+	// endregion
+
+	// region hyperloglog
+	Promise<Long> pfadd(String key, String element, String... otherElements);
+
+	Promise<Long> pfadd(String key, byte[] element, byte[]... otherElements);
+
+	Promise<Long> pfcount(String key, String... otherKeys);
+
+	Promise<Void> pfmerge(String destKey, String sourceKey, String... otherSourceKeys);
 	// endregion
 }

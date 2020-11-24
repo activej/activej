@@ -445,7 +445,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<byte @Nullable []> brpoplpushAsBinary(String source, String target, double timeoutSeconds) {
+	public Promise<@Nullable byte[]> brpoplpushAsBinary(String source, String target, double timeoutSeconds) {
 		return send(RedisCommand.of(BRPOPLPUSH, charset, source, target, String.valueOf(timeoutSeconds)), RedisConnection::parseBulk);
 	}
 
@@ -455,7 +455,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<byte @Nullable []> lindexAsBinary(String key, long index) {
+	public Promise<@Nullable byte[]> lindexAsBinary(String key, long index) {
 		return send(RedisCommand.of(LINDEX, charset, key, String.valueOf(index)), RedisConnection::parseBulk);
 	}
 
@@ -480,7 +480,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<byte @Nullable []> lpopAsBinary(String key) {
+	public Promise<@Nullable byte[]> lpopAsBinary(String key) {
 		return send(RedisCommand.of(LPOP, key.getBytes(charset)), RedisConnection::parseBulk);
 	}
 
@@ -596,7 +596,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<byte @Nullable []> rpopAsBinary(String key) {
+	public Promise<@Nullable byte[]> rpopAsBinary(String key) {
 		return send(RedisCommand.of(RPOP, key.getBytes(charset)), RedisConnection::parseBulk);
 	}
 
@@ -606,7 +606,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<byte @Nullable []> rpoplpushAsBinary(String source, String destination) {
+	public Promise<@Nullable byte[]> rpoplpushAsBinary(String source, String destination) {
 		return send(RedisCommand.of(RPOPLPUSH, charset, source, destination), RedisConnection::parseBulk);
 	}
 
@@ -713,7 +713,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<byte @Nullable []> spopAsBinary(String key) {
+	public Promise<@Nullable byte[]> spopAsBinary(String key) {
 		return send(RedisCommand.of(SPOP, key.getBytes(charset)), RedisConnection::parseBulk);
 	}
 
@@ -733,7 +733,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<byte @Nullable []> srandmemberAsBinary(String key) {
+	public Promise<@Nullable byte[]> srandmemberAsBinary(String key) {
 		return send(RedisCommand.of(SRANDMEMBER, key.getBytes(charset)), RedisConnection::parseBulk);
 	}
 
@@ -790,7 +790,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<byte @Nullable []> hgetAsBinary(String key, String field) {
+	public Promise<@Nullable byte[]> hgetAsBinary(String key, String field) {
 		return send(RedisCommand.of(HGET, charset, key, field), RedisConnection::parseBulk);
 	}
 
@@ -831,13 +831,13 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<List<byte @Nullable []>> hmgetAsBinary(String key, String field, String... otherFields) {
+	public Promise<List<@Nullable byte[]>> hmgetAsBinary(String key, String field, String... otherFields) {
 		return send(RedisCommand.of(HMGET, charset, list(key, field, otherFields)), response -> parseNullableArray(response, byte[].class, Function.identity()))
 				.then(RedisConnection::nonNull);
 	}
 
 	@Override
-	public Promise<String> hmset(String key, Map<@NotNull String, byte @NotNull []> entries) {
+	public Promise<String> hmset(String key, Map<@NotNull String, @NotNull byte[]> entries) {
 		checkArgument(!entries.isEmpty(), "No entry to set");
 		List<byte[]> args = new ArrayList<>(entries.size() * 2 + 1);
 		args.add(key.getBytes(charset));
@@ -855,7 +855,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	@Override
-	public Promise<Long> hset(String key, Map<@NotNull String, byte @NotNull []> entries) {
+	public Promise<Long> hset(String key, Map<@NotNull String, @NotNull byte[]> entries) {
 		checkArgument(!entries.isEmpty(), "No entry to set");
 		List<byte[]> args = new ArrayList<>(entries.size() * 2 + 1);
 		args.add(key.getBytes(charset));
@@ -1281,6 +1281,28 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public Promise<Long> zunionstore(String destination, String key, String... otherKeys) {
 		return doZstore(ZUNIONSTORE, destination, null, key, otherKeys);
+	}
+	// endregion
+
+	// region hyperloglog
+	@Override
+	public Promise<Long> pfadd(String key, String element, String... otherElements) {
+		return send(RedisCommand.of(PFADD, charset, list(key, element, otherElements)), RedisConnection::parseInteger);
+	}
+
+	@Override
+	public Promise<Long> pfadd(String key, byte[] element, byte[]... otherElements) {
+		return send(RedisCommand.of(PFADD, list(key.getBytes(charset), element, otherElements)), RedisConnection::parseInteger);
+	}
+
+	@Override
+	public Promise<Long> pfcount(String key, String... otherKeys) {
+		return send(RedisCommand.of(PFCOUNT, charset, list(key, otherKeys)), RedisConnection::parseInteger);
+	}
+
+	@Override
+	public Promise<Void> pfmerge(String destKey, String sourceKey, String... otherSourceKeys) {
+		return send(RedisCommand.of(PFMERGE, charset, list(destKey, sourceKey, otherSourceKeys)), this::expectOk);
 	}
 	// endregion
 	// endregion

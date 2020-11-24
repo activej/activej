@@ -559,7 +559,7 @@ public final class RedisConnectionTest {
 		String key = "list";
 
 		assertEquals(8, (long) await(redis -> redis.rpush(key, "a", "b", "c", "a", "c", "g", "c", "b")));
-		assertEquals(asList( "a", "b", "c", "a", "c", "g", "c", "b"), await(redis -> redis.lrange(key)));
+		assertEquals(asList("a", "b", "c", "a", "c", "g", "c", "b"), await(redis -> redis.lrange(key)));
 
 		assertEquals(1, (long) await(redis -> redis.lrem(key, 1, "a")));
 		assertEquals(asList("b", "c", "a", "c", "g", "c", "b"), await(redis -> redis.lrange(key)));
@@ -601,6 +601,36 @@ public final class RedisConnectionTest {
 		assertEquals(2, binaryList.size());
 		assertArrayEquals(new byte[]{'a', 'b', 'c'}, binaryList.get(0));
 		assertArrayEquals(new byte[]{'d', 'e', 'f'}, binaryList.get(1));
+	}
+
+	@Test
+	public void pfaddAndPfcount() {
+		String key1 = "hll1";
+		String key2 = "hll2";
+
+		assertEquals(1, (long) await(redis -> redis.pfadd(key1, "a", "b", "c", "d", "e", "f", "g")));
+		assertEquals(0, (long) await(redis -> redis.pfadd(key1, "a", "a", "b")));
+
+		assertEquals(1, (long) await(redis -> redis.pfadd(key2, "1", "2", "3")));
+
+		assertEquals(10, (long) await(redis -> redis.pfcount(key1, key2)));
+		assertEquals(0, (long) await(redis -> redis.pfcount("nonexistent")));
+	}
+
+	@Test
+	public void pfmerge() {
+		String key1 = "hll1";
+		String key2 = "hll2";
+		String destKey = "result";
+
+		assertEquals(1, (long) await(redis -> redis.pfadd(key1, "a", "b", "c", "d", "e", "f", "g")));
+		assertEquals(1, (long) await(redis -> redis.pfadd(key2, "1", "2", "3", "4", "a", "b", "c", "d")));
+
+		assertEquals(7, (long) await(redis -> redis.pfcount(key1)));
+		assertEquals(8, (long) await(redis -> redis.pfcount(key2)));
+
+		await(redis -> redis.pfmerge(destKey, key1, key2));
+		assertEquals(11, (long) await(redis -> redis.pfcount(destKey)));
 	}
 
 	private void testExpiration(Duration ttl, Function<RedisAPI, Promise<?>> expireCommand) {
