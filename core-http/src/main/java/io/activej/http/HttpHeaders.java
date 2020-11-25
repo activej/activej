@@ -16,13 +16,18 @@
 
 package io.activej.http;
 
+import io.activej.common.ApplicationSettings;
+
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 
 /**
  * This is a collection of most well-known {@link HttpHeader} token references as Java constants.
  */
 public final class HttpHeaders {
-	private static final CaseInsensitiveTokenMap<HttpHeader> headers = new CaseInsensitiveTokenMap<>(512, 2, HttpHeader.class, HttpHeader::new);
+	private static final int SLOTS_NUMBER = ApplicationSettings.getInt(HttpHeaders.class, "slotsNumber", 512);
+	private static final int MAX_PROBINGS = ApplicationSettings.getInt(HttpHeaders.class, "maxProbings", 2);
+
+	private static final CaseInsensitiveTokenMap<HttpHeader> headers = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, MAX_PROBINGS, HttpHeader.class, HttpHeader::new);
 
 	public static final HttpHeader CACHE_CONTROL = headers.register("Cache-Control");
 	public static final HttpHeader CONTENT_LENGTH = headers.register("Content-Length");
@@ -111,6 +116,10 @@ public final class HttpHeaders {
 	public static final HttpHeader SEC_WEBSOCKET_KEY = headers.register("Sec-WebSocket-Key");
 	public static final HttpHeader SEC_WEBSOCKET_ACCEPT = headers.register("Sec-WebSocket-Accept");
 	public static final HttpHeader SEC_WEBSOCKET_VERSION = headers.register("Sec-WebSocket-Version");
+
+	public static HttpHeader register(String headerName){
+		return headers.register(headerName);
+	}
 
 	public static HttpHeader of(byte[] array, int offset, int length, int lowerCaseHashCode) {
 		return headers.getOrCreate(array, offset, length, lowerCaseHashCode);

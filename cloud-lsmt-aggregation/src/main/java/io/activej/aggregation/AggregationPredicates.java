@@ -64,13 +64,13 @@ public class AggregationPredicates {
 	}
 
 	@FunctionalInterface
-	private interface PredicateSimplifier<L extends AggregationPredicate, R extends AggregationPredicate> {
+	public interface PredicateSimplifier<L extends AggregationPredicate, R extends AggregationPredicate> {
 		AggregationPredicate simplifyAnd(L left, R right);
 	}
 
 	private static final Map<PredicateSimplifierKey<?, ?>, PredicateSimplifier<?, ?>> simplifiers = new HashMap<>();
 
-	private static <L extends AggregationPredicate, R extends AggregationPredicate> void register(Class<L> leftType, Class<R> rightType, PredicateSimplifier<L, R> operation) {
+	public static <L extends AggregationPredicate, R extends AggregationPredicate> void register(Class<L> leftType, Class<R> rightType, PredicateSimplifier<L, R> operation) {
 		PredicateSimplifierKey keyLeftRight = new PredicateSimplifierKey<>(leftType, rightType);
 		checkState(!simplifiers.containsKey(keyLeftRight), "Key '%s has already been registered", keyLeftRight);
 		simplifiers.put(keyLeftRight, operation);

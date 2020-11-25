@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.http.CaseInsensitiveTokenMap.Token;
 import org.jetbrains.annotations.Nullable;
@@ -35,12 +36,15 @@ import static java.nio.charset.Charset.forName;
  * This is a specialized token to be used in {@link CaseInsensitiveTokenMap} for charset header values.
  */
 public final class HttpCharset extends Token {
-	private static final CaseInsensitiveTokenMap<HttpCharset> charsets = new CaseInsensitiveTokenMap<>(256, 2, HttpCharset.class, HttpCharset::new);
+	private static final int SLOTS_NUMBER = ApplicationSettings.getInt(HttpCharset.class, "slotsNumber", 256);
+	private static final int MAX_PROBINGS = ApplicationSettings.getInt(HttpCharset.class, "maxProbings", 2);
+
+	private static final CaseInsensitiveTokenMap<HttpCharset> charsets = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, MAX_PROBINGS, HttpCharset.class, HttpCharset::new);
 	private static final Map<Charset, HttpCharset> java2http = new HashMap<>();
 
-	public static final HttpCharset UTF_8 = charsets.register("utf-8").addCharset(StandardCharsets.UTF_8);
-	public static final HttpCharset US_ASCII = charsets.register("us-ascii").addCharset(StandardCharsets.US_ASCII);
-	public static final HttpCharset LATIN_1 = charsets.register("iso-8859-1").addCharset(StandardCharsets.ISO_8859_1);
+	public static final HttpCharset UTF_8 = register("utf-8", StandardCharsets.UTF_8);
+	public static final HttpCharset US_ASCII = register("us-ascii", StandardCharsets.US_ASCII);
+	public static final HttpCharset LATIN_1 = register("iso-8859-1", StandardCharsets.ISO_8859_1);
 
 	// maximum of 40 characters, us-ascii, see rfc2978,
 	// http://www.iana.org/assignments/character-sets/character-sets.txt
@@ -54,6 +58,10 @@ public final class HttpCharset extends Token {
 		this.bytes = bytes;
 		this.offset = offset;
 		this.length = length;
+	}
+
+	public static HttpCharset register(String charsetName, Charset charset){
+		return charsets.register(charsetName).addCharset(charset);
 	}
 
 	static HttpCharset of(Charset charset) {

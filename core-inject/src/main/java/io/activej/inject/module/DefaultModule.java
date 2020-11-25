@@ -126,6 +126,10 @@ public final class DefaultModule implements Module {
 		));
 	}
 
+	public static void register(Class<?> key, Set<BindingGenerator<?>> bindingGenerators) {
+		generators.put(key, bindingGenerators);
+	}
+
 	@Override
 	public Trie<Scope, Map<Key<?>, BindingSet<?>>> getBindings() {
 		return emptyTrie;

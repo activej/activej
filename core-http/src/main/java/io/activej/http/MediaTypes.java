@@ -28,7 +28,9 @@ import java.util.Map;
 @SuppressWarnings({"unused", "SameParameterValue"})
 public final class MediaTypes {
 	private static final int SLOTS_NUMBER = ApplicationSettings.getInt(MediaTypes.class, "slotsNumber", 2048);
-	private static final CaseInsensitiveTokenMap<MediaType> mimes = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, 2, MediaType.class, MediaType::new);
+	private static final int MAX_PROBINGS = ApplicationSettings.getInt(MediaTypes.class, "maxProbings", 2);
+
+	private static final CaseInsensitiveTokenMap<MediaType> mimes = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, MAX_PROBINGS, MediaType.class, MediaType::new);
 	private static final Map<String, MediaType> ext2mime = new HashMap<>();
 
 	public static final MediaType ANY = register("*/*");
