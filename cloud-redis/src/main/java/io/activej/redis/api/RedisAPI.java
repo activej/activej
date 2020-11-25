@@ -34,6 +34,10 @@ public interface RedisAPI {
 	Promise<String> select(int dbIndex);
 	// endregion
 
+	// region server
+	Promise<String> flushAll(boolean async);
+	// endregion
+
 	// region keys
 	Promise<Long> del(String key, String... otherKeys);
 
@@ -644,5 +648,17 @@ public interface RedisAPI {
 	Promise<Long> georadiusbymember(String key, String member, double radius, DistanceUnit unit, GeoradiusModifier... modifiers);
 
 	Promise<List<GeoradiusResult>> georadiusbymemberReadOnly(String key, String member, double radius, DistanceUnit unit, GeoradiusModifier... modifiers);
+	// endregion
+
+	// region transactions
+	Promise<Void> discard();
+
+	Promise<@Nullable List<Object>> exec();
+
+	Promise<Void> multi();
+
+	Promise<Void> unwatch();
+
+	Promise<Void> watch(String key, String... otherKeys);
 	// endregion
 }

@@ -25,6 +25,8 @@ final class Utils {
 	static final String AGGREGATE = "AGGREGATE";
 	static final String WITHSCORES = "WITHSCORES";
 	static final String LIMIT = "LIMIT";
+	static final String QUEUED = "QUEUED";
+	static final String ASYNC = "ASYNC";
 
 	@SafeVarargs
 	static <T> List<T> list(T main, T... otherArguments) {
@@ -72,7 +74,6 @@ final class Utils {
 		return result;
 	}
 
-	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	static boolean deepEquals(@Nullable List<?> thisArray, @Nullable List<?> thatArray) {
 		if (thisArray == thatArray) return true;
 		if (thisArray == null || thatArray == null) return false;

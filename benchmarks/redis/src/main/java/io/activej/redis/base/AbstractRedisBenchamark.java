@@ -16,6 +16,7 @@ import io.activej.redis.RedisConnection;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
+import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.inject.module.Modules.combine;
@@ -54,7 +55,7 @@ public abstract class AbstractRedisBenchamark extends Launcher {
 
 	@Provides
 	RedisClient redisClient(Eventloop eventloop, Config config) {
-		return RedisClient.create(eventloop);
+		return RedisClient.create(eventloop, config.get(ofInetSocketAddress(), "redis.address"));
 	}
 
 	@Provides
@@ -72,6 +73,7 @@ public abstract class AbstractRedisBenchamark extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
+				.with("redis.address", Config.ofValue(ofInetSocketAddress(), RedisClient.DEFAULT_ADDRESS))
 				.overrideWith(configOverride())
 				.overrideWith(Config.ofSystemProperties("config"));
 	}

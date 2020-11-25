@@ -26,6 +26,7 @@ import java.util.function.Function;
 
 import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.redis.TestUtils.assertOk;
 import static io.activej.test.TestUtils.assertComplete;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -103,7 +104,7 @@ public final class RedisConnectionTest {
 			Promise<String> set3 = redis.set(key + 3, value + 3);
 
 			return Promises.toList(set1, set2, set3)
-					.whenComplete(assertComplete(list -> list.forEach(RedisConnectionTest::assertOk)))
+					.whenComplete(assertComplete(list -> list.forEach(io.activej.redis.TestUtils::assertOk)))
 					.then(() -> Promises.toList(redis.get(key + 1), redis.get(key + 2), redis.get(key + 3)))
 					.whenComplete(assertComplete(list -> {
 						assertEquals(value + 1, list.get(0));
@@ -126,7 +127,7 @@ public final class RedisConnectionTest {
 			Promise<String> set3 = redis.set(key + 3, value3);
 
 			return Promises.toList(set1, set2, set3)
-					.whenComplete(assertComplete(list -> list.forEach(RedisConnectionTest::assertOk)))
+					.whenComplete(assertComplete(list -> list.forEach(io.activej.redis.TestUtils::assertOk)))
 					.then(() -> Promises.toList(redis.getAsBinary(key + 1), redis.getAsBinary(key + 2), redis.getAsBinary(key + 3)))
 					.whenComplete(assertComplete(list -> {
 						assertArrayEquals(value1, list.get(0));
@@ -651,13 +652,7 @@ public final class RedisConnectionTest {
 		assertEquals(0L, (long) await(redis -> redis.expire("nonexistent", Duration.ofSeconds(1))));
 	}
 
-	private static void assertOk(String result) {
-		assertEquals("OK", result);
-	}
-
 	private <T> T await(Function<RedisConnection, Promise<T>> clientCommand) {
-		return TestUtils.await(client.getConnection()
-				.then(connection -> clientCommand.apply(connection)
-						.whenComplete(connection::quit)));
+		return io.activej.redis.TestUtils.await(client, clientCommand);
 	}
 }

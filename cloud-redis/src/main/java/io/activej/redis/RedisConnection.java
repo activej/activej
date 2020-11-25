@@ -18,6 +18,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
+import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.redis.Utils.*;
 import static io.activej.redis.api.BitOperator.NOT;
 import static io.activej.redis.api.Command.*;
@@ -25,18 +27,32 @@ import static io.activej.redis.api.GeoradiusModifier.*;
 import static java.util.stream.Collectors.toList;
 
 public final class RedisConnection implements RedisAPI, Connection {
-	private static final RedisException IN_POOL = new RedisException(RedisConnection.class, "Connection is in pool");
-	private static final RedisException ACTIVE_COMMANDS = new RedisException(RedisConnection.class, "Cannot return to pool, there are ongoing commands");
-	private static final RedisException UNEXPECTED_NIL = new RedisException(RedisConnection.class, "Received unexpected 'NIL' response");
-	private static final RedisException UNEXPECTED_SIZE_OF_ARRAY = new RedisException(RedisConnection.class, "Received array of unexpected size");
-	private static final RedisException UNEXPECTED_TYPES_IN_ARRAY = new RedisException(RedisConnection.class, "Received array with elements of unexpected type");
-	private static final RedisException UNEVEN_MAP = new RedisException(RedisConnection.class, "Map with uneven keys and values");
+	public static final RedisException IN_POOL = new RedisException(RedisConnection.class, "Connection is in pool");
+	public static final RedisException ACTIVE_COMMANDS = new RedisException(RedisConnection.class, "Cannot return to pool, there are ongoing commands");
+	public static final RedisException UNEXPECTED_NIL = new RedisException(RedisConnection.class, "Received unexpected 'NIL' response");
+	public static final RedisException UNEXPECTED_SIZE_OF_ARRAY = new RedisException(RedisConnection.class, "Received array of unexpected size");
+	public static final RedisException UNEXPECTED_TYPES_IN_ARRAY = new RedisException(RedisConnection.class, "Received array with elements of unexpected type");
+	public static final RedisException UNEXPECTED_RESPONSE = new RedisException(RedisConnection.class, "Server responded with unexpected response");
+	public static final RedisException RESPONSES_SIZE_MISMATCH = new RedisException(RedisConnection.class, "Number of responses in transaction does not match number of pending commands");
+	public static final RedisException UNEVEN_MAP = new RedisException(RedisConnection.class, "Map with uneven keys and values");
+	public static final RedisException QUEUED_EXPECTED = new RedisException(RedisConnection.class, "Expected server to respond with 'QUEUED' response");
+	public static final RedisException TRANSACTION_FAILED = new RedisException(RedisConnection.class, "Transaction failed");
+	public static final RedisException TRANSACTION_DISCARDED = new RedisException(RedisConnection.class, "Transaction discarded");
+	public static final RedisException QUIT_CALLED = new RedisException(RedisConnection.class, "Transaction discarded because QUIT was called");
+
+	private static final long NO_TRANSACTION = 0;
 
 	private final RedisClient client;
 	private final RedisMessaging messaging;
 	private final Charset charset;
 
-	private final Queue<SettablePromise<RedisResponse>> callbackDeque = new ArrayDeque<>();
+	private long transactions;
+	private long completedTransactions;
+
+	@Nullable List<Object> transactionResult;
+
+	private final Queue<SettablePromise<RedisResponse>> receiveQueue = new ArrayDeque<>();
+	private final Queue<Callback> multiResultQueue = new ArrayDeque<>();
 
 	private boolean closed;
 	boolean inPool;
@@ -91,6 +107,10 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Void> quit() {
+		transactionResult = null;
+		while (completedTransactions++ != transactions) {
+			abortTransaction(QUIT_CALLED);
+		}
 		return send(RedisCommand.of(QUIT, charset), this::expectOk)
 				.then(messaging::sendEndOfStream)
 				.whenComplete(this::close);
@@ -100,6 +120,15 @@ public final class RedisConnection implements RedisAPI, Connection {
 	public Promise<String> select(int dbIndex) {
 		checkArgument(dbIndex >= 0, "Negative DB index");
 		return send(RedisCommand.of(SELECT, charset, String.valueOf(dbIndex)), RedisConnection::parseSimpleString);
+	}
+	// endregion
+
+	// region server
+	@Override
+	public Promise<String> flushAll(boolean async) {
+		return async ?
+				send(RedisCommand.of(FLUSHALL, ASYNC.getBytes(charset)), RedisConnection::parseSimpleString) :
+				send(RedisCommand.of(FLUSHALL), RedisConnection::parseSimpleString);
 	}
 	// endregion
 
@@ -1409,9 +1438,61 @@ public final class RedisConnection implements RedisAPI, Connection {
 		return doGeoradiusReadOnly(key, Either.right(member), radius, unit, modifiers);
 	}
 	// endregion
+
+	// region transactions
+	@Override
+	public Promise<Void> discard() {
+		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		checkState(inTransaction(), "DISCARD without MULTI");
+		transactionResult = null;
+		long transactionId = ++completedTransactions;
+		return send(RedisCommand.of(DISCARD), response -> {
+			abortTransaction(TRANSACTION_DISCARDED, transactionId);
+			return expectOk(response);
+		});
+	}
+
+	@Override
+	public Promise<@Nullable List<Object>> exec() {
+		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		checkState(inTransaction(), "EXEC without MULTI");
+		List<Object> transactionResult = this.transactionResult;
+		this.transactionResult = null;
+		long transactionId = ++completedTransactions;
+		return send(RedisCommand.of(EXEC), response -> completeTransaction(response, transactionId)
+				.map(completed -> completed ? transactionResult : null));
+	}
+
+	@Override
+	public Promise<Void> multi() {
+		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		checkState(!inTransaction(), "Nested MULTI call");
+		Promise<Void> resultPromise = send(RedisCommand.of(MULTI), this::expectOk);
+		transactionResult = new ArrayList<>();
+		transactions++;
+		return resultPromise;
+	}
+
+	@Override
+	public Promise<Void> unwatch() {
+		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		return send(RedisCommand.of(UNWATCH), this::expectOk);
+	}
+
+	@Override
+	public Promise<Void> watch(String key, String... otherKeys) {
+		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		checkState(!inTransaction(), "WATCH inside MULTI");
+		return send(RedisCommand.of(WATCH, charset, list(key, otherKeys)), this::expectOk);
+	}
+	// endregion
 	// endregion
 
 	// region connection and pooling
+	public boolean inTransaction() {
+		return transactionResult != null;
+	}
+
 	@Override
 	public boolean isClosed() {
 		if (closed) return true;
@@ -1422,7 +1503,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Void> returnToPool() {
-		if (!callbackDeque.isEmpty()) return Promise.ofException(ACTIVE_COMMANDS);
+		if (!receiveQueue.isEmpty()) return Promise.ofException(ACTIVE_COMMANDS);
 		if (closed) return Promise.ofException(CLOSE_EXCEPTION);
 		if (inPool) return Promise.ofException(IN_POOL);
 		client.returnConnection(this);
@@ -1433,7 +1514,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 	public Promise<Void> close(@NotNull Throwable e) {
 		if (closed) return Promise.complete();
 		closed = true;
-		return Promises.all(callbackDeque.iterator())
+		return Promises.all(receiveQueue.iterator())
+				.then(() -> Promises.all(transformIterator(multiResultQueue.iterator(), result -> result.cb)))
 				.whenComplete(() -> {
 					messaging.closeEx(e);
 					client.onConnectionClose(this);
@@ -1446,35 +1528,74 @@ public final class RedisConnection implements RedisAPI, Connection {
 		if (inPool) return Promise.ofException(IN_POOL);
 
 		Promise<Void> sendPromise = messaging.send(command);
-		Promise<RedisResponse> receivePromise = receive();
+		List<Object> transResult = transactionResult;
+		Promise<RedisResponse> receivePromise = transResult != null ? receiveMulti() : receive();
 
 		return sendPromise.then(() -> receivePromise)
-				.then(responseParser);
+				.then(responseParser)
+				.whenResult(response -> {
+					if (transResult != null) {
+						transResult.add(response);
+					}
+				});
 	}
 
 	private Promise<RedisResponse> receive() {
-		if (callbackDeque.isEmpty()) {
+		if (receiveQueue.isEmpty()) {
 			Promise<RedisResponse> receivePromise = messaging.receive();
 			if (receivePromise.isComplete()) return receivePromise;
 
 			SettablePromise<RedisResponse> newCb = new SettablePromise<>();
 			receivePromise
-					.whenComplete(callbackDeque::remove)
+					.whenComplete(receiveQueue::remove)
 					.whenComplete(newCb)
 					.whenResult(this::onReceive);
-			callbackDeque.offer(newCb);
+			receiveQueue.offer(newCb);
 			return newCb;
 		} else {
 			SettablePromise<RedisResponse> newCb = new SettablePromise<>();
-			callbackDeque.offer(newCb);
+			receiveQueue.offer(newCb);
 			return newCb;
 		}
 	}
 
+	private Promise<RedisResponse> receiveMulti() {
+		SettablePromise<RedisResponse> cb = new SettablePromise<>();
+		if (receiveQueue.isEmpty()) {
+			Promise<RedisResponse> queuedPromise = messaging.receive();
+
+			if (queuedPromise.isComplete()) {
+				if (queuedPromise.isException()) {
+					abortTransaction(queuedPromise.getException());
+					return queuedPromise;
+				}
+				RedisResponse result = queuedPromise.getResult();
+				if (!validateTransaction(result, null)) {
+					return Promise.ofException(QUEUED_EXPECTED);
+				}
+			} else {
+				SettablePromise<RedisResponse> queuedCb = new SettablePromise<>();
+				queuedPromise
+						.whenComplete(receiveQueue::remove)
+						.whenComplete(this::validateTransaction)
+						.whenComplete(queuedCb)
+						.whenResult(this::onReceive);
+
+				receiveQueue.offer(queuedCb);
+			}
+		} else {
+			SettablePromise<RedisResponse> queuedCb = new SettablePromise<>();
+			queuedCb.whenComplete(this::validateTransaction);
+			receiveQueue.offer(queuedCb);
+		}
+		multiResultQueue.offer(new Callback(cb));
+		return cb;
+	}
+
 	private void onReceive() {
-		while (!callbackDeque.isEmpty()) {
+		while (!receiveQueue.isEmpty()) {
 			Promise<RedisResponse> rcvPromise = messaging.receive()
-					.whenComplete((result, e) -> callbackDeque.remove().trySet(result, e));
+					.whenComplete((result, e) -> receiveQueue.remove().trySet(result, e));
 			if (!rcvPromise.isComplete()) {
 				rcvPromise.whenResult(this::onReceive);
 				break;
@@ -1869,7 +1990,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 		List<String> arguments = new ArrayList<>(modifiers.length * 2 + 5);
 		arguments.add(key);
 		Command command;
-		if (eitherCoordOrMember.isLeft()){
+		if (eitherCoordOrMember.isLeft()) {
 			command = GEORADIUS;
 			Coordinate coord = eitherCoordOrMember.getLeft();
 			arguments.add(String.valueOf(coord.getLongitude()));
@@ -1891,7 +2012,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 		List<String> arguments = new ArrayList<>(modifiers.length * 2 + 5);
 		arguments.add(key);
 		Command command;
-		if (eitherCoordOrMember.isLeft()){
+		if (eitherCoordOrMember.isLeft()) {
 			command = GEORADIUS;
 			Coordinate coord = eitherCoordOrMember.getLeft();
 			arguments.add(String.valueOf(coord.getLongitude()));
@@ -1913,6 +2034,95 @@ public final class RedisConnection implements RedisAPI, Connection {
 		}
 		boolean finalWithCoord = withCoord, finalWithDist = withDist, finalWithHash = withHash;
 		return send(RedisCommand.of(command, charset, arguments), response -> parseGeoradiusResults(response, finalWithCoord, finalWithDist, finalWithHash));
+	}
+
+	private class Callback {
+		private final SettablePromise<RedisResponse> cb;
+		private final long transactionId;
+
+		private Callback(SettablePromise<RedisResponse> cb) {
+			this.cb = cb;
+			this.transactionId = inTransaction() ? transactions : NO_TRANSACTION;
+		}
+	}
+
+	private boolean validateTransaction(@Nullable RedisResponse response, @Nullable Throwable e) {
+		if (e != null) {
+			abortTransaction(e);
+			return false;
+		}
+		assert response != null;
+		if (response.isError()) {
+			abortTransaction(response.getError());
+			return false;
+		}
+		if (!response.isString() || !QUEUED.equals(response.getString())) {
+			abortTransaction(QUEUED_EXPECTED);
+			return false;
+		}
+		return true;
+	}
+
+	private void abortTransaction(Throwable e) {
+		abortTransaction(e, completedTransactions);
+	}
+
+	private void abortTransaction(Throwable e, long transactionId) {
+		while (!multiResultQueue.isEmpty()) {
+			Callback callback = multiResultQueue.peek();
+			if (callback.transactionId != transactionId) break;
+			multiResultQueue.remove();
+			callback.cb.setException(e);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private Promise<Boolean> completeTransaction(RedisResponse transactionResponse, long transactionId) {
+		if (transactionResponse.isNil()) {
+			abortTransaction(TRANSACTION_FAILED, transactionId);
+			return Promise.of(false);
+		}
+
+		if (!transactionResponse.isArray()) {
+			abortTransaction(UNEXPECTED_RESPONSE, transactionId);
+			return Promise.ofException(UNEXPECTED_RESPONSE);
+		}
+
+		List<Object> responses = (List<Object>) transactionResponse.getArray();
+		List<SettablePromise<RedisResponse>> pending = new ArrayList<>(responses.size());
+		while (!multiResultQueue.isEmpty()) {
+			Callback callback = multiResultQueue.peek();
+			if (callback.transactionId != transactionId) break;
+			multiResultQueue.remove();
+			pending.add(callback.cb);
+		}
+		if (responses.size() != pending.size()) {
+			for (SettablePromise<RedisResponse> pendingCb : pending) {
+				pendingCb.setException(RESPONSES_SIZE_MISMATCH);
+			}
+			return Promise.ofException(RESPONSES_SIZE_MISMATCH);
+		}
+
+		for (int i = 0; i < responses.size(); i++) {
+			Object response = responses.get(i);
+			SettablePromise<RedisResponse> cb = pending.get(i);
+
+			if (response instanceof Long) {
+				cb.set(RedisResponse.integer((Long) response));
+			} else if (response instanceof String) {
+				cb.set(RedisResponse.string((String) response));
+			} else if (response instanceof byte[]) {
+				cb.set(RedisResponse.bytes((byte[]) response));
+			} else if (response instanceof ServerError) {
+				cb.set(RedisResponse.error((ServerError) response));
+			} else if (response instanceof List) {
+				cb.set(RedisResponse.array((List<?>) response));
+			} else {
+				cb.set(RedisResponse.nil());
+			}
+		}
+
+		return Promise.of(true);
 	}
 
 }
