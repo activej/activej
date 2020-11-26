@@ -10,16 +10,21 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.net.connection.ConnectionPool;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.net.ssl.SSLContext;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.Executor;
 
+import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class RedisClient implements EventloopService, ConnectionPool {
@@ -44,6 +49,11 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 	private Charset charset = DEFAULT_CHARSET;
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
 	private long poolTTLMillis = DEFAULT_POOL_TTL.toMillis();
+
+	@Nullable
+	private SSLContext sslContext;
+	@Nullable
+	private Executor sslExecutor;
 
 	// region creators
 	private RedisClient(Eventloop eventloop, InetSocketAddress address) {
@@ -76,6 +86,12 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 
 	public RedisClient withPoolTTL(Duration poolTTL) {
 		this.poolTTLMillis = poolTTL.toMillis();
+		return this;
+	}
+
+	public RedisClient withSslEnabled(@NotNull SSLContext sslContext, @NotNull Executor sslExecutor) {
+		this.sslContext = sslContext;
+		this.sslExecutor = sslExecutor;
 		return this;
 	}
 	// endregion
@@ -169,7 +185,13 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 
 	private Promise<RedisMessaging> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, null)
-				.map(socket -> {
+				.map((AsyncTcpSocket socket) -> {
+					socket = sslContext != null ?
+							wrapClientSocket(socket,
+									address.getHostName(), address.getPort(),
+									sslContext, sslExecutor) :
+							socket;
+
 					ByteBufQueue tempQueue = new ByteBufQueue();
 					RedisMessaging messaging =
 							RedisMessaging.create(socket, new RESPv2(tempQueue, charset));
