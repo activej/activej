@@ -34,9 +34,6 @@ final class RedisMessaging extends AbstractAsyncCloseable implements Messaging<R
 
 	private boolean flushPosted;
 
-	@NotNull
-	private Promise<Void> flushPromise = Promise.complete();
-
 	private RedisMessaging(AsyncTcpSocket socket, RedisProtocol protocol) {
 		this.socket = socket;
 		this.protocol = protocol;
@@ -74,11 +71,6 @@ final class RedisMessaging extends AbstractAsyncCloseable implements Messaging<R
 					})
 					.whenException(this::closeEx);
 		}
-	}
-
-	@NotNull
-	public Promise<Void> getFlushPromise() {
-		return flushPromise;
 	}
 
 	@Override
@@ -125,7 +117,7 @@ final class RedisMessaging extends AbstractAsyncCloseable implements Messaging<R
 
 	private void flush() {
 		if (buffer.canRead()) {
-			flushPromise = socket.write(buffer)
+			socket.write(buffer)
 					.whenException(this::closeEx);
 			if (bufferSize > INITIAL_BUFFER_SIZE){
 				bufferSize = max(bufferSize - (bufferSize >>> 8), INITIAL_BUFFER_SIZE);

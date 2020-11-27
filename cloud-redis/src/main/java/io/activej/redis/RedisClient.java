@@ -146,7 +146,7 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 		connections.addAll(idlePool.values());
 		active.clear();
 		idlePool.clear();
-		return Promises.all(connections.stream().map(connection -> connection.close(CLOSE_EXCEPTION).toTry()));
+		return Promises.all(connections.stream().map(connection -> connection.closeEx(CLOSE_EXCEPTION).toTry()));
 	}
 
 	public Promise<RedisConnection> getConnection() {
@@ -208,7 +208,7 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 			evictTimestamp = eventloop.currentTimeMillis() + poolTTLMillis;
 			evictRunnable = eventloop.scheduleBackground(evictTimestamp, () -> {
 				RedisConnection connection = idlePool.remove(this);
-				if (connection != null) connection.close(CONNECTION_TIMED_OUT);
+				if (connection != null) connection.closeEx(CONNECTION_TIMED_OUT);
 			});
 		}
 

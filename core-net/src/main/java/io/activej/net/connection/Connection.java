@@ -11,9 +11,9 @@ public interface Connection {
 
 	boolean isClosed();
 
-	Promise<Void> close(@NotNull Throwable e);
+	Promise<Void> closeEx(@NotNull Throwable e);
 
 	default Promise<Void> close() {
-		return close(CLOSE_EXCEPTION);
+		return closeEx(CLOSE_EXCEPTION);
 	}
 }

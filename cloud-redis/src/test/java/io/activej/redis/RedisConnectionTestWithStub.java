@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.BitSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -30,11 +28,11 @@ import static io.activej.redis.TestUtils.assertOk;
 import static io.activej.test.TestUtils.assertComplete;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.singleton;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("ConstantConditions")
-public final class RedisConnectionTest {
+public class RedisConnectionTestWithStub {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -48,7 +46,7 @@ public final class RedisConnectionTest {
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
 	private RedisServer server;
-	private RedisClient client;
+	protected RedisClient client;
 
 	@Before
 	public void setUp() throws IOException {
@@ -59,7 +57,7 @@ public final class RedisConnectionTest {
 
 	@After
 	public void tearDown() {
-		server.stop();
+		if (server != null) server.stop();
 	}
 
 	@Test
@@ -177,9 +175,9 @@ public final class RedisConnectionTest {
 		assertOk(await(redis -> redis.set("aba", "two")));
 		assertOk(await(redis -> redis.set("abb", "three")));
 
-		assertEquals(set("aaa", "aba", "abb"), new HashSet<>(await(RedisAPI::keys)));
-		assertEquals(singletonList("aaa"), await(redis -> redis.keys("aaa")));
-		assertEquals(set("aba", "abb"), new HashSet<>(await(redis -> redis.keys("ab?"))));
+		assertEquals(set("aaa", "aba", "abb"), await(RedisAPI::keys));
+		assertEquals(set("aaa"), await(redis -> redis.keys("aaa")));
+		assertEquals(set("aba", "abb"), await(redis -> redis.keys("ab?")));
 	}
 
 	@Test
@@ -189,9 +187,9 @@ public final class RedisConnectionTest {
 		assertOk(await(redis -> redis.set("c", "valueC")));
 		assertOk(await(redis -> redis.set("d", "valueD")));
 
-		assertEquals(set("a", "b", "c", "d"), new HashSet<>(await(RedisAPI::keys)));
+		assertEquals(set("a", "b", "c", "d"), await(RedisAPI::keys));
 		await(redis -> redis.del("a", "c"));
-		assertEquals(set("b", "d"), new HashSet<>(await(RedisAPI::keys)));
+		assertEquals(set("b", "d"), await(RedisAPI::keys));
 	}
 
 	@Test
@@ -200,8 +198,8 @@ public final class RedisConnectionTest {
 		assertOk(await(redis -> redis.set("b", "valueB")));
 		assertOk(await(redis -> redis.set("c", "valueC")));
 
-		assertEquals(1, (long) await(redis -> redis.exists("a")));
-		assertEquals(0, (long) await(redis -> redis.exists("nonexistent")));
+		assertTrue(await(redis -> redis.exists("a")));
+		assertFalse(await(redis -> redis.exists("nonexistent")));
 	}
 
 	@Test
@@ -235,7 +233,7 @@ public final class RedisConnectionTest {
 		String key = "a";
 		assertOk(await(redis -> redis.set(key, "value")));
 
-		assertEquals(1L, (long) await(redis -> redis.expire(key, TTL_SECONDS)));
+		assertTrue(await(redis -> redis.expire(key, TTL_SECONDS)));
 		assertEquals(TTL_SECONDS.getSeconds(), (long) await(redis -> redis.ttl(key)));
 	}
 
@@ -244,7 +242,7 @@ public final class RedisConnectionTest {
 		String key = "a";
 		assertOk(await(redis -> redis.set(key, "value")));
 
-		assertEquals(1L, (long) await(redis -> redis.expire(key, TTL_MILLIS)));
+		assertTrue(await(redis -> redis.expire(key, TTL_MILLIS)));
 		Long ttlMillis = await(redis -> redis.pttl(key));
 
 		assertTrue(0 < ttlMillis && ttlMillis <= TTL_MILLIS.toMillis());
@@ -259,7 +257,7 @@ public final class RedisConnectionTest {
 
 		assertOk(await(redis -> redis.set(key, value)));
 
-		assertEquals(singletonList(key), await(RedisAPI::keys));
+		assertEquals(singleton(key), await(RedisAPI::keys));
 		assertEquals(value.length() + appended.length(), (long) await(redis -> redis.append(key, appended)));
 		assertEquals(appended.length(), (long) await(redis -> redis.append(nonexistent, appended)));
 
@@ -301,18 +299,15 @@ public final class RedisConnectionTest {
 	}
 
 	@Test
-	public void getbit() {
+	public void setbitAndGetbit() {
 		String key = "key";
-		byte[] bytes = new byte[1024];
-		RANDOM.nextBytes(bytes);
 
-		assertOk(await(redis -> redis.set(key, bytes)));
+		assertFalse(await(redis -> redis.setbit(key, 10, true)));
+		assertTrue(await(redis -> redis.setbit(key, 10, false)));
+		assertFalse(await(redis -> redis.setbit(key, 100, true)));
 
-		int offset = RANDOM.nextInt(bytes.length);
-
-		long expectedBit = BitSet.valueOf(bytes).get(offset) ? 1 : 0;
-		long actualBit = await(redis -> redis.getbit(key, offset));
-		assertEquals(expectedBit, actualBit);
+		assertFalse(await(redis -> redis.getbit(key, 10)));
+		assertTrue(await(redis -> redis.getbit(key, 100)));
 	}
 
 	@Test
@@ -458,8 +453,8 @@ public final class RedisConnectionTest {
 
 	@Test
 	public void setnx() {
-		assertEquals(1, (long) await(redis -> redis.setnx("key", "first")));
-		assertEquals(0, (long) await(redis -> redis.setnx("key", "second")));
+		assertTrue(await(redis -> redis.setnx("key", "first")));
+		assertFalse(await(redis -> redis.setnx("key", "second")));
 
 		assertEquals("first", await(redis -> redis.get("key")));
 	}
@@ -646,13 +641,13 @@ public final class RedisConnectionTest {
 		assertTrue(keyTtl > 0 && keyTtl <= ttl.toMillis());
 
 		TestUtils.await(Promises.delay(ttl));
-		assertEquals(0L, (long) await(redis -> redis.exists(EXPIRATION_KEY)));
+		assertFalse(await(redis -> redis.exists(EXPIRATION_KEY)));
 		assertEquals(-2L, (long) await(redis -> redis.ttl(EXPIRATION_KEY)));
 
-		assertEquals(0L, (long) await(redis -> redis.expire("nonexistent", Duration.ofSeconds(1))));
+		assertFalse(await(redis -> redis.expire("nonexistent", Duration.ofSeconds(1))));
 	}
 
-	private <T> T await(Function<RedisConnection, Promise<T>> clientCommand) {
+	protected  <T> T await(Function<RedisConnection, Promise<T>> clientCommand) {
 		return io.activej.redis.TestUtils.await(client, clientCommand);
 	}
 }

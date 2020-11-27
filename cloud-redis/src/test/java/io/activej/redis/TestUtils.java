@@ -1,16 +1,16 @@
 package io.activej.redis;
 
 import io.activej.promise.Promise;
-import org.junit.Assert;
 
 import java.util.List;
 import java.util.function.Function;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public final class TestUtils {
 	public static void assertOk(String result) {
-		Assert.assertEquals("OK", result);
+		assertEquals("OK", result);
 	}
 
 	public static <T> T await(RedisClient client, Function<RedisConnection, Promise<T>> clientCommand) {
@@ -19,7 +19,7 @@ public final class TestUtils {
 						.whenComplete(connection::quit)));
 	}
 
-	public static void assertEquals(List<Object> expected, List<Object> actual) {
+	public static void assertDeepEquals(List<Object> expected, List<Object> actual) {
 		assertTrue(Utils.deepEquals(expected, actual));
 	}
 }

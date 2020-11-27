@@ -1,5 +1,6 @@
 package io.activej.redis.api;
 
+import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -8,20 +9,29 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static io.activej.common.collection.CollectionUtils.map;
 
 public interface RedisAPI {
+	ExpectedRedisException TRANSACTION_FAILED = new ExpectedRedisException("Transaction failed");
+	ExpectedRedisException TRANSACTION_DISCARDED = new ExpectedRedisException("Transaction discarded");
+	ExpectedRedisException QUIT_CALLED = new ExpectedRedisException("Transaction discarded because QUIT was called");
+
 	// region connection
-	Promise<String> auth(String password);
+	Promise<Void> auth(String password);
 
-	Promise<String> auth(String username, String password);
+	Promise<Void> auth(String username, String password);
 
-	Promise<String> clientSetname(String connectionName);
+	Promise<Void> clientSetname(String connectionName);
 
 	Promise<@Nullable String> clientGetname();
 
-	Promise<String> clientPause(Duration pauseDuration);
+	Promise<Void> clientPause(long pauseMillis);
+
+	default Promise<Void> clientPause(Duration pauseDuration) {
+		return clientPause(pauseDuration.toMillis());
+	}
 
 	Promise<String> echo(String message);
 
@@ -31,11 +41,11 @@ public interface RedisAPI {
 
 	Promise<Void> quit();
 
-	Promise<String> select(int dbIndex);
+	Promise<Void> select(int dbIndex);
 	// endregion
 
 	// region server
-	Promise<String> flushAll(boolean async);
+	Promise<Void> flushAll(boolean async);
 	// endregion
 
 	// region keys
@@ -43,31 +53,55 @@ public interface RedisAPI {
 
 	Promise<byte[]> dump(String key);
 
-	Promise<Long> exists(String key, String... otherKeys);
+	Promise<Boolean> exists(String key);
 
-	Promise<Long> expire(String key, long ttlSeconds);
+	Promise<Long> exists(String firstKey, String secondKey, String... otherKeys);
 
-	Promise<Long> expireat(String key, long unixTimestampSeconds);
+	Promise<Boolean> expire(String key, long ttlSeconds);
 
-	Promise<List<String>> keys(String pattern);
+	Promise<Boolean> expireat(String key, long unixTimestampSeconds);
 
-	default Promise<List<String>> keys() {
+	Promise<Set<String>> keys(String pattern);
+
+	default Promise<Set<String>> keys() {
 		return keys("*");
 	}
 
-	Promise<Long> move(String key, int dbIndex);
+	Promise<Boolean> migrate(String host, int port, String key, int destinationDb, long timeoutMillis, MigrateModifier... modifiers);
 
-	Promise<Long> persist(String key);
+	default Promise<Boolean> migrate(String host, int port, String key, int destinationDb, Duration timeout, MigrateModifier... modifiers) {
+		return migrate(host, port, key, destinationDb, timeout.toMillis(), modifiers);
+	}
 
-	Promise<Long> pexpire(String key, long ttlMillis);
+	Promise<Boolean> migrate(String host, int port, int destinationDb, long timeoutMillis, MigrateModifier... modifiers);
 
-	default Promise<Long> expire(String key, Duration ttl) {
+	default Promise<Boolean> migrate(String host, int port, int destinationDb, Duration timeout, MigrateModifier... modifiers) {
+		return migrate(host, port, destinationDb, timeout.toMillis(), modifiers);
+	}
+
+	Promise<Boolean> move(String key, int dbIndex);
+
+	Promise<@Nullable RedisEncoding> objectEncoding(String key);
+
+	Promise<@Nullable Long> objectFreq(String key);
+
+	Promise<String> objectHelp();
+
+	Promise<@Nullable Long> objectIdletime(String key);
+
+	Promise<@Nullable Long> objectRefcount(String key);
+
+	Promise<Boolean> persist(String key);
+
+	Promise<Boolean> pexpire(String key, long ttlMillis);
+
+	default Promise<Boolean> expire(String key, Duration ttl) {
 		return pexpire(key, ttl.toMillis());
 	}
 
-	Promise<Long> pexpireat(String key, long unixTimestampMillis);
+	Promise<Boolean> pexpireat(String key, long unixTimestampMillis);
 
-	default Promise<Long> expireat(String key, Instant expiration) {
+	default Promise<Boolean> expireat(String key, Instant expiration) {
 		return pexpireat(key, expiration.toEpochMilli());
 	}
 
@@ -75,11 +109,37 @@ public interface RedisAPI {
 
 	Promise<@Nullable String> randomkey();
 
-	Promise<String> rename(String key, String newKey);
+	Promise<Void> rename(String key, String newKey);
 
-	Promise<String> renamenx(String key, String newKey);
+	Promise<Boolean> renamenx(String key, String newKey);
 
-	Promise<Void> restore(String key, Duration ttl, byte[] dump);
+	Promise<Void> restore(String key, long ttlMillis, byte[] dump, RestoreModifier... modifiers);
+
+	Promise<ScanResult> scan(String cursor, ScanModifier... modifiers);
+
+	Promise<ScanResult> scan(String cursor, RedisType type,  ScanModifier... modifiers);
+
+	ChannelSupplier<String> scanStream(ScanModifier...modifiers);
+
+	ChannelSupplier<byte[]> scanStreamAsBinary(ScanModifier... modifiers);
+
+	ChannelSupplier<String> scanStream(RedisType type, ScanModifier... modifiers);
+
+	ChannelSupplier<byte[]> scanStreamAsBinary(RedisType type, ScanModifier... modifiers);
+
+	default Promise<Void> restore(String key, Duration ttl, byte[] dump, RestoreModifier... modifiers) {
+		return restore(key, ttl.toMillis(), dump, modifiers);
+	}
+
+	default Promise<Void> restore(String key, byte[] dump, RestoreModifier... modifiers) {
+		return restore(key, 0, dump, modifiers);
+	}
+
+	Promise<List<String>> sort(String key, SortModifier... modifiers);
+
+	Promise<List<byte[]>> sortAsBinary(String key, SortModifier... modifiers);
+
+	Promise<Long> sort(String key, String destination, SortModifier... modifiers);
 
 	Promise<Long> touch(String key, String... otherKeys);
 
@@ -125,7 +185,7 @@ public interface RedisAPI {
 
 	Promise<@Nullable byte[]> getAsBinary(String key);
 
-	Promise<Long> getbit(String key, int offset);
+	Promise<Boolean> getbit(String key, int offset);
 
 	Promise<String> getrange(String key, int start, int end);
 
@@ -153,31 +213,31 @@ public interface RedisAPI {
 
 	Promise<Long> msetnx(String key, String value, String... otherKeysAndValues);
 
-	Promise<String> psetex(String key, long millis, String value);
+	Promise<Void> psetex(String key, long millis, String value);
 
-	Promise<String> psetex(String key, long millis, byte[] value);
+	Promise<Void> psetex(String key, long millis, byte[] value);
 
 	Promise<@Nullable String> set(String key, String value, SetModifier... modifiers);
 
 	Promise<@Nullable String> set(String key, byte[] value, SetModifier... modifiers);
 
-	Promise<Long> setbit(String key, int offset, int value);
+	Promise<Boolean> setbit(String key, int offset, boolean set);
 
-	Promise<String> setex(String key, long seconds, String value);
+	Promise<Void> setex(String key, long seconds, String value);
 
-	Promise<String> setex(String key, long seconds, byte[] value);
+	Promise<Void> setex(String key, long seconds, byte[] value);
 
-	default Promise<String> setex(String key, Duration ttl, String value) {
+	default Promise<Void> setex(String key, Duration ttl, String value) {
 		return psetex(key, ttl.toMillis(), value);
 	}
 
-	default Promise<String> setex(String key, Duration ttl, byte[] value) {
+	default Promise<Void> setex(String key, Duration ttl, byte[] value) {
 		return psetex(key, ttl.toMillis(), value);
 	}
 
-	Promise<Long> setnx(String key, String value);
+	Promise<Boolean> setnx(String key, String value);
 
-	Promise<Long> setnx(String key, byte[] value);
+	Promise<Boolean> setnx(String key, byte[] value);
 
 	Promise<Long> setrange(String key, int offset, String value);
 
@@ -281,11 +341,11 @@ public interface RedisAPI {
 
 	Promise<Long> lrem(String key, long count, byte[] element);
 
-	Promise<String> lset(String key, long index, String element);
+	Promise<Void> lset(String key, long index, String element);
 
-	Promise<String> lset(String key, long index, byte[] element);
+	Promise<Void> lset(String key, long index, byte[] element);
 
-	Promise<String> ltrim(String key, long start, long stop);
+	Promise<Void> ltrim(String key, long start, long stop);
 
 	Promise<@Nullable String> rpop(String key);
 
@@ -311,37 +371,37 @@ public interface RedisAPI {
 
 	Promise<Long> scard(String key);
 
-	Promise<List<String>> sdiff(String key, String... otherKeys);
+	Promise<Set<String>> sdiff(String key, String... otherKeys);
 
-	Promise<List<byte[]>> sdiffAsBinary(String key, String... otherKeys);
+	Promise<Set<byte[]>> sdiffAsBinary(String key, String... otherKeys);
 
 	Promise<Long> sdiffstore(String destination, String key, String... otherKeys);
 
-	Promise<List<String>> sinter(String key, String... otherKeys);
+	Promise<Set<String>> sinter(String key, String... otherKeys);
 
-	Promise<List<byte[]>> sinterAsBinary(String key, String... otherKeys);
+	Promise<Set<byte[]>> sinterAsBinary(String key, String... otherKeys);
 
 	Promise<Long> sinterstore(String destination, String key, String... otherKeys);
 
-	Promise<Long> sismember(String key, String member);
+	Promise<Boolean> sismember(String key, String member);
 
-	Promise<Long> sismember(String key, byte[] member);
+	Promise<Boolean> sismember(String key, byte[] member);
 
-	Promise<List<String>> smembers(String key);
+	Promise<Set<String>> smembers(String key);
 
 	Promise<List<byte[]>> smembersAsBinary(String key);
 
-	Promise<Long> smove(String source, String destination, String member);
+	Promise<Boolean> smove(String source, String destination, String member);
 
-	Promise<Long> smove(String source, String destination, byte[] member);
+	Promise<Boolean> smove(String source, String destination, byte[] member);
 
 	Promise<@Nullable String> spop(String key);
 
 	Promise<@Nullable byte[]> spopAsBinary(String key);
 
-	Promise<List<String>> spop(String key, long count);
+	Promise<Set<String>> spop(String key, long count);
 
-	Promise<List<byte[]>> spopAsBinary(String key, long count);
+	Promise<Set<byte[]>> spopAsBinary(String key, long count);
 
 	Promise<@Nullable String> srandmember(String key);
 
@@ -355,9 +415,15 @@ public interface RedisAPI {
 
 	Promise<Long> srem(String key, byte[] member, byte[]... otherMembers);
 
-	Promise<List<String>> sunion(String key, String... otherKeys);
+	Promise<ScanResult> sscan(String key, String cursor, ScanModifier... modifiers);
 
-	Promise<List<byte[]>> sunionAsBinary(String key, String... otherKeys);
+	ChannelSupplier<String> sscanStream(String key, ScanModifier... modifiers);
+
+	ChannelSupplier<byte[]> sscanStreamAsBinary(String key, ScanModifier... modifiers);
+
+	Promise<Set<String>> sunion(String key, String... otherKeys);
+
+	Promise<Set<byte[]>> sunionAsBinary(String key, String... otherKeys);
 
 	Promise<Long> sunionstore(String destination, String key, String... otherKeys);
 	// endregion
@@ -365,7 +431,7 @@ public interface RedisAPI {
 	// region hashes
 	Promise<Long> hdel(String key, String field, String... otherFields);
 
-	Promise<Long> hexists(String key, String field);
+	Promise<Boolean> hexists(String key, String field);
 
 	Promise<@Nullable String> hget(String key, String field);
 
@@ -379,7 +445,7 @@ public interface RedisAPI {
 
 	Promise<Double> hincrbyfloat(String key, String field, double incrByValue);
 
-	Promise<List<String>> hkeys(String key);
+	Promise<Set<String>> hkeys(String key);
 
 	Promise<Long> hlen(String key);
 
@@ -387,17 +453,23 @@ public interface RedisAPI {
 
 	Promise<List<@Nullable byte[]>> hmgetAsBinary(String key, String field, String... otherFields);
 
-	Promise<String> hmset(String key, Map<@NotNull String, @NotNull byte[]> entries);
+	Promise<Void> hmset(String key, Map<@NotNull String, @NotNull byte[]> entries);
 
-	Promise<String> hmset(String key, String field, String value, String... otherFieldsAndValues);
+	Promise<Void> hmset(String key, String field, String value, String... otherFieldsAndValues);
+
+	Promise<ScanResult> hscan(String key, String cursor, ScanModifier... modifiers);
+
+	ChannelSupplier<Map.Entry<String, String>> hscanStream(String key, ScanModifier... modifiers);
+
+	ChannelSupplier<Map.Entry<String, byte[]>> hscanStreamAsBinary(String key, ScanModifier... modifiers);
 
 	Promise<Long> hset(String key, Map<@NotNull String, @NotNull byte[]> entries);
 
 	Promise<Long> hset(String key, String field, String value, String... otherFieldsAndValues);
 
-	Promise<Long> hsetnx(String key, String field, String value);
+	Promise<Boolean> hsetnx(String key, String field, String value);
 
-	Promise<Long> hsetnx(String key, String field, byte[] value);
+	Promise<Boolean> hsetnx(String key, String field, byte[] value);
 
 	Promise<Long> hstrlen(String key, String field);
 
@@ -427,18 +499,18 @@ public interface RedisAPI {
 		return bzpopmax(0, key, otherKeys);
 	}
 
-	Promise<Long> zadd(String key, Map<Double, String> entries, ZaddModifier... modifiers);
+	Promise<Long> zadd(String key, Map<String, Double> entries, ZaddModifier... modifiers);
 
 	default Promise<Long> zadd(String key, double score, String value, ZaddModifier... modifiers) {
-		return zadd(key, map(score, value), modifiers);
+		return zadd(key, map(value, score), modifiers);
 	}
 
 	Promise<Double> zaddIncr(String key, double score, String value, ZaddModifier... modifiers);
 
-	Promise<Long> zaddBinary(String key, Map<Double, byte[]> entries, ZaddModifier... modifiers);
+	Promise<Long> zaddBinary(String key, Map<byte[], Double> entries, ZaddModifier... modifiers);
 
 	default Promise<Long> zadd(String key, double score, byte[] value, ZaddModifier... modifiers) {
-		return zaddBinary(key, map(score, value), modifiers);
+		return zaddBinary(key, map(value, score), modifiers);
 	}
 
 	Promise<Double> zaddIncr(String key, double score, byte[] value, ZaddModifier... modifiers);
@@ -584,6 +656,12 @@ public interface RedisAPI {
 	Promise<@Nullable Long> zrevrank(String key, String member);
 
 	Promise<@Nullable Long> zrevrank(String key, byte[] member);
+
+	Promise<ScanResult> zscan(String key, String cursor, ScanModifier... modifiers);
+
+	ChannelSupplier<Map.Entry<String, Double>> zscanStream(String key, ScanModifier... modifiers);
+
+	ChannelSupplier<Map.Entry<byte[], Double>> zscanStreamAsBinary(String key, ScanModifier... modifiers);
 
 	Promise<@Nullable Double> zscore(String key, String member);
 
