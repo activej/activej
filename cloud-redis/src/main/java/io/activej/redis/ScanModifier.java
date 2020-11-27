@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import java.util.List;
 

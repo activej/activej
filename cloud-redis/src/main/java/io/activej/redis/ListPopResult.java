@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -9,7 +9,7 @@ public class ListPopResult {
 	private final String key;
 	private final byte[] result;
 
-	public ListPopResult(Charset charset, String key, byte[] result) {
+	ListPopResult(Charset charset, String key, byte[] result) {
 		this.charset = charset;
 		this.key = key;
 		this.result = result;

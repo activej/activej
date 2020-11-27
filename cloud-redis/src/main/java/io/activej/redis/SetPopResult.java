@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -9,7 +9,7 @@ public class SetPopResult {
 	private final byte[] result;
 	private final double score;
 
-	public SetPopResult(Charset charset, byte[] result, double score) {
+	SetPopResult(Charset charset, byte[] result, double score) {
 		this.charset = charset;
 		this.result = result;
 		this.score = score;

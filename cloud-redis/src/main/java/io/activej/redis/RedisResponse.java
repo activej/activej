@@ -1,6 +1,5 @@
 package io.activej.redis;
 
-import io.activej.redis.api.ServerError;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -9,7 +8,7 @@ import java.util.Objects;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class RedisResponse {
+final class RedisResponse {
 	@Nullable
 	private final Long integer;
 

@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
@@ -13,10 +13,10 @@ import java.util.Set;
 
 import static io.activej.common.collection.CollectionUtils.map;
 
-public interface RedisAPI {
-	ExpectedRedisException TRANSACTION_FAILED = new ExpectedRedisException("Transaction failed");
-	ExpectedRedisException TRANSACTION_DISCARDED = new ExpectedRedisException("Transaction discarded");
-	ExpectedRedisException QUIT_CALLED = new ExpectedRedisException("Transaction discarded because QUIT was called");
+public interface RedisApi {
+	ExpectedRedisException TRANSACTION_FAILED = new ExpectedRedisException(RedisApi.class, "Transaction failed");
+	ExpectedRedisException TRANSACTION_DISCARDED = new ExpectedRedisException(RedisApi.class, "Transaction discarded");
+	ExpectedRedisException QUIT_CALLED = new ExpectedRedisException(RedisApi.class, "Transaction discarded because QUIT was called");
 
 	// region connection
 	Promise<Void> auth(String password);

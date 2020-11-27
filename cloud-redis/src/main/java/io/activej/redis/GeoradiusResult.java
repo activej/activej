@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +16,7 @@ public final class GeoradiusResult {
 	@Nullable
 	private final Long hash;
 
-	public GeoradiusResult(Charset charset, byte[] member, @Nullable Coordinate coord, @Nullable Double dist, @Nullable Long hash) {
+	GeoradiusResult(Charset charset, byte[] member, @Nullable Coordinate coord, @Nullable Double dist, @Nullable Long hash) {
 		this.charset = charset;
 		this.member = member;
 		this.coord = coord;

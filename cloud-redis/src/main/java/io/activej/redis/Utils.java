@@ -4,7 +4,6 @@ import io.activej.csp.AbstractChannelSupplier;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.promise.Promise;
-import io.activej.redis.api.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
@@ -15,14 +14,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.redis.GeoradiusModifier.*;
+import static io.activej.redis.MigrateModifier.KEYS;
 import static io.activej.redis.RedisConnection.UNEXPECTED_NIL;
-import static io.activej.redis.api.GeoradiusModifier.*;
-import static io.activej.redis.api.MigrateModifier.KEYS;
-import static io.activej.redis.api.SetModifier.*;
-import static io.activej.redis.api.ZaddModifier.GT;
-import static io.activej.redis.api.ZaddModifier.LT;
+import static io.activej.redis.SetModifier.*;
+import static io.activej.redis.ZaddModifier.GT;
+import static io.activej.redis.ZaddModifier.LT;
 
-public final class Utils {
+final class Utils {
 	private Utils() {
 		throw new AssertionError();
 	}
@@ -38,7 +37,7 @@ public final class Utils {
 	static final String NOKEY = "NOKEY";
 
 	static final String EMPTY_KEY = "";
-	public static final String ZERO_CURSOR = "0";
+	static final String ZERO_CURSOR = "0";
 
 
 	@SafeVarargs
@@ -50,7 +49,7 @@ public final class Utils {
 	}
 
 	@SafeVarargs
-	public static <T> List<T> list(T first, T second, T... otherArguments) {
+	static <T> List<T> list(T first, T second, T... otherArguments) {
 		List<T> result = new ArrayList<>(otherArguments.length + 2);
 		result.add(first);
 		result.add(second);
@@ -260,7 +259,7 @@ public final class Utils {
 		}
 	}
 
-	public static final class ScanChannelSupplier extends AbstractChannelSupplier<byte[]> {
+	static final class ScanChannelSupplier extends AbstractChannelSupplier<byte[]> {
 		private final Function<String, Promise<ScanResult>> scanFn;
 
 		@Nullable
@@ -290,7 +289,7 @@ public final class Utils {
 		}
 	}
 
-	public static final class MapTransformer<K, V> implements ChannelSupplierTransformer<byte[], ChannelSupplier<Map.Entry<K, V>>> {
+	static final class MapTransformer<K, V> implements ChannelSupplierTransformer<byte[], ChannelSupplier<Map.Entry<K, V>>> {
 		private final RedisFunction<byte[], K> keyFn;
 		private final RedisFunction<byte[], V> valueFn;
 

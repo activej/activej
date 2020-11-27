@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import io.activej.common.exception.StacklessException;
 import org.jetbrains.annotations.NotNull;

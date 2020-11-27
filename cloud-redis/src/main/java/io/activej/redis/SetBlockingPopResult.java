@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -10,7 +10,7 @@ public class SetBlockingPopResult {
 	private final byte[] result;
 	private final double score;
 
-	public SetBlockingPopResult(Charset charset, String key, byte[] result, double score) {
+	SetBlockingPopResult(Charset charset, String key, byte[] result, double score) {
 		this.charset = charset;
 		this.key = key;
 		this.result = result;

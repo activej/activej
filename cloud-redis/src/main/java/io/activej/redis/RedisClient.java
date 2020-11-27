@@ -16,6 +16,8 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.net.InetSocketAddress;
@@ -24,10 +26,14 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 
+import static io.activej.async.util.LogUtils.Level.TRACE;
+import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class RedisClient implements EventloopService, ConnectionPool {
+	private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
+
 	public static final CloseException CLOSE_EXCEPTION = new CloseException(RedisClient.class, "Closed");
 	public static final AsyncTimeoutException CONNECTION_TIMED_OUT = new AsyncTimeoutException(RedisClient.class, "Idle connection has timed out");
 
@@ -146,10 +152,12 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 		connections.addAll(idlePool.values());
 		active.clear();
 		idlePool.clear();
-		return Promises.all(connections.stream().map(connection -> connection.closeEx(CLOSE_EXCEPTION).toTry()));
+		return Promises.all(connections.stream().map(connection -> connection.closeEx(CLOSE_EXCEPTION).toTry()))
+				.whenComplete(toLogger(logger, "stop", this));
 	}
 
 	public Promise<RedisConnection> getConnection() {
+		logger.trace("Connection has been requested");
 		return Promise.complete()
 				.then(() -> {
 					while (true) {
@@ -158,6 +166,7 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 							idleEntry.getKey().evictRunnable.cancel();
 							RedisConnection idleConnection = idleEntry.getValue();
 							if (idleConnection.isClosed()) continue;
+							logger.trace("Returning connection from pool");
 							idleConnection.inPool = false;
 							return Promise.of(idleConnection);
 						}
@@ -173,6 +182,7 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 		if (isUsingPool()) {
 			connection.inPool = true;
 			if (connection.isClosed()) return;
+			logger.trace("Connection is returned to pool");
 			idlePool.put(new IdleKey(), connection);
 		} else {
 			connection.close();
@@ -197,7 +207,18 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 							RedisMessaging.create(socket, new RESPv2(tempQueue, charset));
 					messaging.setCloseable($ -> tempQueue.recycle());
 					return messaging;
-				});
+				})
+				.whenComplete(toLogger(logger, TRACE, "connect", this));
+	}
+
+	@Override
+	public String toString() {
+		return "RedisClient{" +
+				"address=" + address +
+				", idlePoolSize=" + idlePool.size() +
+				", activeConnections=" + active.size() +
+				", secure=" + (sslContext != null) +
+				'}';
 	}
 
 	private class IdleKey implements Comparable<IdleKey> {

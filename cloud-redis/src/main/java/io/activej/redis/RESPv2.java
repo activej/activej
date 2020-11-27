@@ -5,8 +5,6 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.redis.api.Command;
-import io.activej.redis.api.ServerError;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.Charset;
@@ -20,7 +18,7 @@ import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
 import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 
-public final class RESPv2 implements RedisProtocol {
+final class RESPv2 implements RedisProtocol {
 
 	private static final int CR_LF_LENGTH = 2;
 	private static final int INTEGER_MAX_LEN = String.valueOf(Long.MIN_VALUE).length();

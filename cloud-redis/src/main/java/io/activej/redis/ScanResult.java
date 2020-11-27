@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -10,7 +10,7 @@ public final class ScanResult {
 	private final String cursor;
 	private final List<byte[]> elements;
 
-	public ScanResult(Charset charset, String cursor, List<byte[]> elements) {
+	ScanResult(Charset charset, String cursor, List<byte[]> elements) {
 		this.charset = charset;
 		this.cursor = cursor;
 		this.elements = elements;

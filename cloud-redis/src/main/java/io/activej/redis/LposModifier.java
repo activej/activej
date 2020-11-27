@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ public final class LposModifier {
 
 	private final List<String> arguments;
 
-	LposModifier(List<String> arguments) {
+	private LposModifier(List<String> arguments) {
 		this.arguments = arguments;
 	}
 

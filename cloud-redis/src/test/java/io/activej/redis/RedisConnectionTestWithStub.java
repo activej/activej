@@ -5,7 +5,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.TestUtils;
-import io.activej.redis.api.RedisAPI;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.Nullable;
@@ -169,13 +168,13 @@ public class RedisConnectionTestWithStub {
 
 	@Test
 	public void keys() {
-		assertTrue(await(RedisAPI::keys).isEmpty());
+		assertTrue(await(RedisApi::keys).isEmpty());
 
 		assertOk(await(redis -> redis.set("aaa", "one")));
 		assertOk(await(redis -> redis.set("aba", "two")));
 		assertOk(await(redis -> redis.set("abb", "three")));
 
-		assertEquals(set("aaa", "aba", "abb"), await(RedisAPI::keys));
+		assertEquals(set("aaa", "aba", "abb"), await(RedisApi::keys));
 		assertEquals(set("aaa"), await(redis -> redis.keys("aaa")));
 		assertEquals(set("aba", "abb"), await(redis -> redis.keys("ab?")));
 	}
@@ -187,9 +186,9 @@ public class RedisConnectionTestWithStub {
 		assertOk(await(redis -> redis.set("c", "valueC")));
 		assertOk(await(redis -> redis.set("d", "valueD")));
 
-		assertEquals(set("a", "b", "c", "d"), await(RedisAPI::keys));
+		assertEquals(set("a", "b", "c", "d"), await(RedisApi::keys));
 		await(redis -> redis.del("a", "c"));
-		assertEquals(set("b", "d"), await(RedisAPI::keys));
+		assertEquals(set("b", "d"), await(RedisApi::keys));
 	}
 
 	@Test
@@ -257,7 +256,7 @@ public class RedisConnectionTestWithStub {
 
 		assertOk(await(redis -> redis.set(key, value)));
 
-		assertEquals(singleton(key), await(RedisAPI::keys));
+		assertEquals(singleton(key), await(RedisApi::keys));
 		assertEquals(value.length() + appended.length(), (long) await(redis -> redis.append(key, appended)));
 		assertEquals(appended.length(), (long) await(redis -> redis.append(nonexistent, appended)));
 
@@ -629,7 +628,7 @@ public class RedisConnectionTestWithStub {
 		assertEquals(11, (long) await(redis -> redis.pfcount(destKey)));
 	}
 
-	private void testExpiration(Duration ttl, Function<RedisAPI, Promise<?>> expireCommand) {
+	private void testExpiration(Duration ttl, Function<RedisApi, Promise<?>> expireCommand) {
 		assertEquals(-2L, (long) await(redis -> redis.ttl(EXPIRATION_KEY)));
 
 		assertOk(await(redis -> redis.set(EXPIRATION_KEY, EXPIRATION_VALUE)));

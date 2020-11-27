@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 public enum DistanceUnit {
 	M, KM, FT, MI;
@@ -9,7 +9,7 @@ public enum DistanceUnit {
 		this.argument = name().toLowerCase();
 	}
 
-	public String getArgument() {
+	String getArgument() {
 		return argument;
 	}
 }

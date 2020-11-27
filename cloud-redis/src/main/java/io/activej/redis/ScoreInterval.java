@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 public final class ScoreInterval {
 	private static final String NEGATIVE_INFINITY = "-inf";

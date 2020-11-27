@@ -1,11 +1,11 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
 
-public enum Command {
+enum Command {
 	// Connection
 	AUTH, CLIENT_GETNAME, CLIENT_SETNAME, CLIENT_PAUSE, ECHO, PING, QUIT, SELECT,
 

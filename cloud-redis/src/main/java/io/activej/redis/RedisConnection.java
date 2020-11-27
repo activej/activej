@@ -1,16 +1,16 @@
 package io.activej.redis;
 
-import io.activej.common.api.ParserFunction;
+import io.activej.common.Checks;
 import io.activej.common.collection.Either;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.net.connection.Connection;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
-import io.activej.redis.api.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -21,15 +21,18 @@ import java.util.stream.Stream;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
+import static io.activej.redis.BitOperator.NOT;
+import static io.activej.redis.Command.*;
+import static io.activej.redis.GeoradiusModifier.*;
+import static io.activej.redis.ScanModifier.TYPE;
+import static io.activej.redis.SortModifier.STORE;
 import static io.activej.redis.Utils.*;
-import static io.activej.redis.api.BitOperator.NOT;
-import static io.activej.redis.api.Command.*;
-import static io.activej.redis.api.GeoradiusModifier.*;
-import static io.activej.redis.api.ScanModifier.TYPE;
-import static io.activej.redis.api.SortModifier.STORE;
 import static java.util.stream.Collectors.toList;
 
-public final class RedisConnection implements RedisAPI, Connection {
+public final class RedisConnection implements RedisApi, Connection {
+	private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
+	private static final boolean CHECK = Checks.isEnabled(RedisConnection.class);
+
 	public static final RedisException IN_POOL = new RedisException(RedisConnection.class, "Connection is in pool");
 	public static final RedisException ACTIVE_COMMANDS = new RedisException(RedisConnection.class, "Cannot return to pool, there are ongoing commands");
 	public static final RedisException UNEXPECTED_NIL = new RedisException(RedisConnection.class, "Received unexpected 'NIL' response");
@@ -53,7 +56,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Nullable List<Object> transactionResult;
 
 	private final Queue<SettablePromise<RedisResponse>> receiveQueue = new ArrayDeque<>();
-	private final Queue<Callback> multiResultQueue = new ArrayDeque<>();
+	private final Queue<Callback> transactionQueue = new ArrayDeque<>();
 
 	private boolean closed;
 	boolean inPool;
@@ -119,7 +122,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Void> select(int dbIndex) {
-		checkArgument(dbIndex >= 0, "Negative DB index");
+		if (CHECK) checkArgument(dbIndex >= 0, "Negative DB index");
+
 		return send(RedisCommand.of(SELECT, charset, String.valueOf(dbIndex)), RedisConnection::expectOk);
 	}
 	// endregion
@@ -181,7 +185,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Boolean> move(String key, int dbIndex) {
-		checkArgument(dbIndex >= 0, "Negative DB index");
+		if (CHECK) checkArgument(dbIndex >= 0, "Negative DB index");
+
 		return send(RedisCommand.of(MOVE, charset, key, String.valueOf(dbIndex)), RedisConnection::parseBoolean);
 	}
 
@@ -250,7 +255,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Void> restore(String key, long ttlMillis, byte[] dump, RestoreModifier... modifiers) {
-		checkRestoreModifiers(modifiers);
+		if (CHECK) checkRestoreModifiers(modifiers);
 
 		List<byte[]> arguments = new ArrayList<>();
 		arguments.add(key.getBytes(charset));
@@ -358,7 +363,9 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Long> bitop(BitOperator operator, String destKey, String sourceKey, String... otherSourceKeys) {
-		checkArgument(operator != NOT || otherSourceKeys.length == 0, "BITOP NOT must be called with a single source key");
+		if (CHECK)
+			checkArgument(operator != NOT || otherSourceKeys.length == 0, "BITOP NOT must be called with a single source key");
+
 		return send(RedisCommand.of(BITOP, charset, list(operator.name(), destKey, sourceKey, otherSourceKeys)), RedisConnection::parseInteger);
 	}
 
@@ -451,7 +458,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Void> mset(Map<@NotNull String, @NotNull byte[]> entries) {
-		checkArgument(!entries.isEmpty(), "No entry to set");
+		if (CHECK) checkArgument(!entries.isEmpty(), "No entry to set");
 		List<byte[]> args = entries.entrySet().stream()
 				.flatMap(entry -> Stream.of(entry.getKey().getBytes(charset), entry.getValue()))
 				.collect(toList());
@@ -460,13 +467,14 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Void> mset(String key, String value, String... otherKeysAndValues) {
-		checkArgument(otherKeysAndValues.length % 2 == 0, "Number of keys should equal number of values");
+		if (CHECK) checkArgument(otherKeysAndValues.length % 2 == 0, "Number of keys should equal number of values");
+
 		return send(RedisCommand.of(MSET, charset, list(key, value, otherKeysAndValues)), RedisConnection::expectOk);
 	}
 
 	@Override
 	public Promise<Long> msetnx(Map<@NotNull String, @NotNull byte[]> entries) {
-		checkArgument(!entries.isEmpty(), "No entry to set");
+		if (CHECK) checkArgument(!entries.isEmpty(), "No entry to set");
 		List<byte[]> args = entries.entrySet().stream()
 				.flatMap(entry -> Stream.of(entry.getKey().getBytes(charset), entry.getValue()))
 				.collect(toList());
@@ -475,7 +483,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Long> msetnx(String key, String value, String... otherKeysAndValues) {
-		checkArgument(otherKeysAndValues.length % 2 == 0, "Number of keys should equal number of values");
+		if (CHECK) checkArgument(otherKeysAndValues.length % 2 == 0, "Number of keys should equal number of values");
+
 		return send(RedisCommand.of(MSETNX, charset, list(key, value, otherKeysAndValues)), RedisConnection::parseInteger);
 	}
 
@@ -500,7 +509,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 		if (modifiers.length == 0) {
 			command = RedisCommand.of(SET, key.getBytes(charset), value);
 		} else {
-			checkSetModifiers(modifiers);
+			if (CHECK) checkSetModifiers(modifiers);
 
 			List<byte[]> arguments = new ArrayList<>(modifiers.length + 2);
 			arguments.add(key.getBytes(charset));
@@ -517,7 +526,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Boolean> setbit(String key, int offset, boolean value) {
-		checkArgument(offset >= 0, "Offset must not be less than 0");
+		if (CHECK) checkArgument(offset >= 0, "Offset must not be less than 0");
+
 		return send(RedisCommand.of(SETBIT, charset, key, String.valueOf(offset), value ? "1" : "0"), RedisConnection::parseBoolean);
 	}
 
@@ -625,7 +635,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 		if (modifiers.length == 0) {
 			command = RedisCommand.of(LPOS, key.getBytes(charset), element);
 		} else {
-			checkLposModifiers(modifiers);
+			if (CHECK) checkLposModifiers(modifiers);
 
 			List<byte[]> arguments = new ArrayList<>(modifiers.length + 2);
 			arguments.add(key.getBytes(charset));
@@ -647,8 +657,10 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<List<Long>> lpos(String key, byte[] element, int count, LposModifier... modifiers) {
-		checkArgument(count >= 0, "COUNT cannot be negative");
-		checkLposModifiers(modifiers);
+		if (CHECK) {
+			checkArgument(count >= 0, "COUNT cannot be negative");
+			checkLposModifiers(modifiers);
+		}
 
 		List<byte[]> arguments = new ArrayList<>(modifiers.length + 4);
 		arguments.add(key.getBytes(charset));
@@ -983,7 +995,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Void> hmset(String key, Map<@NotNull String, @NotNull byte[]> entries) {
-		checkArgument(!entries.isEmpty(), "No entry to set");
+		if (CHECK) checkArgument(!entries.isEmpty(), "No entry to set");
 		List<byte[]> args = new ArrayList<>(entries.size() * 2 + 1);
 		args.add(key.getBytes(charset));
 		for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
@@ -995,7 +1007,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Void> hmset(String key, String field, String value, String... otherFieldsAndValues) {
-		checkArgument(otherFieldsAndValues.length % 2 == 0, "Number of keys should equal number of values");
+		if (CHECK) checkArgument(otherFieldsAndValues.length % 2 == 0, "Number of keys should equal number of values");
+
 		return send(RedisCommand.of(HMSET, charset, list(key, field, value, otherFieldsAndValues)), RedisConnection::expectOk);
 	}
 
@@ -1018,7 +1031,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Long> hset(String key, Map<@NotNull String, @NotNull byte[]> entries) {
-		checkArgument(!entries.isEmpty(), "No entry to set");
+		if (CHECK) checkArgument(!entries.isEmpty(), "No entry to set");
 		List<byte[]> args = new ArrayList<>(entries.size() * 2 + 1);
 		args.add(key.getBytes(charset));
 		for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
@@ -1030,7 +1043,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Long> hset(String key, String field, String value, String... otherFieldsAndValues) {
-		checkArgument(otherFieldsAndValues.length % 2 == 0, "Number of keys should equal number of values");
+		if (CHECK) checkArgument(otherFieldsAndValues.length % 2 == 0, "Number of keys should equal number of values");
+
 		return send(RedisCommand.of(HSET, charset, list(key, field, value, otherFieldsAndValues)), RedisConnection::parseInteger);
 	}
 
@@ -1073,8 +1087,10 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Long> zadd(String key, Map<String, Double> entries, ZaddModifier... modifiers) {
-		checkArgument(!entries.isEmpty(), "No entry to add");
-		checkZaddModifiers(modifiers);
+		if (CHECK) {
+			checkArgument(!entries.isEmpty(), "No entry to add");
+			checkZaddModifiers(modifiers);
+		}
 
 		List<byte[]> args = new ArrayList<>(entries.size() * 2 + modifiers.length + 1);
 		args.add(key.getBytes(charset));
@@ -1090,7 +1106,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Double> zaddIncr(String key, double score, String value, ZaddModifier... modifiers) {
-		checkZaddModifiers(modifiers);
+		if (CHECK) checkZaddModifiers(modifiers);
+
 		List<byte[]> args = new ArrayList<>(4 + modifiers.length);
 		args.add(key.getBytes(charset));
 		for (ZaddModifier modifier : modifiers) {
@@ -1105,8 +1122,10 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Long> zaddBinary(String key, Map<byte[], Double> entries, ZaddModifier... modifiers) {
-		checkArgument(!entries.isEmpty(), "No entry to add");
-		checkZaddModifiers(modifiers);
+		if (CHECK) {
+			checkArgument(!entries.isEmpty(), "No entry to add");
+			checkZaddModifiers(modifiers);
+		}
 
 		List<byte[]> args = new ArrayList<>(entries.size() * 2 + modifiers.length + 1);
 		args.add(key.getBytes(charset));
@@ -1122,7 +1141,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Double> zaddIncr(String key, double score, byte[] value, ZaddModifier... modifiers) {
-		checkZaddModifiers(modifiers);
+		if (CHECK) checkZaddModifiers(modifiers);
+
 		List<byte[]> args = new ArrayList<>(4 + modifiers.length);
 		args.add(key.getBytes(charset));
 		for (ZaddModifier modifier : modifiers) {
@@ -1205,13 +1225,13 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public Promise<Map<String, Double>> zrangeWithScores(String key, long start, long stop) {
 		return send(RedisCommand.of(ZRANGE, charset, key, String.valueOf(start), String.valueOf(stop), WITHSCORES),
-				response -> parseMap(response, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, this::parseDouble));
 	}
 
 	@Override
 	public Promise<Map<byte[], Double>> zrangeAsBinaryWithScores(String key, long start, long stop) {
 		return send(RedisCommand.of(ZRANGE, charset, key, String.valueOf(start), String.valueOf(stop), WITHSCORES),
-				response -> parseMap(response, v -> v, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, v -> v, this::parseDouble));
 	}
 
 	@Override
@@ -1284,26 +1304,26 @@ public final class RedisConnection implements RedisAPI, Connection {
 	public Promise<Map<String, Double>> zrangebyscoreWithScores(String key, ScoreInterval interval, long offset, long count) {
 		return send(RedisCommand.of(ZRANGEBYSCORE, charset, key, interval.getMin(), interval.getMax(), WITHSCORES, LIMIT,
 				String.valueOf(offset), String.valueOf(count)),
-				response -> parseMap(response, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, this::parseDouble));
 	}
 
 	@Override
 	public Promise<Map<String, Double>> zrangebyscoreWithScores(String key, ScoreInterval interval) {
 		return send(RedisCommand.of(ZRANGEBYSCORE, charset, key, interval.getMin(), interval.getMax(), WITHSCORES),
-				response -> parseMap(response, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, this::parseDouble));
 	}
 
 	@Override
 	public Promise<Map<byte[], Double>> zrangebyscoreAsBinaryWithScores(String key, ScoreInterval interval, long offset, long count) {
 		return send(RedisCommand.of(ZRANGEBYSCORE, charset, key, interval.getMin(), interval.getMax(), WITHSCORES, LIMIT,
 				String.valueOf(offset), String.valueOf(count)),
-				response -> parseMap(response, k -> k, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, k -> k, this::parseDouble));
 	}
 
 	@Override
 	public Promise<Map<byte[], Double>> zrangebyscoreAsBinaryWithScores(String key, ScoreInterval interval) {
 		return send(RedisCommand.of(ZRANGEBYSCORE, charset, key, interval.getMin(), interval.getMax(), WITHSCORES),
-				response -> parseMap(response, k -> k, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, k -> k, this::parseDouble));
 	}
 
 	@Override
@@ -1354,13 +1374,13 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public Promise<Map<String, Double>> zrevrangeWithScores(String key, long start, long stop) {
 		return send(RedisCommand.of(ZREVRANGE, charset, key, String.valueOf(start), String.valueOf(stop), WITHSCORES),
-				response -> parseMap(response, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, this::parseDouble));
 	}
 
 	@Override
 	public Promise<Map<byte[], Double>> zrevrangeAsBinaryWithScores(String key, long start, long stop) {
 		return send(RedisCommand.of(ZREVRANGE, charset, key, String.valueOf(start), String.valueOf(stop), WITHSCORES),
-				response -> parseMap(response, v -> v, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, v -> v, this::parseDouble));
 	}
 
 	@Override
@@ -1383,26 +1403,26 @@ public final class RedisConnection implements RedisAPI, Connection {
 	public Promise<Map<String, Double>> zrevrangebyscoreWithScores(String key, ScoreInterval interval, long offset, long count) {
 		return send(RedisCommand.of(ZREVRANGEBYSCORE, charset, key, interval.getMin(), interval.getMax(), WITHSCORES, LIMIT,
 				String.valueOf(offset), String.valueOf(count)),
-				response -> parseMap(response, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, this::parseDouble));
 	}
 
 	@Override
 	public Promise<Map<String, Double>> zrevrangebyscoreWithScores(String key, ScoreInterval interval) {
 		return send(RedisCommand.of(ZREVRANGEBYSCORE, charset, key, interval.getMin(), interval.getMax(), WITHSCORES),
-				response -> parseMap(response, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, this::parseDouble));
 	}
 
 	@Override
 	public Promise<Map<byte[], Double>> zrevrangebyscoreAsBinaryWithScores(String key, ScoreInterval interval, long offset, long count) {
 		return send(RedisCommand.of(ZREVRANGEBYSCORE, charset, key, interval.getMin(), interval.getMax(), WITHSCORES, LIMIT,
 				String.valueOf(offset), String.valueOf(count)),
-				response -> parseMap(response, k -> k, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, k -> k, this::parseDouble));
 	}
 
 	@Override
 	public Promise<Map<byte[], Double>> zrevrangebyscoreAsBinaryWithScores(String key, ScoreInterval interval) {
 		return send(RedisCommand.of(ZREVRANGEBYSCORE, charset, key, interval.getMin(), interval.getMax(), WITHSCORES),
-				response -> parseMap(response, k -> k, bytes -> Double.parseDouble(new String(bytes, charset))));
+				response -> parseMap(response, k -> k, this::parseDouble));
 	}
 
 	@Override
@@ -1423,13 +1443,13 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public ChannelSupplier<Map.Entry<String, Double>> zscanStream(String key, ScanModifier... modifiers) {
 		return new ScanChannelSupplier(cursor -> zscan(key, cursor, modifiers))
-				.transformWith(new MapTransformer<>(bytes -> new String(bytes, charset), bytes -> Double.parseDouble(new String(bytes, charset))));
+				.transformWith(new MapTransformer<>(bytes -> new String(bytes, charset), this::parseDouble));
 	}
 
 	@Override
 	public ChannelSupplier<Map.Entry<byte[], Double>> zscanStreamAsBinary(String key, ScanModifier... modifiers) {
 		return new ScanChannelSupplier(cursor -> zscan(key, cursor, modifiers))
-				.transformWith(new MapTransformer<>(v -> v, bytes -> Double.parseDouble(new String(bytes, charset))));
+				.transformWith(new MapTransformer<>(v -> v, this::parseDouble));
 	}
 
 	@Override
@@ -1500,7 +1520,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Long> geoadd(String key, Map<String, Coordinate> coordinates) {
-		checkArgument(!coordinates.isEmpty(), "Nothing to add");
+		if (CHECK) checkArgument(!coordinates.isEmpty(), "Nothing to add");
+
 		List<String> arguments = new ArrayList<>(coordinates.size() * 2 + 1);
 		arguments.add(key);
 		for (Map.Entry<String, Coordinate> entry : coordinates.entrySet()) {
@@ -1514,7 +1535,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 	@Override
 	public Promise<Long> geoaddBinary(String key, Map<byte[], Coordinate> coordinates) {
-		checkArgument(!coordinates.isEmpty(), "Nothing to add");
+		if (CHECK) checkArgument(!coordinates.isEmpty(), "Nothing to add");
+
 		List<byte[]> arguments = new ArrayList<>(coordinates.size() * 2 + 1);
 		arguments.add(key.getBytes(charset));
 		for (Map.Entry<byte[], Coordinate> entry : coordinates.entrySet()) {
@@ -1591,7 +1613,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public Promise<Void> discard() {
 		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
-		checkState(inTransaction(), "DISCARD without MULTI");
+
+		if (CHECK) checkState(inTransaction(), "DISCARD without MULTI");
+
+		logger.trace("Transaction is being discarded");
+
 		transactionResult = null;
 		long transactionId = ++completedTransactions;
 		return send(RedisCommand.of(DISCARD), response -> {
@@ -1603,7 +1629,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public Promise<@Nullable List<Object>> exec() {
 		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
-		checkState(inTransaction(), "EXEC without MULTI");
+
+		if (CHECK) checkState(inTransaction(), "EXEC without MULTI");
+
+		logger.trace("Executing transaction");
+
 		List<Object> transactionResult = this.transactionResult;
 		this.transactionResult = null;
 		long transactionId = ++completedTransactions;
@@ -1614,7 +1644,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public Promise<Void> multi() {
 		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
-		checkState(!inTransaction(), "Nested MULTI call");
+
+		if (CHECK) checkState(!inTransaction(), "Nested MULTI call");
+
+		logger.trace("Transaction has been started");
+
 		Promise<Void> resultPromise = send(RedisCommand.of(MULTI), RedisConnection::expectOk);
 		transactionResult = new ArrayList<>();
 		transactions++;
@@ -1630,7 +1664,9 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public Promise<Void> watch(String key, String... otherKeys) {
 		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
-		checkState(!inTransaction(), "WATCH inside MULTI");
+
+		if (CHECK) checkState(!inTransaction(), "WATCH inside MULTI");
+
 		return send(RedisCommand.of(WATCH, charset, list(key, otherKeys)), RedisConnection::expectOk);
 	}
 	// endregion
@@ -1661,12 +1697,18 @@ public final class RedisConnection implements RedisAPI, Connection {
 	@Override
 	public Promise<Void> closeEx(@NotNull Throwable e) {
 		if (closed) return Promise.complete();
+		if (e == CLOSE_EXCEPTION) {
+			logger.trace("Closing Redis connection {}", this);
+		} else {
+			logger.warn("Closing Redis connection {} because of exception", this, e);
+		}
 		closed = true;
 		return Promises.all(receiveQueue.iterator())
-				.then(() -> Promises.all(transformIterator(multiResultQueue.iterator(), result -> result.cb)))
+				.then(() -> Promises.all(transformIterator(transactionQueue.iterator(), result -> result.cb)))
 				.whenComplete(() -> {
 					messaging.closeEx(e);
 					client.onConnectionClose(this);
+					logger.trace("Connection {} has been closed", this);
 				});
 	}
 	// endregion
@@ -1677,17 +1719,27 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 		Promise<Void> sendPromise = messaging.send(command);
 		List<Object> transResult = transactionResult;
-		Promise<RedisResponse> receivePromise = transResult != null ? receiveMulti() : receive();
+		Promise<RedisResponse> receivePromise;
+		if (transResult != null) {
+			logger.trace("Sending Redis command {} as part of transaction", command);
+			receivePromise = receiveMulti();
+		} else {
+			logger.trace("Sending Redis command {}", command);
+			receivePromise = receive();
+		}
 
 		return sendPromise.then(() -> receivePromise)
 				.then(responseParser)
 				.whenResult(response -> {
 					if (transResult != null) {
+						logger.trace("Transaction has finished. Received response {} for the command {}", response, command);
 						transResult.add(response);
+					} else {
+						logger.trace("Received response {} for the command {}", response, command);
 					}
 				})
 				.whenException(e -> {
-					if (!(e instanceof ExpectedRedisException)){
+					if (!(e instanceof ExpectedRedisException)) {
 						closeEx(e);
 					}
 				});
@@ -1741,7 +1793,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 			queuedCb.whenComplete(this::validateTransaction);
 			receiveQueue.offer(queuedCb);
 		}
-		multiResultQueue.offer(new Callback(cb));
+		transactionQueue.offer(new Callback(cb));
 		return cb;
 	}
 
@@ -1900,11 +1952,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 						"', but some elements were not");
 	}
 
-	private <T> Promise<Map<String, T>> parseMap(RedisResponse response, ParserFunction<byte[], T> valueFn) {
+	private <T> Promise<Map<String, T>> parseMap(RedisResponse response, RedisFunction<byte[], T> valueFn) {
 		return parseMap(response, keyBytes -> new String(keyBytes, charset), valueFn);
 	}
 
-	private static <K, V> Promise<Map<K, V>> parseMap(RedisResponse response, ParserFunction<byte[], K> keyFn, ParserFunction<byte[], V> valueFn) {
+	private static <K, V> Promise<Map<K, V>> parseMap(RedisResponse response, RedisFunction<byte[], K> keyFn, RedisFunction<byte[], V> valueFn) {
 		if (response.isArray()) {
 			List<?> array = response.getArray();
 			if (array.size() % 2 != 0) {
@@ -1915,8 +1967,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 				for (int i = 0; i < array.size(); ) {
 					byte[] key = (byte[]) array.get(i++);
 					byte[] value = (byte[]) array.get(i++);
-					K keyK = keyFn.parse(key);
-					V valueV = valueFn.parse(value);
+					K keyK = keyFn.apply(key);
+					V valueV = valueFn.apply(value);
 					if (result.put(keyK, valueV) != null) {
 						return Promise.ofException(new RedisException(RedisConnection.class, "Duplicate field: " + keyK));
 					}
@@ -1924,8 +1976,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 				return Promise.of(result);
 			} catch (ClassCastException e) {
 				return RedisConnection.unexpectedType(byte[].class);
-			} catch (ParseException e) {
-				return Promise.ofException(new RedisException(RedisConnection.class, "Could not parse value", e));
+			} catch (RedisException e) {
+				return Promise.ofException(e);
 			}
 		}
 		return parseError(response);
@@ -1960,9 +2012,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 					try {
 						foundKey = (byte[]) array.get(0);
 						value = (byte[]) array.get(1);
-						score = Double.parseDouble(new String((byte[]) array.get(2), charset));
+						score = parseDouble((byte[]) array.get(2));
 					} catch (ClassCastException e) {
 						return Promise.ofException(UNEXPECTED_TYPES_IN_ARRAY);
+					} catch (RedisException e) {
+						return Promise.ofException(e);
 					}
 
 					return Promise.of(new SetBlockingPopResult(charset, new String(foundKey, charset), value, score));
@@ -1981,9 +2035,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 						double score;
 						try {
 							value = (byte[]) array.get(i++);
-							score = Double.parseDouble(new String((byte[]) array.get(i++), charset));
+							score = parseDouble((byte[]) array.get(i++));
 						} catch (ClassCastException e) {
 							return Promise.ofException(UNEXPECTED_TYPES_IN_ARRAY);
+						} catch (RedisException e) {
+							return Promise.ofException(e);
 						}
 
 						result.add(new SetPopResult(charset, value, score));
@@ -2016,9 +2072,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 						Long hash = null;
 						if (withDist) {
 							try {
-								dist = Double.parseDouble(new String((byte[]) subArray.get(index++), charset));
+								dist = parseDouble((byte[]) subArray.get(index++));
 							} catch (ClassCastException ignored) {
 								return unexpectedType(byte[].class);
+							} catch (RedisException e) {
+								return Promise.ofException(e);
 							}
 						}
 						if (withHash) {
@@ -2056,7 +2114,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 						return Promise.of(new ScanResult(charset, cursor, elements));
 					} catch (ClassCastException e) {
 						return Promise.ofException(UNEXPECTED_TYPES_IN_ARRAY);
-					} catch (IllegalArgumentException e){
+					} catch (IllegalArgumentException e) {
 						return Promise.ofException(new RedisException(RedisConnection.class, "Received illegal cursor: " + e.getMessage()));
 					}
 				});
@@ -2151,8 +2209,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 			}
 
 			return new Coordinate(
-					Double.parseDouble(new String(coordinatesList.get(0), charset)),
-					Double.parseDouble(new String(coordinatesList.get(1), charset))
+					parseDouble(coordinatesList.get(0)),
+					parseDouble(coordinatesList.get(1))
 			);
 		} catch (ClassCastException e) {
 			throw unexpectedTypeException(List.class);
@@ -2167,7 +2225,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	private Promise<Long> doZstore(Command storeCommand, String destination, @Nullable Aggregate aggregate, Map<String, Double> entries) {
-		checkArgument(!entries.isEmpty(), "No key specified");
+		if (CHECK) checkArgument(!entries.isEmpty(), "No key specified");
 
 		List<byte[]> args = new ArrayList<>(entries.size() + 5);
 		args.add(destination.getBytes(charset));
@@ -2202,7 +2260,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	private Promise<Long> doGeoradiusStore(String key, Either<Coordinate, String> eitherCoordOrMember, double radius, DistanceUnit unit, GeoradiusModifier[] modifiers) {
-		checkGeoradiusModifiers(false, modifiers);
+		if (CHECK) checkGeoradiusModifiers(false, modifiers);
+
 		List<String> arguments = new ArrayList<>(modifiers.length * 2 + 5);
 		arguments.add(key);
 		Command command;
@@ -2224,7 +2283,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	private Promise<List<GeoradiusResult>> doGeoradiusReadOnly(String key, Either<Coordinate, String> eitherCoordOrMember, double radius, DistanceUnit unit, GeoradiusModifier[] modifiers) {
-		checkGeoradiusModifiers(true, modifiers);
+		if (CHECK) checkGeoradiusModifiers(true, modifiers);
 
 		List<String> arguments = new ArrayList<>(modifiers.length * 2 + 5);
 		arguments.add(key);
@@ -2254,7 +2313,7 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	private <T> Promise<T> doSort(String key, SortModifier[] modifiers, Function<RedisResponse, Promise<@Nullable T>> responseParser, byte[]... additionalArgs) {
-		checkSortModifiers(modifiers);
+		if (CHECK) checkSortModifiers(modifiers);
 
 		List<byte[]> arguments = new ArrayList<>();
 		arguments.add(key.getBytes(charset));
@@ -2268,8 +2327,10 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	private Promise<Boolean> doMigrate(String host, int port, @Nullable String key, int destinationDb, long timeoutMillis, MigrateModifier... modifiers) {
-		checkMigrateModifiers(key == null, modifiers);
-		checkArgument(destinationDb >= 0, "Negative destination DB index");
+		if (CHECK) {
+			checkMigrateModifiers(key == null, modifiers);
+			checkArgument(destinationDb >= 0, "Negative destination DB index");
+		}
 
 		List<byte[]> arguments = new ArrayList<>();
 		arguments.add(host.getBytes(charset));
@@ -2292,12 +2353,14 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	private Promise<ScanResult> doScan(Command command, String key, String cursor, ScanModifier... modifiers) {
-		return doScan(command, key, cursor, null,  modifiers);
+		return doScan(command, key, cursor, null, modifiers);
 	}
 
 	private Promise<ScanResult> doScan(Command command, @Nullable String key, String cursor, @Nullable RedisType type, ScanModifier... modifiers) {
-		checkCursor(cursor);
-		checkScanModifiers(modifiers);
+		if (CHECK) {
+			checkCursor(cursor);
+			checkScanModifiers(modifiers);
+		}
 
 		List<byte[]> arguments = new ArrayList<>();
 		if (key != null) {
@@ -2315,6 +2378,14 @@ public final class RedisConnection implements RedisAPI, Connection {
 		}
 
 		return send(RedisCommand.of(command, arguments), this::parseScanResult);
+	}
+
+	private double parseDouble(byte[] bytes) throws RedisException {
+		try {
+			return Double.parseDouble(new String(bytes, charset));
+		} catch (NumberFormatException e) {
+			throw new RedisException(RedisConnection.class, "Could not parse 'double' value: " + new String(bytes));
+		}
 	}
 
 	private class Callback {
@@ -2349,10 +2420,11 @@ public final class RedisConnection implements RedisAPI, Connection {
 	}
 
 	private void abortTransaction(Throwable e, long transactionId) {
-		while (!multiResultQueue.isEmpty()) {
-			Callback callback = multiResultQueue.peek();
+		logger.trace("Aborting transaction #{} due to {}", transactionId, e);
+		while (!transactionQueue.isEmpty()) {
+			Callback callback = transactionQueue.peek();
 			if (callback.transactionId != transactionId) break;
-			multiResultQueue.remove();
+			transactionQueue.remove();
 			callback.cb.setException(e);
 		}
 	}
@@ -2371,10 +2443,10 @@ public final class RedisConnection implements RedisAPI, Connection {
 
 		List<Object> responses = (List<Object>) transactionResponse.getArray();
 		List<SettablePromise<RedisResponse>> pending = new ArrayList<>(responses.size());
-		while (!multiResultQueue.isEmpty()) {
-			Callback callback = multiResultQueue.peek();
+		while (!transactionQueue.isEmpty()) {
+			Callback callback = transactionQueue.peek();
 			if (callback.transactionId != transactionId) break;
-			multiResultQueue.remove();
+			transactionQueue.remove();
 			pending.add(callback.cb);
 		}
 		if (responses.size() != pending.size()) {
@@ -2383,6 +2455,8 @@ public final class RedisConnection implements RedisAPI, Connection {
 			}
 			return Promise.ofException(RESPONSES_SIZE_MISMATCH);
 		}
+
+		logger.trace("Completing transaction #{}, pending commands ({})", transactionId, pending.size());
 
 		for (int i = 0; i < responses.size(); i++) {
 			Object response = responses.get(i);
@@ -2406,4 +2480,17 @@ public final class RedisConnection implements RedisAPI, Connection {
 		return Promise.of(true);
 	}
 
+	@Override
+	public String toString() {
+		return "RedisConnection{" +
+				"client=" + client +
+				", charset=" + charset +
+				", transactions=" + transactions +
+				", completedTransactions=" + completedTransactions +
+				", receiveQueue=" + receiveQueue.size() +
+				", transactionQueue=" + transactionQueue.size() +
+				", closed=" + closed +
+				", inPool=" + inPool +
+				'}';
+	}
 }

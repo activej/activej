@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public final class GeoradiusModifier {
 
 	private final List<String> arguments;
 
-	public GeoradiusModifier(List<String> arguments) {
+	private GeoradiusModifier(List<String> arguments) {
 		this.arguments = arguments;
 	}
 

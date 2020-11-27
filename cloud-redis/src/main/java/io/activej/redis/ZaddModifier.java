@@ -1,4 +1,4 @@
-package io.activej.redis.api;
+package io.activej.redis;
 
 public final class ZaddModifier {
 	// Key existence modifiers
