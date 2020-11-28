@@ -780,6 +780,9 @@ public class BinarySerializerTest {
 
 		@Serialize(order = 2, added = 2)
 		public int c;
+
+		@Serialize(order = 3, added = 10)
+		public int d;
 	}
 
 	@Test
@@ -789,6 +792,9 @@ public class BinarySerializerTest {
 		BinarySerializer<TestDataVersions> serializer11 = SerializerBuilder.create().withVersions(1, 1, 1).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer2 = SerializerBuilder.create().withEncodeVersion(2).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer22 = SerializerBuilder.create().withVersions(2, 2, 2).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer5 = SerializerBuilder.create().withEncodeVersion(5).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer10 = SerializerBuilder.create().withVersions(10, 10, 10).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer100 = SerializerBuilder.create().withEncodeVersion(100).build(TestDataVersions.class);
 
 		TestDataVersions testData1 = new TestDataVersions();
 		testData1.a = 10;
@@ -848,12 +854,9 @@ public class BinarySerializerTest {
 		assertEquals(0, testData2.c);
 
 		try {
-			testData2 = doTest(testData1, serializer0, serializer11);
+			doTest(testData1, serializer0, serializer11);
 			fail();
-			assertEquals(testData1.a, testData2.a);
-			assertEquals(testData1.b, testData2.b);
-			assertEquals(0, testData2.c);
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 		}
 
 		testData2 = doTest(testData1, serializer2, serializer22);
@@ -865,6 +868,19 @@ public class BinarySerializerTest {
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
+
+		testData1.d = 100;
+		testData2 = doTest(testData1, serializer5, serializer2);
+		assertEquals(testData1.a, testData2.a);
+		assertEquals(0, testData2.b);
+		assertEquals(testData1.c, testData2.c);
+		assertEquals(0, testData2.d);
+
+		testData2 = doTest(testData1, serializer100, serializer10);
+		assertEquals(testData1.a, testData2.a);
+		assertEquals(0, testData2.b);
+		assertEquals(testData1.c, testData2.c);
+		assertEquals(testData1.d, testData2.d);
 	}
 
 	public static class TestDataProfiles {

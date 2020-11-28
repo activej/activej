@@ -49,6 +49,7 @@ import static java.lang.reflect.Modifier.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.newSetFromMap;
+import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -60,7 +61,7 @@ public final class SerializerBuilder {
 
 	private final DefiningClassLoader classLoader;
 	private String profile;
-	private @Nullable Integer encodeVersion;
+	private int encodeVersionMax = Integer.MAX_VALUE;
 	private int decodeVersionMin = 0;
 	private int decodeVersionMax = Integer.MAX_VALUE;
 	private Path saveBytecodePath = DEFAULT_SAVE_DIR;
@@ -223,8 +224,8 @@ public final class SerializerBuilder {
 		return this;
 	}
 
-	public SerializerBuilder withEncodeVersion(int encodeVersion) {
-		this.encodeVersion = encodeVersion;
+	public SerializerBuilder withEncodeVersion(int encodeVersionMax) {
+		this.encodeVersionMax = encodeVersionMax;
 		return this;
 	}
 
@@ -234,8 +235,8 @@ public final class SerializerBuilder {
 		return this;
 	}
 
-	public SerializerBuilder withVersions(int encodeVersion, int decodeVersionMin, int decodeVersionMax) {
-		this.encodeVersion = encodeVersion;
+	public SerializerBuilder withVersions(int encodeVersionMax, int decodeVersionMin, int decodeVersionMax) {
+		this.encodeVersionMax = encodeVersionMax;
 		this.decodeVersionMin = decodeVersionMin;
 		this.decodeVersionMax = decodeVersionMax;
 		return this;
@@ -835,11 +836,10 @@ public final class SerializerBuilder {
 		};
 		visitor.visit(serializer);
 
-		Integer encodeVersion = this.encodeVersion != null ?
-				this.encodeVersion :
-				collectedVersions.isEmpty() ?
-						null :
-						collectedVersions.stream().mapToInt(Integer::intValue).max().getAsInt();
+		Integer encodeVersion = collectedVersions.stream()
+				.filter(v -> v <= encodeVersionMax)
+				.max(naturalOrder())
+				.orElse(null);
 
 		List<Integer> decodeVersions = collectedVersions.stream()
 				.filter(v -> v >= decodeVersionMin && v <= decodeVersionMax)
