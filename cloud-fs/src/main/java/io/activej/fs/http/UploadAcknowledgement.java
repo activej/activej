@@ -19,15 +19,14 @@ package io.activej.fs.http;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredCodecs;
 import io.activej.fs.exception.FsException;
+import io.activej.fs.exception.FsExceptionCodec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static io.activej.fs.util.Codecs.FS_EXCEPTION_CODEC;
 
 public final class UploadAcknowledgement {
 	@SuppressWarnings("ConstantConditions")
 	public static final StructuredCodec<UploadAcknowledgement> CODEC = StructuredCodecs.object(UploadAcknowledgement::new,
-			"error", UploadAcknowledgement::getError, FS_EXCEPTION_CODEC.nullable());
+			"error", UploadAcknowledgement::getError, FsExceptionCodec.CODEC.nullable());
 
 	@Nullable
 	private final FsException error;

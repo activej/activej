@@ -22,7 +22,8 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.exception.scalar.FileNotFoundException;
+import io.activej.fs.exception.FileNotFoundException;
+import io.activej.fs.exception.FsExceptionCodec;
 import io.activej.http.*;
 import io.activej.http.MultipartParser.MultipartDataHandler;
 import io.activej.promise.Promise;
@@ -152,7 +153,7 @@ public final class ActiveFsServlet {
 		return fs.info(name)
 				.then(meta -> {
 					if (meta == null) {
-						return Promise.ofException(new FileNotFoundException(ActiveFsServlet.class));
+						return Promise.ofException(new FileNotFoundException());
 					}
 					return HttpResponse.file(
 							(offset, limit) -> fs.download(name, offset, limit),
@@ -199,7 +200,7 @@ public final class ActiveFsServlet {
 	private static HttpResponse getErrorResponse(Throwable e) {
 		return HttpResponse.ofCode(500)
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBody(toJsonBuf(FS_EXCEPTION_CODEC, castError(e)));
+				.withBody(toJsonBuf(FsExceptionCodec.CODEC, castError(e)));
 	}
 
 	private static <T> BiFunction<T, Throwable, HttpResponse> errorHandler() {

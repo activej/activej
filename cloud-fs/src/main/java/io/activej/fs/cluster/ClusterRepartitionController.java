@@ -33,7 +33,7 @@ import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsIOException;
-import io.activej.fs.exception.scalar.PathContainsFileException;
+import io.activej.fs.exception.PathContainsFileException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
@@ -322,7 +322,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								// upload file to this partition
 								ActiveFs fs = partitions.get(partitionId);
 								if (fs == null) {
-									return Promise.ofException(new FsIOException(ClusterRepartitionController.class, "File system '" + partitionId + "' is not alive"));
+									return Promise.ofException(new FsIOException("File system '" + partitionId + "' is not alive"));
 								}
 								return Promise.<Void>ofCallback(cb ->
 										splitter.addOutput()
@@ -406,7 +406,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private void checkEnoughAlivePartitions() {
 		if (partitions.getAlivePartitions().size() < replicationCount) {
-			throw new UncheckedException(new FsIOException(ClusterRepartitionController.class, "Not enough alive partitions"));
+			throw new UncheckedException(new FsIOException("Not enough alive partitions"));
 		}
 	}
 

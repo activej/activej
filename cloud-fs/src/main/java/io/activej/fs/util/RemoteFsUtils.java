@@ -151,11 +151,11 @@ public final class RemoteFsUtils {
 		ActiveFs.class is used as a component to hide implementation details from peer
 	 */
 	public static FsException castError(Throwable e) {
-		return e instanceof FsException ? (FsException) e : new FsIOException(ActiveFs.class, "Unknown error");
+		return e instanceof FsException ? (FsException) e : new FsIOException("Unknown error");
 	}
 
-	public static FsBatchException batchEx(Class<?> component, String name, FsScalarException exception) {
-		return new FsBatchException(component, map(name, exception));
+	public static FsBatchException batchEx(String name, FsScalarException exception) {
+		return new FsBatchException(map(name, exception));
 	}
 
 	public static Promise<Void> reduceErrors(List<Try<Void>> tries, Iterator<String> sources) {
@@ -171,7 +171,7 @@ public final class RemoteFsUtils {
 			}
 		}
 		if (!scalarExceptions.isEmpty()) {
-			return Promise.ofException(new FsBatchException(ActiveFs.class, scalarExceptions));
+			return Promise.ofException(new FsBatchException(scalarExceptions));
 		}
 		return Promise.complete();
 	}

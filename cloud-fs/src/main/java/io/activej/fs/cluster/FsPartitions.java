@@ -51,7 +51,7 @@ import static java.util.stream.Collectors.toMap;
 public final class FsPartitions implements EventloopService, WithInitializer<FsPartitions> {
 	private static final Logger logger = LoggerFactory.getLogger(FsPartitions.class);
 
-	static final FsException LOCAL_EXCEPTION = new FsException(FsPartitions.class, "Local exception");
+	static final FsException LOCAL_EXCEPTION = new FsException("Local exception");
 
 	private final Map<Object, ActiveFs> alivePartitions = new HashMap<>();
 	private final Map<Object, ActiveFs> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
@@ -200,7 +200,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 				return Promise.ofException(e);
 			}
 			logger.warn("Node failed", e);
-			return Promise.ofException(new FsIOException(FsPartitions.class, "Node failed"));
+			return Promise.ofException(new FsIOException("Node failed"));
 		};
 	}
 

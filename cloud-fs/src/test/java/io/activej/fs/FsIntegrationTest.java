@@ -10,9 +10,9 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
-import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.promise.Promise;
@@ -186,7 +186,7 @@ public final class FsIntegrationTest {
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(
 				ChannelSupplier.of(wrapUtf8("Test1"), wrapUtf8(" Test2"), wrapUtf8(" Test3")).async(),
 				ChannelSupplier.of(ByteBuf.wrapForReading(BIG_FILE)),
-				ChannelSupplier.ofException(new FsIOException(FsIntegrationTest.class, "Test exception")),
+				ChannelSupplier.ofException(new FsIOException("Test exception")),
 				ChannelSupplier.of(wrapUtf8("Test4")));
 
 		Throwable exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(fs.upload(resultFile, Long.MAX_VALUE)))

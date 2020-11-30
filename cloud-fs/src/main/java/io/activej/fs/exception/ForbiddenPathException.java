@@ -18,12 +18,16 @@ package io.activej.fs.exception;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FsScalarException extends FsStateException {
-	public FsScalarException(@NotNull String message) {
+public final class ForbiddenPathException extends FsScalarException {
+	public ForbiddenPathException() {
+		super("Forbidden path");
+	}
+
+	public ForbiddenPathException(@NotNull String message) {
 		super(message);
 	}
 
-	FsScalarException(@NotNull String message, boolean withStack) {
+	ForbiddenPathException(@NotNull String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

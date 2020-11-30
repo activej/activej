@@ -18,12 +18,12 @@ package io.activej.fs.exception;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FsScalarException extends FsStateException {
-	public FsScalarException(@NotNull String message) {
+public final class MalformedGlobException extends FsScalarException {
+	public MalformedGlobException(@NotNull String message) {
 		super(message);
 	}
 
-	FsScalarException(@NotNull String message, boolean withStack) {
+	MalformedGlobException(@NotNull String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

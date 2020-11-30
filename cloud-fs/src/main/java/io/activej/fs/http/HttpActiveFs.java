@@ -26,6 +26,7 @@ import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.exception.FsExceptionCodec;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -247,7 +248,7 @@ public final class HttpActiveFs implements ActiveFs {
 				return response.loadBody()
 						.then(body -> {
 							try {
-								return Promise.ofException(fromJson(FS_EXCEPTION_CODEC, body.getString(UTF_8)));
+								return Promise.ofException(fromJson(FsExceptionCodec.CODEC, body.getString(UTF_8)));
 							} catch (ParseException ignored) {
 								return Promise.ofException(HttpException.ofCode(500));
 							}

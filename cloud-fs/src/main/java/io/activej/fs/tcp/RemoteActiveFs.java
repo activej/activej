@@ -72,7 +72,6 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectionTimeout", Duration.ZERO);
 
-	private static final FsIOException INVALID_MESSAGE = new FsIOException(RemoteActiveFs.class, "Invalid or unexpected message received");
 	private static final TruncatedDataException UNEXPECTED_END_OF_STREAM = new TruncatedDataException(RemoteActiveFs.class);
 	private static final UnexpectedDataException UNEXPECTED_DATA = new UnexpectedDataException(RemoteActiveFs.class);
 
@@ -339,7 +338,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		if (msg instanceof ServerError) {
 			return Promise.ofException(((ServerError) msg).getError());
 		}
-		return Promise.ofException(INVALID_MESSAGE);
+		return Promise.ofException(new FsIOException("Invalid or unexpected message received"));
 	}
 
 	private <T, R extends FsResponse> Promise<T> simpleCommand(FsCommand command, Class<R> responseType, Function<R, T> answerExtractor) {

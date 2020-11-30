@@ -59,9 +59,14 @@ public final class CodecSubtype<T> implements WithInitializer<CodecSubtype<T>>, 
 	/**
 	 * Add a subtype along with its codec and custom string tag
 	 */
+	@SuppressWarnings("unchecked")
 	public CodecSubtype<T> with(Type type, String name, StructuredCodec<? extends T> adapter) {
 		namesToAdapters.put(name, adapter);
 		subtypesToNames.put(type, name);
+		if (adapter instanceof CodecSubtype) {
+			namesToAdapters.putAll(((CodecSubtype<? extends T>) adapter).namesToAdapters);
+			subtypesToNames.putAll(((CodecSubtype<? extends T>) adapter).subtypesToNames);
+		}
 		return this;
 	}
 

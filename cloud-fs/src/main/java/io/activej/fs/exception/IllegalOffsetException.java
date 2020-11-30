@@ -18,12 +18,12 @@ package io.activej.fs.exception;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FsScalarException extends FsStateException {
-	public FsScalarException(@NotNull String message) {
+public final class IllegalOffsetException extends FsScalarException {
+	public IllegalOffsetException(@NotNull String message) {
 		super(message);
 	}
 
-	FsScalarException(@NotNull String message, boolean withStack) {
+	IllegalOffsetException(@NotNull String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

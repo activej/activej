@@ -2,7 +2,7 @@ package io.activej.fs;
 
 import io.activej.csp.ChannelConsumer;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.exception.scalar.ForbiddenPathException;
+import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;

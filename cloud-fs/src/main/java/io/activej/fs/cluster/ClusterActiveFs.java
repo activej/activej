@@ -286,7 +286,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	}
 
 	private static <T> Promise<T> ofFailure(String message) {
-		return Promise.ofException(new FsIOException(ClusterActiveFs.class, message));
+		return Promise.ofException(new FsIOException(message));
 	}
 
 	private <T> Promise<T> checkStillNotDead(T value) {
@@ -366,7 +366,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	private <T> Promise<T> call(Object id, BiFunction<Object, ActiveFs, Promise<T>> action) {
 		ActiveFs fs = partitions.get(id);
 		if (fs == null) {  // marked as dead already by somebody
-			return Promise.ofException(new FsIOException(ClusterActiveFs.class, "Partition '" + id + "' is not alive"));
+			return Promise.ofException(new FsIOException("Partition '" + id + "' is not alive"));
 		}
 		return action.apply(id, fs)
 				.thenEx(partitions.wrapDeath(id));

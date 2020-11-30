@@ -37,7 +37,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.exception.scalar.IllegalOffsetException;
+import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.serializer.BinarySerializer;

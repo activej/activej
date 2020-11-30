@@ -18,12 +18,12 @@ package io.activej.fs.exception;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FsScalarException extends FsStateException {
-	public FsScalarException(@NotNull String message) {
-		super(message);
+public final class PathContainsFileException extends FsScalarException {
+	public PathContainsFileException() {
+		super("Path contains existing file as its part");
 	}
 
-	FsScalarException(@NotNull String message, boolean withStack) {
+	PathContainsFileException(@NotNull String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

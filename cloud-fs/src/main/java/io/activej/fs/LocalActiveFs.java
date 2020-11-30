@@ -35,7 +35,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.LocalFileUtils.*;
 import io.activej.fs.exception.*;
-import io.activej.fs.exception.scalar.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.Promise.BlockingCallable;
@@ -252,7 +251,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					}
 					long size = channel.size();
 					if (size < offset) {
-						throw new IllegalOffsetException(LocalActiveFs.class, "Offset " + offset + " exceeds file size " + size);
+						throw new IllegalOffsetException("Offset " + offset + " exceeds file size " + size);
 					}
 					return channel;
 				})
@@ -283,7 +282,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					FileChannel channel = FileChannel.open(path, READ);
 					long size = channel.size();
 					if (size < offset) {
-						throw new IllegalOffsetException(LocalActiveFs.class, "Offset " + offset + " exceeds file size " + size);
+						throw new IllegalOffsetException("Offset " + offset + " exceeds file size " + size);
 					}
 					return channel;
 				}))
@@ -436,7 +435,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private IsADirectoryException dirEx(String name) {
-		return new IsADirectoryException(LocalActiveFs.class, "Path '" + name + "' is a directory");
+		return new IsADirectoryException("Path '" + name + "' is a directory");
 	}
 
 	private Path resolve(String name) throws ForbiddenPathException {
@@ -488,7 +487,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				translateBatchErrors(entry, () -> {
 					Path path = resolve(entry.getKey());
 					if (Files.readAttributes(path, BasicFileAttributes.class).isDirectory()) {
-						throw new IsADirectoryException(LocalActiveFs.class, "File '" + entry.getKey() + "' is a directory");
+						throw new IsADirectoryException("File '" + entry.getKey() + "' is a directory");
 					}
 					Path targetPath = resolve(entry.getValue());
 					if (path.equals(targetPath)) {
@@ -558,7 +557,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		} catch (DirectoryNotEmptyException e) {
 			throw dirEx(storage.relativize(target).toString());
 		} catch (FileSystemException e) {
-			throw new PathContainsFileException(LocalActiveFs.class);
+			throw new PathContainsFileException();
 		}
 	}
 
@@ -575,7 +574,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {
 			logger.warn("Failed to retrieve metadata for {}", path, e);
-			throw new UncheckedException(new FsIOException(LocalActiveFs.class, "Failed to retrieve metadata"));
+			throw new UncheckedException(new FsIOException("Failed to retrieve metadata"));
 		}
 	}
 
@@ -599,30 +598,30 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				Map<String, FsScalarException> exceptions = ((FsBatchException) e).getExceptions();
 				assert exceptions.size() == 1;
 				return Promise.ofException(first(exceptions.values()));
-			} else if (e instanceof StacklessException) {
+			} else if (e instanceof FsException || e instanceof StacklessException) {
 				return Promise.ofException(e);
 			} else if (e instanceof FileAlreadyExistsException) {
 				return execute(() -> {
 					if (name != null && Files.isDirectory(resolve(name))) throw dirEx(name);
-					throw new PathContainsFileException(LocalActiveFs.class);
+					throw new PathContainsFileException();
 				});
 			} else if (e instanceof NoSuchFileException) {
-				return Promise.ofException(new FileNotFoundException(LocalActiveFs.class));
+				return Promise.ofException(new FileNotFoundException());
 			} else if (e instanceof GlobException) {
-				return Promise.ofException(new MalformedGlobException(LocalActiveFs.class, e.getMessage()));
+				return Promise.ofException(new MalformedGlobException(e.getMessage()));
 			}
 			return execute(() -> {
 				if (name != null) {
 					Path path = resolve(name);
 					if (!Files.exists(path))
-						throw new FileNotFoundException(LocalActiveFs.class, "File '" + name + "' not found");
+						throw new FileNotFoundException("File '" + name + "' not found");
 					if (Files.isDirectory(path)) throw dirEx(name);
 				}
 				logger.warn("Operation failed", e);
 				if (e instanceof IOException) {
-					throw new FsIOException(LocalActiveFs.class, "IO Error");
+					throw new FsIOException("IO Error");
 				}
-				throw new FsIOException(LocalActiveFs.class, "Unknown error");
+				throw new FsIOException("Unknown error");
 			});
 		};
 	}
@@ -633,20 +632,20 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		try {
 			runnable.run();
 		} catch (FsScalarException e) {
-			throw batchEx(LocalActiveFs.class, first, e);
+			throw batchEx(first, e);
 		} catch (FileAlreadyExistsException e) {
 			checkIfDirectories(first, second);
-			throw batchEx(LocalActiveFs.class, first, new PathContainsFileException(LocalActiveFs.class));
+			throw batchEx(first, new PathContainsFileException());
 		} catch (NoSuchFileException e) {
-			throw batchEx(LocalActiveFs.class, first, new FileNotFoundException(LocalActiveFs.class));
+			throw batchEx(first, new FileNotFoundException());
 		} catch (IOException e) {
 			checkIfExists(first);
 			checkIfDirectories(first, second);
 			logger.warn("Operation failed", e);
-			throw new FsIOException(LocalActiveFs.class, "IO Error");
+			throw new FsIOException("IO Error");
 		} catch (Exception e) {
 			logger.warn("Operation failed", e);
-			throw new FsIOException(LocalActiveFs.class, "Unknown Error");
+			throw new FsIOException("Unknown Error");
 		}
 	}
 
@@ -657,27 +656,27 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private void checkIfDirectories(@NotNull String first, @Nullable String second) throws FsBatchException {
 		try {
 			if (Files.isDirectory(resolve(first))) {
-				throw batchEx(LocalActiveFs.class, first, dirEx(first));
+				throw batchEx(first, dirEx(first));
 			}
 		} catch (ForbiddenPathException e) {
-			throw batchEx(LocalActiveFs.class, first, e);
+			throw batchEx(first, e);
 		}
 		try {
 			if (Files.isDirectory(resolve(second))) {
-				throw batchEx(LocalActiveFs.class, first, dirEx(second));
+				throw batchEx(first, dirEx(second));
 			}
 		} catch (ForbiddenPathException e) {
-			throw batchEx(LocalActiveFs.class, first, e);
+			throw batchEx(first, e);
 		}
 	}
 
 	private void checkIfExists(@NotNull String file) throws FsBatchException {
 		try {
 			if (!Files.exists(resolve(file))) {
-				throw batchEx(LocalActiveFs.class, file, new FileNotFoundException(LocalActiveFs.class, "File '" + file + "' not found"));
+				throw batchEx(file, new FileNotFoundException("File '" + file + "' not found"));
 			}
 		} catch (ForbiddenPathException e) {
-			throw batchEx(LocalActiveFs.class, file, e);
+			throw batchEx(file, e);
 		}
 	}
 

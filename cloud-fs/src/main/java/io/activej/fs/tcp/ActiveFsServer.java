@@ -21,7 +21,7 @@ import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.exception.scalar.FileNotFoundException;
+import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.tcp.RemoteFsCommands.*;
 import io.activej.fs.tcp.RemoteFsResponses.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -149,7 +149,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 			return fs.info(name)
 					.then(meta -> {
 						if (meta == null) {
-							return Promise.ofException(new FileNotFoundException(ActiveFsServer.class));
+							return Promise.ofException(new FileNotFoundException());
 						}
 
 						long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));
