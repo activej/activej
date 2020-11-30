@@ -1,7 +1,7 @@
 package io.activej.ot;
 
 import io.activej.common.tuple.Tuple3;
-import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
 import io.activej.ot.utils.TestAdd;
@@ -106,7 +106,7 @@ public final class MergedOTSystemTest {
 	}
 
 	@Test
-	public void testTransform() throws OTTransformException {
+	public void testTransform() throws TransformException {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> left = asList(
 				new Tuple3<>(asList(add(12), add(13), add(-2)), emptyList(), emptyList()),
 				new Tuple3<>(emptyList(), asList(set(0, 10), set(10, 14)), emptyList()),
@@ -143,7 +143,7 @@ public final class MergedOTSystemTest {
 	}
 
 	@Test
-	public void testTransformWithEmptyDiffs() throws OTTransformException {
+	public void testTransformWithEmptyDiffs() throws TransformException {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> diffs = asList(
 				new Tuple3<>(asList(add(12), add(13), add(-2)), emptyList(), emptyList()),
 				new Tuple3<>(emptyList(), asList(set(0, 10), set(10, 14)), emptyList())

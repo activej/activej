@@ -185,7 +185,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * or that there were no response at all
 	 */
 	public void markIfDead(Object partitionId, Throwable e) {
-		if (!(e instanceof FsException) && e != LOCAL_EXCEPTION || e instanceof FsIOException) {
+		if (!(e instanceof FsException) || e instanceof FsIOException) {
 			markDead(partitionId, e);
 		}
 	}

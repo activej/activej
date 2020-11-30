@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.Checks;
+import io.activej.common.exception.CloseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -47,6 +48,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	private static final Boolean CHECK = Checks.isEnabled(WebSocketFramesToBufs.class);
 
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
+	private static final CloseException CLOSE_EXCEPTION = new CloseException(WebSocketFramesToBufs.class);
 
 	private final boolean masked;
 	private final SettablePromise<Void> closeSentPromise = new SettablePromise<>();

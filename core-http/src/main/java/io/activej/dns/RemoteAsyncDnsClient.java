@@ -18,6 +18,8 @@ package io.activej.dns;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
+import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.common.exception.CloseException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -46,7 +48,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.promise.Promises.TIMEOUT_EXCEPTION;
 import static io.activej.promise.Promises.timeout;
 
 /**
@@ -61,6 +62,8 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	private static final int DNS_SERVER_PORT = 53;
 	public static final InetSocketAddress GOOGLE_PUBLIC_DNS = new InetSocketAddress("8.8.8.8", DNS_SERVER_PORT);
 	public static final InetSocketAddress LOCAL_DNS = new InetSocketAddress("192.168.0.1", DNS_SERVER_PORT);
+
+	private static final CloseException CLOSE_EXCEPTION = new CloseException(RemoteAsyncDnsClient.class, "Closed");
 
 	private final Eventloop eventloop;
 	private final Map<DnsTransaction, SettablePromise<DnsResponse>> transactions = new HashMap<>();
@@ -132,7 +135,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		}
 		socket.close();
 		socket = null;
-		transactions.values().forEach(s -> s.setException(TIMEOUT_EXCEPTION));
+		transactions.values().forEach(s -> s.setException(CLOSE_EXCEPTION));
 	}
 
 	private Promise<AsyncUdpSocket> getSocket() {
@@ -165,7 +168,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 			logger.trace("{} already contained an IP address within itself", query);
 			return Promise.of(fromQuery);
 		}
-		// ignore the result because soon or later it will be sent and just completed
+		// ignore the result because sooner or later it will be sent and just completed
 		// here we use that transactions map because it easily could go completely out of order and we should be ok with that
 		return getSocket()
 				.then(socket -> {
@@ -216,7 +219,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 									logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
 									return Promise.of(queryResult);
 								}
-								if (e == TIMEOUT_EXCEPTION) {
+								if (e instanceof AsyncTimeoutException) {
 									if (inspector != null) {
 										inspector.onDnsQueryExpiration(query);
 									}

@@ -18,6 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -34,7 +35,6 @@ import java.nio.charset.CharacterCodingException;
 import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.csp.binary.ByteBufsDecoder.ofFixedSize;
 import static io.activej.http.HttpUtils.*;
 import static io.activej.http.WebSocketConstants.*;
@@ -314,7 +314,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	@Override
 	protected void doClose(Throwable e) {
 		if (output != null) {
-			output.closeEx(e == UNEXPECTED_END_OF_STREAM_EXCEPTION ? CLOSE_FRAME_MISSING : e);
+			output.closeEx(e instanceof TruncatedDataException ? CLOSE_FRAME_MISSING : e);
 		}
 		frameQueue.recycle();
 		controlMessageQueue.recycle();

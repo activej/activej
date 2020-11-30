@@ -20,6 +20,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
+import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
@@ -185,12 +186,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		@Override
 		public void onHttpError(HttpClientConnection connection, Throwable e) {
-			if (e == AbstractHttpConnection.READ_TIMEOUT_ERROR || e == AbstractHttpConnection.WRITE_TIMEOUT_ERROR) {
+			if (e instanceof AsyncTimeoutException) {
 				httpTimeouts.recordEvent();
 				return;
 			}
 			httpErrors.recordException(e);
-			if (SSLException.class == e.getClass()) {
+			if (e instanceof SSLException) {
 				sslErrors.recordEvent();
 			}
 			// when connection is in keep-alive state, it means that the response already happened,

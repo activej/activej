@@ -20,6 +20,7 @@ import io.activej.async.callback.Callback;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.common.exception.CloseException;
 import io.activej.common.time.Stopwatch;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.eventloop.Eventloop;
@@ -40,8 +41,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-import static io.activej.rpc.client.IRpcClient.RPC_OVERLOAD_EXCEPTION;
-import static io.activej.rpc.client.IRpcClient.RPC_TIMEOUT_EXCEPTION;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public final class RpcClientConnection implements RpcStream.Listener, RpcSender, JmxRefreshable {
@@ -50,12 +49,14 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	private static final int BUCKET_CAPACITY = ApplicationSettings.getInt(RpcClientConnection.class, "bucketCapacity", 16);
 
+	private static final CloseException CONNECTION_CLOSED = new CloseException(RpcClientConnection.class, "Connection closed");
+	private static final RpcException CONNECTION_UNRESPONSIVE = new RpcException(RpcClientConnection.class, "Unresponsive connection");
+	private static final RpcOverloadException RPC_OVERLOAD_EXCEPTION = new RpcOverloadException(RpcClientConnection.class, "RPC client is overloaded");
+	private static final AsyncTimeoutException RPC_TIMEOUT_EXCEPTION = new AsyncTimeoutException(RpcClientConnection.class, "RPC request has timed out");
+
 	private StreamDataAcceptor<RpcMessage> downstreamDataAcceptor = null;
 	private boolean overloaded = false;
 	private boolean closed;
-
-	public static final RpcException CONNECTION_CLOSED = new RpcException(RpcClientConnection.class, "Connection closed");
-	public static final RpcException CONNECTION_UNRESPONSIVE = new RpcException(RpcClientConnection.class, "Unresponsive connection");
 
 	private final Eventloop eventloop;
 	private final RpcClient rpcClient;

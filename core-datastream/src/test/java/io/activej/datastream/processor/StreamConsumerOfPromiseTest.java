@@ -1,5 +1,6 @@
 package io.activej.datastream.processor;
 
+import io.activej.common.exception.CloseException;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -8,15 +9,15 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
 import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 
 public class StreamConsumerOfPromiseTest {
 
@@ -43,9 +44,9 @@ public class StreamConsumerOfPromiseTest {
 		consumer.close();
 		Throwable exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertSame(CLOSE_EXCEPTION, exception);
-		assertClosedWithError(CLOSE_EXCEPTION, supplier, consumer);
-		assertClosedWithError(CLOSE_EXCEPTION, delayedConsumer);
+		assertThat(exception, instanceOf(CloseException.class));
+		assertClosedWithError(CloseException.class, supplier, consumer);
+		assertClosedWithError(CloseException.class, delayedConsumer);
 		assertEquals(0, delayedConsumer.getList().size());
 	}
 
@@ -57,9 +58,9 @@ public class StreamConsumerOfPromiseTest {
 		StreamConsumer<Integer> consumer = StreamConsumer.ofPromise(Promise.complete().async().map($ -> delayedConsumer));
 		Throwable exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertSame(CLOSE_EXCEPTION, exception);
-		assertClosedWithError(CLOSE_EXCEPTION, supplier, consumer);
-		assertClosedWithError(CLOSE_EXCEPTION, delayedConsumer);
+		assertThat(exception, instanceOf(CloseException.class));
+		assertClosedWithError(CloseException.class, supplier, consumer);
+		assertClosedWithError(CloseException.class, delayedConsumer);
 		assertEquals(0, delayedConsumer.getList().size());
 	}
 }

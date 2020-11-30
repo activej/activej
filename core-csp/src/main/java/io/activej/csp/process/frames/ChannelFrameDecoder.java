@@ -19,6 +19,7 @@ package io.activej.csp.process.frames;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -29,7 +30,6 @@ import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
@@ -90,7 +90,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	protected void doProcess() {
 		parse()
 				.whenComplete((result, e) -> {
-					if (e == UNEXPECTED_END_OF_STREAM_EXCEPTION) {
+					if (e instanceof TruncatedDataException) {
 						if (bufs.isEmpty()) {
 							if (decoder.ignoreMissingEndOfStreamBlock()) {
 								output.acceptEndOfStream()

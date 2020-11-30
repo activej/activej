@@ -19,6 +19,8 @@ package io.activej.http;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.http.loader.StaticLoader;
+import io.activej.http.loader.StaticLoader.ResourceIsADirectoryException;
+import io.activej.http.loader.StaticLoader.ResourceNotFoundException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -42,6 +44,8 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
  */
 public final class StaticServlet implements AsyncServlet {
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
+
+	private static final ResourceNotFoundException NOT_FOUND_EXCEPTION = new ResourceNotFoundException(StaticServlet.class);
 
 	private final StaticLoader resourceLoader;
 	private Function<String, ContentType> contentTypeResolver = StaticServlet::getContentType;
@@ -156,7 +160,7 @@ public final class StaticServlet implements AsyncServlet {
 						resourceLoader.load(mappedPath)
 								.map(byteBuf -> createHttpResponse(byteBuf, contentType))
 								.thenEx((value, e) -> {
-									if (e == StaticLoader.IS_A_DIRECTORY) {
+									if (e instanceof ResourceIsADirectoryException) {
 										return tryLoadIndexResource(mappedPath);
 									} else {
 										return Promise.of(value, e);
@@ -165,7 +169,7 @@ public final class StaticServlet implements AsyncServlet {
 				.thenEx((response, e) -> {
 					if (e == null) {
 						return Promise.of(response);
-					} else if (e == StaticLoader.NOT_FOUND_EXCEPTION) {
+					} else if (e instanceof ResourceNotFoundException) {
 						return tryLoadDefaultResource();
 					} else {
 						return Promise.ofException(HttpException.ofCode(400, e));
@@ -181,7 +185,7 @@ public final class StaticServlet implements AsyncServlet {
 						.map(indexResource -> AsyncSupplier.of(() ->
 								resourceLoader.load(dirPath + indexResource)
 										.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource))))))
-				.thenEx(((response, e) -> e == null ? Promise.of(response) : Promise.ofException(StaticLoader.NOT_FOUND_EXCEPTION)));
+				.thenEx(((response, e) -> e == null ? Promise.of(response) : Promise.ofException(NOT_FOUND_EXCEPTION)));
 	}
 
 	@NotNull

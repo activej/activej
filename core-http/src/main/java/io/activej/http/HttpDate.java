@@ -24,7 +24,7 @@ import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
 
 final class HttpDate {
-	public static final ParseException FAILED_TO_PARSE_DATE = new ParseException(HttpDate.class, "Failed to parse date");
+	private static final ParseException FAILED_TO_PARSE_DATE = new ParseException(HttpDate.class, "Failed to parse date");
 	private static final int HOUR_SECONDS = 60 * 60;
 	private static final int DAY_SECONDS = 24 * HOUR_SECONDS;
 	private static final int YEAR_SECONDS = 365 * DAY_SECONDS;

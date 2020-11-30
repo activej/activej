@@ -32,8 +32,6 @@ import static io.activej.csp.binary.Utils.parseUntilTerminatorByte;
 
 @FunctionalInterface
 public interface ByteBufsDecoder<T> {
-	ParseException SIZE_EXCEEDS_MAX_SIZE = new InvalidSizeException(ByteBufsDecoder.class, "Size exceeds max size");
-	ParseException NEGATIVE_SIZE = new InvalidSizeException(ByteBufsDecoder.class, "Invalid size of bytes to be read, should be greater than 0");
 
 	@Nullable
 	T tryDecode(ByteBufQueue bufs) throws ParseException;
@@ -126,8 +124,8 @@ public interface ByteBufsDecoder<T> {
 
 			int size = scanner.getResult();
 
-			if (size < 0) throw NEGATIVE_SIZE;
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (size < 0) throw new InvalidSizeException(ByteBufsDecoder.class, "Invalid size of bytes to be read, should be greater than 0");
+			if (size > maxSize) throw new InvalidSizeException(ByteBufsDecoder.class, "Size exceeds max size");
 
 			if (!bufs.hasRemainingBytes(4 + size)) return null;
 			bufs.skip(4);
@@ -144,7 +142,7 @@ public interface ByteBufsDecoder<T> {
 			if (!bufs.hasRemainingBytes(2)) return null;
 			int size = (bufs.peekByte(0) & 0xFF) << 8
 					| (bufs.peekByte(1) & 0xFF);
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (size > maxSize) throw new InvalidSizeException(ByteBufsDecoder.class, "Size exceeds max size");
 			if (!bufs.hasRemainingBytes(2 + size)) return null;
 			bufs.skip(2);
 			return bufs.takeExactSize(size);
@@ -159,7 +157,7 @@ public interface ByteBufsDecoder<T> {
 		return bufs -> {
 			if (!bufs.hasRemaining()) return null;
 			int size = bufs.peekByte() & 0xFF;
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (size > maxSize) throw new InvalidSizeException(ByteBufsDecoder.class, "Size exceeds max size");
 			if (!bufs.hasRemainingBytes(1 + size)) return null;
 			bufs.skip(1);
 			return bufs.takeExactSize(size);
@@ -179,8 +177,8 @@ public interface ByteBufsDecoder<T> {
 
 			int size = scanner.getResult();
 
-			if (size < 0) throw NEGATIVE_SIZE;
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (size < 0) throw new InvalidSizeException(ByteBufsDecoder.class, "Invalid size of bytes to be read, should be greater than 0");
+			if (size > maxSize) throw new InvalidSizeException(ByteBufsDecoder.class, "Size exceeds max size");
 
 			int prefixSize = lastIndex + 1;
 			if (!bufs.hasRemainingBytes(prefixSize + size)) return null;

@@ -56,13 +56,13 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	public static final int MAX_HEADER_FIELD_LENGTH = 4096; //4 Kb
 	public static final int DEFAULT_BUF_SIZE = 512;
 	// region exceptions
-	public static final ParseException ACTUAL_DECOMPRESSED_DATA_SIZE_IS_NOT_EQUAL_TO_EXPECTED = new InvalidSizeException(BufsConsumerGzipInflater.class, "Decompressed data size is not equal to input size from GZIP trailer");
-	public static final ParseException CRC32_VALUE_DIFFERS = new ParseException(BufsConsumerGzipInflater.class, "CRC32 value of uncompressed data differs");
-	public static final ParseException INCORRECT_ID_HEADER_BYTES = new UnknownFormatException(BufsConsumerGzipInflater.class, "Incorrect identification bytes. Not in GZIP format");
-	public static final ParseException UNSUPPORTED_COMPRESSION_METHOD = new UnknownFormatException(BufsConsumerGzipInflater.class, "Unsupported compression method. Deflate compression required");
-	public static final ParseException FEXTRA_TOO_LARGE = new InvalidSizeException(BufsConsumerGzipInflater.class, "FEXTRA part of a header is larger than maximum allowed length");
-	public static final ParseException FNAME_FCOMMENT_TOO_LARGE = new InvalidSizeException(BufsConsumerGzipInflater.class, "FNAME or FEXTRA header is larger than maximum allowed length");
-	public static final ParseException MALFORMED_FLAG = new ParseException(BufsConsumerGzipInflater.class, "Flag byte of a header is malformed. Reserved bits are set");
+	private static final ParseException ACTUAL_DECOMPRESSED_DATA_SIZE_IS_NOT_EQUAL_TO_EXPECTED = new InvalidSizeException(BufsConsumerGzipInflater.class, "Decompressed data size is not equal to input size from GZIP trailer");
+	private static final ParseException CRC32_VALUE_DIFFERS = new ParseException(BufsConsumerGzipInflater.class, "CRC32 value of uncompressed data differs");
+	private static final ParseException INCORRECT_ID_HEADER_BYTES = new UnknownFormatException(BufsConsumerGzipInflater.class, "Incorrect identification bytes. Not in GZIP format");
+	private static final ParseException UNSUPPORTED_COMPRESSION_METHOD = new UnknownFormatException(BufsConsumerGzipInflater.class, "Unsupported compression method. Deflate compression required");
+	private static final ParseException FEXTRA_TOO_LARGE = new InvalidSizeException(BufsConsumerGzipInflater.class, "FEXTRA part of a header is larger than maximum allowed length");
+	private static final ParseException FNAME_FCOMMENT_TOO_LARGE = new InvalidSizeException(BufsConsumerGzipInflater.class, "FNAME or FEXTRA header is larger than maximum allowed length");
+	private static final ParseException MALFORMED_FLAG = new ParseException(BufsConsumerGzipInflater.class, "Flag byte of a header is malformed. Reserved bits are set");
 	// endregion
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED};

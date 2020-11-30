@@ -2,6 +2,7 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.common.exception.parse.UnexpectedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.TestUtils.AssertingConsumer;
 import io.activej.promise.Promise;
@@ -19,13 +20,13 @@ import java.util.zip.Deflater;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
 import static io.activej.http.GzipProcessorUtils.toGzip;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.lang.Math.min;
 import static java.util.Arrays.copyOfRange;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertThat;
 
 public final class BufsConsumerGzipInflaterTest {
 
@@ -145,7 +146,7 @@ public final class BufsConsumerGzipInflaterTest {
 			finalMessage.append(s);
 		}
 		consumer.setExpectedByteArray(finalMessage.toString().getBytes());
-		consumer.setExpectedException(UNEXPECTED_DATA_EXCEPTION);
+		consumer.setExpectedExceptionType(UnexpectedDataException.class);
 
 		byte[] data = deflate(finalMessage.toString().getBytes());
 		byte[] withExtraData = new byte[data.length + 3];
@@ -157,7 +158,7 @@ public final class BufsConsumerGzipInflaterTest {
 		buf.put(withExtraData);
 		list.add(buf);
 
-		doTest(UNEXPECTED_DATA_EXCEPTION);
+		doTest(UnexpectedDataException.class);
 	}
 
 	@Test
@@ -208,13 +209,13 @@ public final class BufsConsumerGzipInflaterTest {
 		doTest(null);
 	}
 
-	private void doTest(@Nullable Exception expectedException) {
+	private void doTest(@Nullable Class<? extends Throwable> expectedExceptionType) {
 		gunzip.getInput().set(ChannelSupplier.ofList(list));
 		Promise<Void> processResult = gunzip.getProcessCompletion();
-		if (expectedException == null) {
+		if (expectedExceptionType == null) {
 			await(processResult);
 		} else {
-			assertEquals(expectedException, awaitException(processResult));
+			assertThat(awaitException(processResult), instanceOf(expectedExceptionType));
 		}
 	}
 

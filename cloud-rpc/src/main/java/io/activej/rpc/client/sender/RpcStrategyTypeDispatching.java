@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
 
 public final class RpcStrategyTypeDispatching implements RpcStrategy {
 	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy = new HashMap<>();

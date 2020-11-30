@@ -20,6 +20,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
+import io.activej.common.exception.CloseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
@@ -51,7 +52,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -135,7 +135,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 						if (throwable == null) {
 							succeededTasks++;
 							logger.info("Task executed successfully: {}", command);
-						} else if (throwable == CLOSE_EXCEPTION) {
+						} else if (throwable instanceof CloseException) {
 							canceledTasks++;
 							logger.error("Canceled task: {}", command, throwable);
 						} else {

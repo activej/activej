@@ -19,7 +19,6 @@ package io.activej.promise;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.Async;
@@ -481,9 +480,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract(pure = true)
 	@NotNull
 	Promise<Void> both(@NotNull Promise<?> other);
-
-	StacklessException NOT_ENOUGH_PROMISES_EXCEPTION = new StacklessException(Promises.class,
-			"There are no promises to be complete");
 
 	/**
 	 * Returns the {@code Promise} which was completed first.

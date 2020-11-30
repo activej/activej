@@ -18,6 +18,7 @@ package io.activej.csp.net;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -27,12 +28,12 @@ import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
-
 /**
  * Represents a simple binary protocol over for communication a TCP connection.
  */
 public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O> {
+	private static final TruncatedDataException UNEXPECTED_END_OF_STREAM = new TruncatedDataException(MessagingWithBinaryStreaming.class);
+
 	private final AsyncTcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;
@@ -56,7 +57,7 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 								bufs.add(buf);
 								return Promise.complete();
 							} else {
-								return Promise.ofException(UNEXPECTED_END_OF_STREAM_EXCEPTION);
+								return Promise.ofException(UNEXPECTED_END_OF_STREAM);
 							}
 						})
 						.whenException(this::closeEx),

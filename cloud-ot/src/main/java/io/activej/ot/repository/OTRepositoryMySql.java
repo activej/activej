@@ -24,7 +24,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.ot.OTCommit;
-import io.activej.ot.exceptions.OTNoCommitException;
+import io.activej.ot.exception.NoCommitException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
@@ -329,7 +329,7 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 						}
 
 						if (timestamp == 0) {
-							throw new OTNoCommitException(revisionId);
+							throw new NoCommitException(OTRepositoryMySql.class, revisionId);
 						}
 
 						return OTCommit.of(epoch, revisionId, parentDiffs)

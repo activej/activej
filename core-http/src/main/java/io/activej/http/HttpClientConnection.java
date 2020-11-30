@@ -19,8 +19,8 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.CloseException;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.parse.UnexpectedDataException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -94,9 +94,9 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 public final class HttpClientConnection extends AbstractHttpConnection {
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpClientConnection.class, "detailedErrorMessages", false);
 
-	public static final ParseException INVALID_RESPONSE = new UnknownFormatException(HttpClientConnection.class, "Invalid response");
-	public static final StacklessException CONNECTION_CLOSED = new CloseException(HttpClientConnection.class, "Connection closed");
-	public static final StacklessException NOT_ACCEPTED_RESPONSE = new StacklessException(HttpClientConnection.class, "Response was not accepted");
+	private static final ParseException INVALID_RESPONSE = new UnknownFormatException(HttpClientConnection.class, "Invalid response");
+	private static final CloseException CONNECTION_CLOSED = new CloseException(HttpClientConnection.class, "Connection closed");
+	private static final ParseException UNEXPECTED_READ = new UnexpectedDataException(HttpClientConnection.class, "Unexpected read data");
 
 	static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.of("upgrade");
 	static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.of("websocket");

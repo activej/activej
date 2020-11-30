@@ -26,6 +26,7 @@ import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
+import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.reducers.DiffsReducer;
 import io.activej.ot.repository.OTRepositoryEx;
 import io.activej.ot.system.OTSystem;
@@ -125,7 +126,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 				.then(heads -> findFrozenCut(heads, eventloop.currentInstant().minus(freezeTimeout)))
 				.then(this::cleanupFrozenCut)
 				.thenEx((v, e) -> {
-					if (e == GRAPH_EXHAUSTED) return Promise.of(null);
+					if (e instanceof GraphExhaustedException) return Promise.of(null);
 					return Promise.of(v, e);
 				})
 				.whenComplete(promiseCleanup.recordStats())

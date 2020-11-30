@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.ot.exceptions;
+package io.activej.ot.exception;
 
-public class OTNoCommitException extends OTException {
-	private static final String NO_COMMIT_MESSAGE = "No commit with id: ";
-
-	public OTNoCommitException(long revisionId) {
-		super(NO_COMMIT_MESSAGE + revisionId);
+public class GraphExhaustedException extends OTException {
+	public GraphExhaustedException(Class<?> component, String message) {
+		super(component, message);
 	}
 }

@@ -21,8 +21,8 @@ import java.util.function.Consumer;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.*;
 
 public class TestUtils {
 
@@ -70,7 +70,7 @@ public class TestUtils {
 		@Nullable
 		private ByteBuf expectedBuf;
 		@Nullable
-		private Exception expectedException;
+		private Class<? extends Throwable> expectedExceptionType;
 		@Nullable
 		private Consumer<Throwable> exceptionValidator;
 
@@ -86,8 +86,8 @@ public class TestUtils {
 			this.expectedBuf = expectedBuf;
 		}
 
-		public void setExpectedException(@Nullable Exception expectedException) {
-			this.expectedException = expectedException;
+		public void setExpectedExceptionType(@Nullable Class<? extends Throwable> expectedExceptionType) {
+			this.expectedExceptionType = expectedExceptionType;
 		}
 
 		public void setExceptionValidator(@Nullable Consumer<Throwable> exceptionValidator) {
@@ -97,7 +97,7 @@ public class TestUtils {
 		public void reset() {
 			expectedBuf = null;
 			expectedByteArray = null;
-			expectedException = null;
+			expectedExceptionType = null;
 			expectedString = null;
 			exceptionValidator = null;
 			executed = false;
@@ -144,8 +144,8 @@ public class TestUtils {
 		@Override
 		protected void onClosed(@NotNull Throwable e) {
 			executed = true;
-			if (expectedException != null) {
-				assertEquals(expectedException, e);
+			if (expectedExceptionType != null) {
+				assertThat(e, instanceOf(expectedExceptionType));
 				return;
 			}
 			if (exceptionValidator != null) {

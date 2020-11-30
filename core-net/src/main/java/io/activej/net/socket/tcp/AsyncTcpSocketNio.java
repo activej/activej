@@ -21,6 +21,7 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.common.exception.CloseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
@@ -56,10 +57,10 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private static final boolean CHECK = Checks.isEnabled(AsyncTcpSocketNio.class);
 
 	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(AsyncTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
-
-	public static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(AsyncTcpSocketNio.class, "timed out");
 	public static final int NO_TIMEOUT = 0;
 
+	private static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(AsyncTcpSocketNio.class, "Timed out");
+	private static final CloseException CLOSE_EXCEPTION = new CloseException(AsyncTcpSocketNio.class);
 	private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
 
 	private final Eventloop eventloop;

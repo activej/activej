@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception.parse;
+package io.activej.async.process;
 
-public class TruncatedDataException extends ParseException {
-	public TruncatedDataException() {
-		super();
-	}
+import io.activej.common.exception.CloseException;
 
-	public TruncatedDataException(String message) {
-		super(null, message);
-	}
+final class CloseExceptionHolder {
+	static final CloseException CLOSE_EXCEPTION = new CloseException(AsyncCloseable.class);
 
-	public TruncatedDataException(Class<?> component) {
-		super(component, "Data has ended unexpectedly");
-	}
-
-	public TruncatedDataException(Class<?> component, String message) {
-		super(component, message);
+	private CloseExceptionHolder() {
+		throw new AssertionError();
 	}
 }

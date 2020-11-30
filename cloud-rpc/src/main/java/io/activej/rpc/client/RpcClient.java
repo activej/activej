@@ -21,7 +21,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.api.WithInitializer;
-import io.activej.common.exception.StacklessException;
+import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
@@ -42,6 +42,7 @@ import io.activej.rpc.client.jmx.RpcRequestStats;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
 import io.activej.rpc.server.RpcServer;
@@ -87,7 +88,10 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = Duration.ofSeconds(1);
 	public static final MemSize DEFAULT_PACKET_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
-	public static final StacklessException START_EXCEPTION = new StacklessException("Could not establish initial connection");
+
+	private static final RpcException START_EXCEPTION = new RpcException(RpcClient.class, "Could not establish initial connection");
+	private static final AsyncTimeoutException RPC_TIMEOUT_EXCEPTION = new AsyncTimeoutException(RpcClient.class, "RPC request has timed out");
+	private static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException(RpcClient.class, "No senders available");
 
 	private Logger logger = getLogger(getClass());
 

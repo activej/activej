@@ -19,7 +19,7 @@ package io.activej.cube.ot;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationOT;
 import io.activej.ot.TransformResult;
-import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
 
@@ -50,9 +50,9 @@ public class CubeOT {
 							return TransformResult.conflict(transformed.resolution);
 
 						if (transformed.left.size() > 1)
-							throw new OTTransformException("Left transformation result has more than one aggregation diff");
+							throw new TransformException(CubeOT.class, "Left transformation result has more than one aggregation diff");
 						if (transformed.right.size() > 1)
-							throw new OTTransformException("Right transformation result has more than one aggregation diff");
+							throw new TransformException(CubeOT.class, "Right transformation result has more than one aggregation diff");
 
 						if (!transformed.left.isEmpty())
 							newOpsLeft.put(aggregation, transformed.left.get(0));

@@ -2,6 +2,7 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -9,13 +10,13 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 
 public final class BinaryChannelSupplierTest {
 	@ClassRule
@@ -37,6 +38,6 @@ public final class BinaryChannelSupplierTest {
 		Exception exception = awaitException(BinaryChannelSupplier.of(ChannelSupplier.of(wrapUtf8("Hello\r\n Wo")))
 				.parseStream(ofCrlfTerminatedBytes())
 				.toCollector(ByteBufQueue.collector()));
-		assertSame(UNEXPECTED_END_OF_STREAM_EXCEPTION, exception);
+		assertThat(exception, instanceOf(TruncatedDataException.class));
 	}
 }

@@ -22,7 +22,7 @@ import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
 import org.jetbrains.annotations.Nullable;
 
-public class RpcRemoteException extends RpcException implements RpcMandatoryData {
+public final class RpcRemoteException extends RpcException implements RpcMandatoryData {
 	private static final long serialVersionUID = 769022174067373741L;
 	@Nullable
 	private final String causeMessage;

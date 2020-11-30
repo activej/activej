@@ -22,6 +22,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.CollectorsEx;
 import io.activej.common.MemSize;
 import io.activej.common.collection.CollectionUtils;
+import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
@@ -598,7 +599,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				Map<String, FsScalarException> exceptions = ((FsBatchException) e).getExceptions();
 				assert exceptions.size() == 1;
 				return Promise.ofException(first(exceptions.values()));
-			} else if (e instanceof FsException) {
+			} else if (e instanceof StacklessException) {
 				return Promise.ofException(e);
 			} else if (e instanceof FileAlreadyExistsException) {
 				return execute(() -> {

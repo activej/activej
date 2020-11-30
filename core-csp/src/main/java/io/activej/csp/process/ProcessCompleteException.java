@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception.parse;
+package io.activej.csp.process;
 
-public class TruncatedDataException extends ParseException {
-	public TruncatedDataException() {
-		super();
-	}
+import io.activej.common.exception.StacklessException;
+import org.jetbrains.annotations.NotNull;
 
-	public TruncatedDataException(String message) {
-		super(null, message);
-	}
-
-	public TruncatedDataException(Class<?> component) {
-		super(component, "Data has ended unexpectedly");
-	}
-
-	public TruncatedDataException(Class<?> component, String message) {
+public final class ProcessCompleteException extends StacklessException {
+	public ProcessCompleteException(@NotNull Class<?> component, @NotNull String message) {
 		super(component, message);
 	}
 }

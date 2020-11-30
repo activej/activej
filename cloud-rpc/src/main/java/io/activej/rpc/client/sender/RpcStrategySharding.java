@@ -26,6 +26,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Set;
 
+import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
+
 public final class RpcStrategySharding implements RpcStrategy {
 	private final RpcStrategyList list;
 	private final ShardingFunction<?> shardingFunction;

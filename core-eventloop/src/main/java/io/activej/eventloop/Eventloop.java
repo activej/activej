@@ -21,7 +21,6 @@ import io.activej.async.callback.Callback;
 import io.activej.common.Checks;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.exception.AsyncTimeoutException;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.reflection.ReflectionUtils;
@@ -90,14 +89,13 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	public static final boolean JIGSAW_DETECTED;
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
+	public static final Duration DEFAULT_IDLE_INTERVAL = Duration.ofSeconds(1);
 
 	static {
 		JIGSAW_DETECTED = ReflectionUtils.isClassPresent("java.lang.Module");
 	}
 
-	public static final AsyncTimeoutException CONNECT_TIMEOUT = new AsyncTimeoutException(Eventloop.class, "Connection timed out");
-	public static final StacklessException NOT_CONNECTED = new StacklessException(Eventloop.class, "Connection key was received but the channel was not connected - this is not possible without some bug in Java NIO");
-	public static final Duration DEFAULT_IDLE_INTERVAL = Duration.ofSeconds(1);
+	private static final AsyncTimeoutException CONNECT_TIMEOUT = new AsyncTimeoutException(Eventloop.class, "Connection timed out");
 
 	@NotNull
 	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
@@ -786,7 +784,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			if (connected) {
 				cb.accept(channel, null);
 			} else {
-				cb.accept(null, NOT_CONNECTED);
+				cb.accept(null, new IOException("Connection key was received but the channel was not connected - " +
+						"this is not possible without some bug in Java NIO"));
 			}
 		} catch (Throwable e) {
 			recordFatalError(e, channel);

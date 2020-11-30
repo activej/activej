@@ -18,7 +18,6 @@ package io.activej.csp.process;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncProcess;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
@@ -41,7 +40,7 @@ import org.jetbrains.annotations.Nullable;
  * Process can be cancelled or closed manually.
  */
 public abstract class AbstractCommunicatingProcess implements AsyncProcess {
-	public static final StacklessException ASYNC_PROCESS_IS_COMPLETE = new StacklessException(AbstractCommunicatingProcess.class, "AsyncProcess is complete");
+	private static final ProcessCompleteException ASYNC_PROCESS_IS_COMPLETE = new ProcessCompleteException(AbstractCommunicatingProcess.class, "AsyncProcess is complete");
 
 	private boolean processStarted;
 	private boolean processComplete;

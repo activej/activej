@@ -10,7 +10,7 @@ import java.util.List;
 import static io.activej.common.Checks.checkNotNull;
 
 public final class FailingStreamSorterStorageStub<T> implements StreamSorterStorage<T> {
-	public static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
+	static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
 
 	private StreamSorterStorage<T> storage;
 

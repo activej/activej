@@ -16,9 +16,10 @@
 
 package io.activej.async.process;
 
-import io.activej.common.exception.CloseException;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
+
+import static io.activej.async.process.CloseExceptionHolder.CLOSE_EXCEPTION;
 
 /**
  * Describes methods that are used to handle exceptional behaviour or to handle closing.
@@ -35,8 +36,6 @@ public interface AsyncCloseable {
 	Object STATIC = new Object() {{
 		Recyclers.register(AsyncCloseable.class, AsyncCloseable::close);
 	}};
-
-	CloseException CLOSE_EXCEPTION = new CloseException(AsyncCloseable.class, "Closed");
 
 	/**
 	 * Cancels the process.

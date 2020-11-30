@@ -36,7 +36,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
  * This class allows to use a simple subset of the Domain Name System (or DNS) protocol
  */
 public final class DnsProtocol {
-	public static final ParseException QUESTION_COUNT_NOT_ONE = new ParseException(DnsProtocol.class, "Received DNS response has question count not equal to one");
+	private static final ParseException QUESTION_COUNT_NOT_ONE = new ParseException(DnsProtocol.class, "Received DNS response has question count not equal to one");
 
 	private static final int MAX_SIZE = 512;
 

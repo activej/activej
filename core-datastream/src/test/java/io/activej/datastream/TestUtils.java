@@ -4,8 +4,8 @@ import io.activej.datastream.processor.StreamTransformer;
 
 import java.util.List;
 
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.*;
 
 public class TestUtils {
 	public static void assertEndOfStream(StreamSupplier<?> streamSupplier) {
@@ -29,6 +29,10 @@ public class TestUtils {
 		assertSame(throwable, streamSupplier.getEndOfStream().getException());
 	}
 
+	public static void assertClosedWithError(Class<? extends Throwable> throwableType, StreamSupplier<?> streamSupplier) {
+		assertThat(streamSupplier.getEndOfStream().getException(), instanceOf(throwableType));
+	}
+
 	public static void assertClosedWithError(StreamConsumer<?> streamConsumer) {
 		assertTrue(streamConsumer.isException());
 	}
@@ -37,9 +41,18 @@ public class TestUtils {
 		assertSame(throwable, streamConsumer.getAcknowledgement().getException());
 	}
 
+	public static void assertClosedWithError(Class<? extends Throwable> throwableType, StreamConsumer<?> streamConsumer) {
+		assertThat(streamConsumer.getAcknowledgement().getException(), instanceOf(throwableType));
+	}
+
 	public static void assertClosedWithError(Throwable throwable, StreamSupplier<?> streamSupplier, StreamConsumer<?> streamConsumer) {
 		assertSame(throwable, streamSupplier.getEndOfStream().getException());
 		assertSame(throwable, streamConsumer.getAcknowledgement().getException());
+	}
+
+	public static void assertClosedWithError(Class<? extends Throwable> throwableType, StreamSupplier<?> streamSupplier, StreamConsumer<?> streamConsumer) {
+		assertThat(streamSupplier.getEndOfStream().getException(), instanceOf(throwableType));
+		assertThat(streamConsumer.getAcknowledgement().getException(), instanceOf(throwableType));
 	}
 
 	public static void assertSuppliersEndOfStream(List<? extends StreamSupplier<?>> streamSuppliers) {
@@ -90,7 +103,7 @@ public class TestUtils {
 			acknowledge();
 		}
 
-		public int getCount(){
+		public int getCount() {
 			return count;
 		}
 	}

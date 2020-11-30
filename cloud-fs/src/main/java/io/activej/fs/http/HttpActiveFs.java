@@ -26,7 +26,6 @@ import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.exception.FsIOException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -44,9 +43,7 @@ import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.Codecs.*;
-import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
-import static io.activej.http.AbstractHttpConnection.INCOMPLETE_MESSAGE;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -57,8 +54,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Inherits all of the limitations of {@link ActiveFs} implementation located on server.
  */
 public final class HttpActiveFs implements ActiveFs {
-	public static final FsIOException UNKNOWN_SERVER_ERROR = new FsIOException(HttpActiveFs.class, "Unknown server error occurred");
-
 	private final IAsyncHttpClient client;
 	private final String url;
 
@@ -110,7 +105,7 @@ public final class HttpActiveFs implements ActiveFs {
 						url + urlBuilder
 								.build()))
 				.then(HttpActiveFs::checkResponse)
-				.map(response -> wrapIncompleteMessages(response.getBodyStream()));
+				.map(HttpMessage::getBodyStream);
 	}
 
 	@Override
@@ -316,13 +311,6 @@ public final class HttpActiveFs implements ActiveFs {
 		}
 		//noinspection ConstantConditions - checked above
 		return Promise.ofException(ack.getError());
-	}
-
-	private static ChannelSupplier<ByteBuf> wrapIncompleteMessages(ChannelSupplier<ByteBuf> supplier) {
-		return supplier.withEndOfStream(eos -> eos
-				.thenEx((v, e) -> e == INCOMPLETE_MESSAGE ?
-						Promise.ofException(UNEXPECTED_END_OF_STREAM) :
-						Promise.of(v, e)));
 	}
 
 }

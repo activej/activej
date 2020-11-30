@@ -120,13 +120,11 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 				.then(messaging -> messaging.send(new Download(timestamp))
 						.then(messaging::receive)
 						.then(response -> {
-							if (response == null) {
-								return Promise.ofException(new IllegalStateException("Unexpected end of stream"));
-							}
-							if (response.getClass() == DownloadStarted.class) {
+							Class<? extends CrdtResponse> responseClass = response.getClass();
+							if (responseClass == DownloadStarted.class) {
 								return Promise.complete();
 							}
-							if (response instanceof ServerError) {
+							if (responseClass == ServerError.class) {
 								return Promise.ofException(new StacklessException(CrdtStorageClient.class, ((ServerError) response).getMsg()));
 							}
 							return Promise.ofException(new IllegalStateException("Received message " + response + " instead of " + DownloadStarted.class.getSimpleName()));

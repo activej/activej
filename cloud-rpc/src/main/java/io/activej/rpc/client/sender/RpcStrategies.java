@@ -18,6 +18,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.rpc.hash.HashFunction;
 import io.activej.rpc.hash.ShardingFunction;
+import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
@@ -36,6 +37,7 @@ import static java.util.Arrays.asList;
  * </ul>
  */
 public final class RpcStrategies {
+	static RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException(RpcStrategies.class, "No senders available");
 
 	public static RpcStrategySingleServer server(@NotNull InetSocketAddress address) {
 		return RpcStrategySingleServer.create(address);

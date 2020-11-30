@@ -45,7 +45,6 @@ import static io.activej.common.collection.CollectionUtils.asIterator;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-import static io.activej.promise.Promise.NOT_ENOUGH_PROMISES_EXCEPTION;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -55,7 +54,9 @@ import static java.util.Collections.singletonList;
  */
 @SuppressWarnings({"WeakerAccess", "unchecked"})
 public final class Promises {
-	public static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(Promises.class, "Promise timeout");
+	private static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(Promises.class, "Promise timeout");
+	private static final StacklessException NOT_ENOUGH_PROMISES_EXCEPTION = new StacklessException(Promises.class,
+			"There are no promises to be complete");
 
 	/**
 	 * @see #timeout(long, Promise)

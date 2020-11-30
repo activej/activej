@@ -24,7 +24,8 @@ public final class ChannelByteCombinerTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-	public static final ExpectedException EXPECTED_EXCEPTION = new ExpectedException();
+
+	private static final ExpectedException EXPECTED_EXCEPTION = new ExpectedException();
 
 	private ChannelByteCombiner combiner;
 

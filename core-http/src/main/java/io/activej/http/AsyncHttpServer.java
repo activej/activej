@@ -18,6 +18,7 @@ package io.activej.http;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
+import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
@@ -132,7 +133,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 
 		@Override
 		public void onHttpError(HttpServerConnection connection, Throwable e) {
-			if (e == AbstractHttpConnection.READ_TIMEOUT_ERROR || e == AbstractHttpConnection.WRITE_TIMEOUT_ERROR) {
+			if (e instanceof AsyncTimeoutException) {
 				httpTimeouts.recordEvent();
 			} else {
 				httpErrors.recordException(e);

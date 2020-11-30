@@ -44,7 +44,8 @@ import static java.util.stream.Collectors.toSet;
  * Inherits all of the limitations of parent {@link ActiveFs}
  */
 final class TransformActiveFs implements ActiveFs {
-	public static final ForbiddenPathException FORBIDDEN_PATH_EXCEPTION = new ForbiddenPathException(TransformActiveFs.class);
+	private static final ForbiddenPathException FORBIDDEN_PATH_EXCEPTION = new ForbiddenPathException(TransformActiveFs.class);
+
 	private final ActiveFs parent;
 	private final Function<String, Optional<String>> into;
 	private final Function<String, Optional<String>> from;

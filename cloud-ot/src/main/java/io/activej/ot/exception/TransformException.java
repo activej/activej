@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception.parse;
+package io.activej.ot.exception;
 
-public class TruncatedDataException extends ParseException {
-	public TruncatedDataException() {
-		super();
+public class TransformException extends OTException {
+	public TransformException(String message) {
+		super(message);
 	}
 
-	public TruncatedDataException(String message) {
-		super(null, message);
-	}
-
-	public TruncatedDataException(Class<?> component) {
-		super(component, "Data has ended unexpectedly");
-	}
-
-	public TruncatedDataException(Class<?> component, String message) {
+	public TransformException(Class<?> component, String message) {
 		super(component, message);
 	}
 }

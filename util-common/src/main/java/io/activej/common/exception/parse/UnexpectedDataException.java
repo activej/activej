@@ -16,20 +16,20 @@
 
 package io.activej.common.exception.parse;
 
-public class TruncatedDataException extends ParseException {
-	public TruncatedDataException() {
+public class UnexpectedDataException extends ParseException {
+	public UnexpectedDataException() {
 		super();
 	}
 
-	public TruncatedDataException(String message) {
+	public UnexpectedDataException(String message) {
 		super(null, message);
 	}
 
-	public TruncatedDataException(Class<?> component) {
-		super(component, "Data has ended unexpectedly");
+	public UnexpectedDataException(Class<?> component) {
+		super(component, "Unexpected data");
 	}
 
-	public TruncatedDataException(Class<?> component, String message) {
+	public UnexpectedDataException(Class<?> component, String message) {
 		super(component, message);
 	}
 }

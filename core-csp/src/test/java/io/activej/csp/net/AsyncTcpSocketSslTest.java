@@ -2,6 +2,8 @@ package io.activej.csp.net;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
+import io.activej.common.exception.CloseException;
+import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
@@ -36,15 +38,14 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 
 public final class AsyncTcpSocketSslTest {
 	private static final String KEYSTORE_PATH = "./src/test/resources/keystore.jks";
@@ -198,7 +199,7 @@ public final class AsyncTcpSocketSslTest {
 				socket.write(wrapAscii("He"))
 						.whenComplete(socket::close)
 						.then(() -> socket.write(wrapAscii("ello")))
-						.whenComplete(($, e) -> assertSame(CLOSE_EXCEPTION, e)));
+						.whenComplete(($, e) -> assertThat(e, instanceOf(CloseException.class))));
 
 		Throwable e = awaitException(AsyncTcpSocketNio.connect(ADDRESS)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
@@ -208,7 +209,7 @@ public final class AsyncTcpSocketSslTest {
 							.whenException(supplier::closeEx);
 				}));
 
-		assertSame(UNEXPECTED_END_OF_STREAM_EXCEPTION, e);
+		assertThat(e, instanceOf(TruncatedDataException.class));
 	}
 
 	@Test
@@ -235,7 +236,7 @@ public final class AsyncTcpSocketSslTest {
 				})
 				.map(tcpSocket -> AsyncTcpSocketSsl.wrapClientSocket(tcpSocket, sslContext, executor))
 				.then(socket -> socket.write(ByteBufStrings.wrapUtf8("hello"))));
-		assertEquals(CLOSE_EXCEPTION, exception);
+		assertThat(exception, instanceOf(CloseException.class));
 	}
 
 	static void startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {

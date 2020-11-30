@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
@@ -33,15 +33,14 @@ import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.eventloop.Eventloop.CONNECT_TIMEOUT;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
-import static io.activej.http.HttpClientConnection.INVALID_RESPONSE;
 import static io.activej.https.SslUtils.createTestSslContext;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class AsyncHttpClientTest {
@@ -85,8 +84,8 @@ public final class AsyncHttpClientTest {
 	public void testClientTimeoutConnect() {
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withConnectTimeout(Duration.ofMillis(1));
-		AsyncTimeoutException e = awaitException(client.request(HttpRequest.get("http://google.com")));
-		assertSame(CONNECT_TIMEOUT, e);
+		Exception e = awaitException(client.request(HttpRequest.get("http://google.com")));
+		assertThat(e, instanceOf(AsyncTimeoutException.class));
 	}
 
 	@Test
@@ -113,10 +112,10 @@ public final class AsyncHttpClientTest {
 				.listen();
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		UnknownFormatException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
 				.then(HttpMessage::loadBody));
 
-		assertSame(INVALID_RESPONSE, e);
+		assertThat(e, instanceOf(ParseException.class));
 	}
 
 	@Test

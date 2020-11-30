@@ -74,22 +74,22 @@ class StaticLoaderClassPath implements StaticLoader {
 		return Promise.ofBlockingCallable(executor, () -> {
 			URL resource = classLoader.getResource(finalPath);
 			if (resource == null) {
-				throw NOT_FOUND_EXCEPTION;
+				throw new ResourceNotFoundException(StaticLoaderClassPath.class);
 			}
 
 			URLConnection connection = resource.openConnection();
 
 			if (connection instanceof JarURLConnection) {
 				if (((JarURLConnection) connection).getJarEntry().isDirectory()) {
-					throw IS_A_DIRECTORY;
+					throw new ResourceIsADirectoryException(StaticLoaderClassPath.class);
 				}
 			} else if ("file".equals(resource.getProtocol())) {
 				Path filePath = Paths.get(resource.toURI());
 				if (!Files.isRegularFile(filePath)) {
 					if (Files.isDirectory(filePath)) {
-						throw IS_A_DIRECTORY;
+						throw new ResourceIsADirectoryException(StaticLoaderClassPath.class);
 					} else {
-						throw NOT_FOUND_EXCEPTION;
+						throw new ResourceNotFoundException(StaticLoaderClassPath.class);
 					}
 				}
 			}

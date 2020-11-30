@@ -21,7 +21,6 @@ import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.exception.FsIOException;
 import io.activej.fs.exception.scalar.FileNotFoundException;
 import io.activej.fs.tcp.RemoteFsCommands.*;
 import io.activej.fs.tcp.RemoteFsResponses.*;
@@ -39,6 +38,7 @@ import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.fs.util.RemoteFsUtils.*;
 
 /**
@@ -50,8 +50,6 @@ import static io.activej.fs.util.RemoteFsUtils.*;
 public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private static final ByteBufsCodec<FsCommand, FsResponse> SERIALIZER =
 			nullTerminatedJson(RemoteFsCommands.CODEC, RemoteFsResponses.CODEC);
-
-	public static final FsIOException NO_HANDLER_FOR_MESSAGE = new FsIOException(ActiveFsServer.class, "No handler for received message type");
 
 	private final Map<Class<?>, MessagingHandler<FsCommand>> handlers = new HashMap<>();
 	private final ActiveFs fs;
@@ -96,11 +94,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()
 				.then(msg -> {
-					MessagingHandler<FsCommand> handler = handlers.get(msg.getClass());
-					if (handler == null) {
-						logger.warn("received a message with no associated handler, type: {}", msg.getClass());
-						return Promise.ofException(NO_HANDLER_FOR_MESSAGE);
-					}
+					MessagingHandler<FsCommand> handler = checkNotNull(handlers.get(msg.getClass()));
 					return handler.onMessage(messaging, msg);
 				})
 				.whenComplete(handleRequestPromise.recordStats())

@@ -3,6 +3,7 @@ package io.activej.rpc;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.annotations.Deserialize;
@@ -24,7 +25,8 @@ import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
-import static org.junit.Assert.assertSame;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertThat;
 
 public final class RpcNoServerTest {
 	@ClassRule
@@ -121,7 +123,7 @@ public final class RpcNoServerTest {
 					.whenComplete(($, e) -> {
 						if (e != null) {
 							System.err.println(e.getMessage());
-							assertSame(RpcClient.START_EXCEPTION, e); // connectTimeout
+							assertThat(e, instanceOf(RpcException.class));
 						}
 					})
 					.thenEx(($1, $2) -> rpcClient.stop())

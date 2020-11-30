@@ -17,6 +17,10 @@
 package io.activej.common.exception;
 
 public class CloseException extends StacklessException {
+	public CloseException(Class<?> component) {
+		super(component, "Closed");
+	}
+
 	public CloseException(Class<?> component, String message) {
 		super(component, message);
 	}

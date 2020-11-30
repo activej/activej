@@ -19,6 +19,7 @@ package io.activej.net.socket.tcp;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.exception.CloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.eventloop.net.CloseWithoutNotifyException;
 import io.activej.promise.Promise;
@@ -45,6 +46,9 @@ import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
  */
 public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(AsyncTcpSocketSsl.class, "errorOnCloseWithoutNotify", false);
+
+	private static final CloseException CLOSE_EXCEPTION = new CloseException(AsyncTcpSocketSsl.class);
+
 	private final SSLEngine engine;
 	private final Executor executor;
 	private final AsyncTcpSocket upstream;

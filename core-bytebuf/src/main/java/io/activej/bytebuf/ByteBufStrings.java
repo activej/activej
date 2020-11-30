@@ -28,8 +28,8 @@ import static io.activej.common.Checks.checkArgument;
 public final class ByteBufStrings {
 	private static final boolean CHECK = Checks.isEnabled(ByteBufStrings.class);
 
-	public static final ParseException READ_PAST_LIMIT = new ParseException(ByteBufStrings.class, "Malformed utf-8 input: Read past end");
-	public static final ParseException READ_PAST_ARRAY_LENGTH = new ParseException(ByteBufStrings.class, "Malformed utf-8 input");
+	private static final ParseException READ_PAST_LIMIT = new ParseException(ByteBufStrings.class, "Malformed utf-8 input: Read past end");
+	private static final ParseException READ_PAST_ARRAY_LENGTH = new ParseException(ByteBufStrings.class, "Malformed utf-8 input");
 
 	public static final byte CR = (byte) '\r';
 	public static final byte LF = (byte) '\n';

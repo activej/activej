@@ -17,14 +17,10 @@
 package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.rpc.protocol.RpcOverloadException;
 
 public interface IRpcClient {
-	AsyncTimeoutException RPC_TIMEOUT_EXCEPTION = new AsyncTimeoutException(IRpcClient.class, "RPC request has timed out");
-	RpcOverloadException RPC_OVERLOAD_EXCEPTION = new RpcOverloadException(IRpcClient.class, "RPC client is overloaded");
 
 	default <I, O> Promise<O> sendRequest(I request, int timeout) {
 		SettablePromise<O> resultPromise = new SettablePromise<>();

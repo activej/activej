@@ -16,17 +16,19 @@
 
 package io.activej.common.exception;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 public final class Exceptions {
 
-	public static Exception concat(Class<?> component, String message, List<? extends Throwable> errors) {
+	public static Exception concat(@NotNull Class<?> component, String message, List<? extends Throwable> errors) {
 		StacklessException res = new StacklessException(component, message);
 		errors.forEach(res::addSuppressed);
 		return res;
 	}
 
 	public static Exception concat(String message, List<? extends Throwable> errors) {
-		return concat(null, message, errors);
+		return concat(Exceptions.class, message, errors);
 	}
 }

@@ -2,6 +2,8 @@ package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.parse.TruncatedDataException;
+import io.activej.common.exception.parse.UnexpectedDataException;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -35,8 +37,6 @@ import java.util.stream.IntStream;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.fs.Utils.initTempDir;
-import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_DATA;
-import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -117,7 +117,7 @@ public final class FsIntegrationTest {
 				.streamTo(fs.upload(filename, 10))
 				.whenComplete(server::close));
 
-		assertSame(UNEXPECTED_END_OF_STREAM, exception);
+		assertThat(exception, instanceOf(TruncatedDataException.class));
 
 		assertFalse(Files.exists(path));
 	}
@@ -132,7 +132,7 @@ public final class FsIntegrationTest {
 				.streamTo(fs.upload(filename, 10))
 				.whenComplete(server::close));
 
-		assertSame(UNEXPECTED_DATA, exception);
+		assertThat(exception, instanceOf(UnexpectedDataException.class));
 
 		assertFalse(Files.exists(path));
 	}

@@ -3,6 +3,7 @@ package io.activej.dataflow.stream;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.codec.StructuredCodec;
+import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -69,7 +70,6 @@ import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.codec.StructuredCodec.ofObject;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
@@ -582,7 +582,7 @@ public final class PartitionedStreamTest {
 							})
 							.thenEx((value, e) -> {
 								if (e == null) return Promise.of(value);
-								if (e == UNEXPECTED_END_OF_STREAM_EXCEPTION) {
+								if (e instanceof TruncatedDataException) {
 									ByteBufQueue bufs = binaryChannelSupplier.getBufs();
 									return Promise.of(bufs.isEmpty() ? null : bufs.takeRemaining().asString(UTF_8));
 								}

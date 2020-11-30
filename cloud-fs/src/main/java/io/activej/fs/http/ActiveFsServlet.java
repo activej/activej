@@ -35,8 +35,8 @@ import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.Codecs.*;
-import static io.activej.fs.util.RemoteFsUtils.*;
-import static io.activej.http.AbstractHttpConnection.INCOMPLETE_MESSAGE;
+import static io.activej.fs.util.RemoteFsUtils.castError;
+import static io.activej.fs.util.RemoteFsUtils.parseBody;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
@@ -72,16 +72,13 @@ public final class ActiveFsServlet {
 					return (size == null ?
 							fs.upload(decodePath(request)) :
 							fs.upload(decodePath(request), size))
-							.map(ActiveFsServlet::wrapIncompleteMessages)
 							.mapEx(acknowledgeUpload(request));
 				})
-				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(file -> fs.upload(file)
-						.map(ActiveFsServlet::wrapIncompleteMessages)))
+				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(fs::upload))
 						.mapEx(errorHandler()))
 				.map(POST, "/" + APPEND + "/*", request -> {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					return fs.append(decodePath(request), offset)
-							.map(ActiveFsServlet::wrapIncompleteMessages)
 							.mapEx(acknowledgeUpload(request));
 				})
 				.map(GET, "/" + DOWNLOAD + "/*", request -> {
@@ -222,13 +219,6 @@ public final class ActiveFsServlet {
 								UploadAcknowledgement.ok() :
 								UploadAcknowledgement.ofError(castError(e)))
 						.map(ack -> ChannelSupplier.of(toJsonBuf(UploadAcknowledgement.CODEC, ack))))));
-	}
-
-	private static ChannelConsumer<ByteBuf> wrapIncompleteMessages(ChannelConsumer<ByteBuf> consumer) {
-		return consumer.withAcknowledgement(ack -> ack
-				.thenEx((v, e) -> e == INCOMPLETE_MESSAGE ?
-						Promise.ofException(UNEXPECTED_END_OF_STREAM) :
-						Promise.of(v, e)));
 	}
 
 }

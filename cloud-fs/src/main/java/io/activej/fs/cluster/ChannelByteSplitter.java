@@ -38,7 +38,7 @@ import static io.activej.fs.cluster.FsPartitions.LOCAL_EXCEPTION;
 
 final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelByteSplitter, ByteBuf>, WithChannelOutputs<ByteBuf> {
-	public static final FsException NOT_ENOUGH_SUCCESSES = new FsException(ChannelByteSplitter.class, "Not enough successes");
+	private static final FsException NOT_ENOUGH_SUCCESSES = new FsException(ChannelByteSplitter.class, "Not enough successes");
 
 	private final List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
 	private final int requiredSuccesses;

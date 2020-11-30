@@ -23,6 +23,8 @@ import io.activej.codec.StructuredDecoder;
 import io.activej.codec.json.JsonUtils;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.parse.TruncatedDataException;
+import io.activej.common.exception.parse.UnexpectedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
@@ -51,8 +53,8 @@ import static io.activej.common.collection.CollectionUtils.map;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class RemoteFsUtils {
-	public static final FsIOException UNEXPECTED_DATA = new FsIOException(ActiveFs.class, "Received more data than expected");
-	public static final FsIOException UNEXPECTED_END_OF_STREAM = new FsIOException(ActiveFs.class, "Received less data than expected");
+	private static final UnexpectedDataException UNEXPECTED_DATA = new UnexpectedDataException(ActiveFs.class);
+	private static final TruncatedDataException UNEXPECTED_END_OF_STREAM = new TruncatedDataException(ActiveFs.class);
 
 	private static final Pattern ANY_GLOB_METACHARS = Pattern.compile("[*?{}\\[\\]\\\\]");
 	private static final Pattern UNESCAPED_GLOB_METACHARS = Pattern.compile("(?<!\\\\)(?:\\\\\\\\)*[*?{}\\[\\]]");

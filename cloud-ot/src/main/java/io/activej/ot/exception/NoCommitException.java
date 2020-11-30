@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.ot.exceptions;
+package io.activej.ot.exception;
 
-public class OTTransformException extends OTException {
-	public OTTransformException() {
-	}
+public class NoCommitException extends OTException {
+	private static final String NO_COMMIT_MESSAGE = "No commit with id: ";
 
-	public OTTransformException(String message) {
-		super(message);
-	}
-
-	public OTTransformException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	public OTTransformException(Throwable cause) {
-		super(cause);
+	public NoCommitException(Class<?> component, long revisionId) {
+		super(component, NO_COMMIT_MESSAGE + revisionId);
 	}
 }

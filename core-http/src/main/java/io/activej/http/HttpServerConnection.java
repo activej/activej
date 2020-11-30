@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
+import io.activej.common.exception.CloseException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
@@ -35,7 +36,6 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetAddress;
 import java.util.Arrays;
 
-import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
 import static io.activej.csp.ChannelSupplier.ofLazyProvider;
@@ -60,13 +60,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
 
-	public static final UnknownFormatException UNKNOWN_HTTP_METHOD = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP method");
-	public static final UnknownFormatException UNKNOWN_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP version");
-	public static final UnknownFormatException UNSUPPORTED_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unsupported HTTP version");
+	private static final UnknownFormatException UNKNOWN_HTTP_METHOD = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP method");
+	private static final UnknownFormatException UNKNOWN_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP version");
+	private static final UnknownFormatException UNSUPPORTED_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unsupported HTTP version");
 
 	private static final int HEADERS_SLOTS = 256;
 	private static final int MAX_PROBINGS = 2;
 	private static final HttpMethod[] METHODS = new HttpMethod[HEADERS_SLOTS];
+	private static final CloseException CLOSED_EXCEPTION = new CloseException(HttpServerConnection.class);
 
 	static {
 		assert Integer.bitCount(METHODS.length) == 1;
@@ -344,7 +345,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private boolean processWebSocketRequest(@Nullable ByteBuf body) {
 		if (body != null && body.readRemaining() == 0) {
 			ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> isClosed() ?
-					ChannelSupplier.ofException(CLOSE_EXCEPTION) :
+					ChannelSupplier.ofException(CLOSED_EXCEPTION) :
 					ChannelSupplier.of(readQueue.takeRemaining()));
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
 			request.bodyStream = concat(ofQueueSupplier, ofSocketSupplier)
