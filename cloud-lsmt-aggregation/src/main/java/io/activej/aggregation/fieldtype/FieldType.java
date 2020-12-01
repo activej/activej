@@ -72,6 +72,11 @@ public class FieldType<T> {
 		return internalValue;
 	}
 
+	@SuppressWarnings("unchecked")
+	public T toInitialValue(Object internalValue) {
+		return (T) internalValue;
+	}
+
 	public Object toInternalValue(T value) {
 		return value;
 	}

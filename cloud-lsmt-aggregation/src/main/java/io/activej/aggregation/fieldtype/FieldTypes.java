@@ -140,6 +140,11 @@ public final class FieldTypes {
 		}
 
 		@Override
+		public LocalDate toInitialValue(Object internalValue) {
+			return startDate.plusDays((int) internalValue);
+		}
+
+		@Override
 		public Object toInternalValue(LocalDate value) {
 			return (int) DAYS.between(startDate, value);
 		}

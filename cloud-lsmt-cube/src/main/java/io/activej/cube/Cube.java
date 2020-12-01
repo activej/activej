@@ -52,6 +52,7 @@ import io.activej.etl.LogDataConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.ot.OTState;
 import io.activej.promise.Promise;
@@ -75,16 +76,19 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.activej.aggregation.AggregationPredicates.between;
+import static io.activej.aggregation.AggregationPredicates.eq;
 import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
 import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
+import static io.activej.codegen.expression.Expressions.set;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Primitives.isWrapperType;
+import static io.activej.codegen.util.Primitives.wrap;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.of;
-import static io.activej.common.collection.CollectionUtils.entriesToMap;
-import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.cube.Utils.createResultClass;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -355,6 +359,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 	public void addDimension(String dimensionId, FieldType type) {
 		checkState(aggregations.isEmpty(), "Cannot add dimension while aggregations are present");
+		checkState(Comparable.class.isAssignableFrom(wrap((Class<?>) type.getDataType())), "Dimension type is not primitive or Comparable");
 		dimensionTypes.put(dimensionId, type);
 		fieldTypes.put(dimensionId, type);
 	}
@@ -447,6 +452,39 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 	public Aggregation getAggregation(String aggregationId) {
 		return aggregations.get(aggregationId).aggregation;
+	}
+
+	public Map<String, Set<AggregationChunk>> getIrrelevantChunks() {
+		Map<String, Set<AggregationChunk>> irrelevantChunks = new HashMap<>();
+		for (Entry<String, AggregationContainer> entry : aggregations.entrySet()) {
+			AggregationContainer container = entry.getValue();
+			Aggregation aggregation = container.aggregation;
+			AggregationPredicate containerPredicate = container.predicate;
+			AggregationStructure structure = aggregation.getStructure();
+			List<String> keys = aggregation.getKeys();
+			for (AggregationChunk chunk : aggregation.getState().getChunks().values()) {
+				PrimaryKey minPrimaryKey = chunk.getMinPrimaryKey();
+				PrimaryKey maxPrimaryKey = chunk.getMaxPrimaryKey();
+				AggregationPredicate chunkPredicate = AggregationPredicates.alwaysTrue();
+				for (int i = 0; i < keys.size(); i++) {
+					String key = keys.get(i);
+					FieldType keyType = structure.getKeyType(key);
+					Object minKey = keyType.toInitialValue(minPrimaryKey.get(i));
+					Object maxKey = keyType.toInitialValue(maxPrimaryKey.get(i));
+					if (Objects.equals(minKey, maxKey)) {
+						chunkPredicate = AggregationPredicates.and(chunkPredicate, eq(key, minKey));
+					} else {
+						chunkPredicate = AggregationPredicates.and(chunkPredicate, between(key, (Comparable) minKey, (Comparable) maxKey));
+						break;
+					}
+				}
+				AggregationPredicate intersection = AggregationPredicates.and(chunkPredicate, containerPredicate).simplify();
+				if (intersection == AggregationPredicates.alwaysFalse()) {
+					irrelevantChunks.computeIfAbsent(entry.getKey(), $ -> new HashSet<>()).add(chunk);
+				}
+			}
+		}
+		return irrelevantChunks;
 	}
 
 	public Set<String> getAggregationIds() {
@@ -1157,7 +1195,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 						.sorted(comparator)
 						.skip(offset)
 						.limit(limit)
-						.collect(Collectors.toList());
+						.collect(toList());
 			}
 
 			return results.subList(start, end);
@@ -1339,6 +1377,13 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	@JmxAttribute
 	public AggregationStats getAggregationStats() {
 		return aggregationStats;
+	}
+
+	@JmxOperation
+	public Map<String, String> getIrrelevantChunksIds(){
+		return transformMapValues(getIrrelevantChunks(), chunks -> chunks.stream()
+				.map(chunk -> String.valueOf(chunk.getChunkId()))
+				.collect(Collectors.joining(", ")));
 	}
 
 	@NotNull

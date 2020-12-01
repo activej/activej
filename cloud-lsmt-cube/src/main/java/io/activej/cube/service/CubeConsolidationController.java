@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -44,6 +45,10 @@ import java.util.function.Supplier;
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.common.Checks.checkState;
+import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.common.collection.CollectionUtils.transformMapValues;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanEx {
@@ -72,11 +77,15 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 
 	private final PromiseStats promiseConsolidate = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseConsolidateImpl = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final PromiseStats promiseCleanupIrrelevantChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	private final ValueStats removedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final ValueStats removedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
 	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
+
+	private boolean consolidating;
+	private boolean cleaning;
 
 	CubeConsolidationController(Eventloop eventloop,
 			CubeDiffScheme<D> cubeDiffScheme, Cube cube,
@@ -104,13 +113,21 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	}
 
 	private final AsyncSupplier<Void> consolidate = reuse(this::doConsolidate);
+	private final AsyncSupplier<Void> cleanupIrrelevantChunks = reuse(this::doCleanupIrrelevantChunks);
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> consolidate() {
 		return consolidate.get();
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
+	public Promise<Void> cleanupIrrelevantChunks() {
+		return cleanupIrrelevantChunks.get();
+	}
+
 	Promise<Void> doConsolidate() {
+		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
+		consolidating = true;
 		return Promise.complete()
 				.then(stateManager::sync)
 				.then(() -> cube.consolidate(strategy.get()).whenComplete(promiseConsolidateImpl.recordStats()))
@@ -126,7 +143,32 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 							.whenComplete(toLogger(logger, thisMethod(), cubeDiff));
 				})
 				.whenComplete(promiseConsolidate.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), stateManager));
+				.whenComplete(toLogger(logger, thisMethod(), stateManager))
+				.whenComplete(() -> consolidating = false);
+	}
+
+	private Promise<Void> doCleanupIrrelevantChunks() {
+		checkState(!consolidating, "Cannot consolidate and clean up irrelevant chunks at the same time");
+		cleaning = true;
+		return stateManager.sync()
+				.then(() -> {
+					Map<String, Set<AggregationChunk>> irrelevantChunks = cube.getIrrelevantChunks();
+					if (irrelevantChunks.isEmpty()) {
+						logger.info("Found no irrelevant chunks");
+						return Promise.complete();
+					}
+					logger.info("Removing irrelevant chunks: " + toLimitedString(irrelevantChunks.keySet(), 100));
+					Map<String, AggregationDiff> diffMap = transformMapValues(irrelevantChunks,
+							chunksToRemove -> AggregationDiff.of(emptySet(), chunksToRemove));
+					CubeDiff cubeDiff = CubeDiff.of(diffMap);
+					cubeDiffJmx(cubeDiff);
+					stateManager.add(cubeDiffScheme.wrap(cubeDiff));
+					return stateManager.sync();
+				})
+				.whenComplete(promiseCleanupIrrelevantChunks.recordStats())
+				.whenException(e -> stateManager.reset())
+				.whenComplete(toLogger(logger, thisMethod(), stateManager))
+				.whenComplete(() -> cleaning = false);
 	}
 
 	private void cubeDiffJmx(CubeDiff cubeDiff) {
@@ -195,9 +237,19 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		return promiseConsolidateImpl;
 	}
 
+	@JmxAttribute
+	public PromiseStats getPromiseCleanupIrrelevantChunks() {
+		return promiseCleanupIrrelevantChunks;
+	}
+
 	@JmxOperation
 	public void consolidateNow() {
 		consolidate();
+	}
+
+	@JmxOperation
+	public void cleanupIrrelevantChunksNow() {
+		cleanupIrrelevantChunks();
 	}
 
 	@NotNull
