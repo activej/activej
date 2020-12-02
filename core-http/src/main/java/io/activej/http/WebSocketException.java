@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.common.exception.StacklessException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +31,7 @@ import static io.activej.http.HttpUtils.isReservedCloseCode;
  * Note that some codes are forbidden to be sent on a wire, exceptions with such codes will be translated to a more generic
  * exceptions.
  */
-public final class WebSocketException extends StacklessException {
+public class WebSocketException extends Exception {
 	@Nullable
 	private final Integer code;
 
@@ -40,24 +39,24 @@ public final class WebSocketException extends StacklessException {
 	 * An empty exception with no close code and no close reason.
 	 * Peer that receives close frame with no close code will interpret it as a close code {@code 1005}
 	 */
-	public WebSocketException(Class<?> component) {
-		super(component, "");
+	public WebSocketException() {
+		super("");
 		this.code = null;
 	}
 
 	/**
 	 * An empty exception with a close code but no close reason.
 	 */
-	public WebSocketException(Class<?> component, @NotNull Integer code) {
-		super(component, "");
+	public WebSocketException(@NotNull Integer code) {
+		super("");
 		this.code = code;
 	}
 
 	/**
 	 * An exception with a close code and a close reason. Length of the reason string should not exceed 123 characters.
 	 */
-	public WebSocketException(Class<?> component, @NotNull Integer code, @NotNull String reason) {
-		super(component, checkArgument(reason, r -> r.length() <= 123, "Reason too long"));
+	public WebSocketException(@NotNull Integer code, @NotNull String reason) {
+		super(checkArgument(reason, r -> r.length() <= 123, "Reason too long"));
 		this.code = code;
 	}
 
@@ -72,6 +71,11 @@ public final class WebSocketException extends StacklessException {
 
 	boolean canBeEchoed() {
 		return code == null || !isReservedCloseCode(code);
+	}
+
+	@Override
+	public final Throwable fillInStackTrace() {
+		return this;
 	}
 
 	@Override

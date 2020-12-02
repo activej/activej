@@ -21,23 +21,23 @@ import org.jetbrains.annotations.Nullable;
 
 public final class WebSocketConstants {
 	// region exceptions
-	static final WebSocketException EMPTY_CLOSE = new WebSocketException(WebSocketConstants.class);
-	static final WebSocketException REGULAR_CLOSE = new WebSocketException(WebSocketConstants.class, 1000);
-	static final WebSocketException GOING_AWAY = new WebSocketException(WebSocketConstants.class, 1001, "Client going away");
-	static final WebSocketException UNKNOWN_OP_CODE = new WebSocketException(WebSocketConstants.class, 1002, "Unknown op code");
-	static final WebSocketException RESERVED_BITS_SET = new WebSocketException(WebSocketConstants.class, 1002, "Reserved bits set, unknown extension");
-	static final WebSocketException FRAGMENTED_CONTROL_MESSAGE = new WebSocketException(WebSocketConstants.class, 1002, "Control messages should not be fragmented");
-	static final WebSocketException INVALID_CLOSE_CODE = new WebSocketException(WebSocketConstants.class, 1002, "Invalid close code");
-	static final WebSocketException WAITING_FOR_LAST_FRAME = new WebSocketException(WebSocketConstants.class, 1002, "Last frame has not been received yet");
-	static final WebSocketException UNEXPECTED_CONTINUATION = new WebSocketException(WebSocketConstants.class, 1002, "Received unexpected continuation frame");
-	static final WebSocketException INVALID_PAYLOAD_LENGTH = new WebSocketException(WebSocketConstants.class, 1002, "Invalid payload length");
-	static final WebSocketException MASK_REQUIRED = new WebSocketException(WebSocketConstants.class, 1002, "Message should be masked");
-	static final WebSocketException MASK_SHOULD_NOT_BE_PRESENT = new WebSocketException(WebSocketConstants.class, 1002, "Message should not be masked");
-	static final WebSocketException STATUS_CODE_MISSING = new WebSocketException(WebSocketConstants.class, 1005, "Status code missing");
-	static final WebSocketException CLOSE_FRAME_MISSING = new WebSocketException(WebSocketConstants.class, 1006, "Peer did not send CLOSE frame");
-	static final WebSocketException NOT_A_VALID_UTF_8 = new WebSocketException(WebSocketConstants.class, 1007, "Received TEXT message is not a valid UTF-8 message");
-	static final WebSocketException MESSAGE_TOO_BIG = new WebSocketException(WebSocketConstants.class, 1009, "Received message is too big");
-	static final WebSocketException SERVER_ERROR = new WebSocketException(WebSocketConstants.class, 1011, "Unexpected server error");
+	static final WebSocketException EMPTY_CLOSE = new WebSocketException();
+	static final WebSocketException REGULAR_CLOSE = new WebSocketException(1000);
+	static final WebSocketException GOING_AWAY = new WebSocketException(1001, "Client going away");
+	static final WebSocketException UNKNOWN_OP_CODE = new WebSocketException(1002, "Unknown op code");
+	static final WebSocketException RESERVED_BITS_SET = new WebSocketException(1002, "Reserved bits set, unknown extension");
+	static final WebSocketException FRAGMENTED_CONTROL_MESSAGE = new WebSocketException(1002, "Control messages should not be fragmented");
+	static final WebSocketException INVALID_CLOSE_CODE = new WebSocketException(1002, "Invalid close code");
+	static final WebSocketException WAITING_FOR_LAST_FRAME = new WebSocketException(1002, "Last frame has not been received yet");
+	static final WebSocketException UNEXPECTED_CONTINUATION = new WebSocketException(1002, "Received unexpected continuation frame");
+	static final WebSocketException INVALID_PAYLOAD_LENGTH = new WebSocketException(1002, "Invalid payload length");
+	static final WebSocketException MASK_REQUIRED = new WebSocketException(1002, "Message should be masked");
+	static final WebSocketException MASK_SHOULD_NOT_BE_PRESENT = new WebSocketException(1002, "Message should not be masked");
+	static final WebSocketException STATUS_CODE_MISSING = new WebSocketException(1005, "Status code missing");
+	static final WebSocketException CLOSE_FRAME_MISSING = new WebSocketException(1006, "Peer did not send CLOSE frame");
+	static final WebSocketException NOT_A_VALID_UTF_8 = new WebSocketException(1007, "Received TEXT message is not a valid UTF-8 message");
+	static final WebSocketException MESSAGE_TOO_BIG = new WebSocketException(1009, "Received message is too big");
+	static final WebSocketException SERVER_ERROR = new WebSocketException(1011, "Unexpected server error");
 
 	static final StacklessException HANDSHAKE_FAILED = new StacklessException(WebSocketConstants.class, "Failed to perform a proper opening handshake");
 	static final HttpException UPGRADE_WITH_BODY = HttpException.badRequest400("Upgrade request contained body");

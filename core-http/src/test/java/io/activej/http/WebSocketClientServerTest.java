@@ -78,7 +78,7 @@ public final class WebSocketClientServerTest {
 		RefInt counter = new RefInt(100);
 		List<Message> messages = new ArrayList<>();
 		String reason = "Some error";
-		WebSocketException exception = new WebSocketException(getClass(), 4321, reason);
+		WebSocketException exception = new WebSocketException(4321, reason);
 
 		startTestServer(webSocket -> ChannelSupplier.of(() -> Promise.of("hello"))
 				.mapAsync(
@@ -107,7 +107,7 @@ public final class WebSocketClientServerTest {
 
 	@Test
 	public void testSecureWebSocketsCloseByClient() throws IOException {
-		WebSocketException testError = new WebSocketException(getClass(), 4321, "Test error");
+		WebSocketException testError = new WebSocketException(4321, "Test error");
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		SettablePromise<WebSocketException> settablePromise = new SettablePromise<>();
 
@@ -128,7 +128,7 @@ public final class WebSocketClientServerTest {
 
 	@Test
 	public void testSecureWebSocketsCloseByServer() throws IOException {
-		WebSocketException testError = new WebSocketException(getClass(), 4321, "Test error");
+		WebSocketException testError = new WebSocketException(4321, "Test error");
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		startSecureTestServer(webSocket -> webSocket.closeEx(testError));
@@ -168,7 +168,7 @@ public final class WebSocketClientServerTest {
 
 	@Test
 	public void testCloseByServerWithError() throws IOException {
-		WebSocketException testError = new WebSocketException(getClass(), 4321, "Test error");
+		WebSocketException testError = new WebSocketException(4321, "Test error");
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		List<String> messages = asList("first", "second", "third");
 
@@ -238,7 +238,7 @@ public final class WebSocketClientServerTest {
 
 	@Test
 	public void testCloseByClientWithError() throws IOException {
-		WebSocketException testError = new WebSocketException(getClass(), 4321, "Test error");
+		WebSocketException testError = new WebSocketException(4321, "Test error");
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		List<String> messages = asList("first", "second", "third");
 		List<String> result = new ArrayList<>();
