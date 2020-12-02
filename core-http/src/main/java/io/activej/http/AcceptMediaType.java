@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
 
 import java.util.List;
 
@@ -55,7 +54,7 @@ public final class AcceptMediaType {
 		return new AcceptMediaType(mime, q);
 	}
 
-	static void parse(byte[] bytes, int pos, int length, List<AcceptMediaType> list) throws ParseException {
+	static void parse(byte[] bytes, int pos, int length, List<AcceptMediaType> list) throws HttpParseException {
 		int end = pos + length;
 
 		while (pos < end) {

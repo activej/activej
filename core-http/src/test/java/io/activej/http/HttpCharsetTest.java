@@ -1,7 +1,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
 import org.junit.Test;
 
 import java.nio.charset.Charset;
@@ -36,7 +35,7 @@ public class HttpCharsetTest {
 	}
 
 	@Test
-	public void testConverters() throws ParseException {
+	public void testConverters() throws HttpParseException {
 		HttpCharset expected = HttpCharset.US_ASCII;
 		Charset charset = expected.toJavaCharset();
 		HttpCharset actual = HttpCharset.of(charset);
@@ -44,7 +43,7 @@ public class HttpCharsetTest {
 	}
 
 	@Test
-	public void testAcceptCharset() throws ParseException {
+	public void testAcceptCharset() throws HttpParseException {
 		byte[] bytes = encodeAscii("iso-8859-5, unicode-1-1;q=0.8");
 		List<AcceptCharset> chs = new ArrayList<>();
 		AcceptCharset.parse(bytes, 0, bytes.length, chs);

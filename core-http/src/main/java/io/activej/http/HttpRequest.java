@@ -342,7 +342,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (CHECK) checkState(!isRecycled());
 		String contentType = getHeader(CONTENT_TYPE);
 		if (contentType == null || !contentType.startsWith("multipart/form-data; boundary=")) {
-			return Promise.ofException(HttpException.ofCode(400, "Content type is not multipart/form-data"));
+			return Promise.ofException(HttpError.ofCode(400, "Content type is not multipart/form-data"));
 		}
 		String boundary = contentType.substring(30);
 		if (boundary.startsWith("\"") && boundary.endsWith("\"")) {

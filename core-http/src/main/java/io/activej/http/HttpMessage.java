@@ -20,10 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.api.ParserFunction;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -136,7 +133,7 @@ public abstract class HttpMessage {
 			if (k.equals(header)) {
 				try {
 					parser.parse(((HttpHeaderValue) headers.kvPairs[i + 1]).getBuf(), list);
-				} catch (ParseException ignored) {
+				} catch (HttpParseException ignored) {
 				}
 			}
 		}
@@ -144,8 +141,15 @@ public abstract class HttpMessage {
 	}
 
 	@Nullable
-	public <T> T getHeader(HttpHeader header, ParserFunction<ByteBuf, T> parser) {
-		return parser.parseOrDefault(getHeaderBuf(header), null);
+	public <T> T getHeader(HttpHeader header, HttpParserFunction<T> parser) {
+		try {
+			ByteBuf buf = getHeaderBuf(header);
+			if (buf != null) {
+				return parser.parse(buf);
+			}
+		} catch (HttpParseException ignore) {}
+
+		return null;
 	}
 
 	@Nullable
@@ -279,7 +283,7 @@ public abstract class HttpMessage {
 					if (maxBodySize != 0 && queue.hasRemainingBytes(maxBodySize)) {
 						queue.recycle();
 						buf.recycle();
-						throw new UncheckedException(new InvalidSizeException(
+						throw new UncheckedException(new HttpParseException(
 								"HTTP body size exceeds load limit " + maxBodySize));
 					}
 					queue.add(buf);
@@ -456,4 +460,8 @@ public abstract class HttpMessage {
 	protected abstract int estimateSize();
 
 	protected abstract void writeTo(@NotNull ByteBuf buf);
+
+	public interface HttpParserFunction<T> {
+		T parse(ByteBuf value) throws HttpParseException;
+	}
 }

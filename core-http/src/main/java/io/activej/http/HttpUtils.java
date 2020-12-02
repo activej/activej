@@ -18,12 +18,12 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.http.WebSocket.Frame.FrameType;
 import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLDecoder;
@@ -109,7 +109,7 @@ public final class HttpUtils {
 				}
 				try {
 					v = trimAndDecodePositiveInt(bytes, start, i - start);
-				} catch (ParseException e) {
+				} catch (HttpParseException e) {
 					return false;
 				}
 				if (v < 0 || v > 255) return false;
@@ -172,7 +172,7 @@ public final class HttpUtils {
 		return pos;
 	}
 
-	public static int parseQ(byte[] bytes, int pos, int length) throws ParseException {
+	public static int parseQ(byte[] bytes, int pos, int length) throws HttpParseException {
 		if (bytes[pos] == '1') {
 			return 100;
 		} else if (bytes[pos] == '0') {
@@ -182,7 +182,7 @@ public final class HttpUtils {
 			if (length == 1) q *= 10;
 			return q;
 		}
-		throw new ParseException("Value of 'q' should start either from 0 or 1");
+		throw new HttpParseException("Value of 'q' should start either from 0 or 1");
 	}
 
 	/**
@@ -234,18 +234,18 @@ public final class HttpUtils {
 		}
 	}
 
-	public static String urlDecode(@Nullable String string, String enc) throws ParseException {
+	public static String urlDecode(@Nullable String string, String enc) throws HttpParseException {
 		if (string == null) {
-			throw new ParseException("No string to decode");
+			throw new HttpParseException("No string to decode");
 		}
 		try {
 			return URLDecoder.decode(string, enc);
 		} catch (UnsupportedEncodingException e) {
-			throw new UnknownFormatException("Can't encode with supplied encoding: " + enc, e);
+			throw new HttpParseException("Can't encode with supplied encoding: " + enc, e);
 		}
 	}
 
-	public static int trimAndDecodePositiveInt(byte[] array, int pos, int len) throws ParseException {
+	public static int trimAndDecodePositiveInt(byte[] array, int pos, int len) throws HttpParseException {
 		int left = trimLeft(array, pos, len);
 		pos += left;
 		len -= left;
@@ -422,4 +422,57 @@ public final class HttpUtils {
 		}
 	}
 
+	static Throwable translateToHttpException(Throwable e) {
+		if (e instanceof HttpException) return e;
+		if (e instanceof IOException) return new HttpIOException((IOException) e);
+		if (e instanceof ParseException) return new HttpParseException(e);
+		return new HttpException(e);
+	}
+
+	static int decodePositiveInt(byte[] array, int pos, int len) throws HttpParseException {
+		int result = 0;
+		for (int i = pos; i < pos + len; i++) {
+			byte b = (byte) (array[i] - '0');
+			if (b < 0 || b >= 10) {
+				throw new HttpParseException("Not a decimal value: " + new String(array, pos, len));
+			}
+			result = b + result * 10;
+			if (result < 0) {
+				throw new HttpParseException("Bigger than max int value: " + new String(array, pos, len));
+			}
+		}
+		return result;
+	}
+
+	static int decodeUtf8(byte[] array, int pos, int len, char[] buffer, int to) throws HttpParseException {
+		int end = pos + len;
+		try {
+			while (pos < end) {
+				int c = array[pos++] & 0xff;
+				switch ((c >> 4) & 0x0F) {
+					case 0:
+					case 1:
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					case 7:
+						buffer[to++] = (char) c;
+						break;
+					case 12:
+					case 13:
+						buffer[to++] = (char) ((c & 0x1F) << 6 | array[pos++] & 0x3F);
+						break;
+					case 14:
+						buffer[to++] = (char) ((c & 0x0F) << 12 | (array[pos++] & 0x3F) << 6 | (array[pos++] & 0x3F));
+						break;
+				}
+			}
+			if (pos > end) throw new HttpParseException("Malformed utf-8 input: Read past end");
+		} catch (ArrayIndexOutOfBoundsException ignored) {
+			throw new HttpParseException("Malformed utf-8 input");
+		}
+		return to;
+	}
 }

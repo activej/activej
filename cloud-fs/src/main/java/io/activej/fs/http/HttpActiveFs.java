@@ -250,11 +250,11 @@ public final class HttpActiveFs implements ActiveFs {
 							try {
 								return Promise.ofException(fromJson(FsExceptionCodec.CODEC, body.getString(UTF_8)));
 							} catch (ParseException ignored) {
-								return Promise.ofException(HttpException.ofCode(500));
+								return Promise.ofException(HttpError.ofCode(500));
 							}
 						});
 			default:
-				return Promise.ofException(HttpException.ofCode(response.getCode()));
+				return Promise.ofException(HttpError.ofCode(response.getCode()));
 		}
 	}
 

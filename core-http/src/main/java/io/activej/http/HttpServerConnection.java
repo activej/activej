@@ -22,8 +22,6 @@ import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.CloseException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpServer.Inspector;
@@ -145,13 +143,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 */
 	@SuppressWarnings("PointlessArithmeticExpression")
 	@Override
-	protected void onStartLine(byte[] line, int limit) throws ParseException {
+	protected void onStartLine(byte[] line, int limit) throws HttpParseException {
 		switchPool(server.poolReadWrite);
 
 		HttpMethod method = getHttpMethod(line);
 		if (method == null) {
-			if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Unknown HTTP method");
-			throw new UnknownFormatException("Unknown HTTP method. First line: " +
+			if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Unknown HTTP method");
+			throw new HttpParseException("Unknown HTTP method. First line: " +
 					new String(line, 0, limit, ISO_8859_1));
 		}
 
@@ -180,13 +178,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			} else if (line[p + 7] == '0') {
 				version = HTTP_1_0;
 			} else {
-				if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Unknown HTTP version");
-				throw new UnknownFormatException("Unknown HTTP version. First line: " +
+				if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Unknown HTTP version");
+				throw new HttpParseException("Unknown HTTP version. First line: " +
 						new String(line, 0, limit, ISO_8859_1));
 			}
 		} else {
-			if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Unsupported HTTP version");
-			throw new UnknownFormatException(
+			if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Unsupported HTTP version");
+			throw new HttpParseException(
 					"Unsupported HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
@@ -245,13 +243,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param header received header
 	 */
 	@Override
-	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws ParseException {
+	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws HttpParseException {
 		if (header == HttpHeaders.EXPECT && equalsLowerCaseAscii(EXPECT_100_CONTINUE, array, off, len)) {
 			socket.write(ByteBuf.wrapForReading(EXPECT_RESPONSE_CONTINUE));
 		}
 		//noinspection ConstantConditions
 		if (request.headers.size() >= MAX_HEADERS) {
-			throw new ParseException("Too many headers");
+			throw new HttpParseException("Too many headers");
 		}
 		request.addHeader(header, array, off, len);
 	}
@@ -392,8 +390,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				 */
 				contentLength = 0;
 				readHttpMessage();
-			} catch (ParseException e) {
-				closeWithError(e);
+			} catch (HttpParseException e) {
+				closeWithError(new HttpParseException(e));
 			}
 		} else {
 			close();

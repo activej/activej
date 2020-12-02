@@ -60,8 +60,8 @@ public interface HttpExceptionFormatter {
 	 */
 	HttpExceptionFormatter DEFAULT_FORMATTER = e -> {
 		HttpResponse response;
-		if (e instanceof HttpException) {
-			int code = ((HttpException) e).getCode();
+		if (e instanceof HttpError) {
+			int code = ((HttpError) e).getCode();
 			response = HttpResponse.ofCode(code).withHtml(HTTP_ERROR_HTML.replace("{title}", HttpUtils.getHttpErrorTitle(code)).replace("{message}", e.toString()));
 		} else {
 			response = HttpResponse.ofCode(500).withHtml(INTERNAL_SERVER_ERROR_HTML);
@@ -77,7 +77,7 @@ public interface HttpExceptionFormatter {
 	 * This formatter prints the stacktrace of the exception into the HTTP response.
 	 */
 	HttpExceptionFormatter DEBUG_FORMATTER = e ->
-			DebugStacktraceRenderer.render(e, e instanceof HttpException ? ((HttpException) e).getCode() : 500)
+			DebugStacktraceRenderer.render(e, e instanceof HttpError ? ((HttpError) e).getCode() : 500)
 					.withHeader(CACHE_CONTROL, "no-store")
 					.withHeader(PRAGMA, "no-cache")
 					.withHeader(AGE, "0");

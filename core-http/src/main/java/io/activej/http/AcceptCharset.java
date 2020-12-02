@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
 
 import java.nio.charset.Charset;
 import java.util.List;
@@ -63,7 +62,7 @@ public final class AcceptCharset {
 		return new AcceptCharset(charset, q);
 	}
 
-	public Charset getCharset() throws ParseException {
+	public Charset getCharset() throws HttpParseException {
 		return charset.toJavaCharset();
 	}
 
@@ -71,7 +70,7 @@ public final class AcceptCharset {
 		return q;
 	}
 
-	static void parse(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws ParseException {
+	static void parse(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws HttpParseException {
 		try {
 			int end = pos + len;
 
@@ -113,7 +112,7 @@ public final class AcceptCharset {
 				}
 			}
 		} catch (RuntimeException e) {
-			throw new ParseException("Failed to parse accept-charset", e);
+			throw new HttpParseException("Failed to parse accept-charset", e);
 		}
 	}
 

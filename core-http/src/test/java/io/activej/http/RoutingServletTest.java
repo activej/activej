@@ -36,7 +36,7 @@ public final class RoutingServletTest {
 						assertEquals(expectedCode, result.getCode());
 					}));
 		} else {
-			assertEquals(expectedCode, ((HttpException) promise.getException()).getCode());
+			assertEquals(expectedCode, ((HttpError) promise.getException()).getCode());
 		}
 	}
 

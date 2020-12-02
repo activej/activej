@@ -31,7 +31,7 @@ import static io.activej.http.HttpUtils.isReservedCloseCode;
  * Note that some codes are forbidden to be sent on a wire, exceptions with such codes will be translated to a more generic
  * exceptions.
  */
-public class WebSocketException extends Exception {
+public class WebSocketException extends HttpException {
 	@Nullable
 	private final Integer code;
 

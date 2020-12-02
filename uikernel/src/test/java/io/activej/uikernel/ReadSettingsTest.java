@@ -2,6 +2,7 @@ package io.activej.uikernel;
 
 import com.google.gson.Gson;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.http.HttpParseException;
 import io.activej.http.HttpRequest;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
@@ -15,7 +16,7 @@ public final class ReadSettingsTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
-	public void testParseEncoded() throws ParseException {
+	public void testParseEncoded() throws HttpParseException, ParseException {
 		String query = "fields=%5B%22name%22%2C%22surname%22%2C%22phone%22%2C%22age%22%2C%22gender%22%5D" +
 				"&offset=0" +
 				"&limit=10" +

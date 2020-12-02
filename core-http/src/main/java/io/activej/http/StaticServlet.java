@@ -152,7 +152,7 @@ public final class StaticServlet implements AsyncServlet {
 	@Override
 	public final Promise<HttpResponse> serve(@NotNull HttpRequest request) {
 		String mappedPath = pathMapper.apply(request);
-		if (mappedPath == null) return Promise.ofException(HttpException.notFound404());
+		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);
 		return Promise.complete()
 				.then(() -> (mappedPath.endsWith("/") || mappedPath.isEmpty()) ?
@@ -172,7 +172,7 @@ public final class StaticServlet implements AsyncServlet {
 					} else if (e instanceof ResourceNotFoundException) {
 						return tryLoadDefaultResource();
 					} else {
-						return Promise.ofException(HttpException.ofCode(400, e));
+						return Promise.ofException(HttpError.ofCode(400, e));
 					}
 				});
 	}
@@ -193,6 +193,6 @@ public final class StaticServlet implements AsyncServlet {
 		return defaultResource != null ?
 				resourceLoader.load(defaultResource)
 						.map(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :
-				Promise.ofException(HttpException.notFound404());
+				Promise.ofException(HttpError.notFound404());
 	}
 }

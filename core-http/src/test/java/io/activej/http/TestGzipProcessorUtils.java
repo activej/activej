@@ -3,7 +3,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -68,15 +67,15 @@ public final class TestGzipProcessorUtils {
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
 	@Test
-	public void testEncodeDecode() throws ParseException {
+	public void testEncodeDecode() throws HttpParseException {
 		ByteBuf raw = toGzip(wrapUtf8(text));
 		ByteBuf actual = fromGzip(raw, 11_000_000);
 		assertEquals(text, actual.asString(UTF_8));
 	}
 
 	@Test
-	public void testEncodeDecodeWithTrailerInputSizeLessThenActual() throws ParseException {
-		expectedException.expect(ParseException.class);
+	public void testEncodeDecodeWithTrailerInputSizeLessThenActual() throws HttpParseException {
+		expectedException.expect(HttpParseException.class);
 		expectedException.expectMessage("Decompressed data size is not equal to input size from GZIP trailer");
 
 		ByteBuf raw = toGzip(wrapUtf8(text));
@@ -87,8 +86,8 @@ public final class TestGzipProcessorUtils {
 	}
 
 	@Test
-	public void recycleByteBufInCaseOfBadInput() throws ParseException {
-		expectedException.expect(ParseException.class);
+	public void recycleByteBufInCaseOfBadInput() throws HttpParseException {
+		expectedException.expect(HttpParseException.class);
 		expectedException.expectMessage("Corrupted GZIP header");
 
 		ByteBuf badBuf = ByteBufPool.allocate(100);
@@ -142,7 +141,7 @@ public final class TestGzipProcessorUtils {
 	}
 
 	@Test
-	public void testGzipOutputStreamDataIsCorrectlyDecoded() throws IOException, ParseException {
+	public void testGzipOutputStreamDataIsCorrectlyDecoded() throws IOException, HttpParseException {
 		ByteBuf encodedData = encodeWithGzipOutputStream(wrapUtf8(text));
 		ByteBuf decoded = fromGzip(encodedData, 11_000_000);
 		assertEquals(text, decoded.asString(UTF_8));

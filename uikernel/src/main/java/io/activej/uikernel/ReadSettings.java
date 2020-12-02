@@ -21,6 +21,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import io.activej.common.exception.parse.ParseException;
+import io.activej.http.HttpParseException;
 import io.activej.http.HttpRequest;
 
 import java.lang.reflect.Type;
@@ -69,7 +70,7 @@ public final class ReadSettings<K> {
 		this.extra = extra;
 	}
 
-	public static <K> ReadSettings<K> from(Gson gson, HttpRequest request) throws ParseException {
+	public static <K> ReadSettings<K> from(Gson gson, HttpRequest request) throws HttpParseException, ParseException {
 		String fieldsParameter = request.getQueryParameter("fields");
 		List<String> fields;
 		if (fieldsParameter != null && !fieldsParameter.isEmpty()) {

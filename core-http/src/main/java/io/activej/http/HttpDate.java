@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
@@ -63,7 +62,7 @@ final class HttpDate {
 		MONTHS_IN_YEAR[11] = encodeAscii("Dec");
 	}
 
-	static long parse(byte[] bytes, int start) throws ParseException {
+	static long parse(byte[] bytes, int start) throws HttpParseException {
 		try {
 			int day = trimAndDecodePositiveInt(bytes, start + 5, 2);
 
@@ -113,7 +112,7 @@ final class HttpDate {
 
 			return timestamp;
 		} catch (RuntimeException ignored) {
-			throw new ParseException("Failed to parse date");
+			throw new HttpParseException("Failed to parse date");
 		}
 	}
 

@@ -8,7 +8,8 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Random;
 
-import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.bytebuf.ByteBufStrings.decodeUtf8;
+import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
@@ -33,7 +34,7 @@ public class HttpUtilsTest {
 	}
 
 	@Test
-	public void testDecodePositiveInt() throws ParseException {
+	public void testDecodePositiveInt() throws HttpParseException {
 		// Test edge cases
 		decodeUnsignedIntTest(Integer.MAX_VALUE);
 		decodeUnsignedIntTest(0);
@@ -43,7 +44,7 @@ public class HttpUtilsTest {
 	}
 
 	@Test
-	public void testDecodePositiveInt2() throws ParseException {
+	public void testDecodePositiveInt2() throws HttpParseException {
 		// Test edge cases
 		decodeUnsignedLongTest(Integer.MAX_VALUE);
 		decodeUnsignedLongTest(0);
@@ -63,7 +64,7 @@ public class HttpUtilsTest {
 			bytesRepr = string.getBytes();
 			trimAndDecodePositiveInt(bytesRepr, 0, string.length());
 			fail();
-		} catch (ParseException e) {
+		} catch (HttpParseException e) {
 			assertEquals("Bigger than max int value: 92233720368547758081242123", e.getMessage());
 		}
 	}
@@ -84,17 +85,17 @@ public class HttpUtilsTest {
 		assertEquals(String.valueOf(value), stringRepr);
 	}
 
-	private void decodeUnsignedIntTest(int value) throws ParseException {
+	private void decodeUnsignedIntTest(int value) throws HttpParseException {
 		String string = String.valueOf(value);
 		byte[] bytesRepr = string.getBytes();
 		int decoded = trimAndDecodePositiveInt(bytesRepr, 0, string.length());
 		assertEquals(value, decoded);
 	}
 
-	private void decodeUnsignedLongTest(int value) throws ParseException {
+	private void decodeUnsignedLongTest(int value) throws HttpParseException {
 		String string = String.valueOf(value);
 		byte[] bytesRepr = string.getBytes();
-		long decoded = decodePositiveInt(bytesRepr, 0, string.length());
+		long decoded = HttpUtils.decodePositiveInt(bytesRepr, 0, string.length());
 		assertEquals(value, decoded);
 	}
 
@@ -103,7 +104,7 @@ public class HttpUtilsTest {
 			runnable.run();
 			fail();
 		} catch (Throwable e) {
-			assertThat(e, instanceOf(ParseException.class));
+			assertThat(e, instanceOf(HttpParseException.class));
 			assertThat(e.getMessage(), containsString("Not a decimal value"));
 		}
 

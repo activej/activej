@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.http.CaseInsensitiveTokenMap.Token;
 import org.jetbrains.annotations.Nullable;
 
@@ -89,7 +88,7 @@ public final class HttpCharset extends Token {
 		return this;
 	}
 
-	Charset toJavaCharset() throws ParseException {
+	Charset toJavaCharset() throws HttpParseException {
 		if (javaCharset == null) {
 			String charsetName = decodeAscii(bytes, offset, length);
 			try {
@@ -98,7 +97,7 @@ public final class HttpCharset extends Token {
 				}
 				javaCharset = forName(charsetName);
 			} catch (Exception e) {
-				throw new ParseException("Can't fetch charset for " + charsetName, e);
+				throw new HttpParseException("Can't fetch charset for " + charsetName, e);
 			}
 		}
 		return javaCharset;

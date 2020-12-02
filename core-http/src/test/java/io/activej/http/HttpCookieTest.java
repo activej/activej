@@ -2,7 +2,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -25,7 +24,7 @@ public class HttpCookieTest {
 	public static final ByteBufRule rule = new ByteBufRule();
 
 	@Test
-	public void testParser() throws ParseException {
+	public void testParser() throws HttpParseException {
 		String cookieString = "name1=\"value1\"; expires=Thu, 01 Jan 2015 00:00:00 GMT; Secure; name2=value2; HttpOnly";
 		List<HttpCookie> httpCookies = new ArrayList<>();
 		byte[] bytes = encodeAscii(cookieString);
@@ -89,7 +88,7 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParse() throws ParseException {
+	public void testParse() throws HttpParseException {
 		String cookieName = "HMECOMDIC";
 		String cookieValue = "{\"osVersion\":\"x86_64\",\"deviceOs\":\"Linux\",\"deviceType\":\"DESKTOP\"}";
 		byte[] bytes = ByteBufStrings.encodeAscii(cookieName + "=" + cookieValue);
@@ -117,7 +116,7 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParsePathSlash() throws ParseException {
+	public void testParsePathSlash() throws HttpParseException {
 		String cookieName = "name";
 		String cookieValue = "value";
 		String cookiePath = "/";
@@ -146,7 +145,7 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParsePathEmpty() throws ParseException {
+	public void testParsePathEmpty() throws HttpParseException {
 		String cookieName = "name";
 		String cookieValue = "value";
 		byte[] bytes = ByteBufStrings.encodeAscii(cookieName + "=" + cookieValue);

@@ -31,6 +31,7 @@ import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class HttpStreamTest {
@@ -116,7 +117,7 @@ public final class HttpStreamTest {
 	public void testCloseWithError() throws IOException {
 		String exceptionMessage = "Test Exception";
 
-		startTestServer(request -> Promise.ofException(new HttpException(432, exceptionMessage)));
+		startTestServer(request -> Promise.ofException(new HttpError(432, exceptionMessage)));
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(expectedList);
 
@@ -229,7 +230,8 @@ public final class HttpStreamTest {
 										ChannelSupplier.ofException(exception))))
 						.then(response -> response.getBodyStream().toCollector(ByteBufQueue.collector())));
 
-		assertSame(e, exception);
+		assertThat(e, instanceOf(HttpException.class));
+		assertSame(exception, e.getCause());
 	}
 
 	private void startTestServer(AsyncServlet servlet) throws IOException {

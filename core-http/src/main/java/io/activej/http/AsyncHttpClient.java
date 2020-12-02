@@ -60,6 +60,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.jmx.MBeanFormat.formatListAsMultilineString;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
+import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -442,12 +443,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 							//noinspection ConstantConditions - dnsResponse is successful (not null)
 							return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
 						} else {
-							return Promise.ofException(new DnsQueryException(AsyncHttpClient.class, dnsResponse));
+							return Promise.ofException(new HttpException(new DnsQueryException(AsyncHttpClient.class, dnsResponse)));
 						}
 					} else {
 						if (inspector != null) inspector.onResolveError(request, e);
 						request.recycle();
-						return Promise.ofException(e);
+						return Promise.ofException(translateToHttpException(e));
 					}
 				});
 	}
@@ -503,7 +504,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 					} else {
 						if (inspector != null) inspector.onConnectError(request, address, e);
 						request.recycle();
-						return Promise.ofException(e);
+						return Promise.ofException(translateToHttpException(e));
 					}
 				});
 	}

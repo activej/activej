@@ -1,7 +1,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ public class ContentTypeTest {
 	}
 
 	@Test
-	public void testContentTypeParse() throws ParseException {
+	public void testContentTypeParse() throws HttpParseException {
 		byte[] contentType = encodeAscii("text/plain;param=value; url-form=www;CHARSET=UTF-8; a=v");
 		ContentType actual = ContentType.parse(contentType, 0, contentType.length);
 		assertSame(MediaTypes.PLAIN_TEXT, actual.getMediaType());
@@ -32,7 +31,7 @@ public class ContentTypeTest {
 	}
 
 	@Test
-	public void testQParser() throws ParseException {
+	public void testQParser() throws HttpParseException {
 		byte[] num = encodeAscii("0.12313");
 		int q = parseQ(num, 0, num.length);
 		assertEquals(12, q);
@@ -51,7 +50,7 @@ public class ContentTypeTest {
 	}
 
 	@Test
-	public void testAcceptContentType() throws ParseException {
+	public void testAcceptContentType() throws HttpParseException {
 		byte[] acceptCts = encodeAscii("text/html;q=0.1, " +
 				"application/xhtml+xml; method=get; q=0.3; bool=true," +
 				"application/xml;q=0.9," +

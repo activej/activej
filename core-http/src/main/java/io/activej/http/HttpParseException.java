@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.http.decoder;
+package io.activej.http;
 
-import io.activej.http.HttpException;
-import org.jetbrains.annotations.NotNull;
-
-/**
- * An exception that occurs when an invalid HTTP request is received and the decoder fails
- * to map it on needed type.
- */
-public class DecodeException extends HttpException {
-	@NotNull
-	private final DecodeErrors errors;
-
-	public DecodeException(@NotNull DecodeErrors errors) {
-		super();
-		this.errors = errors;
+public final class HttpParseException extends HttpException {
+	public HttpParseException(String message) {
+		super(message);
 	}
 
-	@NotNull
-	public DecodeErrors getErrors() {
-		return errors;
+	public HttpParseException(Throwable cause) {
+		super(cause);
+	}
+
+	public HttpParseException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

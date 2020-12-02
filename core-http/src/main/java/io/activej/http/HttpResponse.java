@@ -219,17 +219,17 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		long contentLength, offset;
 		if (rangeHeader != null) {
 			if (!rangeHeader.startsWith("bytes=")) {
-				return Promise.ofException(HttpException.ofCode(416, "Invalid range header (not in bytes)"));
+				return Promise.ofException(HttpError.ofCode(416, "Invalid range header (not in bytes)"));
 			}
 			rangeHeader = rangeHeader.substring(6);
 			if (!rangeHeader.matches("(?:\\d+)?-(?:\\d+)?")) {
-				return Promise.ofException(HttpException.ofCode(416, "Only single part ranges are allowed"));
+				return Promise.ofException(HttpError.ofCode(416, "Only single part ranges are allowed"));
 			}
 			String[] parts = rangeHeader.split("-", 2);
 			long endOffset;
 			if (parts[0].isEmpty()) {
 				if (parts[1].isEmpty()) {
-					return Promise.ofException(HttpException.ofCode(416, "Invalid range"));
+					return Promise.ofException(HttpError.ofCode(416, "Invalid range"));
 				}
 				offset = size - Long.parseLong(parts[1]);
 				endOffset = size;
@@ -243,7 +243,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 				}
 			}
 			if (endOffset != -1 && offset > endOffset) {
-				return Promise.ofException(HttpException.ofCode(416, "Invalid range"));
+				return Promise.ofException(HttpError.ofCode(416, "Invalid range"));
 			}
 			contentLength = endOffset - offset + 1;
 			response.addHeader(CONTENT_RANGE, "bytes " + offset + "-" + endOffset + "/" + size);

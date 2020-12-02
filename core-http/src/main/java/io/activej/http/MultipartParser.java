@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.recycle.Recyclable;
@@ -88,11 +87,11 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 		assert headers != null;
 		String header = headers.get("content-disposition");
 		if (header == null) {
-			return Promise.ofException(new StacklessException(MultipartParser.class, "Headers had no Content-Disposition"));
+			return Promise.ofException(new HttpParseException("Headers had no Content-Disposition"));
 		}
 		String[] headerParts = header.split(";");
 		if (headerParts.length == 0 || !"form-data".equals(headerParts[0].trim())) {
-			return Promise.ofException(new StacklessException(MultipartParser.class, "Content-Disposition type is not 'form-data'"));
+			return Promise.ofException(new HttpParseException("Content-Disposition type is not 'form-data'"));
 		}
 		return Promise.of(Arrays.stream(headerParts)
 				.skip(1)
@@ -146,7 +145,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 					if (frame.isHeaders()) {
 						return doSplit(frame, frames, dataHandler);
 					}
-					StacklessException e = new StacklessException(MultipartParser.class, "First frame had no headers");
+					Exception e = new HttpParseException("First frame had no headers");
 					frames.closeEx(e);
 					return Promise.ofException(e);
 				});

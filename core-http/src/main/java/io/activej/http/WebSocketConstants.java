@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.common.exception.StacklessException;
 import org.jetbrains.annotations.Nullable;
 
 public final class WebSocketConstants {
@@ -39,10 +38,10 @@ public final class WebSocketConstants {
 	static final WebSocketException MESSAGE_TOO_BIG = new WebSocketException(1009, "Received message is too big");
 	static final WebSocketException SERVER_ERROR = new WebSocketException(1011, "Unexpected server error");
 
-	static final StacklessException HANDSHAKE_FAILED = new StacklessException(WebSocketConstants.class, "Failed to perform a proper opening handshake");
-	static final HttpException UPGRADE_WITH_BODY = HttpException.badRequest400("Upgrade request contained body");
+	static final HttpException HANDSHAKE_FAILED = new HttpException("Failed to perform a proper opening handshake");
+	static final HttpError UPGRADE_WITH_BODY = HttpError.badRequest400("Upgrade request contained body");
 
-	static final HttpException NOT_A_WEB_SOCKET_REQUEST = HttpException.ofCode(400, "Not a websocket request");
+	static final HttpError NOT_A_WEB_SOCKET_REQUEST = HttpError.ofCode(400, "Not a websocket request");
 	// endregion
 
 	static final String MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";

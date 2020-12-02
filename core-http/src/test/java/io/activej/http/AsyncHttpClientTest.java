@@ -3,8 +3,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.AsyncTimeoutException;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
@@ -95,7 +93,7 @@ public final class AsyncHttpClientTest {
 		int maxBodySize = HELLO_WORLD.length - 1;
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		InvalidSizeException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+		HttpParseException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
 				.then(response -> response.loadBody(maxBodySize)));
 		assertThat(e.getMessage(), containsString("HTTP body size exceeds load limit " + maxBodySize));
 	}
@@ -115,7 +113,7 @@ public final class AsyncHttpClientTest {
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
 				.then(HttpMessage::loadBody));
 
-		assertThat(e, instanceOf(ParseException.class));
+		assertThat(e, instanceOf(HttpParseException.class));
 	}
 
 	@Test

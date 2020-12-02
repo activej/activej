@@ -141,8 +141,8 @@ public class AsyncServletDecoratorTest {
 
 	@Test
 	public void testOnException() {
-		AsyncServlet servlet = onException((request, throwable) -> assertEquals(throwable.getClass(), HttpException.class))
-				.serve(request -> Promise.ofException(new HttpException(202)));
+		AsyncServlet servlet = onException((request, throwable) -> assertEquals(throwable.getClass(), HttpError.class))
+				.serve(request -> Promise.ofException(new HttpError(202)));
 		awaitException(servlet.serveAsync(HttpRequest.get("http://test.com")));
 	}
 
@@ -151,7 +151,7 @@ public class AsyncServletDecoratorTest {
 		AsyncServlet servlet = combineDecorators(
 				mapException(throwable -> HttpResponse.ofCode(100)),
 				mapException(throwable -> HttpResponse.ofCode(200)))
-				.serve(request -> Promise.ofException(new HttpException(300)));
+				.serve(request -> Promise.ofException(new HttpError(300)));
 
 		HttpResponse response = await(servlet.serveAsync(HttpRequest.get("http://test.com")));
 		assertEquals(200, response.getCode());
@@ -203,7 +203,7 @@ public class AsyncServletDecoratorTest {
 				.serve(request -> {
 					String path = request.getPath();
 					if ("/resource".equals(path)) {
-						return Promise.ofException(HttpException.ofCode(404));
+						return Promise.ofException(HttpError.ofCode(404));
 					}
 					return Promise.of(HttpResponse.ok200());
 				});

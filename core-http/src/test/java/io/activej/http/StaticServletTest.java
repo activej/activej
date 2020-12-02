@@ -61,7 +61,7 @@ public final class StaticServletTest {
 	@Test
 	public void testFileNotFoundPathLoader() {
 		StaticServlet staticServlet = StaticServlet.create(ofPath(newCachedThreadPool(), resourcesPath));
-		HttpException e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
+		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
 
 		assertEquals(404, e.getCode());
 	}
@@ -79,7 +79,7 @@ public final class StaticServletTest {
 	@Test
 	public void testFileNotFoundClassPath() {
 		StaticServlet staticServlet = StaticServlet.create(ofClassPath(newCachedThreadPool(), "/"));
-		HttpException e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/index.html")));
+		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/index.html")));
 
 		assertEquals(404, e.getCode());
 	}
@@ -109,7 +109,7 @@ public final class StaticServletTest {
 	public void testFileNotFoundRelativeClassPath() {
 		StaticLoader resourceLoader = ofClassPath(newCachedThreadPool(), getClass().getClassLoader(), "/");
 		StaticServlet staticServlet = StaticServlet.create(resourceLoader);
-		HttpException e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
+		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
 
 		assertEquals(404, e.getCode());
 	}

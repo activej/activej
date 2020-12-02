@@ -123,7 +123,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 									try {
 										partition = partitions.get(Integer.parseInt(indexParam));
 									} catch (NumberFormatException | IndexOutOfBoundsException e) {
-										return Promise.ofException(HttpException.ofCode(400, "Bad index"));
+										return Promise.ofException(HttpError.ofCode(400, "Bad index"));
 									}
 									return getTask(partition.getAddress(), id)
 											.map(task -> ok200()
@@ -150,7 +150,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		try {
 			return Promise.of(Long.parseLong(param));
 		} catch (NumberFormatException e) {
-			return Promise.ofException(HttpException.ofCode(400, "Bad number " + param));
+			return Promise.ofException(HttpError.ofCode(400, "Bad number " + param));
 		}
 	}
 

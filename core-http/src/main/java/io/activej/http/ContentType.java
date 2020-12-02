@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.ParseException;
 
 import java.nio.charset.Charset;
 import java.util.Objects;
@@ -49,7 +48,7 @@ public final class ContentType {
 		return lookup(mime, HttpCharset.of(charset));
 	}
 
-	static ContentType parse(byte[] bytes, int pos, int length) throws ParseException {
+	static ContentType parse(byte[] bytes, int pos, int length) throws HttpParseException {
 		try {
 			// parsing media type
 			int end = pos + length;
@@ -89,7 +88,7 @@ public final class ContentType {
 			}
 			return lookup(type, charset);
 		} catch (RuntimeException e) {
-			throw new ParseException("Failed to parse content-type", e);
+			throw new HttpParseException("Failed to parse content-type", e);
 		}
 	}
 
@@ -111,7 +110,7 @@ public final class ContentType {
 		return pos;
 	}
 
-	public Charset getCharset() throws ParseException {
+	public Charset getCharset() throws HttpParseException {
 		return charset == null ? null : charset.toJavaCharset();
 	}
 

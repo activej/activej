@@ -19,9 +19,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.CloseException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnexpectedDataException;
-import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.queue.ChannelZeroBuffer;
@@ -37,13 +34,11 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.SP;
-import static io.activej.bytebuf.ByteBufStrings.decodePositiveInt;
 import static io.activej.csp.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_KEY;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
-import static io.activej.http.HttpUtils.generateWebSocketKey;
-import static io.activej.http.HttpUtils.isAnswerInvalid;
+import static io.activej.http.HttpUtils.*;
 import static io.activej.http.WebSocketConstants.HANDSHAKE_FAILED;
 import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
@@ -139,13 +134,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onStartLine(byte[] line, int limit) throws ParseException {
+	protected void onStartLine(byte[] line, int limit) throws HttpParseException {
 		boolean http1x = line[0] == 'H' && line[1] == 'T' && line[2] == 'T' && line[3] == 'P' && line[4] == '/' && line[5] == '1';
 		boolean http11 = line[6] == '.' && line[7] == '1' && line[8] == SP;
 
 		if (!http1x) {
-			if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Invalid response");
-			throw new UnknownFormatException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Invalid response");
+			throw new HttpParseException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int pos = 9;
@@ -158,13 +153,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			version = HttpVersion.HTTP_1_0;
 			pos = 7;
 		} else {
-			if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Invalid response");
-			throw new ParseException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Invalid response");
+			throw new HttpParseException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int statusCode = decodePositiveInt(line, pos, 3);
 		if (!(statusCode >= 100 && statusCode < 600)) {
-			throw new UnknownFormatException("Invalid HTTP Status Code " + statusCode);
+			throw new HttpParseException("Invalid HTTP Status Code " + statusCode);
 		}
 		response = new HttpResponse(version, statusCode, this);
 		response.maxBodySize = maxBodySize;
@@ -186,9 +181,9 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws ParseException {
+	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws HttpParseException {
 		assert response != null;
-		if (response.headers.size() >= MAX_HEADERS) throw new ParseException("Too many headers");
+		if (response.headers.size() >= MAX_HEADERS) throw new HttpParseException("Too many headers");
 		response.addHeader(header, array, off, len);
 	}
 
@@ -308,7 +303,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 							maxWebSocketMessageSize
 					));
 				})
-				.whenException(this::closeWithError);
+				.whenException(e -> closeWithError(translateToHttpException(e)));
 	}
 
 	private void bindWebSocketTransformers(WebSocketFramesToBufs encoder, WebSocketBufsToFrames decoder) {
@@ -358,12 +353,12 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 						if (e == null) {
 							if (buf != null) {
 								buf.recycle();
-								closeWithError(new UnexpectedDataException("Unexpected read data"));
+								closeWithError(new HttpException("Unexpected read data"));
 							} else {
 								close();
 							}
 						} else {
-							closeWithError(e);
+							closeWithError(translateToHttpException(e));
 						}
 					});
 			if (isClosed()) return;
@@ -406,7 +401,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private void tryReadHttpMessage() {
 		try {
 			readHttpMessage();
-		} catch (ParseException e) {
+		} catch (HttpParseException e) {
 			closeWithError(e);
 		}
 	}

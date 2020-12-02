@@ -138,21 +138,21 @@ public interface AsyncServletDecorator {
 	}
 
 	static AsyncServletDecorator mapHttpException(AsyncServlet fallbackServlet) {
-		return mapException(throwable -> throwable instanceof HttpException, fallbackServlet);
+		return mapException(throwable -> throwable instanceof HttpError, fallbackServlet);
 	}
 
 	static AsyncServletDecorator mapHttpException404(AsyncServlet fallbackServlet) {
-		return mapException(throwable -> throwable instanceof HttpException && ((HttpException) throwable).getCode() == 404, fallbackServlet);
+		return mapException(throwable -> throwable instanceof HttpError && ((HttpError) throwable).getCode() == 404, fallbackServlet);
 	}
 
 	static AsyncServletDecorator mapHttpException500(AsyncServlet fallbackServlet) {
-		return mapException(throwable -> throwable instanceof HttpException && ((HttpException) throwable).getCode() == 500, fallbackServlet);
+		return mapException(throwable -> throwable instanceof HttpError && ((HttpError) throwable).getCode() == 500, fallbackServlet);
 	}
 
 	static AsyncServletDecorator mapHttpClientException(AsyncServlet fallbackServlet) {
 		return mapException(throwable -> {
-			if (throwable instanceof HttpException) {
-				int code = ((HttpException) throwable).getCode();
+			if (throwable instanceof HttpError) {
+				int code = ((HttpError) throwable).getCode();
 				return code >= 400 && code < 500;
 			}
 			return false;
@@ -161,8 +161,8 @@ public interface AsyncServletDecorator {
 
 	static AsyncServletDecorator mapHttpServerException(AsyncServlet fallbackServlet) {
 		return mapException(throwable -> {
-			if (throwable instanceof HttpException) {
-				int code = ((HttpException) throwable).getCode();
+			if (throwable instanceof HttpError) {
+				int code = ((HttpError) throwable).getCode();
 				return code >= 500 && code < 600;
 			}
 			return false;
@@ -170,30 +170,30 @@ public interface AsyncServletDecorator {
 	}
 
 	static AsyncServletDecorator mapToHttp500Exception() {
-		return mapToHttpException(e -> HttpException.internalServerError500());
+		return mapToHttpException(e -> HttpError.internalServerError500());
 	}
 
-	static AsyncServletDecorator mapToHttpException(Function<Throwable, HttpException> fn) {
+	static AsyncServletDecorator mapToHttpException(Function<Throwable, HttpError> fn) {
 		return servlet ->
 				request -> servlet.serveAsync(request)
 						.thenEx(((response, e) -> {
 							if (e == null) {
 								return Promise.of(response);
 							} else {
-								if (e instanceof HttpException) return Promise.ofException(e);
+								if (e instanceof HttpError) return Promise.ofException(e);
 								return Promise.ofException(fn.apply(e));
 							}
 						}));
 	}
 
-	static AsyncServletDecorator mapToHttpException(BiFunction<HttpRequest, Throwable, HttpException> fn) {
+	static AsyncServletDecorator mapToHttpException(BiFunction<HttpRequest, Throwable, HttpError> fn) {
 		return servlet ->
 				request -> servlet.serveAsync(request)
 						.thenEx(((response, e) -> {
 							if (e == null) {
 								return Promise.of(response);
 							} else {
-								if (e instanceof HttpException) return Promise.ofException(e);
+								if (e instanceof HttpError) return Promise.ofException(e);
 								return Promise.ofException(fn.apply(request, e));
 							}
 						}));

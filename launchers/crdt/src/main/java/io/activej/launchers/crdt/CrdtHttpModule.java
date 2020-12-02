@@ -78,7 +78,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								return Promise.of(HttpResponse.ofCode(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8)));
 							} catch (ParseException e) {
-								return Promise.ofException(HttpException.ofCode(400, e));
+								return Promise.ofException(HttpError.ofCode(400, e));
 							}
 						}))
 				.map(PUT, "/", loadBody()
@@ -88,7 +88,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								client.put(JsonUtils.fromJson(codec, body.getString(UTF_8)));
 								return Promise.of(HttpResponse.ok200());
 							} catch (ParseException e) {
-								return Promise.ofException(HttpException.ofCode(400, e));
+								return Promise.ofException(HttpError.ofCode(400, e));
 							}
 						}))
 				.map(DELETE, "/", loadBody()
@@ -102,7 +102,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								return Promise.of(HttpResponse.ofCode(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8)));
 							} catch (ParseException e) {
-								return Promise.ofException(HttpException.ofCode(400, e));
+								return Promise.ofException(HttpError.ofCode(400, e));
 							}
 						}));
 		if (backupService == null) {
