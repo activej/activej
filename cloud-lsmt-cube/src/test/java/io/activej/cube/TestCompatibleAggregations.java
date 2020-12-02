@@ -2,7 +2,6 @@ package io.activej.cube;
 
 import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.AggregationPredicate;
-import io.activej.aggregation.AggregationPredicates;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.cube.Cube.AggregationConfig;
@@ -205,10 +204,10 @@ public class TestCompatibleAggregations {
 
 		//matches all aggregations, but with different filtering logic
 		assertTrue(compatibleAggregations.containsKey(LIMITED_DATES_AGGREGATION.getId()));
-		assertEquals(LIMITED_DATES_AGGREGATION_PREDICATE.simplify(), compatibleAggregations.get(LIMITED_DATES_AGGREGATION.getId()));
+		assertEquals(alwaysTrue(), compatibleAggregations.get(LIMITED_DATES_AGGREGATION.getId()));
 
 		assertTrue(compatibleAggregations.containsKey(DAILY_AGGREGATION.getId()));
-		assertEquals(AggregationPredicates.alwaysTrue(), compatibleAggregations.get(DAILY_AGGREGATION.getId()));
+		assertEquals(alwaysTrue(), compatibleAggregations.get(DAILY_AGGREGATION.getId()));
 
 		assertTrue(compatibleAggregations.containsKey(ADVERTISERS_AGGREGATION.getId()));
 		assertEquals(ADVERTISER_AGGREGATION_PREDICATE.simplify(), compatibleAggregations.get(ADVERTISERS_AGGREGATION.getId()));

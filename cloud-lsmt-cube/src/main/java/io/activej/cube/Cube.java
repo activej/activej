@@ -600,7 +600,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			AggregationPredicate intersection = AggregationPredicates.and(containerPredicate, dataPredicate).simplify();
 			if (AggregationPredicates.alwaysFalse().equals(intersection)) continue;
 
-			if (intersection.equals(containerPredicate)) {
+			if (intersection.equals(dataPredicate)) {
 				aggregationToDataInputFilterPredicate.put(aggregationContainer.getKey(), AggregationPredicates.alwaysTrue());
 				continue;
 			}
