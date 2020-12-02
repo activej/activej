@@ -48,7 +48,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Util for working with {@link HttpRequest}
  */
 public final class HttpUtils {
-	private static final ParseException INVALID_Q_VALUE = new ParseException("Value of 'q' should start either from 0 or 1");
 	private static final int URI_DEFAULT_CAPACITY = 1 << 5;
 
 	public static InetAddress inetAddress(String host) {
@@ -183,7 +182,7 @@ public final class HttpUtils {
 			if (length == 1) q *= 10;
 			return q;
 		}
-		throw INVALID_Q_VALUE;
+		throw new ParseException("Value of 'q' should start either from 0 or 1");
 	}
 
 	/**
@@ -237,12 +236,12 @@ public final class HttpUtils {
 
 	public static String urlDecode(@Nullable String string, String enc) throws ParseException {
 		if (string == null) {
-			throw new ParseException(HttpUtils.class, "No string to decode");
+			throw new ParseException("No string to decode");
 		}
 		try {
 			return URLDecoder.decode(string, enc);
 		} catch (UnsupportedEncodingException e) {
-			throw new UnknownFormatException(HttpUtils.class, "Can't encode with supplied encoding: " + enc, e);
+			throw new UnknownFormatException("Can't encode with supplied encoding: " + enc, e);
 		}
 	}
 

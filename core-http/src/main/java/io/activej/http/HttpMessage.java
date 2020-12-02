@@ -279,7 +279,7 @@ public abstract class HttpMessage {
 					if (maxBodySize != 0 && queue.hasRemainingBytes(maxBodySize)) {
 						queue.recycle();
 						buf.recycle();
-						throw new UncheckedException(new InvalidSizeException(HttpMessage.class,
+						throw new UncheckedException(new InvalidSizeException(
 								"HTTP body size exceeds load limit " + maxBodySize));
 					}
 					queue.add(buf);

@@ -54,7 +54,6 @@ import static java.util.stream.Collectors.toMap;
 public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(MultipartParser.class, "maxMetaBuffer", kilobytes(4)).toInt();
 	private static final ByteBufsDecoder<ByteBuf> OF_CRLF_DECODER = ByteBufsDecoder.ofCrlfTerminatedBytes();
-	private static final InvalidSizeException HEADER_TOO_BIG = new InvalidSizeException(MultipartParser.class, "Header size exceeds max meta size");
 
 	@Nullable
 	private List<String> readingHeaders = null;
@@ -208,7 +207,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 				return getFalseTermFrame(bufs.takeRemaining());
 			}
 			if (remaining >= MAX_META_SIZE) {
-				throw HEADER_TOO_BIG;
+				throw new InvalidSizeException("Header size exceeds max meta size");
 			}
 			return null;
 		}

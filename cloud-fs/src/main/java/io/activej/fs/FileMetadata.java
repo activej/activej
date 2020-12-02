@@ -16,7 +16,7 @@
 
 package io.activej.fs;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.parse.InvalidSizeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,9 +48,9 @@ public final class FileMetadata {
 		return new FileMetadata(size, timestamp);
 	}
 
-	public static FileMetadata parse(long size, long timestamp) throws ParseException {
+	public static FileMetadata parse(long size, long timestamp) throws InvalidSizeException {
 		if (size < 0) {
-			throw new ParseException(FileMetadata.class, "Size is less than zero");
+			throw new InvalidSizeException("Size is less than zero");
 		}
 		return new FileMetadata(size, timestamp);
 	}

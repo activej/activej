@@ -69,7 +69,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	private Promise<Object> serve(Object request) {
 		RpcRequestHandler<Object, Object> requestHandler = (RpcRequestHandler<Object, Object>) handlers.get(request.getClass());
 		if (requestHandler == null) {
-			return Promise.ofException(new ParseException(RpcServerConnection.class, "Failed to process request " + request));
+			return Promise.ofException(new ParseException("Failed to process request " + request));
 		}
 		return requestHandler.run(request);
 	}

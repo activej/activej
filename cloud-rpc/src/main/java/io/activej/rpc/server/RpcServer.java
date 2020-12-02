@@ -122,7 +122,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 					if (request == RpcControlMessage.PING) {
 						return Promise.of(RpcControlMessage.PONG);
 					}
-					return Promise.ofException(new ParseException(RpcServer.class, "Unknown message: " + request));
+					return Promise.ofException(new ParseException("Unknown message: " + request));
 				});
 	}
 

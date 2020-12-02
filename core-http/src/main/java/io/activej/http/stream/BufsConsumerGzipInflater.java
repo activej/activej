@@ -55,14 +55,6 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater> {
 	public static final int MAX_HEADER_FIELD_LENGTH = 4096; //4 Kb
 	public static final int DEFAULT_BUF_SIZE = 512;
-	// region exceptions
-	private static final ParseException ACTUAL_DECOMPRESSED_DATA_SIZE_IS_NOT_EQUAL_TO_EXPECTED = new InvalidSizeException(BufsConsumerGzipInflater.class, "Decompressed data size is not equal to input size from GZIP trailer");
-	private static final ParseException CRC32_VALUE_DIFFERS = new ParseException(BufsConsumerGzipInflater.class, "CRC32 value of uncompressed data differs");
-	private static final ParseException INCORRECT_ID_HEADER_BYTES = new UnknownFormatException(BufsConsumerGzipInflater.class, "Incorrect identification bytes. Not in GZIP format");
-	private static final ParseException UNSUPPORTED_COMPRESSION_METHOD = new UnknownFormatException(BufsConsumerGzipInflater.class, "Unsupported compression method. Deflate compression required");
-	private static final ParseException FEXTRA_TOO_LARGE = new InvalidSizeException(BufsConsumerGzipInflater.class, "FEXTRA part of a header is larger than maximum allowed length");
-	private static final ParseException FNAME_FCOMMENT_TOO_LARGE = new InvalidSizeException(BufsConsumerGzipInflater.class, "FNAME or FEXTRA header is larger than maximum allowed length");
-	private static final ParseException MALFORMED_FLAG = new ParseException(BufsConsumerGzipInflater.class, "Flag byte of a header is malformed. Reserved bits are set");
 	// endregion
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED};
@@ -136,19 +128,19 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 					//header validation
 					if (buf.get() != GZIP_HEADER[0] || buf.get() != GZIP_HEADER[1]) {
 						buf.recycle();
-						closeEx(INCORRECT_ID_HEADER_BYTES);
+						closeEx(new UnknownFormatException("Incorrect identification bytes. Not in GZIP format"));
 						return;
 					}
 					if (buf.get() != GZIP_HEADER[2]) {
 						buf.recycle();
-						closeEx(UNSUPPORTED_COMPRESSION_METHOD);
+						closeEx(new UnknownFormatException("Unsupported compression method. Deflate compression required"));
 						return;
 					}
 
 					byte flag = buf.get();
 					if ((flag & 0b11100000) > 0) {
 						buf.recycle();
-						closeEx(MALFORMED_FLAG);
+						closeEx(new ParseException("Flag byte of a header is malformed. Reserved bits are set"));
 						return;
 					}
 					// unsetting FTEXT bit
@@ -188,12 +180,12 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 		input.parse(ofFixedSize(GZIP_FOOTER_SIZE))
 				.whenResult(buf -> {
 					if ((int) crc32.getValue() != reverseBytes(buf.readInt())) {
-						closeEx(CRC32_VALUE_DIFFERS);
+						closeEx(new ParseException("CRC32 value of uncompressed data differs"));
 						buf.recycle();
 						return;
 					}
 					if (inflater.getTotalOut() != reverseBytes(buf.readInt())) {
-						closeEx(ACTUAL_DECOMPRESSED_DATA_SIZE_IS_NOT_EQUAL_TO_EXPECTED);
+						closeEx(new InvalidSizeException("Decompressed data size is not equal to input size from GZIP trailer"));
 						buf.recycle();
 						return;
 					}
@@ -240,7 +232,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 
 	private void skipTerminatorByte(int flag, int part) {
 		input.parse(ByteBufsDecoder.ofNullTerminatedBytes(MAX_HEADER_FIELD_LENGTH))
-				.whenException(e -> closeEx(FNAME_FCOMMENT_TOO_LARGE))
+				.whenException(e -> closeEx(new InvalidSizeException("FNAME or FEXTRA header is larger than maximum allowed length")))
 				.whenResult(ByteBuf::recycle)
 				.whenResult(() -> runNext(flag - part).run());
 	}
@@ -254,8 +246,9 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 				})
 				.then(toSkip -> {
 					if (toSkip > MAX_HEADER_FIELD_LENGTH) {
-						closeEx(FEXTRA_TOO_LARGE);
-						return Promise.ofException(FEXTRA_TOO_LARGE);
+						ParseException exception = new InvalidSizeException("FEXTRA part of a header is larger than maximum allowed length");
+						closeEx(exception);
+						return Promise.ofException(exception);
 					}
 					return input.parse(ofFixedSize(toSkip));
 				})

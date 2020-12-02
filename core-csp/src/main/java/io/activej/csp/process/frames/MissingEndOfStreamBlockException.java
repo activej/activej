@@ -23,7 +23,7 @@ import io.activej.common.exception.parse.TruncatedDataException;
  * missing End-Of-Stream Block
  */
 public final class MissingEndOfStreamBlockException extends TruncatedDataException {
-	public MissingEndOfStreamBlockException(Class<?> component) {
-		super(component, "Stream ends with data block, not end-of-stream block");
+	public MissingEndOfStreamBlockException(Throwable cause) {
+		super("Stream ends with data block, not end-of-stream block", cause);
 	}
 }

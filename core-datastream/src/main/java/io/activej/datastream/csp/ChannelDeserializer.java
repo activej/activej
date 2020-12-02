@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.TruncatedDataException;
+import io.activej.common.exception.parse.UnexpectedDataException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelSupplier;
@@ -79,10 +80,10 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 		try {
 			endOfStream = process();
 		} catch (CorruptedDataException e) {
-			closeEx(new ParseException(ChannelDeserializer.class, "Data is corrupted", e));
+			closeEx(new ParseException("Data is corrupted", e));
 			return;
 		} catch (Exception e) {
-			closeEx(new UnknownFormatException(ChannelDeserializer.class, format("Parse exception, %s : %s", this, queue), e));
+			closeEx(new UnknownFormatException(format("Parse exception, %s : %s", this, queue), e));
 			return;
 		}
 
@@ -91,12 +92,12 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 			queue.skip(1);
 
 			if (!explicitEndOfStream) {
-				closeEx(new UnknownFormatException(ChannelDeserializer.class, format("Unexpected end-of-stream, %s : %s", this, queue)));
+				closeEx(new TruncatedDataException(format("Unexpected end-of-stream, %s : %s", this, queue)));
 				return;
 			}
 
 			if (queue.hasRemaining()) {
-				closeEx(new UnknownFormatException(ChannelDeserializer.class, format("Unexpected data after end-of-stream, %s : %s", this, queue)));
+				closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, queue)));
 				return;
 			}
 		}
@@ -107,21 +108,21 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 						if (buf != null) {
 							if (endOfStream) {
 								buf.recycle();
-								closeEx(new UnknownFormatException(ChannelDeserializer.class, format("Unexpected data after end-of-stream, %s : %s", this, queue)));
+								closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, queue)));
 								return;
 							}
 							queue.add(buf);
 							asyncResume();
 						} else {
 							if (explicitEndOfStream && !endOfStream) {
-								closeEx(new UnknownFormatException(ChannelDeserializer.class, format("Explicit end-of-stream is missing, %s : %s", this, queue)));
+								closeEx(new UnknownFormatException(format("Explicit end-of-stream is missing, %s : %s", this, queue)));
 								return;
 							}
 
 							if (queue.isEmpty()) {
 								sendEndOfStream();
 							} else {
-								closeEx(new TruncatedDataException(ChannelDeserializer.class, format("Truncated serialized data stream, %s : %s", this, queue)));
+								closeEx(new TruncatedDataException(format("Truncated serialized data stream, %s : %s", this, queue)));
 							}
 						}
 					})

@@ -60,10 +60,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
 
-	private static final UnknownFormatException UNKNOWN_HTTP_METHOD = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP method");
-	private static final UnknownFormatException UNKNOWN_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP version");
-	private static final UnknownFormatException UNSUPPORTED_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unsupported HTTP version");
-
 	private static final int HEADERS_SLOTS = 256;
 	private static final int MAX_PROBINGS = 2;
 	private static final HttpMethod[] METHODS = new HttpMethod[HEADERS_SLOTS];
@@ -154,9 +150,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		HttpMethod method = getHttpMethod(line);
 		if (method == null) {
-			if (!DETAILED_ERROR_MESSAGES) throw UNKNOWN_HTTP_METHOD;
-			throw new UnknownFormatException(HttpServerConnection.class,
-					"Unknown HTTP method. First line: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Unknown HTTP method");
+			throw new UnknownFormatException("Unknown HTTP method. First line: " +
+					new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int urlStart = method.size + 1;
@@ -184,13 +180,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			} else if (line[p + 7] == '0') {
 				version = HTTP_1_0;
 			} else {
-				if (!DETAILED_ERROR_MESSAGES) throw UNKNOWN_HTTP_VERSION;
-				throw new UnknownFormatException(HttpServerConnection.class,
-						"Unknown HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
+				if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Unknown HTTP version");
+				throw new UnknownFormatException("Unknown HTTP version. First line: " +
+						new String(line, 0, limit, ISO_8859_1));
 			}
 		} else {
-			if (!DETAILED_ERROR_MESSAGES) throw UNSUPPORTED_HTTP_VERSION;
-			throw new UnknownFormatException(HttpServerConnection.class,
+			if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Unsupported HTTP version");
+			throw new UnknownFormatException(
 					"Unsupported HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
@@ -255,7 +251,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 		//noinspection ConstantConditions
 		if (request.headers.size() >= MAX_HEADERS) {
-			throw TOO_MANY_HEADERS;
+			throw new ParseException("Too many headers");
 		}
 		request.addHeader(header, array, off, len);
 	}

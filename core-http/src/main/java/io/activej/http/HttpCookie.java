@@ -261,7 +261,7 @@ public final class HttpCookie {
 				pos = valueEnd + 1;
 			}
 		} catch (RuntimeException e) {
-			throw new ParseException(HttpCookie.class, "Failed to parse cookies", e);
+			throw new ParseException("Failed to parse cookies", e);
 		}
 	}
 
@@ -326,7 +326,7 @@ public final class HttpCookie {
 				pos = valueEnd + 1;
 			}
 		} catch (RuntimeException e) {
-			throw new ParseException(HttpCookie.class, "Failed to parse cookies", e);
+			throw new ParseException("Failed to parse cookies", e);
 		}
 	}
 

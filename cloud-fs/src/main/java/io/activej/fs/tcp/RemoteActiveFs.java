@@ -72,9 +72,6 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectionTimeout", Duration.ZERO);
 
-	private static final TruncatedDataException UNEXPECTED_END_OF_STREAM = new TruncatedDataException(RemoteActiveFs.class);
-	private static final UnexpectedDataException UNEXPECTED_DATA = new UnexpectedDataException(RemoteActiveFs.class);
-
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
 			nullTerminatedJson(RemoteFsResponses.CODEC, RemoteFsCommands.CODEC);
 
@@ -203,7 +200,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 								.then(msg -> {
 									long receivingSize = msg.getSize();
 									if (receivingSize > limit) {
-										return Promise.ofException(UNEXPECTED_DATA);
+										return Promise.ofException(new UnexpectedDataException());
 									}
 
 									logger.trace("download size for file {} is {}: {}", name, receivingSize, this);
@@ -221,7 +218,10 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 																" (offset " + offset + ", limit " + limit + ")," +
 																" expected: " + receivingSize +
 																" actual: " + size.get());
-														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM : UNEXPECTED_DATA);
+														return Promise.ofException(size.get() < receivingSize ?
+																new TruncatedDataException() :
+																new UnexpectedDataException()
+														);
 													})
 													.whenComplete(downloadFinishPromise.recordStats())
 													.whenComplete(toLogger(logger, "onDownloadComplete", name, offset, limit, this))

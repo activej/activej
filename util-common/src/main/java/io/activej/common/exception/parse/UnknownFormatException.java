@@ -17,15 +17,15 @@
 package io.activej.common.exception.parse;
 
 public class UnknownFormatException extends ParseException {
-	public UnknownFormatException(Class<?> component) {
-		super(component, "Unknown format");
+	public UnknownFormatException() {
+		super("Unknown format");
 	}
 
-	public UnknownFormatException(Class<?> component, String message) {
-		super(component, message);
+	public UnknownFormatException(String message) {
+		super(message);
 	}
 
-	public UnknownFormatException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
+	public UnknownFormatException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

@@ -94,9 +94,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 public final class HttpClientConnection extends AbstractHttpConnection {
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpClientConnection.class, "detailedErrorMessages", false);
 
-	private static final ParseException INVALID_RESPONSE = new UnknownFormatException(HttpClientConnection.class, "Invalid response");
 	private static final CloseException CONNECTION_CLOSED = new CloseException(HttpClientConnection.class, "Connection closed");
-	private static final ParseException UNEXPECTED_READ = new UnexpectedDataException(HttpClientConnection.class, "Unexpected read data");
 
 	static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.of("upgrade");
 	static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.of("websocket");
@@ -146,9 +144,8 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		boolean http11 = line[6] == '.' && line[7] == '1' && line[8] == SP;
 
 		if (!http1x) {
-			if (!DETAILED_ERROR_MESSAGES) throw INVALID_RESPONSE;
-			throw new UnknownFormatException(HttpClientConnection.class,
-					"Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Invalid response");
+			throw new UnknownFormatException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int pos = 9;
@@ -161,14 +158,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			version = HttpVersion.HTTP_1_0;
 			pos = 7;
 		} else {
-			if (!DETAILED_ERROR_MESSAGES) throw INVALID_RESPONSE;
-			throw new ParseException(HttpClientConnection.class,
-					"Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw new UnknownFormatException("Invalid response");
+			throw new ParseException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int statusCode = decodePositiveInt(line, pos, 3);
 		if (!(statusCode >= 100 && statusCode < 600)) {
-			throw new UnknownFormatException(HttpClientConnection.class, "Invalid HTTP Status Code " + statusCode);
+			throw new UnknownFormatException("Invalid HTTP Status Code " + statusCode);
 		}
 		response = new HttpResponse(version, statusCode, this);
 		response.maxBodySize = maxBodySize;
@@ -192,7 +188,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws ParseException {
 		assert response != null;
-		if (response.headers.size() >= MAX_HEADERS) throw TOO_MANY_HEADERS;
+		if (response.headers.size() >= MAX_HEADERS) throw new ParseException("Too many headers");
 		response.addHeader(header, array, off, len);
 	}
 
@@ -362,7 +358,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 						if (e == null) {
 							if (buf != null) {
 								buf.recycle();
-								closeWithError(UNEXPECTED_READ);
+								closeWithError(new UnexpectedDataException("Unexpected read data"));
 							} else {
 								close();
 							}

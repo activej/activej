@@ -121,13 +121,13 @@ public final class UrlParser {
 
 	private void parse(boolean isRelativePathAllowed) throws ParseException {
 		if (raw.length() > Short.MAX_VALUE) {
-			throw new InvalidSizeException(UrlParser.class, "HttpUrl length cannot be greater than " + Short.MAX_VALUE);
+			throw new InvalidSizeException("HttpUrl length cannot be greater than " + Short.MAX_VALUE);
 		}
 
 		short index = (short) raw.indexOf("://");
 		if (index < 0 || index > 5) {
 			if (!isRelativePathAllowed)
-				throw new ParseException(UrlParser.class, "Partial URI is not allowed: " + raw);
+				throw new ParseException("Partial URI is not allowed: " + raw);
 			index = 0;
 		} else {
 			if (index == 5 && raw.startsWith(HTTPS.lowercase())) {
@@ -139,7 +139,7 @@ public final class UrlParser {
 			} else if (index == 2 && raw.startsWith(WS.lowercase())) {
 				protocol = WS;
 			} else {
-				throw new UnknownFormatException(UrlParser.class, "Unsupported schema: " + raw.substring(0, index));
+				throw new UnknownFormatException("Unsupported schema: " + raw.substring(0, index));
 			}
 			index += "://".length();
 			host = index;
@@ -379,8 +379,7 @@ public final class UrlParser {
 
 	private static final int[] NO_PARAMETERS = {};
 
-	@NotNull
-	static int[] parseQueryParameters(@NotNull String query, int pos, int end) {
+	static @NotNull int[] parseQueryParameters(@NotNull String query, int pos, int end) {
 		if (pos == end)
 			return NO_PARAMETERS;
 		assert query.length() >= end;
@@ -503,22 +502,22 @@ public final class UrlParser {
 
 	private static int toInt(@NotNull String str, int pos, int end) throws ParseException {
 		if (pos == end) {
-			throw new ParseException(UrlParser.class, "Empty port value");
+			throw new ParseException("Empty port value");
 		}
 		if ((end - pos) > 5) {
-			throw new ParseException(UrlParser.class, "Bad port: " + str.substring(pos, end));
+			throw new ParseException("Bad port: " + str.substring(pos, end));
 		}
 
 		int result = 0;
 		for (int i = pos; i < end; i++) {
 			int c = str.charAt(i) - '0';
 			if (c < 0 || c > 9)
-				throw new ParseException(UrlParser.class, "Bad port: " + str.substring(pos, end));
+				throw new ParseException("Bad port: " + str.substring(pos, end));
 			result = c + result * 10;
 		}
 
 		if (result > 0xFFFF) {
-			throw new ParseException(UrlParser.class, "Bad port: " + str.substring(pos, end));
+			throw new ParseException("Bad port: " + str.substring(pos, end));
 		}
 
 		return result;
@@ -616,7 +615,7 @@ public final class UrlParser {
 		if (c >= '0' && c <= '9') return (byte) (c - '0');
 		if (c >= 'a' && c <= 'f') return (byte) (c - 'a' + 10);
 		if (c >= 'A' && c <= 'F') return (byte) (c - 'A' + 10);
-		throw new ParseException(UrlParser.class, "Failed to parse hex digit from '" + c + '\'');
+		throw new ParseException("Failed to parse hex digit from '" + c + '\'');
 	}
 
 	@Override

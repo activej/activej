@@ -45,10 +45,6 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder> {
 	public static final int MAX_CHUNK_LENGTH_DIGITS = 8;
 	public static final byte[] CRLF = {13, 10};
-	// region exceptions
-	private static final ParseException MALFORMED_CHUNK = new ParseException(BufsConsumerChunkedDecoder.class, "Malformed chunk");
-	private static final ParseException MALFORMED_CHUNK_LENGTH = new InvalidSizeException(BufsConsumerChunkedDecoder.class, "Malformed chunk length");
-	// endregion
 
 	private ByteBufQueue bufs;
 	private BinaryChannelSupplier input;
@@ -111,14 +107,14 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 						} else if (c == ';' || c == CR) {
 							// Success
 							if (index == 0 || chunkLength < 0) {
-								throw MALFORMED_CHUNK_LENGTH;
+								throw new InvalidSizeException("Malformed chunk length");
 							}
 							return true;
 						} else {
-							throw MALFORMED_CHUNK_LENGTH;
+							throw new InvalidSizeException("Unexpected data");
 						}
 						if (index == MAX_CHUNK_LENGTH_DIGITS + 1) {
-							throw MALFORMED_CHUNK_LENGTH;
+							throw new InvalidSizeException("Chunk length exceeds maximum allowed size");
 						}
 						return false;
 					});

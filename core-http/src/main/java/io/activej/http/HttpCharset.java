@@ -98,7 +98,7 @@ public final class HttpCharset extends Token {
 				}
 				javaCharset = forName(charsetName);
 			} catch (Exception e) {
-				throw new ParseException(HttpCharset.class, "Can't fetch charset for " + charsetName, e);
+				throw new ParseException("Can't fetch charset for " + charsetName, e);
 			}
 		}
 		return javaCharset;

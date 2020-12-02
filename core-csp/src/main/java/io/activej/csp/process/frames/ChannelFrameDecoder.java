@@ -34,8 +34,6 @@ import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {
-	private static final MissingEndOfStreamBlockException MISSING_END_OF_STREAM_BLOCK_EXCEPTION = new MissingEndOfStreamBlockException(ChannelFrameDecoder.class);
-	private static final TruncatedBlockException TRUNCATED_BLOCK_EXCEPTION = new TruncatedBlockException(ChannelFrameDecoder.class);
 
 	@NotNull
 	private final BlockDecoder decoder;
@@ -96,10 +94,10 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 								output.acceptEndOfStream()
 										.whenResult(this::completeProcess);
 							} else {
-								closeEx(MISSING_END_OF_STREAM_BLOCK_EXCEPTION);
+								closeEx(new MissingEndOfStreamBlockException(e));
 							}
 						} else {
-							closeEx(TRUNCATED_BLOCK_EXCEPTION);
+							closeEx(new TruncatedBlockException(e));
 						}
 					} else {
 						sanitize(result, e)

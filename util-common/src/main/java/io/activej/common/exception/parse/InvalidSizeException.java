@@ -17,11 +17,15 @@
 package io.activej.common.exception.parse;
 
 public class InvalidSizeException extends ParseException {
-	public InvalidSizeException(Class<?> component, String message) {
-		super(component, message);
+	public InvalidSizeException() {
+		super("Invalid size");
 	}
 
-	public InvalidSizeException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
+	public InvalidSizeException(String message) {
+		super(message);
+	}
+
+	public InvalidSizeException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

@@ -32,8 +32,6 @@ import org.jetbrains.annotations.NotNull;
  * Represents a simple binary protocol over for communication a TCP connection.
  */
 public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O> {
-	private static final TruncatedDataException UNEXPECTED_END_OF_STREAM = new TruncatedDataException(MessagingWithBinaryStreaming.class);
-
 	private final AsyncTcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;
@@ -57,7 +55,7 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 								bufs.add(buf);
 								return Promise.complete();
 							} else {
-								return Promise.ofException(UNEXPECTED_END_OF_STREAM);
+								return Promise.ofException(new TruncatedDataException());
 							}
 						})
 						.whenException(this::closeEx),

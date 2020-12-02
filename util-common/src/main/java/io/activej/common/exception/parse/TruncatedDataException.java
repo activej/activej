@@ -18,18 +18,14 @@ package io.activej.common.exception.parse;
 
 public class TruncatedDataException extends ParseException {
 	public TruncatedDataException() {
-		super();
+		super("Truncated data");
 	}
 
 	public TruncatedDataException(String message) {
-		super(null, message);
+		super(message);
 	}
 
-	public TruncatedDataException(Class<?> component) {
-		super(component, "Data has ended unexpectedly");
-	}
-
-	public TruncatedDataException(Class<?> component, String message) {
-		super(component, message);
+	public TruncatedDataException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

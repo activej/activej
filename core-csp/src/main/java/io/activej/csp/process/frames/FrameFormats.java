@@ -85,8 +85,6 @@ public class FrameFormats {
 
 	// region implementations
 	private static final class Compound implements FrameFormat {
-		private static final UnknownFormatException UNKNOWN_FORMAT_EXCEPTION = new UnknownFormatException(Compound.class);
-
 		private final List<FrameFormat> formats = new ArrayList<>();
 
 		Compound(FrameFormat mainFormat, List<FrameFormat> otherFormats) {
@@ -130,7 +128,7 @@ public class FrameFormats {
 				private ByteBuf tryNextDecoder(ByteBufQueue bufs) throws ParseException {
 					while (true) {
 						if (possibleDecoder == null) {
-							if (!possibleDecoders.hasNext()) throw UNKNOWN_FORMAT_EXCEPTION;
+							if (!possibleDecoders.hasNext()) throw new UnknownFormatException();
 							possibleDecoder = possibleDecoders.next().createDecoder();
 						}
 
@@ -211,8 +209,6 @@ public class FrameFormats {
 	}
 
 	private static final class SizePrefixedFrameFormat implements FrameFormat {
-		private static final InvalidSizeException NEGATIVE_LENGTH = new InvalidSizeException(SizePrefixedFrameFormat.class, "Negative length");
-		private static final InvalidSizeException COULD_NOT_READ_VAR_INT = new InvalidSizeException(SizePrefixedFrameFormat.class, "Could not read var int");
 		private static final byte[] ZERO_BYTE_ARRAY = {0};
 
 		private static volatile SizePrefixedFrameFormat instance = null;
@@ -292,10 +288,10 @@ public class FrameFormats {
 				public Integer parse(int index, byte nextByte) throws ParseException {
 					result |= (nextByte & 0x7F) << index * 7;
 					if ((nextByte & 0x80) == 0) {
-						if (result < 0) throw NEGATIVE_LENGTH;
+						if (result < 0) throw new InvalidSizeException("Negative length");
 						return result;
 					}
-					if (index == 4) throw COULD_NOT_READ_VAR_INT;
+					if (index == 4) throw new InvalidSizeException("Could not read var int");
 					return null;
 				}
 			});

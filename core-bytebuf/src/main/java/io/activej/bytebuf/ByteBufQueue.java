@@ -96,7 +96,7 @@ public final class ByteBufQueue implements Recyclable {
 					if (size > maxSize || queue.hasRemainingBytes(maxSize - size + 1)) {
 						queue.recycle();
 						buf.recycle();
-						throw new UncheckedException(new InvalidSizeException(ByteBufQueue.class,
+						throw new UncheckedException(new InvalidSizeException(
 								"ByteBufQueue exceeds maximum size of " + maxSize + " bytes"));
 					}
 					queue.add(buf);

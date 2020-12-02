@@ -18,6 +18,7 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
 
 class Utils {
@@ -29,7 +30,7 @@ class Utils {
 					return true;
 				}
 				if (index == maxSize - 1) {
-					throw new ParseException(ByteBufsDecoder.class, "No terminator byte is found in " + maxSize + " bytes");
+					throw new ParseException("No terminator byte is found in " + maxSize + " bytes");
 				}
 				return false;
 			});
@@ -53,7 +54,7 @@ class Utils {
 				return true;
 			}
 			if (index == 4) {
-				throw new ParseException(ByteBufsDecoder.class, "VarInt is too long for 32-bit integer");
+				throw new InvalidSizeException("VarInt is too long for a 32-bit integer");
 			}
 
 			return false;

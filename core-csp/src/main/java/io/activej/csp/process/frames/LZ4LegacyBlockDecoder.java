@@ -19,6 +19,7 @@ package io.activej.csp.process.frames;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import net.jpountz.lz4.LZ4Exception;
@@ -32,10 +33,6 @@ import static io.activej.csp.process.frames.LZ4LegacyFrameFormat.*;
 
 @Deprecated
 final class LZ4LegacyBlockDecoder implements BlockDecoder {
-	private static final ParseException STREAM_IS_CORRUPTED = new ParseException(LZ4LegacyBlockDecoder.class, "Stream is corrupted");
-	private static final UnknownFormatException UNKNOWN_FORMAT_EXCEPTION = new UnknownFormatException(LZ4LegacyFrameFormat.class,
-			"Expected stream to start with bytes: " + Arrays.toString(MAGIC));
-
 	private final LZ4FastDecompressor decompressor;
 	private final StreamingXXHash32 checksum;
 	private final boolean ignoreMissingEndOfStreamBlock;
@@ -82,7 +79,8 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	private boolean readHeader(ByteBufQueue bufs) throws ParseException {
 		bufs.scanBytes((index, value) -> {
 			if (value != MAGIC[index]) {
-				throw UNKNOWN_FORMAT_EXCEPTION;
+				throw new UnknownFormatException(
+						"Expected stream to start with bytes: " + Arrays.toString(MAGIC));
 			}
 			return index == MAGIC_LENGTH - 1;
 		});
@@ -94,7 +92,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		compressionMethod = token & 0xF0;
 		int compressionLevel = COMPRESSION_LEVEL_BASE + (token & 0x0F);
 		if (compressionMethod != COMPRESSION_METHOD_RAW && compressionMethod != COMPRESSION_METHOD_LZ4) {
-			throw STREAM_IS_CORRUPTED;
+			throw new UnknownFormatException("Unknown compression method");
 		}
 
 		compressedLen = readIntLE(bufs);
@@ -105,11 +103,11 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 				|| (originalLen == 0 && compressedLen != 0)
 				|| (originalLen != 0 && compressedLen == 0)
 				|| (compressionMethod == COMPRESSION_METHOD_RAW && originalLen != compressedLen)) {
-			throw STREAM_IS_CORRUPTED;
+			throw new ParseException("Malformed header");
 		}
 		if (originalLen == 0) {
 			if (check != 0) {
-				throw STREAM_IS_CORRUPTED;
+				throw new ParseException("Checksum in last block is not allowed");
 			}
 			endOfStream = true;
 		}
@@ -137,27 +135,23 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 			byte[] bytes = inputBuf.array();
 			int off = inputBuf.head();
 			outputBuf.tail(originalLen);
-			switch (compressionMethod) {
-				case COMPRESSION_METHOD_RAW:
-					System.arraycopy(bytes, off, outputBuf.array(), 0, originalLen);
-					break;
-				case COMPRESSION_METHOD_LZ4:
-					try {
-						int compressedLen = decompressor.decompress(bytes, off, outputBuf.array(), 0, originalLen);
-						if (compressedLen != this.compressedLen) {
-							throw STREAM_IS_CORRUPTED;
-						}
-					} catch (LZ4Exception e) {
-						throw new ParseException(LZ4LegacyBlockDecoder.class, "Stream is corrupted", e);
+			if (compressionMethod == COMPRESSION_METHOD_RAW) {
+				System.arraycopy(bytes, off, outputBuf.array(), 0, originalLen);
+			} else {
+				assert compressionMethod == COMPRESSION_METHOD_LZ4;
+				try {
+					int compressedLen = decompressor.decompress(bytes, off, outputBuf.array(), 0, originalLen);
+					if (compressedLen != this.compressedLen) {
+						throw new InvalidSizeException("Actual size of decompressed data does not equal expected size of decompressed data");
 					}
-					break;
-				default:
-					throw STREAM_IS_CORRUPTED;
+				} catch (LZ4Exception e) {
+					throw new ParseException("Failed to decompress data", e);
+				}
 			}
 			checksum.reset();
 			checksum.update(outputBuf.array(), 0, originalLen);
 			if (checksum.getValue() != check) {
-				throw STREAM_IS_CORRUPTED;
+				throw new ParseException("Checksums do not match. Received: (" + check + "), actual: (" + checksum.getValue() + ')');
 			}
 			return outputBuf;
 		} catch (Exception e) {

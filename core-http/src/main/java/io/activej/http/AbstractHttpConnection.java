@@ -55,11 +55,6 @@ public abstract class AbstractHttpConnection {
 	public static final int MAX_HEADERS = ApplicationSettings.getInt(HttpMessage.class, "maxHeaders", 100); // http://httpd.apache.org/docs/2.2/mod/core.html#limitrequestfields
 
 	protected static final AsyncTimeoutException READ_TIMEOUT_ERROR = new AsyncTimeoutException(AbstractHttpConnection.class, "Read timeout");
-	protected static final ParseException TOO_MANY_HEADERS = new ParseException(AbstractHttpConnection.class, "Too many headers");
-	private static final ParseException HEADER_NAME_ABSENT = new ParseException(AbstractHttpConnection.class, "Header name is absent");
-	private static final ParseException TOO_LONG_HEADER = new ParseException(AbstractHttpConnection.class, "Header line exceeds max header size");
-	private static final ParseException INCOMPLETE_MESSAGE = new TruncatedDataException(AbstractHttpConnection.class, "Incomplete HTTP message");
-	private static final ParseException INVALID_CRLF = new ParseException(AbstractHttpConnection.class, "Invalid CRLF");
 
 	protected static final HttpHeaderValue CONNECTION_KEEP_ALIVE_HEADER = HttpHeaderValue.of("keep-alive");
 	protected static final HttpHeaderValue CONNECTION_CLOSE_HEADER = HttpHeaderValue.of("close");
@@ -270,7 +265,7 @@ public abstract class AbstractHttpConnection {
 			}
 			size += buf.readRemaining();
 		}
-		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw TOO_LONG_HEADER;
+		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw new ParseException("Header line exceeds max header size");
 		socket.read().whenComplete(startLineConsumer);
 	}
 
@@ -318,7 +313,7 @@ public abstract class AbstractHttpConnection {
 			}
 		}
 
-		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw TOO_LONG_HEADER;
+		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw new ParseException("Header line exceeds max header size");
 		socket.read().whenComplete(headersConsumer);
 	}
 
@@ -333,7 +328,7 @@ public abstract class AbstractHttpConnection {
 			if (b == CR) {
 				if (i >= remainingBytes) return null;
 				b = readQueue.peekByte(i++);
-				if (b != LF) throw INVALID_CRLF;
+				if (b != LF) throw new ParseException("Invalid CRLF");
 				if (i == 2) {
 					bytes = EMPTY_HEADER;
 				} else {
@@ -378,7 +373,7 @@ public abstract class AbstractHttpConnection {
 			hashCode = 31 * hashCode + b;
 			pos++;
 		}
-		if (pos == limit) throw HEADER_NAME_ABSENT;
+		if (pos == limit) throw new ParseException("Header name is absent");
 		HttpHeader header = HttpHeaders.of(array, off, pos - off, hashCode);
 		pos++;
 
@@ -435,7 +430,7 @@ public abstract class AbstractHttpConnection {
 									readQueue.add(buf);
 									return Promise.complete();
 								} else {
-									return Promise.ofException(INCOMPLETE_MESSAGE);
+									return Promise.ofException(new TruncatedDataException("Incomplete HTTP message"));
 								}
 							} else {
 								closeWithError(e);

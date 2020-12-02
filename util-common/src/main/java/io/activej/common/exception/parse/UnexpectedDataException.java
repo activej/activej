@@ -18,18 +18,14 @@ package io.activej.common.exception.parse;
 
 public class UnexpectedDataException extends ParseException {
 	public UnexpectedDataException() {
-		super();
+		super("Unexpected data");
 	}
 
 	public UnexpectedDataException(String message) {
-		super(null, message);
+		super(message);
 	}
 
-	public UnexpectedDataException(Class<?> component) {
-		super(component, "Unexpected data");
-	}
-
-	public UnexpectedDataException(Class<?> component, String message) {
-		super(component, message);
+	public UnexpectedDataException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

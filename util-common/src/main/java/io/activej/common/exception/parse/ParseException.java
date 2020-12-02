@@ -16,12 +16,7 @@
 
 package io.activej.common.exception.parse;
 
-import io.activej.common.exception.StacklessException;
-
-public class ParseException extends StacklessException {
-	public ParseException() {
-	}
-
+public class ParseException extends Exception {
 	public ParseException(String message) {
 		super(message);
 	}
@@ -32,13 +27,5 @@ public class ParseException extends StacklessException {
 
 	public ParseException(Throwable cause) {
 		super(cause);
-	}
-
-	public ParseException(Class<?> component, String message) {
-		super(component, message);
-	}
-
-	public ParseException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
 	}
 }

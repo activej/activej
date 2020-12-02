@@ -31,9 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
-	private static final Exception UNEXPECTED_DATA_EXCEPTION = new UnexpectedDataException(BinaryChannelSupplier.class, "Unexpected data after end-of-stream");
-	private static final Exception UNEXPECTED_END_OF_STREAM_EXCEPTION = new TruncatedDataException(BinaryChannelSupplier.class, "Unexpected end-of-stream");
-
 	protected final ByteBufQueue bufs;
 
 	protected BinaryChannelSupplier(ByteBufQueue bufs) {
@@ -70,7 +67,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 								bufs.add(buf);
 								return Promise.complete();
 							} else {
-								return Promise.ofException(UNEXPECTED_END_OF_STREAM_EXCEPTION);
+								return Promise.ofException(new TruncatedDataException("Unexpected end-of-stream"));
 							}
 						});
 			}
@@ -79,8 +76,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			public Promise<Void> endOfStream() {
 				if (!bufs.isEmpty()) {
 					bufs.recycle();
-					input.closeEx(UNEXPECTED_DATA_EXCEPTION);
-					return Promise.ofException(UNEXPECTED_DATA_EXCEPTION);
+					Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+					input.closeEx(exception);
+					return Promise.ofException(exception);
 				}
 				return input.get()
 						.then(buf -> {
@@ -88,8 +86,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 								return Promise.complete();
 							} else {
 								buf.recycle();
-								input.closeEx(UNEXPECTED_DATA_EXCEPTION);
-								return Promise.ofException(UNEXPECTED_DATA_EXCEPTION);
+								Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+								input.closeEx(exception);
+								return Promise.ofException(exception);
 							}
 						});
 			}
@@ -152,8 +151,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 		return parse(decoder)
 				.then(result -> {
 					if (!bufs.isEmpty()) {
-						closeEx(UNEXPECTED_DATA_EXCEPTION);
-						return Promise.ofException(UNEXPECTED_DATA_EXCEPTION);
+						Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+						closeEx(exception);
+						return Promise.ofException(exception);
 					}
 					return endOfStream().map($ -> result);
 				});

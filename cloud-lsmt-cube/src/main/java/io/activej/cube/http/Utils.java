@@ -32,9 +32,6 @@ import static io.activej.aggregation.fieldtype.FieldTypes.LOCAL_DATE_CODEC;
 import static java.util.stream.Collectors.toList;
 
 class Utils {
-	private static final ParseException MALFORMED_TAIL = new ParseException(Utils.class, "Tail is neither 'asc' nor 'desc'");
-	private static final ParseException MISSING_SEMICOLON = new ParseException(Utils.class, "Failed to parse orderings, missing semicolon");
-
 	static final String MEASURES_PARAM = "measures";
 	static final String ATTRIBUTES_PARAM = "attributes";
 	static final String WHERE_PARAM = "where";
@@ -65,7 +62,7 @@ class Utils {
 		for (String s : tokens) {
 			int i = s.indexOf(':');
 			if (i == -1) {
-				throw MISSING_SEMICOLON;
+				throw new ParseException("Failed to parse orderings, missing semicolon");
 			}
 			String field = s.substring(0, i);
 			String tail = s.substring(i + 1).toLowerCase();
@@ -74,7 +71,7 @@ class Utils {
 			else if ("desc".equals(tail))
 				result.add(Ordering.desc(field));
 			else {
-				throw MALFORMED_TAIL;
+				throw new ParseException("Tail is neither 'asc' nor 'desc'");
 			}
 		}
 		return result;

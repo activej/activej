@@ -23,8 +23,8 @@ import io.activej.dataflow.command.*;
 import io.activej.dataflow.command.DataflowResponsePartitionData.TaskDesc;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskStatus;
-import io.activej.dataflow.http.ReducedTaskData;
 import io.activej.dataflow.http.LocalTaskData;
+import io.activej.dataflow.http.ReducedTaskData;
 import io.activej.dataflow.inject.CodecsModule.SubtypeNameFactory;
 import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.node.*;
@@ -103,7 +103,7 @@ public final class DataflowCodecs extends AbstractModule {
 					try {
 						return new InetSocketAddress(InetAddress.getByName(split[0]), Integer.parseInt(split[1]));
 					} catch (UnknownHostException e) {
-						throw new ParseException(DataflowCodecs.class, "Failed to create InetSocketAddress", e);
+						throw new ParseException("Failed to create InetSocketAddress", e);
 					}
 				},
 				(out, addr) -> out.writeString(addr.getAddress().getHostAddress() + ':' + addr.getPort())

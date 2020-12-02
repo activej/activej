@@ -19,6 +19,7 @@ package io.activej.csp.process.frames;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.parse.InvalidSizeException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.common.exception.parse.UnknownFormatException;
 import net.jpountz.lz4.LZ4Exception;
@@ -30,10 +31,6 @@ import java.util.Arrays;
 import static io.activej.csp.process.frames.LZ4FrameFormat.*;
 
 final class LZ4BlockDecoder implements BlockDecoder {
-	private static final ParseException STREAM_IS_CORRUPTED = new ParseException(LZ4BlockDecoder.class, "Stream is corrupted");
-	private static final UnknownFormatException UNKNOWN_FORMAT_EXCEPTION = new UnknownFormatException(LZ4FrameFormat.class,
-			"Expected stream to start with bytes: " + Arrays.toString(MAGIC));
-
 	private static final int LAST_BLOCK_INT = 0xffffffff;
 
 	private final LZ4FastDecompressor decompressor;
@@ -67,7 +64,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 			if (!bufs.hasRemainingBytes(compressedSize + 1)) return null;
 			ByteBuf result = bufs.takeExactSize(compressedSize + 1);
 			if (result.at(result.tail() - 1) != END_OF_BLOCK) {
-				throw STREAM_IS_CORRUPTED;
+				throw new ParseException("Block does not end with special byte '1'");
 			}
 			result.moveTail(-1);
 			compressedSize = null;
@@ -83,7 +80,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 	private boolean readHeader(ByteBufQueue bufs) throws ParseException {
 		return bufs.parseBytes((index, value) -> {
-			if (value != MAGIC[index]) throw UNKNOWN_FORMAT_EXCEPTION;
+			if (value != MAGIC[index]) throw new UnknownFormatException("Expected stream to start with bytes: " + Arrays.toString(MAGIC));
 			return index == MAGIC_LENGTH - 1 ? MAGIC : null;
 		}) != null;
 	}
@@ -98,7 +95,8 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		//noinspection ConstantConditions - cannot be null as 4 bytes in queue are asserted above
 		int originalSize = readInt(bufs);
 		if (originalSize < 0 || originalSize > MAX_BLOCK_SIZE.toInt()) {
-			throw STREAM_IS_CORRUPTED;
+			throw new InvalidSizeException("Size (" + originalSize +
+					") of block is either negative or exceeds max block size (" + MAX_BLOCK_SIZE + ')');
 		}
 
 		ByteBuf firstBuf = bufs.peekBuf();
@@ -107,7 +105,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		ByteBuf compressedBuf = firstBuf.readRemaining() >= actualCompressedSize + 1 ? firstBuf : bufs.takeExactSize(actualCompressedSize + 1);
 
 		if (compressedBuf.at(compressedBuf.head() + actualCompressedSize) != END_OF_BLOCK) {
-			throw STREAM_IS_CORRUPTED;
+			throw new ParseException("Block does not end with special byte '1'");
 		}
 
 		ByteBuf buf = ByteBufPool.allocate(originalSize);
@@ -115,12 +113,12 @@ final class LZ4BlockDecoder implements BlockDecoder {
 			int readBytes = decompressor.decompress(compressedBuf.array(), compressedBuf.head(), buf.array(), 0, originalSize);
 			if (readBytes != actualCompressedSize) {
 				buf.recycle();
-				throw STREAM_IS_CORRUPTED;
+				throw new InvalidSizeException("Actual size of decompressed data does not equal expected size of decompressed data");
 			}
 			buf.tail(originalSize);
 		} catch (LZ4Exception e) {
 			buf.recycle();
-			throw new ParseException(LZ4BlockDecoder.class, "Stream is corrupted", e);
+			throw new ParseException("Failed to decompress data", e);
 		}
 
 		if (compressedBuf != firstBuf) {
