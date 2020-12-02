@@ -17,10 +17,6 @@
 package io.activej.ot.exception;
 
 public class TransformException extends OTException {
-	public TransformException(String message) {
-		super(message);
-	}
-
 	public TransformException(Class<?> component, String message) {
 		super(component, message);
 	}

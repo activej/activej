@@ -272,7 +272,7 @@ public class OTLoadedGraph<K, D> {
 			return resultNode;
 		}
 
-		throw new OTException("Graph cannot be merged");
+		throw new OTException(OTLoadedGraph.class, "Graph cannot be merged");
 	}
 
 	public String toGraphViz() {

@@ -1,7 +1,7 @@
 package io.activej.ot;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.exception.StacklessException;
+import io.activej.common.exception.ExpectedException;
 import io.activej.ot.repository.OTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
@@ -33,7 +33,7 @@ import static org.junit.Assert.*;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class OTStateManagerTest {
-	private static final StacklessException FAILED = new StacklessException("Failed");
+	private static final ExpectedException FAILED = new ExpectedException();
 	private static final OTSystem<TestOp> SYSTEM = createTestOp();
 
 	@ClassRule

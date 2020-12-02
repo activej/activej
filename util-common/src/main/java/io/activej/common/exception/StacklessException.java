@@ -17,7 +17,6 @@
 package io.activej.common.exception;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * This exception (as well as its subtypes) is used in asynchronous contexts
@@ -26,32 +25,8 @@ import org.jetbrains.annotations.Nullable;
  */
 
 public class StacklessException extends Exception {
-	@Nullable
+	@NotNull
 	private final Class<?> component;
-
-	public StacklessException() {
-		super();
-		this.component = null;
-		super.fillInStackTrace();
-	}
-
-	public StacklessException(@NotNull String message) {
-		super(message);
-		this.component = null;
-		super.fillInStackTrace();
-	}
-
-	public StacklessException(@NotNull String message, @NotNull Throwable cause) {
-		super(message, cause);
-		this.component = null;
-		super.fillInStackTrace();
-	}
-
-	public StacklessException(@NotNull Throwable cause) {
-		super(cause);
-		this.component = null;
-		super.fillInStackTrace();
-	}
 
 	public StacklessException(@NotNull Class<?> component, @NotNull String message) {
 		super(message);
@@ -63,13 +38,9 @@ public class StacklessException extends Exception {
 		this.component = component;
 	}
 
-	@Nullable
+	@NotNull
 	public Class<?> getComponent() {
 		return component;
-	}
-
-	public final boolean isConstant() {
-		return component != null;
 	}
 
 	@Override
@@ -80,7 +51,7 @@ public class StacklessException extends Exception {
 	@Override
 	public String toString() {
 		return getClass().getName() +
-				(component != null ? " (" + component.getSimpleName() + ")" : "") + " : " +
+				" (" + component.getSimpleName() + ")" + " : " +
 				getMessage();
 	}
 }
