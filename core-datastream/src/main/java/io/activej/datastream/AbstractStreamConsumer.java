@@ -41,7 +41,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	protected final Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 	{
-		if (eventloop.inEventloopThread()){
+		if (eventloop.inEventloopThread()) {
 			eventloop.post(this::ensureInitialized);
 		} else {
 			eventloop.execute(this::ensureInitialized);
@@ -70,8 +70,8 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	}
 
 	/**
-	 * 	 This method will be called exactly once: either in the next eventloop tick after creation of this supplier
-	 * 	 or right before {@link #onStarted()} or {@link #onError(Throwable)} calls
+	 * This method will be called exactly once: either in the next eventloop tick after creation of this supplier
+	 * or right before {@link #onStarted()} or {@link #onError(Throwable)} calls
 	 */
 	protected void onInit() {
 	}

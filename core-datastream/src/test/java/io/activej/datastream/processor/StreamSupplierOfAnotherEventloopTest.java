@@ -10,14 +10,15 @@ import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
 import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
-import static io.activej.eventloop.Eventloop.initWithEventloop;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -32,10 +33,15 @@ public class StreamSupplierOfAnotherEventloopTest {
 	private Eventloop anotherEventloop;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws InterruptedException {
 		anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
 		anotherEventloop.keepAlive(true);
-		new Thread(anotherEventloop, "another").start();
+		CountDownLatch latch = new CountDownLatch(1);
+		new Thread(() -> {
+			anotherEventloop.post(latch::countDown);
+			anotherEventloop.run();
+		}, "another").start();
+		latch.await();
 	}
 
 	@After
@@ -45,7 +51,7 @@ public class StreamSupplierOfAnotherEventloopTest {
 
 	@Test
 	public void testStreaming() throws ExecutionException, InterruptedException {
-		StreamSupplier<Integer> anotherEventloopSupplier = initWithEventloop(anotherEventloop, () -> StreamSupplier.of(1, 2, 3, 4, 5));
+		StreamSupplier<Integer> anotherEventloopSupplier = fromAnotherEventloop(() -> StreamSupplier.of(1, 2, 3, 4, 5));
 		StreamSupplier<Integer> supplier = StreamSupplier.ofAnotherEventloop(anotherEventloop, anotherEventloopSupplier);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
@@ -59,7 +65,7 @@ public class StreamSupplierOfAnotherEventloopTest {
 	@Test
 	public void testSupplierException() throws ExecutionException, InterruptedException {
 		ExpectedException expectedException = new ExpectedException();
-		StreamSupplier<Integer> anotherEventloopSupplier = initWithEventloop(anotherEventloop, () ->
+		StreamSupplier<Integer> anotherEventloopSupplier = fromAnotherEventloop(() ->
 				StreamSupplier.concat(StreamSupplier.of(1, 2, 3), StreamSupplier.closingWithError(expectedException), StreamSupplier.of(4, 5, 6)));
 		StreamSupplier<Integer> supplier = StreamSupplier.ofAnotherEventloop(anotherEventloop, anotherEventloopSupplier);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
@@ -72,9 +78,9 @@ public class StreamSupplierOfAnotherEventloopTest {
 	}
 
 	@Test
-	public void testConsumerException() {
+	public void testConsumerException() throws ExecutionException, InterruptedException {
 		ExpectedException expectedException = new ExpectedException();
-		StreamSupplier<Integer> anotherEventloopSupplier = initWithEventloop(anotherEventloop, () -> StreamSupplier.of(1, 2, 3, 4, 5));
+		StreamSupplier<Integer> anotherEventloopSupplier = fromAnotherEventloop(() -> StreamSupplier.of(1, 2, 3, 4, 5));
 		StreamSupplier<Integer> supplier = StreamSupplier.ofAnotherEventloop(anotherEventloop, anotherEventloopSupplier);
 		StreamConsumer<Integer> consumer = StreamConsumerToList.create();
 
@@ -90,7 +96,7 @@ public class StreamSupplierOfAnotherEventloopTest {
 	@Ignore
 	public void testForOutOfMemoryError() throws ExecutionException, InterruptedException {
 		int nItems = 10000;
-		StreamSupplier<byte[]> anotherEventloopSupplier = initWithEventloop(anotherEventloop, () -> StreamSupplier.ofStream(Stream.generate(() -> new byte[1024 * 1024]).limit(nItems)));
+		StreamSupplier<byte[]> anotherEventloopSupplier = fromAnotherEventloop(() -> StreamSupplier.ofStream(Stream.generate(() -> new byte[1024 * 1024]).limit(nItems)));
 		CountingStreamConsumer<byte[]> consumer = new CountingStreamConsumer<>();
 		StreamSupplier<byte[]> supplier = StreamSupplier.ofAnotherEventloop(anotherEventloop, anotherEventloopSupplier);
 
@@ -99,5 +105,9 @@ public class StreamSupplierOfAnotherEventloopTest {
 		assertEquals(nItems, consumer.getCount());
 		assertEndOfStream(supplier, consumer);
 		anotherEventloop.submit(() -> assertEndOfStream(anotherEventloopSupplier)).get();
+	}
+
+	private <T> T fromAnotherEventloop(Supplier<T> supplier) throws ExecutionException, InterruptedException {
+		return anotherEventloop.<T>submit(() -> cb -> cb.accept(supplier.get(), null)).get();
 	}
 }
