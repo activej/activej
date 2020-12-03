@@ -336,7 +336,7 @@ public final class DynamicMBeanFactory {
 
 			} else if (ReflectionUtils.isSimpleType(returnClass)) {
 				JmxReducer<?> reducer;
-				if (attrAnnotation == null){
+				if (attrAnnotation == null) {
 					reducer = DEFAULT_REDUCER;
 				} else {
 					try {
@@ -793,9 +793,19 @@ public final class DynamicMBeanFactory {
 
 		@Override
 		public Object getAttribute(String attribute) throws MBeanException {
-			Object value = rootNode.aggregateAttributes(singleton(attribute), beans).get(attribute);
+			Object value;
+			try {
+				value = rootNode.aggregateAttributes(singleton(attribute), beans).get(attribute);
+			} catch (Exception e) {
+				logger.error("Failed to fetch attribute '{}' from beans {}", attribute, beans, e);
+				propagate(e);
+				throw new AssertionError("Never reached");
+			}
+
 			if (value instanceof Throwable) {
-				propagate((Throwable) value);
+				Throwable throwable = (Throwable) value;
+				logger.error("Failed to fetch attribute '{}' from beans {}", attribute, beans, throwable);
+				propagate(throwable);
 			}
 			return value;
 		}
@@ -814,6 +824,7 @@ public final class DynamicMBeanFactory {
 						rootNode.setAttribute(attrName, attrValue, singletonList(bean));
 						latch.countDown();
 					} catch (Exception e) {
+						logger.error("Failed to set attribute '{}' of {} with value '{}'", attrName, bean, attrValue, e);
 						exceptionRef.set(e);
 						latch.countDown();
 					}
@@ -849,7 +860,7 @@ public final class DynamicMBeanFactory {
 					}
 				}
 			} catch (Exception e) {
-				logger.error("Cannot get attributes: {}", attrNames, e);
+				logger.error("Failed to get attributes {} from beans {}", attrNames, beans, e);
 			}
 			return attrList;
 		}
@@ -862,8 +873,7 @@ public final class DynamicMBeanFactory {
 				try {
 					setAttribute(attribute);
 					resultList.add(new Attribute(attribute.getName(), attribute.getValue()));
-				} catch (MBeanException e) {
-					logger.error("Cannot set attribute: {}", attribute.getName(), e);
+				} catch (MBeanException ignored) {
 				}
 			}
 			return resultList;
@@ -904,6 +914,7 @@ public final class DynamicMBeanFactory {
 						lastValueRef.set(result);
 						latch.countDown();
 					} catch (Exception e) {
+						logger.error("Failed to invoke method '{}' on {} with args {}", method, bean, args, e);
 						exceptionRef.set(e);
 						latch.countDown();
 					}
@@ -928,7 +939,8 @@ public final class DynamicMBeanFactory {
 		private Object invokeNode(String name, AttributeNode node) throws MBeanException {
 			try {
 				return node.aggregateAttributes(singleton(name), beans).get(name);
-			} catch (Throwable e){
+			} catch (Throwable e) {
+				logger.error("Failed to fetch attribute '{}' from beans {}", name, beans, e);
 				propagate(e);
 				return null;
 			}
