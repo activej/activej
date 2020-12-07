@@ -42,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -56,7 +55,6 @@ import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.arg;
 import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.nullToSupplier;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static java.lang.Math.min;
@@ -130,7 +128,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	 * @param executor                executor, that is used for asynchronous work with files
 	 * @param classLoader             class loader for defining dynamic classes
 	 * @param aggregationChunkStorage storage for data chunks
-	 * @param frameFormat			  frame format in which data is to be stored
+	 * @param frameFormat             frame format in which data is to be stored
 	 */
 	public static Aggregation create(Eventloop eventloop, Executor executor, DefiningClassLoader classLoader,
 			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, @NotNull AggregationStructure structure) {
@@ -261,7 +259,8 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 		return StreamConsumerWithResult.of(groupReducer,
 				groupReducer.getResult()
-						.map(chunks -> AggregationDiff.of(new HashSet<>(chunks))));
+						.map(chunks -> AggregationDiff.of(new HashSet<>(chunks)))
+						.thenEx(wrapException(e -> new AggregationException("Failed to consume data", e))));
 	}
 
 	public <T> StreamConsumerWithResult<T, AggregationDiff> consume(Class<T> inputClass) {
@@ -293,7 +292,9 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		List<String> fields = getMeasures().stream().filter(query.getMeasures()::contains).collect(toList());
 		List<AggregationChunk> allChunks = state.findChunks(query.getPredicate(), fields);
 		return consolidatedSupplier(query.getKeys(),
-				fields, outputClass, query.getPredicate(), allChunks, queryClassLoader);
+				fields, outputClass, query.getPredicate(), allChunks, queryClassLoader)
+				.withEndOfStream(eos -> eos
+						.thenEx(wrapException(e -> new AggregationException("Query " + query + " failed", e))));
 	}
 
 	private <T> StreamSupplier<T> sortStream(StreamSupplier<T> unsortedStream, Class<T> resultClass,
@@ -301,7 +302,16 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		Comparator<T> keyComparator = createKeyComparator(resultClass, allKeys, classLoader);
 		BinarySerializer<T> binarySerializer = createBinarySerializer(structure, resultClass,
 				getKeys(), measures, classLoader);
-		Path sortDir = nullToSupplier(temporarySortDir, this::createSortDir);
+		Path sortDir;
+		if (temporarySortDir != null) {
+			sortDir = temporarySortDir;
+		} else {
+			try {
+				sortDir = createSortDir();
+			} catch (AggregationException e) {
+				return StreamSupplier.closingWithError(e);
+			}
+		}
 		StreamSorter<T, T> sorter = StreamSorter.create(
 				StreamSorterStorageImpl.create(executor, binarySerializer, frameFormat, sortDir),
 				Function.identity(), keyComparator, false, sorterItemsInMemory);
@@ -538,11 +548,11 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 				.map(removedChunks -> AggregationDiff.of(new LinkedHashSet<>(removedChunks), new LinkedHashSet<>(chunks)));
 	}
 
-	private Path createSortDir() {
+	private Path createSortDir() throws AggregationException {
 		try {
 			return Files.createTempDirectory("aggregation_sort_dir");
 		} catch (IOException e) {
-			throw new UncheckedIOException(e);
+			throw new AggregationException("Could not create sort dir", e);
 		}
 	}
 

@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.cube;
+package io.activej.multilog;
 
-import io.activej.cube.exception.QueryException;
-import io.activej.promise.Promise;
+public final class MultilogException extends Exception {
+	public MultilogException(String message) {
+		super(message);
+	}
 
-import java.lang.reflect.Type;
-import java.util.Map;
-
-public interface ICube {
-	Promise<QueryResult> query(CubeQuery cubeQuery) throws QueryException;
-
-	Map<String, Type> getAttributeTypes();
-
-	Map<String, Type> getMeasureTypes();
+	public MultilogException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

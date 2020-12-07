@@ -14,6 +14,7 @@ import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.Cube;
 import io.activej.cube.IdGeneratorStub;
 import io.activej.cube.LogItem;
+import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeOT;
@@ -170,7 +171,9 @@ public final class CubeLogProcessorControllerTest {
 						.withEncoderResets())
 				.streamTo(logsFs.upload(logFile)));
 
-		UnknownFormatException exception = awaitException(controller.process());
-		assertThat(exception.getCause(), instanceOf(StringIndexOutOfBoundsException.class));
+		CubeException exception = awaitException(controller.process());
+		Throwable firstCause = exception.getCause();
+		assertThat(firstCause, instanceOf(UnknownFormatException.class));
+		assertThat(firstCause.getCause(), instanceOf(StringIndexOutOfBoundsException.class));
 	}
 }

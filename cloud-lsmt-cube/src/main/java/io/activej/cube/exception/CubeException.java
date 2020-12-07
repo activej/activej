@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation;
+package io.activej.cube.exception;
 
-public class QueryException extends Exception {
-	public QueryException(String message) {
+public class CubeException extends Exception {
+	public CubeException(String message) {
 		super(message);
+	}
+
+	public CubeException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

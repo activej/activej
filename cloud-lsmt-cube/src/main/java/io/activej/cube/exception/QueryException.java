@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.cube;
+package io.activej.cube.exception;
 
-import io.activej.cube.exception.QueryException;
-import io.activej.promise.Promise;
-
-import java.lang.reflect.Type;
-import java.util.Map;
-
-public interface ICube {
-	Promise<QueryResult> query(CubeQuery cubeQuery) throws QueryException;
-
-	Map<String, Type> getAttributeTypes();
-
-	Map<String, Type> getMeasureTypes();
+public class QueryException extends CubeException {
+	public QueryException(String message) {
+		super(message);
+	}
 }

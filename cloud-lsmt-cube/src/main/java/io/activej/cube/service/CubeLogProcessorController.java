@@ -22,6 +22,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.cube.Cube;
+import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
@@ -43,6 +44,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
+import static io.activej.aggregation.util.Utils.wrapException;
 import static io.activej.async.function.AsyncSuppliers.coalesce;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -116,8 +118,10 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanE
 	Promise<Boolean> process() {
 		return Promise.complete()
 				.then(stateManager::sync)
+				.thenEx(wrapException(e -> new CubeException("Failed to synchronize state prior to log processing", e)))
 				.map($ -> stateManager.getCommitId())
-				.then(predicate::test)
+				.then(commitId -> predicate.test(commitId)
+						.thenEx(wrapException(e -> new CubeException("Failed to test commit '" + commitId + "' with predicate", e))))
 				.then(ok -> {
 					if (!ok) return Promise.of(false);
 
@@ -132,12 +136,16 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanE
 							Promises.reduce(toList(), 1, asPromises(tasks));
 
 					return promise
+							.thenEx(wrapException(e -> new CubeException("Failed to process logs", e)))
 							.whenComplete(promiseProcessLogsImpl.recordStats())
 							.whenResult(this::cubeDiffJmx)
 							.then(diffs -> Promise.complete()
 									.then(() -> chunkStorage.finish(addedChunks(diffs)))
+									.thenEx(wrapException(e -> new CubeException("Failed to finalize chunks in storage", e)))
 									.whenResult(() -> stateManager.addAll(diffs))
-									.then(stateManager::sync)
+									.then(() -> stateManager.sync()
+											.thenEx(wrapException(e -> new CubeException(
+													"Failed to synchronize state after log processing, resetting", e))))
 									.whenException(e -> stateManager.reset())
 									.map($ -> true));
 				})
