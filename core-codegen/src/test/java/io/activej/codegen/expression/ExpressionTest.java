@@ -1014,4 +1014,28 @@ public class ExpressionTest {
 		}
 	}
 
+	public interface TestConcat {
+		String concat(byte aByte, int anInt, String space, long aLong, char aChar, Object anObject, TestPojo testPojo);
+	}
+
+	@SuppressWarnings("ConstantConditions")
+	@org.junit.Test
+	public void testConcat() {
+		byte aByte = -123;
+		int anInt = 124124211;
+		String space = " ";
+		long aLong = -1_000_000_000_000_000L;
+		char aChar = 't';
+		Object anObject = null;
+		TestPojo testPojo = new TestPojo(10, 20);
+
+		TestConcat testConcat = ClassBuilder.create(DefiningClassLoader.create(), TestConcat.class)
+				.withMethod("concat", concat(arg(0), arg(1), arg(2),
+						arg(3), arg(4), arg(5), arg(6)))
+				.buildClassAndCreateNewInstance();
+
+		String expected = "" + aByte + anInt + space + aLong + aChar + anObject + testPojo;
+		String actual = testConcat.concat(aByte, anInt, space, aLong, aChar, anObject, testPojo);
+		assertEquals(expected, actual);
+	}
 }

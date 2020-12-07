@@ -293,7 +293,7 @@ public class Expressions {
 	/**
 	 * Returns the string which was constructed from properties
 	 *
-	 * @param properties list of the properties
+	 * @param properties varArg of properties
 	 * @return new instance of the ExpressionToString
 	 */
 	public static Expression toStringImpl(String... properties) {
@@ -303,7 +303,7 @@ public class Expressions {
 	/**
 	 * Returns the string which was constructed from properties
 	 *
-	 * @param properties list of the properties
+	 * @param properties list of properties
 	 * @return new instance of the ExpressionToString
 	 */
 	public static Expression toStringImpl(List<String> properties) {
@@ -312,6 +312,27 @@ public class Expressions {
 			toString.with(property + "=", property(self(), property));
 		}
 		return toString;
+	}
+
+	/**
+	 * Returns the string which was constructed by concatenation of all the arguments
+	 *
+	 * @param arguments varArg of arguments to be concatenated
+	 * @return new instance of the ExpressionConcat
+	 */
+	public static Expression concat(Expression... arguments) {
+		return concat(asList(arguments));
+	}
+
+	/**
+	 * Returns the string which was constructed by concatenation of all the arguments
+	 *
+	 * @param arguments list of arguments to be concatenated
+	 * @return new instance of the ExpressionConcat
+	 */
+	public static Expression concat(List<Expression> arguments) {
+		if (arguments.isEmpty()) return value("");
+		return new ExpressionConcat(arguments);
 	}
 
 	/**
