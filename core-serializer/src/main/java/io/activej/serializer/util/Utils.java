@@ -19,6 +19,7 @@ package io.activej.serializer.util;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unchecked")
@@ -37,4 +38,27 @@ public final class Utils {
 		return supplier.get();
 	}
 
+	public static String extractRanges(List<Integer> versions) {
+		StringBuilder sb = new StringBuilder();
+		int size = versions.size();
+		int first = 0, second = 0;
+		while (first < size) {
+			//noinspection StatementWithEmptyBody
+			while (++second < size && versions.get(second) - versions.get(second - 1) == 1) {
+			}
+			if (second - first > 2) {
+				sb.append(versions.get(first));
+				sb.append('-');
+				sb.append(versions.get(second - 1));
+				if (second != size) sb.append(',');
+				first = second;
+			} else {
+				for (; first < second; first++) {
+					sb.append(versions.get(first));
+					if (second != size) sb.append(',');
+				}
+			}
+		}
+		return sb.toString();
+	}
 }

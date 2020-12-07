@@ -41,8 +41,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.getPathSetting;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
-import static io.activej.serializer.util.Utils.findAnnotation;
-import static io.activej.serializer.util.Utils.of;
+import static io.activej.serializer.util.Utils.*;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
@@ -913,7 +912,12 @@ public final class SerializerBuilder {
 						listKey.add(value((byte) version));
 						listValue.add(call(self(), "decodeVersion" + version, arg(0)));
 					}
-					return switchByKey(arg(1), listKey, listValue, throwException(CorruptedDataException.class, value("Unsupported version")));
+					return switchByKey(arg(1), listKey, listValue,
+							throwException(CorruptedDataException.class,
+									concat(
+											value("Unsupported version: "), arg(1),
+											value(", supported versions: " + extractRanges(decodeVersions)))
+							));
 				}));
 
 		for (int i = decodeVersions.size() - 2; i >= 0; i--) {

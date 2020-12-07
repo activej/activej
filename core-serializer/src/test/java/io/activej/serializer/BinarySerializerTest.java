@@ -2098,13 +2098,14 @@ public class BinarySerializerTest {
 		byte[] array = new byte[1000];
 		serializer.encode(array, 0, testDataBefore);
 		assertEquals(5, array[0]);
-		array[0] = 0; // overriding version
+		byte unsupportedVersion = 123;
+		array[0] = unsupportedVersion; // overriding version
 
 		try {
 			serializer.decode(array, 0);
 			fail();
 		} catch (CorruptedDataException e) {
-			assertEquals("Unsupported version", e.getMessage());
+			assertEquals("Unsupported version: " + unsupportedVersion + ", supported versions: 3-5", e.getMessage());
 		}
 	}
 

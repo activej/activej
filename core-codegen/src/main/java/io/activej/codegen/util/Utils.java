@@ -148,11 +148,11 @@ public final class Utils {
 						|| to.getSort() > DOUBLE);
 	}
 
-	public static String getStringSetting(Class<?> cls, String key, String defaultValue){
+	public static String getStringSetting(Class<?> cls, String key, String defaultValue) {
 		return System.getProperty(cls.getSimpleName() + '.' + key, defaultValue);
 	}
 
-	public static Path getPathSetting(Class<?> cls, String key, Path defaultValue){
+	public static Path getPathSetting(Class<?> cls, String key, Path defaultValue) {
 		String setting = getStringSetting(cls, key, null);
 		return setting == null ? defaultValue : Paths.get(setting);
 	}
