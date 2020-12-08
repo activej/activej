@@ -69,9 +69,8 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 		this.distinct = distinct;
 		this.itemsInMemory = itemsInMemory;
 
-		this.input = new Input();
-
 		List<Integer> partitionIds = new ArrayList<>();
+		this.input = new Input(partitionIds);
 		this.output = StreamSupplier.ofPromise(
 				(this.temporaryStreamsAccumulator = AsyncAccumulator.create(partitionIds))
 						.get()
@@ -97,10 +96,6 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 										return streamMerger.getOutput();
 									});
 						}));
-		this.output.getAcknowledgement()
-				.whenComplete(() -> {
-					if (!partitionIds.isEmpty()) storage.cleanup(partitionIds);
-				});
 	}
 
 	public StreamSorter<K, T> withSortingExecutor(Executor executor) {
@@ -159,7 +154,12 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 	}
 
 	private final class Input extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
+		private final List<Integer> partitionIds;
 		private ArrayList<T> list = new ArrayList<>();
+
+		private Input(List<Integer> partitionIds) {
+			this.partitionIds = partitionIds;
+		}
 
 		@Override
 		protected void onStarted() {
@@ -204,6 +204,12 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 		protected void onEndOfStream() {
 			temporaryStreamsAccumulator.run();
 			output.getAcknowledgement()
+					.thenEx((ackRes, e) -> {
+						Promise<Void> originalAck = Promise.of(ackRes, e);
+						if (partitionIds.isEmpty()) return originalAck;
+						return storage.cleanup(partitionIds)
+								.thenEx(($, e1) -> originalAck);
+					})
 					.whenResult(this::acknowledge)
 					.whenException(this::closeEx);
 		}

@@ -9,6 +9,7 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -170,9 +171,14 @@ public final class StreamSorterTest {
 
 		assertEquals(6, Files.list(storagePath).count());
 
-		await(inputPromise, sorter.getOutput().streamTo(consumer.transformWith(randomlySuspending())));
-
-		assertFalse(Files.list(storagePath).findAny().isPresent());
+		await(Promises.all(inputPromise, sorter.getOutput().streamTo(consumer.transformWith(randomlySuspending())))
+				.whenResult(() -> {
+					try {
+						assertFalse(Files.list(storagePath).findAny().isPresent());
+					} catch (IOException e) {
+						throw new AssertionError(e);
+					}
+				}));
 	}
 
 	@Test

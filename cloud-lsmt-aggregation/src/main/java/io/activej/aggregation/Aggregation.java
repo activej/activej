@@ -302,16 +302,17 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		BinarySerializer<T> binarySerializer = createBinarySerializer(structure, resultClass,
 				getKeys(), measures, classLoader);
 		Path sortDir = nullToSupplier(temporarySortDir, this::createSortDir);
+		StreamSorter<T, T> sorter = StreamSorter.create(
+				StreamSorterStorageImpl.create(executor, binarySerializer, frameFormat, sortDir),
+				Function.identity(), keyComparator, false, sorterItemsInMemory);
+		sorter.getInput().getAcknowledgement()
+				.whenComplete(() -> {
+					if (temporarySortDir == null) {
+						deleteSortDirSilent(sortDir);
+					}
+				});
 		return unsortedStream
-				.transformWith(StreamSorter.create(
-						StreamSorterStorageImpl.create(executor, binarySerializer, frameFormat, sortDir),
-						Function.identity(), keyComparator, false, sorterItemsInMemory))
-				.withEndOfStream(p -> p
-						.whenComplete(() -> {
-							if (temporarySortDir == null) {
-								deleteSortDirSilent(sortDir);
-							}
-						}));
+				.transformWith(sorter);
 	}
 
 	private Promise<List<AggregationChunk>> doConsolidation(List<AggregationChunk> chunksToConsolidate) {
