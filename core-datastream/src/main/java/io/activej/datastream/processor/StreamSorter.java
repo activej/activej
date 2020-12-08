@@ -155,7 +155,9 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 
 	private final class Input extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
 		private final List<Integer> partitionIds;
+
 		private ArrayList<T> list = new ArrayList<>();
+		private Promise<Void> cleanupPromise;
 
 		private Input(List<Integer> partitionIds) {
 			this.partitionIds = partitionIds;
@@ -204,12 +206,8 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 		protected void onEndOfStream() {
 			temporaryStreamsAccumulator.run();
 			output.getAcknowledgement()
-					.thenEx((ackRes, e) -> {
-						Promise<Void> originalAck = Promise.of(ackRes, e);
-						if (partitionIds.isEmpty()) return originalAck;
-						return storage.cleanup(partitionIds)
-								.thenEx(($, e1) -> originalAck);
-					})
+					.thenEx((ackRes, e) -> cleanup()
+							.thenEx(($, e1) -> Promise.of(ackRes, e)))
 					.whenResult(this::acknowledge)
 					.whenException(this::closeEx);
 		}
@@ -222,6 +220,14 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 		@Override
 		protected void onCleanup() {
 			list = null;
+			cleanup();
+		}
+
+		private Promise<Void> cleanup() {
+			if (cleanupPromise != null) return cleanupPromise;
+			return cleanupPromise = partitionIds.isEmpty() ?
+					Promise.complete() :
+					storage.cleanup(partitionIds);
 		}
 	}
 
