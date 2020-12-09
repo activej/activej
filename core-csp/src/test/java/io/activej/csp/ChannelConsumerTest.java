@@ -2,9 +2,9 @@ package io.activej.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.exception.ExpectedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;

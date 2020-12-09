@@ -1,11 +1,11 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.exception.ExpectedException;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcStrategyFirstValidResult.ResultValidator;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import io.activej.test.ExpectedException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 

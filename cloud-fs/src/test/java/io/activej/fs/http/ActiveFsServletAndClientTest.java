@@ -2,7 +2,6 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.ExpectedException;
 import io.activej.common.exception.parse.TruncatedDataException;
 import io.activej.common.exception.parse.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
@@ -15,6 +14,7 @@ import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.http.AsyncServlet;
 import io.activej.http.StubHttpClient;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;

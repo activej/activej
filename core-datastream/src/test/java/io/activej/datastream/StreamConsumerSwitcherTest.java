@@ -1,8 +1,8 @@
 package io.activej.datastream;
 
-import io.activej.common.exception.ExpectedException;
 import io.activej.common.ref.RefInt;
 import io.activej.promise.Promises;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;

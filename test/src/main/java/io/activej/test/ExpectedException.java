@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception;
+package io.activej.test;
 
 public class ExpectedException extends Exception {
 

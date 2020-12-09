@@ -1,9 +1,9 @@
 package io.activej.datastream.processor;
 
-import io.activej.common.exception.ExpectedException;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
+import io.activej.test.ExpectedException;
 
 import java.util.List;
 

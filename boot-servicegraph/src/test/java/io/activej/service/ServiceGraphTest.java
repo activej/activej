@@ -37,7 +37,7 @@ public class ServiceGraphTest {
 	// region modules
 	public static class FailingModule extends AbstractModule {
 
-		private static final io.activej.common.exception.ExpectedException INTERRUPTED = new io.activej.common.exception.ExpectedException("interrupted");
+		private static final io.activej.test.ExpectedException INTERRUPTED = new io.activej.test.ExpectedException("interrupted");
 
 		@Override
 		protected void configure() {
