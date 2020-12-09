@@ -18,7 +18,6 @@ package io.activej.crdt;
 
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.StacklessException;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelConsumer;
@@ -125,7 +124,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 								return Promise.complete();
 							}
 							if (responseClass == ServerError.class) {
-								return Promise.ofException(new StacklessException(CrdtStorageClient.class, ((ServerError) response).getMsg()));
+								return Promise.ofException(new Exception(((ServerError) response).getMsg()));
 							}
 							return Promise.ofException(new IllegalStateException("Received message " + response + " instead of " + DownloadStarted.class.getSimpleName()));
 						})
@@ -184,7 +183,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 				return Promise.complete();
 			}
 			if (response instanceof ServerError) {
-				return Promise.ofException(new StacklessException(CrdtStorageClient.class, ((ServerError) response).getMsg()));
+				return Promise.ofException(new Exception(((ServerError) response).getMsg()));
 			}
 			return Promise.ofException(new IllegalStateException("Received message " + response + " instead of " + expected));
 		};

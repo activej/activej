@@ -48,7 +48,6 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	private static final Boolean CHECK = Checks.isEnabled(WebSocketFramesToBufs.class);
 
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
-	private static final CloseException CLOSE_EXCEPTION = new CloseException(WebSocketFramesToBufs.class);
 
 	private final boolean masked;
 	private final SettablePromise<Void> closeSentPromise = new SettablePromise<>();
@@ -170,7 +169,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	private Promise<Void> doAccept(@Nullable ByteBuf buf) {
 		if (closeSentPromise.isComplete()) {
 			if (buf != null) buf.recycle();
-			return Promise.ofException(CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		if (pendingPromise == null) {
 			return pendingPromise = output.accept(buf);

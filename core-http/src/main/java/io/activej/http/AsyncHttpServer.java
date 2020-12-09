@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -271,7 +270,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 				poolReadWriteExpired += poolNew.closeExpiredConnections(eventloop.currentTimeMillis() -
 						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown));
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(eventloop.currentTimeMillis() -
-						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), READ_TIMEOUT_ERROR);
+						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
 			}
 			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(eventloop.currentTimeMillis() - keepAliveTimeoutMillis);
 			if (getConnectionsCount() != 0) {

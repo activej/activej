@@ -17,11 +17,11 @@
 package io.activej.rpc.protocol;
 
 public class RpcOverloadException extends RpcException {
-	public RpcOverloadException(Class<?> component, String message) {
-		super(component, message);
+	public RpcOverloadException(String message) {
+		super(message);
 	}
 
-	public RpcOverloadException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
+	public RpcOverloadException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

@@ -17,7 +17,7 @@
 package io.activej.ot.exception;
 
 public class GraphExhaustedException extends OTException {
-	public GraphExhaustedException(Class<?> component, String message) {
-		super(component, message);
+	public GraphExhaustedException() {
+		super();
 	}
 }

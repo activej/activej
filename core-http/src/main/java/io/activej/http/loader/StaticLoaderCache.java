@@ -41,7 +41,7 @@ class StaticLoaderCache implements StaticLoader {
 	public Promise<ByteBuf> load(String path) {
 		byte[] bytes = get.apply(path);
 		if (bytes == NOT_FOUND) {
-			return Promise.ofException(new ResourceNotFoundException(StaticLoaderCache.class));
+			return Promise.ofException(new ResourceNotFoundException("Could not find '" + path + '\''));
 		} else if (bytes != null) {
 			return Promise.of(wrapForReading(bytes));
 		} else {

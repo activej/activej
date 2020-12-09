@@ -16,14 +16,17 @@
 
 package io.activej.rpc.protocol;
 
-import io.activej.common.exception.StacklessException;
-
-public class RpcException extends StacklessException {
-	public RpcException(Class<?> component, String message) {
-		super(component, message);
+public class RpcException extends Exception {
+	public RpcException(String message) {
+		super(message);
 	}
 
-	public RpcException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
+	public RpcException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	@Override
+	public final Throwable fillInStackTrace() {
+		return this;
 	}
 }

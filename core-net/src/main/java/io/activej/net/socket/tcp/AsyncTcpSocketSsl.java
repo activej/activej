@@ -47,8 +47,6 @@ import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
 public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(AsyncTcpSocketSsl.class, "errorOnCloseWithoutNotify", false);
 
-	private static final CloseException CLOSE_EXCEPTION = new CloseException(AsyncTcpSocketSsl.class);
-
 	private final SSLEngine engine;
 	private final Executor executor;
 	private final AsyncTcpSocket upstream;
@@ -117,7 +115,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 			shouldReturnEndOfStream = false;
 			return Promise.of(null);
 		}
-		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		if (isClosed()) return Promise.ofException(new CloseException());
 		if (engine2app.canRead()) {
 			ByteBuf readBuf = engine2app;
 			engine2app = ByteBuf.empty();
@@ -136,7 +134,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 			if (buf != null) {
 				buf.recycle();
 			}
-			return Promise.ofException(CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		if (buf == null) {
 			throw new UnsupportedOperationException("SSL cannot work in half-duplex mode");
@@ -175,7 +173,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 								this.read = null;
 								read.set(null);
 							}
-							closeEx(new CloseWithoutNotifyException(AsyncTcpSocketSsl.class, "Peer closed without sending close_notify", e));
+							closeEx(new CloseWithoutNotifyException("Peer closed without sending close_notify", e));
 						}
 					}
 				});

@@ -16,20 +16,18 @@
 
 package io.activej.dns.protocol;
 
-import io.activej.common.exception.StacklessException;
-
 /**
  * Represents a failed DNS query response as a exception.
  */
-public final class DnsQueryException extends StacklessException {
+public final class DnsQueryException extends Exception {
 	private final DnsQuery query;
 	private final DnsResponse result;
 
 	/**
 	 * Creates a new instance of DnsQueryException
 	 */
-	public DnsQueryException(Class<?> component, DnsResponse response) {
-		super(component, response.getTransaction().getQuery() + " failed with error code: " + response.getErrorCode().name());
+	public DnsQueryException(DnsResponse response) {
+		super(response.getTransaction().getQuery() + " failed with error code: " + response.getErrorCode().name());
 		this.query = response.getTransaction().getQuery();
 		this.result = response;
 	}

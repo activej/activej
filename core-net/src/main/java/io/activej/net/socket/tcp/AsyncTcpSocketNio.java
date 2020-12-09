@@ -59,8 +59,6 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(AsyncTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
 	public static final int NO_TIMEOUT = 0;
 
-	private static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(AsyncTcpSocketNio.class, "Timed out");
-	private static final CloseException CLOSE_EXCEPTION = new CloseException(AsyncTcpSocketNio.class);
 	private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
 
 	private final Eventloop eventloop;
@@ -315,7 +313,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		scheduledReadTimeout = eventloop.delayBackground(readTimeout, wrapContext(this, () -> {
 			if (inspector != null) inspector.onReadTimeout(this);
 			scheduledReadTimeout = null;
-			closeEx(TIMEOUT_EXCEPTION);
+			closeEx(new AsyncTimeoutException("Timed out"));
 		}));
 	}
 
@@ -324,7 +322,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		scheduledWriteTimeout = eventloop.delayBackground(writeTimeout, wrapContext(this, () -> {
 			if (inspector != null) inspector.onWriteTimeout(this);
 			scheduledWriteTimeout = null;
-			closeEx(TIMEOUT_EXCEPTION);
+			closeEx(new AsyncTimeoutException("Timed out"));
 		}));
 	}
 
@@ -351,7 +349,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	@Override
 	public Promise<ByteBuf> read() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
-		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		if (isClosed()) return Promise.ofException(new CloseException());
 		read = null;
 		if (readBuf != null || readEndOfStream) {
 			ByteBuf readBuf = this.readBuf;
@@ -444,7 +442,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 		if (isClosed()) {
 			if (buf != null) buf.recycle();
-			return Promise.ofException(CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		writeEndOfStream |= buf == null;
 

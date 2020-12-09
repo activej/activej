@@ -43,7 +43,7 @@ class StaticLoaderFileReader implements StaticLoader {
 		Path file = root.resolve(path).normalize();
 
 		if (!file.startsWith(root)) {
-			return Promise.ofException(new ResourceNotFoundException(StaticLoaderFileReader.class));
+			return Promise.ofException(new ResourceNotFoundException("Could not find '" + path + '\''));
 		}
 
 		return Promise.ofBlockingCallable(executor,
@@ -52,9 +52,9 @@ class StaticLoaderFileReader implements StaticLoader {
 						return null;
 					}
 					if (Files.isDirectory(file)) {
-						throw new ResourceIsADirectoryException(StaticLoaderFileReader.class);
+						throw new ResourceIsADirectoryException("Resource '" + path + "' is a directory");
 					} else {
-						throw new ResourceNotFoundException(StaticLoaderFileReader.class);
+						throw new ResourceNotFoundException("Could not find '" + path + '\'');
 					}
 				})
 				.then(() -> ChannelFileReader.open(executor, file))

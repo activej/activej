@@ -154,7 +154,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	protected void onClosed(@NotNull Throwable e) {
 		try {
 			if (!channel.isOpen()) {
-				throw new CloseException(ChannelFileReader.class, "File has been closed");
+				throw new CloseException("File has been closed");
 			}
 
 			channel.close();

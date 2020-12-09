@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.async.process;
+package io.activej.http.loader;
 
-import io.activej.common.exception.CloseException;
-
-final class CloseExceptionHolder {
-	static final CloseException CLOSE_EXCEPTION = new CloseException(AsyncCloseable.class);
-
-	private CloseExceptionHolder() {
-		throw new AssertionError();
+public class ResourceIsADirectoryException extends Exception {
+	public ResourceIsADirectoryException(String message) {
+		super(message);
 	}
 }

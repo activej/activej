@@ -16,11 +16,9 @@
 
 package io.activej.eventloop.net;
 
-import io.activej.common.exception.StacklessException;
+public class CloseWithoutNotifyException extends Exception {
 
-public class CloseWithoutNotifyException extends StacklessException {
-
-	public CloseWithoutNotifyException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
+	public CloseWithoutNotifyException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

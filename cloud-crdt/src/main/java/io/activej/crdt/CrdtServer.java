@@ -16,7 +16,6 @@
 
 package io.activej.crdt;
 
-import io.activej.common.exception.StacklessException;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
@@ -26,7 +25,6 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
 
 import java.net.InetAddress;
@@ -85,7 +83,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 										.transformWith(ChannelSerializer.create(serializer))
 										.streamTo(messaging.sendBinaryStream()));
 					}
-					return Promise.ofException(new StacklessException(CrdtServer.class, "Message type was added, but no handling code for it"));
+					throw new IllegalArgumentException("Message type was added, but no handling code for it");
 				})
 				.whenComplete(($, e) -> {
 					if (e == null) {

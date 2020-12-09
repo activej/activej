@@ -19,7 +19,6 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.service.EventloopService;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.StacklessException;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
@@ -215,7 +214,7 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 							.map(Try::get)
 							.collect(toList());
 					if (successes.isEmpty()) {
-						return Promise.ofException(new StacklessException(CrdtStorageCluster.class, "No successful connections"));
+						return Promise.ofException(new Exception("No successful connections"));
 					}
 					return Promise.of(successes);
 				});

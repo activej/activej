@@ -58,7 +58,6 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	 * and fine-tune performance by switching to up to 4-byte encoding at later time.
 	 */
 	private static final int MAX_SIZE_INT = 1 << 28;
-	private static final IllegalStateException SIZE_EXCEPTION = new IllegalStateException("Size of data exceeds 256MB");
 
 	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = MemSize.kilobytes(16);
 
@@ -257,7 +256,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			if (CHECK) checkState(dataSize < MAX_SIZE_INT, "Serialized data size exceeds 256MB");
 
 			if (dataSize >= MAX_SIZE_INT) {
-				throw SIZE_EXCEPTION;
+				throw new IllegalStateException("Size of data exceeds 256MB");
 			}
 			estimatedDataSize = dataSize;
 			estimatedHeaderSize = varIntSize(estimatedDataSize);

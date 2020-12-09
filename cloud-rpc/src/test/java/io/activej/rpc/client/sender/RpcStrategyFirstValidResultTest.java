@@ -1,7 +1,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.exception.StacklessException;
+import io.activej.common.exception.ExpectedException;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcStrategyFirstValidResult.ResultValidator;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
@@ -30,7 +30,7 @@ public class RpcStrategyFirstValidResultTest {
 	private static final InetSocketAddress ADDRESS_2 = new InetSocketAddress(HOST, getFreePort());
 	private static final InetSocketAddress ADDRESS_3 = new InetSocketAddress(HOST, getFreePort());
 
-	private static final StacklessException NO_VALID_RESULT_EXCEPTION = new StacklessException(RpcStrategyFirstValidResultTest.class, "No valid result");
+	private static final Exception NO_VALID_RESULT_EXCEPTION = new ExpectedException("No valid result");
 
 	@Test
 	public void itShouldSendRequestToAllAvailableSenders() {
@@ -78,7 +78,7 @@ public class RpcStrategyFirstValidResultTest {
 		assertNull(future.get());
 	}
 
-	@Test(expected = StacklessException.class)
+	@Test(expected = ExpectedException.class)
 	public void itShouldCallOnExceptionIfAllSendersReturnsNullAndValidatorIsDefaultButExceptionIsSpecified() throws Throwable {
 		// default validator should check whether result is not null
 		RpcStrategy strategy1 = new RequestSenderOnResultWithNullStrategy();

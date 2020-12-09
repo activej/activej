@@ -63,8 +63,6 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	public static final InetSocketAddress GOOGLE_PUBLIC_DNS = new InetSocketAddress("8.8.8.8", DNS_SERVER_PORT);
 	public static final InetSocketAddress LOCAL_DNS = new InetSocketAddress("192.168.0.1", DNS_SERVER_PORT);
 
-	private static final CloseException CLOSE_EXCEPTION = new CloseException(RemoteAsyncDnsClient.class, "Closed");
-
 	private final Eventloop eventloop;
 	private final Map<DnsTransaction, SettablePromise<DnsResponse>> transactions = new HashMap<>();
 
@@ -135,7 +133,8 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		}
 		socket.close();
 		socket = null;
-		transactions.values().forEach(s -> s.setException(CLOSE_EXCEPTION));
+		CloseException closeException = new CloseException();
+		transactions.values().forEach(s -> s.setException(closeException));
 	}
 
 	private Promise<AsyncUdpSocket> getSocket() {
@@ -200,7 +199,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 									if (queryResult.isSuccessful()) {
 										cb.set(queryResult);
 									} else {
-										cb.setException(new DnsQueryException(RemoteAsyncDnsClient.class, queryResult));
+										cb.setException(new DnsQueryException(queryResult));
 									}
 									closeIfDone();
 								} catch (ParseException e) {
@@ -224,7 +223,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 										inspector.onDnsQueryExpiration(query);
 									}
 									logger.trace("{} timed out", query);
-									e = new DnsQueryException(RemoteAsyncDnsClient.class, DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
+									e = new DnsQueryException(DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
 									transactions.remove(transaction);
 									closeIfDone();
 								} else if (inspector != null) {

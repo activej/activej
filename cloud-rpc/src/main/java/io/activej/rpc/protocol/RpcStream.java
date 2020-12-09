@@ -36,7 +36,6 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 
 public final class RpcStream {
-	private static final CloseException RPC_CLOSE_EXCEPTION = new CloseException(RpcStream.class, "RPC Channel Closed");
 	private final ChannelDeserializer<RpcMessage> deserializer;
 	private final ChannelSerializer<RpcMessage> serializer;
 	private Listener listener;
@@ -135,7 +134,7 @@ public final class RpcStream {
 	}
 
 	public void close() {
-		closeEx(RPC_CLOSE_EXCEPTION);
+		closeEx(new CloseException("RPC Channel Closed"));
 	}
 
 	public void closeEx(@NotNull Throwable e) {

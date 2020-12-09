@@ -74,22 +74,22 @@ class StaticLoaderClassPath implements StaticLoader {
 		return Promise.ofBlockingCallable(executor, () -> {
 			URL resource = classLoader.getResource(finalPath);
 			if (resource == null) {
-				throw new ResourceNotFoundException(StaticLoaderClassPath.class);
+				throw new ResourceNotFoundException("Could not find '" + name + "' in class path");
 			}
 
 			URLConnection connection = resource.openConnection();
 
 			if (connection instanceof JarURLConnection) {
 				if (((JarURLConnection) connection).getJarEntry().isDirectory()) {
-					throw new ResourceIsADirectoryException(StaticLoaderClassPath.class);
+					throw new ResourceIsADirectoryException("Resource '" + name + "' is a directory");
 				}
 			} else if ("file".equals(resource.getProtocol())) {
 				Path filePath = Paths.get(resource.toURI());
 				if (!Files.isRegularFile(filePath)) {
 					if (Files.isDirectory(filePath)) {
-						throw new ResourceIsADirectoryException(StaticLoaderClassPath.class);
+						throw new ResourceIsADirectoryException("Resource '" + name + "' is a directory");
 					} else {
-						throw new ResourceNotFoundException(StaticLoaderClassPath.class);
+						throw new ResourceNotFoundException("Could not find '" + name + "' in class path");
 					}
 				}
 			}

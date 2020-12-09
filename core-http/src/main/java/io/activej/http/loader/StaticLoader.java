@@ -17,7 +17,6 @@
 package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.StacklessException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,7 +38,7 @@ public interface StaticLoader {
 	default StaticLoader filter(Predicate<String> predicate) {
 		return path -> predicate.test(path) ?
 				load(path) :
-				Promise.ofException(new ResourceNotFoundException(StaticLoader.class));
+				Promise.ofException(new ResourceNotFoundException("Resource '" + path + "' has been filtered out"));
 	}
 
 	default StaticLoader map(Function<String, String> fn) {
@@ -83,15 +82,4 @@ public interface StaticLoader {
 		return StaticLoaderFileReader.create(executor, dir);
 	}
 
-	class ResourceNotFoundException extends StacklessException {
-		public ResourceNotFoundException(@NotNull Class<?> component) {
-			super(component, "Resource not found");
-		}
-	}
-
-	class ResourceIsADirectoryException extends StacklessException {
-		public ResourceIsADirectoryException(@NotNull Class<?> component) {
-			super(component, "Resource is a directory");
-		}
-	}
 }

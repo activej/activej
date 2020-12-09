@@ -89,8 +89,6 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 public final class HttpClientConnection extends AbstractHttpConnection {
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpClientConnection.class, "detailedErrorMessages", false);
 
-	private static final CloseException CONNECTION_CLOSED = new CloseException(HttpClientConnection.class, "Connection closed");
-
 	static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.of("upgrade");
 	static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.of("websocket");
 
@@ -416,7 +414,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			if (inspector != null) inspector.onDisconnect(this);
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
-			promise.setException(CONNECTION_CLOSED);
+			promise.setException(new CloseException("Connection closed"));
 		}
 		if (pool == client.poolKeepAlive) {
 			AddressLinkedList addresses = client.addresses.get(remoteAddress);

@@ -61,7 +61,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private static final int HEADERS_SLOTS = 256;
 	private static final int MAX_PROBINGS = 2;
 	private static final HttpMethod[] METHODS = new HttpMethod[HEADERS_SLOTS];
-	private static final CloseException CLOSED_EXCEPTION = new CloseException(HttpServerConnection.class);
 
 	static {
 		assert Integer.bitCount(METHODS.length) == 1;
@@ -339,7 +338,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private boolean processWebSocketRequest(@Nullable ByteBuf body) {
 		if (body != null && body.readRemaining() == 0) {
 			ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> isClosed() ?
-					ChannelSupplier.ofException(CLOSED_EXCEPTION) :
+					ChannelSupplier.ofException(new CloseException("Connection closed")) :
 					ChannelSupplier.of(readQueue.takeRemaining()));
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
 			request.bodyStream = concat(ofQueueSupplier, ofSocketSupplier)

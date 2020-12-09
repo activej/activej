@@ -20,7 +20,6 @@ import io.activej.async.AsyncAccumulator;
 import io.activej.async.AsyncBuffer;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.AsyncTimeoutException;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.*;
 import io.activej.eventloop.Eventloop;
@@ -54,10 +53,6 @@ import static java.util.Collections.singletonList;
  */
 @SuppressWarnings({"WeakerAccess", "unchecked"})
 public final class Promises {
-	private static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(Promises.class, "Promise timeout");
-	private static final StacklessException NOT_ENOUGH_PROMISES_EXCEPTION = new StacklessException(Promises.class,
-			"There are no promises to be complete");
-
 	/**
 	 * @see #timeout(long, Promise)
 	 */
@@ -79,14 +74,14 @@ public final class Promises {
 	@NotNull
 	public static <T> Promise<T> timeout(long delay, @NotNull Promise<T> promise) {
 		if (promise.isComplete()) return promise;
-		if (delay <= 0) return Promise.ofException(TIMEOUT_EXCEPTION);
+		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
 		return promise.next(new NextPromise<T, T>() {
 			@Nullable
 			ScheduledRunnable schedule = getCurrentEventloop().delay(delay,
 					wrapContext(this, () -> {
 						promise.whenResult(Recyclers::recycle);
 						schedule = null;
-						tryCompleteExceptionally(TIMEOUT_EXCEPTION);
+						tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout"));
 					}));
 
 			@Override
@@ -324,7 +319,7 @@ public final class Promises {
 	}
 
 	/**
-	 * Returns a {@link CompleteExceptionallyPromise} with {@link StacklessException},
+	 * Returns a {@link CompleteExceptionallyPromise} with {@link Exception},
 	 * since this method doesn't accept any {@code Promise}s
 	 *
 	 * @see #any(Iterator)
@@ -332,7 +327,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	public static <T> Promise<T> any() {
-		return Promise.ofException(NOT_ENOUGH_PROMISES_EXCEPTION);
+		return Promise.ofException(new Exception("There are no promises to be complete"));
 	}
 
 	/**
@@ -1023,7 +1018,7 @@ public final class Promises {
 			});
 			return;
 		}
-		cb.setException(NOT_ENOUGH_PROMISES_EXCEPTION);
+		cb.setException(new Exception("There are no promises to be complete"));
 	}
 
 	/**
@@ -1173,7 +1168,7 @@ public final class Promises {
 						Object retryStateFinal = retryState != null ? retryState : retryPolicy.createRetryState();
 						long nextRetryTimestamp = retryPolicy.nextRetryTimestamp(now, e, retryStateFinal);
 						if (nextRetryTimestamp == 0) {
-							cb.setException(e != null ? e : new StacklessException(Promises.class, "RetryPolicy: giving up " + retryState));
+							cb.setException(e != null ? e : new Exception("RetryPolicy: giving up " + retryState));
 						} else {
 							eventloop.schedule(nextRetryTimestamp,
 									wrapContext(cb, () -> retryImpl(next, breakCondition, retryPolicy, retryStateFinal, cb)));
@@ -1328,7 +1323,7 @@ public final class Promises {
 			} else {
 				Recyclers.recycle(result);
 				if (--countdown == 0) {
-					completeExceptionally(NOT_ENOUGH_PROMISES_EXCEPTION);
+					completeExceptionally(new Exception("There are no promises to be complete"));
 				}
 			}
 		}

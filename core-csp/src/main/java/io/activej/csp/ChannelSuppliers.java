@@ -22,7 +22,6 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.queue.ChannelBuffer;
@@ -177,7 +176,7 @@ public final class ChannelSuppliers {
 		if (supplier.isSuccess() && consumer.isSuccess()) {
 			return streamTo(supplier.get(), consumer.get());
 		}
-		StacklessException exception = new StacklessException(ChannelSuppliers.class, "Channel stream failed");
+		Exception exception = new Exception("Channel stream failed");
 		supplier.consume(AsyncCloseable::close, exception::addSuppressed);
 		consumer.consume(AsyncCloseable::close, exception::addSuppressed);
 		return Promise.ofException(exception);

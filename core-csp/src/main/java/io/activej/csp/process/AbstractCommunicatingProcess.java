@@ -18,6 +18,7 @@ package io.activej.csp.process;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncProcess;
+import io.activej.common.exception.CloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
@@ -40,8 +41,6 @@ import org.jetbrains.annotations.Nullable;
  * Process can be cancelled or closed manually.
  */
 public abstract class AbstractCommunicatingProcess implements AsyncProcess {
-	private static final ProcessCompleteException ASYNC_PROCESS_IS_COMPLETE = new ProcessCompleteException(AbstractCommunicatingProcess.class, "AsyncProcess is complete");
-
 	private boolean processStarted;
 	private boolean processComplete;
 	private final SettablePromise<Void> processCompletion = new SettablePromise<>();
@@ -133,7 +132,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	protected abstract void doClose(Throwable e);
 
 	/**
-	 * Closes this process with {@link AsyncCloseable#CLOSE_EXCEPTION}
+	 * Closes this process with {@link CloseException}
 	 */
 	@Override
 	public final void close() {
@@ -200,21 +199,22 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	 * exception if provided {@code e} is not {@code null}.
 	 * Otherwise, returns a promise of {@code value}. If the
 	 * process was already completed, returns a promise of
-	 * {@link #ASYNC_PROCESS_IS_COMPLETE} and recycles the
+	 * {@link ProcessCompleteException} and recycles the
 	 * provided {@code value}.
 	 *
 	 * @return a promise of {@code value} if {@code e} is
 	 * {@code null} and {@code promise} of {@code e} exception
 	 * otherwise. If the process was already completed,
-	 * returns {@link #ASYNC_PROCESS_IS_COMPLETE}.
+	 * returns {@link ProcessCompleteException}.
 	 */
 	protected final <T> Promise<T> sanitize(T value, @Nullable Throwable e) {
 		if (isProcessComplete()) {
 			Recyclers.recycle(value);
+			ProcessCompleteException processCompleteException = new ProcessCompleteException();
 			if (value instanceof AsyncCloseable) {
-				((AsyncCloseable) value).closeEx(ASYNC_PROCESS_IS_COMPLETE);
+				((AsyncCloseable) value).closeEx(processCompleteException);
 			}
-			return Promise.ofException(ASYNC_PROCESS_IS_COMPLETE);
+			return Promise.ofException(processCompleteException);
 		}
 		if (e == null) {
 			return Promise.of(value);

@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.ot.exception;
+package io.activej.http.loader;
 
-public class TransformException extends OTException {
-	public TransformException(String message) {
+public class ResourceNotFoundException extends Exception {
+	public ResourceNotFoundException(String message) {
 		super(message);
+	}
+
+	public ResourceNotFoundException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

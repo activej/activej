@@ -51,7 +51,6 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	private static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
 	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
-	private static final CloseException CLOSE_EXCEPTION = new CloseException(AsyncUdpSocketNio.class);
 
 	private final Eventloop eventloop;
 
@@ -196,7 +195,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	public Promise<UdpPacket> receive() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (!isOpen()) {
-			return Promise.ofException(CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		UdpPacket polled = readBuffer.poll();
 		if (polled != null) {
@@ -249,7 +248,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	public Promise<Void> send(UdpPacket packet) {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (!isOpen()) {
-			return Promise.ofException(CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		return Promise.ofCallback(cb -> {
 			writeQueue.add(new Tuple2<>(packet, cb));

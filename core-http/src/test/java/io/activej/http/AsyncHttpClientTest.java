@@ -31,7 +31,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
 import static io.activej.https.SslUtils.createTestSslContext;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -135,7 +134,7 @@ public final class AsyncHttpClientTest {
 				.withReadWriteTimeout(Duration.ofMillis(20))
 				.withInspector(inspector);
 
-		AsyncTimeoutException e = awaitException(Promises.all(
+		Exception e = awaitException(Promises.all(
 				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
 				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
 				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
@@ -157,7 +156,7 @@ public final class AsyncHttpClientTest {
 
 					assertEquals(4, inspector.getActiveRequests());
 				}));
-		assertSame(READ_TIMEOUT_ERROR, e);
+		assertThat(e, instanceOf(AsyncTimeoutException.class));
 	}
 
 	@Test

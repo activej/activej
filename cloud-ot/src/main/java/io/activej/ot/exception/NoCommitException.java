@@ -19,7 +19,7 @@ package io.activej.ot.exception;
 public class NoCommitException extends OTException {
 	private static final String NO_COMMIT_MESSAGE = "No commit with id: ";
 
-	public NoCommitException(Class<?> component, long revisionId) {
-		super(component, NO_COMMIT_MESSAGE + revisionId);
+	public <T> NoCommitException(T revisionId) {
+		super(NO_COMMIT_MESSAGE + revisionId);
 	}
 }

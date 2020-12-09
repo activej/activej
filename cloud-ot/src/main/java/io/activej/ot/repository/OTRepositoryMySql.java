@@ -329,7 +329,7 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 						}
 
 						if (timestamp == 0) {
-							throw new NoCommitException(OTRepositoryMySql.class, revisionId);
+							throw new NoCommitException(revisionId);
 						}
 
 						return OTCommit.of(epoch, revisionId, parentDiffs)

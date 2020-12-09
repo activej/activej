@@ -49,10 +49,8 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	private static final int BUCKET_CAPACITY = ApplicationSettings.getInt(RpcClientConnection.class, "bucketCapacity", 16);
 
-	private static final CloseException CONNECTION_CLOSED = new CloseException(RpcClientConnection.class, "Connection closed");
-	private static final RpcException CONNECTION_UNRESPONSIVE = new RpcException(RpcClientConnection.class, "Unresponsive connection");
-	private static final RpcOverloadException RPC_OVERLOAD_EXCEPTION = new RpcOverloadException(RpcClientConnection.class, "RPC client is overloaded");
-	private static final AsyncTimeoutException RPC_TIMEOUT_EXCEPTION = new AsyncTimeoutException(RpcClientConnection.class, "RPC request has timed out");
+	private static final RpcException CONNECTION_UNRESPONSIVE = new RpcException("Unresponsive connection");
+	private static final RpcOverloadException RPC_OVERLOAD_EXCEPTION = new RpcOverloadException("RPC client is overloaded");
 
 	private StreamDataAcceptor<RpcMessage> downstreamDataAcceptor = null;
 	private boolean overloaded = false;
@@ -133,7 +131,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 								connectionStats.getExpiredRequests().recordEvent();
 								rpcClient.getGeneralRequestsStats().getExpiredRequests().recordEvent();
 
-								expiredCb.accept(null, RPC_TIMEOUT_EXCEPTION);
+								expiredCb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 							}
 						}
 
@@ -321,7 +319,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 			for (Integer cookie : new HashSet<>(activeRequests.keySet())) {
 				Callback<?> cb = activeRequests.remove(cookie);
 				if (cb != null) {
-					cb.accept(null, CONNECTION_CLOSED);
+					cb.accept(null, new CloseException("Connection closed"));
 				}
 			}
 		}

@@ -59,9 +59,8 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.jmx.MBeanFormat.formatListAsMultilineString;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
-import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
+import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -357,7 +356,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 			boolean isClosing = closePromise != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(eventloop.currentTimeMillis() -
-						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), READ_TIMEOUT_ERROR);
+						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
 			}
 			if (getConnectionsCount() != 0) {
 				scheduleExpiredConnectionsCheck();
@@ -443,7 +442,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 							//noinspection ConstantConditions - dnsResponse is successful (not null)
 							return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
 						} else {
-							return Promise.ofException(new HttpException(new DnsQueryException(AsyncHttpClient.class, dnsResponse)));
+							return Promise.ofException(new HttpException(new DnsQueryException(dnsResponse)));
 						}
 					} else {
 						if (inspector != null) inspector.onResolveError(request, e);

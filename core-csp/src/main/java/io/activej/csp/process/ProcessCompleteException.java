@@ -16,11 +16,8 @@
 
 package io.activej.csp.process;
 
-import io.activej.common.exception.StacklessException;
-import org.jetbrains.annotations.NotNull;
-
-public final class ProcessCompleteException extends StacklessException {
-	public ProcessCompleteException(@NotNull Class<?> component, @NotNull String message) {
-		super(component, message);
+public final class ProcessCompleteException extends Exception {
+	public ProcessCompleteException() {
+		super();
 	}
 }

@@ -53,8 +53,6 @@ import static java.util.stream.Collectors.toSet;
 public final class OTAlgorithms {
 	private static final Logger logger = LoggerFactory.getLogger(OTAlgorithms.class);
 
-	private static final GraphExhaustedException GRAPH_EXHAUSTED = new GraphExhaustedException(OTAlgorithms.class, "Graph exhausted");
-
 	public static <K, D, R> Promise<R> reduce(OTRepository<K, D> repository, OTSystem<D> system,
 			Set<K> heads, GraphReducer<K, D, R> reducer) {
 		return toList(heads.stream().map(repository::loadCommit))
@@ -70,7 +68,7 @@ public final class OTAlgorithms {
 			PriorityQueue<OTCommit<K, D>> queue, Set<K> visited, SettablePromise<R> cb) {
 		OTCommit<K, D> commit = queue.peek();
 		if (commit == null) {
-			cb.setException(GRAPH_EXHAUSTED);
+			cb.setException(new GraphExhaustedException());
 			return;
 		}
 		reducer.onCommit(commit)

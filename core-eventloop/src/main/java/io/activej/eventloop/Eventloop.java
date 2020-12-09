@@ -95,8 +95,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		JIGSAW_DETECTED = ReflectionUtils.isClassPresent("java.lang.Module");
 	}
 
-	private static final AsyncTimeoutException CONNECT_TIMEOUT = new AsyncTimeoutException(Eventloop.class, "Connection timed out");
-
 	@NotNull
 	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
 
@@ -934,7 +932,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			} else {
 				ScheduledRunnable scheduledTimeout = delay(timeout, () -> {
 					closeChannel(channel, null);
-					cb.accept(null, CONNECT_TIMEOUT);
+					cb.accept(null, new AsyncTimeoutException("Connection timed out"));
 				});
 
 				channel.register(ensureSelector(), SelectionKey.OP_CONNECT,

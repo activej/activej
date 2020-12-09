@@ -16,10 +16,12 @@
 
 package io.activej.ot.exception;
 
-import io.activej.common.exception.StacklessException;
+public class OTException extends Exception {
+	public OTException() {
+		super();
+	}
 
-public class OTException extends StacklessException {
-	public OTException(Class<?> component, String message) {
-		super(component, message);
+	public OTException(String message) {
+		super(message);
 	}
 }

@@ -89,9 +89,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = Duration.ofSeconds(1);
 	public static final MemSize DEFAULT_PACKET_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 
-	private static final RpcException START_EXCEPTION = new RpcException(RpcClient.class, "Could not establish initial connection");
-	private static final AsyncTimeoutException RPC_TIMEOUT_EXCEPTION = new AsyncTimeoutException(RpcClient.class, "RPC request has timed out");
-	private static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException(RpcClient.class, "No senders available");
+	private static final RpcException START_EXCEPTION = new RpcException("Could not establish initial connection");
+	private static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
 
 	private Logger logger = getLogger(getClass());
 
@@ -413,7 +412,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		if (timeout > 0) {
 			requestSender.sendRequest(request, timeout, cb);
 		} else {
-			cb.accept(null, RPC_TIMEOUT_EXCEPTION);
+			cb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 		}
 	}
 
@@ -436,7 +435,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					eventloop.execute(wrapContext(requestSender, () ->
 							requestSender.sendRequest(request, timeout, toAnotherEventloop(anotherEventloop, cb))));
 				} else {
-					cb.accept(null, RPC_TIMEOUT_EXCEPTION);
+					cb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 				}
 			}
 

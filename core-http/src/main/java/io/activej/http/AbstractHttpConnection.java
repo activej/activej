@@ -23,7 +23,6 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
-import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.parse.ParseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
@@ -53,8 +52,6 @@ public abstract class AbstractHttpConnection {
 	public static final MemSize MAX_HEADER_LINE_SIZE = MemSize.of(ApplicationSettings.getInt(HttpMessage.class, "maxHeaderLineSize", MemSize.kilobytes(8).toInt())); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values
 	public static final int MAX_HEADER_LINE_SIZE_BYTES = MAX_HEADER_LINE_SIZE.toInt(); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values
 	public static final int MAX_HEADERS = ApplicationSettings.getInt(HttpMessage.class, "maxHeaders", 100); // http://httpd.apache.org/docs/2.2/mod/core.html#limitrequestfields
-
-	protected static final AsyncTimeoutException READ_TIMEOUT_ERROR = new AsyncTimeoutException(AbstractHttpConnection.class, "Read timeout");
 
 	protected static final HttpHeaderValue CONNECTION_KEEP_ALIVE_HEADER = HttpHeaderValue.of("keep-alive");
 	protected static final HttpHeaderValue CONNECTION_CLOSE_HEADER = HttpHeaderValue.of("close");

@@ -20,7 +20,6 @@ import io.activej.async.callback.Callback;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Async;
@@ -672,9 +671,6 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	private static final class EitherPromise<T> extends NextPromise<T, T> {
-		static final StacklessException NOT_ENOUGH_PROMISES = new StacklessException(EitherPromise.class,
-				"Both promises completed exceptionally");
-
 		int errors = 2;
 
 		@Override
@@ -685,7 +681,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				}
 			} else {
 				if (--errors == 0) {
-					completeExceptionally(NOT_ENOUGH_PROMISES);
+					completeExceptionally(new Exception("Both promises completed exceptionally"));
 				}
 			}
 		}

@@ -16,12 +16,12 @@
 
 package io.activej.common.exception;
 
-public class AsyncTimeoutException extends StacklessException {
-	public AsyncTimeoutException(Class<?> component, String message) {
-		super(component, message);
+public class AsyncTimeoutException extends Exception {
+	public AsyncTimeoutException(String message) {
+		super(message);
 	}
 
-	public AsyncTimeoutException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
+	public AsyncTimeoutException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }
