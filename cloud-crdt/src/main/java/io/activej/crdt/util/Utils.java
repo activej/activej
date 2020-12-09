@@ -20,8 +20,14 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.json.JsonUtils;
+import io.activej.crdt.CrdtException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.promise.Promise;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -41,4 +47,11 @@ public class Utils {
 						item -> JsonUtils.toJsonBuf(out, item));
 	}
 
+	public static <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> wrapException(Supplier<String> errorMessageSupplier) {
+		return (v, e) -> e == null ?
+				Promise.of(v) :
+				e instanceof CrdtException ?
+						Promise.ofException(e) :
+						Promise.ofException(new CrdtException(errorMessageSupplier.get(), e));
+	}
 }

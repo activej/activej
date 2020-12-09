@@ -20,6 +20,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtException;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -48,6 +49,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.crdt.util.Utils.wrapException;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes") // JMX
@@ -214,7 +216,7 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 							.map(Try::get)
 							.collect(toList());
 					if (successes.isEmpty()) {
-						return Promise.ofException(new Exception("No successful connections"));
+						return Promise.ofException(new CrdtException("No successful connections"));
 					}
 					return Promise.of(successes);
 				});
@@ -231,7 +233,11 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 								}
 							});
 					successes.forEach(consumer -> splitter.newOutput().streamTo(consumer));
-					return Promise.of(splitter.getInput().transformWith(detailedStats ? uploadStats : uploadStatsDetailed));
+					return Promise.of(splitter.getInput()
+							.transformWith(detailedStats ? uploadStats : uploadStatsDetailed)
+							.withAcknowledgement(ack -> ack
+									.thenEx(wrapException(() -> "Cluster 'upload' failed")))
+					);
 				});
 	}
 
@@ -247,7 +253,10 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 					successes.forEach(producer -> producer.streamTo(reducer.newInput()));
 
 					return Promise.of(reducer.getOutput()
-							.transformWith(detailedStats ? downloadStats : downloadStatsDetailed));
+							.transformWith(detailedStats ? downloadStats : downloadStatsDetailed)
+							.withEndOfStream(eos -> eos
+									.thenEx(wrapException(() -> "Cluster 'download' failed")))
+					);
 				});
 	}
 
@@ -262,7 +271,9 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 					});
 					successes.forEach(consumer -> splitter.newOutput().streamTo(consumer));
 					return Promise.of(splitter.getInput()
-							.transformWith(detailedStats ? removeStats : removeStatsDetailed));
+							.transformWith(detailedStats ? removeStats : removeStatsDetailed)
+							.withAcknowledgement(ack -> ack
+									.thenEx(wrapException(() -> "Cluster 'remove' failed"))));
 				});
 	}
 

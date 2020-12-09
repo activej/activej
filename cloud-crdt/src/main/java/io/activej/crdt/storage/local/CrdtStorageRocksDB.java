@@ -20,8 +20,8 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.common.exception.UncheckedException;
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtException;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -126,12 +126,12 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 			try {
 				db.flush(flushOptions);
 			} catch (RocksDBException e) {
-				throw new UncheckedException(e);
+				throw new CrdtException("Flush failed", e);
 			}
 		});
 	}
 
-	private void doPut(K key, S state) {
+	private void doPut(K key, S state) throws CrdtException {
 		ByteBuf buf = ByteBufPool.allocate(bufferSize);
 		buf.tail(keySerializer.encode(buf.array(), buf.tail(), key));
 		byte[] keyBytes = buf.getArray();
@@ -139,7 +139,7 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 		try {
 			possibleState = db.get(keyBytes);
 		} catch (RocksDBException e) {
-			throw new UncheckedException(e);
+			throw new CrdtException("Failed to get key: " + key, e);
 		}
 
 		// custom merge operators in RocksJava are yet to come
@@ -149,7 +149,7 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 				try {
 					db.delete(keyBytes);
 				} catch (RocksDBException e) {
-					throw new UncheckedException(e);
+					throw new CrdtException("Failed to delete key: " + key, e);
 				}
 				buf.recycle();
 				return;
@@ -160,17 +160,17 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 		try {
 			db.put(writeOptions, keyBytes, buf.asArray());
 		} catch (RocksDBException e) {
-			throw new UncheckedException(e);
+			throw new CrdtException("Failed to put key: " + key, e);
 		}
 	}
 
-	private void doRemove(K key) {
+	private void doRemove(K key) throws CrdtException {
 		ByteBuf buf = ByteBufPool.allocate(bufferSize);
 		buf.tail(keySerializer.encode(buf.array(), buf.tail(), key));
 		try {
 			db.delete(writeOptions, buf.asArray());
 		} catch (RocksDBException e) {
-			throw new UncheckedException(e);
+			throw new CrdtException("Failed  to remove key: " + key, e);
 		}
 	}
 
@@ -236,7 +236,12 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 		return Promise.ofBlockingCallable(executor, () -> {
 			ByteBuf buf = ByteBufPool.allocate(bufferSize);
 			keySerializer.encode(buf.array(), buf.head(), key);
-			byte[] state = db.get(buf.asArray());
+			byte[] state;
+			try {
+				state = db.get(buf.asArray());
+			} catch (RocksDBException e) {
+				throw new CrdtException("Failed to get value at key: " + key, e);
+			}
 			if (state == null) {
 				return null;
 			}
