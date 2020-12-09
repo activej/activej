@@ -16,7 +16,11 @@
 
 package io.activej.common.exception;
 
+import io.activej.common.ApplicationSettings;
+
 public class CloseException extends Exception {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(CloseException.class, "withStackTrace", false);
+
 	public CloseException() {
 		super();
 	}
@@ -27,5 +31,10 @@ public class CloseException extends Exception {
 
 	public CloseException(String message, Throwable cause) {
 		super(message, cause);
+	}
+
+	@Override
+	public final Throwable fillInStackTrace() {
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

@@ -16,7 +16,11 @@
 
 package io.activej.rpc.protocol;
 
+import io.activej.common.ApplicationSettings;
+
 public class RpcException extends Exception {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(RpcException.class, "withStackTrace", false);
+
 	public RpcException(String message) {
 		super(message);
 	}
@@ -27,6 +31,6 @@ public class RpcException extends Exception {
 
 	@Override
 	public final Throwable fillInStackTrace() {
-		return this;
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

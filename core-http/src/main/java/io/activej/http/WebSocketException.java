@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,11 +28,13 @@ import static io.activej.http.HttpUtils.isReservedCloseCode;
  * If a web socket is closed with this exception it will be translated to a close frame with corresponding
  * close code and close reason.
  * <p>
- *
+ * <p>
  * Note that some codes are forbidden to be sent on a wire, exceptions with such codes will be translated to a more generic
  * exceptions.
  */
 public class WebSocketException extends HttpException {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(WebSocketException.class, "withStackTrace", false);
+
 	@Nullable
 	private final Integer code;
 
@@ -75,7 +78,7 @@ public class WebSocketException extends HttpException {
 
 	@Override
 	public final Throwable fillInStackTrace() {
-		return this;
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 
 	@Override

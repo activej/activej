@@ -29,7 +29,7 @@ public class FsException extends Exception {
 	}
 
 	@Override
-	public final synchronized Throwable fillInStackTrace() {
+	public final Throwable fillInStackTrace() {
 		return this;
 	}
 }

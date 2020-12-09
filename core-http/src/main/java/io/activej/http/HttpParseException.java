@@ -16,7 +16,11 @@
 
 package io.activej.http;
 
+import io.activej.common.ApplicationSettings;
+
 public final class HttpParseException extends HttpException {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(HttpParseException.class, "withStackTrace", false);
+
 	public HttpParseException(String message) {
 		super(message);
 	}
@@ -27,5 +31,10 @@ public final class HttpParseException extends HttpException {
 
 	public HttpParseException(String message, Throwable cause) {
 		super(message, cause);
+	}
+
+	@Override
+	public Throwable fillInStackTrace() {
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

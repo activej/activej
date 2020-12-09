@@ -16,8 +16,17 @@
 
 package io.activej.csp.process;
 
+import io.activej.common.ApplicationSettings;
+
 public final class ProcessCompleteException extends Exception {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(ProcessCompleteException.class, "withStackTrace", false);
+
 	public ProcessCompleteException() {
 		super();
+	}
+
+	@Override
+	public synchronized Throwable fillInStackTrace() {
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

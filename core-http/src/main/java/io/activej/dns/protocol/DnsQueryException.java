@@ -16,10 +16,14 @@
 
 package io.activej.dns.protocol;
 
+import io.activej.common.ApplicationSettings;
+
 /**
  * Represents a failed DNS query response as a exception.
  */
 public final class DnsQueryException extends Exception {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(DnsQueryException.class, "withStackTrace", false);
+
 	private final DnsQuery query;
 	private final DnsResponse result;
 
@@ -38,5 +42,10 @@ public final class DnsQueryException extends Exception {
 
 	public DnsResponse getResult() {
 		return result;
+	}
+
+	@Override
+	public Throwable fillInStackTrace() {
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

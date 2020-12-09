@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 
@@ -25,6 +26,8 @@ import io.activej.promise.Promise;
  * Please be aware that when a cause is given, its stacktrace is printed too
  */
 public class HttpError extends HttpException implements Promisable<HttpResponse> {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(HttpError.class, "withStackTrace", false);
+
 	private final int code;
 
 	protected HttpError(int code) {
@@ -89,7 +92,7 @@ public class HttpError extends HttpException implements Promisable<HttpResponse>
 
 	@Override
 	public final Throwable fillInStackTrace() {
-		return this;
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 
 	@Override
