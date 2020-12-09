@@ -22,6 +22,7 @@ import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowClient.Session;
+import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;
 import io.activej.dataflow.node.NodeUpload;
@@ -114,7 +115,7 @@ public final class DataflowGraph {
 
 					if (sessions.size() != partitions.size()) {
 						sessions.forEach(PartitionSession::close);
-						return Promise.ofException(new Exception("Can't connect to all partitions"));
+						return Promise.ofException(new DataflowException("Cannot connect to all partitions"));
 					}
 					return Promise.of(sessions);
 				});

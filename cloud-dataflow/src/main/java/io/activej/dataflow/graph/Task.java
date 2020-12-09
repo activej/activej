@@ -17,6 +17,7 @@
 package io.activej.dataflow.graph;
 
 import io.activej.common.exception.CloseException;
+import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;
@@ -129,12 +130,16 @@ public final class Task {
 
 				return supplier.streamTo(consumer);
 			} catch (Exception e) {
-				return Promise.ofException(e);
+				return Promise.ofException(new DataflowException(e));
 			}
 		}).collect(toList()))
 				.whenComplete(($, e) -> {
 					finished = Instant.now();
-					error = e;
+					if (e != null && !(e instanceof DataflowException)){
+						error = new DataflowException(e);
+					} else {
+						error = e;
+					}
 					status = e == null ?
 							TaskStatus.COMPLETED :
 							e instanceof CloseException ?
