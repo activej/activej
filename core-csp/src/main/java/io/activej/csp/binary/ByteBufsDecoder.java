@@ -20,8 +20,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.bytebuf.ByteBufQueue.ByteScanner;
 import io.activej.common.api.ParserFunction;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.Utils.IntScanner;
 import io.activej.csp.binary.Utils.VarIntScanner;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +34,7 @@ import static io.activej.csp.binary.Utils.parseUntilTerminatorByte;
 public interface ByteBufsDecoder<T> {
 
 	@Nullable
-	T tryDecode(ByteBufQueue bufs) throws ParseException;
+	T tryDecode(ByteBufQueue bufs) throws MalformedDataException;
 
 	default <V> ByteBufsDecoder<V> andThen(ParserFunction<? super T, ? extends V> after) {
 		return bufs -> {
@@ -48,7 +48,7 @@ public interface ByteBufsDecoder<T> {
 		return bufs ->
 				bufs.parseBytes((index, nextByte) -> {
 					if (nextByte != data[index]) {
-						throw new ParseException("Array of bytes differs at index " + index +
+						throw new MalformedDataException("Array of bytes differs at index " + index +
 								"[Expected: " + data[index] + ", actual: " + nextByte + ']');
 					}
 					return index == data.length - 1 ? data : null;
@@ -88,7 +88,7 @@ public interface ByteBufsDecoder<T> {
 				boolean crFound;
 
 				@Override
-				public boolean consume(int index, byte nextByte) throws ParseException {
+				public boolean consume(int index, byte nextByte) throws MalformedDataException {
 					if (crFound) {
 						if (nextByte == LF) {
 							return true;
@@ -96,7 +96,7 @@ public interface ByteBufsDecoder<T> {
 						crFound = false;
 					}
 					if (index == maxSize - 1) {
-						throw new ParseException("No CRLF is found in " + maxSize + " bytes");
+						throw new MalformedDataException("No CRLF is found in " + maxSize + " bytes");
 					}
 					if (nextByte == CR) {
 						crFound = true;

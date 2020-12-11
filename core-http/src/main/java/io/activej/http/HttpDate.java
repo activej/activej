@@ -62,7 +62,7 @@ final class HttpDate {
 		MONTHS_IN_YEAR[11] = encodeAscii("Dec");
 	}
 
-	static long parse(byte[] bytes, int start) throws HttpParseException {
+	static long parse(byte[] bytes, int start) throws MalformedHttpException {
 		try {
 			int day = trimAndDecodePositiveInt(bytes, start + 5, 2);
 
@@ -112,7 +112,7 @@ final class HttpDate {
 
 			return timestamp;
 		} catch (RuntimeException ignored) {
-			throw new HttpParseException("Failed to parse date");
+			throw new MalformedHttpException("Failed to parse date");
 		}
 	}
 

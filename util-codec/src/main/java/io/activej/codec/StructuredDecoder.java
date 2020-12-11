@@ -16,7 +16,7 @@
 
 package io.activej.codec;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 import java.util.function.Supplier;
 
@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  * Encorer can read an object of type T from a {@link StructuredInput}.
  */
 public interface StructuredDecoder<T> {
-	T decode(StructuredInput in) throws ParseException;
+	T decode(StructuredInput in) throws MalformedDataException;
 
 	static <T> StructuredDecoder<T> ofObject(StructuredDecoder<T> decoder) {
 		return in -> in.readObject(decoder);

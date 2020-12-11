@@ -19,7 +19,7 @@ package io.activej.aggregation;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +71,7 @@ public class AggregationChunkCodec implements StructuredCodec<AggregationChunk> 
 	}
 
 	@Override
-	public AggregationChunk decode(StructuredInput in) throws ParseException {
+	public AggregationChunk decode(StructuredInput in) throws MalformedDataException {
 		return in.readObject($ -> {
 			in.readKey(ID);
 			Object id = chunkIdCodec.decode(in);
@@ -84,7 +84,7 @@ public class AggregationChunkCodec implements StructuredCodec<AggregationChunk> 
 			in.readKey(MEASURES);
 			List<String> measures = MEASURES_CODEC.decode(in);
 			List<String> invalidMeasures = getInvalidMeasures(measures);
-			if (!invalidMeasures.isEmpty()) throw new ParseException("Unknown fields: " + invalidMeasures);
+			if (!invalidMeasures.isEmpty()) throw new MalformedDataException("Unknown fields: " + invalidMeasures);
 			return AggregationChunk.create(id, measures, from, to, count);
 		});
 	}

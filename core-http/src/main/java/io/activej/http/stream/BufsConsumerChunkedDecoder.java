@@ -19,8 +19,8 @@ package io.activej.http.stream;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.bytebuf.ByteBufQueue.ByteScanner;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -187,8 +187,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 							.whenResult(this::completeProcess);
 					return;
 				}
-			} catch (ParseException ignored) {
-				throw new AssertionError("Parse exceptions cannot be caught here");
+			} catch (MalformedDataException ignored) {
+				throw new AssertionError("Exceptions cannot be caught here");
 			}
 
 			bufs.skip(remainingBytes - 3);

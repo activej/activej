@@ -119,7 +119,7 @@ public final class HttpUrlTest {
 	}
 
 	@Test
-	public void testPartialUrl() throws HttpParseException {
+	public void testPartialUrl() throws MalformedHttpException {
 		UrlParser url = UrlParser.parse("/path1/path2?aa=bb&zz=a+b");
 		assertTrue(url.isRelativePath());
 		assertNull(url.getHostAndPort());
@@ -140,8 +140,8 @@ public final class HttpUrlTest {
 		assertEquals("", url.getQuery());
 	}
 
-	@Test(expected = HttpParseException.class)
-	public void testInvalidScheme() throws HttpParseException {
+	@Test(expected = MalformedHttpException.class)
+	public void testInvalidScheme() throws MalformedHttpException {
 		UrlParser.parse("ftp://abc.com/");
 	}
 
@@ -151,8 +151,8 @@ public final class HttpUrlTest {
 		UrlParser.of("/path").isRelativePath();
 	}
 
-	@Test(expected = HttpParseException.class)
-	public void testBadPort() throws HttpParseException {
+	@Test(expected = MalformedHttpException.class)
+	public void testBadPort() throws MalformedHttpException {
 		UrlParser.parse("http://hello-world.com:80ab/path");
 	}
 
@@ -169,7 +169,7 @@ public final class HttpUrlTest {
 	}
 
 	@Test
-	public void testPollUrlPartWithNotUrlEncodedQuery() throws HttpParseException {
+	public void testPollUrlPartWithNotUrlEncodedQuery() throws MalformedHttpException {
 		UrlParser url = UrlParser.parse("/category/url?url=http://example.com");
 		assertEquals("category", url.pollUrlPart());
 		assertEquals("url", url.pollUrlPart());

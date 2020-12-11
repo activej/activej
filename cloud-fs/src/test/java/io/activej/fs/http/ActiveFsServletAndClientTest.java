@@ -2,8 +2,8 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.TruncatedDataException;
-import io.activej.common.exception.parse.UnexpectedDataException;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;

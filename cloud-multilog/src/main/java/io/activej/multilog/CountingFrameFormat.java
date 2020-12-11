@@ -18,7 +18,7 @@ package io.activej.multilog;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.process.frames.BlockDecoder;
 import io.activej.csp.process.frames.BlockEncoder;
 import io.activej.csp.process.frames.FrameFormat;
@@ -57,7 +57,7 @@ final class CountingFrameFormat implements FrameFormat {
 				decoder.reset();
 			}
 
-			public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+			public @Nullable ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 				int before = bufs.remainingBytes();
 				ByteBuf buf = decoder.decode(bufs);
 				innerOffset += (before - bufs.remainingBytes());

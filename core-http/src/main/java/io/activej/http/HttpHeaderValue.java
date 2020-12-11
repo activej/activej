@@ -93,17 +93,17 @@ public abstract class HttpHeaderValue {
 		return new HttpHeaderValueOfContentType(type);
 	}
 
-	public static int toPositiveInt(@NotNull ByteBuf buf) throws HttpParseException {
+	public static int toPositiveInt(@NotNull ByteBuf buf) throws MalformedHttpException {
 		return trimAndDecodePositiveInt(buf.array(), buf.head(), buf.readRemaining());
 	}
 
 	@NotNull
-	public static ContentType toContentType(@NotNull ByteBuf buf) throws HttpParseException {
+	public static ContentType toContentType(@NotNull ByteBuf buf) throws MalformedHttpException {
 		return ContentType.parse(buf.array(), buf.head(), buf.readRemaining());
 	}
 
 	@NotNull
-	public static Instant toInstant(@NotNull ByteBuf buf) throws HttpParseException {
+	public static Instant toInstant(@NotNull ByteBuf buf) throws MalformedHttpException {
 		return Instant.ofEpochSecond(HttpDate.parse(buf.array(), buf.head()));
 	}
 
@@ -117,22 +117,22 @@ public abstract class HttpHeaderValue {
 
 	@FunctionalInterface
 	public interface ParserIntoList<T> {
-		void parse(@NotNull ByteBuf buf, @NotNull List<T> into) throws HttpParseException;
+		void parse(@NotNull ByteBuf buf, @NotNull List<T> into) throws MalformedHttpException;
 	}
 
-	public static void toAcceptContentTypes(@NotNull ByteBuf buf, @NotNull List<AcceptMediaType> into) throws HttpParseException {
+	public static void toAcceptContentTypes(@NotNull ByteBuf buf, @NotNull List<AcceptMediaType> into) throws MalformedHttpException {
 		AcceptMediaType.parse(buf.array(), buf.head(), buf.readRemaining(), into);
 	}
 
-	public static void toAcceptCharsets(@NotNull ByteBuf buf, @NotNull List<AcceptCharset> into) throws HttpParseException {
+	public static void toAcceptCharsets(@NotNull ByteBuf buf, @NotNull List<AcceptCharset> into) throws MalformedHttpException {
 		AcceptCharset.parse(buf.array(), buf.head(), buf.readRemaining(), into);
 	}
 
-	static void toSimpleCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws HttpParseException {
+	static void toSimpleCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws MalformedHttpException {
 		HttpCookie.parseSimple(buf.array(), buf.head(), buf.tail(), into);
 	}
 
-	static void toFullCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws HttpParseException {
+	static void toFullCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws MalformedHttpException {
 		HttpCookie.parseFull(buf.array(), buf.head(), buf.tail(), into);
 	}
 

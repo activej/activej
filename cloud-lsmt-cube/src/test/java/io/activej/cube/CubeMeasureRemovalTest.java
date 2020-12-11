@@ -2,7 +2,7 @@ package io.activej.cube;
 
 import io.activej.aggregation.*;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
@@ -313,7 +313,7 @@ public class CubeMeasureRemovalTest {
 				otSystem, diffCodec2);
 		otSourceSql2.initialize();
 
-		exception.expectCause(instanceOf(ParseException.class));
+		exception.expectCause(instanceOf(MalformedDataException.class));
 		exception.expectCause(hasProperty("message", equalTo("Unknown fields: [clicks, conversions]")));
 
 		Set<Long> newHeads = await(otSourceSql2.getHeads());
@@ -377,7 +377,7 @@ public class CubeMeasureRemovalTest {
 				otSystem, diffCodec2);
 		otSourceSql2.initialize();
 
-		exception.expectCause(instanceOf(ParseException.class));
+		exception.expectCause(instanceOf(MalformedDataException.class));
 		exception.expectCause(hasProperty("message", equalTo("Unknown aggregation: impressionsAggregation")));
 
 		Set<Long> newHeads = await(otSourceSql2.getHeads());

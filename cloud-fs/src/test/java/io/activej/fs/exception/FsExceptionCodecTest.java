@@ -1,6 +1,6 @@
 package io.activej.fs.exception;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
 import java.util.Map;
@@ -67,7 +67,7 @@ public final class FsExceptionCodecTest {
 		FsException deserializedException;
 		try {
 			deserializedException = fromJson(FsExceptionCodec.CODEC, json);
-		} catch (ParseException e) {
+		} catch (MalformedDataException e) {
 			throw new AssertionError();
 		}
 		return deserializedException;

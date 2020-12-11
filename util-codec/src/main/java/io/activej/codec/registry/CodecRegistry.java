@@ -20,7 +20,7 @@ import io.activej.codec.CodecSubtype;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.reflection.RecursiveType;
 import io.activej.common.tuple.*;
 import org.jetbrains.annotations.Nullable;
@@ -198,7 +198,7 @@ public final class CodecRegistry implements CodecFactory {
 		}
 
 		@Override
-		public T decode(StructuredInput in) throws ParseException {
+		public T decode(StructuredInput in) throws MalformedDataException {
 			if (ref == null) {
 				ref = supplier.get();
 			}

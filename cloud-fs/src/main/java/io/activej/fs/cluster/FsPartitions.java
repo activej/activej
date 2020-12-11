@@ -20,7 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
 import io.activej.common.api.WithInitializer;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsException;
@@ -275,7 +275,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	}
 
 	@JmxOperation
-	public void setPartitions(List<String> partitions) throws ParseException {
+	public void setPartitions(List<String> partitions) throws MalformedDataException {
 		Map<String, Object> previousPartitions = this.partitions.keySet().stream()
 				.collect(toMap(Object::toString, Function.identity()));
 		Set<String> previousPartitionsKeyset = previousPartitions.keySet();

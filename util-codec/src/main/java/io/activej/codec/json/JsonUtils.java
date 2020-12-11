@@ -24,28 +24,28 @@ import com.google.gson.stream.MalformedJsonException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.codec.*;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.ParseException;
 
 import java.io.*;
 
 public class JsonUtils {
 
-	public static <T> T fromJson(StructuredDecoder<T> decoder, String string) throws ParseException {
+	public static <T> T fromJson(StructuredDecoder<T> decoder, String string) throws MalformedDataException {
 		JsonReader reader = new JsonReader(new StringReader(string));
 		T result;
 		try {
 			result = decoder.decode(new JsonStructuredInput(reader));
 		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
+			throw e.propagate(MalformedDataException.class);
 		}
 
 		try {
 			if (reader.peek() != JsonToken.END_DOCUMENT) {
-				throw new ParseException("Json data was not fully consumed when decoding");
+				throw new MalformedDataException("Json data was not fully consumed when decoding");
 			}
 		} catch (EOFException | MalformedJsonException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		} catch (IOException e) {
 			throw new AssertionError();
 		}
@@ -116,7 +116,7 @@ public class JsonUtils {
 			}
 
 			@Override
-			public T decode(StructuredInput in) throws ParseException {
+			public T decode(StructuredInput in) throws MalformedDataException {
 				return codec.decode(in);
 			}
 		};

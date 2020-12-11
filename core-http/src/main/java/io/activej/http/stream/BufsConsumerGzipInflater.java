@@ -19,9 +19,9 @@ package io.activej.http.stream;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -140,7 +140,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 					byte flag = buf.get();
 					if ((flag & 0b11100000) > 0) {
 						buf.recycle();
-						closeEx(new ParseException("Flag byte of a header is malformed. Reserved bits are set"));
+						closeEx(new MalformedDataException("Flag byte of a header is malformed. Reserved bits are set"));
 						return;
 					}
 					// unsetting FTEXT bit
@@ -180,7 +180,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 		input.parse(ofFixedSize(GZIP_FOOTER_SIZE))
 				.whenResult(buf -> {
 					if ((int) crc32.getValue() != reverseBytes(buf.readInt())) {
-						closeEx(new ParseException("CRC32 value of uncompressed data differs"));
+						closeEx(new MalformedDataException("CRC32 value of uncompressed data differs"));
 						buf.recycle();
 						return;
 					}
@@ -246,7 +246,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 				})
 				.then(toSkip -> {
 					if (toSkip > MAX_HEADER_FIELD_LENGTH) {
-						ParseException exception = new InvalidSizeException("FEXTRA part of a header is larger than maximum allowed length");
+						MalformedDataException exception = new InvalidSizeException("FEXTRA part of a header is larger than maximum allowed length");
 						closeEx(exception);
 						return Promise.ofException(exception);
 					}

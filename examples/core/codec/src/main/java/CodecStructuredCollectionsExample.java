@@ -1,7 +1,7 @@
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredCodecs;
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import util.Person;
 import util.Registry;
 
@@ -20,7 +20,7 @@ public final class CodecStructuredCollectionsExample {
 	private static final Person john = new Person(121, "John", LocalDate.of(1990, 3, 12));
 	private static final Person sarah = new Person(124, "Sarah", LocalDate.of(1992, 6, 27));
 
-	private static void encodeDecodeList() throws ParseException {
+	private static void encodeDecodeList() throws MalformedDataException {
 		List<Person> persons = new ArrayList<>(asList(john, sarah));
 
 		StructuredCodec<List<Person>> listCodec = StructuredCodecs.ofList(PERSON_CODEC);
@@ -35,7 +35,7 @@ public final class CodecStructuredCollectionsExample {
 		System.out.println();
 	}
 
-	private static void encodeDecodeMap() throws ParseException {
+	private static void encodeDecodeMap() throws MalformedDataException {
 		Map<Integer, Person> personsMap = new HashMap<>();
 		personsMap.put(sarah.getId(), sarah);
 		personsMap.put(john.getId(), john);
@@ -51,7 +51,7 @@ public final class CodecStructuredCollectionsExample {
 		System.out.println("Maps are equal? : " + personsMap.equals(decodedPersons));
 	}
 
-	public static void main(String[] args) throws ParseException {
+	public static void main(String[] args) throws MalformedDataException {
 		encodeDecodeList();
 		encodeDecodeMap();
 	}

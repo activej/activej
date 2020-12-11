@@ -16,7 +16,7 @@
 
 package io.activej.fs;
 
-import io.activej.common.exception.parse.InvalidSizeException;
+import io.activej.common.exception.InvalidSizeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

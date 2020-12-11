@@ -16,21 +16,21 @@
 
 package io.activej.common.api;
 
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
 
 @FunctionalInterface
 public interface ParserFunction<T, R> {
-	R parse(T value) throws ParseException;
+	R parse(T value) throws MalformedDataException;
 
 	static <T, R> Function<T, R> asFunction(ParserFunction<T, R> fn) {
 		return item -> {
 			try {
 				return fn.parse(item);
-			} catch (ParseException e) {
+			} catch (MalformedDataException e) {
 				throw new UncheckedException(e);
 			}
 		};
@@ -41,7 +41,7 @@ public interface ParserFunction<T, R> {
 			try {
 				return fn.apply(value);
 			} catch (Exception e) {
-				throw new ParseException(e);
+				throw new MalformedDataException(e);
 			}
 		};
 	}
@@ -51,7 +51,7 @@ public interface ParserFunction<T, R> {
 			if (value != null) {
 				return parse(value);
 			}
-		} catch (ParseException ignore) {}
+		} catch (MalformedDataException ignore) {}
 
 		return defaultResult;
 	}

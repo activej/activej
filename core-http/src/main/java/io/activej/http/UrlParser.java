@@ -102,29 +102,29 @@ public final class UrlParser {
 		UrlParser httpUrl = new UrlParser(url);
 		try {
 			httpUrl.parse(false);
-		} catch (HttpParseException e) {
+		} catch (MalformedHttpException e) {
 			throw new IllegalArgumentException(e);
 		}
 		return httpUrl;
 	}
 
 	@NotNull
-	public static UrlParser parse(@NotNull String url) throws HttpParseException {
+	public static UrlParser parse(@NotNull String url) throws MalformedHttpException {
 		UrlParser httpUrl = new UrlParser(url);
 		httpUrl.parse(true);
 		return httpUrl;
 	}
 	// endregion
 
-	private void parse(boolean isRelativePathAllowed) throws HttpParseException {
+	private void parse(boolean isRelativePathAllowed) throws MalformedHttpException {
 		if (raw.length() > Short.MAX_VALUE) {
-			throw new HttpParseException("HttpUrl length cannot be greater than " + Short.MAX_VALUE);
+			throw new MalformedHttpException("HttpUrl length cannot be greater than " + Short.MAX_VALUE);
 		}
 
 		short index = (short) raw.indexOf("://");
 		if (index < 0 || index > 5) {
 			if (!isRelativePathAllowed)
-				throw new HttpParseException("Partial URI is not allowed: " + raw);
+				throw new MalformedHttpException("Partial URI is not allowed: " + raw);
 			index = 0;
 		} else {
 			if (index == 5 && raw.startsWith(HTTPS.lowercase())) {
@@ -136,14 +136,14 @@ public final class UrlParser {
 			} else if (index == 2 && raw.startsWith(WS.lowercase())) {
 				protocol = WS;
 			} else {
-				throw new HttpParseException("Unsupported schema: " + raw.substring(0, index));
+				throw new MalformedHttpException("Unsupported schema: " + raw.substring(0, index));
 			}
 			index += "://".length();
 			host = index;
 
 			short hostPortEnd = findHostPortEnd(host);
 			if (host == hostPortEnd || raw.indexOf(':', host) == host) {
-				throw new HttpParseException("Domain name cannot be null or empty");
+				throw new MalformedHttpException("Domain name cannot be null or empty");
 			}
 
 			if (raw.indexOf(IPV6_OPENING_BRACKET, index) != -1) {                   // parse IPv6
@@ -497,24 +497,24 @@ public final class UrlParser {
 		return true;
 	}
 
-	private static int toInt(@NotNull String str, int pos, int end) throws HttpParseException {
+	private static int toInt(@NotNull String str, int pos, int end) throws MalformedHttpException {
 		if (pos == end) {
-			throw new HttpParseException("Empty port value");
+			throw new MalformedHttpException("Empty port value");
 		}
 		if ((end - pos) > 5) {
-			throw new HttpParseException("Bad port: " + str.substring(pos, end));
+			throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
 		}
 
 		int result = 0;
 		for (int i = pos; i < end; i++) {
 			int c = str.charAt(i) - '0';
 			if (c < 0 || c > 9)
-				throw new HttpParseException("Bad port: " + str.substring(pos, end));
+				throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
 			result = c + result * 10;
 		}
 
 		if (result > 0xFFFF) {
-			throw new HttpParseException("Bad port: " + str.substring(pos, end));
+			throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
 		}
 
 		return result;
@@ -584,7 +584,7 @@ public final class UrlParser {
 						int bytesPos = 0;
 
 						while ((pos + 2 < len) && (c == '%')) {
-							bytes[bytesPos++] = (byte) ((parseHex(s.charAt(pos + 1)) << 4) + parseHex(s.charAt(pos + 2)));
+							bytes[bytesPos++] = (byte) ((decodeHex(s.charAt(pos + 1)) << 4) + decodeHex(s.charAt(pos + 2)));
 							pos += 3;
 							if (pos < len) {
 								c = s.charAt(pos);
@@ -603,16 +603,16 @@ public final class UrlParser {
 				}
 			}
 			return new String(chars, 0, charsPos);
-		} catch (HttpParseException e) {
+		} catch (MalformedHttpException e) {
 			return null;
 		}
 	}
 
-	private static byte parseHex(char c) throws HttpParseException {
+	private static byte decodeHex(char c) throws MalformedHttpException {
 		if (c >= '0' && c <= '9') return (byte) (c - '0');
 		if (c >= 'a' && c <= 'f') return (byte) (c - 'a' + 10);
 		if (c >= 'A' && c <= 'F') return (byte) (c - 'A' + 10);
-		throw new HttpParseException("Failed to parse hex digit from '" + c + '\'');
+		throw new MalformedHttpException("Failed to decode hex digit from '" + c + '\'');
 	}
 
 	@Override

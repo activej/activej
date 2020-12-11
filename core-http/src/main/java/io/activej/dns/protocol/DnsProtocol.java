@@ -18,9 +18,9 @@ package io.activej.dns.protocol;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -104,9 +104,9 @@ public final class DnsProtocol {
 	 *
 	 * @param payload byte buffer with response payload
 	 * @return DNS query response parsed from the payload
-	 * @throws ParseException when parsing fails
+	 * @throws MalformedDataException when parsing fails
 	 */
-	public static DnsResponse readDnsResponse(ByteBuf payload) throws ParseException {
+	public static DnsResponse readDnsResponse(ByteBuf payload) throws MalformedDataException {
 		try {
 			short transactionId = payload.readShort();
 			payload.moveHead(1); // skip first flags byte
@@ -120,7 +120,7 @@ public final class DnsProtocol {
 
 			if (questionCount != 1) {
 				// malformed response, we are always sending only one question
-				throw new ParseException("Received DNS response has question count not equal to one");
+				throw new MalformedDataException("Received DNS response has question count not equal to one");
 			}
 
 			// read domain name from first query
@@ -178,7 +178,7 @@ public final class DnsProtocol {
 						payload.moveHead(b);
 						b = payload.readByte();
 					} else {
-						throw new ParseException("Unsupported compression method");
+						throw new MalformedDataException("Unsupported compression method");
 					}
 				}
 
@@ -209,7 +209,7 @@ public final class DnsProtocol {
 			}
 			return DnsResponse.of(transaction, DnsResourceRecord.of(ips.toArray(new InetAddress[0]), minTtl));
 		} catch (IndexOutOfBoundsException e) {
-			throw new ParseException("Failed parsing DNS response", e);
+			throw new MalformedDataException("Failed parsing DNS response", e);
 		}
 	}
 

@@ -19,7 +19,7 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codec.StructuredDecoder;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -249,7 +249,7 @@ public final class HttpActiveFs implements ActiveFs {
 						.then(body -> {
 							try {
 								return Promise.ofException(fromJson(FsExceptionCodec.CODEC, body.getString(UTF_8)));
-							} catch (ParseException ignored) {
+							} catch (MalformedDataException ignored) {
 								return Promise.ofException(HttpError.ofCode(500));
 							}
 						});
@@ -262,7 +262,7 @@ public final class HttpActiveFs implements ActiveFs {
 		return body -> {
 			try {
 				return Promise.of(fromJson(decoder, body.getString(UTF_8)));
-			} catch (ParseException e) {
+			} catch (MalformedDataException e) {
 				return Promise.ofException(e);
 			}
 		};

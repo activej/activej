@@ -17,7 +17,7 @@
 package io.activej.config.converter;
 
 import io.activej.common.api.ParserFunction;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +49,7 @@ public interface ConfigConverter<T> {
 				T value = thisConverter.get(config, defaultValue == null ? null : from.apply(defaultValue));
 				try {
 					return value != null ? to.parse(value) : null;
-				} catch (ParseException e) {
+				} catch (MalformedDataException e) {
 					throw new IllegalArgumentException(e);
 				}
 			}
@@ -59,7 +59,7 @@ public interface ConfigConverter<T> {
 			public V get(Config config) {
 				try {
 					return to.parse(thisConverter.get(config));
-				} catch (ParseException e) {
+				} catch (MalformedDataException e) {
 					throw new IllegalArgumentException(e);
 				}
 			}

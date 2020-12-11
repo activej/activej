@@ -22,7 +22,7 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 import java.util.Collections;
 import java.util.Set;
@@ -60,7 +60,7 @@ public class AggregationDiffCodec implements StructuredCodec<AggregationDiff> {
 	}
 
 	@Override
-	public AggregationDiff decode(StructuredInput in) throws ParseException {
+	public AggregationDiff decode(StructuredInput in) throws MalformedDataException {
 		return in.readObject($ -> {
 			in.readKey(ADDED);
 			Set<AggregationChunk> added = aggregationChunksCodec.decode(in);

@@ -17,7 +17,7 @@
 package io.activej.codec;
 
 import io.activej.common.api.ParserFunction;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -40,7 +40,7 @@ public interface StructuredCodec<T> extends StructuredEncoder<T>, StructuredDeco
 			}
 
 			@Override
-			public T decode(StructuredInput in) throws ParseException {
+			public T decode(StructuredInput in) throws MalformedDataException {
 				return decoder.decode(in);
 			}
 		};

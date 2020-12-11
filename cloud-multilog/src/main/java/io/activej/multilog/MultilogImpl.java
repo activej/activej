@@ -18,8 +18,8 @@ package io.activej.multilog;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.TruncatedDataException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.Stopwatch;
 import io.activej.csp.ChannelSupplier;
@@ -234,7 +234,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 																	return Promise.complete();
 																}
 
-																if (ignoreMalformedLogs && e instanceof ParseException) {
+																if (ignoreMalformedLogs && e instanceof MalformedDataException) {
 																	if (logger.isWarnEnabled()) {
 																		logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
 																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),

@@ -22,7 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.common.api.WithInitializer;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -329,7 +329,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 		checkArgument(path.startsWith(chunksDir));
 		try {
 			return chunkIdCodec.fromFileName(path.substring(chunksDir.length(), path.length() - LOG.length()));
-		} catch (ParseException e) {
+		} catch (MalformedDataException e) {
 			chunkNameWarnings.recordException(e);
 			logger.warn("Invalid chunk filename: {}", path);
 			return null;

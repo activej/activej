@@ -142,13 +142,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 */
 	@SuppressWarnings("PointlessArithmeticExpression")
 	@Override
-	protected void onStartLine(byte[] line, int limit) throws HttpParseException {
+	protected void onStartLine(byte[] line, int limit) throws MalformedHttpException {
 		switchPool(server.poolReadWrite);
 
 		HttpMethod method = getHttpMethod(line);
 		if (method == null) {
-			if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Unknown HTTP method");
-			throw new HttpParseException("Unknown HTTP method. First line: " +
+			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP method");
+			throw new MalformedHttpException("Unknown HTTP method. First line: " +
 					new String(line, 0, limit, ISO_8859_1));
 		}
 
@@ -177,13 +177,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			} else if (line[p + 7] == '0') {
 				version = HTTP_1_0;
 			} else {
-				if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Unknown HTTP version");
-				throw new HttpParseException("Unknown HTTP version. First line: " +
+				if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP version");
+				throw new MalformedHttpException("Unknown HTTP version. First line: " +
 						new String(line, 0, limit, ISO_8859_1));
 			}
 		} else {
-			if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Unsupported HTTP version");
-			throw new HttpParseException(
+			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unsupported HTTP version");
+			throw new MalformedHttpException(
 					"Unsupported HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
@@ -242,13 +242,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param header received header
 	 */
 	@Override
-	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws HttpParseException {
+	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException {
 		if (header == HttpHeaders.EXPECT && equalsLowerCaseAscii(EXPECT_100_CONTINUE, array, off, len)) {
 			socket.write(ByteBuf.wrapForReading(EXPECT_RESPONSE_CONTINUE));
 		}
 		//noinspection ConstantConditions
 		if (request.headers.size() >= MAX_HEADERS) {
-			throw new HttpParseException("Too many headers");
+			throw new MalformedHttpException("Too many headers");
 		}
 		request.addHeader(header, array, off, len);
 	}
@@ -389,8 +389,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				 */
 				contentLength = 0;
 				readHttpMessage();
-			} catch (HttpParseException e) {
-				closeWithError(new HttpParseException(e));
+			} catch (MalformedHttpException e) {
+				closeWithError(new MalformedHttpException(e));
 			}
 		} else {
 			close();

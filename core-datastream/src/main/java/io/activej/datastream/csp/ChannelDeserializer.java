@@ -18,10 +18,10 @@ package io.activej.datastream.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.TruncatedDataException;
-import io.activej.common.exception.parse.UnexpectedDataException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnexpectedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.AbstractStreamSupplier;
@@ -80,7 +80,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 		try {
 			endOfStream = process();
 		} catch (CorruptedDataException e) {
-			closeEx(new ParseException("Data is corrupted", e));
+			closeEx(new MalformedDataException("Data is corrupted", e));
 			return;
 		} catch (Exception e) {
 			closeEx(new UnknownFormatException(format("Parse exception, %s : %s", this, queue), e));

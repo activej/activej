@@ -18,8 +18,8 @@ package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.TruncatedDataException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -126,7 +126,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 						if (decoderResets) decoder.reset();
 						return Promise.of(result);
 					}
-				} catch (ParseException e) {
+				} catch (MalformedDataException e) {
 					closeEx(e);
 					return Promise.ofException(e);
 				}

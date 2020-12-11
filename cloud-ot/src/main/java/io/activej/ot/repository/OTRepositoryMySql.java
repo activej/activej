@@ -19,7 +19,7 @@ package io.activej.ot.repository;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -171,7 +171,7 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 		return JsonUtils.toJson(diffsCodec, diffs);
 	}
 
-	private List<D> fromJson(String json) throws ParseException {
+	private List<D> fromJson(String json) throws MalformedDataException {
 		return JsonUtils.fromJson(diffsCodec, json);
 	}
 

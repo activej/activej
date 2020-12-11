@@ -19,9 +19,9 @@ package io.activej.csp.process.frames;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import net.jpountz.lz4.LZ4Exception;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import net.jpountz.xxhash.StreamingXXHash32;
@@ -58,7 +58,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 
 	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+	public ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 		if (shouldReadHeader) {
 			if (!readHeader(bufs)) return null;
 			shouldReadHeader = false;
@@ -76,7 +76,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		return ignoreMissingEndOfStreamBlock;
 	}
 
-	private boolean readHeader(ByteBufQueue bufs) throws ParseException {
+	private boolean readHeader(ByteBufQueue bufs) throws MalformedDataException {
 		bufs.scanBytes((index, value) -> {
 			if (value != MAGIC[index]) {
 				throw new UnknownFormatException(
@@ -103,11 +103,11 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 				|| (originalLen == 0 && compressedLen != 0)
 				|| (originalLen != 0 && compressedLen == 0)
 				|| (compressionMethod == COMPRESSION_METHOD_RAW && originalLen != compressedLen)) {
-			throw new ParseException("Malformed header");
+			throw new MalformedDataException("Malformed header");
 		}
 		if (originalLen == 0) {
 			if (check != 0) {
-				throw new ParseException("Checksum in last block is not allowed");
+				throw new MalformedDataException("Checksum in last block is not allowed");
 			}
 			endOfStream = true;
 		}
@@ -120,7 +120,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	 4 bytes in queue are asserted before call, hence warning suppression
 	*/
 	@SuppressWarnings("ConstantConditions")
-	private int readIntLE(ByteBufQueue bufs) throws ParseException {
+	private int readIntLE(ByteBufQueue bufs) throws MalformedDataException {
 		check = 0;
 		return bufs.parseBytes((index, nextByte) -> {
 			check |= (nextByte & 0xFF) << 8 * index;
@@ -128,7 +128,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		});
 	}
 
-	private ByteBuf decompressBody(ByteBufQueue queue) throws ParseException {
+	private ByteBuf decompressBody(ByteBufQueue queue) throws MalformedDataException {
 		ByteBuf inputBuf = queue.takeExactSize(compressedLen);
 		ByteBuf outputBuf = ByteBufPool.allocate(originalLen);
 		try {
@@ -145,13 +145,13 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 						throw new InvalidSizeException("Actual size of decompressed data does not equal expected size of decompressed data");
 					}
 				} catch (LZ4Exception e) {
-					throw new ParseException("Failed to decompress data", e);
+					throw new MalformedDataException("Failed to decompress data", e);
 				}
 			}
 			checksum.reset();
 			checksum.update(outputBuf.array(), 0, originalLen);
 			if (checksum.getValue() != check) {
-				throw new ParseException("Checksums do not match. Received: (" + check + "), actual: (" + checksum.getValue() + ')');
+				throw new MalformedDataException("Checksums do not match. Received: (" + check + "), actual: (" + checksum.getValue() + ')');
 			}
 			return outputBuf;
 		} catch (Exception e) {

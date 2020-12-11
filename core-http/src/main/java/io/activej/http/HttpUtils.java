@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.http.WebSocket.Frame.FrameType;
 import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
@@ -109,7 +109,7 @@ public final class HttpUtils {
 				}
 				try {
 					v = trimAndDecodePositiveInt(bytes, start, i - start);
-				} catch (HttpParseException e) {
+				} catch (MalformedHttpException e) {
 					return false;
 				}
 				if (v < 0 || v > 255) return false;
@@ -172,7 +172,7 @@ public final class HttpUtils {
 		return pos;
 	}
 
-	public static int parseQ(byte[] bytes, int pos, int length) throws HttpParseException {
+	public static int parseQ(byte[] bytes, int pos, int length) throws MalformedHttpException {
 		if (bytes[pos] == '1') {
 			return 100;
 		} else if (bytes[pos] == '0') {
@@ -182,7 +182,7 @@ public final class HttpUtils {
 			if (length == 1) q *= 10;
 			return q;
 		}
-		throw new HttpParseException("Value of 'q' should start either from 0 or 1");
+		throw new MalformedHttpException("Value of 'q' should start either from 0 or 1");
 	}
 
 	/**
@@ -234,18 +234,18 @@ public final class HttpUtils {
 		}
 	}
 
-	public static String urlDecode(@Nullable String string, String enc) throws HttpParseException {
+	public static String urlDecode(@Nullable String string, String enc) throws MalformedHttpException {
 		if (string == null) {
-			throw new HttpParseException("No string to decode");
+			throw new MalformedHttpException("No string to decode");
 		}
 		try {
 			return URLDecoder.decode(string, enc);
 		} catch (UnsupportedEncodingException e) {
-			throw new HttpParseException("Can't encode with supplied encoding: " + enc, e);
+			throw new MalformedHttpException("Can't encode with supplied encoding: " + enc, e);
 		}
 	}
 
-	public static int trimAndDecodePositiveInt(byte[] array, int pos, int len) throws HttpParseException {
+	public static int trimAndDecodePositiveInt(byte[] array, int pos, int len) throws MalformedHttpException {
 		int left = trimLeft(array, pos, len);
 		pos += left;
 		len -= left;
@@ -425,26 +425,26 @@ public final class HttpUtils {
 	static Throwable translateToHttpException(Throwable e) {
 		if (e instanceof HttpException) return e;
 		if (e instanceof IOException) return new HttpIOException((IOException) e);
-		if (e instanceof ParseException) return new HttpParseException(e);
+		if (e instanceof MalformedDataException) return new MalformedHttpException(e);
 		return new HttpException(e);
 	}
 
-	static int decodePositiveInt(byte[] array, int pos, int len) throws HttpParseException {
+	static int decodePositiveInt(byte[] array, int pos, int len) throws MalformedHttpException {
 		int result = 0;
 		for (int i = pos; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new HttpParseException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedHttpException("Not a decimal value: " + new String(array, pos, len));
 			}
 			result = b + result * 10;
 			if (result < 0) {
-				throw new HttpParseException("Bigger than max int value: " + new String(array, pos, len));
+				throw new MalformedHttpException("Bigger than max int value: " + new String(array, pos, len));
 			}
 		}
 		return result;
 	}
 
-	static int decodeUtf8(byte[] array, int pos, int len, char[] buffer, int to) throws HttpParseException {
+	static int decodeUtf8(byte[] array, int pos, int len, char[] buffer, int to) throws MalformedHttpException {
 		int end = pos + len;
 		try {
 			while (pos < end) {
@@ -469,9 +469,9 @@ public final class HttpUtils {
 						break;
 				}
 			}
-			if (pos > end) throw new HttpParseException("Malformed utf-8 input: Read past end");
+			if (pos > end) throw new MalformedHttpException("Malformed utf-8 input: Read past end");
 		} catch (ArrayIndexOutOfBoundsException ignored) {
-			throw new HttpParseException("Malformed utf-8 input");
+			throw new MalformedHttpException("Malformed utf-8 input");
 		}
 		return to;
 	}

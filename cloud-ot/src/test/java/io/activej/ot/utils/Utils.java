@@ -3,7 +3,7 @@ package io.activej.ot.utils;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
@@ -73,7 +73,7 @@ public class Utils {
 		}
 
 		@Override
-		public TestOp decode(StructuredInput in) throws ParseException {
+		public TestOp decode(StructuredInput in) throws MalformedDataException {
 			return in.readObject($ -> {
 				String key = in.readKey();
 				switch (key) {
@@ -86,7 +86,7 @@ public class Utils {
 							return new TestSet(prev, next);
 						});
 					default:
-						throw new ParseException("Invalid TestOp key " + key);
+						throw new MalformedDataException("Invalid TestOp key " + key);
 				}
 			});
 		}

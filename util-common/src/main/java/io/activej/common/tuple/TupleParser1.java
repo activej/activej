@@ -16,9 +16,9 @@
 
 package io.activej.common.tuple;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 @FunctionalInterface
 public interface TupleParser1<T1, R> {
-	R create(T1 value1) throws ParseException;
+	R create(T1 value1) throws MalformedDataException;
 }

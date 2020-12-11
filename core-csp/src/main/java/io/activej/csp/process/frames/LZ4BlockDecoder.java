@@ -19,9 +19,9 @@ package io.activej.csp.process.frames;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import net.jpountz.lz4.LZ4Exception;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +51,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+	public ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 		if (readHeader) {
 			if (!readHeader(bufs)) return null;
 			readHeader = false;
@@ -64,7 +64,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 			if (!bufs.hasRemainingBytes(compressedSize + 1)) return null;
 			ByteBuf result = bufs.takeExactSize(compressedSize + 1);
 			if (result.at(result.tail() - 1) != END_OF_BLOCK) {
-				throw new ParseException("Block does not end with special byte '1'");
+				throw new MalformedDataException("Block does not end with special byte '1'");
 			}
 			result.moveTail(-1);
 			compressedSize = null;
@@ -78,7 +78,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		return false;
 	}
 
-	private boolean readHeader(ByteBufQueue bufs) throws ParseException {
+	private boolean readHeader(ByteBufQueue bufs) throws MalformedDataException {
 		return bufs.parseBytes((index, value) -> {
 			if (value != MAGIC[index]) throw new UnknownFormatException("Expected stream to start with bytes: " + Arrays.toString(MAGIC));
 			return index == MAGIC_LENGTH - 1 ? MAGIC : null;
@@ -86,7 +86,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	}
 
 	@Nullable
-	private ByteBuf decompress(ByteBufQueue bufs) throws ParseException {
+	private ByteBuf decompress(ByteBufQueue bufs) throws MalformedDataException {
 		assert compressedSize != null;
 
 		int actualCompressedSize = compressedSize & COMPRESSED_LENGTH_MASK;
@@ -105,7 +105,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		ByteBuf compressedBuf = firstBuf.readRemaining() >= actualCompressedSize + 1 ? firstBuf : bufs.takeExactSize(actualCompressedSize + 1);
 
 		if (compressedBuf.at(compressedBuf.head() + actualCompressedSize) != END_OF_BLOCK) {
-			throw new ParseException("Block does not end with special byte '1'");
+			throw new MalformedDataException("Block does not end with special byte '1'");
 		}
 
 		ByteBuf buf = ByteBufPool.allocate(originalSize);
@@ -118,7 +118,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 			buf.tail(originalSize);
 		} catch (LZ4Exception e) {
 			buf.recycle();
-			throw new ParseException("Failed to decompress data", e);
+			throw new MalformedDataException("Failed to decompress data", e);
 		}
 
 		if (compressedBuf != firstBuf) {
@@ -132,7 +132,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	}
 
 	@Nullable
-	private Integer readInt(ByteBufQueue bufs) throws ParseException {
+	private Integer readInt(ByteBufQueue bufs) throws MalformedDataException {
 		return bufs.parseBytes((index, nextByte) -> {
 			tempInt <<= 8;
 			tempInt |= (nextByte & 0xFF);

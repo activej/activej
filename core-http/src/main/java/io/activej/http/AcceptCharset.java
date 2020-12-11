@@ -62,7 +62,7 @@ public final class AcceptCharset {
 		return new AcceptCharset(charset, q);
 	}
 
-	public Charset getCharset() throws HttpParseException {
+	public Charset getCharset() throws MalformedHttpException {
 		return charset.toJavaCharset();
 	}
 
@@ -70,7 +70,7 @@ public final class AcceptCharset {
 		return q;
 	}
 
-	static void parse(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws HttpParseException {
+	static void parse(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws MalformedHttpException {
 		try {
 			int end = pos + len;
 
@@ -112,7 +112,7 @@ public final class AcceptCharset {
 				}
 			}
 		} catch (RuntimeException e) {
-			throw new HttpParseException("Failed to parse accept-charset", e);
+			throw new MalformedHttpException("Failed to decode accept-charset", e);
 		}
 	}
 

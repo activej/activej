@@ -22,8 +22,8 @@ import io.activej.common.Checks;
 import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -466,7 +466,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	}
 
 	@JmxOperation
-	public void setPartitions(String partitionString) throws ParseException {
+	public void setPartitions(String partitionString) throws MalformedDataException {
 		List<String> newPartitions = Arrays.stream(partitionString.split(";"))
 				.map(String::trim)
 				.filter(s -> !s.isEmpty())

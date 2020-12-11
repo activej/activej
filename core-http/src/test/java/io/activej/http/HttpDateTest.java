@@ -23,7 +23,7 @@ public class HttpDateTest {
 	}
 
 	@Test
-	public void testParser() throws HttpParseException {
+	public void testParser() throws MalformedHttpException {
 		String date = "Thu, 01 Jan 2015 02:00:00 GMT";
 		long actual = HttpDate.parse(date.getBytes(ISO_8859_1), 0);
 
@@ -32,14 +32,14 @@ public class HttpDateTest {
 	}
 
 	@Test
-	public void testFull() throws HttpParseException {
+	public void testFull() throws MalformedHttpException {
 		byte[] bytes = new byte[29];
 		HttpDate.render(4073580000L, bytes, 0);
 		assertEquals(4073580000L, HttpDate.parse(bytes, 0));
 	}
 
 	@Test
-	public void testDateWithShortYear() throws HttpParseException {
+	public void testDateWithShortYear() throws MalformedHttpException {
 		String date = "Thu, 01 Jan 15 00:00:00 GMT";
 		long actual = HttpDate.parse(date.getBytes(ISO_8859_1), 0);
 

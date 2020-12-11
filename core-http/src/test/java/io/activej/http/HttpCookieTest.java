@@ -24,7 +24,7 @@ public class HttpCookieTest {
 	public static final ByteBufRule rule = new ByteBufRule();
 
 	@Test
-	public void testParser() throws HttpParseException {
+	public void testParser() throws MalformedHttpException {
 		String cookieString = "name1=\"value1\"; expires=Thu, 01 Jan 2015 00:00:00 GMT; Secure; name2=value2; HttpOnly";
 		List<HttpCookie> httpCookies = new ArrayList<>();
 		byte[] bytes = encodeAscii(cookieString);
@@ -88,7 +88,7 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParse() throws HttpParseException {
+	public void testParse() throws MalformedHttpException {
 		String cookieName = "HMECOMDIC";
 		String cookieValue = "{\"osVersion\":\"x86_64\",\"deviceOs\":\"Linux\",\"deviceType\":\"DESKTOP\"}";
 		byte[] bytes = ByteBufStrings.encodeAscii(cookieName + "=" + cookieValue);
@@ -116,7 +116,7 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParsePathSlash() throws HttpParseException {
+	public void testParsePathSlash() throws MalformedHttpException {
 		String cookieName = "name";
 		String cookieValue = "value";
 		String cookiePath = "/";
@@ -145,7 +145,7 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParsePathEmpty() throws HttpParseException {
+	public void testParsePathEmpty() throws MalformedHttpException {
 		String cookieName = "name";
 		String cookieValue = "value";
 		byte[] bytes = ByteBufStrings.encodeAscii(cookieName + "=" + cookieValue);

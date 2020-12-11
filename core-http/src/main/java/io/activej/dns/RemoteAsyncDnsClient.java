@@ -20,7 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.CloseException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
@@ -202,8 +202,8 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 										cb.setException(new DnsQueryException(queryResult));
 									}
 									closeIfDone();
-								} catch (ParseException e) {
-									logger.warn("Received a UDP packet than cannot be parsed as a DNS server response.", e);
+								} catch (MalformedDataException e) {
+									logger.warn("Received a UDP packet than cannot be decoded as a DNS server response.", e);
 								} finally {
 									packet.recycle();
 								}

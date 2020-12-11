@@ -23,7 +23,7 @@ public class ContentTypeTest {
 	}
 
 	@Test
-	public void testContentTypeParse() throws HttpParseException {
+	public void testContentTypeParse() throws MalformedHttpException {
 		byte[] contentType = encodeAscii("text/plain;param=value; url-form=www;CHARSET=UTF-8; a=v");
 		ContentType actual = ContentType.parse(contentType, 0, contentType.length);
 		assertSame(MediaTypes.PLAIN_TEXT, actual.getMediaType());
@@ -31,7 +31,7 @@ public class ContentTypeTest {
 	}
 
 	@Test
-	public void testQParser() throws HttpParseException {
+	public void testQParser() throws MalformedHttpException {
 		byte[] num = encodeAscii("0.12313");
 		int q = parseQ(num, 0, num.length);
 		assertEquals(12, q);
@@ -50,7 +50,7 @@ public class ContentTypeTest {
 	}
 
 	@Test
-	public void testAcceptContentType() throws HttpParseException {
+	public void testAcceptContentType() throws MalformedHttpException {
 		byte[] acceptCts = encodeAscii("text/html;q=0.1, " +
 				"application/xhtml+xml; method=get; q=0.3; bool=true," +
 				"application/xml;q=0.9," +

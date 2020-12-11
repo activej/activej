@@ -18,7 +18,7 @@ package io.activej.dataflow.inject;
 
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.dataflow.command.*;
 import io.activej.dataflow.command.DataflowResponsePartitionData.TaskDesc;
 import io.activej.dataflow.graph.StreamId;
@@ -98,12 +98,12 @@ public final class DataflowCodecs extends AbstractModule {
 					String str = in.readString();
 					String[] split = str.split(":");
 					if (split.length != 2) {
-						throw new ParseException("Address should be split with a single ':'");
+						throw new MalformedDataException("Address should be split with a single ':'");
 					}
 					try {
 						return new InetSocketAddress(InetAddress.getByName(split[0]), Integer.parseInt(split[1]));
 					} catch (UnknownHostException e) {
-						throw new ParseException("Failed to create InetSocketAddress", e);
+						throw new MalformedDataException("Failed to create InetSocketAddress", e);
 					}
 				},
 				(out, addr) -> out.writeString(addr.getAddress().getHostAddress() + ':' + addr.getPort())

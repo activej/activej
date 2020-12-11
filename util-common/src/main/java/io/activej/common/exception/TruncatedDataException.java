@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.http;
+package io.activej.common.exception;
 
-import io.activej.common.ApplicationSettings;
+public class TruncatedDataException extends MalformedDataException {
+	public TruncatedDataException() {
+		super("Truncated data");
+	}
 
-public final class HttpParseException extends HttpException {
-	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(HttpParseException.class, "withStackTrace", false);
-
-	public HttpParseException(String message) {
+	public TruncatedDataException(String message) {
 		super(message);
 	}
 
-	public HttpParseException(Throwable cause) {
-		super(cause);
-	}
-
-	public HttpParseException(String message, Throwable cause) {
+	public TruncatedDataException(String message, Throwable cause) {
 		super(message, cause);
-	}
-
-	@Override
-	public Throwable fillInStackTrace() {
-		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

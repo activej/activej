@@ -17,7 +17,7 @@
 package io.activej.rpc.server;
 
 import io.activej.common.MemSize;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
@@ -122,7 +122,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 					if (request == RpcControlMessage.PING) {
 						return Promise.of(RpcControlMessage.PONG);
 					}
-					return Promise.ofException(new ParseException("Unknown message: " + request));
+					return Promise.ofException(new MalformedDataException("Unknown message: " + request));
 				});
 	}
 

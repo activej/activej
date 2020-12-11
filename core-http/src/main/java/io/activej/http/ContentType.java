@@ -48,7 +48,7 @@ public final class ContentType {
 		return lookup(mime, HttpCharset.of(charset));
 	}
 
-	static ContentType parse(byte[] bytes, int pos, int length) throws HttpParseException {
+	static ContentType parse(byte[] bytes, int pos, int length) throws MalformedHttpException {
 		try {
 			// parsing media type
 			int end = pos + length;
@@ -88,7 +88,7 @@ public final class ContentType {
 			}
 			return lookup(type, charset);
 		} catch (RuntimeException e) {
-			throw new HttpParseException("Failed to parse content-type", e);
+			throw new MalformedHttpException("Failed to parse content-type", e);
 		}
 	}
 
@@ -110,7 +110,7 @@ public final class ContentType {
 		return pos;
 	}
 
-	public Charset getCharset() throws HttpParseException {
+	public Charset getCharset() throws MalformedHttpException {
 		return charset == null ? null : charset.toJavaCharset();
 	}
 

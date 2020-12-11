@@ -14,18 +14,27 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception.parse;
+package io.activej.http;
 
-public class UnknownFormatException extends ParseException {
-	public UnknownFormatException() {
-		super("Unknown format");
-	}
+import io.activej.common.ApplicationSettings;
 
-	public UnknownFormatException(String message) {
+public final class MalformedHttpException extends HttpException {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(MalformedHttpException.class, "withStackTrace", false);
+
+	public MalformedHttpException(String message) {
 		super(message);
 	}
 
-	public UnknownFormatException(String message, Throwable cause) {
+	public MalformedHttpException(Throwable cause) {
+		super(cause);
+	}
+
+	public MalformedHttpException(String message, Throwable cause) {
 		super(message, cause);
+	}
+
+	@Override
+	public Throwable fillInStackTrace() {
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

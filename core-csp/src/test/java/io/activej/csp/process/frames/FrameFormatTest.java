@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.MemSize;
-import io.activej.common.exception.parse.UnexpectedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;

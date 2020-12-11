@@ -16,7 +16,7 @@
 
 package io.activej.codec;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -29,78 +29,78 @@ import java.util.Map;
  * from different sources with different implementations of this interface
  */
 public interface StructuredInput {
-	void readNull() throws ParseException;
+	void readNull() throws MalformedDataException;
 
-	boolean readBoolean() throws ParseException;
+	boolean readBoolean() throws MalformedDataException;
 
-	byte readByte() throws ParseException;
+	byte readByte() throws MalformedDataException;
 
-	int readInt() throws ParseException;
+	int readInt() throws MalformedDataException;
 
-	long readLong() throws ParseException;
+	long readLong() throws MalformedDataException;
 
-	int readInt32() throws ParseException;
+	int readInt32() throws MalformedDataException;
 
-	long readLong64() throws ParseException;
+	long readLong64() throws MalformedDataException;
 
-	float readFloat() throws ParseException;
+	float readFloat() throws MalformedDataException;
 
-	double readDouble() throws ParseException;
+	double readDouble() throws MalformedDataException;
 
-	byte[] readBytes() throws ParseException;
+	byte[] readBytes() throws MalformedDataException;
 
-	String readString() throws ParseException;
+	String readString() throws MalformedDataException;
 
-	@Nullable <T> T readNullable(StructuredDecoder<T> decoder) throws ParseException;
+	@Nullable <T> T readNullable(StructuredDecoder<T> decoder) throws MalformedDataException;
 
-	boolean hasNext() throws ParseException;
+	boolean hasNext() throws MalformedDataException;
 
-	String readKey() throws ParseException;
+	String readKey() throws MalformedDataException;
 
-	default void readKey(String expectedName) throws ParseException {
+	default void readKey(String expectedName) throws MalformedDataException {
 		String actualName = readKey();
 		if (!expectedName.equals(actualName)) {
-			throw new ParseException("Expected field: " + expectedName + ", but was: " + actualName);
+			throw new MalformedDataException("Expected field: " + expectedName + ", but was: " + actualName);
 		}
 	}
 
-	default <T> T readKey(String expectedName, StructuredDecoder<T> decoder) throws ParseException {
+	default <T> T readKey(String expectedName, StructuredDecoder<T> decoder) throws MalformedDataException {
 		readKey(expectedName);
 		return decoder.decode(this);
 	}
 
-	<T> List<T> readList(StructuredDecoder<T> decoder) throws ParseException;
+	<T> List<T> readList(StructuredDecoder<T> decoder) throws MalformedDataException;
 
-	<K, V> Map<K, V> readMap(StructuredDecoder<K> keyDecoder, StructuredDecoder<V> valueDecoder) throws ParseException;
+	<K, V> Map<K, V> readMap(StructuredDecoder<K> keyDecoder, StructuredDecoder<V> valueDecoder) throws MalformedDataException;
 
-	<T> T readTuple(StructuredDecoder<T> decoder) throws ParseException;
+	<T> T readTuple(StructuredDecoder<T> decoder) throws MalformedDataException;
 
-	<T> T readObject(StructuredDecoder<T> decoder) throws ParseException;
+	<T> T readObject(StructuredDecoder<T> decoder) throws MalformedDataException;
 
 	@FunctionalInterface
 	interface ParserRunnable {
-		void run() throws ParseException;
+		void run() throws MalformedDataException;
 	}
 
-	default void readTuple(ParserRunnable decoder) throws ParseException {
+	default void readTuple(ParserRunnable decoder) throws MalformedDataException {
 		readTuple(in -> {
 			decoder.run();
 			return null;
 		});
 	}
 
-	default void readObject(ParserRunnable decoder) throws ParseException {
+	default void readObject(ParserRunnable decoder) throws MalformedDataException {
 		readObject(in -> {
 			decoder.run();
 			return null;
 		});
 	}
 
-	<T> T readCustom(Type type) throws ParseException;
+	<T> T readCustom(Type type) throws MalformedDataException;
 
 	enum Token {
 		NULL, BOOLEAN, BYTE, INT, LONG, FLOAT, DOUBLE, STRING, BYTES, LIST, MAP, TUPLE, OBJECT
 	}
 
-	EnumSet<Token> getNext() throws ParseException;
+	EnumSet<Token> getNext() throws MalformedDataException;
 }

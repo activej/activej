@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception.parse;
+package io.activej.common.exception;
 
-public class InvalidSizeException extends ParseException {
-	public InvalidSizeException() {
-		super("Invalid size");
-	}
-
-	public InvalidSizeException(String message) {
+public class MalformedDataException extends Exception {
+	public MalformedDataException(String message) {
 		super(message);
 	}
 
-	public InvalidSizeException(String message, Throwable cause) {
+	public MalformedDataException(String message, Throwable cause) {
 		super(message, cause);
+	}
+
+	public MalformedDataException(Throwable cause) {
+		super(cause);
 	}
 }

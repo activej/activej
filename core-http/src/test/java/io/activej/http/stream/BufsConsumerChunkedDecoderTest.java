@@ -2,8 +2,8 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.promise.Promise;
@@ -117,12 +117,12 @@ public final class BufsConsumerChunkedDecoderTest {
 	@Test
 	public void shouldThrowParseException() {
 		consumer.setExceptionValidator(e -> {
-			assertThat(e, instanceOf(ParseException.class));
+			assertThat(e, instanceOf(MalformedDataException.class));
 			assertThat(e.getMessage(), startsWith("Array of bytes differs at index 0"));
 		});
 		String message = Integer.toHexString(1);
 		message += "\r\nssss\r\n";
-		decodeOneString(message, ParseException.class);
+		decodeOneString(message, MalformedDataException.class);
 	}
 
 	@Test

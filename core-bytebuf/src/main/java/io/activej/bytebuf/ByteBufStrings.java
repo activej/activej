@@ -18,7 +18,7 @@ package io.activej.bytebuf;
 
 import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -253,7 +253,7 @@ public final class ByteBufStrings {
 		return byteBuffer;
 	}
 
-	public static int decodeUtf8(byte[] array, int pos, int len, char[] buffer, int to) throws ParseException {
+	public static int decodeUtf8(byte[] array, int pos, int len, char[] buffer, int to) throws MalformedDataException {
 		int end = pos + len;
 		try {
 			while (pos < end) {
@@ -278,36 +278,36 @@ public final class ByteBufStrings {
 						break;
 				}
 			}
-			if (pos > end) throw new ParseException("Malformed utf-8 input: Read past end");
+			if (pos > end) throw new MalformedDataException("Malformed utf-8 input: Read past end");
 		} catch (ArrayIndexOutOfBoundsException ignored) {
-			throw new ParseException("Malformed utf-8 input");
+			throw new MalformedDataException("Malformed utf-8 input");
 		}
 		return to;
 	}
 
-	public static String decodeUtf8(byte[] array, int pos, int len, char[] tmpBuffer) throws ParseException {
+	public static String decodeUtf8(byte[] array, int pos, int len, char[] tmpBuffer) throws MalformedDataException {
 		int charIndex = 0;
 		charIndex = decodeUtf8(array, pos, len, tmpBuffer, charIndex);
 		return new String(tmpBuffer, 0, charIndex);
 	}
 
-	public static String decodeUtf8(byte[] array, int pos, int len) throws ParseException {
+	public static String decodeUtf8(byte[] array, int pos, int len) throws MalformedDataException {
 		return decodeUtf8(array, pos, len, ThreadLocalCharArray.ensure(len));
 	}
 
-	public static String decodeUtf8(ByteBuf buf, char[] tmpBuffer) throws ParseException {
+	public static String decodeUtf8(ByteBuf buf, char[] tmpBuffer) throws MalformedDataException {
 		return decodeUtf8(buf.array(), buf.head(), buf.readRemaining(), tmpBuffer);
 	}
 
-	public static String decodeUtf8(ByteBuf buf) throws ParseException {
+	public static String decodeUtf8(ByteBuf buf) throws MalformedDataException {
 		return decodeUtf8(buf.array(), buf.head(), buf.readRemaining(), new char[buf.readRemaining()]);
 	}
 
-	public static String decodeUtf8(byte[] array) throws ParseException {
+	public static String decodeUtf8(byte[] array) throws MalformedDataException {
 		return decodeUtf8(array, 0, array.length, new char[array.length]);
 	}
 
-	public static String asUtf8(ByteBuf buf) throws ParseException {
+	public static String asUtf8(ByteBuf buf) throws MalformedDataException {
 		String str = decodeUtf8(buf.array(), buf.head(), buf.readRemaining(), ThreadLocalCharArray.ensure(buf.readRemaining()));
 		buf.recycle();
 		return str;
@@ -417,7 +417,7 @@ public final class ByteBufStrings {
 		return buf;
 	}
 
-	public static int decodeInt(byte[] array, int pos, int len) throws ParseException {
+	public static int decodeInt(byte[] array, int pos, int len) throws MalformedDataException {
 		int result = 0;
 
 		int i = pos;
@@ -430,20 +430,20 @@ public final class ByteBufStrings {
 		for (; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new ParseException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len));
 			}
 			result = b + result * 10;
 			if (result < 0) {
 				if (result == Integer.MIN_VALUE && (i + 1 == pos + len)) {
 					return Integer.MIN_VALUE;
 				}
-				throw new ParseException("Bigger than max int value: " + new String(array, pos, len));
+				throw new MalformedDataException("Bigger than max int value: " + new String(array, pos, len));
 			}
 		}
 		return (result ^ -negate) + negate;
 	}
 
-	public static long decodeLong(byte[] array, int pos, int len) throws ParseException {
+	public static long decodeLong(byte[] array, int pos, int len) throws MalformedDataException {
 		long result = 0;
 
 		int i = pos;
@@ -456,44 +456,44 @@ public final class ByteBufStrings {
 		for (; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new ParseException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len));
 			}
 			result = b + result * 10;
 			if (result < 0) {
 				if (result == Long.MIN_VALUE && (i + 1 == pos + len)) {
 					return Long.MIN_VALUE;
 				}
-				throw new ParseException("Bigger than max long value: " + new String(array, pos, len));
+				throw new MalformedDataException("Bigger than max long value: " + new String(array, pos, len));
 			}
 		}
 		return (result ^ -negate) + negate;
 	}
 
-	public static int decodePositiveInt(byte[] array, int pos, int len) throws ParseException {
+	public static int decodePositiveInt(byte[] array, int pos, int len) throws MalformedDataException {
 		int result = 0;
 		for (int i = pos; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new ParseException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len));
 			}
 			result = b + result * 10;
 			if (result < 0) {
-				throw new ParseException("Bigger than max int value: " + new String(array, pos, len));
+				throw new MalformedDataException("Bigger than max int value: " + new String(array, pos, len));
 			}
 		}
 		return result;
 	}
 
-	public static long decodePositiveLong(byte[] array, int pos, int len) throws ParseException {
+	public static long decodePositiveLong(byte[] array, int pos, int len) throws MalformedDataException {
 		long result = 0;
 		for (int i = pos; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new ParseException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len));
 			}
 			result = b + result * 10;
 			if (result < 0) {
-				throw new ParseException("Bigger than max long value: " + new String(array, pos, len));
+				throw new MalformedDataException("Bigger than max long value: " + new String(array, pos, len));
 			}
 		}
 		return result;

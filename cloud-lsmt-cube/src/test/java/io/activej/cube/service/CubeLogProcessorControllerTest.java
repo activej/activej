@@ -6,7 +6,7 @@ import io.activej.aggregation.ChunkIdCodec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;

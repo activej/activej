@@ -16,7 +16,7 @@
 
 package io.activej.rpc.server;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -69,7 +69,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	private Promise<Object> serve(Object request) {
 		RpcRequestHandler<Object, Object> requestHandler = (RpcRequestHandler<Object, Object>) handlers.get(request.getClass());
 		if (requestHandler == null) {
-			return Promise.ofException(new ParseException("Failed to process request " + request));
+			return Promise.ofException(new MalformedDataException("Failed to process request " + request));
 		}
 		return requestHandler.run(request);
 	}

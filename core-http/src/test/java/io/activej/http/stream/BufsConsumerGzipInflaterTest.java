@@ -2,7 +2,7 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.exception.parse.UnexpectedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.TestUtils.AssertingConsumer;
 import io.activej.promise.Promise;

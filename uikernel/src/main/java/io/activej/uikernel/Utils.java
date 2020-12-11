@@ -20,14 +20,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 class Utils {
-	static <K, R extends AbstractRecord<K>> List<R> deserializeUpdateRequest(Gson gson, String json, Class<R> type, Class<K> idType) throws ParseException {
+	static <K, R extends AbstractRecord<K>> List<R> deserializeUpdateRequest(Gson gson, String json, Class<R> type, Class<K> idType) throws MalformedDataException {
 		List<R> result = new ArrayList<>();
 		JsonArray root = fromJson(gson, json, JsonArray.class);
 		for (JsonElement element : root) {
@@ -40,35 +40,35 @@ class Utils {
 		return result;
 	}
 
-	static <T> T fromJson(Gson gson, String json, Type typeOfT) throws ParseException {
+	static <T> T fromJson(Gson gson, String json, Type typeOfT) throws MalformedDataException {
 		try {
 			return gson.fromJson(json, typeOfT);
 		} catch (JsonSyntaxException e) {
-			throw new ParseException("Failed to read from JSON", e);
+			throw new MalformedDataException("Failed to read from JSON", e);
 		}
 	}
 
-	static <T> T fromJson(Gson gson, String json, Class<T> typeOfT) throws ParseException {
+	static <T> T fromJson(Gson gson, String json, Class<T> typeOfT) throws MalformedDataException {
 		try {
 			return gson.fromJson(json, typeOfT);
 		} catch (JsonSyntaxException e) {
-			throw new ParseException("Failed to read from JSON", e);
+			throw new MalformedDataException("Failed to read from JSON", e);
 		}
 	}
 
-	static <T> T fromJson(Gson gson, JsonElement json, Type typeOfT) throws ParseException {
+	static <T> T fromJson(Gson gson, JsonElement json, Type typeOfT) throws MalformedDataException {
 		try {
 			return gson.fromJson(json, typeOfT);
 		} catch (JsonSyntaxException e) {
-			throw new ParseException("Failed to read from JSON", e);
+			throw new MalformedDataException("Failed to read from JSON", e);
 		}
 	}
 
-	static <T> T fromJson(Gson gson, JsonElement json, Class<T> typeOfT) throws ParseException {
+	static <T> T fromJson(Gson gson, JsonElement json, Class<T> typeOfT) throws MalformedDataException {
 		try {
 			return gson.fromJson(json, typeOfT);
 		} catch (JsonSyntaxException e) {
-			throw new ParseException("Failed to read from JSON", e);
+			throw new MalformedDataException("Failed to read from JSON", e);
 		}
 	}
 

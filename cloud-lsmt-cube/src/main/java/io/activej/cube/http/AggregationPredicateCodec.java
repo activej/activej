@@ -21,7 +21,7 @@ import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
 import io.activej.codec.registry.CodecFactory;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -207,14 +207,14 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 		}
 	}
 
-	private AggregationPredicate readObjectWithAlgebraOfSetsOperator(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readObjectWithAlgebraOfSetsOperator(StructuredInput reader) throws MalformedDataException {
 		List<AggregationPredicate> predicates = new ArrayList<>();
 		while (reader.hasNext()) {
 			String[] fieldWithOperator = reader.readKey().split(SPACES);
 			String field = fieldWithOperator[0];
 			String operator = (fieldWithOperator.length == 1) ? EMPTY_STRING : fieldWithOperator[1];
 			StructuredCodec<?> codec = attributeCodecs.get(field);
-			if (codec == null) throw new ParseException("Could not parse: " + field);
+			if (codec == null) throw new MalformedDataException("Could not parse: " + field);
 			Object value = codec.decode(reader);
 			AggregationPredicate comparisonPredicate;
 			switch (operator) {
@@ -241,7 +241,7 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 					comparisonPredicate = in(field, (Set<?>) value);
 					break;
 				default:
-					throw new ParseException("Could not read predicate");
+					throw new MalformedDataException("Could not read predicate");
 			}
 			predicates.add(comparisonPredicate);
 		}
@@ -249,57 +249,57 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> StructuredCodec<T> getAttributeCodec(String attribute) throws ParseException {
+	private <T> StructuredCodec<T> getAttributeCodec(String attribute) throws MalformedDataException {
 		StructuredCodec<T> codec = (StructuredCodec<T>) attributeCodecs.get(attribute);
 		if (codec == null) {
-			throw new ParseException("Unknown attribute: " + attribute);
+			throw new MalformedDataException("Unknown attribute: " + attribute);
 		}
 		return codec;
 	}
 
-	private AggregationPredicate readEq(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readEq(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		StructuredCodec<?> codec = getAttributeCodec(attribute);
 		Object value = codec.decode(reader);
 		return eq(attribute, value);
 	}
 
-	private AggregationPredicate readNotEq(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readNotEq(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		StructuredCodec<?> codec = getAttributeCodec(attribute);
 		Object value = codec.decode(reader);
 		return notEq(attribute, value);
 	}
 
-	private AggregationPredicate readGe(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readGe(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		StructuredCodec<?> codec = getAttributeCodec(attribute);
 		Comparable<?> value = (Comparable<?>) codec.decode(reader);
 		return ge(attribute, value);
 	}
 
-	private AggregationPredicate readGt(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readGt(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		StructuredCodec<?> codec = getAttributeCodec(attribute);
 		Comparable<?> value = (Comparable<?>) codec.decode(reader);
 		return gt(attribute, value);
 	}
 
-	private AggregationPredicate readLe(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readLe(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		StructuredCodec<?> codec = getAttributeCodec(attribute);
 		Comparable<?> value = (Comparable<?>) codec.decode(reader);
 		return le(attribute, value);
 	}
 
-	private AggregationPredicate readLt(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readLt(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		StructuredCodec<?> codec = getAttributeCodec(attribute);
 		Comparable<?> value = (Comparable<?>) codec.decode(reader);
 		return lt(attribute, value);
 	}
 
-	private AggregationPredicate readIn(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readIn(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		StructuredCodec<?> codec = getAttributeCodec(attribute);
 		Set<Object> values = new LinkedHashSet<>();
@@ -310,7 +310,7 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 		return in(attribute, values);
 	}
 
-	private AggregationPredicate readBetween(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readBetween(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		StructuredCodec<?> codec = getAttributeCodec(attribute);
 		Comparable<?> from = (Comparable<?>) codec.decode(reader);
@@ -318,19 +318,19 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 		return between(attribute, from, to);
 	}
 
-	private AggregationPredicate readRegexp(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readRegexp(StructuredInput reader) throws MalformedDataException {
 		String attribute = reader.readString();
 		String regexp = reader.readString();
 		Pattern pattern;
 		try {
 			pattern = Pattern.compile(regexp);
 		} catch (PatternSyntaxException e) {
-			throw new ParseException("Malformed regexp", e);
+			throw new MalformedDataException("Malformed regexp", e);
 		}
 		return regexp(attribute, pattern);
 	}
 
-	private AggregationPredicate readAnd(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readAnd(StructuredInput reader) throws MalformedDataException {
 		List<AggregationPredicate> predicates = new ArrayList<>();
 		while (reader.hasNext()) {
 			AggregationPredicate predicate = decode(reader);
@@ -339,7 +339,7 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 		return and(predicates);
 	}
 
-	private AggregationPredicate readOr(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readOr(StructuredInput reader) throws MalformedDataException {
 		List<AggregationPredicate> predicates = new ArrayList<>();
 		while (reader.hasNext()) {
 			AggregationPredicate predicate = decode(reader);
@@ -348,13 +348,13 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 		return or(predicates);
 	}
 
-	private AggregationPredicate readNot(StructuredInput reader) throws ParseException {
+	private AggregationPredicate readNot(StructuredInput reader) throws MalformedDataException {
 		AggregationPredicate predicate = decode(reader);
 		return not(predicate);
 	}
 
 	@Override
-	public AggregationPredicate decode(StructuredInput reader) throws ParseException {
+	public AggregationPredicate decode(StructuredInput reader) throws MalformedDataException {
 		if (reader.getNext().contains(OBJECT)) {
 			return reader.readObject(this::readObjectWithAlgebraOfSetsOperator);
 		} else {
@@ -390,7 +390,7 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 					case FALSE:
 						return alwaysFalse();
 					default:
-						throw new ParseException("Unknown predicate type " + type);
+						throw new MalformedDataException("Unknown predicate type " + type);
 				}
 			});
 		}

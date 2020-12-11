@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception.parse;
+package io.activej.common.exception;
 
-public class TruncatedDataException extends ParseException {
-	public TruncatedDataException() {
-		super("Truncated data");
+public class InvalidSizeException extends MalformedDataException {
+	public InvalidSizeException() {
+		super("Invalid size");
 	}
 
-	public TruncatedDataException(String message) {
+	public InvalidSizeException(String message) {
 		super(message);
 	}
 
-	public TruncatedDataException(String message, Throwable cause) {
+	public InvalidSizeException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

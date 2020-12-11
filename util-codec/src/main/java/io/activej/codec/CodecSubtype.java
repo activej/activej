@@ -17,7 +17,7 @@
 package io.activej.codec;
 
 import io.activej.common.api.WithInitializer;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -101,7 +101,7 @@ public final class CodecSubtype<T> implements WithInitializer<CodecSubtype<T>>, 
 	}
 
 	@Override
-	public T decode(StructuredInput in) throws ParseException {
+	public T decode(StructuredInput in) throws MalformedDataException {
 		return in.readObject($ -> {
 			String key;
 			if (tagName != null) {
@@ -114,7 +114,7 @@ public final class CodecSubtype<T> implements WithInitializer<CodecSubtype<T>>, 
 
 			StructuredCodec<? extends T> codec = namesToAdapters.get(key);
 			if (codec == null) {
-				throw new ParseException("Could not find codec for: " + key);
+				throw new MalformedDataException("Could not find codec for: " + key);
 			}
 			return codec.decode(in);
 		});

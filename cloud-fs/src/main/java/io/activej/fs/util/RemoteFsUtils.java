@@ -22,9 +22,9 @@ import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.json.JsonUtils;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.TruncatedDataException;
-import io.activej.common.exception.parse.UnexpectedDataException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
@@ -114,7 +114,7 @@ public final class RemoteFsUtils {
 		return body -> {
 			try {
 				return Promise.of(fromJson(decoder, body.getString(UTF_8)));
-			} catch (ParseException e) {
+			} catch (MalformedDataException e) {
 				return Promise.ofException(e);
 			}
 		};

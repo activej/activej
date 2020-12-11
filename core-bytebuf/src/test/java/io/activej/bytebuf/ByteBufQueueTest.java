@@ -1,6 +1,6 @@
 package io.activej.bytebuf;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -83,7 +83,7 @@ public class ByteBufQueueTest {
 	}
 
 	@Test
-	public void scanEmptyQueue() throws ParseException {
+	public void scanEmptyQueue() throws MalformedDataException {
 		assertTrue(queue.isEmpty());
 		assertEquals(-1, queue.scanBytes((index, value) -> {
 			throw new AssertionError();
@@ -91,7 +91,7 @@ public class ByteBufQueueTest {
 	}
 
 	@Test
-	public void scanOverQueueSize() throws ParseException {
+	public void scanOverQueueSize() throws MalformedDataException {
 		queue.add(ByteBuf.wrapForReading(new byte[5]));
 		assertEquals(-1, queue.scanBytes(queue.remainingBytes(), (index, value) -> {
 			throw new AssertionError();
@@ -99,7 +99,7 @@ public class ByteBufQueueTest {
 	}
 
 	@Test
-	public void scanWithOffsetOnBufBorder() throws ParseException {
+	public void scanWithOffsetOnBufBorder() throws MalformedDataException {
 		byte[] bytes = {1, 2, 3, 4, 5};
 		queue.add(ByteBuf.wrapForReading(bytes));
 		queue.add(ByteBuf.wrapForReading(bytes));

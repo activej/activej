@@ -18,9 +18,9 @@ package io.activej.bytebuf;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.common.recycle.Recyclable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -674,14 +674,14 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	public interface ByteScanner {
-		boolean consume(int index, byte value) throws ParseException;
+		boolean consume(int index, byte value) throws MalformedDataException;
 	}
 
 	public interface ByteParser<T> {
-		T parse(int index, byte value) throws ParseException;
+		T parse(int index, byte value) throws MalformedDataException;
 	}
 
-	public int scanBytes(ByteScanner byteScanner) throws ParseException {
+	public int scanBytes(ByteScanner byteScanner) throws MalformedDataException {
 		int scanned = 0;
 		for (int n = first; n != last; n = next(n)) {
 			ByteBuf buf = bufs[n];
@@ -697,7 +697,7 @@ public final class ByteBufQueue implements Recyclable {
 		return -1;
 	}
 
-	public int scanBytes(int offset, ByteScanner byteScanner) throws ParseException {
+	public int scanBytes(int offset, ByteScanner byteScanner) throws MalformedDataException {
 		ByteBuf buf = null;
 		int i = 0;
 		int n;
@@ -730,7 +730,7 @@ public final class ByteBufQueue implements Recyclable {
 		return -1;
 	}
 
-	public <T> T parseBytes(ByteParser<T> byteParser) throws ParseException {
+	public <T> T parseBytes(ByteParser<T> byteParser) throws MalformedDataException {
 		int parsed = 0;
 		for (int n = first; n != last; n = next(n)) {
 			ByteBuf buf = bufs[n];
@@ -757,7 +757,7 @@ public final class ByteBufQueue implements Recyclable {
 		return null;
 	}
 
-	public <T> T parseBytes(ByteParser<T> byteParser, Consumer<ByteBuf> recycledBufs) throws ParseException {
+	public <T> T parseBytes(ByteParser<T> byteParser, Consumer<ByteBuf> recycledBufs) throws MalformedDataException {
 		int parsed = 0;
 		for (int n = first; n != last; n = next(n)) {
 			ByteBuf buf = bufs[n];

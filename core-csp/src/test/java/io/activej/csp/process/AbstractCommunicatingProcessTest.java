@@ -2,7 +2,7 @@ package io.activej.csp.process;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
@@ -33,7 +33,7 @@ public final class AbstractCommunicatingProcessTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private static final ParseException ERROR = new ParseException("Test Error");
+	private static final MalformedDataException ERROR = new MalformedDataException("Test Error");
 
 	private final int size = 10;
 	private final List<ByteBuf> actualData = new ArrayList<>();

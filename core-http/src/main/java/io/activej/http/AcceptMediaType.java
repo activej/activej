@@ -54,7 +54,7 @@ public final class AcceptMediaType {
 		return new AcceptMediaType(mime, q);
 	}
 
-	static void parse(byte[] bytes, int pos, int length, List<AcceptMediaType> list) throws HttpParseException {
+	static void parse(byte[] bytes, int pos, int length, List<AcceptMediaType> list) throws MalformedHttpException {
 		int end = pos + length;
 
 		while (pos < end) {

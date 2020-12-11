@@ -67,15 +67,15 @@ public final class TestGzipProcessorUtils {
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
 	@Test
-	public void testEncodeDecode() throws HttpParseException {
+	public void testEncodeDecode() throws MalformedHttpException {
 		ByteBuf raw = toGzip(wrapUtf8(text));
 		ByteBuf actual = fromGzip(raw, 11_000_000);
 		assertEquals(text, actual.asString(UTF_8));
 	}
 
 	@Test
-	public void testEncodeDecodeWithTrailerInputSizeLessThenActual() throws HttpParseException {
-		expectedException.expect(HttpParseException.class);
+	public void testEncodeDecodeWithTrailerInputSizeLessThenActual() throws MalformedHttpException {
+		expectedException.expect(MalformedHttpException.class);
 		expectedException.expectMessage("Decompressed data size is not equal to input size from GZIP trailer");
 
 		ByteBuf raw = toGzip(wrapUtf8(text));
@@ -86,8 +86,8 @@ public final class TestGzipProcessorUtils {
 	}
 
 	@Test
-	public void recycleByteBufInCaseOfBadInput() throws HttpParseException {
-		expectedException.expect(HttpParseException.class);
+	public void recycleByteBufInCaseOfBadInput() throws MalformedHttpException {
+		expectedException.expect(MalformedHttpException.class);
 		expectedException.expectMessage("Corrupted GZIP header");
 
 		ByteBuf badBuf = ByteBufPool.allocate(100);
@@ -141,7 +141,7 @@ public final class TestGzipProcessorUtils {
 	}
 
 	@Test
-	public void testGzipOutputStreamDataIsCorrectlyDecoded() throws IOException, HttpParseException {
+	public void testGzipOutputStreamDataIsCorrectlyDecoded() throws IOException, MalformedHttpException {
 		ByteBuf encodedData = encodeWithGzipOutputStream(wrapUtf8(text));
 		ByteBuf decoded = fromGzip(encodedData, 11_000_000);
 		assertEquals(text, decoded.asString(UTF_8));

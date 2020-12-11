@@ -17,8 +17,8 @@
 package io.activej.codec;
 
 import io.activej.common.api.ParserFunction;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.common.tuple.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,7 +44,7 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Boolean decode(StructuredInput in) throws ParseException {
+		public Boolean decode(StructuredInput in) throws MalformedDataException {
 			return in.readBoolean();
 		}
 	};
@@ -56,12 +56,12 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Character decode(StructuredInput in) throws ParseException {
+		public Character decode(StructuredInput in) throws MalformedDataException {
 			String v = in.readString();
 			if (v.length() == 1) {
 				return v.charAt(0);
 			}
-			throw new ParseException("Read a string with length != 1 while trying to read a character");
+			throw new MalformedDataException("Read a string with length != 1 while trying to read a character");
 		}
 	};
 
@@ -72,12 +72,12 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Byte decode(StructuredInput in) throws ParseException {
+		public Byte decode(StructuredInput in) throws MalformedDataException {
 			int v = in.readInt();
 			if (v >= 0 && v <= 0xFF) {
 				return (byte) v;
 			}
-			throw new ParseException("Read an int not in range [0, 255] while trying to read a byte");
+			throw new MalformedDataException("Read an int not in range [0, 255] while trying to read a byte");
 		}
 	};
 
@@ -88,12 +88,12 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Short decode(StructuredInput in) throws ParseException {
+		public Short decode(StructuredInput in) throws MalformedDataException {
 			int v = in.readInt();
 			if (v >= Short.MIN_VALUE && v <= Short.MAX_VALUE) {
 				return (short) v;
 			}
-			throw new ParseException("Read an int not in range [" + Short.MIN_VALUE + ", " + Short.MAX_VALUE + "] while trying to read a short");
+			throw new MalformedDataException("Read an int not in range [" + Short.MIN_VALUE + ", " + Short.MAX_VALUE + "] while trying to read a short");
 		}
 	};
 
@@ -104,7 +104,7 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Integer decode(StructuredInput in) throws ParseException {
+		public Integer decode(StructuredInput in) throws MalformedDataException {
 			return in.readInt();
 		}
 	};
@@ -116,7 +116,7 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Long decode(StructuredInput in) throws ParseException {
+		public Long decode(StructuredInput in) throws MalformedDataException {
 			return in.readLong();
 		}
 	};
@@ -128,7 +128,7 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Integer decode(StructuredInput in) throws ParseException {
+		public Integer decode(StructuredInput in) throws MalformedDataException {
 			return in.readInt32();
 		}
 	};
@@ -140,7 +140,7 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Long decode(StructuredInput in) throws ParseException {
+		public Long decode(StructuredInput in) throws MalformedDataException {
 			return in.readLong64();
 		}
 	};
@@ -152,7 +152,7 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Float decode(StructuredInput in) throws ParseException {
+		public Float decode(StructuredInput in) throws MalformedDataException {
 			return in.readFloat();
 		}
 	};
@@ -164,7 +164,7 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Double decode(StructuredInput in) throws ParseException {
+		public Double decode(StructuredInput in) throws MalformedDataException {
 			return in.readDouble();
 		}
 	};
@@ -176,7 +176,7 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public String decode(StructuredInput in) throws ParseException {
+		public String decode(StructuredInput in) throws MalformedDataException {
 			return in.readString();
 		}
 	};
@@ -188,14 +188,14 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public byte[] decode(StructuredInput in) throws ParseException {
+		public byte[] decode(StructuredInput in) throws MalformedDataException {
 			return in.readBytes();
 		}
 	};
 
 	public static final StructuredCodec<Void> VOID_CODEC = new StructuredCodec<Void>() {
 		@Override
-		public Void decode(StructuredInput in) throws ParseException {
+		public Void decode(StructuredInput in) throws MalformedDataException {
 			in.readNull();
 			return null;
 		}
@@ -214,7 +214,7 @@ public final class StructuredCodecs {
 			}
 
 			@Override
-			public E decode(StructuredInput in) throws ParseException {
+			public E decode(StructuredInput in) throws MalformedDataException {
 				return Enum.valueOf(enumType, in.readString());
 			}
 		};
@@ -227,11 +227,11 @@ public final class StructuredCodecs {
 		}
 
 		@Override
-		public Class<?> decode(StructuredInput in) throws ParseException {
+		public Class<?> decode(StructuredInput in) throws MalformedDataException {
 			try {
 				return Class.forName(in.readString());
 			} catch (ClassNotFoundException e) {
-				throw new ParseException(e);
+				throw new MalformedDataException(e);
 			}
 		}
 	};
@@ -253,7 +253,7 @@ public final class StructuredCodecs {
 			}
 
 			@Override
-			public T decode(StructuredInput in) throws ParseException {
+			public T decode(StructuredInput in) throws MalformedDataException {
 				return in.readCustom(type);
 			}
 		};
@@ -270,7 +270,7 @@ public final class StructuredCodecs {
 			}
 
 			@Override
-			public Optional<T> decode(StructuredInput in) throws ParseException {
+			public Optional<T> decode(StructuredInput in) throws MalformedDataException {
 				return Optional.ofNullable(in.readNullable(codec));
 			}
 		};
@@ -285,7 +285,7 @@ public final class StructuredCodecs {
 
 			@Nullable
 			@Override
-			public T decode(StructuredInput in) throws ParseException {
+			public T decode(StructuredInput in) throws MalformedDataException {
 				return in.readNullable(codec);
 			}
 		};
@@ -300,12 +300,12 @@ public final class StructuredCodecs {
 			}
 
 			@Override
-			public R decode(StructuredInput in) throws ParseException {
+			public R decode(StructuredInput in) throws MalformedDataException {
 				T result = codec.decode(in);
 				try {
 					return reader.parse(result);
 				} catch (UncheckedException u) {
-					throw u.propagate(ParseException.class);
+					throw u.propagate(MalformedDataException.class);
 				}
 			}
 		};
@@ -323,7 +323,7 @@ public final class StructuredCodecs {
 			}
 
 			@Override
-			public List<T> decode(StructuredInput in) throws ParseException {
+			public List<T> decode(StructuredInput in) throws MalformedDataException {
 				return in.readList(valueAdapters);
 			}
 		};
@@ -363,7 +363,7 @@ public final class StructuredCodecs {
 	public static <T> StructuredCodec<List<T>> ofTupleList(List<StructuredCodec<? extends T>> codecs) {
 		return new StructuredCodec<List<T>>() {
 			@Override
-			public List<T> decode(StructuredInput in) throws ParseException {
+			public List<T> decode(StructuredInput in) throws MalformedDataException {
 				return in.readTuple($ -> {
 					List<T> list = new ArrayList<>();
 					for (StructuredCodec<? extends T> codec : codecs) {
@@ -397,7 +397,7 @@ public final class StructuredCodecs {
 			}
 
 			@Override
-			public Map<K, V> decode(StructuredInput in) throws ParseException {
+			public Map<K, V> decode(StructuredInput in) throws MalformedDataException {
 				return in.readMap(codecKey, codecValue);
 			}
 		};
@@ -409,7 +409,7 @@ public final class StructuredCodecs {
 	public static <T> StructuredCodec<Map<String, T>> ofObjectMap(Map<String, StructuredCodec<? extends T>> fieldCodecs) {
 		return new StructuredCodec<Map<String, T>>() {
 			@Override
-			public Map<String, T> decode(StructuredInput in) throws ParseException {
+			public Map<String, T> decode(StructuredInput in) throws MalformedDataException {
 				return in.readObject($ -> {
 					Map<String, T> map = new LinkedHashMap<>();
 					for (Map.Entry<String, StructuredCodec<? extends T>> entry : fieldCodecs.entrySet()) {
@@ -446,7 +446,7 @@ public final class StructuredCodecs {
 	public static <T> StructuredCodec<List<T>> concat(List<StructuredCodec<? extends T>> elementCodecs) {
 		return new StructuredCodec<List<T>>() {
 			@Override
-			public List<T> decode(StructuredInput in) throws ParseException {
+			public List<T> decode(StructuredInput in) throws MalformedDataException {
 				List<T> result = new ArrayList<>(elementCodecs.size());
 				for (StructuredCodec<? extends T> elementCodec : elementCodecs) {
 					result.add(elementCodec.decode(in));

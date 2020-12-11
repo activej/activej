@@ -132,13 +132,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onStartLine(byte[] line, int limit) throws HttpParseException {
+	protected void onStartLine(byte[] line, int limit) throws MalformedHttpException {
 		boolean http1x = line[0] == 'H' && line[1] == 'T' && line[2] == 'T' && line[3] == 'P' && line[4] == '/' && line[5] == '1';
 		boolean http11 = line[6] == '.' && line[7] == '1' && line[8] == SP;
 
 		if (!http1x) {
-			if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Invalid response");
-			throw new HttpParseException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Invalid response");
+			throw new MalformedHttpException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int pos = 9;
@@ -151,13 +151,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			version = HttpVersion.HTTP_1_0;
 			pos = 7;
 		} else {
-			if (!DETAILED_ERROR_MESSAGES) throw new HttpParseException("Invalid response");
-			throw new HttpParseException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Invalid response");
+			throw new MalformedHttpException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int statusCode = decodePositiveInt(line, pos, 3);
 		if (!(statusCode >= 100 && statusCode < 600)) {
-			throw new HttpParseException("Invalid HTTP Status Code " + statusCode);
+			throw new MalformedHttpException("Invalid HTTP Status Code " + statusCode);
 		}
 		response = new HttpResponse(version, statusCode, this);
 		response.maxBodySize = maxBodySize;
@@ -179,9 +179,9 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws HttpParseException {
+	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException {
 		assert response != null;
-		if (response.headers.size() >= MAX_HEADERS) throw new HttpParseException("Too many headers");
+		if (response.headers.size() >= MAX_HEADERS) throw new MalformedHttpException("Too many headers");
 		response.addHeader(header, array, off, len);
 	}
 
@@ -399,7 +399,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private void tryReadHttpMessage() {
 		try {
 			readHttpMessage();
-		} catch (HttpParseException e) {
+		} catch (MalformedHttpException e) {
 			closeWithError(e);
 		}
 	}

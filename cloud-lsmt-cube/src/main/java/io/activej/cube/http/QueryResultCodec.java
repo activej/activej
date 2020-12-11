@@ -19,7 +19,7 @@ package io.activej.cube.http;
 import io.activej.codec.*;
 import io.activej.codec.registry.CodecFactory;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.reflection.RecursiveType;
 import io.activej.cube.QueryResult;
 import io.activej.record.Record;
@@ -83,7 +83,7 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 	}
 
 	@Override
-	public QueryResult decode(StructuredInput reader) throws ParseException {
+	public QueryResult decode(StructuredInput reader) throws MalformedDataException {
 		return reader.readObject($1 -> {
 			RecordScheme recordScheme = null;
 			List<String> attributes = new ArrayList<>();
@@ -123,7 +123,7 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 						totals = readTotals(reader, recordScheme);
 						break;
 					default:
-						throw new ParseException("Unknown field: " + field);
+						throw new MalformedDataException("Unknown field: " + field);
 				}
 			}
 
@@ -141,7 +141,7 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 		});
 	}
 
-	private List<Record> readRecords(StructuredInput reader, RecordScheme recordScheme) throws ParseException {
+	private List<Record> readRecords(StructuredInput reader, RecordScheme recordScheme) throws MalformedDataException {
 		StructuredCodec<?>[] fieldStructuredCodecs = getStructuredCodecs(recordScheme);
 		StructuredDecoder<Record> recordDecoder = in -> {
 			Record record = recordScheme.record();
@@ -160,7 +160,7 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 		});
 	}
 
-	private Record readTotals(StructuredInput reader, RecordScheme recordScheme) throws ParseException {
+	private Record readTotals(StructuredInput reader, RecordScheme recordScheme) throws MalformedDataException {
 		return reader.readTuple($ -> {
 			Record totals = recordScheme.record();
 			for (int i = 0; i < recordScheme.getFields().size(); i++) {
@@ -175,7 +175,7 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 		});
 	}
 
-	private Map<String, Object> readFilterAttributes(StructuredInput reader) throws ParseException {
+	private Map<String, Object> readFilterAttributes(StructuredInput reader) throws MalformedDataException {
 		return reader.readObject($ -> {
 			Map<String, Object> result = new LinkedHashMap<>();
 			while (reader.hasNext()) {

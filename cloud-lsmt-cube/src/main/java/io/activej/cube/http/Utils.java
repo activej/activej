@@ -18,7 +18,7 @@ package io.activej.cube.http;
 
 import io.activej.codec.registry.CodecFactory;
 import io.activej.codec.registry.CodecRegistry;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.ReportType;
 
@@ -53,7 +53,7 @@ class Utils {
 		return sb.toString();
 	}
 
-	static List<Ordering> parseOrderings(String string) throws ParseException {
+	static List<Ordering> parseOrderings(String string) throws MalformedDataException {
 		List<Ordering> result = new ArrayList<>();
 		List<String> tokens = splitter.splitAsStream(string)
 				.map(String::trim)
@@ -62,7 +62,7 @@ class Utils {
 		for (String s : tokens) {
 			int i = s.indexOf(':');
 			if (i == -1) {
-				throw new ParseException("Failed to parse orderings, missing semicolon");
+				throw new MalformedDataException("Failed to parse orderings, missing semicolon");
 			}
 			String field = s.substring(0, i);
 			String tail = s.substring(i + 1).toLowerCase();
@@ -71,27 +71,27 @@ class Utils {
 			else if ("desc".equals(tail))
 				result.add(Ordering.desc(field));
 			else {
-				throw new ParseException("Tail is neither 'asc' nor 'desc'");
+				throw new MalformedDataException("Tail is neither 'asc' nor 'desc'");
 			}
 		}
 		return result;
 	}
 
-	static int parseNonNegativeInteger(String parameter) throws ParseException {
+	static int parseNonNegativeInteger(String parameter) throws MalformedDataException {
 		try {
 			int value = Integer.parseInt(parameter);
-			if (value < 0 ) throw new ParseException("Must be non negative value: " + parameter);
+			if (value < 0 ) throw new MalformedDataException("Must be non negative value: " + parameter);
 			return value;
 		} catch (NumberFormatException e) {
-			throw new ParseException("Could not parse: " + parameter, e);
+			throw new MalformedDataException("Could not parse: " + parameter, e);
 		}
 	}
 
-	static ReportType parseReportType(String parameter) throws ParseException{
+	static ReportType parseReportType(String parameter) throws MalformedDataException {
 		try {
 			return ReportType.valueOf(parameter.toUpperCase());
 		} catch (IllegalArgumentException e) {
-			throw new ParseException("'" + parameter + "' neither of: " + Arrays.toString(ReportType.values()), e);
+			throw new MalformedDataException("'" + parameter + "' neither of: " + Arrays.toString(ReportType.values()), e);
 		}
 	}
 

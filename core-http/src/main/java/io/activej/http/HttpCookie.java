@@ -32,7 +32,7 @@ import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
  */
 public final class HttpCookie {
 	private abstract static class AvHandler {
-		protected abstract void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws HttpParseException;
+		protected abstract void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException;
 	}
 
 	private static final byte[] EXPIRES = encodeAscii("Expires");
@@ -223,7 +223,7 @@ public final class HttpCookie {
 	}
 	// endregion
 
-	static void parseFull(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws HttpParseException {
+	static void parseFull(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
 		try {
 			HttpCookie cookie = new HttpCookie("", "", "/");
 			while (pos < end) {
@@ -260,7 +260,7 @@ public final class HttpCookie {
 				pos = valueEnd + 1;
 			}
 		} catch (RuntimeException e) {
-			throw new HttpParseException("Failed to parse cookies", e);
+			throw new MalformedHttpException("Failed to parse cookies", e);
 		}
 	}
 
@@ -290,7 +290,7 @@ public final class HttpCookie {
 		return pos;
 	}
 
-	static void parseSimple(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws HttpParseException {
+	static void parseSimple(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
 		try {
 			while (pos < end) {
 				pos = skipSpaces(bytes, pos, end);
@@ -325,7 +325,7 @@ public final class HttpCookie {
 				pos = valueEnd + 1;
 			}
 		} catch (RuntimeException e) {
-			throw new HttpParseException("Failed to parse cookies", e);
+			throw new MalformedHttpException("Failed to parse cookies", e);
 		}
 	}
 
@@ -378,14 +378,14 @@ public final class HttpCookie {
 			case EXPIRES_HC:
 				return new AvHandler() {
 					@Override
-					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws HttpParseException {
+					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
 						cookie.setExpirationDate(parseExpirationDate(bytes, start));
 					}
 				};
 			case MAX_AGE_HC:
 				return new AvHandler() {
 					@Override
-					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws HttpParseException {
+					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
 						cookie.setMaxAge(parseMaxAge(bytes, start, end));
 					}
 				};
@@ -422,11 +422,11 @@ public final class HttpCookie {
 		return null;
 	}
 
-	private static Instant parseExpirationDate(byte[] bytes, int start) throws HttpParseException {
+	private static Instant parseExpirationDate(byte[] bytes, int start) throws MalformedHttpException {
 		return Instant.ofEpochSecond(HttpDate.parse(bytes, start));
 	}
 
-	private static Duration parseMaxAge(byte[] bytes, int start, int end) throws HttpParseException {
+	private static Duration parseMaxAge(byte[] bytes, int start, int end) throws MalformedHttpException {
 		return Duration.ofSeconds(trimAndDecodePositiveInt(bytes, start, end - start));
 	}
 

@@ -88,7 +88,7 @@ public final class HttpCharset extends Token {
 		return this;
 	}
 
-	Charset toJavaCharset() throws HttpParseException {
+	Charset toJavaCharset() throws MalformedHttpException {
 		if (javaCharset == null) {
 			String charsetName = decodeAscii(bytes, offset, length);
 			try {
@@ -97,7 +97,7 @@ public final class HttpCharset extends Token {
 				}
 				javaCharset = forName(charsetName);
 			} catch (Exception e) {
-				throw new HttpParseException("Can't fetch charset for " + charsetName, e);
+				throw new MalformedHttpException("Can't fetch charset for " + charsetName, e);
 			}
 		}
 		return javaCharset;

@@ -2,7 +2,7 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.TruncatedDataException;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;

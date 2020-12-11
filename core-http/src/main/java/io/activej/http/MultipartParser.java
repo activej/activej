@@ -20,8 +20,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelConsumer;
@@ -87,11 +87,11 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 		assert headers != null;
 		String header = headers.get("content-disposition");
 		if (header == null) {
-			return Promise.ofException(new HttpParseException("Headers had no Content-Disposition"));
+			return Promise.ofException(new MalformedHttpException("Headers had no Content-Disposition"));
 		}
 		String[] headerParts = header.split(";");
 		if (headerParts.length == 0 || !"form-data".equals(headerParts[0].trim())) {
-			return Promise.ofException(new HttpParseException("Content-Disposition type is not 'form-data'"));
+			return Promise.ofException(new MalformedHttpException("Content-Disposition type is not 'form-data'"));
 		}
 		return Promise.of(Arrays.stream(headerParts)
 				.skip(1)
@@ -145,7 +145,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 					if (frame.isHeaders()) {
 						return doSplit(frame, frames, dataHandler);
 					}
-					Exception e = new HttpParseException("First frame had no headers");
+					Exception e = new MalformedHttpException("First frame had no headers");
 					frames.closeEx(e);
 					return Promise.ofException(e);
 				});
@@ -156,7 +156,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 
 	@Nullable
 	@Override
-	public MultipartFrame tryDecode(ByteBufQueue bufs) throws ParseException {
+	public MultipartFrame tryDecode(ByteBufQueue bufs) throws MalformedDataException {
 		if (finished) {
 			return null;
 		}
@@ -228,7 +228,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 		return MultipartFrame.of(buf);
 	}
 
-	private boolean cannotBeBoundary(ByteBufQueue bufs) throws ParseException {
+	private boolean cannotBeBoundary(ByteBufQueue bufs) throws MalformedDataException {
 		return bufs.scanBytes((index, nextByte) -> {
 			if (index == lastBoundary.length) {
 				return nextByte != CR;

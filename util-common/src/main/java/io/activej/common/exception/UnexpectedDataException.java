@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception.parse;
+package io.activej.common.exception;
 
-public class ParseException extends Exception {
-	public ParseException(String message) {
+public class UnexpectedDataException extends MalformedDataException {
+	public UnexpectedDataException() {
+		super("Unexpected data");
+	}
+
+	public UnexpectedDataException(String message) {
 		super(message);
 	}
 
-	public ParseException(String message, Throwable cause) {
+	public UnexpectedDataException(String message, Throwable cause) {
 		super(message, cause);
-	}
-
-	public ParseException(Throwable cause) {
-		super(cause);
 	}
 }

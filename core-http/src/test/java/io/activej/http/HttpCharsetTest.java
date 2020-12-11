@@ -35,7 +35,7 @@ public class HttpCharsetTest {
 	}
 
 	@Test
-	public void testConverters() throws HttpParseException {
+	public void testConverters() throws MalformedHttpException {
 		HttpCharset expected = HttpCharset.US_ASCII;
 		Charset charset = expected.toJavaCharset();
 		HttpCharset actual = HttpCharset.of(charset);
@@ -43,7 +43,7 @@ public class HttpCharsetTest {
 	}
 
 	@Test
-	public void testAcceptCharset() throws HttpParseException {
+	public void testAcceptCharset() throws MalformedHttpException {
 		byte[] bytes = encodeAscii("iso-8859-5, unicode-1-1;q=0.8");
 		List<AcceptCharset> chs = new ArrayList<>();
 		AcceptCharset.parse(bytes, 0, bytes.length, chs);

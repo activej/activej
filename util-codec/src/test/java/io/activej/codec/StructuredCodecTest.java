@@ -1,7 +1,7 @@
 package io.activej.codec;
 
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.tuple.Tuple2;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
@@ -16,7 +16,7 @@ public class StructuredCodecTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private <T> void test(StructuredCodec<T> codec, T item) throws ParseException {
+	private <T> void test(StructuredCodec<T> codec, T item) throws MalformedDataException {
 		String str = JsonUtils.toJson(codec, item);
 		System.out.println(str);
 		T result = JsonUtils.fromJson(codec, str);
@@ -24,7 +24,7 @@ public class StructuredCodecTest {
 	}
 
 	@Test
-	public void test1() throws ParseException {
+	public void test1() throws MalformedDataException {
 		StructuredCodec<Tuple2<String, Integer>> codec = tuple(Tuple2::new,
 				Tuple2::getValue1, STRING_CODEC.nullable(),
 				Tuple2::getValue2, INT_CODEC.nullable());

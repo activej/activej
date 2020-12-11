@@ -19,8 +19,8 @@ package io.activej.codec.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.StructuredInput;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -37,82 +37,82 @@ public final class BinaryStructuredInput implements StructuredInput {
 	}
 
 	@Override
-	public boolean readBoolean() throws ParseException {
+	public boolean readBoolean() throws MalformedDataException {
 		try {
 			return buf.readBoolean();
 		} catch (ArrayIndexOutOfBoundsException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 
 	@Override
-	public byte readByte() throws ParseException {
+	public byte readByte() throws MalformedDataException {
 		try {
 			return buf.readByte();
 		} catch (ArrayIndexOutOfBoundsException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 
 	@Override
-	public int readInt() throws ParseException {
+	public int readInt() throws MalformedDataException {
 		try {
 			return buf.readVarInt();
 		} catch (ArrayIndexOutOfBoundsException | IllegalStateException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 
 	@Override
-	public long readLong() throws ParseException {
+	public long readLong() throws MalformedDataException {
 		try {
 			return buf.readVarLong();
 		} catch (ArrayIndexOutOfBoundsException | IllegalStateException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 
 	@Override
-	public int readInt32() throws ParseException {
+	public int readInt32() throws MalformedDataException {
 		try {
 			return buf.readInt();
 		} catch (ArrayIndexOutOfBoundsException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 
 	@Override
-	public long readLong64() throws ParseException {
+	public long readLong64() throws MalformedDataException {
 		try {
 			return buf.readLong();
 		} catch (ArrayIndexOutOfBoundsException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 
 	@Override
-	public float readFloat() throws ParseException {
+	public float readFloat() throws MalformedDataException {
 		try {
 			return buf.readFloat();
 		} catch (ArrayIndexOutOfBoundsException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 
 	@Override
-	public double readDouble() throws ParseException {
+	public double readDouble() throws MalformedDataException {
 		try {
 			return buf.readDouble();
 		} catch (ArrayIndexOutOfBoundsException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 
 	@Override
-	public byte[] readBytes() throws ParseException {
+	public byte[] readBytes() throws MalformedDataException {
 		int length = readInt();
 		if (length < 0 || length > buf.readRemaining()) {
-			throw new ParseException("Invalid length: " + length + ", remaining: " + buf.readRemaining() + ", buf: " + buf);
+			throw new MalformedDataException("Invalid length: " + length + ", remaining: " + buf.readRemaining() + ", buf: " + buf);
 		}
 		byte[] result = new byte[length];
 		buf.read(result);
@@ -120,36 +120,36 @@ public final class BinaryStructuredInput implements StructuredInput {
 	}
 
 	@Override
-	public String readString() throws ParseException {
+	public String readString() throws MalformedDataException {
 		int length = readInt();
 		if (length == 0)
 			return "";
 		if (length > buf.readRemaining())
-			throw new ParseException("Read string length is greater than the remaining data");
+			throw new MalformedDataException("Read string length is greater than the remaining data");
 		String result = new String(buf.array(), buf.head(), length, UTF_8);
 		buf.moveHead(length);
 		return result;
 	}
 
 	@Override
-	public void readNull() throws ParseException {
+	public void readNull() throws MalformedDataException {
 		if (readBoolean()) {
-			throw new ParseException("Expected NULL value");
+			throw new MalformedDataException("Expected NULL value");
 		}
 	}
 
 	@Nullable
 	@Override
-	public <T> T readNullable(StructuredDecoder<T> decoder) throws ParseException {
+	public <T> T readNullable(StructuredDecoder<T> decoder) throws MalformedDataException {
 		try {
 			return readBoolean() ? decoder.decode(this) : null;
 		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
+			throw e.propagate(MalformedDataException.class);
 		}
 	}
 
 	@Override
-	public <T> List<T> readList(StructuredDecoder<T> decoder) throws ParseException {
+	public <T> List<T> readList(StructuredDecoder<T> decoder) throws MalformedDataException {
 		int size = readInt();
 		List<T> list = new ArrayList<>(size);
 		try {
@@ -157,13 +157,13 @@ public final class BinaryStructuredInput implements StructuredInput {
 				list.add(decoder.decode(this));
 			}
 		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
+			throw e.propagate(MalformedDataException.class);
 		}
 		return list;
 	}
 
 	@Override
-	public <K, V> Map<K, V> readMap(StructuredDecoder<K> keyDecoder, StructuredDecoder<V> valueDecoder) throws ParseException {
+	public <K, V> Map<K, V> readMap(StructuredDecoder<K> keyDecoder, StructuredDecoder<V> valueDecoder) throws MalformedDataException {
 		int size = readInt();
 		Map<K, V> map = new LinkedHashMap<>();
 		try {
@@ -171,46 +171,46 @@ public final class BinaryStructuredInput implements StructuredInput {
 				map.put(keyDecoder.decode(this), valueDecoder.decode(this));
 			}
 		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
+			throw e.propagate(MalformedDataException.class);
 		}
 		return map;
 	}
 
 	@Override
-	public <T> T readTuple(StructuredDecoder<T> decoder) throws ParseException {
+	public <T> T readTuple(StructuredDecoder<T> decoder) throws MalformedDataException {
 		try {
 			return decoder.decode(this);
 		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
+			throw e.propagate(MalformedDataException.class);
 		}
 	}
 
 	@Override
-	public <T> T readObject(StructuredDecoder<T> decoder) throws ParseException {
+	public <T> T readObject(StructuredDecoder<T> decoder) throws MalformedDataException {
 		try {
 			return decoder.decode(this);
 		} catch (UncheckedException e) {
-			throw e.propagate(ParseException.class);
+			throw e.propagate(MalformedDataException.class);
 		}
 	}
 
 	@Override
-	public boolean hasNext() throws ParseException {
+	public boolean hasNext() throws MalformedDataException {
 		throw new UnsupportedOperationException("hasNext() is not supported for binary data");
 	}
 
 	@Override
-	public String readKey() throws ParseException {
+	public String readKey() throws MalformedDataException {
 		return readString();
 	}
 
 	@Override
-	public <T> T readCustom(Type type) throws ParseException {
+	public <T> T readCustom(Type type) throws MalformedDataException {
 		throw new UnsupportedOperationException("No custom type readers");
 	}
 
 	@Override
-	public EnumSet<Token> getNext() throws ParseException {
+	public EnumSet<Token> getNext() throws MalformedDataException {
 		throw new UnsupportedOperationException("getNext() is not supported for binary data");
 	}
 

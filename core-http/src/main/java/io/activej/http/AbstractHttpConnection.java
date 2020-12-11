@@ -23,7 +23,7 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.ChannelSupplier;
@@ -99,14 +99,14 @@ public abstract class AbstractHttpConnection {
 
 	protected final ReadConsumer startLineConsumer = new ReadConsumer() {
 		@Override
-		public void thenRun() throws HttpParseException {
+		public void thenRun() throws MalformedHttpException {
 			readStartLine();
 		}
 	};
 
 	protected final ReadConsumer headersConsumer = new ReadConsumer() {
 		@Override
-		public void thenRun() throws HttpParseException {
+		public void thenRun() throws MalformedHttpException {
 			readHeaders();
 		}
 	};
@@ -132,11 +132,11 @@ public abstract class AbstractHttpConnection {
 		this.maxBodySize = maxBodySize;
 	}
 
-	protected abstract void onStartLine(byte[] line, int limit) throws HttpParseException;
+	protected abstract void onStartLine(byte[] line, int limit) throws MalformedHttpException;
 
 	protected abstract void onHeaderBuf(ByteBuf buf);
 
-	protected abstract void onHeader(HttpHeader header, byte[] array, int off, int len) throws HttpParseException;
+	protected abstract void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException;
 
 	protected abstract void onHeadersReceived(@Nullable ByteBuf body, @Nullable ChannelSupplier<ByteBuf> bodySupplier);
 
@@ -233,11 +233,11 @@ public abstract class AbstractHttpConnection {
 		readQueue.recycle();
 	}
 
-	protected final void readHttpMessage() throws HttpParseException {
+	protected final void readHttpMessage() throws MalformedHttpException {
 		readStartLine();
 	}
 
-	private void readStartLine() throws HttpParseException {
+	private void readStartLine() throws MalformedHttpException {
 		int size = 1;
 		for (int i = 0; i < readQueue.remainingBufs(); i++) {
 			ByteBuf buf = readQueue.peekBuf(i);
@@ -262,11 +262,11 @@ public abstract class AbstractHttpConnection {
 			}
 			size += buf.readRemaining();
 		}
-		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw new HttpParseException("Header line exceeds max header size");
+		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw new MalformedHttpException("Header line exceeds max header size");
 		socket.read().whenComplete(startLineConsumer);
 	}
 
-	private void readHeaders() throws HttpParseException {
+	private void readHeaders() throws MalformedHttpException {
 		assert !isClosed();
 		while (readQueue.hasRemaining()) {
 			ByteBuf buf = readQueue.peekBuf(0);
@@ -310,17 +310,17 @@ public abstract class AbstractHttpConnection {
 			}
 		}
 
-		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw new HttpParseException("Header line exceeds max header size");
+		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw new MalformedHttpException("Header line exceeds max header size");
 		socket.read().whenComplete(headersConsumer);
 	}
 
-	private byte[] readHeaderEx(int i) throws HttpParseException {
+	private byte[] readHeaderEx(int i) throws MalformedHttpException {
 		int remainingBytes = readQueue.remainingBytes();
 		while (true) {
 			try {
 				i = readQueue.scanBytes(i, ($, b) -> b == CR || b == LF);
-			} catch (ParseException e) {
-				throw new HttpParseException(e);
+			} catch (MalformedDataException e) {
+				throw new MalformedHttpException(e);
 			}
 			if (i == -1) return null;
 			byte b = readQueue.peekByte(i++);
@@ -329,7 +329,7 @@ public abstract class AbstractHttpConnection {
 			if (b == CR) {
 				if (i >= remainingBytes) return null;
 				b = readQueue.peekByte(i++);
-				if (b != LF) throw new HttpParseException("Invalid CRLF");
+				if (b != LF) throw new MalformedHttpException("Invalid CRLF");
 				if (i == 2) {
 					bytes = EMPTY_HEADER;
 				} else {
@@ -362,7 +362,7 @@ public abstract class AbstractHttpConnection {
 		}
 	}
 
-	private void processHeaderLine(byte[] array, int off, int limit) throws HttpParseException {
+	private void processHeaderLine(byte[] array, int off, int limit) throws MalformedHttpException {
 		int pos = off;
 		int hashCode = 1;
 		while (pos < limit) {
@@ -374,7 +374,7 @@ public abstract class AbstractHttpConnection {
 			hashCode = 31 * hashCode + b;
 			pos++;
 		}
-		if (pos == limit) throw new HttpParseException("Header name is absent");
+		if (pos == limit) throw new MalformedHttpException("Header name is absent");
 		HttpHeader header = HttpHeaders.of(array, off, pos - off, hashCode);
 		pos++;
 
@@ -431,7 +431,7 @@ public abstract class AbstractHttpConnection {
 									readQueue.add(buf);
 									return Promise.complete();
 								} else {
-									return Promise.ofException(new HttpParseException("Incomplete HTTP message"));
+									return Promise.ofException(new MalformedHttpException("Incomplete HTTP message"));
 								}
 							} else {
 								e = translateToHttpException(e);
@@ -572,7 +572,7 @@ public abstract class AbstractHttpConnection {
 					readQueue.add(buf);
 					try {
 						thenRun();
-					} catch (HttpParseException e1) {
+					} catch (MalformedHttpException e1) {
 						closeWithError(e1);
 					}
 				} else {
@@ -583,7 +583,7 @@ public abstract class AbstractHttpConnection {
 			}
 		}
 
-		public abstract void thenRun() throws HttpParseException;
+		public abstract void thenRun() throws MalformedHttpException;
 	}
 
 	@Override

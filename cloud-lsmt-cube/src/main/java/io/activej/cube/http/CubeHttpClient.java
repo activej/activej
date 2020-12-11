@@ -20,7 +20,7 @@ import io.activej.aggregation.AggregationPredicate;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.registry.CodecFactory;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;
@@ -125,7 +125,7 @@ public final class CubeHttpClient implements ICube {
 								}
 								QueryResult result = fromJson(getQueryResultCodec(), httpResponse);
 								return Promise.of(result);
-							} catch (ParseException e) {
+							} catch (MalformedDataException e) {
 								return Promise.ofException(new CubeException("Cube HTTP query failed. Invalid data received", e));
 							}
 						})

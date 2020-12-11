@@ -133,7 +133,7 @@ public abstract class HttpMessage {
 			if (k.equals(header)) {
 				try {
 					parser.parse(((HttpHeaderValue) headers.kvPairs[i + 1]).getBuf(), list);
-				} catch (HttpParseException ignored) {
+				} catch (MalformedHttpException ignored) {
 				}
 			}
 		}
@@ -147,7 +147,7 @@ public abstract class HttpMessage {
 			if (buf != null) {
 				return parser.parse(buf);
 			}
-		} catch (HttpParseException ignore) {}
+		} catch (MalformedHttpException ignore) {}
 
 		return null;
 	}
@@ -283,7 +283,7 @@ public abstract class HttpMessage {
 					if (maxBodySize != 0 && queue.hasRemainingBytes(maxBodySize)) {
 						queue.recycle();
 						buf.recycle();
-						throw new UncheckedException(new HttpParseException(
+						throw new UncheckedException(new MalformedHttpException(
 								"HTTP body size exceeds load limit " + maxBodySize));
 					}
 					queue.add(buf);
@@ -462,6 +462,6 @@ public abstract class HttpMessage {
 	protected abstract void writeTo(@NotNull ByteBuf buf);
 
 	public interface HttpParserFunction<T> {
-		T parse(ByteBuf value) throws HttpParseException;
+		T parse(ByteBuf value) throws MalformedHttpException;
 	}
 }

@@ -19,7 +19,7 @@ package io.activej.launchers.crdt;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.storage.local.CrdtStorageMap;
@@ -77,7 +77,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								}
 								return Promise.of(HttpResponse.ofCode(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8)));
-							} catch (ParseException e) {
+							} catch (MalformedDataException e) {
 								return Promise.ofException(HttpError.ofCode(400, e));
 							}
 						}))
@@ -87,7 +87,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 							try {
 								client.put(JsonUtils.fromJson(codec, body.getString(UTF_8)));
 								return Promise.of(HttpResponse.ok200());
-							} catch (ParseException e) {
+							} catch (MalformedDataException e) {
 								return Promise.ofException(HttpError.ofCode(400, e));
 							}
 						}))
@@ -101,7 +101,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								}
 								return Promise.of(HttpResponse.ofCode(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8)));
-							} catch (ParseException e) {
+							} catch (MalformedDataException e) {
 								return Promise.ofException(HttpError.ofCode(400, e));
 							}
 						}));

@@ -18,8 +18,8 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 
 class Utils {
 
@@ -30,7 +30,7 @@ class Utils {
 					return true;
 				}
 				if (index == maxSize - 1) {
-					throw new ParseException("No terminator byte is found in " + maxSize + " bytes");
+					throw new MalformedDataException("No terminator byte is found in " + maxSize + " bytes");
 				}
 				return false;
 			});
@@ -47,7 +47,7 @@ class Utils {
 		private int result;
 
 		@Override
-		public boolean consume(int index, byte nextByte) throws ParseException {
+		public boolean consume(int index, byte nextByte) throws MalformedDataException {
 			result |= (nextByte & 0x7F) << index * 7;
 			if ((nextByte & 0x80) == 0) {
 

@@ -53,12 +53,12 @@ public final class GzipProcessorUtils {
 	private static final ConcurrentStack<Inflater> decompressors = new ConcurrentStack<>();
 	private static final ConcurrentStack<Deflater> compressors = new ConcurrentStack<>();
 
-	public static ByteBuf fromGzip(ByteBuf src, int maxMessageSize) throws HttpParseException {
+	public static ByteBuf fromGzip(ByteBuf src, int maxMessageSize) throws MalformedHttpException {
 		if (CHECK) checkArgument(src.readRemaining() > 0);
 
 		int expectedSize = readExpectedInputSize(src);
-		check(expectedSize >= 0, src, () -> new HttpParseException("Incorrect uncompressed input size"));
-		check(expectedSize <= maxMessageSize, src, () -> new HttpParseException("Decompressed data size exceeds max expected size"));
+		check(expectedSize >= 0, src, () -> new MalformedHttpException("Incorrect uncompressed input size"));
+		check(expectedSize <= maxMessageSize, src, () -> new MalformedHttpException("Decompressed data size exceeds max expected size"));
 		processHeader(src);
 		ByteBuf dst = ByteBufPool.allocate(expectedSize);
 		Inflater decompressor = ensureDecompressor();
@@ -69,12 +69,12 @@ public final class GzipProcessorUtils {
 			moveDecompressorToPool(decompressor);
 			src.recycle();
 			dst.recycle();
-			throw new HttpParseException("Data format exception");
+			throw new MalformedHttpException("Data format exception");
 		}
 		moveDecompressorToPool(decompressor);
 		check(expectedSize == dst.readRemaining(), src, dst, () ->
-				new HttpParseException("Decompressed data size is not equal to input size from GZIP trailer"));
-		check(src.readRemaining() == GZIP_FOOTER_SIZE, src, dst, () -> new HttpParseException("Compressed data was not read fully"));
+				new MalformedHttpException("Decompressed data size is not equal to input size from GZIP trailer"));
+		check(src.readRemaining() == GZIP_FOOTER_SIZE, src, dst, () -> new MalformedHttpException("Compressed data was not read fully"));
 
 		src.recycle();
 		return dst;
@@ -100,9 +100,9 @@ public final class GzipProcessorUtils {
 		return dst;
 	}
 
-	private static int readExpectedInputSize(ByteBuf buf) throws HttpParseException {
+	private static int readExpectedInputSize(ByteBuf buf) throws MalformedHttpException {
 		// trailer size - 8 bytes. 4 bytes for CRC32, 4 bytes for ISIZE
-		check(buf.readRemaining() >= 8, buf, () -> new HttpParseException("Corrupted GZIP header"));
+		check(buf.readRemaining() >= 8, buf, () -> new MalformedHttpException("Corrupted GZIP header"));
 		int w = buf.tail();
 		int r = buf.head();
 		// read decompressed data size, represented by little-endian int
@@ -112,12 +112,12 @@ public final class GzipProcessorUtils {
 		return Integer.reverseBytes(bigEndianPosition);
 	}
 
-	private static void processHeader(ByteBuf buf) throws HttpParseException {
-		check(buf.readRemaining() >= GZIP_HEADER_SIZE, buf, () -> new HttpParseException("Corrupted GZIP header"));
+	private static void processHeader(ByteBuf buf) throws MalformedHttpException {
+		check(buf.readRemaining() >= GZIP_HEADER_SIZE, buf, () -> new MalformedHttpException("Corrupted GZIP header"));
 
-		check(buf.readByte() == GZIP_HEADER[0], buf, () -> new HttpParseException("Incorrect identification bytes. Not in GZIP format"));
-		check(buf.readByte() == GZIP_HEADER[1], buf, () -> new HttpParseException("Incorrect identification bytes. Not in GZIP format"));
-		check(buf.readByte() == GZIP_HEADER[2], buf, () -> new HttpParseException("Unsupported compression method. Deflate compression required"));
+		check(buf.readByte() == GZIP_HEADER[0], buf, () -> new MalformedHttpException("Incorrect identification bytes. Not in GZIP format"));
+		check(buf.readByte() == GZIP_HEADER[1], buf, () -> new MalformedHttpException("Incorrect identification bytes. Not in GZIP format"));
+		check(buf.readByte() == GZIP_HEADER[2], buf, () -> new MalformedHttpException("Unsupported compression method. Deflate compression required"));
 
 		// skip optional fields
 		byte flag = buf.readByte();
@@ -136,15 +136,15 @@ public final class GzipProcessorUtils {
 		}
 	}
 
-	private static void readDecompressedData(Inflater decompressor, ByteBuf src, ByteBuf dst, int maxSize) throws DataFormatException, HttpParseException {
+	private static void readDecompressedData(Inflater decompressor, ByteBuf src, ByteBuf dst, int maxSize) throws DataFormatException, MalformedHttpException {
 		int totalUncompressedBytesCount = 0;
 		int count = decompressor.inflate(dst.array(), dst.tail(), dst.writeRemaining());
 		totalUncompressedBytesCount += count;
 		dst.moveTail(count);
 		check(totalUncompressedBytesCount < maxSize, dst, src, () ->
-				new HttpParseException("Decompressed data size exceeds max expected size"));
+				new MalformedHttpException("Decompressed data size exceeds max expected size"));
 		check(decompressor.finished(), dst, src, () ->
-				new HttpParseException("Decompressed data size is not equal to input size from GZIP trailer"));
+				new MalformedHttpException("Decompressed data size is not equal to input size from GZIP trailer"));
 		int totalRead = decompressor.getTotalIn();
 		src.moveHead(totalRead);
 	}
@@ -175,21 +175,21 @@ public final class GzipProcessorUtils {
 		return (int) crc32.getValue();
 	}
 
-	private static void skipExtra(ByteBuf buf) throws HttpParseException {
-		check(buf.readRemaining() >= 2, buf, () -> new HttpParseException("Corrupted GZIP header"));
+	private static void skipExtra(ByteBuf buf) throws MalformedHttpException {
+		check(buf.readRemaining() >= 2, buf, () -> new MalformedHttpException("Corrupted GZIP header"));
 		short subFieldDataSize = buf.readShort();
 		short reversedSubFieldDataSize = Short.reverseBytes(subFieldDataSize);
-		check(buf.readRemaining() >= reversedSubFieldDataSize, buf, () -> new HttpParseException("Corrupted GZIP header"));
+		check(buf.readRemaining() >= reversedSubFieldDataSize, buf, () -> new MalformedHttpException("Corrupted GZIP header"));
 		buf.moveHead(reversedSubFieldDataSize);
 	}
 
-	private static void skipToTerminatorByte(ByteBuf buf) throws HttpParseException {
+	private static void skipToTerminatorByte(ByteBuf buf) throws MalformedHttpException {
 		while (buf.readRemaining() > 0) {
 			if (buf.get() == 0) {
 				return;
 			}
 		}
-		throw new HttpParseException("Corrupted GZIP header");
+		throw new MalformedHttpException("Corrupted GZIP header");
 	}
 
 	private static Inflater ensureDecompressor() {
@@ -218,7 +218,7 @@ public final class GzipProcessorUtils {
 		compressors.push(compressor);
 	}
 
-	private static void check(boolean condition, ByteBuf buf1, ByteBuf buf2, Supplier<HttpParseException> exceptionSupplier) throws HttpParseException {
+	private static void check(boolean condition, ByteBuf buf1, ByteBuf buf2, Supplier<MalformedHttpException> exceptionSupplier) throws MalformedHttpException {
 		if (!condition) {
 			buf1.recycle();
 			buf2.recycle();
@@ -226,7 +226,7 @@ public final class GzipProcessorUtils {
 		}
 	}
 
-	private static void check(boolean condition, ByteBuf buf, Supplier<HttpParseException> exceptionSupplier) throws HttpParseException {
+	private static void check(boolean condition, ByteBuf buf, Supplier<MalformedHttpException> exceptionSupplier) throws MalformedHttpException {
 		if (!condition) {
 			buf.recycle();
 			throw exceptionSupplier.get();

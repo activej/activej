@@ -92,7 +92,7 @@ public final class AsyncHttpClientTest {
 		int maxBodySize = HELLO_WORLD.length - 1;
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		HttpParseException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+		MalformedHttpException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
 				.then(response -> response.loadBody(maxBodySize)));
 		assertThat(e.getMessage(), containsString("HTTP body size exceeds load limit " + maxBodySize));
 	}
@@ -112,7 +112,7 @@ public final class AsyncHttpClientTest {
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
 				.then(HttpMessage::loadBody));
 
-		assertThat(e, instanceOf(HttpParseException.class));
+		assertThat(e, instanceOf(MalformedHttpException.class));
 	}
 
 	@Test

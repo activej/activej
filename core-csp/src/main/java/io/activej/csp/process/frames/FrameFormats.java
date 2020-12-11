@@ -19,9 +19,9 @@ package io.activej.csp.process.frames;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.binary.ByteBufsDecoder;
 import org.jetbrains.annotations.Nullable;
 
@@ -120,12 +120,12 @@ public class FrameFormats {
 				}
 
 				@Override
-				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 					if (decoder != null) return decoder.decode(bufs);
 					return tryNextDecoder(bufs);
 				}
 
-				private ByteBuf tryNextDecoder(ByteBufQueue bufs) throws ParseException {
+				private ByteBuf tryNextDecoder(ByteBufQueue bufs) throws MalformedDataException {
 					while (true) {
 						if (possibleDecoder == null) {
 							if (!possibleDecoders.hasNext()) throw new UnknownFormatException();
@@ -140,7 +140,7 @@ public class FrameFormats {
 								possibleDecoders = null;
 							}
 							return buf;
-						} catch (ParseException ignored) {
+						} catch (MalformedDataException ignored) {
 						}
 
 						possibleDecoder = null;
@@ -258,7 +258,7 @@ public class FrameFormats {
 				Integer length;
 
 				@Override
-				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 					if (length == null && (length = readLength(bufs)) == null) return null;
 
 					if (length == 0) return END_OF_STREAM;
@@ -280,12 +280,12 @@ public class FrameFormats {
 		}
 
 		@Nullable
-		private static Integer readLength(ByteBufQueue bufs) throws ParseException {
+		private static Integer readLength(ByteBufQueue bufs) throws MalformedDataException {
 			return bufs.parseBytes(new ByteBufQueue.ByteParser<Integer>() {
 				int result;
 
 				@Override
-				public Integer parse(int index, byte nextByte) throws ParseException {
+				public Integer parse(int index, byte nextByte) throws MalformedDataException {
 					result |= (nextByte & 0x7F) << index * 7;
 					if ((nextByte & 0x80) == 0) {
 						if (result < 0) throw new InvalidSizeException("Negative length");
@@ -351,7 +351,7 @@ public class FrameFormats {
 				boolean validateMagicNumber = true;
 
 				@Override
-				public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+				public ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 					if (validateMagicNumber) {
 						if (magicNumberValidator.tryDecode(bufs) == null) return null;
 						validateMagicNumber = false;

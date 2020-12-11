@@ -2,7 +2,7 @@ package io.activej.ot.repository;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.IdGeneratorStub;
 import io.activej.ot.OTCommit;
@@ -75,7 +75,7 @@ public class OTRepositoryMySqlTest {
 	}
 
 	@Test
-	public void testJson() throws ParseException {
+	public void testJson() throws MalformedDataException {
 		{
 			TestAdd testAdd = new TestAdd(1);
 			String json = toJson(OP_CODEC, testAdd);
