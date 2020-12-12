@@ -24,6 +24,7 @@ import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPT
 import static io.activej.csp.process.frames.FrameFormats.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertSame;
@@ -71,7 +72,7 @@ public class FrameFormatTest {
 				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", testCompound(LZ4LegacyFrameFormat.create(), LZ4FrameFormat.create()), false, true},
 				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", testCompound(LZ4LegacyFrameFormat.create(), LZ4LegacyFrameFormat.create()), false, true},
 				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", testCompound(LZ4FrameFormat.create(), LZ4FrameFormat.create()), false, true},
-				new Object[]{"Compound: Encoded with LZ4, decoded with identity", testCompound(LZ4FrameFormat.create(), FrameFormats.identity()), true, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with Identity", testCompound(LZ4FrameFormat.create(), FrameFormats.identity()), true, true},
 
 				new Object[]{"With random magic number: Size prefixed", withMagicNumber(sizePrefixed(), RANDOM_MAGIC_NUMBER), false, true},
 				new Object[]{"With random magic number: Identity", withMagicNumber(identity(), RANDOM_MAGIC_NUMBER), true, false},
@@ -162,9 +163,62 @@ public class FrameFormatTest {
 		assertSame(UNEXPECTED_DATA_EXCEPTION, e);
 	}
 
-	private void doTest(byte[] data, boolean singleByteChunks, boolean resets) {
-		if (!resetsAllowed) return;
+	@Test
+	public void testCombinations() {
+		doTestCombinations("1".getBytes(UTF_8), "2".getBytes(UTF_8));
+		doTestCombinations(new byte[0], new byte[0]);
 
+		byte[] repeated1 = new byte[20];
+		Arrays.fill(repeated1, (byte) 'a');
+		byte[] repeated2 = new byte[20];
+		Arrays.fill(repeated2, (byte) 'b');
+		doTestCombinations(repeated1, repeated2);
+
+		byte[] random1 = new byte[20];
+		ThreadLocalRandom.current().nextBytes(random1);
+		byte[] random2 = new byte[20];
+		ThreadLocalRandom.current().nextBytes(random2);
+		doTestCombinations(random1, random2);
+	}
+
+	private void doTestCombinations(byte[] data1, byte[] data2) {
+		byte[] expected = new byte[data1.length + data2.length];
+		System.arraycopy(data1, 0, expected, 0, data1.length);
+		System.arraycopy(data2, 0, expected, data1.length, data2.length);
+
+		doTestCombinations(expected, data1, data2, true);
+		doTestCombinations(expected, data1, data2, false);
+	}
+
+	private void doTestCombinations(byte[] expected, byte[] data1, byte[] data2, boolean resets) {
+		ChannelFrameEncoder encoder = ChannelFrameEncoder.create(frameFormat);
+		if (resets) {
+			if (!resetsAllowed) return;
+			encoder = encoder.withEncoderResets();
+		}
+		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSupplier.of(ByteBuf.wrapForReading(data1), ByteBuf.wrapForReading(data2))
+				.transformWith(encoder);
+
+		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufQueue.collector()));
+
+		for (int i = 0; i < compressed.readRemaining(); i++) {
+			ChannelFrameDecoder decoder = ChannelFrameDecoder.create(frameFormat);
+			if (resets) {
+				decoder = decoder.withDecoderResets();
+			}
+
+			ByteBufQueue queue = new ByteBufQueue();
+			queue.add(compressed.slice());
+			ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(queue.takeExactSize(i), queue.takeRemaining())
+					.transformWith(decoder);
+
+			ByteBuf resultBuf = await(supplier.toCollector(ByteBufQueue.collector()));
+			assertArrayEquals(expected, resultBuf.asArray());
+		}
+		compressed.recycle();
+	}
+
+	private void doTest(byte[] data, boolean singleByteChunks, boolean resets) {
 		MemSize chunkSizeMin = singleByteChunks ?
 				MemSize.of(1) :
 				MemSize.bytes(ThreadLocalRandom.current().nextInt(1000) + 500);
@@ -172,19 +226,18 @@ public class FrameFormatTest {
 		ChannelFrameEncoder encoder = ChannelFrameEncoder.create(frameFormat);
 		ChannelFrameDecoder decoder = ChannelFrameDecoder.create(frameFormat);
 		if (resets) {
+			if (!resetsAllowed) return;
 			encoder = encoder.withEncoderResets();
 			decoder = decoder.withDecoderResets();
 		}
 		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSupplier.of(ByteBuf.wrapForReading(data))
 				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
-				.map(buf -> ByteBuf.wrapForReading(buf.asArray()))
 				.transformWith(encoder);
 
 		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufQueue.collector()));
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(compressed)
 				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
-				.map(buf -> ByteBuf.wrapForReading(buf.asArray()))
 				.transformWith(decoder);
 
 		ByteBuf collected = await(supplier.toCollector(ByteBufQueue.collector()));
