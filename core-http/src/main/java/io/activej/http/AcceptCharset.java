@@ -23,7 +23,7 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.http.HttpUtils.parseQ;
+import static io.activej.http.HttpUtils.decodeQ;
 import static io.activej.http.HttpUtils.skipSpaces;
 
 /**
@@ -70,7 +70,7 @@ public final class AcceptCharset {
 		return q;
 	}
 
-	static void parse(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws MalformedHttpException {
+	static void decode(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws MalformedHttpException {
 		try {
 			int end = pos + len;
 
@@ -81,7 +81,7 @@ public final class AcceptCharset {
 				while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
 					pos++;
 				}
-				HttpCharset charset = HttpCharset.parse(bytes, start, pos - start);
+				HttpCharset charset = HttpCharset.decode(bytes, start, pos - start);
 
 				if (pos < end) {
 					if (bytes[pos++] == ',') {
@@ -96,7 +96,7 @@ public final class AcceptCharset {
 								while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
 									pos++;
 								}
-								q = parseQ(bytes, start, pos - start);
+								q = decodeQ(bytes, start, pos - start);
 								pos--;
 							} else if (bytes[pos] == ';') {
 								pos = skipSpaces(bytes, pos + 1, end);

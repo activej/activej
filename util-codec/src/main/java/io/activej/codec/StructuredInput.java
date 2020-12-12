@@ -78,18 +78,18 @@ public interface StructuredInput {
 	<T> T readObject(StructuredDecoder<T> decoder) throws MalformedDataException;
 
 	@FunctionalInterface
-	interface ParserRunnable {
+	interface DecoderRunnable {
 		void run() throws MalformedDataException;
 	}
 
-	default void readTuple(ParserRunnable decoder) throws MalformedDataException {
+	default void readTuple(DecoderRunnable decoder) throws MalformedDataException {
 		readTuple(in -> {
 			decoder.run();
 			return null;
 		});
 	}
 
-	default void readObject(ParserRunnable decoder) throws MalformedDataException {
+	default void readObject(DecoderRunnable decoder) throws MalformedDataException {
 		readObject(in -> {
 			decoder.run();
 			return null;

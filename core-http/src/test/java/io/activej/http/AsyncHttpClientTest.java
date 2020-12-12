@@ -277,7 +277,7 @@ public final class AsyncHttpClientTest {
 		assertEquals((Integer) 200, await(customResponse(req, false).map(HttpResponse::getCode)));
 	}
 
-	private static final ByteBufsDecoder<ByteBuf> REQUEST_PARSER = bufs -> {
+	private static final ByteBufsDecoder<ByteBuf> REQUEST_DECODER = bufs -> {
 		for (int i = 0; i < bufs.remainingBytes() - 3; i++) {
 			if (bufs.peekByte(i) == CR &&
 					bufs.peekByte(i + 1) == LF &&
@@ -292,7 +292,7 @@ public final class AsyncHttpClientTest {
 	private Promise<HttpResponse> customResponse(ByteBuf rawResponse, boolean ssl) throws IOException {
 		SimpleServer server = SimpleServer.create(asyncTcpSocket ->
 				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(asyncTcpSocket))
-						.parse(REQUEST_PARSER)
+						.decode(REQUEST_DECODER)
 						.whenResult(ByteBuf::recycle)
 						.then(() -> asyncTcpSocket.write(rawResponse))
 						.whenResult(asyncTcpSocket::close))

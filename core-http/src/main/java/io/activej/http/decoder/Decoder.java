@@ -27,13 +27,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * A high-level API that allows declarative definition of HTTP parsers
+ * A high-level API that allows declarative definition of HTTP decoders
  * that can convert incoming requests to concrete objects.
- * This allows complex parsers to be algebraically built from simple ones.
+ * This allows complex decoders to be algebraically built from simple ones.
  */
 public interface Decoder<T> {
 	/**
-	 * Either return the parsed type or format
+	 * Either return the decoded type or format
 	 */
 	Either<T, DecodeErrors> decode(@NotNull HttpRequest request);
 
@@ -49,7 +49,7 @@ public interface Decoder<T> {
 	}
 
 	/**
-	 * An id that is going to be used in the error-tree if at some point the whole parser fails
+	 * An id that is going to be used in the error-tree if at some point the whole decoder fails
 	 */
 	String getId();
 

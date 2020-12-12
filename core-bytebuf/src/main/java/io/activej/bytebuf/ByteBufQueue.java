@@ -677,8 +677,8 @@ public final class ByteBufQueue implements Recyclable {
 		boolean consume(int index, byte value) throws MalformedDataException;
 	}
 
-	public interface ByteParser<T> {
-		T parse(int index, byte value) throws MalformedDataException;
+	public interface ByteDecoder<T> {
+		T decode(int index, byte value) throws MalformedDataException;
 	}
 
 	public int scanBytes(ByteScanner byteScanner) throws MalformedDataException {
@@ -730,14 +730,14 @@ public final class ByteBufQueue implements Recyclable {
 		return -1;
 	}
 
-	public <T> T parseBytes(ByteParser<T> byteParser) throws MalformedDataException {
-		int parsed = 0;
+	public <T> T decodeBytes(ByteDecoder<T> byteDecoder) throws MalformedDataException {
+		int decoded = 0;
 		for (int n = first; n != last; n = next(n)) {
 			ByteBuf buf = bufs[n];
 			byte[] array = buf.array();
 			int tail = buf.tail();
 			for (int i = buf.head(); i != tail; i++) {
-				T result = byteParser.parse(parsed++, array[i]);
+				T result = byteDecoder.decode(decoded++, array[i]);
 				if (result != null) {
 					for (; first != n; first = next(first)) {
 						bufs[first].recycle();
@@ -757,14 +757,14 @@ public final class ByteBufQueue implements Recyclable {
 		return null;
 	}
 
-	public <T> T parseBytes(ByteParser<T> byteParser, Consumer<ByteBuf> recycledBufs) throws MalformedDataException {
-		int parsed = 0;
+	public <T> T decodeBytes(ByteDecoder<T> byteDecoder, Consumer<ByteBuf> recycledBufs) throws MalformedDataException {
+		int decoded = 0;
 		for (int n = first; n != last; n = next(n)) {
 			ByteBuf buf = bufs[n];
 			byte[] array = buf.array();
 			int tail = buf.tail();
 			for (int i = buf.head(); i != tail; i++) {
-				T result = byteParser.parse(parsed++, array[i]);
+				T result = byteDecoder.decode(decoded++, array[i]);
 				if (result != null) {
 					for (; first != n; first = next(first)) {
 						ByteBuf bufToRecycle = bufs[first];

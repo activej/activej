@@ -16,7 +16,7 @@
 
 package io.activej.config.converter;
 
-import io.activej.common.api.ParserFunction;
+import io.activej.common.api.DecoderFunction;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import org.jetbrains.annotations.NotNull;
@@ -41,14 +41,14 @@ public interface ConfigConverter<T> {
 	 * @param <V>  return type
 	 * @return converter that knows how to get V value from T value saved in config
 	 */
-	default <V> ConfigConverter<V> transform(ParserFunction<T, V> to, Function<V, T> from) {
+	default <V> ConfigConverter<V> transform(DecoderFunction<T, V> to, Function<V, T> from) {
 		ConfigConverter<T> thisConverter = this;
 		return new ConfigConverter<V>() {
 			@Override
 			public V get(Config config, @Nullable V defaultValue) {
 				T value = thisConverter.get(config, defaultValue == null ? null : from.apply(defaultValue));
 				try {
-					return value != null ? to.parse(value) : null;
+					return value != null ? to.decode(value) : null;
 				} catch (MalformedDataException e) {
 					throw new IllegalArgumentException(e);
 				}
@@ -58,7 +58,7 @@ public interface ConfigConverter<T> {
 			@Override
 			public V get(Config config) {
 				try {
-					return to.parse(thisConverter.get(config));
+					return to.decode(thisConverter.get(config));
 				} catch (MalformedDataException e) {
 					throw new IllegalArgumentException(e);
 				}

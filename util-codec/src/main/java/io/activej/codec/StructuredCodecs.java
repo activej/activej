@@ -16,7 +16,7 @@
 
 package io.activej.codec;
 
-import io.activej.common.api.ParserFunction;
+import io.activej.common.api.DecoderFunction;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.tuple.*;
@@ -291,7 +291,7 @@ public final class StructuredCodecs {
 		};
 	}
 
-	public static <T, R> StructuredCodec<R> transform(StructuredCodec<T> codec, ParserFunction<T, R> reader, Function<R, T> writer) {
+	public static <T, R> StructuredCodec<R> transform(StructuredCodec<T> codec, DecoderFunction<T, R> reader, Function<R, T> writer) {
 		return new StructuredCodec<R>() {
 			@Override
 			public void encode(StructuredOutput out, R value) {
@@ -303,7 +303,7 @@ public final class StructuredCodecs {
 			public R decode(StructuredInput in) throws MalformedDataException {
 				T result = codec.decode(in);
 				try {
-					return reader.parse(result);
+					return reader.decode(result);
 				} catch (UncheckedException u) {
 					throw u.propagate(MalformedDataException.class);
 				}
@@ -467,7 +467,7 @@ public final class StructuredCodecs {
 	/**
 	 * A DSL to call {@link #ofTupleList(List)} with fixed number of arguments and map it to some result type R
 	 */
-	public static <R> StructuredCodec<R> tuple(TupleParser0<R> constructor) {
+	public static <R> StructuredCodec<R> tuple(TupleDecoder0<R> constructor) {
 		return ofTupleList()
 				.transform(
 						list -> constructor.create(),
@@ -477,7 +477,7 @@ public final class StructuredCodecs {
 	/**
 	 * A DSL to call {@link #ofTupleList(List)} with fixed number of arguments and map it to some result type R
 	 */
-	public static <R, T1> StructuredCodec<R> tuple(TupleParser1<T1, R> constructor,
+	public static <R, T1> StructuredCodec<R> tuple(TupleDecoder1<T1, R> constructor,
 			Function<R, T1> getter1, StructuredCodec<T1> codec1) {
 		return ofTupleList(codec1)
 				.transform(
@@ -488,7 +488,7 @@ public final class StructuredCodecs {
 	/**
 	 * A DSL to call {@link #ofTupleList(List)} with fixed number of arguments and map it to some result type R
 	 */
-	public static <R, T1, T2> StructuredCodec<R> tuple(TupleParser2<T1, T2, R> constructor,
+	public static <R, T1, T2> StructuredCodec<R> tuple(TupleDecoder2<T1, T2, R> constructor,
 			Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			Function<R, T2> getter2, StructuredCodec<T2> codec2) {
 		return ofTupleList(codec1, codec2)
@@ -500,7 +500,7 @@ public final class StructuredCodecs {
 	/**
 	 * A DSL to call {@link #ofTupleList(List)} with fixed number of arguments and map it to some result type R
 	 */
-	public static <R, T1, T2, T3> StructuredCodec<R> tuple(TupleParser3<T1, T2, T3, R> constructor,
+	public static <R, T1, T2, T3> StructuredCodec<R> tuple(TupleDecoder3<T1, T2, T3, R> constructor,
 			Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			Function<R, T3> getter3, StructuredCodec<T3> codec3) {
@@ -513,7 +513,7 @@ public final class StructuredCodecs {
 	/**
 	 * A DSL to call {@link #ofTupleList(List)} with fixed number of arguments and map it to some result type R
 	 */
-	public static <R, T1, T2, T3, T4> StructuredCodec<R> tuple(TupleParser4<T1, T2, T3, T4, R> constructor,
+	public static <R, T1, T2, T3, T4> StructuredCodec<R> tuple(TupleDecoder4<T1, T2, T3, T4, R> constructor,
 			Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			Function<R, T3> getter3, StructuredCodec<T3> codec3,
@@ -527,7 +527,7 @@ public final class StructuredCodecs {
 	/**
 	 * A DSL to call {@link #ofTupleList(List)} with fixed number of arguments and map it to some result type R
 	 */
-	public static <R, T1, T2, T3, T4, T5> StructuredCodec<R> tuple(TupleParser5<T1, T2, T3, T4, T5, R> constructor,
+	public static <R, T1, T2, T3, T4, T5> StructuredCodec<R> tuple(TupleDecoder5<T1, T2, T3, T4, T5, R> constructor,
 			Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			Function<R, T3> getter3, StructuredCodec<T3> codec3,
@@ -542,7 +542,7 @@ public final class StructuredCodecs {
 	/**
 	 * A DSL to call {@link #ofTupleList(List)} with fixed number of arguments and map it to some result type R
 	 */
-	public static <R, T1, T2, T3, T4, T5, T6> StructuredCodec<R> tuple(TupleParser6<T1, T2, T3, T4, T5, T6, R> constructor,
+	public static <R, T1, T2, T3, T4, T5, T6> StructuredCodec<R> tuple(TupleDecoder6<T1, T2, T3, T4, T5, T6, R> constructor,
 			Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			Function<R, T3> getter3, StructuredCodec<T3> codec3,
@@ -559,7 +559,7 @@ public final class StructuredCodecs {
 	 * A DSL to call {@link #ofObjectMap(Map)} with fixed number of key-value pairs and map it to some result type R.
 	 * This is the main combinator for POJO codecs
 	 */
-	public static <R> StructuredCodec<R> object(TupleParser0<R> constructor) {
+	public static <R> StructuredCodec<R> object(TupleDecoder0<R> constructor) {
 		return ofObjectMap(emptyMap())
 				.transform(
 						map -> constructor.create(),
@@ -570,7 +570,7 @@ public final class StructuredCodecs {
 	 * A DSL to call {@link #ofObjectMap(Map)} with fixed number of key-value pairs and map it to some result type R.
 	 * This is the main combinator for POJO codecs
 	 */
-	public static <R, T1> StructuredCodec<R> object(TupleParser1<T1, R> constructor,
+	public static <R, T1> StructuredCodec<R> object(TupleDecoder1<T1, R> constructor,
 			String field1, Function<R, T1> getter1, StructuredCodec<T1> codec1) {
 		return ofObjectMap(map(field1, codec1))
 				.transform(
@@ -582,7 +582,7 @@ public final class StructuredCodecs {
 	 * A DSL to call {@link #ofObjectMap(Map)} with fixed number of key-value pairs and map it to some result type R.
 	 * This is the main combinator for POJO codecs
 	 */
-	public static <R, T1, T2> StructuredCodec<R> object(TupleParser2<T1, T2, R> constructor,
+	public static <R, T1, T2> StructuredCodec<R> object(TupleDecoder2<T1, T2, R> constructor,
 			String field1, Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			String field2, Function<R, T2> getter2, StructuredCodec<T2> codec2) {
 		return ofObjectMap(map(field1, codec1, field2, codec2))
@@ -595,7 +595,7 @@ public final class StructuredCodecs {
 	 * A DSL to call {@link #ofObjectMap(Map)} with fixed number of key-value pairs and map it to some result type R.
 	 * This is the main combinator for POJO codecs
 	 */
-	public static <R, T1, T2, T3> StructuredCodec<R> object(TupleParser3<T1, T2, T3, R> constructor,
+	public static <R, T1, T2, T3> StructuredCodec<R> object(TupleDecoder3<T1, T2, T3, R> constructor,
 			String field1, Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			String field2, Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			String field3, Function<R, T3> getter3, StructuredCodec<T3> codec3) {
@@ -609,7 +609,7 @@ public final class StructuredCodecs {
 	 * A DSL to call {@link #ofObjectMap(Map)} with fixed number of key-value pairs and map it to some result type R.
 	 * This is the main combinator for POJO codecs
 	 */
-	public static <R, T1, T2, T3, T4> StructuredCodec<R> object(TupleParser4<T1, T2, T3, T4, R> constructor,
+	public static <R, T1, T2, T3, T4> StructuredCodec<R> object(TupleDecoder4<T1, T2, T3, T4, R> constructor,
 			String field1, Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			String field2, Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			String field3, Function<R, T3> getter3, StructuredCodec<T3> codec3,
@@ -624,7 +624,7 @@ public final class StructuredCodecs {
 	 * A DSL to call {@link #ofObjectMap(Map)} with fixed number of key-value pairs and map it to some result type R.
 	 * This is the main combinator for POJO codecs
 	 */
-	public static <R, T1, T2, T3, T4, T5> StructuredCodec<R> object(TupleParser5<T1, T2, T3, T4, T5, R> constructor,
+	public static <R, T1, T2, T3, T4, T5> StructuredCodec<R> object(TupleDecoder5<T1, T2, T3, T4, T5, R> constructor,
 			String field1, Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			String field2, Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			String field3, Function<R, T3> getter3, StructuredCodec<T3> codec3,
@@ -640,7 +640,7 @@ public final class StructuredCodecs {
 	 * A DSL to call {@link #ofObjectMap(Map)} with fixed number of key-value pairs and map it to some result type R.
 	 * This is the main combinator for POJO codecs
 	 */
-	public static <R, T1, T2, T3, T4, T5, T6> StructuredCodec<R> object(TupleParser6<T1, T2, T3, T4, T5, T6, R> constructor,
+	public static <R, T1, T2, T3, T4, T5, T6> StructuredCodec<R> object(TupleDecoder6<T1, T2, T3, T4, T5, T6, R> constructor,
 			String field1, Function<R, T1> getter1, StructuredCodec<T1> codec1,
 			String field2, Function<R, T2> getter2, StructuredCodec<T2> codec2,
 			String field3, Function<R, T3> getter3, StructuredCodec<T3> codec3,

@@ -25,7 +25,7 @@ import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FsExceptionCodec;
 import io.activej.http.*;
-import io.activej.http.MultipartParser.MultipartDataHandler;
+import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,7 +37,7 @@ import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.Codecs.*;
 import static io.activej.fs.util.RemoteFsUtils.castError;
-import static io.activej.fs.util.RemoteFsUtils.parseBody;
+import static io.activej.fs.util.RemoteFsUtils.decodeBody;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
@@ -111,7 +111,7 @@ public final class ActiveFsServlet {
 												.withBody(toJson(FILE_META_CODEC_NULLABLE, meta).getBytes(UTF_8))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)))))
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
-						.then(parseBody(STRINGS_SET_CODEC))
+						.then(decodeBody(STRINGS_SET_CODEC))
 						.then(fs::infoAll)
 						.mapEx(errorHandler(map ->
 								HttpResponse.ok200()
@@ -126,7 +126,7 @@ public final class ActiveFsServlet {
 							.mapEx(errorHandler());
 				})
 				.map(POST, "/" + MOVE_ALL, request -> request.loadBody()
-						.then(parseBody(SOURCE_TO_TARGET_CODEC))
+						.then(decodeBody(SOURCE_TO_TARGET_CODEC))
 						.then(fs::moveAll)
 						.mapEx(errorHandler()))
 				.map(POST, "/" + COPY, request -> {
@@ -136,14 +136,14 @@ public final class ActiveFsServlet {
 							.mapEx(errorHandler());
 				})
 				.map(POST, "/" + COPY_ALL, request -> request.loadBody()
-						.then(parseBody(SOURCE_TO_TARGET_CODEC))
+						.then(decodeBody(SOURCE_TO_TARGET_CODEC))
 						.then(fs::copyAll)
 						.mapEx(errorHandler()))
 				.map(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
 						fs.delete(decodePath(request))
 								.mapEx(errorHandler()))
 				.map(POST, "/" + DELETE_ALL, request -> request.loadBody()
-						.then(parseBody(STRINGS_SET_CODEC))
+						.then(decodeBody(STRINGS_SET_CODEC))
 						.then(fs::deleteAll)
 						.mapEx(errorHandler()));
 	}
@@ -166,7 +166,7 @@ public final class ActiveFsServlet {
 	}
 
 	private static String decodePath(HttpRequest request) {
-		String value = UrlParser.urlDecode(request.getRelativePath());
+		String value = UrlParser.urlParse(request.getRelativePath());
 		if (value == null) {
 			throw new UncheckedException(HttpError.ofCode(400, "Path contains invalid UTF"));
 		}

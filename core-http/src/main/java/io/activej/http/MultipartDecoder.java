@@ -29,7 +29,7 @@ import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
-import io.activej.http.MultipartParser.MultipartFrame;
+import io.activej.http.MultipartDecoder.MultipartFrame;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,10 +48,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * Util class that allows to parse some binary channel (mainly, the request body stream) into a channel of multipart frames.
+ * Util class that allows to decode some binary channel (mainly, the request body stream) into a channel of multipart frames.
  */
-public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
-	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(MultipartParser.class, "maxMetaBuffer", kilobytes(4)).toInt();
+public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
+	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(MultipartDecoder.class, "maxMetaBuffer", kilobytes(4)).toInt();
 	private static final ByteBufsDecoder<ByteBuf> OF_CRLF_DECODER = ByteBufsDecoder.ofCrlfTerminatedBytes();
 
 	@Nullable
@@ -60,13 +60,13 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 	private final byte[] boundary;
 	private final byte[] lastBoundary;
 
-	private MultipartParser(String boundary) {
+	private MultipartDecoder(String boundary) {
 		this.boundary = ("--" + boundary).getBytes(UTF_8);
 		this.lastBoundary = ("--" + boundary + "--").getBytes(UTF_8);
 	}
 
-	public static MultipartParser create(String boundary) {
-		return new MultipartParser(boundary);
+	public static MultipartDecoder create(String boundary) {
+		return new MultipartDecoder(boundary);
 	}
 
 	/**
@@ -136,7 +136,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 	 * as specified by the Content-Disposition multipart header.
 	 */
 	public Promise<Void> split(ChannelSupplier<ByteBuf> source, MultipartDataHandler dataHandler) {
-		ChannelSupplier<MultipartFrame> frames = BinaryChannelSupplier.of(source).parseStream(this);
+		ChannelSupplier<MultipartFrame> frames = BinaryChannelSupplier.of(source).decodeStream(this);
 		return frames.get()
 				.then(frame -> {
 					if (frame == null) {

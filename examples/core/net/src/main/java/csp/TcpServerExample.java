@@ -28,7 +28,7 @@ public final class TcpServerExample {
 
 		SimpleServer server = SimpleServer.create(socket ->
 				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
-						.parseStream(ByteBufsDecoder.ofCrlfTerminatedBytes())
+						.decodeStream(ByteBufsDecoder.ofCrlfTerminatedBytes())
 						.peek(buf -> System.out.println("client:" + buf.getString(UTF_8)))
 						.map(buf -> {
 							ByteBuf serverBuf = ByteBufStrings.wrapUtf8("Server> ");

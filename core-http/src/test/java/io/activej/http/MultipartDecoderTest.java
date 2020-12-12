@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.mapping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-public final class MultipartParserTest {
+public final class MultipartDecoderTest {
 	private static final String BOUNDARY = "--test-boundary-123";
 	private static final String CRLF = "\r\n";
 
@@ -67,7 +67,7 @@ public final class MultipartParserTest {
 		List<Map<String, String>> headers = new ArrayList<>();
 
 		String res = await(BinaryChannelSupplier.of(ChannelSupplier.ofList(split))
-				.parseStream(MultipartParser.create(BOUNDARY.substring(2)))
+				.decodeStream(MultipartDecoder.create(BOUNDARY.substring(2)))
 				.toCollector(mapping(frame -> {
 					if (frame.isData()) {
 						return frame.getData().asString(UTF_8);
@@ -94,9 +94,9 @@ public final class MultipartParserTest {
 	public void testSplitOnlyLastPart() {
 		// last boundary
 		ByteBuf buf = ByteBufStrings.wrapUtf8(BOUNDARY + "--" + CRLF);
-		MultipartParser parser = MultipartParser.create(BOUNDARY.substring(2));
+		MultipartDecoder decoder = MultipartDecoder.create(BOUNDARY.substring(2));
 
-		await(parser.split(ChannelSupplier.of(buf), new MultipartParser.MultipartDataHandler() {
+		await(decoder.split(ChannelSupplier.of(buf), new MultipartDecoder.MultipartDataHandler() {
 			@Override
 			public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
 				return Promise.ofException(new AssertionError());

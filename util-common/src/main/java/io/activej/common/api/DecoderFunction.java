@@ -23,20 +23,20 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Function;
 
 @FunctionalInterface
-public interface ParserFunction<T, R> {
-	R parse(T value) throws MalformedDataException;
+public interface DecoderFunction<T, R> {
+	R decode(T value) throws MalformedDataException;
 
-	static <T, R> Function<T, R> asFunction(ParserFunction<T, R> fn) {
+	static <T, R> Function<T, R> asFunction(DecoderFunction<T, R> fn) {
 		return item -> {
 			try {
-				return fn.parse(item);
+				return fn.decode(item);
 			} catch (MalformedDataException e) {
 				throw new UncheckedException(e);
 			}
 		};
 	}
 
-	static <T, R> ParserFunction<T, R> of(Function<T, R> fn) {
+	static <T, R> DecoderFunction<T, R> of(Function<T, R> fn) {
 		return value -> {
 			try {
 				return fn.apply(value);
@@ -46,17 +46,17 @@ public interface ParserFunction<T, R> {
 		};
 	}
 
-	default R parseOrDefault(@Nullable T value, R defaultResult) {
+	default R decodeOrDefault(@Nullable T value, R defaultResult) {
 		try {
 			if (value != null) {
-				return parse(value);
+				return decode(value);
 			}
 		} catch (MalformedDataException ignore) {}
 
 		return defaultResult;
 	}
 
-	default <V> ParserFunction<T, V> andThen(ParserFunction<? super R, ? extends V> after) {
-		return (T t) -> after.parse(parse(t));
+	default <V> DecoderFunction<T, V> andThen(DecoderFunction<? super R, ? extends V> after) {
+		return (T t) -> after.decode(decode(t));
 	}
 }

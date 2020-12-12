@@ -48,7 +48,7 @@ public final class ContentType {
 		return lookup(mime, HttpCharset.of(charset));
 	}
 
-	static ContentType parse(byte[] bytes, int pos, int length) throws MalformedHttpException {
+	static ContentType decode(byte[] bytes, int pos, int length) throws MalformedHttpException {
 		try {
 			// parsing media type
 			int end = pos + length;
@@ -79,7 +79,7 @@ public final class ContentType {
 						while (pos < end && bytes[pos] != ';') {
 							pos++;
 						}
-						charset = HttpCharset.parse(bytes, start, pos - start);
+						charset = HttpCharset.decode(bytes, start, pos - start);
 					} else if (bytes[pos] == ';' && pos + 1 < end) {
 						start = skipSpaces(bytes, pos + 1, end);
 					}
@@ -88,7 +88,7 @@ public final class ContentType {
 			}
 			return lookup(type, charset);
 		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to parse content-type", e);
+			throw new MalformedHttpException("Failed to decode content-type", e);
 		}
 	}
 

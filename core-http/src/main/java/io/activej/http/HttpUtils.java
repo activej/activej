@@ -172,7 +172,7 @@ public final class HttpUtils {
 		return pos;
 	}
 
-	public static int parseQ(byte[] bytes, int pos, int length) throws MalformedHttpException {
+	public static int decodeQ(byte[] bytes, int pos, int length) throws MalformedHttpException {
 		if (bytes[pos] == '1') {
 			return 100;
 		} else if (bytes[pos] == '0') {

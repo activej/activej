@@ -281,11 +281,11 @@ public class FrameFormats {
 
 		@Nullable
 		private static Integer readLength(ByteBufQueue bufs) throws MalformedDataException {
-			return bufs.parseBytes(new ByteBufQueue.ByteParser<Integer>() {
+			return bufs.decodeBytes(new ByteBufQueue.ByteDecoder<Integer>() {
 				int result;
 
 				@Override
-				public Integer parse(int index, byte nextByte) throws MalformedDataException {
+				public Integer decode(int index, byte nextByte) throws MalformedDataException {
 					result |= (nextByte & 0x7F) << index * 7;
 					if ((nextByte & 0x80) == 0) {
 						if (result < 0) throw new InvalidSizeException("Negative length");

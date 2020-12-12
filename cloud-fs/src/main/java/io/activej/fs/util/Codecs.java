@@ -25,7 +25,7 @@ import java.util.Set;
 import static io.activej.codec.StructuredCodecs.*;
 
 public final class Codecs {
-	public static final StructuredCodec<FileMetadata> FILE_META_CODEC = object(FileMetadata::parse,
+	public static final StructuredCodec<FileMetadata> FILE_META_CODEC = object(FileMetadata::decode,
 			"size", FileMetadata::getSize, LONG_CODEC,
 			"timestamp", FileMetadata::getTimestamp, LONG_CODEC);
 	public static final StructuredCodec<FileMetadata> FILE_META_CODEC_NULLABLE = FILE_META_CODEC.nullable();

@@ -24,11 +24,11 @@ public class HttpCookieTest {
 	public static final ByteBufRule rule = new ByteBufRule();
 
 	@Test
-	public void testParser() throws MalformedHttpException {
+	public void testDecoder() throws MalformedHttpException {
 		String cookieString = "name1=\"value1\"; expires=Thu, 01 Jan 2015 00:00:00 GMT; Secure; name2=value2; HttpOnly";
 		List<HttpCookie> httpCookies = new ArrayList<>();
 		byte[] bytes = encodeAscii(cookieString);
-		HttpCookie.parseFull(bytes, 0, bytes.length, httpCookies);
+		HttpCookie.decodeFull(bytes, 0, bytes.length, httpCookies);
 		assertEquals(2, httpCookies.size());
 		HttpCookie cookie1 = httpCookies.get(0);
 		HttpCookie cookie2 = httpCookies.get(1);
@@ -88,13 +88,13 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParse() throws MalformedHttpException {
+	public void testDecode() throws MalformedHttpException {
 		String cookieName = "HMECOMDIC";
 		String cookieValue = "{\"osVersion\":\"x86_64\",\"deviceOs\":\"Linux\",\"deviceType\":\"DESKTOP\"}";
 		byte[] bytes = ByteBufStrings.encodeAscii(cookieName + "=" + cookieValue);
 
 		ArrayList<HttpCookie> cookies = new ArrayList<>();
-		HttpCookie.parseFull(bytes, 0, bytes.length, cookies);
+		HttpCookie.decodeFull(bytes, 0, bytes.length, cookies);
 
 		assertEquals(1, cookies.size());
 
@@ -116,14 +116,14 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParsePathSlash() throws MalformedHttpException {
+	public void testDecodePathSlash() throws MalformedHttpException {
 		String cookieName = "name";
 		String cookieValue = "value";
 		String cookiePath = "/";
 		byte[] bytes = ByteBufStrings.encodeAscii(cookieName + "=" + cookieValue + "; Path=" + cookiePath);
 
 		ArrayList<HttpCookie> cookies = new ArrayList<>();
-		HttpCookie.parseFull(bytes, 0, bytes.length, cookies);
+		HttpCookie.decodeFull(bytes, 0, bytes.length, cookies);
 
 		assertEquals(1, cookies.size());
 
@@ -145,13 +145,13 @@ public class HttpCookieTest {
 	}
 
 	@Test
-	public void testParsePathEmpty() throws MalformedHttpException {
+	public void testDecodePathEmpty() throws MalformedHttpException {
 		String cookieName = "name";
 		String cookieValue = "value";
 		byte[] bytes = ByteBufStrings.encodeAscii(cookieName + "=" + cookieValue);
 
 		ArrayList<HttpCookie> cookies = new ArrayList<>();
-		HttpCookie.parseFull(bytes, 0, bytes.length, cookies);
+		HttpCookie.decodeFull(bytes, 0, bytes.length, cookies);
 
 		assertEquals(1, cookies.size());
 

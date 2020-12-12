@@ -118,7 +118,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	}
 
 	private void processOpCode() {
-		input.parse(SINGLE_BYTE_DECODER)
+		input.decode(SINGLE_BYTE_DECODER)
 				.whenResult(firstByte -> {
 					if ((firstByte & RSV_MASK) != 0) {
 						onProtocolError(RESERVED_BITS_SET);
@@ -163,7 +163,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	private void processLength() {
 		assert currentOpCode != null;
 
-		input.parse(SINGLE_BYTE_DECODER)
+		input.decode(SINGLE_BYTE_DECODER)
 				.whenResult(maskAndLen -> {
 					boolean msgMasked = maskAndLen < 0;
 					if (this.masked && !msgMasked) {
@@ -190,7 +190,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 
 	private void processLengthEx(int numberOfBytes) {
 		assert numberOfBytes == 2 || numberOfBytes == 8;
-		input.parse(ofFixedSize(numberOfBytes))
+		input.decode(ofFixedSize(numberOfBytes))
 				.whenResult(lenBuf -> {
 					long len;
 					if (numberOfBytes == 2) {
@@ -215,7 +215,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		if (maskIndex == -1) {
 			processPayload(length);
 		} else {
-			input.parse(queue -> !queue.hasRemainingBytes(4) ? null : queue)
+			input.decode(queue -> !queue.hasRemainingBytes(4) ? null : queue)
 					.whenResult(bufs -> {
 						bufs.drainTo(mask, 0, 4);
 						processPayload(length);

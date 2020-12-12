@@ -99,12 +99,12 @@ public abstract class HttpHeaderValue {
 
 	@NotNull
 	public static ContentType toContentType(@NotNull ByteBuf buf) throws MalformedHttpException {
-		return ContentType.parse(buf.array(), buf.head(), buf.readRemaining());
+		return ContentType.decode(buf.array(), buf.head(), buf.readRemaining());
 	}
 
 	@NotNull
 	public static Instant toInstant(@NotNull ByteBuf buf) throws MalformedHttpException {
-		return Instant.ofEpochSecond(HttpDate.parse(buf.array(), buf.head()));
+		return Instant.ofEpochSecond(HttpDate.decode(buf.array(), buf.head()));
 	}
 
 	@NotNull
@@ -116,24 +116,24 @@ public abstract class HttpHeaderValue {
 	}
 
 	@FunctionalInterface
-	public interface ParserIntoList<T> {
-		void parse(@NotNull ByteBuf buf, @NotNull List<T> into) throws MalformedHttpException;
+	public interface DecoderIntoList<T> {
+		void decode(@NotNull ByteBuf buf, @NotNull List<T> into) throws MalformedHttpException;
 	}
 
 	public static void toAcceptContentTypes(@NotNull ByteBuf buf, @NotNull List<AcceptMediaType> into) throws MalformedHttpException {
-		AcceptMediaType.parse(buf.array(), buf.head(), buf.readRemaining(), into);
+		AcceptMediaType.decode(buf.array(), buf.head(), buf.readRemaining(), into);
 	}
 
 	public static void toAcceptCharsets(@NotNull ByteBuf buf, @NotNull List<AcceptCharset> into) throws MalformedHttpException {
-		AcceptCharset.parse(buf.array(), buf.head(), buf.readRemaining(), into);
+		AcceptCharset.decode(buf.array(), buf.head(), buf.readRemaining(), into);
 	}
 
 	static void toSimpleCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws MalformedHttpException {
-		HttpCookie.parseSimple(buf.array(), buf.head(), buf.tail(), into);
+		HttpCookie.decodeSimple(buf.array(), buf.head(), buf.tail(), into);
 	}
 
 	static void toFullCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws MalformedHttpException {
-		HttpCookie.parseFull(buf.array(), buf.head(), buf.tail(), into);
+		HttpCookie.decodeFull(buf.array(), buf.head(), buf.tail(), into);
 	}
 
 	static final class HttpHeaderValueOfContentType extends HttpHeaderValue {

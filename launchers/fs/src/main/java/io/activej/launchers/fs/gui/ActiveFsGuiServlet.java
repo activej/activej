@@ -36,7 +36,6 @@ import java.util.*;
 import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.fs.http.FsCommand.DOWNLOAD;
 import static io.activej.fs.http.FsCommand.UPLOAD;
-import static io.activej.http.AsyncServletDecorator.mapResponse;
 import static io.activej.http.ContentTypes.HTML_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.CONTENT_TYPE;
@@ -75,7 +74,7 @@ public final class ActiveFsGuiServlet {
 									.map($ -> HttpResponse.ok200());
 						}))
 				.map("/", request -> {
-					String dir = parseDir(request);
+					String dir = decodeDir(request);
 					return fs.list(dir + "**")
 							.thenEx((files, e) -> {
 								if (e != null) {
@@ -106,7 +105,7 @@ public final class ActiveFsGuiServlet {
 		return writer.getBuf();
 	}
 
-	private static String parseDir(HttpRequest request) {
+	private static String decodeDir(HttpRequest request) {
 		String dir = request.getQueryParameter("dir");
 		if (dir == null) return "";
 		dir = dir.replaceAll("^/+", "");

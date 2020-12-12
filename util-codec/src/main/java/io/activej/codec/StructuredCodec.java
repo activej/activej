@@ -16,7 +16,7 @@
 
 package io.activej.codec;
 
-import io.activej.common.api.ParserFunction;
+import io.activej.common.api.DecoderFunction;
 import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,7 +66,7 @@ public interface StructuredCodec<T> extends StructuredEncoder<T>, StructuredDeco
 		return StructuredCodecs.ofList(this);
 	}
 
-	default <R> StructuredCodec<R> transform(ParserFunction<T, R> reader, Function<R, T> writer) {
+	default <R> StructuredCodec<R> transform(DecoderFunction<T, R> reader, Function<R, T> writer) {
 		return StructuredCodecs.transform(this, reader, writer);
 	}
 

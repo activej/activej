@@ -23,7 +23,7 @@ import io.activej.common.exception.MalformedDataException;
 
 class Utils {
 
-	static ByteBufsDecoder<ByteBuf> parseUntilTerminatorByte(byte terminator, int maxSize) {
+	static ByteBufsDecoder<ByteBuf> decodeUntilTerminatorByte(byte terminator, int maxSize) {
 		return bufs -> {
 			int result = bufs.scanBytes((index, nextByte) -> {
 				if (nextByte == terminator) {

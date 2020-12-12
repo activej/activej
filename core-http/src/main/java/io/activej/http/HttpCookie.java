@@ -223,7 +223,7 @@ public final class HttpCookie {
 	}
 	// endregion
 
-	static void parseFull(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
+	static void decodeFull(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
 		try {
 			HttpCookie cookie = new HttpCookie("", "", "/");
 			while (pos < end) {
@@ -260,7 +260,7 @@ public final class HttpCookie {
 				pos = valueEnd + 1;
 			}
 		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to parse cookies", e);
+			throw new MalformedHttpException("Failed to decode cookies", e);
 		}
 	}
 
@@ -290,7 +290,7 @@ public final class HttpCookie {
 		return pos;
 	}
 
-	static void parseSimple(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
+	static void decodeSimple(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
 		try {
 			while (pos < end) {
 				pos = skipSpaces(bytes, pos, end);
@@ -325,7 +325,7 @@ public final class HttpCookie {
 				pos = valueEnd + 1;
 			}
 		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to parse cookies", e);
+			throw new MalformedHttpException("Failed to decode cookies", e);
 		}
 	}
 
@@ -379,14 +379,14 @@ public final class HttpCookie {
 				return new AvHandler() {
 					@Override
 					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
-						cookie.setExpirationDate(parseExpirationDate(bytes, start));
+						cookie.setExpirationDate(decodeExpirationDate(bytes, start));
 					}
 				};
 			case MAX_AGE_HC:
 				return new AvHandler() {
 					@Override
 					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
-						cookie.setMaxAge(parseMaxAge(bytes, start, end));
+						cookie.setMaxAge(decodeMaxAge(bytes, start, end));
 					}
 				};
 			case DOMAIN_HC:
@@ -422,11 +422,11 @@ public final class HttpCookie {
 		return null;
 	}
 
-	private static Instant parseExpirationDate(byte[] bytes, int start) throws MalformedHttpException {
-		return Instant.ofEpochSecond(HttpDate.parse(bytes, start));
+	private static Instant decodeExpirationDate(byte[] bytes, int start) throws MalformedHttpException {
+		return Instant.ofEpochSecond(HttpDate.decode(bytes, start));
 	}
 
-	private static Duration parseMaxAge(byte[] bytes, int start, int end) throws MalformedHttpException {
+	private static Duration decodeMaxAge(byte[] bytes, int start, int end) throws MalformedHttpException {
 		return Duration.ofSeconds(trimAndDecodePositiveInt(bytes, start, end - start));
 	}
 

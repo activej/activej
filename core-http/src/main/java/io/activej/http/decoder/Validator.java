@@ -26,7 +26,7 @@ import static java.util.Collections.singletonList;
 
 /**
  * An enhanced predicate which can return a list of errors for given input object.
- * This can be used to put additional constraints on the parsed object from HTTP decoder.
+ * This can be used to put additional constraints on the decoded object from HTTP decoder.
  * For example to ensure, that age of the person is in range 0-100 or something
  * and return a specific error tree for that input.
  */

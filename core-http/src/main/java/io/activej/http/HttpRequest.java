@@ -21,7 +21,7 @@ import io.activej.common.Checks;
 import io.activej.common.api.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
-import io.activej.http.MultipartParser.MultipartDataHandler;
+import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -348,7 +348,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (boundary.startsWith("\"") && boundary.endsWith("\"")) {
 			boundary = boundary.substring(1, boundary.length() - 1);
 		}
-		return MultipartParser.create(boundary)
+		return MultipartDecoder.create(boundary)
 				.split(getBodyStream(), multipartDataHandler);
 	}
 
@@ -379,7 +379,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (pathParameters == null) {
 			pathParameters = new HashMap<>();
 		}
-		pathParameters.put(key, UrlParser.urlDecode(value));
+		pathParameters.put(key, UrlParser.urlParse(value));
 	}
 
 	@Override

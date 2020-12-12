@@ -69,11 +69,11 @@ public final class HttpCharset extends Token {
 			return hCharset;
 		} else {
 			byte[] bytes = encodeAscii(charset.name());
-			return parse(bytes, 0, bytes.length);
+			return decode(bytes, 0, bytes.length);
 		}
 	}
 
-	static HttpCharset parse(byte[] bytes, int pos, int length) {
+	static HttpCharset decode(byte[] bytes, int pos, int length) {
 		return charsets.getOrCreate(bytes, pos, length);
 	}
 

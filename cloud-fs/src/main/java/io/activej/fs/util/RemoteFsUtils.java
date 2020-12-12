@@ -110,7 +110,7 @@ public final class RemoteFsUtils {
 						item -> JsonUtils.toJsonBuf(out, item));
 	}
 
-	public static <T> Function<ByteBuf, Promise<T>> parseBody(StructuredDecoder<T> decoder) {
+	public static <T> Function<ByteBuf, Promise<T>> decodeBody(StructuredDecoder<T> decoder) {
 		return body -> {
 			try {
 				return Promise.of(fromJson(decoder, body.getString(UTF_8)));

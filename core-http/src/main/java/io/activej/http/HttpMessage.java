@@ -24,7 +24,6 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
-import io.activej.http.HttpHeaderValue.ParserIntoList;
 import io.activej.promise.Promise;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
@@ -123,7 +122,7 @@ public abstract class HttpMessage {
 	}
 
 	@NotNull
-	public final <T> List<T> getHeader(@NotNull HttpHeader header, @NotNull ParserIntoList<T> parser) {
+	public final <T> List<T> getHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue.DecoderIntoList<T> decoder) {
 		List<T> list = new ArrayList<>();
 		for (int i = header.hashCode() & (headers.kvPairs.length - 2); ; i = (i + 2) & (headers.kvPairs.length - 2)) {
 			HttpHeader k = (HttpHeader) headers.kvPairs[i];
@@ -132,7 +131,7 @@ public abstract class HttpMessage {
 			}
 			if (k.equals(header)) {
 				try {
-					parser.parse(((HttpHeaderValue) headers.kvPairs[i + 1]).getBuf(), list);
+					decoder.decode(((HttpHeaderValue) headers.kvPairs[i + 1]).getBuf(), list);
 				} catch (MalformedHttpException ignored) {
 				}
 			}
@@ -141,11 +140,11 @@ public abstract class HttpMessage {
 	}
 
 	@Nullable
-	public <T> T getHeader(HttpHeader header, HttpParserFunction<T> parser) {
+	public <T> T getHeader(HttpHeader header, HttpDecoderFunction<T> decoder) {
 		try {
 			ByteBuf buf = getHeaderBuf(header);
 			if (buf != null) {
-				return parser.parse(buf);
+				return decoder.decode(buf);
 			}
 		} catch (MalformedHttpException ignore) {}
 
@@ -461,7 +460,7 @@ public abstract class HttpMessage {
 
 	protected abstract void writeTo(@NotNull ByteBuf buf);
 
-	public interface HttpParserFunction<T> {
-		T parse(ByteBuf value) throws MalformedHttpException;
+	public interface HttpDecoderFunction<T> {
+		T decode(ByteBuf value) throws MalformedHttpException;
 	}
 }

@@ -115,7 +115,7 @@ public final class BufsConsumerChunkedDecoderTest {
 	}
 
 	@Test
-	public void shouldThrowParseException() {
+	public void shouldThrowMalformedDataException() {
 		consumer.setExceptionValidator(e -> {
 			assertThat(e, instanceOf(MalformedDataException.class));
 			assertThat(e.getMessage(), startsWith("Array of bytes differs at index 0"));

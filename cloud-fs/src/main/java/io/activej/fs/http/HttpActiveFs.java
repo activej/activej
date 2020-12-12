@@ -18,7 +18,6 @@ package io.activej.fs.http;
 
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.codec.StructuredDecoder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -35,7 +34,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
@@ -44,6 +42,7 @@ import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.Codecs.*;
+import static io.activej.fs.util.RemoteFsUtils.decodeBody;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -119,7 +118,7 @@ public final class HttpActiveFs implements ActiveFs {
 								.build()))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(parseBody(FILE_META_MAP_CODEC));
+				.then(decodeBody(FILE_META_MAP_CODEC));
 	}
 
 	@Override
@@ -132,7 +131,7 @@ public final class HttpActiveFs implements ActiveFs {
 								.build()))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(parseBody(FILE_META_CODEC_NULLABLE));
+				.then(decodeBody(FILE_META_CODEC_NULLABLE));
 	}
 
 	@Override
@@ -145,7 +144,7 @@ public final class HttpActiveFs implements ActiveFs {
 						.withBody(toJsonBuf(STRINGS_SET_CODEC, names)))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(parseBody(FILE_META_MAP_CODEC));
+				.then(decodeBody(FILE_META_MAP_CODEC));
 	}
 
 	@Override
@@ -258,16 +257,6 @@ public final class HttpActiveFs implements ActiveFs {
 		}
 	}
 
-	private static <T> Function<ByteBuf, Promise<T>> parseBody(StructuredDecoder<T> decoder) {
-		return body -> {
-			try {
-				return Promise.of(fromJson(decoder, body.getString(UTF_8)));
-			} catch (MalformedDataException e) {
-				return Promise.ofException(e);
-			}
-		};
-	}
-
 	@NotNull
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String filename, @Nullable Long size) {
 		UrlBuilder urlBuilder = UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename);
@@ -291,7 +280,7 @@ public final class HttpActiveFs implements ActiveFs {
 							channelPromise.trySet(consumer
 									.transformWith(transformer)
 									.withAcknowledgement(ack -> ack.both(response.loadBody()
-											.then(parseBody(UploadAcknowledgement.CODEC))
+											.then(decodeBody(UploadAcknowledgement.CODEC))
 											.then(HttpActiveFs::failOnException)
 											.whenException(e -> {
 												channelPromise.trySetException(e);

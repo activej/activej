@@ -123,7 +123,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	}
 
 	private void processHeader() {
-		input.parse(ofFixedSize(10))
+		input.decode(ofFixedSize(10))
 				.whenResult(buf -> {
 					//header validation
 					if (buf.get() != GZIP_HEADER[0] || buf.get() != GZIP_HEADER[1]) {
@@ -177,7 +177,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	}
 
 	private void processFooter() {
-		input.parse(ofFixedSize(GZIP_FOOTER_SIZE))
+		input.decode(ofFixedSize(GZIP_FOOTER_SIZE))
 				.whenResult(buf -> {
 					if ((int) crc32.getValue() != reverseBytes(buf.readInt())) {
 						closeEx(new MalformedDataException("CRC32 value of uncompressed data differs"));
@@ -231,14 +231,14 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	}
 
 	private void skipTerminatorByte(int flag, int part) {
-		input.parse(ByteBufsDecoder.ofNullTerminatedBytes(MAX_HEADER_FIELD_LENGTH))
+		input.decode(ByteBufsDecoder.ofNullTerminatedBytes(MAX_HEADER_FIELD_LENGTH))
 				.whenException(e -> closeEx(new InvalidSizeException("FNAME or FEXTRA header is larger than maximum allowed length")))
 				.whenResult(ByteBuf::recycle)
 				.whenResult(() -> runNext(flag - part).run());
 	}
 
 	private void skipExtra(int flag) {
-		input.parse(ofFixedSize(2))
+		input.decode(ofFixedSize(2))
 				.map(shortBuf -> {
 					short toSkip = reverseBytes(shortBuf.readShort());
 					shortBuf.recycle();
@@ -250,7 +250,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 						closeEx(exception);
 						return Promise.ofException(exception);
 					}
-					return input.parse(ofFixedSize(toSkip));
+					return input.decode(ofFixedSize(toSkip));
 				})
 				.whenException(this::closeEx)
 				.whenResult(ByteBuf::recycle)
@@ -258,7 +258,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	}
 
 	private void skipCRC16(int flag) {
-		input.parse(ofFixedSize(2))
+		input.decode(ofFixedSize(2))
 				.whenException(this::closeEx)
 				.whenResult(ByteBuf::recycle)
 				.whenResult(() -> runNext(flag - FHCRC).run());

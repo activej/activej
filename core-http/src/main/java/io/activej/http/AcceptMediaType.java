@@ -23,7 +23,7 @@ import java.util.List;
 import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.bytebuf.ByteBufStrings.equalsLowerCaseAscii;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.http.HttpUtils.parseQ;
+import static io.activej.http.HttpUtils.decodeQ;
 import static io.activej.http.HttpUtils.skipSpaces;
 
 /**
@@ -54,7 +54,7 @@ public final class AcceptMediaType {
 		return new AcceptMediaType(mime, q);
 	}
 
-	static void parse(byte[] bytes, int pos, int length, List<AcceptMediaType> list) throws MalformedHttpException {
+	static void decode(byte[] bytes, int pos, int length, List<AcceptMediaType> list) throws MalformedHttpException {
 		int end = pos + length;
 
 		while (pos < end) {
@@ -85,7 +85,7 @@ public final class AcceptMediaType {
 							while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
 								pos++;
 							}
-							q = parseQ(bytes, start, pos - start);
+							q = decodeQ(bytes, start, pos - start);
 							pos--;
 						} else if (bytes[pos] == ';') {
 							pos = skipSpaces(bytes, pos + 1, end);

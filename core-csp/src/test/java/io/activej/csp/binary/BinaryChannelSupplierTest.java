@@ -26,17 +26,17 @@ public final class BinaryChannelSupplierTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
-	public void testParseStream() {
+	public void testDecodeStream() {
 		ByteBuf buf = await(BinaryChannelSupplier.of(ChannelSupplier.of(wrapUtf8("Hello\r\n World\r\n")))
-				.parseStream(ofCrlfTerminatedBytes())
+				.decodeStream(ofCrlfTerminatedBytes())
 				.toCollector(ByteBufQueue.collector()));
 		assertEquals("Hello World", buf.asString(UTF_8));
 	}
 
 	@Test
-	public void testParseStreamLessData() {
+	public void testDecodeStreamLessData() {
 		Exception exception = awaitException(BinaryChannelSupplier.of(ChannelSupplier.of(wrapUtf8("Hello\r\n Wo")))
-				.parseStream(ofCrlfTerminatedBytes())
+				.decodeStream(ofCrlfTerminatedBytes())
 				.toCollector(ByteBufQueue.collector()));
 		assertThat(exception, instanceOf(TruncatedDataException.class));
 	}

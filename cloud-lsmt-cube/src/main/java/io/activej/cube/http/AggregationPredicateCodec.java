@@ -214,7 +214,7 @@ final class AggregationPredicateCodec implements StructuredCodec<AggregationPred
 			String field = fieldWithOperator[0];
 			String operator = (fieldWithOperator.length == 1) ? EMPTY_STRING : fieldWithOperator[1];
 			StructuredCodec<?> codec = attributeCodecs.get(field);
-			if (codec == null) throw new MalformedDataException("Could not parse: " + field);
+			if (codec == null) throw new MalformedDataException("Could not decode: " + field);
 			Object value = codec.decode(reader);
 			AggregationPredicate comparisonPredicate;
 			switch (operator) {

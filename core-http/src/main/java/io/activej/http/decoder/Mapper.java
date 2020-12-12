@@ -25,7 +25,7 @@ import static java.util.Collections.singletonList;
 
 /**
  * An enhanced mapping function which can return a list of errors for given input object.
- * This can be used to both map and put additional constraints on the parsed object from HTTP decoder.
+ * This can be used to both map and put additional constraints on the decoded object from HTTP decoder.
  * For example to ensure, that age of the person given as a string is <b>an integer</b> in range 0-100
  * and convert it to that.
  */

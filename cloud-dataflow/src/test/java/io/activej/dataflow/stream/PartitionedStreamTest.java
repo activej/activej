@@ -569,7 +569,7 @@ public final class PartitionedStreamTest {
 		public StreamSupplier<String> transform(ChannelSupplier<ByteBuf> supplier) {
 			BinaryChannelSupplier binaryChannelSupplier = BinaryChannelSupplier.of(supplier);
 			return ofChannelSupplier(ChannelSupplier.of(
-					() -> binaryChannelSupplier.parse(
+					() -> binaryChannelSupplier.decode(
 							bufs -> {
 								for (int i = 0; i < bufs.remainingBytes(); i++) {
 									if (bufs.peekByte(i) == ',') {

@@ -25,7 +25,7 @@ public final class ByteBufsDecoderExample {
 			return bufs.takeExactSize(5).asString(UTF_8);
 		};
 
-		BinaryChannelSupplier.of(ChannelSupplier.ofList(letters)).parse(decoder)
+		BinaryChannelSupplier.of(ChannelSupplier.ofList(letters)).decode(decoder)
 				.whenResult(x -> System.out.println(x));
 
 		eventloop.run();

@@ -79,7 +79,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	}
 
 	private boolean readHeader(ByteBufQueue bufs) throws MalformedDataException {
-		return bufs.parseBytes((index, value) -> {
+		return bufs.decodeBytes((index, value) -> {
 			if (value != MAGIC[index]) throw new UnknownFormatException("Expected stream to start with bytes: " + Arrays.toString(MAGIC));
 			return index == MAGIC_LENGTH - 1 ? MAGIC : null;
 		}) != null;
@@ -133,7 +133,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 	@Nullable
 	private Integer readInt(ByteBufQueue bufs) throws MalformedDataException {
-		return bufs.parseBytes((index, nextByte) -> {
+		return bufs.decodeBytes((index, nextByte) -> {
 			tempInt <<= 8;
 			tempInt |= (nextByte & 0xFF);
 			return index == 3 ? tempInt : null;

@@ -48,7 +48,7 @@ public final class FileMetadata {
 		return new FileMetadata(size, timestamp);
 	}
 
-	public static FileMetadata parse(long size, long timestamp) throws InvalidSizeException {
+	public static FileMetadata decode(long size, long timestamp) throws InvalidSizeException {
 		if (size < 0) {
 			throw new InvalidSizeException("Size is less than zero");
 		}

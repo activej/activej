@@ -94,7 +94,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	}
 
 	private void processLength() {
-		input.parse(
+		input.decode(
 				queue -> {
 					chunkLength = 0;
 					int endIndex = bufs.scanBytes((index, c) -> {
@@ -142,14 +142,14 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 					.whenResult(() -> processData(newChunkLength));
 			return;
 		}
-		input.parse(assertBytes(CRLF))
+		input.decode(assertBytes(CRLF))
 				.whenException(buf::recycle)
 				.then(() -> output.accept(buf))
 				.whenResult(this::processLength);
 	}
 
 	private void consumeCRLF(int chunkLength) {
-		input.parse(
+		input.decode(
 				bufs -> {
 					ByteBuf maybeResult = ofCrlfTerminatedBytes().tryDecode(bufs);
 					if (maybeResult == null) {

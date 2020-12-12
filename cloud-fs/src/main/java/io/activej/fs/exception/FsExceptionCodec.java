@@ -19,7 +19,7 @@ package io.activej.fs.exception;
 import io.activej.codec.CodecSubtype;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredCodecs;
-import io.activej.common.tuple.TupleParser2;
+import io.activej.common.tuple.TupleDecoder2;
 
 import static io.activej.codec.StructuredCodecs.STRING_CODEC;
 import static io.activej.codec.StructuredCodecs.object;
@@ -42,7 +42,7 @@ public final class FsExceptionCodec {
 			.with(FsBatchException.class, object(exceptions -> new FsBatchException(exceptions, false),
 					"exceptions", FsBatchException::getExceptions, StructuredCodecs.ofMap(STRING_CODEC, SCALAR_EXCEPTION_CODEC_SUBTYPE)));
 
-	private static <T extends FsException> StructuredCodec<T> simpleFsExceptionCodec(TupleParser2<String, Boolean, T> constructor) {
+	private static <T extends FsException> StructuredCodec<T> simpleFsExceptionCodec(TupleDecoder2<String, Boolean, T> constructor) {
 		return object(message -> constructor.create(message, false),
 				"message", FsException::getMessage, STRING_CODEC);
 	}

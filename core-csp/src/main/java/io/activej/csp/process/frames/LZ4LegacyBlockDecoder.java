@@ -122,7 +122,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	@SuppressWarnings("ConstantConditions")
 	private int readIntLE(ByteBufQueue bufs) throws MalformedDataException {
 		check = 0;
-		return bufs.parseBytes((index, nextByte) -> {
+		return bufs.decodeBytes((index, nextByte) -> {
 			check |= (nextByte & 0xFF) << 8 * index;
 			return index == 3 ? check : null;
 		});

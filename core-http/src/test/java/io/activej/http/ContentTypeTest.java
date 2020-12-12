@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.http.HttpUtils.parseQ;
+import static io.activej.http.HttpUtils.decodeQ;
 import static io.activej.http.MediaTypes.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -23,29 +23,29 @@ public class ContentTypeTest {
 	}
 
 	@Test
-	public void testContentTypeParse() throws MalformedHttpException {
+	public void testContentTypeDecode() throws MalformedHttpException {
 		byte[] contentType = encodeAscii("text/plain;param=value; url-form=www;CHARSET=UTF-8; a=v");
-		ContentType actual = ContentType.parse(contentType, 0, contentType.length);
+		ContentType actual = ContentType.decode(contentType, 0, contentType.length);
 		assertSame(MediaTypes.PLAIN_TEXT, actual.getMediaType());
 		assertSame(UTF_8, actual.getCharset());
 	}
 
 	@Test
-	public void testQParser() throws MalformedHttpException {
+	public void testQDecoder() throws MalformedHttpException {
 		byte[] num = encodeAscii("0.12313");
-		int q = parseQ(num, 0, num.length);
+		int q = decodeQ(num, 0, num.length);
 		assertEquals(12, q);
 
 		num = encodeAscii("1.0");
-		q = parseQ(num, 0, num.length);
+		q = decodeQ(num, 0, num.length);
 		assertEquals(100, q);
 
 		num = encodeAscii("1");
-		q = parseQ(num, 0, num.length);
+		q = decodeQ(num, 0, num.length);
 		assertEquals(100, q);
 
 		num = encodeAscii("0");
-		q = parseQ(num, 0, num.length);
+		q = decodeQ(num, 0, num.length);
 		assertEquals(0, q);
 	}
 
@@ -58,7 +58,7 @@ public class ContentTypeTest {
 				"*/*;q=0.8," +
 				"unknown/mime");
 		List<AcceptMediaType> result = new ArrayList<>();
-		AcceptMediaType.parse(acceptCts, 0, acceptCts.length, result);
+		AcceptMediaType.decode(acceptCts, 0, acceptCts.length, result);
 		List<AcceptMediaType> expected = new ArrayList<>();
 		expected.add(AcceptMediaType.of(HTML, 10));
 		expected.add(AcceptMediaType.of(XHTML_APP, 30));

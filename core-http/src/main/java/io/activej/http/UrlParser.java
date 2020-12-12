@@ -522,29 +522,29 @@ public final class UrlParser {
 
 	@Nullable
 	private static String keyValueDecode(@NotNull String url, int keyEnd) {
-		return urlDecode(url, keyEnd < url.length() && url.charAt(keyEnd) == '=' ? keyEnd + 1 : keyEnd);
+		return urlParse(url, keyEnd < url.length() && url.charAt(keyEnd) == '=' ? keyEnd + 1 : keyEnd);
 	}
 
 	/**
-	 * Decodes a application/x-www-form-urlencoded string using a specific encoding scheme. The supplied
+	 * Parses an application/x-www-form-urlencoded string using a specific encoding scheme. The supplied
 	 * encoding is used to determine what characters are represented by any consecutive sequences of the
 	 * form "%xy".
 	 *
 	 * @param s string for decoding
-	 * @return the newly decoded String
+	 * @return the newly parsed String
 	 */
 	@Nullable
-	public static String urlDecode(@NotNull String s) {
-		return urlDecode(s, 0);
+	public static String urlParse(@NotNull String s) {
+		return urlParse(s, 0);
 	}
 
 	@Nullable
-	private static String urlDecode(String s, int pos) {
+	private static String urlParse(String s, int pos) {
 		int len = s.length();
 		for (int i = pos; i < len; i++) {
 			char c = s.charAt(i);
 			if (c == '+' || c == '%')
-				return urlDecode(s, pos, i); // inline hint
+				return urlParse(s, pos, i); // inline hint
 			if (c == '&' || c == '#')
 				return s.substring(pos, i);
 		}
@@ -552,7 +552,7 @@ public final class UrlParser {
 	}
 
 	@Nullable
-	private static String urlDecode(String s, int pos, int encodedSuffixPos) {
+	private static String urlParse(String s, int pos, int encodedSuffixPos) {
 		int len = s.length();
 
 		CachedBuffers cachedBuffers = CACHED_BUFFERS.get();

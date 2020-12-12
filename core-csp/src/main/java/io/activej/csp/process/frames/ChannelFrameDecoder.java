@@ -86,7 +86,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 
 	@Override
 	protected void doProcess() {
-		parse()
+		decode()
 				.whenComplete((result, e) -> {
 					if (e instanceof TruncatedDataException) {
 						if (bufs.isEmpty()) {
@@ -117,7 +117,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	}
 
 	@NotNull
-	private Promise<ByteBuf> parse() {
+	private Promise<ByteBuf> decode() {
 		while (true) {
 			if (!bufs.isEmpty()) {
 				try {
@@ -134,7 +134,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 			Promise<Void> moreDataPromise = input.needMoreData();
 			if (moreDataPromise.isResult()) continue;
 			return moreDataPromise
-					.then(this::parse);
+					.then(this::decode);
 		}
 	}
 

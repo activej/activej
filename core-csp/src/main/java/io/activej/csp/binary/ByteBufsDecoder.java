@@ -19,7 +19,7 @@ package io.activej.csp.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.bytebuf.ByteBufQueue.ByteScanner;
-import io.activej.common.api.ParserFunction;
+import io.activej.common.api.DecoderFunction;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.Utils.IntScanner;
@@ -28,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
-import static io.activej.csp.binary.Utils.parseUntilTerminatorByte;
+import static io.activej.csp.binary.Utils.decodeUntilTerminatorByte;
 
 @FunctionalInterface
 public interface ByteBufsDecoder<T> {
@@ -36,17 +36,17 @@ public interface ByteBufsDecoder<T> {
 	@Nullable
 	T tryDecode(ByteBufQueue bufs) throws MalformedDataException;
 
-	default <V> ByteBufsDecoder<V> andThen(ParserFunction<? super T, ? extends V> after) {
+	default <V> ByteBufsDecoder<V> andThen(DecoderFunction<? super T, ? extends V> after) {
 		return bufs -> {
 			T maybeResult = tryDecode(bufs);
 			if (maybeResult == null) return null;
-			return after.parse(maybeResult);
+			return after.decode(maybeResult);
 		};
 	}
 
 	static ByteBufsDecoder<byte[]> assertBytes(byte[] data) {
 		return bufs ->
-				bufs.parseBytes((index, nextByte) -> {
+				bufs.decodeBytes((index, nextByte) -> {
 					if (nextByte != data[index]) {
 						throw new MalformedDataException("Array of bytes differs at index " + index +
 								"[Expected: " + data[index] + ", actual: " + nextByte + ']');
@@ -67,7 +67,7 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofNullTerminatedBytes(int maxSize) {
-		return parseUntilTerminatorByte((byte) 0, maxSize);
+		return decodeUntilTerminatorByte((byte) 0, maxSize);
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofCrTerminatedBytes() {
@@ -75,7 +75,7 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofCrTerminatedBytes(int maxSize) {
-		return parseUntilTerminatorByte(CR, maxSize);
+		return decodeUntilTerminatorByte(CR, maxSize);
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes() {

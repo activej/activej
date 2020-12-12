@@ -88,7 +88,7 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 
 	@Override
 	public Promise<I> receive() {
-		return bufsSupplier.parse(codec::tryDecode)
+		return bufsSupplier.decode(codec::tryDecode)
 				.whenResult(this::prefetch)
 				.whenException(this::closeEx);
 	}
