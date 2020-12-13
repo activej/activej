@@ -104,7 +104,7 @@ public class ByteBufQueueTest {
 		queue.add(ByteBuf.wrapForReading(bytes));
 		queue.add(ByteBuf.wrapForReading(bytes));
 
-		int expectedIndex = bytes.length;
+		int expectedIndex = 0;
 		assertEquals(expectedIndex, queue.scanBytes(bytes.length, (index, value) ->{
 			assertEquals(expectedIndex, index);
 			assertEquals(bytes[0], value);

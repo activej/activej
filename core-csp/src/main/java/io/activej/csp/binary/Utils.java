@@ -46,9 +46,9 @@ class Utils {
 		private int result;
 
 		@Override
-		public boolean consume(int index, byte nextByte) throws ParseException {
-			result |= (nextByte & 0x7F) << index * 7;
-			if ((nextByte & 0x80) == 0) {
+		public boolean consume(int index, byte b) throws ParseException {
+			result |= (b & 0x7F) << index * 7;
+			if ((b & 0x80) == 0) {
 
 				return true;
 			}
@@ -68,9 +68,9 @@ class Utils {
 		private int result;
 
 		@Override
-		public boolean consume(int index, byte nextByte) {
+		public boolean consume(int index, byte b) {
 			result <<= 8;
-			result |= (nextByte & 0xFF);
+			result |= (b & 0xFF);
 			return index == 3;
 		}
 

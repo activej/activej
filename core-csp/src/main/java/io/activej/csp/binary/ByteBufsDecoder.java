@@ -48,13 +48,13 @@ public interface ByteBufsDecoder<T> {
 
 	static ByteBufsDecoder<byte[]> assertBytes(byte[] data) {
 		return bufs ->
-				bufs.parseBytes((index, nextByte) -> {
-					if (nextByte != data[index]) {
+				bufs.consumeBytes((index, b) -> {
+					if (b != data[index]) {
 						throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + index +
-								"[Expected: " + data[index] + ", actual: " + nextByte + ']');
+								"[Expected: " + data[index] + ", actual: " + b + ']');
 					}
-					return index == data.length - 1 ? data : null;
-				});
+					return index == data.length - 1;
+				}) != -1 ? data : null;
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofFixedSize(int length) {
@@ -90,9 +90,9 @@ public interface ByteBufsDecoder<T> {
 				boolean crFound;
 
 				@Override
-				public boolean consume(int index, byte nextByte) throws ParseException {
+				public boolean consume(int index, byte b) throws ParseException {
 					if (crFound) {
-						if (nextByte == LF) {
+						if (b == LF) {
 							return true;
 						}
 						crFound = false;
@@ -100,7 +100,7 @@ public interface ByteBufsDecoder<T> {
 					if (index == maxSize - 1) {
 						throw new ParseException(ByteBufsDecoder.class, "No CRLF is found in " + maxSize + " bytes");
 					}
-					if (nextByte == CR) {
+					if (b == CR) {
 						crFound = true;
 					}
 					return false;

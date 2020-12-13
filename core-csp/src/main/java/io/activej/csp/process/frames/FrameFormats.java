@@ -58,7 +58,7 @@ public class FrameFormats {
 	 * </b>
 	 */
 	public static FrameFormat identity() {
-		return IdentityFrameFormat.getInstance();
+		return new IdentityFrameFormat();
 	}
 
 	/**
@@ -72,7 +72,7 @@ public class FrameFormats {
 	 * </b>
 	 */
 	public static FrameFormat sizePrefixed() {
-		return SizePrefixedFrameFormat.getInstance();
+		return new SizePrefixedFrameFormat();
 	}
 
 	/**
@@ -153,23 +153,6 @@ public class FrameFormats {
 	}
 
 	private static final class IdentityFrameFormat implements FrameFormat {
-		private static volatile IdentityFrameFormat instance = null;
-
-		private IdentityFrameFormat() {
-			if (instance != null) throw new AssertionError("Already created");
-		}
-
-		static IdentityFrameFormat getInstance() {
-			if (instance == null) {
-				synchronized (IdentityFrameFormat.class) {
-					if (instance == null) {
-						instance = new IdentityFrameFormat();
-					}
-				}
-			}
-			return instance;
-		}
-
 		@Override
 		public BlockEncoder createEncoder() {
 			return new BlockEncoder() {
@@ -215,23 +198,6 @@ public class FrameFormats {
 		private static final InvalidSizeException COULD_NOT_READ_VAR_INT = new InvalidSizeException(SizePrefixedFrameFormat.class, "Could not read var int");
 		private static final byte[] ZERO_BYTE_ARRAY = {0};
 
-		private static volatile SizePrefixedFrameFormat instance = null;
-
-		private SizePrefixedFrameFormat() {
-			if (instance != null) throw new AssertionError("Already created");
-		}
-
-		static SizePrefixedFrameFormat getInstance() {
-			if (instance == null) {
-				synchronized (SizePrefixedFrameFormat.class) {
-					if (instance == null) {
-						instance = new SizePrefixedFrameFormat();
-					}
-				}
-			}
-			return instance;
-		}
-
 		@Override
 		public BlockEncoder createEncoder() {
 			return new BlockEncoder() {
@@ -258,18 +224,20 @@ public class FrameFormats {
 		@Override
 		public BlockDecoder createDecoder() {
 			return new BlockDecoder() {
-				@Nullable
-				Integer length;
+				private final LengthScanner lengthScanner = new LengthScanner();
 
 				@Override
 				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
-					if (length == null && (length = readLength(bufs)) == null) return null;
-
-					if (length == 0) return END_OF_STREAM;
-					if (!bufs.hasRemainingBytes(length)) return null;
-					ByteBuf buf = bufs.takeExactSize(length);
-					length = null;
-					return buf;
+					int bytes = bufs.scanBytes(lengthScanner) + 1;
+					if (bytes == 0) return null;
+					int length = lengthScanner.value;
+					if (length == 0) {
+						bufs.skip(bytes);
+						return END_OF_STREAM;
+					}
+					if (!bufs.hasRemainingBytes(bytes + length)) return null;
+					bufs.skip(bytes);
+					return bufs.takeExactSize(length);
 				}
 
 				@Override
@@ -283,22 +251,19 @@ public class FrameFormats {
 			};
 		}
 
-		@Nullable
-		private static Integer readLength(ByteBufQueue bufs) throws ParseException {
-			return bufs.parseBytes(new ByteBufQueue.ByteParser<Integer>() {
-				int result;
+		private static final class LengthScanner implements ByteBufQueue.ByteScanner {
+			public int value;
 
-				@Override
-				public Integer parse(int index, byte nextByte) throws ParseException {
-					result |= (nextByte & 0x7F) << index * 7;
-					if ((nextByte & 0x80) == 0) {
-						if (result < 0) throw NEGATIVE_LENGTH;
-						return result;
-					}
-					if (index == 4) throw COULD_NOT_READ_VAR_INT;
-					return null;
+			@Override
+			public boolean consume(int index, byte b) throws ParseException {
+				value = index == 0 ? b & 0x7F : value | (b & 0x7F) << index * 7;
+				if (b >= 0) {
+					if (value < 0) throw NEGATIVE_LENGTH;
+					return true;
 				}
-			});
+				if (index == 4) throw COULD_NOT_READ_VAR_INT;
+				return false;
+			}
 		}
 	}
 

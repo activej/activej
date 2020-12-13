@@ -174,8 +174,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 					int crlfCrlfSequence;
 
 					@Override
-					public boolean consume(int index, byte nextByte) {
-						int remainder = nextByte == CR ? 0 : nextByte == LF ? 1 : -1;
+					public boolean consume(int index, byte b) {
+						int remainder = b == CR ? 0 : b == LF ? 1 : -1;
 
 						if (crlfCrlfSequence % 2 == remainder) {
 							return ++crlfCrlfSequence == 4;
