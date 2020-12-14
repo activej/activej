@@ -24,7 +24,7 @@ class Utils {
 
 	static ByteBufsDecoder<ByteBuf> parseUntilTerminatorByte(byte terminator, int maxSize) {
 		return bufs -> {
-			int result = bufs.scanBytes((index, nextByte) -> {
+			int bytes = bufs.scanBytes((index, nextByte) -> {
 				if (nextByte == terminator) {
 					return true;
 				}
@@ -34,10 +34,10 @@ class Utils {
 				return false;
 			});
 
-			if (result == -1) return null;
+			if (bytes == 0) return null;
 
-			ByteBuf buf = bufs.takeExactSize(result);
-			bufs.skip(1);
+			ByteBuf buf = bufs.takeExactSize(bytes);
+			buf.moveTail(-1);
 			return buf;
 		};
 	}
@@ -49,13 +49,11 @@ class Utils {
 		public boolean consume(int index, byte b) throws ParseException {
 			result |= (b & 0x7F) << index * 7;
 			if ((b & 0x80) == 0) {
-
 				return true;
 			}
 			if (index == 4) {
 				throw new ParseException(ByteBufsDecoder.class, "VarInt is too long for 32-bit integer");
 			}
-
 			return false;
 		}
 

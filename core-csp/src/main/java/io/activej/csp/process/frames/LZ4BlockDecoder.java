@@ -58,7 +58,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 			readHeader = false;
 		}
 
-		if (bufs.scanBytes(intScanner) == -1) return null;
+		if (bufs.scanBytes(intScanner) == 0) return null;
 		int compressedSize = intScanner.value;
 		if (compressedSize == LAST_BLOCK_INT) {
 			bufs.skip(4);
@@ -88,7 +88,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		return bufs.consumeBytes((index, value) -> {
 			if (value != MAGIC[index]) throw UNKNOWN_FORMAT_EXCEPTION;
 			return index == MAGIC_LENGTH - 1;
-		}) != -1;
+		}) != 0;
 	}
 
 	@Nullable

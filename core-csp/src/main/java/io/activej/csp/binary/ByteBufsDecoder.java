@@ -47,14 +47,13 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<byte[]> assertBytes(byte[] data) {
-		return bufs ->
-				bufs.consumeBytes((index, b) -> {
-					if (b != data[index]) {
-						throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + index +
-								"[Expected: " + data[index] + ", actual: " + b + ']');
-					}
-					return index == data.length - 1;
-				}) != -1 ? data : null;
+		return bufs -> bufs.consumeBytes((index, b) -> {
+			if (b != data[index]) {
+				throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + index +
+						"[Expected: " + data[index] + ", actual: " + b + ']');
+			}
+			return index == data.length - 1;
+		}) != 0 ? data : null;
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofFixedSize(int length) {
@@ -86,7 +85,7 @@ public interface ByteBufsDecoder<T> {
 
 	static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes(int maxSize) {
 		return bufs -> {
-			int lfIndex = bufs.scanBytes(new ByteScanner() {
+			int bytes = bufs.scanBytes(new ByteScanner() {
 				boolean crFound;
 
 				@Override
@@ -107,10 +106,10 @@ public interface ByteBufsDecoder<T> {
 				}
 			});
 
-			if (lfIndex == -1) return null;
+			if (bytes == 0) return null;
 
-			ByteBuf buf = bufs.takeExactSize(lfIndex - 1);
-			bufs.skip(2);
+			ByteBuf buf = bufs.takeExactSize(bytes);
+			buf.moveTail(-2);
 			return buf;
 		};
 	}
@@ -122,7 +121,7 @@ public interface ByteBufsDecoder<T> {
 	static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes(int maxSize) {
 		return bufs -> {
 			IntScanner scanner = new IntScanner();
-			if (bufs.scanBytes(scanner) == -1) return null;
+			if (bufs.scanBytes(scanner) == 0) return null;
 
 			int size = scanner.getResult();
 
@@ -173,18 +172,17 @@ public interface ByteBufsDecoder<T> {
 	static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes(int maxSize) {
 		return bufs -> {
 			VarIntScanner scanner = new VarIntScanner();
-			int lastIndex = bufs.scanBytes(scanner);
+			int bytes = bufs.scanBytes(scanner);
 
-			if (lastIndex == -1) return null;
+			if (bytes == 0) return null;
 
 			int size = scanner.getResult();
 
 			if (size < 0) throw NEGATIVE_SIZE;
 			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
 
-			int prefixSize = lastIndex + 1;
-			if (!bufs.hasRemainingBytes(prefixSize + size)) return null;
-			bufs.skip(prefixSize);
+			if (!bufs.hasRemainingBytes(bytes + size)) return null;
+			bufs.skip(bytes);
 			return bufs.takeExactSize(size);
 		};
 	}

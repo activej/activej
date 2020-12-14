@@ -327,9 +327,9 @@ public abstract class AbstractHttpConnection {
 		int remainingBytes = readQueue.remainingBytes();
 		while (true) {
 			int n = readQueue.scanBytes(i, (index, b) -> b == CR || b == LF);
-			if (n == -1) return null;
+			if (n == 0) return null;
 			i += n;
-			byte b = readQueue.peekByte(i++);
+			byte b = readQueue.peekByte(i - 1);
 			assert b == CR || b == LF;
 			byte[] bytes;
 			if (b == CR) {

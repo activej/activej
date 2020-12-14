@@ -639,15 +639,15 @@ public final class ByteBufQueue implements Recyclable {
 			ByteBuf buf = bufs[n];
 			byte[] array = buf.array();
 			int tail = buf.tail();
-			for (int i = buf.head() + offset; i != tail; i++, index++) {
-				if (byteScanner.consume(index, array[i])) {
+			for (int i = buf.head() + offset; i != tail; i++) {
+				if (byteScanner.consume(index++, array[i])) {
 					return index;
 				}
 			}
 			n = next(n);
 			offset = 0;
 		}
-		return -1;
+		return 0;
 	}
 
 	public int consumeBytes(ByteScanner byteScanner) throws ParseException {
@@ -678,8 +678,8 @@ public final class ByteBufQueue implements Recyclable {
 			byte[] array = buf.array();
 			int tail = buf.tail();
 			int i;
-			for (i = buf.head() + offset; i != tail; i++, index++) {
-				if (byteScanner.consume(index, array[i])) {
+			for (i = buf.head() + offset; i != tail; i++) {
+				if (byteScanner.consume(index++, array[i])) {
 					break;
 				}
 			}
@@ -703,7 +703,7 @@ public final class ByteBufQueue implements Recyclable {
 			n = next(n);
 			offset = 0;
 		}
-		return -1;
+		return 0;
 	}
 
 	@NotNull

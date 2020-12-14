@@ -242,7 +242,7 @@ public final class MultipartParser implements ByteBufsDecoder<MultipartFrame> {
 				assert index < boundary.length;
 				return nextByte != boundary[index];
 			}
-		}) != -1;
+		}) != 0;
 	}
 
 	public static final class MultipartFrame implements Recyclable {

@@ -228,7 +228,7 @@ public class FrameFormats {
 
 				@Override
 				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
-					int bytes = bufs.scanBytes(lengthScanner) + 1;
+					int bytes = bufs.scanBytes(lengthScanner);
 					if (bytes == 0) return null;
 					int length = lengthScanner.value;
 					if (length == 0) {

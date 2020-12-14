@@ -85,7 +85,7 @@ public class ByteBufQueueTest {
 	@Test
 	public void scanEmptyQueue() throws ParseException {
 		assertTrue(queue.isEmpty());
-		assertEquals(-1, queue.scanBytes((index, value) -> {
+		assertEquals(0, queue.scanBytes((index, value) -> {
 			throw new AssertionError();
 		}));
 	}
@@ -93,7 +93,7 @@ public class ByteBufQueueTest {
 	@Test
 	public void scanOverQueueSize() throws ParseException {
 		queue.add(ByteBuf.wrapForReading(new byte[5]));
-		assertEquals(-1, queue.scanBytes(queue.remainingBytes(), (index, value) -> {
+		assertEquals(0, queue.scanBytes(queue.remainingBytes(), (index, value) -> {
 			throw new AssertionError();
 		}));
 	}
@@ -104,9 +104,8 @@ public class ByteBufQueueTest {
 		queue.add(ByteBuf.wrapForReading(bytes));
 		queue.add(ByteBuf.wrapForReading(bytes));
 
-		int expectedIndex = 0;
-		assertEquals(expectedIndex, queue.scanBytes(bytes.length, (index, value) ->{
-			assertEquals(expectedIndex, index);
+		assertEquals(1, queue.scanBytes(bytes.length, (index, value) -> {
+			assertEquals(0, index);
 			assertEquals(bytes[0], value);
 			return true;
 		}));

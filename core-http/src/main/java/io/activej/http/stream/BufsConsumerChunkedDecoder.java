@@ -101,7 +101,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		input.parse(
 				queue -> {
 					chunkLength = 0;
-					int endIndex = bufs.scanBytes((index, c) -> {
+					int bytes = bufs.scanBytes((index, c) -> {
 						if (c >= '0' && c <= '9') {
 							chunkLength = (chunkLength << 4) + (c - '0');
 						} else if (c >= 'a' && c <= 'f') {
@@ -122,8 +122,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 						}
 						return false;
 					});
-					if (endIndex == -1) return null;
-					bufs.skip(endIndex);
+					if (bytes == 0) return null;
+					bufs.skip(bytes - 1);
 					return chunkLength;
 				})
 				.whenException(this::closeEx)
@@ -170,7 +170,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		int remainingBytes = bufs.remainingBytes();
 		if (remainingBytes >= 4) {
 			try {
-				int lastLfIndex = bufs.scanBytes(new ByteScanner() {
+				int bytes = bufs.scanBytes(new ByteScanner() {
 					int crlfCrlfSequence;
 
 					@Override
@@ -184,8 +184,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 						return false;
 					}
 				});
-				if (lastLfIndex != -1) {
-					bufs.skip(lastLfIndex + 1);
+				if (bytes != 0) {
+					bufs.skip(bytes);
 					input.endOfStream()
 							.then(output::acceptEndOfStream)
 							.whenResult(this::completeProcess);
