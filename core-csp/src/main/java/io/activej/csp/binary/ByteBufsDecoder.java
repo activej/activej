@@ -119,11 +119,11 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes(int maxSize) {
+		IntScanner scanner = new IntScanner();
 		return bufs -> {
-			IntScanner scanner = new IntScanner();
 			if (bufs.scanBytes(scanner) == 0) return null;
 
-			int size = scanner.getResult();
+			int size = scanner.result;
 
 			if (size < 0) throw NEGATIVE_SIZE;
 			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
@@ -170,13 +170,13 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes(int maxSize) {
+		VarIntScanner scanner = new VarIntScanner();
 		return bufs -> {
-			VarIntScanner scanner = new VarIntScanner();
 			int bytes = bufs.scanBytes(scanner);
 
 			if (bytes == 0) return null;
 
-			int size = scanner.getResult();
+			int size = scanner.result;
 
 			if (size < 0) throw NEGATIVE_SIZE;
 			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;

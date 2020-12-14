@@ -43,11 +43,11 @@ class Utils {
 	}
 
 	static class VarIntScanner implements ByteBufQueue.ByteScanner {
-		private int result;
+		int result;
 
 		@Override
 		public boolean consume(int index, byte b) throws ParseException {
-			result |= (b & 0x7F) << index * 7;
+			result = (index == 0 ? 0 : result) | (b & 0x7F) << index * 7;
 			if ((b & 0x80) == 0) {
 				return true;
 			}
@@ -56,24 +56,15 @@ class Utils {
 			}
 			return false;
 		}
-
-		public int getResult() {
-			return result;
-		}
 	}
 
 	static class IntScanner implements ByteBufQueue.ByteScanner {
-		private int result;
+		int result;
 
 		@Override
 		public boolean consume(int index, byte b) {
-			result <<= 8;
-			result |= (b & 0xFF);
+			result = result << 8 | b & 0xFF;
 			return index == 3;
-		}
-
-		public int getResult() {
-			return result;
 		}
 	}
 }

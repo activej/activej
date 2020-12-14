@@ -137,7 +137,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 		@Override
 		public boolean consume(int index, byte b) throws ParseException {
-			value = index == 0 ? b & 0xFF : value << 8 | b & 0xFF;
+			value = value << 8 | b & 0xFF;
 			return index == 3;
 		}
 	}
