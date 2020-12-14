@@ -43,7 +43,9 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	private int check;
 	private boolean endOfStream;
 
-	private boolean shouldReadHeader = true;
+	private boolean readingHeader = true;
+
+	private final IntLeScanner intLEScanner = new IntLeScanner();
 
 	LZ4LegacyBlockDecoder(LZ4FastDecompressor decompressor, StreamingXXHash32 checksum, boolean ignoreMissingEndOfStreamBlock) {
 		this.decompressor = decompressor;
@@ -59,13 +61,13 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	@Nullable
 	@Override
 	public ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
-		if (shouldReadHeader) {
+		if (readingHeader) {
 			if (!readHeader(bufs)) return null;
-			shouldReadHeader = false;
+			readingHeader = false;
 		}
 
 		if (!bufs.hasRemainingBytes(compressedLen)) return null;
-		shouldReadHeader = true;
+		readingHeader = true;
 
 		if (endOfStream) return END_OF_STREAM;
 		return decompressBody(bufs);
@@ -95,9 +97,9 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 			throw new UnknownFormatException("Unknown compression method");
 		}
 
-		compressedLen = readIntLE(bufs);
-		originalLen = readIntLE(bufs);
-		check = readIntLE(bufs);
+		compressedLen = readInt(bufs);
+		originalLen = readInt(bufs);
+		check = readInt(bufs);
 		if (originalLen > 1 << compressionLevel
 				|| (originalLen < 0 || compressedLen < 0)
 				|| (originalLen == 0 && compressedLen != 0)
@@ -115,17 +117,9 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		return true;
 	}
 
-	/*
-	 Using 'check' as an accumulator as it will be set last.
-	 4 bytes in queue are asserted before call, hence warning suppression
-	*/
-	@SuppressWarnings("ConstantConditions")
-	private int readIntLE(ByteBufQueue bufs) throws MalformedDataException {
-		check = 0;
-		return bufs.decodeBytes((index, nextByte) -> {
-			check |= (nextByte & 0xFF) << 8 * index;
-			return index == 3 ? check : null;
-		});
+	private int readInt(ByteBufQueue bufs) throws MalformedDataException {
+		bufs.consumeBytes(intLEScanner);
+		return intLEScanner.value;
 	}
 
 	private ByteBuf decompressBody(ByteBufQueue queue) throws MalformedDataException {
@@ -161,5 +155,16 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 			inputBuf.recycle();
 		}
 	}
+
+	private static final class IntLeScanner implements ByteBufQueue.ByteScanner {
+		public int value;
+
+		@Override
+		public boolean consume(int index, byte b) throws MalformedDataException {
+			value = (index == 0 ? 0 : value >>> 8) | (b & 0xFF) << 24;
+			return index == 3;
+		}
+	}
+
 
 }

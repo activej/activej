@@ -34,11 +34,9 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	private static final int LAST_BLOCK_INT = 0xffffffff;
 
 	private final LZ4FastDecompressor decompressor;
-
-	private @Nullable Integer compressedSize;
-	private int tempInt;
-
 	private boolean readHeader = true;
+
+	private final IntScanner intScanner = new IntScanner();
 
 	LZ4BlockDecoder(LZ4FastDecompressor decompressor) {
 		this.decompressor = decompressor;
@@ -57,20 +55,25 @@ final class LZ4BlockDecoder implements BlockDecoder {
 			readHeader = false;
 		}
 
-		if (compressedSize == null && (compressedSize = readInt(bufs)) == null) return null;
-		if (compressedSize == LAST_BLOCK_INT) return END_OF_STREAM;
+		if (bufs.scanBytes(intScanner) == 0) return null;
+		int compressedSize = intScanner.value;
+		if (compressedSize == LAST_BLOCK_INT) {
+			bufs.skip(4);
+			return END_OF_STREAM;
+		}
 
 		if (compressedSize >= 0) {
-			if (!bufs.hasRemainingBytes(compressedSize + 1)) return null;
+			if (!bufs.hasRemainingBytes(4 + compressedSize + 1)) return null;
+			bufs.skip(4);
 			ByteBuf result = bufs.takeExactSize(compressedSize + 1);
 			if (result.at(result.tail() - 1) != END_OF_BLOCK) {
 				throw new MalformedDataException("Block does not end with special byte '1'");
 			}
 			result.moveTail(-1);
-			compressedSize = null;
 			return result;
+		} else {
+			return decompress(bufs, compressedSize & COMPRESSED_LENGTH_MASK);
 		}
-		return decompress(bufs);
 	}
 
 	@Override
@@ -79,21 +82,18 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	}
 
 	private boolean readHeader(ByteBufQueue bufs) throws MalformedDataException {
-		return bufs.decodeBytes((index, value) -> {
+		return bufs.consumeBytes((index, value) -> {
 			if (value != MAGIC[index]) throw new UnknownFormatException("Expected stream to start with bytes: " + Arrays.toString(MAGIC));
-			return index == MAGIC_LENGTH - 1 ? MAGIC : null;
-		}) != null;
+			return index == MAGIC_LENGTH - 1;
+		}) != 0;
 	}
 
 	@Nullable
-	private ByteBuf decompress(ByteBufQueue bufs) throws MalformedDataException {
-		assert compressedSize != null;
+	private ByteBuf decompress(ByteBufQueue bufs, int compressedSize) throws MalformedDataException {
+		if (!bufs.hasRemainingBytes(4 + 4 + compressedSize + 1)) return null;
 
-		int actualCompressedSize = compressedSize & COMPRESSED_LENGTH_MASK;
-
-		if (!bufs.hasRemainingBytes(4 + actualCompressedSize + 1)) return null;
-		//noinspection ConstantConditions - cannot be null as 4 bytes in queue are asserted above
-		int originalSize = readInt(bufs);
+		bufs.consumeBytes(4, intScanner);
+		int originalSize = intScanner.value;
 		if (originalSize < 0 || originalSize > MAX_BLOCK_SIZE.toInt()) {
 			throw new InvalidSizeException("Size (" + originalSize +
 					") of block is either negative or exceeds max block size (" + MAX_BLOCK_SIZE + ')');
@@ -102,16 +102,16 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		ByteBuf firstBuf = bufs.peekBuf();
 		assert firstBuf != null; // ensured above
 
-		ByteBuf compressedBuf = firstBuf.readRemaining() >= actualCompressedSize + 1 ? firstBuf : bufs.takeExactSize(actualCompressedSize + 1);
+		ByteBuf compressedBuf = firstBuf.readRemaining() >= compressedSize + 1 ? firstBuf : bufs.takeExactSize(compressedSize + 1);
 
-		if (compressedBuf.at(compressedBuf.head() + actualCompressedSize) != END_OF_BLOCK) {
+		if (compressedBuf.at(compressedBuf.head() + compressedSize) != END_OF_BLOCK) {
 			throw new MalformedDataException("Block does not end with special byte '1'");
 		}
 
 		ByteBuf buf = ByteBufPool.allocate(originalSize);
 		try {
 			int readBytes = decompressor.decompress(compressedBuf.array(), compressedBuf.head(), buf.array(), 0, originalSize);
-			if (readBytes != actualCompressedSize) {
+			if (readBytes != compressedSize) {
 				buf.recycle();
 				throw new InvalidSizeException("Actual size of decompressed data does not equal expected size of decompressed data");
 			}
@@ -124,19 +124,19 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		if (compressedBuf != firstBuf) {
 			compressedBuf.recycle();
 		} else {
-			bufs.skip(actualCompressedSize + 1);
+			bufs.skip(compressedSize + 1);
 		}
 
-		compressedSize = null;
 		return buf;
 	}
 
-	@Nullable
-	private Integer readInt(ByteBufQueue bufs) throws MalformedDataException {
-		return bufs.decodeBytes((index, nextByte) -> {
-			tempInt <<= 8;
-			tempInt |= (nextByte & 0xFF);
-			return index == 3 ? tempInt : null;
-		});
+	private static final class IntScanner implements ByteBufQueue.ByteScanner {
+		public int value;
+
+		@Override
+		public boolean consume(int index, byte b) throws MalformedDataException {
+			value = value << 8 | b & 0xFF;
+			return index == 3;
+		}
 	}
 }

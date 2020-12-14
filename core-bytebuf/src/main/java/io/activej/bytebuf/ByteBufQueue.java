@@ -227,18 +227,7 @@ public final class ByteBufQueue implements Recyclable {
 	 */
 	@NotNull
 	public ByteBuf takeAtLeast(int size) {
-		if (CHECK) checkArgument(hasRemainingBytes(size), () -> "Queue does not have " + size + " bufs");
-		if (size == 0) return ByteBuf.empty();
-		ByteBuf buf = bufs[first];
-		if (buf.readRemaining() >= size) {
-			if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
-			first = next(first);
-			return buf;
-		}
-		ByteBuf result = ByteBufPool.allocate(size);
-		drainTo(result.array(), 0, size);
-		result.moveTail(size);
-		return result;
+		return takeAtLeast(size, $ -> {});
 	}
 
 	@NotNull
@@ -271,22 +260,7 @@ public final class ByteBufQueue implements Recyclable {
 	 */
 	@NotNull
 	public ByteBuf takeExactSize(int exactSize) {
-		if (CHECK) checkArgument(hasRemainingBytes(exactSize), () -> "Queue does not have " + exactSize + " bufs");
-		if (exactSize == 0) return ByteBuf.empty();
-		ByteBuf buf = bufs[first];
-		if (buf.readRemaining() == exactSize) {
-			if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
-			first = next(first);
-			return buf;
-		} else if (exactSize < buf.readRemaining()) {
-			ByteBuf result = buf.slice(exactSize);
-			buf.moveHead(exactSize);
-			return result;
-		}
-		ByteBuf result = ByteBufPool.allocate(exactSize);
-		drainTo(result.array(), 0, exactSize);
-		result.moveTail(exactSize);
-		return result;
+		return takeExactSize(exactSize, $ -> {});
 	}
 
 	@NotNull
@@ -521,21 +495,7 @@ public final class ByteBufQueue implements Recyclable {
 	 * @return number of removed bytes
 	 */
 	public int skip(int maxSize) {
-		int s = maxSize;
-		while (hasRemaining()) {
-			ByteBuf buf = bufs[first];
-			int remaining = buf.readRemaining();
-			if (s < remaining) {
-				buf.moveHead(s);
-				return maxSize;
-			} else {
-				buf.recycle();
-				if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
-				first = next(first);
-				s -= remaining;
-			}
-		}
-		return maxSize - s;
+		return skip(maxSize, $ -> {});
 	}
 
 	public int skip(int maxSize, @NotNull Consumer<ByteBuf> recycledBufs) {
@@ -569,24 +529,7 @@ public final class ByteBufQueue implements Recyclable {
 	 * @return number of drained bytes
 	 */
 	public int drainTo(@NotNull byte[] dest, int destOffset, int maxSize) {
-		int s = maxSize;
-		while (hasRemaining()) {
-			ByteBuf buf = bufs[first];
-			int remaining = buf.readRemaining();
-			if (s < remaining) {
-				arraycopy(buf.array(), buf.head(), dest, destOffset, s);
-				buf.moveHead(s);
-				return maxSize;
-			} else {
-				arraycopy(buf.array(), buf.head(), dest, destOffset, remaining);
-				buf.recycle();
-				if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
-				first = next(first);
-				s -= remaining;
-				destOffset += remaining;
-			}
-		}
-		return maxSize - s;
+		return drainTo(dest, destOffset, maxSize, $ -> {});
 	}
 
 	public int drainTo(@NotNull byte[] dest, int destOffset, int maxSize, @NotNull Consumer<ByteBuf> recycledBufs) {
@@ -674,117 +617,93 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	public interface ByteScanner {
-		boolean consume(int index, byte value) throws MalformedDataException;
-	}
-
-	public interface ByteDecoder<T> {
-		T decode(int index, byte value) throws MalformedDataException;
+		boolean consume(int index, byte b) throws MalformedDataException;
 	}
 
 	public int scanBytes(ByteScanner byteScanner) throws MalformedDataException {
-		int scanned = 0;
-		for (int n = first; n != last; n = next(n)) {
-			ByteBuf buf = bufs[n];
-			byte[] array = buf.array();
-			int tail = buf.tail();
-			for (int i = buf.head(); i != tail; i++) {
-				if (byteScanner.consume(scanned, array[i])) {
-					return scanned;
-				}
-				scanned++;
-			}
-		}
-		return -1;
+		return scanBytes(0, byteScanner);
 	}
 
 	public int scanBytes(int offset, ByteScanner byteScanner) throws MalformedDataException {
-		ByteBuf buf = null;
-		int i = 0;
-		int n;
-		int scanned = 0;
-		for (n = first; n != last; n = next(n)) {
-			buf = bufs[n];
-			int readRemaining = buf.readRemaining();
+		int n = first;
+		while (offset > 0 && n != last) {
+			int readRemaining = bufs[n].readRemaining();
 			if (offset < readRemaining) {
-				i = buf.head() + offset;
-				scanned += offset;
 				break;
 			}
 			offset -= readRemaining;
-			scanned += readRemaining;
+			n = next(n);
 		}
+		int index = 0;
 		while (n != last) {
+			ByteBuf buf = bufs[n];
 			byte[] array = buf.array();
 			int tail = buf.tail();
-			for (; i != tail; i++) {
-				if (byteScanner.consume(scanned, array[i])) {
-					return scanned;
+			for (int i = buf.head() + offset; i != tail; i++) {
+				if (byteScanner.consume(index++, array[i])) {
+					return index;
 				}
-				scanned++;
 			}
 			n = next(n);
-			if (n == last) break;
-			buf = bufs[n];
-			i = buf.head();
+			offset = 0;
 		}
-		return -1;
+		return 0;
 	}
 
-	public <T> T decodeBytes(ByteDecoder<T> byteDecoder) throws MalformedDataException {
-		int decoded = 0;
-		for (int n = first; n != last; n = next(n)) {
+	public int consumeBytes(ByteScanner byteScanner) throws MalformedDataException {
+		return consumeBytes(0, byteScanner, $ -> {});
+	}
+
+	public int consumeBytes(ByteScanner byteScanner, Consumer<ByteBuf> recycledBufs) throws MalformedDataException {
+		return consumeBytes(0, byteScanner, recycledBufs);
+	}
+
+	public int consumeBytes(int offset, ByteScanner byteScanner) throws MalformedDataException {
+		return consumeBytes(offset, byteScanner, $ -> {});
+	}
+
+	public int consumeBytes(int offset, ByteScanner byteScanner, Consumer<ByteBuf> recycledBufs) throws MalformedDataException {
+		int n = first;
+		while (offset > 0 && n != last) {
+			int readRemaining = bufs[n].readRemaining();
+			if (offset < readRemaining) {
+				break;
+			}
+			offset -= readRemaining;
+			n = next(n);
+		}
+		int index = 0;
+		while (n != last) {
 			ByteBuf buf = bufs[n];
 			byte[] array = buf.array();
 			int tail = buf.tail();
-			for (int i = buf.head(); i != tail; i++) {
-				T result = byteDecoder.decode(decoded++, array[i]);
-				if (result != null) {
-					for (; first != n; first = next(first)) {
-						bufs[first].recycle();
-						if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
-					}
-					if (i == tail - 1) {
-						buf.recycle();
-						if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
-						first = next(first);
-					} else {
-						buf.head(i + 1);
-					}
-					return result;
+			int i;
+			for (i = buf.head() + offset; i != tail; i++) {
+				if (byteScanner.consume(index++, array[i])) {
+					break;
 				}
 			}
-		}
-		return null;
-	}
-
-	public <T> T decodeBytes(ByteDecoder<T> byteDecoder, Consumer<ByteBuf> recycledBufs) throws MalformedDataException {
-		int decoded = 0;
-		for (int n = first; n != last; n = next(n)) {
-			ByteBuf buf = bufs[n];
-			byte[] array = buf.array();
-			int tail = buf.tail();
-			for (int i = buf.head(); i != tail; i++) {
-				T result = byteDecoder.decode(decoded++, array[i]);
-				if (result != null) {
-					for (; first != n; first = next(first)) {
-						ByteBuf bufToRecycle = bufs[first];
-						recycledBufs.accept(bufToRecycle);
-						bufToRecycle.recycle();
-						if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
-					}
-					if (i == tail - 1) {
-						recycledBufs.accept(buf);
-						buf.recycle();
-						if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
-						first = next(first);
-					} else {
-						buf.head(i + 1);
-					}
-					return result;
+			if (i != tail) { // break
+				for (; first != n; first = next(first)) {
+					ByteBuf bufToRecycle = bufs[first];
+					recycledBufs.accept(bufToRecycle);
+					bufToRecycle.recycle();
+					if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
 				}
+				if (i == tail - 1) {
+					recycledBufs.accept(buf);
+					buf.recycle();
+					if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
+					first = next(first);
+				} else {
+					buf.head(i + 1);
+				}
+				return index;
 			}
+			n = next(n);
+			offset = 0;
 		}
-		return null;
+		return 0;
 	}
 
 	@NotNull

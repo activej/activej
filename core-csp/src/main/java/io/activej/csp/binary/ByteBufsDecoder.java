@@ -45,14 +45,13 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<byte[]> assertBytes(byte[] data) {
-		return bufs ->
-				bufs.decodeBytes((index, nextByte) -> {
-					if (nextByte != data[index]) {
-						throw new MalformedDataException("Array of bytes differs at index " + index +
-								"[Expected: " + data[index] + ", actual: " + nextByte + ']');
-					}
-					return index == data.length - 1 ? data : null;
-				});
+		return bufs -> bufs.consumeBytes((index, b) -> {
+			if (b != data[index]) {
+				throw new MalformedDataException("Array of bytes differs at index " + index +
+						"[Expected: " + data[index] + ", actual: " + b + ']');
+			}
+			return index == data.length - 1;
+		}) != 0 ? data : null;
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofFixedSize(int length) {
@@ -84,13 +83,13 @@ public interface ByteBufsDecoder<T> {
 
 	static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes(int maxSize) {
 		return bufs -> {
-			int lfIndex = bufs.scanBytes(new ByteScanner() {
+			int bytes = bufs.scanBytes(new ByteScanner() {
 				boolean crFound;
 
 				@Override
-				public boolean consume(int index, byte nextByte) throws MalformedDataException {
+				public boolean consume(int index, byte b) throws MalformedDataException {
 					if (crFound) {
-						if (nextByte == LF) {
+						if (b == LF) {
 							return true;
 						}
 						crFound = false;
@@ -98,17 +97,17 @@ public interface ByteBufsDecoder<T> {
 					if (index == maxSize - 1) {
 						throw new MalformedDataException("No CRLF is found in " + maxSize + " bytes");
 					}
-					if (nextByte == CR) {
+					if (b == CR) {
 						crFound = true;
 					}
 					return false;
 				}
 			});
 
-			if (lfIndex == -1) return null;
+			if (bytes == 0) return null;
 
-			ByteBuf buf = bufs.takeExactSize(lfIndex - 1);
-			bufs.skip(2);
+			ByteBuf buf = bufs.takeExactSize(bytes);
+			buf.moveTail(-2);
 			return buf;
 		};
 	}
@@ -118,11 +117,11 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes(int maxSize) {
+		IntScanner scanner = new IntScanner();
 		return bufs -> {
-			IntScanner scanner = new IntScanner();
-			if (bufs.scanBytes(scanner) == -1) return null;
+			if (bufs.scanBytes(scanner) == 0) return null;
 
-			int size = scanner.getResult();
+			int size = scanner.result;
 
 			if (size < 0) throw new InvalidSizeException("Invalid size of bytes to be read, should be greater than 0");
 			if (size > maxSize) throw new InvalidSizeException("Size exceeds max size");
@@ -169,20 +168,19 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes(int maxSize) {
+		VarIntScanner scanner = new VarIntScanner();
 		return bufs -> {
-			VarIntScanner scanner = new VarIntScanner();
-			int lastIndex = bufs.scanBytes(scanner);
+			int bytes = bufs.scanBytes(scanner);
 
-			if (lastIndex == -1) return null;
+			if (bytes == 0) return null;
 
-			int size = scanner.getResult();
+			int size = scanner.result;
 
 			if (size < 0) throw new InvalidSizeException("Invalid size of bytes to be read, should be greater than 0");
 			if (size > maxSize) throw new InvalidSizeException("Size exceeds max size");
 
-			int prefixSize = lastIndex + 1;
-			if (!bufs.hasRemainingBytes(prefixSize + size)) return null;
-			bufs.skip(prefixSize);
+			if (!bufs.hasRemainingBytes(bytes + size)) return null;
+			bufs.skip(bytes);
 			return bufs.takeExactSize(size);
 		};
 	}

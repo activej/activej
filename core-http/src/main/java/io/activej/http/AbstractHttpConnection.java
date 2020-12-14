@@ -318,12 +318,13 @@ public abstract class AbstractHttpConnection {
 		int remainingBytes = readQueue.remainingBytes();
 		while (true) {
 			try {
-				i = readQueue.scanBytes(i, ($, b) -> b == CR || b == LF);
-			} catch (MalformedDataException e) {
-				throw new MalformedHttpException(e);
+				int n = readQueue.scanBytes(i, (index, b) -> b == CR || b == LF);
+				if (n == 0) return null;
+				i += n;
+			} catch (MalformedDataException ignored){
+				throw new AssertionError("Cannot be caught here");
 			}
-			if (i == -1) return null;
-			byte b = readQueue.peekByte(i++);
+			byte b = readQueue.peekByte(i - 1);
 			assert b == CR || b == LF;
 			byte[] bytes;
 			if (b == CR) {

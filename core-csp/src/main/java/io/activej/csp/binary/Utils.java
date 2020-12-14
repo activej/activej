@@ -25,7 +25,7 @@ class Utils {
 
 	static ByteBufsDecoder<ByteBuf> decodeUntilTerminatorByte(byte terminator, int maxSize) {
 		return bufs -> {
-			int result = bufs.scanBytes((index, nextByte) -> {
+			int bytes = bufs.scanBytes((index, nextByte) -> {
 				if (nextByte == terminator) {
 					return true;
 				}
@@ -35,48 +35,37 @@ class Utils {
 				return false;
 			});
 
-			if (result == -1) return null;
+			if (bytes == 0) return null;
 
-			ByteBuf buf = bufs.takeExactSize(result);
-			bufs.skip(1);
+			ByteBuf buf = bufs.takeExactSize(bytes);
+			buf.moveTail(-1);
 			return buf;
 		};
 	}
 
 	static class VarIntScanner implements ByteBufQueue.ByteScanner {
-		private int result;
+		int result;
 
 		@Override
-		public boolean consume(int index, byte nextByte) throws MalformedDataException {
-			result |= (nextByte & 0x7F) << index * 7;
-			if ((nextByte & 0x80) == 0) {
-
+		public boolean consume(int index, byte b) throws MalformedDataException {
+			result = (index == 0 ? 0 : result) | (b & 0x7F) << index * 7;
+			if ((b & 0x80) == 0) {
 				return true;
 			}
 			if (index == 4) {
 				throw new InvalidSizeException("VarInt is too long for a 32-bit integer");
 			}
-
 			return false;
-		}
-
-		public int getResult() {
-			return result;
 		}
 	}
 
 	static class IntScanner implements ByteBufQueue.ByteScanner {
-		private int result;
+		int result;
 
 		@Override
-		public boolean consume(int index, byte nextByte) {
-			result <<= 8;
-			result |= (nextByte & 0xFF);
+		public boolean consume(int index, byte b) {
+			result = result << 8 | b & 0xFF;
 			return index == 3;
-		}
-
-		public int getResult() {
-			return result;
 		}
 	}
 }
