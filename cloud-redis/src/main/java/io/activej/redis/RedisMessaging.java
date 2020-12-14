@@ -14,39 +14,45 @@
  * limitations under the License.
  */
 
-package io.activej.csp.net;
+package io.activej.redis;
 
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.net.Messaging;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Represents a simple binary protocol over for communication a TCP connection.
- */
-public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncCloseable implements Messaging<I, O> {
-	private final AsyncTcpSocket socket;
+import static java.lang.Math.max;
 
-	private final ByteBufsCodec<I, O> codec;
+final class RedisMessaging extends AbstractAsyncCloseable implements Messaging<RedisResponse, RedisCommand> {
+	static final int INITIAL_BUFFER_SIZE = ApplicationSettings.getInt(RedisMessaging.class, "initialBufferSize", 16384);
 
 	private final ByteBufQueue bufs = new ByteBufQueue();
+
+	private final AsyncTcpSocket socket;
+	private final RedisProtocol protocol;
 	private final BinaryChannelSupplier bufsSupplier;
+
+	private int bufferSize = INITIAL_BUFFER_SIZE;
+	private ByteBuf buffer = ByteBufPool.allocate(bufferSize);
 
 	private boolean readDone;
 	private boolean writeDone;
 
-	// region creators
-	private MessagingWithBinaryStreaming(AsyncTcpSocket socket, ByteBufsCodec<I, O> codec) {
+	private boolean flushPosted;
+
+	private RedisMessaging(AsyncTcpSocket socket, RedisProtocol protocol) {
 		this.socket = socket;
-		this.codec = codec;
+		this.protocol = protocol;
 		this.bufsSupplier = BinaryChannelSupplier.ofProvidedQueue(bufs,
 				() -> this.socket.read()
 						.then(buf -> {
@@ -62,13 +68,11 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 				this);
 	}
 
-	public static <I, O> MessagingWithBinaryStreaming<I, O> create(AsyncTcpSocket socket,
-			ByteBufsCodec<I, O> serializer) {
-		MessagingWithBinaryStreaming<I, O> messaging = new MessagingWithBinaryStreaming<>(socket, serializer);
-		messaging.prefetch();
-		return messaging;
+	public static RedisMessaging create(AsyncTcpSocket socket, RedisProtocol protocol) {
+		RedisMessaging redisMessaging = new RedisMessaging(socket, protocol);
+		redisMessaging.prefetch();
+		return redisMessaging;
 	}
-	// endregion
 
 	private void prefetch() {
 		if (bufs.isEmpty()) {
@@ -86,15 +90,66 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 	}
 
 	@Override
-	public Promise<I> receive() {
-		return bufsSupplier.decode(codec::tryDecode)
+	public Promise<RedisResponse> receive() {
+		return bufsSupplier.decode(protocol::tryDecode)
 				.whenResult(this::prefetch)
 				.whenException(this::closeEx);
 	}
 
 	@Override
-	public Promise<Void> send(O msg) {
-		return socket.write(codec.encode(msg));
+	public Promise<Void> send(RedisCommand msg) {
+		doEncode(msg);
+		if (!flushPosted) {
+			postFlush();
+		}
+		return Promise.complete();
+	}
+
+	private void doEncode(RedisCommand item) {
+		int positionBegin;
+		while (true) {
+			positionBegin = buffer.tail();
+			try {
+				buffer.tail(protocol.encode(buffer.array(), buffer.tail(), item));
+			} catch (ArrayIndexOutOfBoundsException e) {
+				onUnderEstimate(positionBegin);
+				continue;
+			}
+			break;
+		}
+		int positionEnd = buffer.tail();
+		int dataSize = positionEnd - positionBegin;
+		if (dataSize > bufferSize) {
+			bufferSize = dataSize;
+		}
+	}
+
+	private void onUnderEstimate(int positionBegin) {
+		buffer.tail(positionBegin);
+		int writeRemaining = buffer.writeRemaining();
+		flush();
+		buffer = ByteBufPool.allocate(max(bufferSize, writeRemaining + (writeRemaining >>> 1) + 1));
+	}
+
+	private void flush() {
+		if (buffer.canRead()) {
+			socket.write(buffer)
+					.whenException(this::closeEx);
+			if (bufferSize > INITIAL_BUFFER_SIZE){
+				bufferSize = max(bufferSize - (bufferSize >>> 8), INITIAL_BUFFER_SIZE);
+			}
+		} else {
+			buffer.recycle();
+		}
+		buffer = ByteBufPool.allocate(bufferSize);
+	}
+
+	private void postFlush() {
+		flushPosted = true;
+		eventloop.postLast(() -> {
+			flushPosted = false;
+			flush();
+		});
 	}
 
 	@Override
@@ -129,6 +184,7 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 
 	@Override
 	protected void onClosed(@NotNull Throwable e) {
+		buffer.recycle();
 		socket.closeEx(e);
 		bufs.recycle();
 	}
@@ -137,10 +193,5 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 		if (readDone && writeDone) {
 			close();
 		}
-	}
-
-	@Override
-	public String toString() {
-		return "MessagingWithBinaryStreaming{socket=" + socket + "}";
 	}
 }

@@ -45,6 +45,7 @@ import static io.activej.http.HttpUtils.frameToMessageType;
 import static io.activej.http.HttpUtils.getUTF8;
 import static io.activej.http.WebSocket.Message.MessageType.TEXT;
 import static io.activej.http.WebSocketConstants.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	private static final boolean CHECK = Checks.isEnabled(WebSocketImpl.class);
@@ -136,7 +137,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 				return frameOutput.accept(null);
 			}
 			if (msg.getType() == TEXT) {
-				return frameOutput.accept(Frame.text(wrapForReading(msg.getText().getBytes())));
+				return frameOutput.accept(Frame.text(wrapForReading(msg.getText().getBytes(UTF_8))));
 			} else {
 				return frameOutput.accept(Frame.binary(msg.getBuf()));
 			}

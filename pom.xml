@@ -53,6 +53,7 @@
     <module>cloud-lsmt-cube</module>
     <module>cloud-etl</module>
     <module>cloud-dataflow</module>
+    <module>cloud-redis</module>
     <module>launcher</module>
     <module>launchers</module>
     <module>util-codec</module>
@@ -159,6 +160,11 @@
         <groupId>org.openjdk.jmh</groupId>
         <artifactId>jmh-generator-annprocess</artifactId>
         <version>1.22</version>
+      </dependency>
+      <dependency>
+        <groupId>ai.grakn</groupId>
+        <artifactId>redis-mock</artifactId>
+        <version>0.1.4</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
