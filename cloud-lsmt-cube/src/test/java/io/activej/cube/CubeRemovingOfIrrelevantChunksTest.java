@@ -26,6 +26,7 @@ import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplinkImpl;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -67,14 +68,17 @@ public class CubeRemovingOfIrrelevantChunksTest {
 	private static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static final int numberMin = 0;
 	private static final int numberMax = 100;

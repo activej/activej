@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
 import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
 import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
@@ -915,16 +916,19 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testStaticConstants() {
+		ClassBuilder.clearStaticConstants();
 		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 		Object testObject = new Object();
 		Getter instance = ClassBuilder.create(definingClassLoader, Getter.class)
 				.withMethod("get", value(testObject))
 				.buildClassAndCreateNewInstance();
 		assertSame(testObject, instance.get(null));
+		assertStaticConstantsCleared();
 	}
 
 	@org.junit.Test
 	public void testFields() {
+		ClassBuilder.clearStaticConstants();
 		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 		Object testObject = new Object();
 		Getter instance = ClassBuilder.create(definingClassLoader, Getter.class)
@@ -933,6 +937,7 @@ public class ExpressionTest {
 				.withMethod("get", property(self(), "field1"))
 				.buildClassAndCreateNewInstance();
 		assertSame(testObject, instance.get(null));
+		assertStaticConstantsCleared();
 	}
 
 	@org.junit.Test

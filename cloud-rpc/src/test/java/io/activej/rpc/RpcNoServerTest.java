@@ -9,6 +9,7 @@ import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -35,6 +36,9 @@ public final class RpcNoServerTest {
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private interface HelloService {
 		String hello(String name) throws Exception;

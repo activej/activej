@@ -50,6 +50,7 @@ import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -95,6 +96,9 @@ public final class PartitionedStreamTest {
 
 	@Rule
 	public final TemporaryFolder tempDir = new TemporaryFolder();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private Eventloop serverEventloop;
 	private List<AsyncHttpServer> sourceFsServers;

@@ -7,8 +7,10 @@ import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.RpcClientConnection;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -31,6 +33,9 @@ public final class TestRpcClientShutdown {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@Test
 	public void testServerOnClientShutdown() throws IOException {

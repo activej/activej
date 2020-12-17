@@ -267,6 +267,15 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	public static Object getStaticConstant(int id) {
 		return STATIC_CONSTANTS.get(id);
 	}
+
+	public static int getStaticConstantsSize() {
+		return STATIC_CONSTANTS.size();
+	}
+
+	// For testing purposes
+	public static void clearStaticConstants() {
+		STATIC_CONSTANTS.clear();
+	}
 	// endregion
 
 	public Class<T> build() {

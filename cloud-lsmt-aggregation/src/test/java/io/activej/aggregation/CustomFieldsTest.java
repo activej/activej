@@ -13,6 +13,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -34,14 +35,17 @@ import static io.activej.promise.TestUtils.await;
 import static junit.framework.TestCase.assertEquals;
 
 public class CustomFieldsTest {
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+
+	@Rule
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Measures("eventCount")
 	public static class EventRecord {

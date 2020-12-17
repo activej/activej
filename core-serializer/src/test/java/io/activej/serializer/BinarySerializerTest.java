@@ -2,7 +2,9 @@ package io.activej.serializer;
 
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.net.Inet4Address;
@@ -21,6 +23,9 @@ import static org.junit.Assert.*;
 
 @SuppressWarnings("unused")
 public class BinarySerializerTest {
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	public static class TestDataScalars {
 		public enum TestEnum {

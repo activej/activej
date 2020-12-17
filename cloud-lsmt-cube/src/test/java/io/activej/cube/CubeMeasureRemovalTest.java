@@ -24,6 +24,7 @@ import io.activej.ot.uplink.OTUplinkImpl;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -63,17 +64,20 @@ import static org.junit.Assert.*;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class CubeMeasureRemovalTest {
+	@ClassRule
+	public static final EventloopRule eventloopRule = new EventloopRule();
+
+	@ClassRule
+	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@ClassRule
-	public static final ByteBufRule byteBufRule = new ByteBufRule();
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 

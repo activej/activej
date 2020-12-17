@@ -3,6 +3,8 @@ package io.activej.serializer;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.annotations.SerializeReference;
+import io.activej.test.rules.ClassBuilderConstantsRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -15,6 +17,9 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class SerializerReferenceTest {
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	public static class TestDataReferences {
 		@Serialize(order = 0)

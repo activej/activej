@@ -30,6 +30,7 @@ import io.activej.ot.uplink.OTUplinkImpl;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +38,7 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
@@ -83,6 +85,9 @@ public final class ReportingTest {
 
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static final int SERVER_PORT = getFreePort();
 
@@ -357,10 +362,7 @@ public final class ReportingTest {
 		logCubeStateManager.add(logDiff);
 		await(logCubeStateManager.sync());
 
-		cubeHttpServer = AsyncHttpServer.create(eventloop, ReportingServiceServlet.createRootServlet(eventloop, cube))
-				.withListenPort(SERVER_PORT)
-				.withAcceptOnce();
-		cubeHttpServer.listen();
+		cubeHttpServer = startHttpServer();
 
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
 				.withNoKeepAlive();
@@ -384,6 +386,18 @@ public final class ReportingTest {
 				.withMeasure("uniqueUserIdsCount", int.class)
 				.withMeasure("uniqueUserPercent", double.class)
 				.withMeasure("errorsPercent", double.class);
+	}
+
+	private AsyncHttpServer startHttpServer() {
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, ReportingServiceServlet.createRootServlet(eventloop, cube))
+				.withListenPort(SERVER_PORT)
+				.withAcceptOnce();
+		try {
+			server.listen();
+		} catch (IOException e) {
+			throw new AssertionError(e);
+		}
+		return server;
 	}
 
 	@After
@@ -421,6 +435,58 @@ public final class ReportingTest {
 		assertEquals(500, (long) totals.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
 		assertEquals(set("date"), new HashSet<>(queryResult.getSortedBy()));
+	}
+
+	@Test
+	public void testDuplicateQuery() {
+		CubeQuery query = CubeQuery.create()
+				.withAttributes("date")
+				.withMeasures("impressions", "clicks", "ctr", "revenue")
+				.withOrderingDesc("date")
+				.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
+				.withReportType(DATA_WITH_TOTALS);
+
+		QueryResult queryResult1 = await(cubeHttpClient.query(query));
+
+		List<Record> records1 = queryResult1.getRecords();
+		assertEquals(2, records1.size());
+		assertEquals(set("date"), new HashSet<>(queryResult1.getAttributes()));
+		assertEquals(set("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult1.getMeasures()));
+		assertEquals(LocalDate.parse("2000-01-03"), records1.get(0).get("date"));
+		assertEquals(5, (long) records1.get(0).get("clicks"));
+		assertEquals(65, (long) records1.get(0).get("impressions"));
+		assertEquals(5.0 / 65.0 * 100.0, records1.get(0).get("ctr"), DELTA);
+		assertEquals(LocalDate.parse("2000-01-02"), records1.get(1).get("date"));
+		assertEquals(33, (long) records1.get(1).get("clicks"));
+		assertEquals(435, (long) records1.get(1).get("impressions"));
+		assertEquals(33.0 / 435.0 * 100.0, records1.get(1).get("ctr"), DELTA);
+		assertEquals(2, queryResult1.getTotalCount());
+		Record totals1 = queryResult1.getTotals();
+		assertEquals(38, (long) totals1.get("clicks"));
+		assertEquals(500, (long) totals1.get("impressions"));
+		assertEquals(38.0 / 500.0 * 100.0, totals1.get("ctr"), DELTA);
+		assertEquals(set("date"), new HashSet<>(queryResult1.getSortedBy()));
+
+		startHttpServer();
+		QueryResult queryResult2 = await(cubeHttpClient.query(query));
+		List<Record> records2 = queryResult2.getRecords();
+		assertEquals(records1.size(), records2.size());
+		assertEquals(queryResult1.getAttributes(), queryResult2.getAttributes());
+		assertEquals(queryResult1.getMeasures(), queryResult2.getMeasures());
+		assertEquals((LocalDate) records1.get(0).get("date"), records2.get(0).get("date"));
+		assertEquals((long) records1.get(0).get("clicks"), (long) records2.get(0).get("clicks"));
+		assertEquals((long) records1.get(0).get("impressions"), (long) records2.get(0).get("impressions"));
+		assertEquals((double) records1.get(0).get("ctr"), records1.get(0).get("ctr"), DELTA);
+		assertEquals((LocalDate) records1.get(1).get("date"), records2.get(1).get("date"));
+		assertEquals((long) records1.get(1).get("clicks"), (long) records2.get(1).get("clicks"));
+		assertEquals((long) records1.get(1).get("impressions"), (long) records2.get(1).get("impressions"));
+		assertEquals((double) records1.get(1).get("ctr"), records2.get(1).get("ctr"), DELTA);
+		assertEquals(queryResult1.getTotalCount(), queryResult2.getTotalCount());
+		Record totals2 = queryResult2.getTotals();
+		assertEquals((long) totals1.get("clicks"), (long) totals2.get("clicks"));
+		assertEquals((long) totals1.get("impressions"), (long) totals2.get("impressions"));
+		assertEquals((double) totals1.get("ctr"), totals2.get("ctr"), DELTA);
+		assertEquals(queryResult1.getSortedBy(), queryResult2.getSortedBy());
 	}
 
 	@Test
