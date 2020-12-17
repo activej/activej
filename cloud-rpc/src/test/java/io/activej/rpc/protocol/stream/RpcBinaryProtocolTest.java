@@ -17,8 +17,10 @@ import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -41,6 +43,9 @@ public final class RpcBinaryProtocolTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@Test
 	public void test() throws Exception {

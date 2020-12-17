@@ -6,6 +6,8 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.ComputedMeasure;
 import io.activej.cube.ComputedMeasures;
+import io.activej.test.rules.ClassBuilderConstantsRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
@@ -18,6 +20,9 @@ import static io.activej.common.collection.CollectionUtils.keysToMap;
 import static org.junit.Assert.assertEquals;
 
 public class ComputedMeasuresTest {
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+
 	private static final class M extends Measures {}
 
 	private static final class CM extends ComputedMeasures {}

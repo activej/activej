@@ -4,6 +4,8 @@ import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.impl.SerializerDefByteBuffer;
+import io.activej.test.rules.ClassBuilderConstantsRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -13,6 +15,9 @@ import static io.activej.serializer.Utils.doTest;
 import static org.junit.Assert.*;
 
 public class CodeGenSerializerDefByteBufferTest {
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@Test
 	public void test() {

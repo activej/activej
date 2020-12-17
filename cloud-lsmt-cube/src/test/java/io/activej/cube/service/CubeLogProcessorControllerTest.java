@@ -34,6 +34,7 @@ import io.activej.ot.uplink.OTUplinkImpl;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -64,14 +65,17 @@ import static org.junit.Assert.assertThat;
 public final class CubeLogProcessorControllerTest {
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+
+	@Rule
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private Multilog<LogItem> multilog;
 	private LocalActiveFs logsFs;

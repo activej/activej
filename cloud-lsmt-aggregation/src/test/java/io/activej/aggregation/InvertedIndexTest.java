@@ -9,6 +9,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -32,14 +33,18 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 public class InvertedIndexTest {
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	public static class InvertedIndexQueryResult {
 		public String word;

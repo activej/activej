@@ -402,8 +402,10 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 			String fieldName = entry.getKey();
 
-			if (entry.getValue().method == null)
+			if (entry.getValue().method == null) {
+				classBuilder.cleanup();
 				throw new NullPointerException();
+			}
 			Method method = entry.getValue().method;
 
 			classBuilder

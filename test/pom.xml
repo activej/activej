@@ -33,6 +33,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-codegen</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>

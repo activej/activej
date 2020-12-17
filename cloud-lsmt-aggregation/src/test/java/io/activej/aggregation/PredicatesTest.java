@@ -3,6 +3,8 @@ package io.activej.aggregation;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.test.rules.ClassBuilderConstantsRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -17,6 +19,9 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class PredicatesTest {
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+
 	@Test
 	public void testSimplify() {
 		assertEquals(alwaysFalse(), and(eq("publisher", 10), eq("publisher", 20)).simplify());

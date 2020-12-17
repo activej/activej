@@ -23,6 +23,7 @@ import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplinkImpl;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -56,14 +57,17 @@ import static org.junit.Assert.assertFalse;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class CubeIntegrationTest {
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Test

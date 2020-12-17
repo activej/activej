@@ -9,11 +9,9 @@ import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -40,6 +38,9 @@ public final class RpcBlockingTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@Before
 	public void setUp() throws Exception {

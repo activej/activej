@@ -10,6 +10,7 @@ import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -39,6 +40,9 @@ public final class AggregationChunkerTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();

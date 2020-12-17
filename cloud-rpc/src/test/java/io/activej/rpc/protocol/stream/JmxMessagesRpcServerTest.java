@@ -5,9 +5,11 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -28,6 +30,9 @@ public class JmxMessagesRpcServerTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	RpcServer server;
 

@@ -4,7 +4,9 @@ import com.carrotsearch.hppc.*;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import static io.activej.serializer.Utils.doTest;
@@ -14,6 +16,9 @@ import static org.junit.Assert.assertNotNull;
 public final class SerializerDefHppc7Example {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static <T> BinarySerializer<T> getBufferSerializer(Class<T> collectionType) {
 		return SerializerBuilderUtils.createWithHppc7Support(DefiningClassLoader.create())

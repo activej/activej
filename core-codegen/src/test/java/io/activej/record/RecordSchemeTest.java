@@ -1,10 +1,18 @@
 package io.activej.record;
 
+import io.activej.codegen.ClassBuilder;
+import org.junit.Before;
 import org.junit.Test;
 
+import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
 import static org.junit.Assert.*;
 
 public class RecordSchemeTest {
+
+	@Before
+	public void setUp() throws Exception {
+		ClassBuilder.clearStaticConstants();
+	}
 
 	@Test
 	public void test() {
@@ -39,6 +47,7 @@ public class RecordSchemeTest {
 				.build();
 
 		assertSame(scheme.getRecordClass(), scheme2.getRecordClass());
+		assertStaticConstantsCleared();
 	}
 
 	@Test
@@ -95,6 +104,7 @@ public class RecordSchemeTest {
 		assertSame(scheme, scheme.getter("int").getScheme());
 		assertEquals("int", scheme.getter("int").getField());
 		assertEquals(int.class, scheme.getter("int").getType());
+		assertStaticConstantsCleared();
 	}
 
 }

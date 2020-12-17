@@ -1,5 +1,7 @@
 package io.activej.serializer.stream;
 
+import io.activej.test.rules.ClassBuilderConstantsRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -13,6 +15,9 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class StreamCodecRegistryTest {
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@Test
 	public void test1() throws IOException {

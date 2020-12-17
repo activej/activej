@@ -16,6 +16,7 @@ import io.activej.http.AsyncHttpServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -49,14 +50,17 @@ import static org.junit.Assert.*;
 public final class CubeTest {
 	private static final int LISTEN_PORT = getFreePort();
 
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	@Rule
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 

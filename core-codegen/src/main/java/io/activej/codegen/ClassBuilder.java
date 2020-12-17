@@ -267,6 +267,15 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	public static Object getStaticConstant(int id) {
 		return STATIC_CONSTANTS.get(id);
 	}
+
+	public static int getStaticConstantsSize() {
+		return STATIC_CONSTANTS.size();
+	}
+
+	// For testing purposes
+	public static void clearStaticConstants() {
+		STATIC_CONSTANTS.clear();
+	}
 	// endregion
 
 	public Class<T> build() {
@@ -274,6 +283,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 			Class<?> cachedClass = classLoader.getCachedClass(classKey);
 
 			if (cachedClass != null) {
+				cleanup();
 				return (Class<T>) cachedClass;
 			}
 		}
@@ -301,10 +311,14 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				return aClass;
 			}
 		} finally {
-			for (Expression expression : this.fieldExpressions.values()) {
-				if (expression instanceof ExpressionConstant) {
-					STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
-				}
+			cleanup();
+		}
+	}
+
+	public void cleanup() {
+		for (Expression expression : this.fieldExpressions.values()) {
+			if (expression instanceof ExpressionConstant) {
+				STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
 			}
 		}
 	}

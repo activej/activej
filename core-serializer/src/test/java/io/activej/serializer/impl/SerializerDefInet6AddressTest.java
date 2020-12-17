@@ -1,5 +1,7 @@
 package io.activej.serializer.impl;
 
+import io.activej.test.rules.ClassBuilderConstantsRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.net.Inet6Address;
@@ -9,6 +11,9 @@ import static io.activej.serializer.Utils.doTest;
 import static org.junit.Assert.assertEquals;
 
 public final class SerializerDefInet6AddressTest {
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@Test
 	public void testIPV4MappedAddresses() throws UnknownHostException {

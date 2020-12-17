@@ -18,11 +18,9 @@ import io.activej.inject.module.ModuleBuilder;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.net.InetSocketAddress;
@@ -55,6 +53,9 @@ public class MapReduceTest {
 
 	@ClassRule
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private ExecutorService executor;
 	private ExecutorService sortingExecutor;
