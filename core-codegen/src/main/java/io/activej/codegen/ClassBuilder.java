@@ -315,7 +315,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		}
 	}
 
-	private void cleanup() {
+	public void cleanup() {
 		for (Expression expression : this.fieldExpressions.values()) {
 			if (expression instanceof ExpressionConstant) {
 				STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
