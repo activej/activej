@@ -274,6 +274,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 			Class<?> cachedClass = classLoader.getCachedClass(classKey);
 
 			if (cachedClass != null) {
+				cleanup();
 				return (Class<T>) cachedClass;
 			}
 		}
@@ -301,10 +302,14 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				return aClass;
 			}
 		} finally {
-			for (Expression expression : this.fieldExpressions.values()) {
-				if (expression instanceof ExpressionConstant) {
-					STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
-				}
+			cleanup();
+		}
+	}
+
+	private void cleanup() {
+		for (Expression expression : this.fieldExpressions.values()) {
+			if (expression instanceof ExpressionConstant) {
+				STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
 			}
 		}
 	}
