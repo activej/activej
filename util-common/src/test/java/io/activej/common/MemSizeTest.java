@@ -1,15 +1,11 @@
 package io.activej.common;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class MemSizeTest {
-	@Rule
-	public final ExpectedException exception = ExpectedException.none();
-
 	@Test
 	public void testMemSize() {
 		long bytes;
@@ -101,23 +97,22 @@ public class MemSizeTest {
 
 	@Test
 	public void testParsingExceptions() {
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("MemSize unit bytes cannot be fractional");
-		MemSize.valueOf("2.2b");
+		assertThrows("MemSize unit bytes cannot be fractional",
+				IllegalArgumentException.class,
+				() -> MemSize.valueOf("2.2b"));
 	}
 
 	@Test
 	public void testLongOverflow() {
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("Resulting number of bytes exceeds Long.MAX_VALUE");
-		MemSize.kilobytes(Long.MAX_VALUE);
+		assertThrows("Resulting number of bytes exceeds Long.MAX_VALUE",
+				IllegalArgumentException.class,
+				() -> MemSize.kilobytes(Long.MAX_VALUE));
 	}
 
 	@Test
 	public void testMemSizeOfNegative() {
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("Cannot create MemSize of negative value");
-		MemSize.kilobytes(-1);
-
+		assertThrows("Cannot create MemSize of negative value",
+				IllegalArgumentException.class,
+				() -> MemSize.kilobytes(-1));
 	}
 }

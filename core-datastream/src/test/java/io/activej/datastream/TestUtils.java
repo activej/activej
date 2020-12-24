@@ -4,8 +4,10 @@ import io.activej.datastream.processor.StreamTransformer;
 
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class TestUtils {
 	public static void assertEndOfStream(StreamSupplier<?> streamSupplier) {

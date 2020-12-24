@@ -30,7 +30,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import javax.sql.DataSource;
@@ -40,7 +39,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -48,18 +46,17 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
@@ -72,9 +69,6 @@ public class CubeMeasureRemovalTest {
 
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-	@Rule
-	public final ExpectedException exception = ExpectedException.none();
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
@@ -317,13 +311,9 @@ public class CubeMeasureRemovalTest {
 				otSystem, diffCodec2);
 		otSourceSql2.initialize();
 
-		exception.expectCause(instanceOf(MalformedDataException.class));
-		exception.expectCause(hasProperty("message", equalTo("Unknown fields: [clicks, conversions]")));
-
-		Set<Long> newHeads = await(otSourceSql2.getHeads());
-		assertEquals(1, newHeads.size());
-
-		await(otSourceSql2.loadCommit(first(newHeads)));
+		Throwable exception = awaitException(otSourceSql2.getHeads());
+		assertThat(exception, instanceOf(MalformedDataException.class));
+		assertEquals("Unknown fields: [clicks, conversions]", exception.getMessage());
 	}
 
 	@Test
@@ -381,11 +371,8 @@ public class CubeMeasureRemovalTest {
 				otSystem, diffCodec2);
 		otSourceSql2.initialize();
 
-		exception.expectCause(instanceOf(MalformedDataException.class));
-		exception.expectCause(hasProperty("message", equalTo("Unknown aggregation: impressionsAggregation")));
-
-		Set<Long> newHeads = await(otSourceSql2.getHeads());
-		assertEquals(1, newHeads.size());
-		await(otSourceSql2.loadCommit(first(newHeads)));
+		Throwable exception = awaitException(otSourceSql2.getHeads());
+		assertThat(exception, instanceOf(MalformedDataException.class));
+		assertEquals("Unknown aggregation: impressionsAggregation", exception.getMessage());
 	}
 }

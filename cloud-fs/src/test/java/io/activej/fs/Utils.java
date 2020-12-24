@@ -20,8 +20,10 @@ import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public final class Utils {
 

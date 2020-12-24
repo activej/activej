@@ -24,8 +24,8 @@ import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertThat;
 
 public final class TestRpcClientShutdown {
 	@ClassRule

@@ -25,8 +25,8 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.lang.Math.min;
 import static java.util.Arrays.copyOfRange;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertThat;
 
 public final class BufsConsumerGzipInflaterTest {
 

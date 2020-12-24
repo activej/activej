@@ -22,9 +22,9 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class OTAlgorithmsTest {

@@ -12,28 +12,23 @@ import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;
 import io.activej.worker.WorkerPools;
 import io.activej.worker.annotation.Worker;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.Set;
 
 import static org.junit.Assert.*;
 
 public class TriggersModuleTest {
-	@Rule
-	public final ExpectedException exception = ExpectedException.none();
 
 	@Test
 	public void testDuplicatesRejection() {
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("Cannot assign duplicate trigger");
-		Injector.of(
-				TriggersModule.create()
-						.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create())
-						.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create())
-		);
-		fail();
+		assertThrows("Cannot assign duplicate trigger",
+				IllegalArgumentException.class,
+				() -> Injector.of(
+						TriggersModule.create()
+								.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create())
+								.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create())
+				));
 	}
 
 	@Test

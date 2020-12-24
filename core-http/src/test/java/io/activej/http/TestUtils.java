@@ -9,7 +9,6 @@ import io.activej.csp.process.ChannelByteChunker;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Assert;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -21,6 +20,7 @@ import java.util.function.Consumer;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
@@ -159,7 +159,7 @@ public class TestUtils {
 	private static final Random RANDOM = ThreadLocalRandom.current();
 
 	public static <T> Consumer<T> failOnItem(){
-		return $ -> Assert.fail();
+		return $ -> fail();
 	}
 
 	public static ChannelByteChunker chunker() {

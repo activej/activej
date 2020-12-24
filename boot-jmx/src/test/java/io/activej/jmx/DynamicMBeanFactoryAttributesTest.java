@@ -5,10 +5,7 @@ import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.helper.JmxBeanAdapterStub;
 import io.activej.jmx.helper.JmxStatsStub;
-import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import javax.management.Attribute;
 import javax.management.DynamicMBean;
@@ -22,13 +19,11 @@ import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.Utils.nameToAttribute;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
 public class DynamicMBeanFactoryAttributesTest {
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
-
 	@Test
 	public void retrievesProperMBeanInfo() {
 		MBeanWithSimpleAttrsAndPojo mbeanOneSample = new MBeanWithSimpleAttrsAndPojo("data", new SamplePojo(5, 100));
@@ -259,7 +254,7 @@ public class DynamicMBeanFactoryAttributesTest {
 				new MBeanWithJmxAttributesOfArbitraryTypes(arbitraryType, date);
 		try {
 			createDynamicMBeanFor(obj);
-			Assert.fail();
+			fail();
 		} catch (Exception ignored) {
 		}
 	}

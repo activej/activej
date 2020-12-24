@@ -6,9 +6,7 @@ import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
@@ -26,9 +24,6 @@ import static org.junit.Assert.assertEquals;
 
 public final class StaticServletTest {
 	public static final String EXPECTED_CONTENT = "Test";
-
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

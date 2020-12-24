@@ -4,9 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.http.HttpMethod.*;
@@ -22,9 +20,6 @@ public final class RoutingServletTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
 
 	private void check(Promise<HttpResponse> promise, String expectedBody, int expectedCode) {
 		assertTrue(promise.isComplete());
