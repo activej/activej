@@ -53,14 +53,14 @@ public abstract class AbstractHttpConnection {
 	public static final int MAX_HEADER_LINE_SIZE_BYTES = MAX_HEADER_LINE_SIZE.toInt(); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values
 	public static final int MAX_HEADERS = ApplicationSettings.getInt(HttpMessage.class, "maxHeaders", 100); // http://httpd.apache.org/docs/2.2/mod/core.html#limitrequestfields
 
-	protected static final HttpHeaderValue CONNECTION_KEEP_ALIVE_HEADER = HttpHeaderValue.of("keep-alive");
-	protected static final HttpHeaderValue CONNECTION_CLOSE_HEADER = HttpHeaderValue.of("close");
+	protected static final HttpHeaderValue CONNECTION_KEEP_ALIVE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("keep-alive"));
+	protected static final HttpHeaderValue CONNECTION_CLOSE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("close"));
 	protected static final int UNSET_CONTENT_LENGTH = -1;
 
-	private static final byte[] CONNECTION_KEEP_ALIVE = encodeAscii("keep-alive");
-	private static final byte[] TRANSFER_ENCODING_CHUNKED = encodeAscii("chunked");
-	private static final byte[] CONTENT_ENCODING_GZIP = encodeAscii("gzip");
-	private static final byte[] EMPTY_HEADER = new byte[0];
+	protected static final byte[] CONNECTION_KEEP_ALIVE = encodeAscii("keep-alive");
+	protected static final byte[] TRANSFER_ENCODING_CHUNKED = encodeAscii("chunked");
+	protected static final byte[] CONTENT_ENCODING_GZIP = encodeAscii("gzip");
+	protected static final byte[] EMPTY_HEADER = new byte[0];
 
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
@@ -77,9 +77,10 @@ public abstract class AbstractHttpConnection {
 	protected static final byte WEB_SOCKET = 1 << 3;
 	protected static final byte BODY_RECEIVED = 1 << 4;
 	protected static final byte BODY_SENT = 1 << 5;
+	protected static final byte READING_MESSAGES = 1 << 6;
 	protected static final byte CLOSED = (byte) (1 << 7);
 
-	@MagicConstant(flags = {KEEP_ALIVE, GZIPPED, CHUNKED, WEB_SOCKET, BODY_RECEIVED, BODY_SENT, CLOSED})
+	@MagicConstant(flags = {KEEP_ALIVE, GZIPPED, CHUNKED, WEB_SOCKET, BODY_RECEIVED, BODY_SENT, READING_MESSAGES, CLOSED})
 	protected byte flags = 0;
 
 	@Nullable
@@ -97,14 +98,14 @@ public abstract class AbstractHttpConnection {
 	@Nullable
 	private Object userData;
 
-	protected final ReadConsumer startLineConsumer = new ReadConsumer() {
+	protected final ReadConsumer readMessageConsumer = new ReadConsumer() {
 		@Override
 		public void thenRun() throws MalformedHttpException {
-			readStartLine();
+			readMessage();
 		}
 	};
 
-	protected final ReadConsumer headersConsumer = new ReadConsumer() {
+	protected final ReadConsumer readHeadersConsumer = new ReadConsumer() {
 		@Override
 		public void thenRun() throws MalformedHttpException {
 			readHeaders();
@@ -233,11 +234,11 @@ public abstract class AbstractHttpConnection {
 		readQueue.recycle();
 	}
 
-	protected final void readHttpMessage() throws MalformedHttpException {
+	protected void readMessage() throws MalformedHttpException {
 		readStartLine();
 	}
 
-	private void readStartLine() throws MalformedHttpException {
+	protected final void readStartLine() throws MalformedHttpException {
 		int size = 1;
 		for (int i = 0; i < readQueue.remainingBufs(); i++) {
 			ByteBuf buf = readQueue.peekBuf(i);
@@ -262,8 +263,9 @@ public abstract class AbstractHttpConnection {
 			}
 			size += buf.readRemaining();
 		}
-		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw new MalformedHttpException("Header line exceeds max header size");
-		socket.read().whenComplete(startLineConsumer);
+		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
+			throw new MalformedHttpException("Header line exceeds max header size");
+		socket.read().whenComplete(readMessageConsumer);
 	}
 
 	private void readHeaders() throws MalformedHttpException {
@@ -310,8 +312,9 @@ public abstract class AbstractHttpConnection {
 			}
 		}
 
-		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES)) throw new MalformedHttpException("Header line exceeds max header size");
-		socket.read().whenComplete(headersConsumer);
+		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
+			throw new MalformedHttpException("Header line exceeds max header size");
+		socket.read().whenComplete(readHeadersConsumer);
 	}
 
 	private byte[] readHeaderEx(int i) throws MalformedHttpException {
@@ -321,7 +324,7 @@ public abstract class AbstractHttpConnection {
 				int n = readQueue.scanBytes(i, (index, b) -> b == CR || b == LF);
 				if (n == 0) return null;
 				i += n;
-			} catch (MalformedDataException ignored){
+			} catch (MalformedDataException ignored) {
 				throw new AssertionError("Cannot be caught here");
 			}
 			byte b = readQueue.peekByte(i - 1);
@@ -510,7 +513,7 @@ public abstract class AbstractHttpConnection {
 		return null;
 	}
 
-	protected void writeHttpMessageAsStream(HttpMessage httpMessage) {
+	protected void writeHttpMessageAsStream(@Nullable ByteBuf writeBuf, HttpMessage httpMessage) {
 		ChannelSupplier<ByteBuf> bodyStream = httpMessage.bodyStream;
 		assert bodyStream != null;
 		httpMessage.bodyStream = null;
@@ -534,7 +537,7 @@ public abstract class AbstractHttpConnection {
 		ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize());
 		httpMessage.writeTo(buf);
 
-		writeStream(ChannelSuppliers.concat(ChannelSupplier.of(buf), bodyStream));
+		writeStream(ChannelSuppliers.concat(writeBuf != null ? ChannelSupplier.of(writeBuf, buf) : ChannelSupplier.of(buf), bodyStream));
 	}
 
 	protected void writeBuf(ByteBuf buf) {
@@ -564,7 +567,7 @@ public abstract class AbstractHttpConnection {
 		poolTimestamp = eventloop.currentTimeMillis();
 	}
 
-	private abstract class ReadConsumer implements Callback<ByteBuf> {
+	protected abstract class ReadConsumer implements Callback<ByteBuf> {
 		@Override
 		public void accept(ByteBuf buf, Throwable e) {
 			assert !isClosed() || e != null;

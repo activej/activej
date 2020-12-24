@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.SP;
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.csp.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_KEY;
@@ -89,8 +90,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 public final class HttpClientConnection extends AbstractHttpConnection {
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpClientConnection.class, "detailedErrorMessages", false);
 
-	static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.of("upgrade");
-	static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.of("websocket");
+	static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("upgrade"));
+	static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.ofBytes(encodeAscii("websocket"));
 
 	@Nullable
 	private SettablePromise<HttpResponse> promise;
@@ -268,7 +269,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
 		request.setBodyStream(buffer.getSupplier());
 
-		writeHttpMessageAsStream(request);
+		writeHttpMessageAsStream(null, request);
 		request.recycle();
 
 		if (!isClosed()) {
@@ -387,7 +388,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		if (buf != null) {
 			writeBuf(buf);
 		} else {
-			writeHttpMessageAsStream(request);
+			writeHttpMessageAsStream(null, request);
 		}
 		request.recycle();
 		if (!isClosed()) {
@@ -398,7 +399,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	private void tryReadHttpMessage() {
 		try {
-			readHttpMessage();
+			readMessage();
 		} catch (MalformedHttpException e) {
 			closeWithError(e);
 		}
