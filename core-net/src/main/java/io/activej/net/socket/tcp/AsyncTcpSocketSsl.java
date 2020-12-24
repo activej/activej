@@ -151,6 +151,11 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 		return write;
 	}
 
+	@Override
+	public boolean isReadAvailable() {
+		return engine2app != null && engine2app.canRead();
+	}
+
 	private void doRead() {
 		upstream.read()
 				.thenEx(this::sanitize)

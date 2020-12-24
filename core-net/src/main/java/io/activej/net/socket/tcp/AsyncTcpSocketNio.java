@@ -484,6 +484,11 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	}
 
 	@Override
+	public boolean isReadAvailable() {
+		return readBuf != null;
+	}
+
+	@Override
 	public void onWriteReady() {
 		assert write != null;
 		ops = (byte) (ops | 0x80);
