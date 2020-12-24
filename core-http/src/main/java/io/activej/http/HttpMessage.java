@@ -422,22 +422,25 @@ public abstract class HttpMessage {
 
 	protected void writeHeaders(@NotNull ByteBuf buf) {
 		if (CHECK) checkState(!isRecycled());
+		byte[] array = buf.array();
+		int offset = buf.tail();
 		for (int i = 0; i < headers.kvPairs.length - 1; i += 2) {
 			HttpHeader k = (HttpHeader) headers.kvPairs[i];
 			if (k != null) {
 				HttpHeaderValue v = (HttpHeaderValue) headers.kvPairs[i + 1];
-				buf.put(CR);
-				buf.put(LF);
-				k.writeTo(buf);
-				buf.put((byte) ':');
-				buf.put(SP);
-				v.writeTo(buf);
+				array[offset++] = CR;
+				array[offset++] = LF;
+				offset = k.writeTo(array, offset);
+				array[offset++] = (byte) ':';
+				array[offset++] = SP;
+				offset = v.writeTo(array, offset);
 			}
 		}
-		buf.put(CR);
-		buf.put(LF);
-		buf.put(CR);
-		buf.put(LF);
+		array[offset++] = CR;
+		array[offset++] = LF;
+		array[offset++] = CR;
+		array[offset++] = LF;
+		buf.tail(offset);
 	}
 
 	protected int estimateSize(int firstLineSize) {

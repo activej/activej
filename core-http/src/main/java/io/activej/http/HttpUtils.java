@@ -50,6 +50,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class HttpUtils {
 	private static final int URI_DEFAULT_CAPACITY = 1 << 5;
 
+	static final byte EQUALS = '=';
+	static final byte SEMICOLON = ';';
+	static final byte COLON = ':';
+	static final byte Q = 'q';
+	static final byte DOT = '.';
+	static final byte ZERO = '0';
+	static final byte COMMA = ',';
+
 	public static InetAddress inetAddress(String host) {
 		try {
 			return InetAddress.getByName(host);

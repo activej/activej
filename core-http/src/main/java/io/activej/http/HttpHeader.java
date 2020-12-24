@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.bytebuf.ByteBuf;
 import io.activej.http.CaseInsensitiveTokenMap.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,8 +42,9 @@ public final class HttpHeader extends Token {
 		return length;
 	}
 
-	public void writeTo(@NotNull ByteBuf buf) {
-		buf.put(bytes, offset, length);
+	public int writeTo(byte[] array, int offset) {
+		System.arraycopy(bytes, this.offset, array, offset, length);
+		return length + offset;
 	}
 
 	@Override

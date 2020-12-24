@@ -22,9 +22,10 @@ import io.activej.bytebuf.ByteBufStrings;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
+import static io.activej.bytebuf.ByteBufStrings.SP;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.http.ContentTypes.lookup;
-import static io.activej.http.HttpUtils.skipSpaces;
+import static io.activej.http.HttpUtils.*;
 
 /**
  * This is a value class for the Content-Type header value.
@@ -100,11 +101,12 @@ public final class ContentType {
 	static int render(ContentType type, byte[] container, int pos) {
 		pos += MediaTypes.render(type.getMediaType(), container, pos);
 		if (type.charset != null) {
-			container[pos++] = ';';
-			container[pos++] = ' ';
-			System.arraycopy(CHARSET_KEY, 0, container, pos, CHARSET_KEY.length);
-			pos += CHARSET_KEY.length;
-			container[pos++] = '=';
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte b : CHARSET_KEY) {
+				container[pos++] = b;
+			}
+			container[pos++] = EQUALS;
 			pos += HttpCharset.render(type.charset, container, pos);
 		}
 		return pos;

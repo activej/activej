@@ -43,10 +43,11 @@ public final class ByteBufStrings {
 	private static final byte[] MIN_INT_BYTES = new byte[]{45, 50, 49, 52, 55, 52, 56, 51, 54, 52, 56};
 
 	// ASCII
-	public static void encodeAscii(byte[] array, int pos, String string) {
+	public static int encodeAscii(byte[] array, int pos, String string) {
 		for (int i = 0; i < string.length(); i++) {
 			array[pos++] = (byte) string.charAt(i);
 		}
+		return string.length();
 	}
 
 	public static byte[] encodeAscii(String string) {
@@ -135,10 +136,11 @@ public final class ByteBufStrings {
 			byte p = lowerCasePattern[i];
 			if (CHECK) checkArgument(p < 'A' || p > 'Z');
 			byte a = array[offset + i];
-			if (a >= 'A' && a <= 'Z')
-				a += 'a' - 'A';
-			if (a != p)
-				return false;
+
+			if (a != p) {
+				// 32 =='a' - 'A'
+				if (a < 'A' || a > 'Z' || p - a != 32) return false;
+			}
 		}
 		return true;
 	}
@@ -321,7 +323,30 @@ public final class ByteBufStrings {
 		}
 	}
 
+	private static final int CACHED_INT_SIZE = 1024;
+	private static final byte[][] positiveInts = new byte[CACHED_INT_SIZE][];
+
+	static {
+		for (int i = 0; i < positiveInts.length; i++) {
+			int number = i + 1;
+			byte[] bytes = new byte[digitsInt(number)];
+			doEncodePositiveInt(bytes, 0, number);
+			positiveInts[i] = bytes;
+		}
+	}
+
 	public static int encodePositiveInt(byte[] array, int pos, int value) {
+		if (value <= CACHED_INT_SIZE && value > 0) {
+			byte[] positiveInt = positiveInts[value - 1];
+			for (byte b : positiveInt) {
+				array[pos++] = b;
+			}
+			return positiveInt.length;
+		}
+		return doEncodePositiveInt(array, pos, value);
+	}
+
+	private static int doEncodePositiveInt(byte[] array, int pos, int value) {
 		int digits = digitsInt(value);
 		for (int i = pos + digits - 1; i >= pos; i--) {
 			long digit = value % 10;

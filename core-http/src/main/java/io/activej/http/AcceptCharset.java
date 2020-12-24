@@ -23,8 +23,7 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.http.HttpUtils.decodeQ;
-import static io.activej.http.HttpUtils.skipSpaces;
+import static io.activej.http.HttpUtils.*;
 
 /**
  * This is a value class for the Accept-Charset header value.
@@ -126,19 +125,19 @@ public final class AcceptCharset {
 			AcceptCharset charset = charsets.get(i);
 			pos += HttpCharset.render(charset.charset, bytes, pos);
 			if (charset.q != DEFAULT_Q) {
-				bytes[pos++] = ';';
-				bytes[pos++] = ' ';
-				bytes[pos++] = 'q';
-				bytes[pos++] = '=';
-				bytes[pos++] = '0';
-				bytes[pos++] = '.';
+				bytes[pos++] = SEMICOLON;
+				bytes[pos++] = SP;
+				bytes[pos++] = Q;
+				bytes[pos++] = EQUALS;
+				bytes[pos++] = ZERO;
+				bytes[pos++] = DOT;
 				int q = charset.q;
 				if (q % 10 == 0) q /= 10;
 				pos += encodePositiveInt(bytes, pos, q);
 			}
 			if (i < charsets.size() - 1) {
-				bytes[pos++] = ',';
-				bytes[pos++] = ' ';
+				bytes[pos++] = COMMA;
+				bytes[pos++] = SP;
 			}
 		}
 		return pos;

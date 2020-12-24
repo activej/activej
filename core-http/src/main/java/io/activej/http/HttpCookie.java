@@ -24,8 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.http.HttpUtils.skipSpaces;
-import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
+import static io.activej.http.HttpUtils.*;
 
 /**
  * This class represents an abstraction for HTTP Cookie with fast parsing algorithms.
@@ -272,19 +271,16 @@ public final class HttpCookie {
 	static int renderSimple(List<HttpCookie> cookies, byte[] bytes, int pos) {
 		for (int i = 0; i < cookies.size(); i++) {
 			HttpCookie cookie = cookies.get(i);
-			encodeAscii(bytes, pos, cookie.name);
-			pos += cookie.name.length();
+			pos += encodeAscii(bytes, pos, cookie.name);
 
 			if (cookie.value != null) {
-				encodeAscii(bytes, pos, "=");
-				pos += 1;
-				encodeAscii(bytes, pos, cookie.value);
-				pos += cookie.value.length();
+				bytes[pos++] = EQUALS;
+				pos += encodeAscii(bytes, pos, cookie.value);
 			}
 
 			if (i != cookies.size() - 1) {
-				encodeAscii(bytes, pos, "; ");
-				pos += 2;
+				bytes[pos++] = SEMICOLON;
+				bytes[pos++] = SP;
 			}
 		}
 		return pos;
@@ -330,47 +326,72 @@ public final class HttpCookie {
 	}
 
 	void renderFull(ByteBuf buf) {
-		putAscii(buf, name);
-		putAscii(buf, "=");
+		int pos = renderFull(buf.array(), buf.tail());
+		buf.tail(pos);
+	}
+
+	int renderFull(byte[] container, int pos) {
+		pos += encodeAscii(container, pos, name);
+		container[pos++] = EQUALS;
 		if (value != null) {
-			putAscii(buf, value);
+			pos += encodeAscii(container, pos, value);
 		}
 		if (expirationDate != -1) {
-			putAscii(buf, "; ");
-			buf.put(EXPIRES);
-			putAscii(buf, "=");
-			HttpDate.render(expirationDate, buf);
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte expireByte : EXPIRES) {
+				container[pos++] = expireByte;
+			}
+			container[pos++] = EQUALS;
+			pos = HttpDate.render(expirationDate, container, pos);
 		}
 		if (maxAge >= 0) {
-			putAscii(buf, "; ");
-			buf.put(MAX_AGE);
-			putAscii(buf, "=");
-			putPositiveInt(buf, maxAge);
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte maxAgeByte : MAX_AGE) {
+				container[pos++] = maxAgeByte;
+			}
+			container[pos++] = EQUALS;
+			pos += encodePositiveInt(container, pos, maxAge);
 		}
 		if (domain != null) {
-			putAscii(buf, "; ");
-			buf.put(DOMAIN);
-			putAscii(buf, "=");
-			putAscii(buf, domain);
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte domainByte : DOMAIN) {
+				container[pos++] = domainByte;
+			}
+			container[pos++] = EQUALS;
+			pos += encodeAscii(container, pos, domain);
 		}
 		if (!(path == null || path.equals(""))) {
-			putAscii(buf, "; ");
-			buf.put(PATH);
-			putAscii(buf, "=");
-			putAscii(buf, path);
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte pathByte : PATH) {
+				container[pos++] = pathByte;
+			}
+			container[pos++] = EQUALS;
+			pos += encodeAscii(container, pos, path);
 		}
 		if (secure) {
-			putAscii(buf, "; ");
-			buf.put(SECURE);
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte secureByte : SECURE) {
+				container[pos++] = secureByte;
+			}
 		}
 		if (httpOnly) {
-			putAscii(buf, "; ");
-			buf.put(HTTPONLY);
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte httpOnlyByte : HTTPONLY) {
+				container[pos++] = httpOnlyByte;
+			}
 		}
 		if (extension != null) {
-			putAscii(buf, "; ");
-			putAscii(buf, extension);
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			pos += encodeAscii(container, pos, extension);
 		}
+		return pos;
 	}
 
 	private static AvHandler getCookieHandler(int hash) {

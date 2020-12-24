@@ -20,11 +20,9 @@ import io.activej.bytebuf.ByteBuf;
 
 import java.util.List;
 
-import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
-import static io.activej.bytebuf.ByteBufStrings.equalsLowerCaseAscii;
+import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.http.HttpUtils.decodeQ;
-import static io.activej.http.HttpUtils.skipSpaces;
+import static io.activej.http.HttpUtils.*;
 
 /**
  * This is a value class for the Accept header value.
@@ -112,19 +110,19 @@ public final class AcceptMediaType {
 			AcceptMediaType type = types.get(i);
 			pos += MediaTypes.render(type.mime, container, pos);
 			if (type.q != DEFAULT_Q) {
-				container[pos++] = ';';
-				container[pos++] = ' ';
-				container[pos++] = 'q';
-				container[pos++] = '=';
-				container[pos++] = '0';
-				container[pos++] = '.';
+				container[pos++] = SEMICOLON;
+				container[pos++] = SP;
+				container[pos++] = Q;
+				container[pos++] = EQUALS;
+				container[pos++] = ZERO;
+				container[pos++] = DOT;
 				int q = type.q;
 				if (q % 10 == 0) q /= 10;
 				pos += encodePositiveInt(container, pos, q);
 			}
 			if (i < types.size() - 1) {
-				container[pos++] = ',';
-				container[pos++] = ' ';
+				container[pos++] = COMMA;
+				container[pos++] = SP;
 			}
 		}
 		return pos;

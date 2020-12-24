@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +24,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 final class HttpHeadersMultimap<K, V> {
-	Object[] kvPairs = new Object[8];
+	static final int INITIAL_SIZE = ApplicationSettings.getInt(HttpHeadersMultimap.class, "initialSize", 8);
+
+	Object[] kvPairs = new Object[INITIAL_SIZE];
 	int size;
 
 	@Contract(pure = true)

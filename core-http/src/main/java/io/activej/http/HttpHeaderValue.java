@@ -32,7 +32,7 @@ import static java.util.Arrays.asList;
 public abstract class HttpHeaderValue {
 	abstract int estimateSize();
 
-	abstract void writeTo(@NotNull ByteBuf buf);
+	abstract int writeTo(byte[] array, int offset);
 
 	@Override
 	@NotNull
@@ -111,7 +111,8 @@ public abstract class HttpHeaderValue {
 	public ByteBuf getBuf() {
 		int estimatedSize = estimateSize();
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[estimatedSize]);
-		writeTo(buf);
+		int pos = writeTo(buf.array(), 0);
+		buf.tail(pos);
 		return buf;
 	}
 
@@ -150,8 +151,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		public void writeTo(@NotNull ByteBuf buf) {
-			ContentType.render(type, buf);
+		public int writeTo(byte[] array, int offset) {
+			return ContentType.render(type, array, offset);
 		}
 
 		@NotNull
@@ -181,8 +182,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		public void writeTo(@NotNull ByteBuf buf) {
-			AcceptMediaType.render(types, buf);
+		public int writeTo(byte[] array, int offset) {
+			return AcceptMediaType.render(types, array, offset);
 		}
 
 		@NotNull
@@ -214,8 +215,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			HttpCookie.renderSimple(cookies, buf);
+		int writeTo(byte[] array, int offset) {
+			return HttpCookie.renderSimple(cookies, array, offset);
 		}
 
 		@NotNull
@@ -248,8 +249,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			cookie.renderFull(buf);
+		int writeTo(byte[] array, int offset) {
+			return cookie.renderFull(array, offset);
 		}
 
 		@NotNull
@@ -279,8 +280,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			AcceptCharset.render(charsets, buf);
+		int writeTo(byte[] array, int offset) {
+			return AcceptCharset.render(charsets, array, offset);
 		}
 
 		@NotNull
@@ -305,8 +306,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			HttpDate.render(epochSeconds, buf);
+		int writeTo(byte[] array, int offset) {
+			return HttpDate.render(epochSeconds, array, offset);
 		}
 
 		@NotNull
@@ -331,8 +332,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			putPositiveInt(buf, value);
+		int writeTo(byte[] array, int offset) {
+			return offset + encodePositiveInt(array, offset, value);
 		}
 
 		@NotNull
@@ -356,8 +357,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			putAscii(buf, string);
+		int writeTo(byte[] array, int offset) {
+			return offset + encodeAscii(array, offset, string);
 		}
 
 		@NotNull
@@ -384,8 +385,16 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			buf.put(array, offset, size);
+		int writeTo(byte[] array, int offset) {
+			if (this.array.length < 10) {
+				for (byte b : this.array) {
+					array[offset++] = b;
+				}
+				return offset;
+			} else {
+				System.arraycopy(this.array, this.offset, array, offset, size);
+				return offset + size;
+			}
 		}
 
 		@NotNull
