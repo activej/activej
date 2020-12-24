@@ -1,1 +1,1 @@
-This module forms ActiveCRDT library. To learn more, please visit [ActiveCRDT website](https://crdt.activej.io).
+This module forms ActiveJ CRDT library. To learn more, please visit [ActiveJ CRDT website](https://crdt.activej.io).

@@ -11,7 +11,7 @@
 
   <artifactId>activej-fs</artifactId>
 
-  <name>ActiveFS</name>
+  <name>ActiveJ : FS</name>
   <description>
     Provides tools for building efficient, scalable remote file servers.
     It utilizes ActiveJ CSP for fast and reliable file transfer.

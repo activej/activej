@@ -1,1 +1,1 @@
-To learn more about FS module, please visit [ActiveFS website](https://fs.activej.io).
+To learn more about FS module, please visit [ActiveJ FS website](https://fs.activej.io).
