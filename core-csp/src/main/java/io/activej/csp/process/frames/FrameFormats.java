@@ -19,9 +19,9 @@ package io.activej.csp.process.frames;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.binary.ByteBufsDecoder;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,8 +85,6 @@ public class FrameFormats {
 
 	// region implementations
 	private static final class Compound implements FrameFormat {
-		private static final UnknownFormatException UNKNOWN_FORMAT_EXCEPTION = new UnknownFormatException(Compound.class);
-
 		private final List<FrameFormat> formats = new ArrayList<>();
 
 		Compound(FrameFormat mainFormat, List<FrameFormat> otherFormats) {
@@ -122,15 +120,15 @@ public class FrameFormats {
 				}
 
 				@Override
-				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 					if (decoder != null) return decoder.decode(bufs);
 					return tryNextDecoder(bufs);
 				}
 
-				private ByteBuf tryNextDecoder(ByteBufQueue bufs) throws ParseException {
+				private ByteBuf tryNextDecoder(ByteBufQueue bufs) throws MalformedDataException {
 					while (true) {
 						if (possibleDecoder == null) {
-							if (!possibleDecoders.hasNext()) throw UNKNOWN_FORMAT_EXCEPTION;
+							if (!possibleDecoders.hasNext()) throw new UnknownFormatException();
 							possibleDecoder = possibleDecoders.next().createDecoder();
 						}
 
@@ -142,7 +140,7 @@ public class FrameFormats {
 								possibleDecoders = null;
 							}
 							return buf;
-						} catch (ParseException ignored) {
+						} catch (MalformedDataException ignored) {
 						}
 
 						possibleDecoder = null;
@@ -194,8 +192,6 @@ public class FrameFormats {
 	}
 
 	private static final class SizePrefixedFrameFormat implements FrameFormat {
-		private static final InvalidSizeException NEGATIVE_LENGTH = new InvalidSizeException(SizePrefixedFrameFormat.class, "Negative length");
-		private static final InvalidSizeException COULD_NOT_READ_VAR_INT = new InvalidSizeException(SizePrefixedFrameFormat.class, "Could not read var int");
 		private static final byte[] ZERO_BYTE_ARRAY = {0};
 
 		@Override
@@ -227,7 +223,7 @@ public class FrameFormats {
 				private final LengthScanner lengthScanner = new LengthScanner();
 
 				@Override
-				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 					int bytes = bufs.scanBytes(lengthScanner);
 					if (bytes == 0) return null;
 					int length = lengthScanner.value;
@@ -255,13 +251,13 @@ public class FrameFormats {
 			public int value;
 
 			@Override
-			public boolean consume(int index, byte b) throws ParseException {
+			public boolean consume(int index, byte b) throws MalformedDataException {
 				value = index == 0 ? b & 0x7F : value | (b & 0x7F) << index * 7;
 				if (b >= 0) {
-					if (value < 0) throw NEGATIVE_LENGTH;
+					if (value < 0) throw new InvalidSizeException("Negative length");
 					return true;
 				}
-				if (index == 4) throw COULD_NOT_READ_VAR_INT;
+				if (index == 4) throw new InvalidSizeException("Could not read var int");
 				return false;
 			}
 		}
@@ -320,7 +316,7 @@ public class FrameFormats {
 				boolean validateMagicNumber = true;
 
 				@Override
-				public ByteBuf decode(ByteBufQueue bufs) throws ParseException {
+				public ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
 					if (validateMagicNumber) {
 						if (magicNumberValidator.tryDecode(bufs) == null) return null;
 						validateMagicNumber = false;

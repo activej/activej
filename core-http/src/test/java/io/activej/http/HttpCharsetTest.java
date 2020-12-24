@@ -1,7 +1,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
 import org.junit.Test;
 
 import java.nio.charset.Charset;
@@ -28,15 +27,15 @@ public class HttpCharsetTest {
 	}
 
 	@Test
-	public void testParser() {
+	public void testDecoder() {
 		HttpCharset expected = HttpCharset.US_ASCII;
 		byte[] asciis = "us-ascii".getBytes(US_ASCII);
-		HttpCharset actual = HttpCharset.parse(asciis, 0, asciis.length);
+		HttpCharset actual = HttpCharset.decode(asciis, 0, asciis.length);
 		assertSame(expected, actual);
 	}
 
 	@Test
-	public void testConverters() throws ParseException {
+	public void testConverters() throws MalformedHttpException {
 		HttpCharset expected = HttpCharset.US_ASCII;
 		Charset charset = expected.toJavaCharset();
 		HttpCharset actual = HttpCharset.of(charset);
@@ -44,10 +43,10 @@ public class HttpCharsetTest {
 	}
 
 	@Test
-	public void testAcceptCharset() throws ParseException {
+	public void testAcceptCharset() throws MalformedHttpException {
 		byte[] bytes = encodeAscii("iso-8859-5, unicode-1-1;q=0.8");
 		List<AcceptCharset> chs = new ArrayList<>();
-		AcceptCharset.parse(bytes, 0, bytes.length, chs);
+		AcceptCharset.decode(bytes, 0, bytes.length, chs);
 		assertEquals(2, chs.size());
 		assertSame(forName("ISO-8859-5"), chs.get(0).getCharset());
 		assertEquals(80, chs.get(1).getQ());

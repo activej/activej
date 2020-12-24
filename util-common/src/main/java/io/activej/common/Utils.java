@@ -16,7 +16,7 @@
 
 package io.activej.common;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -154,13 +154,13 @@ public class Utils {
 		return loadResource(checkNotNull(Thread.currentThread().getContextClassLoader().getResourceAsStream(name)));
 	}
 
-	public static InetSocketAddress parseInetSocketAddress(String addressAndPort) throws ParseException {
+	public static InetSocketAddress parseInetSocketAddress(String addressAndPort) throws MalformedDataException {
 		int portPos = addressAndPort.lastIndexOf(':');
 		if (portPos == -1) {
 			try {
 				return new InetSocketAddress(Integer.parseInt(addressAndPort));
 			} catch (NumberFormatException nfe) {
-				throw new ParseException(nfe);
+				throw new MalformedDataException(nfe);
 			}
 		}
 		String addressStr = addressAndPort.substring(0, portPos);
@@ -169,11 +169,11 @@ public class Utils {
 		try {
 			port = Integer.parseInt(portStr);
 		} catch (NumberFormatException nfe) {
-			throw new ParseException(nfe);
+			throw new MalformedDataException(nfe);
 		}
 
 		if (port <= 0 || port >= 65536) {
-			throw new ParseException("Invalid address. Port is not in range (0, 65536) " + addressStr);
+			throw new MalformedDataException("Invalid address. Port is not in range (0, 65536) " + addressStr);
 		}
 		if ("*".equals(addressStr)) {
 			return new InetSocketAddress(port);
@@ -182,7 +182,7 @@ public class Utils {
 			InetAddress address = InetAddress.getByName(addressStr);
 			return new InetSocketAddress(address, port);
 		} catch (UnknownHostException e) {
-			throw new ParseException(e);
+			throw new MalformedDataException(e);
 		}
 	}
 

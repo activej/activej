@@ -20,9 +20,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.CollectorsEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsScalarException;
-import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.fs.util.RemoteFsUtils;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +44,6 @@ import static java.util.stream.Collectors.toSet;
  * Inherits all of the limitations of parent {@link ActiveFs}
  */
 final class TransformActiveFs implements ActiveFs {
-	public static final ForbiddenPathException FORBIDDEN_PATH_EXCEPTION = new ForbiddenPathException(TransformActiveFs.class);
 	private final ActiveFs parent;
 	private final Function<String, Optional<String>> into;
 	private final Function<String, Optional<String>> from;
@@ -61,7 +60,7 @@ final class TransformActiveFs implements ActiveFs {
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {
-			return Promise.ofException(FORBIDDEN_PATH_EXCEPTION);
+			return Promise.ofException(new ForbiddenPathException());
 		}
 		return parent.upload(transformed.get());
 	}
@@ -70,7 +69,7 @@ final class TransformActiveFs implements ActiveFs {
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {
-			return Promise.ofException(FORBIDDEN_PATH_EXCEPTION);
+			return Promise.ofException(new ForbiddenPathException());
 		}
 		return parent.upload(transformed.get(), size);
 	}
@@ -79,7 +78,7 @@ final class TransformActiveFs implements ActiveFs {
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {
-			return Promise.ofException(FORBIDDEN_PATH_EXCEPTION);
+			return Promise.ofException(new ForbiddenPathException());
 		}
 		return parent.append(transformed.get(), offset);
 	}
@@ -88,7 +87,7 @@ final class TransformActiveFs implements ActiveFs {
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {
-			return Promise.ofException(FORBIDDEN_PATH_EXCEPTION);
+			return Promise.ofException(new ForbiddenPathException());
 		}
 		return parent.download(transformed.get(), offset, limit);
 	}
@@ -180,11 +179,11 @@ final class TransformActiveFs implements ActiveFs {
 	private Promise<Void> transfer(String source, String target, BiFunction<String, String, Promise<Void>> action) {
 		Optional<String> transformed = into.apply(source);
 		if (!transformed.isPresent()) {
-			return Promise.ofException(new ForbiddenPathException(TransformActiveFs.class, "Path '" + source + "' is forbidden"));
+			return Promise.ofException(new ForbiddenPathException("Path '" + source + "' is forbidden"));
 		}
 		Optional<String> transformedNew = into.apply(target);
 		if (!transformedNew.isPresent()) {
-			return Promise.ofException(new ForbiddenPathException(TransformActiveFs.class, "Path '" + target + "' is forbidden"));
+			return Promise.ofException(new ForbiddenPathException("Path '" + target + "' is forbidden"));
 		}
 		return action.apply(transformed.get(), transformedNew.get());
 	}
@@ -196,19 +195,19 @@ final class TransformActiveFs implements ActiveFs {
 			String source = entry.getKey();
 			Optional<String> transformed = into.apply(source);
 			if (!transformed.isPresent()) {
-				exceptions.put(source, new ForbiddenPathException(TransformActiveFs.class, "Path '" + source + "' is forbidden"));
+				exceptions.put(source, new ForbiddenPathException("Path '" + source + "' is forbidden"));
 				continue;
 			}
 			String target = entry.getValue();
 			Optional<String> transformedNew = into.apply(target);
 			if (!transformedNew.isPresent()) {
-				exceptions.put(source, new ForbiddenPathException(TransformActiveFs.class, "Path '" + target + "' is forbidden"));
+				exceptions.put(source, new ForbiddenPathException("Path '" + target + "' is forbidden"));
 				continue;
 			}
 			renamed.put(transformed.get(), transformedNew.get());
 		}
 		if (!exceptions.isEmpty()) {
-			return Promise.ofException(new FsBatchException(TransformActiveFs.class, exceptions));
+			return Promise.ofException(new FsBatchException(exceptions));
 		}
 		return action.apply(renamed);
 	}

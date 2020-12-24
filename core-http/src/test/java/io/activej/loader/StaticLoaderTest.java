@@ -1,7 +1,7 @@
 package io.activej.loader;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.StacklessException;
+import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.http.loader.StaticLoader;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -10,11 +10,13 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 
-import static io.activej.http.loader.StaticLoader.NOT_FOUND_EXCEPTION;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.concurrent.Executors.newCachedThreadPool;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class StaticLoaderTest {
 	@ClassRule
@@ -34,15 +36,15 @@ public class StaticLoaderTest {
 	@Test
 	public void testFileNotFoundClassPath() {
 		StaticLoader staticLoader = StaticLoader.ofClassPath(newCachedThreadPool(), "/");
-		StacklessException exception = awaitException(staticLoader.load("unknownFile.txt"));
-		assertEquals(NOT_FOUND_EXCEPTION, exception);
+		Exception exception = awaitException(staticLoader.load("unknownFile.txt"));
+		assertThat(exception, instanceOf(ResourceNotFoundException.class));
 	}
 
 	@Test
 	public void testFileNotFoundPath() {
 		StaticLoader staticLoader = StaticLoader.ofPath(newCachedThreadPool(), Paths.get("/"));
-		StacklessException exception = awaitException(staticLoader.load("unknownFile.txt"));
-		assertEquals(NOT_FOUND_EXCEPTION, exception);
+		Exception exception = awaitException(staticLoader.load("unknownFile.txt"));
+		assertThat(exception, instanceOf(ResourceNotFoundException.class));
 	}
 
 	@Test
@@ -57,8 +59,8 @@ public class StaticLoaderTest {
 	public void testFilterFileClassPath() {
 		StaticLoader staticLoader = StaticLoader.ofClassPath(newCachedThreadPool(), "/")
 				.filter(file -> !file.equals("testFile.txt"));
-		StacklessException exception = awaitException(staticLoader.load("testFile.txt"));
-		assertEquals(NOT_FOUND_EXCEPTION, exception);
+		Exception exception = awaitException(staticLoader.load("testFile.txt"));
+		assertThat(exception, instanceOf(ResourceNotFoundException.class));
 	}
 
 	@Test
@@ -78,8 +80,8 @@ public class StaticLoaderTest {
 	public void testFilterFilePath() {
 		StaticLoader staticLoader = StaticLoader.ofPath(newCachedThreadPool(), Paths.get("/"))
 				.filter(file -> !file.equals("testFile.txt"));
-		StacklessException exception = awaitException(staticLoader.load("testFile.txt"));
-		assertEquals(NOT_FOUND_EXCEPTION, exception);
+		Exception exception = awaitException(staticLoader.load("testFile.txt"));
+		assertThat(exception, instanceOf(ResourceNotFoundException.class));
 	}
 
 	@Test

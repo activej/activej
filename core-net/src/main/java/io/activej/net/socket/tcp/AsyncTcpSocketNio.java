@@ -21,6 +21,7 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.common.exception.CloseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
@@ -56,8 +57,6 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private static final boolean CHECK = Checks.isEnabled(AsyncTcpSocketNio.class);
 
 	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(AsyncTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
-
-	public static final AsyncTimeoutException TIMEOUT_EXCEPTION = new AsyncTimeoutException(AsyncTcpSocketNio.class, "timed out");
 	public static final int NO_TIMEOUT = 0;
 
 	private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
@@ -314,7 +313,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		scheduledReadTimeout = eventloop.delayBackground(readTimeout, wrapContext(this, () -> {
 			if (inspector != null) inspector.onReadTimeout(this);
 			scheduledReadTimeout = null;
-			closeEx(TIMEOUT_EXCEPTION);
+			closeEx(new AsyncTimeoutException("Timed out"));
 		}));
 	}
 
@@ -323,7 +322,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		scheduledWriteTimeout = eventloop.delayBackground(writeTimeout, wrapContext(this, () -> {
 			if (inspector != null) inspector.onWriteTimeout(this);
 			scheduledWriteTimeout = null;
-			closeEx(TIMEOUT_EXCEPTION);
+			closeEx(new AsyncTimeoutException("Timed out"));
 		}));
 	}
 
@@ -350,7 +349,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	@Override
 	public Promise<ByteBuf> read() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
-		if (isClosed()) return Promise.ofException(CLOSE_EXCEPTION);
+		if (isClosed()) return Promise.ofException(new CloseException());
 		read = null;
 		if (readBuf != null || readEndOfStream) {
 			ByteBuf readBuf = this.readBuf;
@@ -443,7 +442,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 		if (isClosed()) {
 			if (buf != null) buf.recycle();
-			return Promise.ofException(CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		writeEndOfStream |= buf == null;
 
@@ -482,6 +481,11 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 			updateInterests();
 		}
 		return write;
+	}
+
+	@Override
+	public boolean isReadAvailable() {
+		return readBuf != null;
 	}
 
 	@Override

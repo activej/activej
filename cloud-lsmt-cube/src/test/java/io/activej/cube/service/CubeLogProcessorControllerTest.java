@@ -6,7 +6,7 @@ import io.activej.aggregation.ChunkIdCodec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
@@ -14,6 +14,7 @@ import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.Cube;
 import io.activej.cube.IdGeneratorStub;
 import io.activej.cube.LogItem;
+import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeOT;
@@ -57,9 +58,9 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.Collections.singletonList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 public final class CubeLogProcessorControllerTest {
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
@@ -174,7 +175,9 @@ public final class CubeLogProcessorControllerTest {
 						.withEncoderResets())
 				.streamTo(logsFs.upload(logFile)));
 
-		UnknownFormatException exception = awaitException(controller.process());
-		assertThat(exception.getCause(), instanceOf(StringIndexOutOfBoundsException.class));
+		CubeException exception = awaitException(controller.process());
+		Throwable firstCause = exception.getCause();
+		assertThat(firstCause, instanceOf(UnknownFormatException.class));
+		assertThat(firstCause.getCause(), instanceOf(StringIndexOutOfBoundsException.class));
 	}
 }

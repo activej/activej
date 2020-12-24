@@ -17,7 +17,6 @@
 package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.StacklessException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,15 +32,13 @@ import java.util.function.Predicate;
  * Represents the 'predefined storage' for the {@link io.activej.http.StaticServlet StaticServlet}.
  */
 public interface StaticLoader {
-	StacklessException NOT_FOUND_EXCEPTION = new StacklessException(StaticLoader.class, "File not found");
-	StacklessException IS_A_DIRECTORY = new StacklessException(StaticLoader.class, "Is a directory");
 
 	Promise<ByteBuf> load(String path);
 
 	default StaticLoader filter(Predicate<String> predicate) {
 		return path -> predicate.test(path) ?
 				load(path) :
-				Promise.ofException(NOT_FOUND_EXCEPTION);
+				Promise.ofException(new ResourceNotFoundException("Resource '" + path + "' has been filtered out"));
 	}
 
 	default StaticLoader map(Function<String, String> fn) {

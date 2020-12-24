@@ -3,8 +3,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.AsyncTimeoutException;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
@@ -33,16 +31,16 @@ import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.eventloop.Eventloop.CONNECT_TIMEOUT;
-import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
-import static io.activej.http.HttpClientConnection.INVALID_RESPONSE;
 import static io.activej.https.SslUtils.createTestSslContext;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public final class AsyncHttpClientTest {
 	private static final int PORT = getFreePort();
@@ -85,8 +83,8 @@ public final class AsyncHttpClientTest {
 	public void testClientTimeoutConnect() {
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withConnectTimeout(Duration.ofMillis(1));
-		AsyncTimeoutException e = awaitException(client.request(HttpRequest.get("http://google.com")));
-		assertSame(CONNECT_TIMEOUT, e);
+		Exception e = awaitException(client.request(HttpRequest.get("http://google.com")));
+		assertThat(e, instanceOf(AsyncTimeoutException.class));
 	}
 
 	@Test
@@ -96,7 +94,7 @@ public final class AsyncHttpClientTest {
 		int maxBodySize = HELLO_WORLD.length - 1;
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		InvalidSizeException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+		MalformedHttpException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
 				.then(response -> response.loadBody(maxBodySize)));
 		assertThat(e.getMessage(), containsString("HTTP body size exceeds load limit " + maxBodySize));
 	}
@@ -113,10 +111,10 @@ public final class AsyncHttpClientTest {
 				.listen();
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		UnknownFormatException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
+		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + PORT))
 				.then(HttpMessage::loadBody));
 
-		assertSame(INVALID_RESPONSE, e);
+		assertThat(e, instanceOf(MalformedHttpException.class));
 	}
 
 	@Test
@@ -138,7 +136,7 @@ public final class AsyncHttpClientTest {
 				.withReadWriteTimeout(Duration.ofMillis(20))
 				.withInspector(inspector);
 
-		AsyncTimeoutException e = awaitException(Promises.all(
+		Exception e = awaitException(Promises.all(
 				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
 				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
 				httpClient.request(HttpRequest.get("http://127.0.0.1:" + PORT)),
@@ -160,7 +158,7 @@ public final class AsyncHttpClientTest {
 
 					assertEquals(4, inspector.getActiveRequests());
 				}));
-		assertSame(READ_TIMEOUT_ERROR, e);
+		assertThat(e, instanceOf(AsyncTimeoutException.class));
 	}
 
 	@Test
@@ -281,7 +279,7 @@ public final class AsyncHttpClientTest {
 		assertEquals((Integer) 200, await(customResponse(req, false).map(HttpResponse::getCode)));
 	}
 
-	private static final ByteBufsDecoder<ByteBuf> REQUEST_PARSER = bufs -> {
+	private static final ByteBufsDecoder<ByteBuf> REQUEST_DECODER = bufs -> {
 		for (int i = 0; i < bufs.remainingBytes() - 3; i++) {
 			if (bufs.peekByte(i) == CR &&
 					bufs.peekByte(i + 1) == LF &&
@@ -296,7 +294,7 @@ public final class AsyncHttpClientTest {
 	private Promise<HttpResponse> customResponse(ByteBuf rawResponse, boolean ssl) throws IOException {
 		SimpleServer server = SimpleServer.create(asyncTcpSocket ->
 				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(asyncTcpSocket))
-						.parse(REQUEST_PARSER)
+						.decode(REQUEST_DECODER)
 						.whenResult(ByteBuf::recycle)
 						.then(() -> asyncTcpSocket.write(rawResponse))
 						.whenResult(asyncTcpSocket::close))

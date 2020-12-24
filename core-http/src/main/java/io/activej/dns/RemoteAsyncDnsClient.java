@@ -18,7 +18,9 @@ package io.activej.dns;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.common.exception.CloseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
@@ -46,7 +48,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.promise.Promises.TIMEOUT_EXCEPTION;
 import static io.activej.promise.Promises.timeout;
 
 /**
@@ -132,7 +133,8 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		}
 		socket.close();
 		socket = null;
-		transactions.values().forEach(s -> s.setException(TIMEOUT_EXCEPTION));
+		CloseException closeException = new CloseException();
+		transactions.values().forEach(s -> s.setException(closeException));
 	}
 
 	private Promise<AsyncUdpSocket> getSocket() {
@@ -165,7 +167,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 			logger.trace("{} already contained an IP address within itself", query);
 			return Promise.of(fromQuery);
 		}
-		// ignore the result because soon or later it will be sent and just completed
+		// ignore the result because sooner or later it will be sent and just completed
 		// here we use that transactions map because it easily could go completely out of order and we should be ok with that
 		return getSocket()
 				.then(socket -> {
@@ -197,11 +199,11 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 									if (queryResult.isSuccessful()) {
 										cb.set(queryResult);
 									} else {
-										cb.setException(new DnsQueryException(RemoteAsyncDnsClient.class, queryResult));
+										cb.setException(new DnsQueryException(queryResult));
 									}
 									closeIfDone();
-								} catch (ParseException e) {
-									logger.warn("Received a UDP packet than cannot be parsed as a DNS server response.", e);
+								} catch (MalformedDataException e) {
+									logger.warn("Received a UDP packet than cannot be decoded as a DNS server response.", e);
 								} finally {
 									packet.recycle();
 								}
@@ -216,12 +218,12 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 									logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
 									return Promise.of(queryResult);
 								}
-								if (e == TIMEOUT_EXCEPTION) {
+								if (e instanceof AsyncTimeoutException) {
 									if (inspector != null) {
 										inspector.onDnsQueryExpiration(query);
 									}
 									logger.trace("{} timed out", query);
-									e = new DnsQueryException(RemoteAsyncDnsClient.class, DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
+									e = new DnsQueryException(DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
 									transactions.remove(transaction);
 									closeIfDone();
 								} else if (inspector != null) {

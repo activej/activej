@@ -1,16 +1,16 @@
 package io.activej.datastream.processor;
 
-import io.activej.common.exception.ExpectedException;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
+import io.activej.test.ExpectedException;
 
 import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
 public final class FailingStreamSorterStorageStub<T> implements StreamSorterStorage<T> {
-	public static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
+	static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
 
 	private StreamSorterStorage<T> storage;
 

@@ -21,7 +21,7 @@ import io.activej.common.Checks;
 import io.activej.common.api.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
-import io.activej.http.MultipartParser.MultipartDataHandler;
+import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -299,7 +299,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	@NotNull
 	public Map<String, String> getPostParameters() {
 		if (postParameters != null) return postParameters;
-		if (body == null) throw new NullPointerException("Body must be loaded to parse post parameters");
+		if (body == null) throw new NullPointerException("Body must be loaded to decode post parameters");
 		return postParameters =
 				containsPostParameters() ?
 						UrlParser.parseQueryIntoMap(decodeAscii(body.array(), body.head(), body.readRemaining())) :
@@ -342,13 +342,13 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (CHECK) checkState(!isRecycled());
 		String contentType = getHeader(CONTENT_TYPE);
 		if (contentType == null || !contentType.startsWith("multipart/form-data; boundary=")) {
-			return Promise.ofException(HttpException.ofCode(400, "Content type is not multipart/form-data"));
+			return Promise.ofException(HttpError.ofCode(400, "Content type is not multipart/form-data"));
 		}
 		String boundary = contentType.substring(30);
 		if (boundary.startsWith("\"") && boundary.endsWith("\"")) {
 			boundary = boundary.substring(1, boundary.length() - 1);
 		}
-		return MultipartParser.create(boundary)
+		return MultipartDecoder.create(boundary)
 				.split(getBodyStream(), multipartDataHandler);
 	}
 
@@ -379,7 +379,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (pathParameters == null) {
 			pathParameters = new HashMap<>();
 		}
-		pathParameters.put(key, UrlParser.urlDecode(value));
+		pathParameters.put(key, UrlParser.urlParse(value));
 	}
 
 	@Override

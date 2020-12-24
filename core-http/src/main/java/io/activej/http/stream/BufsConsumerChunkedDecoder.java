@@ -19,8 +19,8 @@ package io.activej.http.stream;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.bytebuf.ByteBufQueue.ByteScanner;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -45,10 +45,6 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder> {
 	public static final int MAX_CHUNK_LENGTH_DIGITS = 8;
 	public static final byte[] CRLF = {13, 10};
-	// region exceptions
-	public static final ParseException MALFORMED_CHUNK = new ParseException(BufsConsumerChunkedDecoder.class, "Malformed chunk");
-	public static final ParseException MALFORMED_CHUNK_LENGTH = new InvalidSizeException(BufsConsumerChunkedDecoder.class, "Malformed chunk length");
-	// endregion
 
 	private ByteBufQueue bufs;
 	private BinaryChannelSupplier input;
@@ -98,7 +94,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	}
 
 	private void processLength() {
-		input.parse(
+		input.decode(
 				queue -> {
 					chunkLength = 0;
 					int bytes = bufs.scanBytes((index, c) -> {
@@ -111,14 +107,14 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 						} else if (c == ';' || c == CR) {
 							// Success
 							if (index == 0 || chunkLength < 0) {
-								throw MALFORMED_CHUNK_LENGTH;
+								throw new InvalidSizeException("Malformed chunk length");
 							}
 							return true;
 						} else {
-							throw MALFORMED_CHUNK_LENGTH;
+							throw new InvalidSizeException("Unexpected data");
 						}
 						if (index == MAX_CHUNK_LENGTH_DIGITS + 1) {
-							throw MALFORMED_CHUNK_LENGTH;
+							throw new InvalidSizeException("Chunk length exceeds maximum allowed size");
 						}
 						return false;
 					});
@@ -146,14 +142,14 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 					.whenResult(() -> processData(newChunkLength));
 			return;
 		}
-		input.parse(assertBytes(CRLF))
+		input.decode(assertBytes(CRLF))
 				.whenException(buf::recycle)
 				.then(() -> output.accept(buf))
 				.whenResult(this::processLength);
 	}
 
 	private void consumeCRLF(int chunkLength) {
-		input.parse(
+		input.decode(
 				bufs -> {
 					ByteBuf maybeResult = ofCrlfTerminatedBytes().tryDecode(bufs);
 					if (maybeResult == null) {
@@ -191,8 +187,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 							.whenResult(this::completeProcess);
 					return;
 				}
-			} catch (ParseException ignored) {
-				throw new AssertionError("Parse exceptions cannot be caught here");
+			} catch (MalformedDataException ignored) {
+				throw new AssertionError("Exceptions cannot be caught here");
 			}
 
 			bufs.skip(remainingBytes - 3);

@@ -1,7 +1,7 @@
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
@@ -57,7 +57,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 								Record record = JsonUtils.fromJson(RECORD_CODEC, body.getString(UTF_8));
 								recordDAO.add(record);
 								return HttpResponse.ok200();
-							} catch (ParseException e) {
+							} catch (MalformedDataException e) {
 								return HttpResponse.ofCode(400);
 							}
 						}))

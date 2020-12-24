@@ -6,8 +6,8 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.exception.scalar.IllegalOffsetException;
-import io.activej.fs.exception.scalar.MalformedGlobException;
+import io.activej.fs.exception.IllegalOffsetException;
+import io.activej.fs.exception.MalformedGlobException;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.test.rules.ByteBufRule;
@@ -32,8 +32,10 @@ import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public final class TestPartialRemoteFs {
 	private static final int PORT = getFreePort();

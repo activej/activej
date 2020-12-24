@@ -681,7 +681,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				}
 			} else {
 				if (--errors == 0) {
-					completeExceptionally(NOT_ENOUGH_PROMISES_EXCEPTION);
+					completeExceptionally(new Exception("Both promises completed exceptionally"));
 				}
 			}
 		}

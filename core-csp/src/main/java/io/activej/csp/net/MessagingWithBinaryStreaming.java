@@ -16,8 +16,10 @@
 
 package io.activej.csp.net;
 
+import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -27,20 +29,16 @@ import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
-
 /**
  * Represents a simple binary protocol over for communication a TCP connection.
  */
-public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O> {
+public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncCloseable implements Messaging<I, O> {
 	private final AsyncTcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;
 
 	private final ByteBufQueue bufs = new ByteBufQueue();
 	private final BinaryChannelSupplier bufsSupplier;
-
-	private Throwable closedException;
 
 	private boolean readDone;
 	private boolean writeDone;
@@ -56,7 +54,7 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 								bufs.add(buf);
 								return Promise.complete();
 							} else {
-								return Promise.ofException(UNEXPECTED_END_OF_STREAM_EXCEPTION);
+								return Promise.ofException(new TruncatedDataException());
 							}
 						})
 						.whenException(this::closeEx),
@@ -89,7 +87,7 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 
 	@Override
 	public Promise<I> receive() {
-		return bufsSupplier.parse(codec::tryDecode)
+		return bufsSupplier.decode(codec::tryDecode)
 				.whenResult(this::prefetch)
 				.whenException(this::closeEx);
 	}
@@ -130,9 +128,7 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 	}
 
 	@Override
-	public void closeEx(@NotNull Throwable e) {
-		if (isClosed()) return;
-		closedException = e;
+	protected void onClosed(@NotNull Throwable e) {
 		socket.closeEx(e);
 		bufs.recycle();
 	}
@@ -141,10 +137,6 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 		if (readDone && writeDone) {
 			close();
 		}
-	}
-
-	public boolean isClosed() {
-		return closedException != null;
 	}
 
 	@Override

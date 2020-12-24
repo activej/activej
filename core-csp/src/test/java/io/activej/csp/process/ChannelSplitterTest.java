@@ -1,7 +1,6 @@
 package io.activej.csp.process;
 
 import io.activej.async.function.AsyncConsumer;
-import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -57,7 +56,7 @@ public class ChannelSplitterTest {
 		expected.add("second");
 		expected.add("third");
 
-		StacklessException exception = new StacklessException(ChannelSplitterTest.class, "test exception");
+		Exception exception = new Exception("test exception");
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
 				.withInput(ChannelSuppliers.concat(ChannelSupplier.ofList(expected), ChannelSupplier.ofException(exception)));
 
@@ -80,7 +79,7 @@ public class ChannelSplitterTest {
 
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
 				.withInput(ChannelSupplier.ofList(expected));
-		StacklessException exception = new StacklessException(ChannelSplitterTest.class, "test exception");
+		Exception exception = new Exception("test exception");
 
 		for (int i = 0; i < n; i++) {
 			if (i == n / 2) {

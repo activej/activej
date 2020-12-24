@@ -20,14 +20,10 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.api.ParserFunction;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
-import io.activej.http.HttpHeaderValue.ParserIntoList;
 import io.activej.promise.Promise;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
@@ -126,7 +122,7 @@ public abstract class HttpMessage {
 	}
 
 	@NotNull
-	public final <T> List<T> getHeader(@NotNull HttpHeader header, @NotNull ParserIntoList<T> parser) {
+	public final <T> List<T> getHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue.DecoderIntoList<T> decoder) {
 		List<T> list = new ArrayList<>();
 		for (int i = header.hashCode() & (headers.kvPairs.length - 2); ; i = (i + 2) & (headers.kvPairs.length - 2)) {
 			HttpHeader k = (HttpHeader) headers.kvPairs[i];
@@ -135,8 +131,8 @@ public abstract class HttpMessage {
 			}
 			if (k.equals(header)) {
 				try {
-					parser.parse(((HttpHeaderValue) headers.kvPairs[i + 1]).getBuf(), list);
-				} catch (ParseException ignored) {
+					decoder.decode(((HttpHeaderValue) headers.kvPairs[i + 1]).getBuf(), list);
+				} catch (MalformedHttpException ignored) {
 				}
 			}
 		}
@@ -144,8 +140,15 @@ public abstract class HttpMessage {
 	}
 
 	@Nullable
-	public <T> T getHeader(HttpHeader header, ParserFunction<ByteBuf, T> parser) {
-		return parser.parseOrDefault(getHeaderBuf(header), null);
+	public <T> T getHeader(HttpHeader header, HttpDecoderFunction<T> decoder) {
+		try {
+			ByteBuf buf = getHeaderBuf(header);
+			if (buf != null) {
+				return decoder.decode(buf);
+			}
+		} catch (MalformedHttpException ignore) {}
+
+		return null;
 	}
 
 	@Nullable
@@ -279,7 +282,7 @@ public abstract class HttpMessage {
 					if (maxBodySize != 0 && queue.hasRemainingBytes(maxBodySize)) {
 						queue.recycle();
 						buf.recycle();
-						throw new UncheckedException(new InvalidSizeException(HttpMessage.class,
+						throw new UncheckedException(new MalformedHttpException(
 								"HTTP body size exceeds load limit " + maxBodySize));
 					}
 					queue.add(buf);
@@ -419,22 +422,25 @@ public abstract class HttpMessage {
 
 	protected void writeHeaders(@NotNull ByteBuf buf) {
 		if (CHECK) checkState(!isRecycled());
+		byte[] array = buf.array();
+		int offset = buf.tail();
 		for (int i = 0; i < headers.kvPairs.length - 1; i += 2) {
 			HttpHeader k = (HttpHeader) headers.kvPairs[i];
 			if (k != null) {
 				HttpHeaderValue v = (HttpHeaderValue) headers.kvPairs[i + 1];
-				buf.put(CR);
-				buf.put(LF);
-				k.writeTo(buf);
-				buf.put((byte) ':');
-				buf.put(SP);
-				v.writeTo(buf);
+				array[offset++] = CR;
+				array[offset++] = LF;
+				offset = k.writeTo(array, offset);
+				array[offset++] = (byte) ':';
+				array[offset++] = SP;
+				offset = v.writeTo(array, offset);
 			}
 		}
-		buf.put(CR);
-		buf.put(LF);
-		buf.put(CR);
-		buf.put(LF);
+		array[offset++] = CR;
+		array[offset++] = LF;
+		array[offset++] = CR;
+		array[offset++] = LF;
+		buf.tail(offset);
 	}
 
 	protected int estimateSize(int firstLineSize) {
@@ -456,4 +462,8 @@ public abstract class HttpMessage {
 	protected abstract int estimateSize();
 
 	protected abstract void writeTo(@NotNull ByteBuf buf);
+
+	public interface HttpDecoderFunction<T> {
+		T decode(ByteBuf value) throws MalformedHttpException;
+	}
 }

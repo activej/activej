@@ -1,24 +1,27 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.test.rules.LambdaStatement.ThrowingRunnable;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Random;
 
-import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.bytebuf.ByteBufStrings.decodeUtf8;
+import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class HttpUtilsTest {
 	private static final Random RANDOM = new Random();
 
 	@Test
-	public void testEncodePositiveDecimal() throws ParseException {
+	public void testEncodePositiveDecimal() throws MalformedDataException {
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[20]);
 
 		// Test edge cases
@@ -33,7 +36,7 @@ public class HttpUtilsTest {
 	}
 
 	@Test
-	public void testDecodePositiveInt() throws ParseException {
+	public void testDecodePositiveInt() throws MalformedHttpException {
 		// Test edge cases
 		decodeUnsignedIntTest(Integer.MAX_VALUE);
 		decodeUnsignedIntTest(0);
@@ -43,7 +46,7 @@ public class HttpUtilsTest {
 	}
 
 	@Test
-	public void testDecodePositiveInt2() throws ParseException {
+	public void testDecodePositiveInt2() throws MalformedHttpException {
 		// Test edge cases
 		decodeUnsignedLongTest(Integer.MAX_VALUE);
 		decodeUnsignedLongTest(0);
@@ -63,7 +66,7 @@ public class HttpUtilsTest {
 			bytesRepr = string.getBytes();
 			trimAndDecodePositiveInt(bytesRepr, 0, string.length());
 			fail();
-		} catch (ParseException e) {
+		} catch (MalformedHttpException e) {
 			assertEquals("Bigger than max int value: 92233720368547758081242123", e.getMessage());
 		}
 	}
@@ -77,24 +80,24 @@ public class HttpUtilsTest {
 	}
 
 	// region helpers
-	private void encodePositiveIntTest(ByteBuf buf, int value) throws ParseException {
+	private void encodePositiveIntTest(ByteBuf buf, int value) throws MalformedDataException {
 		buf.rewind();
 		buf.moveTail(encodePositiveInt(buf.array(), buf.head(), value));
 		String stringRepr = decodeUtf8(buf);
 		assertEquals(String.valueOf(value), stringRepr);
 	}
 
-	private void decodeUnsignedIntTest(int value) throws ParseException {
+	private void decodeUnsignedIntTest(int value) throws MalformedHttpException {
 		String string = String.valueOf(value);
 		byte[] bytesRepr = string.getBytes();
 		int decoded = trimAndDecodePositiveInt(bytesRepr, 0, string.length());
 		assertEquals(value, decoded);
 	}
 
-	private void decodeUnsignedLongTest(int value) throws ParseException {
+	private void decodeUnsignedLongTest(int value) throws MalformedHttpException {
 		String string = String.valueOf(value);
 		byte[] bytesRepr = string.getBytes();
-		long decoded = decodePositiveInt(bytesRepr, 0, string.length());
+		long decoded = HttpUtils.decodePositiveInt(bytesRepr, 0, string.length());
 		assertEquals(value, decoded);
 	}
 
@@ -103,7 +106,7 @@ public class HttpUtilsTest {
 			runnable.run();
 			fail();
 		} catch (Throwable e) {
-			assertThat(e, instanceOf(ParseException.class));
+			assertThat(e, instanceOf(MalformedHttpException.class));
 			assertThat(e.getMessage(), containsString("Not a decimal value"));
 		}
 

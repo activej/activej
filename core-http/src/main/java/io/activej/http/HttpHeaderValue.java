@@ -19,7 +19,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
@@ -33,7 +32,7 @@ import static java.util.Arrays.asList;
 public abstract class HttpHeaderValue {
 	abstract int estimateSize();
 
-	abstract void writeTo(@NotNull ByteBuf buf);
+	abstract int writeTo(byte[] array, int offset);
 
 	@Override
 	@NotNull
@@ -94,47 +93,48 @@ public abstract class HttpHeaderValue {
 		return new HttpHeaderValueOfContentType(type);
 	}
 
-	public static int toPositiveInt(@NotNull ByteBuf buf) throws ParseException {
+	public static int toPositiveInt(@NotNull ByteBuf buf) throws MalformedHttpException {
 		return trimAndDecodePositiveInt(buf.array(), buf.head(), buf.readRemaining());
 	}
 
 	@NotNull
-	public static ContentType toContentType(@NotNull ByteBuf buf) throws ParseException {
-		return ContentType.parse(buf.array(), buf.head(), buf.readRemaining());
+	public static ContentType toContentType(@NotNull ByteBuf buf) throws MalformedHttpException {
+		return ContentType.decode(buf.array(), buf.head(), buf.readRemaining());
 	}
 
 	@NotNull
-	public static Instant toInstant(@NotNull ByteBuf buf) throws ParseException {
-		return Instant.ofEpochSecond(HttpDate.parse(buf.array(), buf.head()));
+	public static Instant toInstant(@NotNull ByteBuf buf) throws MalformedHttpException {
+		return Instant.ofEpochSecond(HttpDate.decode(buf.array(), buf.head()));
 	}
 
 	@NotNull
 	public ByteBuf getBuf() {
 		int estimatedSize = estimateSize();
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[estimatedSize]);
-		writeTo(buf);
+		int pos = writeTo(buf.array(), 0);
+		buf.tail(pos);
 		return buf;
 	}
 
 	@FunctionalInterface
-	public interface ParserIntoList<T> {
-		void parse(@NotNull ByteBuf buf, @NotNull List<T> into) throws ParseException;
+	public interface DecoderIntoList<T> {
+		void decode(@NotNull ByteBuf buf, @NotNull List<T> into) throws MalformedHttpException;
 	}
 
-	public static void toAcceptContentTypes(@NotNull ByteBuf buf, @NotNull List<AcceptMediaType> into) throws ParseException {
-		AcceptMediaType.parse(buf.array(), buf.head(), buf.readRemaining(), into);
+	public static void toAcceptContentTypes(@NotNull ByteBuf buf, @NotNull List<AcceptMediaType> into) throws MalformedHttpException {
+		AcceptMediaType.decode(buf.array(), buf.head(), buf.readRemaining(), into);
 	}
 
-	public static void toAcceptCharsets(@NotNull ByteBuf buf, @NotNull List<AcceptCharset> into) throws ParseException {
-		AcceptCharset.parse(buf.array(), buf.head(), buf.readRemaining(), into);
+	public static void toAcceptCharsets(@NotNull ByteBuf buf, @NotNull List<AcceptCharset> into) throws MalformedHttpException {
+		AcceptCharset.decode(buf.array(), buf.head(), buf.readRemaining(), into);
 	}
 
-	static void toSimpleCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws ParseException {
-		HttpCookie.parseSimple(buf.array(), buf.head(), buf.tail(), into);
+	static void toSimpleCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws MalformedHttpException {
+		HttpCookie.decodeSimple(buf.array(), buf.head(), buf.tail(), into);
 	}
 
-	static void toFullCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws ParseException {
-		HttpCookie.parseFull(buf.array(), buf.head(), buf.tail(), into);
+	static void toFullCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws MalformedHttpException {
+		HttpCookie.decodeFull(buf.array(), buf.head(), buf.tail(), into);
 	}
 
 	static final class HttpHeaderValueOfContentType extends HttpHeaderValue {
@@ -151,8 +151,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		public void writeTo(@NotNull ByteBuf buf) {
-			ContentType.render(type, buf);
+		public int writeTo(byte[] array, int offset) {
+			return ContentType.render(type, array, offset);
 		}
 
 		@NotNull
@@ -182,8 +182,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		public void writeTo(@NotNull ByteBuf buf) {
-			AcceptMediaType.render(types, buf);
+		public int writeTo(byte[] array, int offset) {
+			return AcceptMediaType.render(types, array, offset);
 		}
 
 		@NotNull
@@ -215,8 +215,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			HttpCookie.renderSimple(cookies, buf);
+		int writeTo(byte[] array, int offset) {
+			return HttpCookie.renderSimple(cookies, array, offset);
 		}
 
 		@NotNull
@@ -249,8 +249,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			cookie.renderFull(buf);
+		int writeTo(byte[] array, int offset) {
+			return cookie.renderFull(array, offset);
 		}
 
 		@NotNull
@@ -280,8 +280,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			AcceptCharset.render(charsets, buf);
+		int writeTo(byte[] array, int offset) {
+			return AcceptCharset.render(charsets, array, offset);
 		}
 
 		@NotNull
@@ -306,8 +306,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			HttpDate.render(epochSeconds, buf);
+		int writeTo(byte[] array, int offset) {
+			return HttpDate.render(epochSeconds, array, offset);
 		}
 
 		@NotNull
@@ -332,8 +332,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			putPositiveInt(buf, value);
+		int writeTo(byte[] array, int offset) {
+			return offset + encodePositiveInt(array, offset, value);
 		}
 
 		@NotNull
@@ -357,8 +357,8 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			putAscii(buf, string);
+		int writeTo(byte[] array, int offset) {
+			return offset + encodeAscii(array, offset, string);
 		}
 
 		@NotNull
@@ -369,8 +369,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	static final class HttpHeaderValueOfBytes extends HttpHeaderValue {
-		@NotNull
-		private final byte[] array;
+		private final @NotNull byte[] array;
 		private final int offset;
 		private final int size;
 
@@ -386,8 +385,16 @@ public abstract class HttpHeaderValue {
 		}
 
 		@Override
-		void writeTo(@NotNull ByteBuf buf) {
-			buf.put(array, offset, size);
+		int writeTo(byte[] array, int offset) {
+			if (this.array.length < 10) {
+				for (byte b : this.array) {
+					array[offset++] = b;
+				}
+				return offset;
+			} else {
+				System.arraycopy(this.array, this.offset, array, offset, size);
+				return offset + size;
+			}
 		}
 
 		@NotNull

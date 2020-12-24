@@ -18,9 +18,9 @@ package io.activej.dns.protocol;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -36,8 +36,6 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
  * This class allows to use a simple subset of the Domain Name System (or DNS) protocol
  */
 public final class DnsProtocol {
-	public static final ParseException QUESTION_COUNT_NOT_ONE = new ParseException(DnsProtocol.class, "Received DNS response has question count not equal to one");
-
 	private static final int MAX_SIZE = 512;
 
 	private static final byte[] STANDARD_QUERY_HEADER = {
@@ -106,9 +104,9 @@ public final class DnsProtocol {
 	 *
 	 * @param payload byte buffer with response payload
 	 * @return DNS query response parsed from the payload
-	 * @throws ParseException when parsing fails
+	 * @throws MalformedDataException when parsing fails
 	 */
-	public static DnsResponse readDnsResponse(ByteBuf payload) throws ParseException {
+	public static DnsResponse readDnsResponse(ByteBuf payload) throws MalformedDataException {
 		try {
 			short transactionId = payload.readShort();
 			payload.moveHead(1); // skip first flags byte
@@ -122,7 +120,7 @@ public final class DnsProtocol {
 
 			if (questionCount != 1) {
 				// malformed response, we are always sending only one question
-				throw QUESTION_COUNT_NOT_ONE;
+				throw new MalformedDataException("Received DNS response has question count not equal to one");
 			}
 
 			// read domain name from first query
@@ -143,7 +141,7 @@ public final class DnsProtocol {
 			RecordType recordType = RecordType.fromCode(recordTypeCode);
 			if (recordType == null) {
 				// malformed response, we are sending query only with existing RecordType's
-				throw new UnknownFormatException(DnsProtocol.class, "Received DNS response with unknown query record type (" +
+				throw new UnknownFormatException("Received DNS response with unknown query record type (" +
 						Integer.toHexString(recordTypeCode & 0xFFFF) + ")");
 			}
 
@@ -151,7 +149,7 @@ public final class DnsProtocol {
 			short queryClassCode = payload.readShort();
 			QueryClass queryClass = QueryClass.fromCode(queryClassCode);
 			if (queryClass != QueryClass.INTERNET) {
-				throw new UnknownFormatException(DnsProtocol.class, "Received DNS response with unknown query class (" +
+				throw new UnknownFormatException("Received DNS response with unknown query class (" +
 						Integer.toHexString(queryClassCode & 0xFFFF) + ")");
 			}
 
@@ -180,7 +178,7 @@ public final class DnsProtocol {
 						payload.moveHead(b);
 						b = payload.readByte();
 					} else {
-						throw new ParseException("Unsupported compression method");
+						throw new MalformedDataException("Unsupported compression method");
 					}
 				}
 
@@ -194,7 +192,7 @@ public final class DnsProtocol {
 				minTtl = Math.min(payload.readInt(), minTtl);
 				short length = payload.readShort();
 				if (length != recordType.dataLength) {
-					throw new InvalidSizeException(DnsProtocol.class, "Bad record length received. " + recordType +
+					throw new InvalidSizeException("Bad record length received. " + recordType +
 							"-record length should be " + recordType.dataLength + " bytes, it was " + length);
 				}
 				byte[] bytes = new byte[length];
@@ -211,7 +209,7 @@ public final class DnsProtocol {
 			}
 			return DnsResponse.of(transaction, DnsResourceRecord.of(ips.toArray(new InetAddress[0]), minTtl));
 		} catch (IndexOutOfBoundsException e) {
-			throw new ParseException(DnsProtocol.class, "Failed parsing DNS response", e);
+			throw new MalformedDataException("Failed parsing DNS response", e);
 		}
 	}
 

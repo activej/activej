@@ -35,6 +35,8 @@ import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.attributes.AttributeResolver;
+import io.activej.cube.exception.CubeException;
+import io.activej.cube.exception.QueryException;
 import io.activej.cube.function.MeasuresFunction;
 import io.activej.cube.function.RecordFunction;
 import io.activej.cube.function.TotalsFunction;
@@ -51,6 +53,7 @@ import io.activej.datastream.processor.StreamSplitter;
 import io.activej.etl.LogDataConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -65,7 +68,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
@@ -770,12 +772,17 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			Aggregation aggregation = entry.getValue().aggregation;
 
 			runnables.add(() -> strategy.apply(aggregation)
-					.whenResult(aggregationDiff -> {
-						if (!aggregationDiff.isEmpty()) {
-							map.put(aggregationId, aggregationDiff);
+					.thenEx((aggregationDiff, e) -> {
+						if (e == null) {
+							if (!aggregationDiff.isEmpty()) {
+								map.put(aggregationId, aggregationDiff);
+							}
+							return Promise.complete();
+						} else {
+							return Promise.ofException(new CubeException(
+									"Failed to consolidate aggregation '" + aggregationId + '\'', e));
 						}
-					})
-					.toVoid());
+					}));
 		}
 
 		return Promises.sequence(runnables).map($ -> CubeDiff.of(map));
@@ -829,8 +836,8 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 						queryErrors++;
 						queryLastError = e;
 
-						if (e instanceof NoSuchFileException) {
-							logger.warn("Query failed because of NoSuchFileException. " + cubeQuery.toString(), e);
+						if (e instanceof FileNotFoundException) {
+							logger.warn("Query failed because of FileNotFoundException. " + cubeQuery.toString(), e);
 						}
 					}
 				});

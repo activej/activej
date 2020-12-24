@@ -47,7 +47,7 @@ This repository contains the [ActiveJ](https://activej.io) platform components a
 * [ActiveSerializer](https://serializer.activej.io) - `core-serializer` module;
 * [ActiveCodegen](https://codegen.activej.io) - `core-codegen` module;
 * [ActiveSpecializer](https://specializer.activej.io) - `core-specializer` module;
-* [ActiveRPC](https://rpc.activej.io) - `cloud-rpc` module;
-* [ActiveFS](https://fs.activej.io) - `cloud-fs` module.
+* [ActiveJ RPC](https://rpc.activej.io) - `cloud-rpc` module;
+* [ActiveJ FS](https://fs.activej.io) - `cloud-fs` module.
 
 Examples for usage of the ActiveJ platform and all the ActiveJ libraries can be found in [`examples`](https://github.com/activej/activej/tree/master/examples) module.

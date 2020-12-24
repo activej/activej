@@ -31,7 +31,7 @@ public final class PingPongSocketConnection {
 				socket -> {
 					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
 					repeat(() ->
-							bufsSupplier.parse(DECODER)
+							bufsSupplier.decode(DECODER)
 									.whenResult(x -> System.out.println(x))
 									.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
 									.map($ -> true))
@@ -48,7 +48,7 @@ public final class PingPongSocketConnection {
 					loop(0,
 							i -> i < ITERATIONS,
 							i -> socket.write(wrapAscii(REQUEST_MSG))
-									.then(() -> bufsSupplier.parse(DECODER)
+									.then(() -> bufsSupplier.decode(DECODER)
 											.whenResult(x -> System.out.println(x))
 											.map($2 -> i + 1)))
 							.whenComplete(socket::close);

@@ -1,7 +1,7 @@
 package io.activej.datastream;
 
-import io.activej.common.exception.ExpectedException;
 import io.activej.promise.Promise;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.After;
 import org.junit.Before;

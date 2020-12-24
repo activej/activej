@@ -16,7 +16,7 @@
 
 package io.activej.cube;
 
-import io.activej.aggregation.QueryException;
+import io.activej.cube.exception.QueryException;
 import io.activej.promise.Promise;
 
 import java.lang.reflect.Type;

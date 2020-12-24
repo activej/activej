@@ -4,18 +4,20 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.MemSize;
 import io.activej.common.collection.CollectionUtils;
-import io.activej.common.exception.ExpectedException;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.exception.scalar.FileNotFoundException;
-import io.activej.fs.exception.scalar.IllegalOffsetException;
-import io.activej.fs.exception.scalar.IsADirectoryException;
-import io.activej.fs.exception.scalar.MalformedGlobException;
+import io.activej.fs.exception.FileNotFoundException;
+import io.activej.fs.exception.IllegalOffsetException;
+import io.activej.fs.exception.IsADirectoryException;
+import io.activej.fs.exception.MalformedGlobException;
 import io.activej.promise.Promises;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -38,8 +40,6 @@ import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.createEmptyDirectories;
 import static io.activej.fs.Utils.initTempDir;
-import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_DATA;
-import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -47,6 +47,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.stream.Collectors.toSet;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
@@ -186,7 +187,7 @@ public final class TestLocalActiveFs {
 
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
 
-		assertSame(UNEXPECTED_END_OF_STREAM, exception);
+		assertThat(exception, instanceOf(TruncatedDataException.class));
 
 		assertFalse(Files.exists(path));
 	}
@@ -201,7 +202,7 @@ public final class TestLocalActiveFs {
 
 		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
 
-		assertSame(UNEXPECTED_DATA, exception);
+		assertThat(exception, instanceOf(UnexpectedDataException.class));
 
 		assertFalse(Files.exists(path));
 	}

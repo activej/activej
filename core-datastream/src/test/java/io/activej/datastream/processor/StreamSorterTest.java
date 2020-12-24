@@ -1,7 +1,6 @@
 package io.activej.datastream.processor;
 
 import io.activej.common.MemSize;
-import io.activej.common.exception.ExpectedException;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.FrameFormats;
 import io.activej.datastream.StreamConsumer;
@@ -9,6 +8,7 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.test.ExpectedException;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;

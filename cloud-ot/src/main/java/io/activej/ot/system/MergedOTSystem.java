@@ -18,7 +18,7 @@ package io.activej.ot.system;
 
 import io.activej.common.tuple.*;
 import io.activej.ot.TransformResult;
-import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.exception.TransformException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -118,7 +118,7 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 
 	@Override
 	public TransformResult<D> transform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws
-			OTTransformException {
+			TransformException {
 		List<D1> leftDiffs1 = collect(leftDiffs, getter1);
 		List<D2> leftDiffs2 = collect(leftDiffs, getter2);
 		List<D1> rightDiffs1 = collect(rightDiffs, getter1);

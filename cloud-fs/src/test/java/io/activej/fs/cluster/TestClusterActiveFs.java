@@ -46,6 +46,7 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public final class TestClusterActiveFs {

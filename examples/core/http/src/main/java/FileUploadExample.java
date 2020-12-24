@@ -1,7 +1,7 @@
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.http.MultipartParser.MultipartDataHandler;
+import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StaticServlet;
 import io.activej.inject.Injector;

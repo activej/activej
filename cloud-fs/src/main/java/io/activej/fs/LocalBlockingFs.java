@@ -22,7 +22,7 @@ import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.service.BlockingService;
 import io.activej.common.time.CurrentTimeProvider;
-import io.activej.fs.exception.scalar.ForbiddenPathException;
+import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.util.ForwardingOutputStream;
 import io.activej.fs.util.LimitedInputStream;
 import io.activej.fs.util.UploadOutputStream;

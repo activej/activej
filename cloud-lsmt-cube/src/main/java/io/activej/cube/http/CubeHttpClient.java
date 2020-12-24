@@ -20,11 +20,15 @@ import io.activej.aggregation.AggregationPredicate;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.registry.CodecFactory;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;
-import io.activej.http.*;
+import io.activej.cube.exception.CubeException;
+import io.activej.http.AsyncHttpClient;
+import io.activej.http.HttpRequest;
+import io.activej.http.HttpUtils;
+import io.activej.http.IAsyncHttpClient;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +38,7 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static io.activej.aggregation.util.Utils.wrapException;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJson;
@@ -109,17 +114,19 @@ public final class CubeHttpClient implements ICube {
 	@Override
 	public Promise<QueryResult> query(CubeQuery query) {
 		return httpClient.request(buildRequest(query))
+				.thenEx(wrapException(e -> new CubeException("HTTP request failed", e)))
 				.then(response -> response.loadBody()
+						.thenEx(wrapException(e -> new CubeException("HTTP request failed", e)))
 						.then(body -> {
 							try {
 								String httpResponse = body.getString(UTF_8);
 								if (response.getCode() != 200) {
-									return Promise.ofException(HttpException.ofCode(400, "Cube HTTP query failed. Response code: " + response.getCode() + " Body: " + httpResponse));
+									return Promise.ofException(new CubeException("Cube HTTP query failed. Response code: " + response.getCode() + " Body: " + httpResponse));
 								}
 								QueryResult result = fromJson(getQueryResultCodec(), httpResponse);
 								return Promise.of(result);
-							} catch (ParseException e) {
-								return Promise.ofException(HttpException.ofCode(400, "Cube HTTP query failed. Invalid data received", e));
+							} catch (MalformedDataException e) {
+								return Promise.ofException(new CubeException("Cube HTTP query failed. Invalid data received", e));
 							}
 						})
 						.whenComplete(toLogger(logger, "query", query)));

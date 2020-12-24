@@ -4,6 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.MemSize;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -20,14 +21,14 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_DATA_EXCEPTION;
 import static io.activej.csp.process.frames.FrameFormats.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assume.assumeFalse;
 
 @RunWith(Parameterized.class)
@@ -160,7 +161,7 @@ public class FrameFormatTest {
 				.transformWith(decompressor)
 				.streamTo(ChannelConsumer.ofConsumer(ByteBuf::recycle)));
 
-		assertSame(UNEXPECTED_DATA_EXCEPTION, e);
+		assertThat(e, instanceOf(UnexpectedDataException.class));
 	}
 
 	@Test

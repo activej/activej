@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.Checks;
+import io.activej.common.exception.CloseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -168,7 +169,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	private Promise<Void> doAccept(@Nullable ByteBuf buf) {
 		if (closeSentPromise.isComplete()) {
 			if (buf != null) buf.recycle();
-			return Promise.ofException(CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		if (pendingPromise == null) {
 			return pendingPromise = output.accept(buf);

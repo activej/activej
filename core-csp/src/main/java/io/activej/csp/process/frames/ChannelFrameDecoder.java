@@ -18,7 +18,8 @@ package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -29,13 +30,10 @@ import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {
-	private static final MissingEndOfStreamBlockException MISSING_END_OF_STREAM_BLOCK_EXCEPTION = new MissingEndOfStreamBlockException(ChannelFrameDecoder.class);
-	private static final TruncatedBlockException TRUNCATED_BLOCK_EXCEPTION = new TruncatedBlockException(ChannelFrameDecoder.class);
 
 	@NotNull
 	private final BlockDecoder decoder;
@@ -88,18 +86,18 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 
 	@Override
 	protected void doProcess() {
-		parse()
+		decode()
 				.whenComplete((result, e) -> {
-					if (e == UNEXPECTED_END_OF_STREAM_EXCEPTION) {
+					if (e instanceof TruncatedDataException) {
 						if (bufs.isEmpty()) {
 							if (decoder.ignoreMissingEndOfStreamBlock()) {
 								output.acceptEndOfStream()
 										.whenResult(this::completeProcess);
 							} else {
-								closeEx(MISSING_END_OF_STREAM_BLOCK_EXCEPTION);
+								closeEx(new MissingEndOfStreamBlockException(e));
 							}
 						} else {
-							closeEx(TRUNCATED_BLOCK_EXCEPTION);
+							closeEx(new TruncatedBlockException(e));
 						}
 					} else {
 						sanitize(result, e)
@@ -119,7 +117,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	}
 
 	@NotNull
-	private Promise<ByteBuf> parse() {
+	private Promise<ByteBuf> decode() {
 		while (true) {
 			if (!bufs.isEmpty()) {
 				try {
@@ -128,7 +126,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 						if (decoderResets) decoder.reset();
 						return Promise.of(result);
 					}
-				} catch (ParseException e) {
+				} catch (MalformedDataException e) {
 					closeEx(e);
 					return Promise.ofException(e);
 				}
@@ -136,7 +134,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 			Promise<Void> moreDataPromise = input.needMoreData();
 			if (moreDataPromise.isResult()) continue;
 			return moreDataPromise
-					.then(this::parse);
+					.then(this::decode);
 		}
 	}
 

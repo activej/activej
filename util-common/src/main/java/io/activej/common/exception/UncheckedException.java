@@ -16,16 +16,19 @@
 
 package io.activej.common.exception;
 
+import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.NotNull;
 
 public final class UncheckedException extends RuntimeException {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(UncheckedException.class, "withStackTrace", false);
+
 	public UncheckedException(@NotNull Throwable cause) {
 		super(cause);
 	}
 
 	@Override
 	public Throwable fillInStackTrace() {
-		return this;
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 
 	@SuppressWarnings("unchecked")

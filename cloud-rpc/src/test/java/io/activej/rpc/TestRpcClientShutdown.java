@@ -1,5 +1,6 @@
 package io.activej.rpc;
 
+import io.activej.common.exception.CloseException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -20,11 +21,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.rpc.client.RpcClientConnection.CONNECTION_CLOSED;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertSame;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 
 public final class TestRpcClientShutdown {
 	@ClassRule
@@ -75,7 +76,7 @@ public final class TestRpcClientShutdown {
 				.whenComplete(rpcServer::close)
 		);
 
-		assertSame(CONNECTION_CLOSED, exception);
+		assertThat(exception, instanceOf(CloseException.class));
 	}
 
 	public static final class Request {

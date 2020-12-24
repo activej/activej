@@ -17,14 +17,11 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
 
-import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
-import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
+import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.http.HttpUtils.*;
 
 final class HttpDate {
-	public static final ParseException FAILED_TO_PARSE_DATE = new ParseException(HttpDate.class, "Failed to parse date");
 	private static final int HOUR_SECONDS = 60 * 60;
 	private static final int DAY_SECONDS = 24 * HOUR_SECONDS;
 	private static final int YEAR_SECONDS = 365 * DAY_SECONDS;
@@ -64,7 +61,7 @@ final class HttpDate {
 		MONTHS_IN_YEAR[11] = encodeAscii("Dec");
 	}
 
-	static long parse(byte[] bytes, int start) throws ParseException {
+	static long decode(byte[] bytes, int start) throws MalformedHttpException {
 		try {
 			int day = trimAndDecodePositiveInt(bytes, start + 5, 2);
 
@@ -114,7 +111,7 @@ final class HttpDate {
 
 			return timestamp;
 		} catch (RuntimeException ignored) {
-			throw FAILED_TO_PARSE_DATE;
+			throw new MalformedHttpException("Failed to decode date");
 		}
 	}
 
@@ -163,47 +160,51 @@ final class HttpDate {
 		int dayOfWeek = (int) ((epochSeconds / (24 * 60 * 60) + 4) % 7) + 1;
 
 		byte[] stringDay = DAYS_OF_WEEK[dayOfWeek - 1];
-		System.arraycopy(stringDay, 0, bytes, pos, stringDay.length);
-		pos += stringDay.length;
-		bytes[pos++] = ',';
-		bytes[pos++] = ' ';
+		for (byte b : stringDay) {
+			bytes[pos++] = b;
+		}
+		bytes[pos++] = COMMA;
+		bytes[pos++] = SP;
 
 		if (day < 9) {
-			bytes[pos++] = '0';
+			bytes[pos++] = ZERO;
 		}
 		day += 1;
 		pos += encodePositiveInt(bytes, pos, day);
-		bytes[pos++] = ' ';
+		bytes[pos++] = SP;
 
 		byte[] stringMonth = MONTHS_IN_YEAR[month];
-		System.arraycopy(stringMonth, 0, bytes, pos, stringMonth.length);
-		pos += stringMonth.length;
-		bytes[pos++] = ' ';
+		for (byte b : stringMonth) {
+			bytes[pos++] = b;
+		}
+		bytes[pos++] = SP;
 
 		pos += encodePositiveInt(bytes, pos, year);
-		bytes[pos++] = ' ';
+		bytes[pos++] = SP;
 
 		if (hours < 10) {
-			bytes[pos++] = '0';
+			bytes[pos++] = ZERO;
 		}
 		pos += encodePositiveInt(bytes, pos, hours);
-		bytes[pos++] = ':';
+		bytes[pos++] = COLON;
 
 		if (minutes < 10) {
-			bytes[pos++] = '0';
+			bytes[pos++] = ZERO;
 		}
 		pos += encodePositiveInt(bytes, pos, minutes);
-		bytes[pos++] = ':';
+		bytes[pos++] = COLON;
 
 		if (seconds < 10) {
-			bytes[pos++] = '0';
+			bytes[pos++] = ZERO;
 		}
 		pos += encodePositiveInt(bytes, pos, seconds);
-		bytes[pos++] = ' ';
+		bytes[pos++] = SP;
 
-		System.arraycopy(GMT, 0, bytes, pos, GMT.length);
+		for (byte b : GMT) {
+			bytes[pos++] = b;
+		}
 
-		return pos + 3;
+		return pos;
 	}
 
 	private static boolean isLeap(int year) {

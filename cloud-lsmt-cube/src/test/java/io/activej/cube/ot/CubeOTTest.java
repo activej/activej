@@ -10,7 +10,7 @@ import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
-import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
@@ -25,7 +25,9 @@ import static io.activej.aggregation.PrimaryKey.ofArray;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class CubeOTTest {
 	private OTSystem<LogDiff<CubeDiff>> logSystem;
@@ -61,7 +63,7 @@ public class CubeOTTest {
 	}
 
 	@Test
-	public void test() throws OTTransformException {
+	public void test() throws TransformException {
 		LogFile logFile = new LogFile("file", 1);
 		List<String> fields = asList("field1", "field2");
 		LogDiff<CubeDiff> changesLeft = LogDiff.of(

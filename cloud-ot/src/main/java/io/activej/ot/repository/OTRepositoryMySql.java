@@ -19,12 +19,12 @@ package io.activej.ot.repository;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.json.JsonUtils;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.ot.OTCommit;
-import io.activej.ot.exceptions.OTNoCommitException;
+import io.activej.ot.exception.NoCommitException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
@@ -171,7 +171,7 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 		return JsonUtils.toJson(diffsCodec, diffs);
 	}
 
-	private List<D> fromJson(String json) throws ParseException {
+	private List<D> fromJson(String json) throws MalformedDataException {
 		return JsonUtils.fromJson(diffsCodec, json);
 	}
 
@@ -329,7 +329,7 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 						}
 
 						if (timestamp == 0) {
-							throw new OTNoCommitException(revisionId);
+							throw new NoCommitException(revisionId);
 						}
 
 						return OTCommit.of(epoch, revisionId, parentDiffs)

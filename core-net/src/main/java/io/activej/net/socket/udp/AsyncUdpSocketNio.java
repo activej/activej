@@ -16,11 +16,11 @@
 
 package io.activej.net.socket.udp;
 
-import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
+import io.activej.common.exception.CloseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.recycle.Recyclers;
@@ -49,8 +49,8 @@ import static io.activej.common.Checks.checkState;
 public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventHandler {
 	private static final boolean CHECK = Checks.isEnabled(AsyncUdpSocketNio.class);
 
+	private static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
 	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
-	public static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
 
 	private final Eventloop eventloop;
 
@@ -195,7 +195,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	public Promise<UdpPacket> receive() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (!isOpen()) {
-			return Promise.ofException(AsyncCloseable.CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		UdpPacket polled = readBuffer.poll();
 		if (polled != null) {
@@ -248,7 +248,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	public Promise<Void> send(UdpPacket packet) {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (!isOpen()) {
-			return Promise.ofException(AsyncCloseable.CLOSE_EXCEPTION);
+			return Promise.ofException(new CloseException());
 		}
 		return Promise.ofCallback(cb -> {
 			writeQueue.add(new Tuple2<>(packet, cb));

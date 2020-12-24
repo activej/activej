@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.exception.AsyncTimeoutException;
 import org.jetbrains.annotations.Nullable;
 
 final class ConnectionsLinkedList {
@@ -64,7 +65,7 @@ final class ConnectionsLinkedList {
 		return closeExpiredConnections(expiration, null);
 	}
 
-	public int closeExpiredConnections(long expiration, @Nullable Exception e) {
+	public int closeExpiredConnections(long expiration, @Nullable AsyncTimeoutException e) {
 		int count = 0;
 		AbstractHttpConnection connection = first;
 		while (connection != null) {

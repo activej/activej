@@ -16,20 +16,22 @@
 
 package io.activej.dns.protocol;
 
-import io.activej.common.exception.StacklessException;
+import io.activej.common.ApplicationSettings;
 
 /**
  * Represents a failed DNS query response as a exception.
  */
-public final class DnsQueryException extends StacklessException {
+public final class DnsQueryException extends Exception {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(DnsQueryException.class, "withStackTrace", false);
+
 	private final DnsQuery query;
 	private final DnsResponse result;
 
 	/**
 	 * Creates a new instance of DnsQueryException
 	 */
-	public DnsQueryException(Class<?> component, DnsResponse response) {
-		super(component, response.getTransaction().getQuery() + " failed with error code: " + response.getErrorCode().name());
+	public DnsQueryException(DnsResponse response) {
+		super(response.getTransaction().getQuery() + " failed with error code: " + response.getErrorCode().name());
 		this.query = response.getTransaction().getQuery();
 		this.result = response;
 	}
@@ -40,5 +42,10 @@ public final class DnsQueryException extends StacklessException {
 
 	public DnsResponse getResult() {
 		return result;
+	}
+
+	@Override
+	public Throwable fillInStackTrace() {
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

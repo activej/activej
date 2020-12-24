@@ -18,7 +18,7 @@ package io.activej.uikernel;
 
 import com.google.gson.Gson;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 
@@ -55,8 +55,8 @@ public class UiKernelServlets {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
 				return model.read(settings).map(response ->
 						createResponse(response.toJson(gson, model.getRecordType(), model.getIdType())));
-			} catch (ParseException e) {
-				return Promise.ofException(HttpException.ofCode(400, e));
+			} catch (MalformedDataException | MalformedHttpException e) {
+				return Promise.ofException(HttpError.ofCode(400, e));
 
 			}
 		};
@@ -69,8 +69,8 @@ public class UiKernelServlets {
 				K id = fromJson(gson, request.getPathParameter(ID_PARAMETER_NAME), model.getIdType());
 				return model.read(id, settings).map(obj ->
 						createResponse(gson.toJson(obj, model.getRecordType())));
-			} catch (ParseException e) {
-				return Promise.ofException(HttpException.ofCode(400, e));
+			} catch (MalformedDataException | MalformedHttpException e) {
+				return Promise.ofException(HttpError.ofCode(400, e));
 			}
 		};
 	}
@@ -83,8 +83,8 @@ public class UiKernelServlets {
 						R obj = fromJson(gson, json, model.getRecordType());
 						return model.create(obj).map(response ->
 								createResponse(response.toJson(gson, model.getIdType())));
-					} catch (ParseException e) {
-						return Promise.ofException(HttpException.ofCode(400, e));
+					} catch (MalformedDataException e) {
+						return Promise.ofException(HttpError.ofCode(400, e));
 					}
 				});
 	}
@@ -97,8 +97,8 @@ public class UiKernelServlets {
 						List<R> list = deserializeUpdateRequest(gson, json, model.getRecordType(), model.getIdType());
 						return model.update(list).map(result ->
 								createResponse(result.toJson(gson, model.getRecordType(), model.getIdType())));
-					} catch (ParseException e) {
-						return Promise.ofException(HttpException.ofCode(400, e));
+					} catch (MalformedDataException e) {
+						return Promise.ofException(HttpError.ofCode(400, e));
 					}
 				});
 	}
@@ -116,8 +116,8 @@ public class UiKernelServlets {
 					}
 					return res;
 				});
-			} catch (ParseException e) {
-				return Promise.ofException(HttpException.ofCode(400, e));
+			} catch (MalformedDataException e) {
+				return Promise.ofException(HttpError.ofCode(400, e));
 			}
 		};
 	}

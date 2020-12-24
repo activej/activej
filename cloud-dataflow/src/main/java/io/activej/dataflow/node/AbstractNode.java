@@ -1,5 +1,6 @@
 package io.activej.dataflow.node;
 
+import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.stats.NodeStat;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,6 +21,9 @@ public abstract class AbstractNode implements Node {
 
 	@Override
 	public void finish(@Nullable Throwable e) {
+		if (e != null && !(e instanceof DataflowException)){
+			e = new DataflowException(e);
+		}
 		error = e;
 		finished = Instant.now();
 	}

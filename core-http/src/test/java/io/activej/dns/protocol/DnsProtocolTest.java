@@ -1,7 +1,7 @@
 package io.activej.dns.protocol;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -21,13 +21,13 @@ public class DnsProtocolTest {
 	private static final byte[] SUFFIX = new byte[]{0, 1, 0, 1, 0, 0, 1, 13, 0, 4, -84, -39, 16, 36};
 
 	@Test
-	public void testMessageCompressedWithAPointer() throws ParseException {
+	public void testMessageCompressedWithAPointer() throws MalformedDataException {
 		ByteBuf pointer = ByteBuf.wrapForReading(new byte[]{(byte) 0b11000000, 12});
 		doTestCompression(pointer);
 	}
 
 	@Test
-	public void testMessageCompressedWithASequenceOfLabelsAndZeroOctet() throws ParseException {
+	public void testMessageCompressedWithASequenceOfLabelsAndZeroOctet() throws MalformedDataException {
 		ByteBuf labels = ByteBuf.wrapForReading(new byte[]{
 				3, 'w', 'w', 'w',
 				4, 't', 'e', 's', 't',
@@ -38,7 +38,7 @@ public class DnsProtocolTest {
 	}
 
 	@Test
-	public void testMessageCompressedWithASequenceOfLabelsAndAPointer() throws ParseException {
+	public void testMessageCompressedWithASequenceOfLabelsAndAPointer() throws MalformedDataException {
 		ByteBuf labels = ByteBuf.wrapForReading(new byte[]{
 				3, 'w', 'w', 'w',
 				4, 't', 'e', 's', 't',
@@ -48,7 +48,7 @@ public class DnsProtocolTest {
 		doTestCompression(append(labels, pointer));
 	}
 
-	private void doTestCompression(ByteBuf compressedPart) throws ParseException {
+	private void doTestCompression(ByteBuf compressedPart) throws MalformedDataException {
 		ByteBuf prefixBuf = ByteBuf.wrapForReading(PREFIX);
 		ByteBuf suffixBuf = ByteBuf.wrapForReading(SUFFIX);
 		ByteBuf payload = append(append(prefixBuf, compressedPart), suffixBuf);

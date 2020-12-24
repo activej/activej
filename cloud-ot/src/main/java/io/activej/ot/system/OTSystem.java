@@ -17,7 +17,7 @@
 package io.activej.ot.system;
 
 import io.activej.ot.TransformResult;
-import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.exception.TransformException;
 
 import java.util.List;
 
@@ -25,9 +25,9 @@ import static java.util.Collections.singletonList;
 
 public interface OTSystem<D> {
 
-	TransformResult<D> transform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws OTTransformException;
+	TransformResult<D> transform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws TransformException;
 
-	default TransformResult<D> transform(D leftDiff, D rightDiff) throws OTTransformException {
+	default TransformResult<D> transform(D leftDiff, D rightDiff) throws TransformException {
 		return transform(singletonList(leftDiff), singletonList(rightDiff));
 	}
 

@@ -17,8 +17,8 @@
 package io.activej.fs;
 
 import io.activej.common.time.CurrentTimeProvider;
+import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.GlobException;
-import io.activej.fs.exception.scalar.ForbiddenPathException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public final class LocalFileUtils {
 	static Path resolve(Path storage, Path tempDir, String name) throws ForbiddenPathException {
 		Path path = storage.resolve(name).normalize();
 		if (!path.startsWith(storage) || path.startsWith(tempDir)) {
-			throw new ForbiddenPathException(LocalActiveFs.class, "Path '" + name + "' is forbidden");
+			throw new ForbiddenPathException("Path '" + name + "' is forbidden");
 		}
 		return path;
 	}

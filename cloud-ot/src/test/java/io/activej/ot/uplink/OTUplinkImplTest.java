@@ -1,7 +1,7 @@
 package io.activej.ot.uplink;
 
-import io.activej.common.exception.StacklessException;
 import io.activej.ot.OTCommit;
+import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.uplink.OTUplink.FetchData;
 import io.activej.ot.utils.OTGraphBuilder;
 import io.activej.ot.utils.OTRepositoryStub;
@@ -22,10 +22,9 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 public class OTUplinkImplTest {
 	private static final TestOpState state = new TestOpState();
@@ -159,8 +158,7 @@ public class OTUplinkImplTest {
 	@Test
 	public void testFetchInvalidRevision() {
 		Throwable exception = awaitException(node.fetch(100));
-		assertThat(exception, instanceOf(StacklessException.class));
-		assertThat(exception.getMessage(), containsString("Graph exhausted"));
+		assertThat(exception, instanceOf(GraphExhaustedException.class));
 	}
 
 	@Test

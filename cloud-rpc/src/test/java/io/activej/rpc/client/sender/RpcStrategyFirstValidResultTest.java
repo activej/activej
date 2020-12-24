@@ -1,11 +1,11 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.exception.StacklessException;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcStrategyFirstValidResult.ResultValidator;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import io.activej.test.ExpectedException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -29,6 +29,8 @@ public class RpcStrategyFirstValidResultTest {
 	private static final InetSocketAddress ADDRESS_1 = new InetSocketAddress(HOST, getFreePort());
 	private static final InetSocketAddress ADDRESS_2 = new InetSocketAddress(HOST, getFreePort());
 	private static final InetSocketAddress ADDRESS_3 = new InetSocketAddress(HOST, getFreePort());
+
+	private static final Exception NO_VALID_RESULT_EXCEPTION = new ExpectedException("No valid result");
 
 	@Test
 	public void itShouldSendRequestToAllAvailableSenders() {
@@ -76,14 +78,14 @@ public class RpcStrategyFirstValidResultTest {
 		assertNull(future.get());
 	}
 
-	@Test(expected = StacklessException.class)
+	@Test(expected = ExpectedException.class)
 	public void itShouldCallOnExceptionIfAllSendersReturnsNullAndValidatorIsDefaultButExceptionIsSpecified() throws Throwable {
 		// default validator should check whether result is not null
 		RpcStrategy strategy1 = new RequestSenderOnResultWithNullStrategy();
 		RpcStrategy strategy2 = new RequestSenderOnResultWithNullStrategy();
 		RpcStrategy strategy3 = new RequestSenderOnResultWithNullStrategy();
 		RpcStrategyFirstValidResult firstValidResult = firstValidResult(strategy1, strategy2, strategy3)
-				.withNoValidResultException(new StacklessException());
+				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 
 		CompletableFuture<Object> future = new CompletableFuture<>();
@@ -105,7 +107,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy3 = new RequestSenderOnResultWithValueStrategy(invalidKey);
 		RpcStrategyFirstValidResult firstValidResult = firstValidResult(strategy1, strategy2, strategy3)
 				.withResultValidator((ResultValidator<Integer>) input -> input == validKey)
-				.withNoValidResultException(new StacklessException());
+				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 		CompletableFuture<Object> future = new CompletableFuture<>();
 
@@ -123,7 +125,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy3 = new RequestSenderOnResultWithValueStrategy(invalidKey);
 		RpcStrategyFirstValidResult firstValidResult = firstValidResult(strategy1, strategy2, strategy3)
 				.withResultValidator((ResultValidator<Integer>) input -> input == validKey)
-				.withNoValidResultException(new StacklessException());
+				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 		CompletableFuture<Object> future = new CompletableFuture<>();
 		sender.sendRequest(new Object(), 50, forFuture(future));

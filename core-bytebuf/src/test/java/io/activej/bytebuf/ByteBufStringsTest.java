@@ -1,6 +1,6 @@
 package io.activej.bytebuf;
 
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -20,7 +20,7 @@ public class ByteBufStringsTest {
 	private static final Random RANDOM = new Random();
 
 	@Test
-	public void testEncodeLong() throws ParseException {
+	public void testEncodeLong() throws MalformedDataException {
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[20]);
 
 		// Test edge cases
@@ -36,7 +36,7 @@ public class ByteBufStringsTest {
 	}
 
 	@Test
-	public void testDecodeInt() throws ParseException {
+	public void testDecodeInt() throws MalformedDataException {
 		// Test edge cases
 		decodeIntTest(Integer.MAX_VALUE);
 		decodeIntTest(Integer.MIN_VALUE);
@@ -46,7 +46,7 @@ public class ByteBufStringsTest {
 	}
 
 	@Test
-	public void testDecodeLong() throws ParseException {
+	public void testDecodeLong() throws MalformedDataException {
 		// Test edge cases
 		decodeLongTest(Long.MAX_VALUE);
 		decodeLongTest(Long.MIN_VALUE);
@@ -66,13 +66,13 @@ public class ByteBufStringsTest {
 			bytesRepr = string.getBytes();
 			ByteBufStrings.decodeLong(bytesRepr, 0, string.length());
 			fail();
-		} catch (ParseException e) {
+		} catch (MalformedDataException e) {
 			assertEquals("Bigger than max long value: 92233720368547758081242123", e.getMessage());
 		}
 	}
 
 	@Test
-	public void testWrapLong() throws ParseException {
+	public void testWrapLong() throws MalformedDataException {
 		// Test edge cases
 		ByteBuf byteBuf = ByteBufStrings.wrapLong(Long.MAX_VALUE);
 		assertEquals(String.valueOf(Long.MAX_VALUE), ByteBufStrings.decodeUtf8(byteBuf));
@@ -86,21 +86,21 @@ public class ByteBufStringsTest {
 	}
 
 	// region helpers
-	private void encodeLongTest(ByteBuf buf, long value) throws ParseException {
+	private void encodeLongTest(ByteBuf buf, long value) throws MalformedDataException {
 		buf.rewind();
 		buf.moveTail(encodeLong(buf.array, buf.head(), value));
 		String stringRepr = decodeUtf8(buf);
 		assertEquals(String.valueOf(value), stringRepr);
 	}
 
-	private void decodeIntTest(int value) throws ParseException {
+	private void decodeIntTest(int value) throws MalformedDataException {
 		String string = String.valueOf(value);
 		byte[] bytesRepr = string.getBytes();
 		int decoded = ByteBufStrings.decodeInt(bytesRepr, 0, string.length());
 		assertEquals(value, decoded);
 	}
 
-	private void decodeLongTest(long value) throws ParseException {
+	private void decodeLongTest(long value) throws MalformedDataException {
 		String string = String.valueOf(value);
 		byte[] bytesRepr = string.getBytes();
 		long decoded = ByteBufStrings.decodeLong(bytesRepr, 0, string.length());

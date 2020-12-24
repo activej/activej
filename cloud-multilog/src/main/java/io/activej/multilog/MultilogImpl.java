@@ -18,8 +18,8 @@ package io.activej.multilog;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.TruncatedDataException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.Stopwatch;
 import io.activej.csp.ChannelSupplier;
@@ -37,7 +37,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.exception.scalar.IllegalOffsetException;
+import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.serializer.BinarySerializer;
@@ -50,6 +50,8 @@ import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
@@ -115,7 +117,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 	public Promise<StreamConsumer<T>> write(@NotNull String logPartition) {
 		validateLogPartition(logPartition);
 
-		return Promise.of(StreamConsumer.ofSupplier(
+		return Promise.of(StreamConsumer.<T>ofSupplier(
 				supplier -> supplier
 						.transformWith(ChannelSerializer.create(serializer)
 								.withAutoFlushInterval(autoFlushInterval)
@@ -126,7 +128,9 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 						.bindTo(new LogStreamChunker(eventloop, fs, namingScheme, logPartition,
 								consumer -> consumer.transformWith(
 										ChannelFrameEncoder.create(frameFormat)
-												.withEncoderResets())))));
+												.withEncoderResets()))))
+				.withAcknowledgement(ack -> ack
+						.thenEx(wrapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e)))));
 	}
 
 	@Override
@@ -162,7 +166,8 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 							)
 							.sorted()
 							.collect(toList()), lastFileRef.get());
-				});
+				})
+				.thenEx(wrapException(e -> new MultilogException("Failed to read logs from partition '" + logPartition + '\'', e)));
 	}
 
 	private StreamSupplierWithResult<T, LogPosition> readLogFiles(@NotNull String logPartition, @NotNull LogPosition startPosition, @NotNull List<LogPosition> logFiles, boolean lastFile) {
@@ -229,7 +234,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 																	return Promise.complete();
 																}
 
-																if (ignoreMalformedLogs && e instanceof ParseException) {
+																if (ignoreMalformedLogs && e instanceof MalformedDataException) {
 																	if (logger.isWarnEnabled()) {
 																		logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
 																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
@@ -271,4 +276,10 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 		return eventloop;
 	}
 
+
+	private static <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> wrapException(Function<Throwable, Throwable> wrapFn) {
+		return (v, e) -> e == null ?
+				Promise.of(v) :
+				Promise.ofException(wrapFn.apply(e));
+	}
 }

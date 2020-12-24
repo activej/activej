@@ -16,6 +16,8 @@
 
 package io.activej.dataflow.graph;
 
+import io.activej.common.exception.CloseException;
+import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;
@@ -37,7 +39,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
-import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 import static java.util.stream.Collectors.toList;
@@ -129,15 +130,19 @@ public final class Task {
 
 				return supplier.streamTo(consumer);
 			} catch (Exception e) {
-				return Promise.ofException(e);
+				return Promise.ofException(new DataflowException(e));
 			}
 		}).collect(toList()))
 				.whenComplete(($, e) -> {
 					finished = Instant.now();
-					error = e;
+					if (e != null && !(e instanceof DataflowException)){
+						error = new DataflowException(e);
+					} else {
+						error = e;
+					}
 					status = e == null ?
 							TaskStatus.COMPLETED :
-							e == CLOSE_EXCEPTION ?
+							e instanceof CloseException ?
 									TaskStatus.CANCELED :
 									TaskStatus.FAILED;
 					executionPromise.accept($, e);
@@ -198,7 +203,7 @@ public final class Task {
 				network.put(download.getStreamId(), download.getOutput());
 			} else if (node instanceof NodeUpload) {
 				uploads.put(((NodeUpload<?>) node).getStreamId(), node);
-			}else{
+			} else {
 				node.getInputs().forEach(input -> nodesByInput.put(input, node));
 				node.getOutputs().forEach(input -> nodesByOutput.put(input, node));
 			}

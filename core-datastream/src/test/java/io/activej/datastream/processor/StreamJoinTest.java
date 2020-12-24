@@ -1,11 +1,11 @@
 package io.activej.datastream.processor;
 
-import io.activej.common.exception.ExpectedException;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamJoin.ValueJoiner;
 import io.activej.promise.Promise;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;

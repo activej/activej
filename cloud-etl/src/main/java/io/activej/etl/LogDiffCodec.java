@@ -17,7 +17,7 @@
 package io.activej.etl;
 
 import io.activej.codec.*;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 
@@ -48,7 +48,7 @@ public final class LogDiffCodec<D> implements StructuredCodec<LogDiff<D>> {
 		}
 
 		@Override
-		public LogPosition decode(StructuredInput in) throws ParseException {
+		public LogPosition decode(StructuredInput in) throws MalformedDataException {
 			return in.readTuple($ -> {
 				String name = in.readString();
 				int n = in.readInt();
@@ -85,7 +85,7 @@ public final class LogDiffCodec<D> implements StructuredCodec<LogDiff<D>> {
 	}
 
 	@Override
-	public LogDiff<D> decode(StructuredInput in) throws ParseException {
+	public LogDiff<D> decode(StructuredInput in) throws MalformedDataException {
 		return in.readObject($ -> LogDiff.of(
 				in.readKey(POSITIONS, StructuredDecoder.ofTuple(in1 -> {
 					Map<String, LogPositionDiff> positions = new LinkedHashMap<>();

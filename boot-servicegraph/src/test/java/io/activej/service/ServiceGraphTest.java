@@ -6,37 +6,45 @@ import io.activej.inject.Key;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import org.hamcrest.core.IsSame;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 public class ServiceGraphTest {
-	@Rule
-	public final ExpectedException expected = ExpectedException.none();
-
 	@Test
-	public void testProperClosingForFailingServiceOneComponent() throws Exception {
+	public void testProperClosingForFailingServiceOneComponent() {
 		Injector injector = Injector.of(new FailingModule());
 		injector.getInstance(Key.ofName(BlockingService.class, "TopService1"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
-		expected.expectCause(IsSame.sameInstance(FailingModule.INTERRUPTED));
-		graph.startFuture().get();
+
+		try {
+			graph.startFuture().get();
+			fail();
+		} catch (Exception e){
+			assertSame(FailingModule.INTERRUPTED, e.getCause());
+		}
 	}
 
 	@Test
-	public void testProperClosingForFailingServiceTwoComponents() throws Exception {
+	public void testProperClosingForFailingServiceTwoComponents() {
 		Injector injector = Injector.of(new FailingModule());
 		injector.getInstance(Key.ofName(BlockingService.class, "TopService1"));
 		injector.getInstance(Key.ofName(BlockingService.class, "TopService2"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
-		expected.expectCause(IsSame.sameInstance(FailingModule.INTERRUPTED));
-		graph.startFuture().get();
+
+		try {
+			graph.startFuture().get();
+			fail();
+		} catch (Exception e){
+			assertSame(FailingModule.INTERRUPTED, e.getCause());
+		}
 	}
 
 	// region modules
 	public static class FailingModule extends AbstractModule {
-		public static final io.activej.common.exception.ExpectedException INTERRUPTED = new io.activej.common.exception.ExpectedException("interrupted");
+
+		private static final io.activej.test.ExpectedException INTERRUPTED = new io.activej.test.ExpectedException("interrupted");
 
 		@Override
 		protected void configure() {

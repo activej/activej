@@ -18,18 +18,19 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 
 class Utils {
 
-	static ByteBufsDecoder<ByteBuf> parseUntilTerminatorByte(byte terminator, int maxSize) {
+	static ByteBufsDecoder<ByteBuf> decodeUntilTerminatorByte(byte terminator, int maxSize) {
 		return bufs -> {
 			int bytes = bufs.scanBytes((index, nextByte) -> {
 				if (nextByte == terminator) {
 					return true;
 				}
 				if (index == maxSize - 1) {
-					throw new ParseException(ByteBufsDecoder.class, "No terminator byte is found in " + maxSize + " bytes");
+					throw new MalformedDataException("No terminator byte is found in " + maxSize + " bytes");
 				}
 				return false;
 			});
@@ -46,13 +47,13 @@ class Utils {
 		int result;
 
 		@Override
-		public boolean consume(int index, byte b) throws ParseException {
+		public boolean consume(int index, byte b) throws MalformedDataException {
 			result = (index == 0 ? 0 : result) | (b & 0x7F) << index * 7;
 			if ((b & 0x80) == 0) {
 				return true;
 			}
 			if (index == 4) {
-				throw new ParseException(ByteBufsDecoder.class, "VarInt is too long for 32-bit integer");
+				throw new InvalidSizeException("VarInt is too long for a 32-bit integer");
 			}
 			return false;
 		}

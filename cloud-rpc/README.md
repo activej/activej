@@ -1,1 +1,1 @@
-This module forms ActiveRPC framework. To learn more, please visit [ActiveRPC website](https://rpc.activej.io).
+This module forms ActiveJ RPC framework. To learn more, please visit [ActiveJ RPC website](https://rpc.activej.io).

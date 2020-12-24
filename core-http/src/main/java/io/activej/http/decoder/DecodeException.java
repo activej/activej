@@ -16,18 +16,21 @@
 
 package io.activej.http.decoder;
 
-import io.activej.common.exception.StacklessException;
+import io.activej.http.HttpException;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * An exception that occurs when an invalid HTTP request is received and the decoder fails
  * to map it on needed type.
  */
-public class DecodeException extends StacklessException {
+public class DecodeException extends HttpException {
 	@NotNull
 	private final DecodeErrors errors;
 
-	public DecodeException(@NotNull DecodeErrors errors) {this.errors = errors;}
+	public DecodeException(@NotNull DecodeErrors errors) {
+		super();
+		this.errors = errors;
+	}
 
 	@NotNull
 	public DecodeErrors getErrors() {

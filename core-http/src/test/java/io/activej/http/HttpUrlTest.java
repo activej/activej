@@ -3,7 +3,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.test.rules.ByteBufRule;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.ClassRule;
@@ -18,6 +17,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public final class HttpUrlTest {
@@ -120,7 +120,7 @@ public final class HttpUrlTest {
 	}
 
 	@Test
-	public void testPartialUrl() throws ParseException {
+	public void testPartialUrl() throws MalformedHttpException {
 		UrlParser url = UrlParser.parse("/path1/path2?aa=bb&zz=a+b");
 		assertTrue(url.isRelativePath());
 		assertNull(url.getHostAndPort());
@@ -141,8 +141,8 @@ public final class HttpUrlTest {
 		assertEquals("", url.getQuery());
 	}
 
-	@Test(expected = ParseException.class)
-	public void testInvalidScheme() throws ParseException {
+	@Test(expected = MalformedHttpException.class)
+	public void testInvalidScheme() throws MalformedHttpException {
 		UrlParser.parse("ftp://abc.com/");
 	}
 
@@ -152,8 +152,8 @@ public final class HttpUrlTest {
 		UrlParser.of("/path").isRelativePath();
 	}
 
-	@Test(expected = ParseException.class)
-	public void testBadPort() throws ParseException {
+	@Test(expected = MalformedHttpException.class)
+	public void testBadPort() throws MalformedHttpException {
 		UrlParser.parse("http://hello-world.com:80ab/path");
 	}
 
@@ -170,7 +170,7 @@ public final class HttpUrlTest {
 	}
 
 	@Test
-	public void testPollUrlPartWithNotUrlEncodedQuery() throws ParseException {
+	public void testPollUrlPartWithNotUrlEncodedQuery() throws MalformedHttpException {
 		UrlParser url = UrlParser.parse("/category/url?url=http://example.com");
 		assertEquals("category", url.pollUrlPart());
 		assertEquals("url", url.pollUrlPart());

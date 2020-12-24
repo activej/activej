@@ -22,6 +22,7 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
+import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.command.*;
 import io.activej.dataflow.command.DataflowResponsePartitionData.TaskDesc;
 import io.activej.dataflow.graph.Partition;
@@ -123,7 +124,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 									try {
 										partition = partitions.get(Integer.parseInt(indexParam));
 									} catch (NumberFormatException | IndexOutOfBoundsException e) {
-										return Promise.ofException(HttpException.ofCode(400, "Bad index"));
+										return Promise.ofException(HttpError.ofCode(400, "Bad index"));
 									}
 									return getTask(partition.getAddress(), id)
 											.map(task -> ok200()
@@ -150,7 +151,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		try {
 			return Promise.of(Long.parseLong(param));
 		} catch (NumberFormatException e) {
-			return Promise.ofException(HttpException.ofCode(400, "Bad number " + param));
+			return Promise.ofException(HttpError.ofCode(400, "Bad number " + param));
 		}
 	}
 
@@ -165,9 +166,9 @@ public final class DataflowDebugServlet implements AsyncServlet {
 								if (response instanceof DataflowResponsePartitionData) {
 									return Promise.of(((DataflowResponsePartitionData) response));
 								} else if (response instanceof DataflowResponseResult) {
-									return Promise.ofException(new Exception("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError()));
+									return Promise.ofException(new DataflowException("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError()));
 								}
-								return Promise.ofException(new Exception("Bad response from server"));
+								return Promise.ofException(new DataflowException("Bad response from server"));
 							});
 				});
 	}
@@ -183,9 +184,9 @@ public final class DataflowDebugServlet implements AsyncServlet {
 								if (response instanceof DataflowResponseTaskData) {
 									return Promise.of(((DataflowResponseTaskData) response));
 								} else if (response instanceof DataflowResponseResult) {
-									return Promise.ofException(new Exception("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError()));
+									return Promise.ofException(new DataflowException("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError()));
 								}
-								return Promise.ofException(new Exception("Bad response from server"));
+								return Promise.ofException(new DataflowException("Bad response from server"));
 							});
 				});
 	}

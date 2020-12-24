@@ -19,37 +19,35 @@ package io.activej.csp.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.bytebuf.ByteBufQueue.ByteScanner;
-import io.activej.common.api.ParserFunction;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.api.DecoderFunction;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.Utils.IntScanner;
 import io.activej.csp.binary.Utils.VarIntScanner;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
-import static io.activej.csp.binary.Utils.parseUntilTerminatorByte;
+import static io.activej.csp.binary.Utils.decodeUntilTerminatorByte;
 
 @FunctionalInterface
 public interface ByteBufsDecoder<T> {
-	ParseException SIZE_EXCEEDS_MAX_SIZE = new InvalidSizeException(ByteBufsDecoder.class, "Size exceeds max size");
-	ParseException NEGATIVE_SIZE = new InvalidSizeException(ByteBufsDecoder.class, "Invalid size of bytes to be read, should be greater than 0");
 
 	@Nullable
-	T tryDecode(ByteBufQueue bufs) throws ParseException;
+	T tryDecode(ByteBufQueue bufs) throws MalformedDataException;
 
-	default <V> ByteBufsDecoder<V> andThen(ParserFunction<? super T, ? extends V> after) {
+	default <V> ByteBufsDecoder<V> andThen(DecoderFunction<? super T, ? extends V> after) {
 		return bufs -> {
 			T maybeResult = tryDecode(bufs);
 			if (maybeResult == null) return null;
-			return after.parse(maybeResult);
+			return after.decode(maybeResult);
 		};
 	}
 
 	static ByteBufsDecoder<byte[]> assertBytes(byte[] data) {
 		return bufs -> bufs.consumeBytes((index, b) -> {
 			if (b != data[index]) {
-				throw new ParseException(ByteBufsDecoder.class, "Array of bytes differs at index " + index +
+				throw new MalformedDataException("Array of bytes differs at index " + index +
 						"[Expected: " + data[index] + ", actual: " + b + ']');
 			}
 			return index == data.length - 1;
@@ -68,7 +66,7 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofNullTerminatedBytes(int maxSize) {
-		return parseUntilTerminatorByte((byte) 0, maxSize);
+		return decodeUntilTerminatorByte((byte) 0, maxSize);
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofCrTerminatedBytes() {
@@ -76,7 +74,7 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofCrTerminatedBytes(int maxSize) {
-		return parseUntilTerminatorByte(CR, maxSize);
+		return decodeUntilTerminatorByte(CR, maxSize);
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofCrlfTerminatedBytes() {
@@ -89,7 +87,7 @@ public interface ByteBufsDecoder<T> {
 				boolean crFound;
 
 				@Override
-				public boolean consume(int index, byte b) throws ParseException {
+				public boolean consume(int index, byte b) throws MalformedDataException {
 					if (crFound) {
 						if (b == LF) {
 							return true;
@@ -97,7 +95,7 @@ public interface ByteBufsDecoder<T> {
 						crFound = false;
 					}
 					if (index == maxSize - 1) {
-						throw new ParseException(ByteBufsDecoder.class, "No CRLF is found in " + maxSize + " bytes");
+						throw new MalformedDataException("No CRLF is found in " + maxSize + " bytes");
 					}
 					if (b == CR) {
 						crFound = true;
@@ -125,8 +123,8 @@ public interface ByteBufsDecoder<T> {
 
 			int size = scanner.result;
 
-			if (size < 0) throw NEGATIVE_SIZE;
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (size < 0) throw new InvalidSizeException("Invalid size of bytes to be read, should be greater than 0");
+			if (size > maxSize) throw new InvalidSizeException("Size exceeds max size");
 
 			if (!bufs.hasRemainingBytes(4 + size)) return null;
 			bufs.skip(4);
@@ -143,7 +141,7 @@ public interface ByteBufsDecoder<T> {
 			if (!bufs.hasRemainingBytes(2)) return null;
 			int size = (bufs.peekByte(0) & 0xFF) << 8
 					| (bufs.peekByte(1) & 0xFF);
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (size > maxSize) throw new InvalidSizeException("Size exceeds max size");
 			if (!bufs.hasRemainingBytes(2 + size)) return null;
 			bufs.skip(2);
 			return bufs.takeExactSize(size);
@@ -158,7 +156,7 @@ public interface ByteBufsDecoder<T> {
 		return bufs -> {
 			if (!bufs.hasRemaining()) return null;
 			int size = bufs.peekByte() & 0xFF;
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (size > maxSize) throw new InvalidSizeException("Size exceeds max size");
 			if (!bufs.hasRemainingBytes(1 + size)) return null;
 			bufs.skip(1);
 			return bufs.takeExactSize(size);
@@ -178,8 +176,8 @@ public interface ByteBufsDecoder<T> {
 
 			int size = scanner.result;
 
-			if (size < 0) throw NEGATIVE_SIZE;
-			if (size > maxSize) throw SIZE_EXCEEDS_MAX_SIZE;
+			if (size < 0) throw new InvalidSizeException("Invalid size of bytes to be read, should be greater than 0");
+			if (size > maxSize) throw new InvalidSizeException("Size exceeds max size");
 
 			if (!bufs.hasRemainingBytes(bytes + size)) return null;
 			bufs.skip(bytes);

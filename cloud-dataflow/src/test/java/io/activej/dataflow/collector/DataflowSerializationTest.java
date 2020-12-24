@@ -1,7 +1,7 @@
 package io.activej.dataflow.collector;
 
 import io.activej.codec.StructuredCodec;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowCommandExecute;
 import io.activej.dataflow.graph.StreamId;
@@ -68,7 +68,7 @@ public class DataflowSerializationTest {
 
 	@SuppressWarnings("rawtypes")
 	@Test
-	public void test2() throws UnknownHostException, ParseException {
+	public void test2() throws UnknownHostException, MalformedDataException {
 
 		Module serialization = ModuleBuilder.create()
 				.install(DataflowCodecs.create())

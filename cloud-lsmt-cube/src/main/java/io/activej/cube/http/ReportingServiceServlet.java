@@ -17,15 +17,15 @@
 package io.activej.cube.http;
 
 import io.activej.aggregation.AggregationPredicate;
-import io.activej.aggregation.QueryException;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.registry.CodecFactory;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.time.Stopwatch;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;
+import io.activej.cube.exception.QueryException;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.*;
 import io.activej.promise.Promise;
@@ -119,7 +119,7 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 		} catch (QueryException e) {
 			logger.error("Query exception: " + httpRequest, e);
 			return Promise.of(createErrorResponse(e.getMessage()));
-		} catch (ParseException e) {
+		} catch (MalformedDataException e) {
 			logger.error("Parse exception: " + httpRequest, e);
 			return Promise.of(createErrorResponse(e.getMessage()));
 		}
@@ -150,7 +150,7 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 				.collect(toList());
 	}
 
-	public CubeQuery parseQuery(HttpRequest request) throws ParseException {
+	public CubeQuery parseQuery(HttpRequest request) throws MalformedDataException {
 		CubeQuery query = CubeQuery.create();
 
 		String parameter;

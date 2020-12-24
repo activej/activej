@@ -17,7 +17,7 @@
 package io.activej.launchers.fs;
 
 import io.activej.common.api.Initializer;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
@@ -49,7 +49,7 @@ public final class Initializers {
 			List<String> tcpPartitions = config.get(ofList(ofString()), "partitions", fsPartitions.getAllPartitions());
 			try {
 				fsPartitions.setPartitions(tcpPartitions);
-			} catch (ParseException e) {
+			} catch (MalformedDataException e) {
 				throw new RuntimeException(e);
 			}
 			checkState(!fsPartitions.getPartitions().isEmpty(),

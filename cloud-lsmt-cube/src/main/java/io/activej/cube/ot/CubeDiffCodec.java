@@ -22,7 +22,7 @@ import io.activej.aggregation.ot.AggregationDiffCodec;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.Cube;
 
 import java.util.LinkedHashMap;
@@ -60,14 +60,14 @@ public class CubeDiffCodec implements StructuredCodec<CubeDiff> {
 	}
 
 	@Override
-	public CubeDiff decode(StructuredInput in) throws ParseException {
+	public CubeDiff decode(StructuredInput in) throws MalformedDataException {
 		return in.readObject($ -> {
 			Map<String, AggregationDiff> map = new LinkedHashMap<>();
 			while (in.hasNext()) {
 				String aggregation = in.readKey();
 				AggregationDiffCodec aggregationDiffCodec = aggregationDiffCodecs.get(aggregation);
 				if (aggregationDiffCodec == null) {
-					throw new ParseException("Unknown aggregation: " + aggregation);
+					throw new MalformedDataException("Unknown aggregation: " + aggregation);
 				}
 				AggregationDiff aggregationDiff = aggregationDiffCodec.decode(in);
 				map.put(aggregation, aggregationDiff);

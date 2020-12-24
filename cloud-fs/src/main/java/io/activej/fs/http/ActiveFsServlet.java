@@ -22,9 +22,10 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.exception.scalar.FileNotFoundException;
+import io.activej.fs.exception.FileNotFoundException;
+import io.activej.fs.exception.FsExceptionCodec;
 import io.activej.http.*;
-import io.activej.http.MultipartParser.MultipartDataHandler;
+import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,8 +36,8 @@ import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.Codecs.*;
-import static io.activej.fs.util.RemoteFsUtils.*;
-import static io.activej.http.AbstractHttpConnection.INCOMPLETE_MESSAGE;
+import static io.activej.fs.util.RemoteFsUtils.castError;
+import static io.activej.fs.util.RemoteFsUtils.decodeBody;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
@@ -72,16 +73,13 @@ public final class ActiveFsServlet {
 					return (size == null ?
 							fs.upload(decodePath(request)) :
 							fs.upload(decodePath(request), size))
-							.map(ActiveFsServlet::wrapIncompleteMessages)
 							.mapEx(acknowledgeUpload(request));
 				})
-				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(file -> fs.upload(file)
-						.map(ActiveFsServlet::wrapIncompleteMessages)))
+				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(fs::upload))
 						.mapEx(errorHandler()))
 				.map(POST, "/" + APPEND + "/*", request -> {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					return fs.append(decodePath(request), offset)
-							.map(ActiveFsServlet::wrapIncompleteMessages)
 							.mapEx(acknowledgeUpload(request));
 				})
 				.map(GET, "/" + DOWNLOAD + "/*", request -> {
@@ -113,7 +111,7 @@ public final class ActiveFsServlet {
 												.withBody(toJson(FILE_META_CODEC_NULLABLE, meta).getBytes(UTF_8))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)))))
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
-						.then(parseBody(STRINGS_SET_CODEC))
+						.then(decodeBody(STRINGS_SET_CODEC))
 						.then(fs::infoAll)
 						.mapEx(errorHandler(map ->
 								HttpResponse.ok200()
@@ -128,7 +126,7 @@ public final class ActiveFsServlet {
 							.mapEx(errorHandler());
 				})
 				.map(POST, "/" + MOVE_ALL, request -> request.loadBody()
-						.then(parseBody(SOURCE_TO_TARGET_CODEC))
+						.then(decodeBody(SOURCE_TO_TARGET_CODEC))
 						.then(fs::moveAll)
 						.mapEx(errorHandler()))
 				.map(POST, "/" + COPY, request -> {
@@ -138,14 +136,14 @@ public final class ActiveFsServlet {
 							.mapEx(errorHandler());
 				})
 				.map(POST, "/" + COPY_ALL, request -> request.loadBody()
-						.then(parseBody(SOURCE_TO_TARGET_CODEC))
+						.then(decodeBody(SOURCE_TO_TARGET_CODEC))
 						.then(fs::copyAll)
 						.mapEx(errorHandler()))
 				.map(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
 						fs.delete(decodePath(request))
 								.mapEx(errorHandler()))
 				.map(POST, "/" + DELETE_ALL, request -> request.loadBody()
-						.then(parseBody(STRINGS_SET_CODEC))
+						.then(decodeBody(STRINGS_SET_CODEC))
 						.then(fs::deleteAll)
 						.mapEx(errorHandler()));
 	}
@@ -155,7 +153,7 @@ public final class ActiveFsServlet {
 		return fs.info(name)
 				.then(meta -> {
 					if (meta == null) {
-						return Promise.ofException(new FileNotFoundException(ActiveFsServlet.class));
+						return Promise.ofException(new FileNotFoundException());
 					}
 					return HttpResponse.file(
 							(offset, limit) -> fs.download(name, offset, limit),
@@ -168,9 +166,9 @@ public final class ActiveFsServlet {
 	}
 
 	private static String decodePath(HttpRequest request) {
-		String value = UrlParser.urlDecode(request.getRelativePath());
+		String value = UrlParser.urlParse(request.getRelativePath());
 		if (value == null) {
-			throw new UncheckedException(HttpException.ofCode(400, "Path contains invalid UTF"));
+			throw new UncheckedException(HttpError.ofCode(400, "Path contains invalid UTF"));
 		}
 		return value;
 	}
@@ -178,7 +176,7 @@ public final class ActiveFsServlet {
 	private static String getQueryParameter(HttpRequest request, String parameterName) {
 		String value = request.getQueryParameter(parameterName);
 		if (value == null) {
-			throw new UncheckedException(HttpException.ofCode(400, "No '" + parameterName + "' query parameter"));
+			throw new UncheckedException(HttpError.ofCode(400, "No '" + parameterName + "' query parameter"));
 		}
 		return value;
 	}
@@ -195,14 +193,14 @@ public final class ActiveFsServlet {
 			}
 			return val;
 		} catch (NumberFormatException ignored) {
-			throw new UncheckedException(HttpException.ofCode(400, "Invalid '" + parameterName + "' value"));
+			throw new UncheckedException(HttpError.ofCode(400, "Invalid '" + parameterName + "' value"));
 		}
 	}
 
 	private static HttpResponse getErrorResponse(Throwable e) {
 		return HttpResponse.ofCode(500)
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBody(toJsonBuf(FS_EXCEPTION_CODEC, castError(e)));
+				.withBody(toJsonBuf(FsExceptionCodec.CODEC, castError(e)));
 	}
 
 	private static <T> BiFunction<T, Throwable, HttpResponse> errorHandler() {
@@ -222,13 +220,6 @@ public final class ActiveFsServlet {
 								UploadAcknowledgement.ok() :
 								UploadAcknowledgement.ofError(castError(e)))
 						.map(ack -> ChannelSupplier.of(toJsonBuf(UploadAcknowledgement.CODEC, ack))))));
-	}
-
-	private static ChannelConsumer<ByteBuf> wrapIncompleteMessages(ChannelConsumer<ByteBuf> consumer) {
-		return consumer.withAcknowledgement(ack -> ack
-				.thenEx((v, e) -> e == INCOMPLETE_MESSAGE ?
-						Promise.ofException(UNEXPECTED_END_OF_STREAM) :
-						Promise.of(v, e)));
 	}
 
 }

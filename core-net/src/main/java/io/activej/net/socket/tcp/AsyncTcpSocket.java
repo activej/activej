@@ -58,5 +58,7 @@ public interface AsyncTcpSocket extends AsyncCloseable {
 	@NotNull
 	Promise<Void> write(@Nullable ByteBuf buf);
 
+	boolean isReadAvailable();
+
 	boolean isClosed();
 }

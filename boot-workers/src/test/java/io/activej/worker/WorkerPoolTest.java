@@ -5,9 +5,7 @@ import io.activej.inject.Injector;
 import io.activej.inject.module.AbstractModule;
 import io.activej.worker.annotation.Worker;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,9 +16,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 public class WorkerPoolTest {
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
-
 	private WorkerPool first;
 	private WorkerPool second;
 	private WorkerPools pools;

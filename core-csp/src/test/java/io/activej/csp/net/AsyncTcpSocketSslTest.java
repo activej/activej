@@ -2,6 +2,8 @@ package io.activej.csp.net;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
+import io.activej.common.exception.CloseException;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
@@ -36,15 +38,14 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
-import static io.activej.csp.binary.BinaryChannelSupplier.UNEXPECTED_END_OF_STREAM_EXCEPTION;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 
 public final class AsyncTcpSocketSslTest {
 	private static final String KEYSTORE_PATH = "./src/test/resources/keystore.jks";
@@ -93,7 +94,7 @@ public final class AsyncTcpSocketSslTest {
 	@Test
 	public void testWrite() throws IOException {
 		startServer(sslContext, sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
-				.parse(DECODER)
+				.decode(DECODER)
 				.whenComplete(sslSocket::close)
 				.whenComplete(assertComplete(result -> assertEquals(TEST_STRING, result))));
 
@@ -113,7 +114,7 @@ public final class AsyncTcpSocketSslTest {
 		String result = await(AsyncTcpSocketNio.connect(ADDRESS)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
-						.parse(DECODER)
+						.decode(DECODER)
 						.whenComplete(sslSocket::close)));
 
 		assertEquals(TEST_STRING, result);
@@ -122,7 +123,7 @@ public final class AsyncTcpSocketSslTest {
 	@Test
 	public void testLoopBack() throws IOException {
 		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
-				.parse(DECODER)
+				.decode(DECODER)
 				.then(result -> serverSsl.write(wrapAscii(result)))
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertComplete()));
@@ -132,7 +133,7 @@ public final class AsyncTcpSocketSslTest {
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
 								.then(() -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
-										.parse(DECODER))
+										.decode(DECODER))
 								.whenComplete(sslSocket::close)));
 
 		assertEquals(TEST_STRING, result);
@@ -144,7 +145,7 @@ public final class AsyncTcpSocketSslTest {
 		String TEST_STRING_PART_1 = TEST_STRING.substring(0, halfLength);
 		String TEST_STRING_PART_2 = TEST_STRING.substring(halfLength);
 		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
-				.parse(DECODER)
+				.decode(DECODER)
 				.then(result -> serverSsl.write(wrapAscii(result)))
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertComplete()));
@@ -156,7 +157,7 @@ public final class AsyncTcpSocketSslTest {
 								.then(() -> sslSocket.write(ByteBuf.empty()))
 								.then(() -> sslSocket.write(wrapAscii(TEST_STRING_PART_2)))
 								.then(() -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
-										.parse(DECODER))
+										.decode(DECODER))
 								.whenComplete(sslSocket::close)));
 
 		assertEquals(TEST_STRING, result);
@@ -165,7 +166,7 @@ public final class AsyncTcpSocketSslTest {
 	@Test
 	public void sendsLargeAmountOfDataFromClientToServer() throws IOException {
 		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
-				.parse(DECODER_LARGE)
+				.decode(DECODER_LARGE)
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertComplete(result -> assertEquals(result, sentData.toString()))));
 
@@ -186,7 +187,7 @@ public final class AsyncTcpSocketSslTest {
 		String result = await(AsyncTcpSocketNio.connect(ADDRESS)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
-						.parse(DECODER_LARGE)
+						.decode(DECODER_LARGE)
 						.whenComplete(sslSocket::close)));
 
 		assertEquals(sentData.toString(), result);
@@ -198,17 +199,17 @@ public final class AsyncTcpSocketSslTest {
 				socket.write(wrapAscii("He"))
 						.whenComplete(socket::close)
 						.then(() -> socket.write(wrapAscii("ello")))
-						.whenComplete(($, e) -> assertSame(CLOSE_EXCEPTION, e)));
+						.whenComplete(($, e) -> assertThat(e, instanceOf(CloseException.class))));
 
 		Throwable e = awaitException(AsyncTcpSocketNio.connect(ADDRESS)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket -> {
 					BinaryChannelSupplier supplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket));
-					return supplier.parse(DECODER)
+					return supplier.decode(DECODER)
 							.whenException(supplier::closeEx);
 				}));
 
-		assertSame(UNEXPECTED_END_OF_STREAM_EXCEPTION, e);
+		assertThat(e, instanceOf(TruncatedDataException.class));
 	}
 
 	@Test
@@ -235,7 +236,7 @@ public final class AsyncTcpSocketSslTest {
 				})
 				.map(tcpSocket -> AsyncTcpSocketSsl.wrapClientSocket(tcpSocket, sslContext, executor))
 				.then(socket -> socket.write(ByteBufStrings.wrapUtf8("hello"))));
-		assertEquals(CLOSE_EXCEPTION, exception);
+		assertThat(exception, instanceOf(CloseException.class));
 	}
 
 	static void startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {

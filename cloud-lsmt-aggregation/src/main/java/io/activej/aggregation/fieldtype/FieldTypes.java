@@ -23,7 +23,7 @@ import io.activej.codec.StructuredOutput;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.util.Primitives;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.reflection.RecursiveType;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
@@ -158,11 +158,11 @@ public final class FieldTypes {
 		}
 
 		@Override
-		public LocalDate decode(StructuredInput in) throws ParseException {
+		public LocalDate decode(StructuredInput in) throws MalformedDataException {
 			try {
 				return LocalDate.parse(in.readString());
 			} catch (DateTimeException e) {
-				throw new ParseException(e);
+				throw new MalformedDataException(e);
 			}
 		}
 	};

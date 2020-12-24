@@ -22,13 +22,14 @@ import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.json.JsonUtils;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
-import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
@@ -51,9 +52,6 @@ import static io.activej.common.collection.CollectionUtils.map;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class RemoteFsUtils {
-	public static final FsIOException UNEXPECTED_DATA = new FsIOException(ActiveFs.class, "Received more data than expected");
-	public static final FsIOException UNEXPECTED_END_OF_STREAM = new FsIOException(ActiveFs.class, "Received less data than expected");
-
 	private static final Pattern ANY_GLOB_METACHARS = Pattern.compile("[*?{}\\[\\]\\\\]");
 	private static final Pattern UNESCAPED_GLOB_METACHARS = Pattern.compile("(?<!\\\\)(?:\\\\\\\\)*[*?{}\\[\\]]");
 
@@ -112,11 +110,11 @@ public final class RemoteFsUtils {
 						item -> JsonUtils.toJsonBuf(out, item));
 	}
 
-	public static <T> Function<ByteBuf, Promise<T>> parseBody(StructuredDecoder<T> decoder) {
+	public static <T> Function<ByteBuf, Promise<T>> decodeBody(StructuredDecoder<T> decoder) {
 		return body -> {
 			try {
 				return Promise.of(fromJson(decoder, body.getString(UTF_8)));
-			} catch (ParseException e) {
+			} catch (MalformedDataException e) {
 				return Promise.ofException(e);
 			}
 		};
@@ -130,14 +128,14 @@ public final class RemoteFsUtils {
 						long left = total.dec(byteBuf.readRemaining());
 						if (left < 0) {
 							byteBuf.recycle();
-							return Promise.ofException(UNEXPECTED_DATA);
+							return Promise.ofException(new UnexpectedDataException());
 						}
 						return Promise.of(byteBuf);
 					})
 					.withAcknowledgement(ack -> ack
 							.then(() -> {
 								if (total.get() > 0) {
-									return Promise.ofException(UNEXPECTED_END_OF_STREAM);
+									return Promise.ofException(new TruncatedDataException());
 								}
 								return Promise.complete();
 							}));
@@ -149,11 +147,11 @@ public final class RemoteFsUtils {
 		ActiveFs.class is used as a component to hide implementation details from peer
 	 */
 	public static FsException castError(Throwable e) {
-		return e instanceof FsException ? (FsException) e : new FsIOException(ActiveFs.class, "Unknown error");
+		return e instanceof FsException ? (FsException) e : new FsIOException("Unknown error");
 	}
 
-	public static FsBatchException batchEx(Class<?> component, String name, FsScalarException exception) {
-		return new FsBatchException(component, map(name, exception));
+	public static FsBatchException batchEx(String name, FsScalarException exception) {
+		return new FsBatchException(map(name, exception));
 	}
 
 	public static Promise<Void> reduceErrors(List<Try<Void>> tries, Iterator<String> sources) {
@@ -169,7 +167,7 @@ public final class RemoteFsUtils {
 			}
 		}
 		if (!scalarExceptions.isEmpty()) {
-			return Promise.ofException(new FsBatchException(ActiveFs.class, scalarExceptions));
+			return Promise.ofException(new FsBatchException(scalarExceptions));
 		}
 		return Promise.complete();
 	}

@@ -204,7 +204,7 @@ final class MountingActiveFs implements ActiveFs {
 							return Promise.ofException(exception);
 						}
 					}
-					return Promise.ofException(new FsBatchException(MountingActiveFs.class, scalarExceptions));
+					return Promise.ofException(new FsBatchException(scalarExceptions));
 				});
 	}
 

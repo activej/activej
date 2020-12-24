@@ -2,15 +2,17 @@ package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
-import io.activej.fs.exception.scalar.ForbiddenPathException;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.promise.Promise;
@@ -35,12 +37,11 @@ import java.util.stream.IntStream;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.fs.Utils.initTempDir;
-import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_DATA;
-import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
@@ -117,7 +118,7 @@ public final class FsIntegrationTest {
 				.streamTo(fs.upload(filename, 10))
 				.whenComplete(server::close));
 
-		assertSame(UNEXPECTED_END_OF_STREAM, exception);
+		assertThat(exception, instanceOf(TruncatedDataException.class));
 
 		assertFalse(Files.exists(path));
 	}
@@ -132,7 +133,7 @@ public final class FsIntegrationTest {
 				.streamTo(fs.upload(filename, 10))
 				.whenComplete(server::close));
 
-		assertSame(UNEXPECTED_DATA, exception);
+		assertThat(exception, instanceOf(UnexpectedDataException.class));
 
 		assertFalse(Files.exists(path));
 	}
@@ -186,7 +187,7 @@ public final class FsIntegrationTest {
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(
 				ChannelSupplier.of(wrapUtf8("Test1"), wrapUtf8(" Test2"), wrapUtf8(" Test3")).async(),
 				ChannelSupplier.of(ByteBuf.wrapForReading(BIG_FILE)),
-				ChannelSupplier.ofException(new FsIOException(FsIntegrationTest.class, "Test exception")),
+				ChannelSupplier.ofException(new FsIOException("Test exception")),
 				ChannelSupplier.of(wrapUtf8("Test4")));
 
 		Throwable exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(fs.upload(resultFile, Long.MAX_VALUE)))

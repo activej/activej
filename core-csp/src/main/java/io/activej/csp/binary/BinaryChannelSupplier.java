@@ -21,7 +21,8 @@ import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -30,9 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
-	public static final Exception UNEXPECTED_DATA_EXCEPTION = new ParseException(BinaryChannelSupplier.class, "Unexpected data after end-of-stream");
-	public static final Exception UNEXPECTED_END_OF_STREAM_EXCEPTION = new ParseException(BinaryChannelSupplier.class, "Unexpected end-of-stream");
-
 	protected final ByteBufQueue bufs;
 
 	protected BinaryChannelSupplier(ByteBufQueue bufs) {
@@ -69,7 +67,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 								bufs.add(buf);
 								return Promise.complete();
 							} else {
-								return Promise.ofException(UNEXPECTED_END_OF_STREAM_EXCEPTION);
+								return Promise.ofException(new TruncatedDataException("Unexpected end-of-stream"));
 							}
 						});
 			}
@@ -78,8 +76,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			public Promise<Void> endOfStream() {
 				if (!bufs.isEmpty()) {
 					bufs.recycle();
-					input.closeEx(UNEXPECTED_DATA_EXCEPTION);
-					return Promise.ofException(UNEXPECTED_DATA_EXCEPTION);
+					Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+					input.closeEx(exception);
+					return Promise.ofException(exception);
 				}
 				return input.get()
 						.then(buf -> {
@@ -87,8 +86,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 								return Promise.complete();
 							} else {
 								buf.recycle();
-								input.closeEx(UNEXPECTED_DATA_EXCEPTION);
-								return Promise.ofException(UNEXPECTED_DATA_EXCEPTION);
+								Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+								input.closeEx(exception);
+								return Promise.ofException(exception);
 							}
 						});
 			}
@@ -120,12 +120,12 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 		};
 	}
 
-	public final <T> Promise<T> parse(ByteBufsDecoder<T> decoder) {
-		return doParse(decoder, this);
+	public final <T> Promise<T> decode(ByteBufsDecoder<T> decoder) {
+		return doDecode(decoder, this);
 	}
 
 	@NotNull
-	private <T> Promise<T> doParse(ByteBufsDecoder<T> decoder, AsyncCloseable closeable) {
+	private <T> Promise<T> doDecode(ByteBufsDecoder<T> decoder, AsyncCloseable closeable) {
 		while (true) {
 			if (!bufs.isEmpty()) {
 				T result;
@@ -143,31 +143,32 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			if (moreDataPromise.isResult()) continue;
 			return moreDataPromise
 					.whenException(closeable::closeEx)
-					.then(() -> doParse(decoder, closeable));
+					.then(() -> doDecode(decoder, closeable));
 		}
 	}
 
-	public final <T> Promise<T> parseRemaining(ByteBufsDecoder<T> decoder) {
-		return parse(decoder)
+	public final <T> Promise<T> decodeRemaining(ByteBufsDecoder<T> decoder) {
+		return decode(decoder)
 				.then(result -> {
 					if (!bufs.isEmpty()) {
-						closeEx(UNEXPECTED_DATA_EXCEPTION);
-						return Promise.ofException(UNEXPECTED_DATA_EXCEPTION);
+						Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+						closeEx(exception);
+						return Promise.ofException(exception);
 					}
 					return endOfStream().map($ -> result);
 				});
 	}
 
-	public final <T> ChannelSupplier<T> parseStream(ByteBufsDecoder<T> decoder) {
+	public final <T> ChannelSupplier<T> decodeStream(ByteBufsDecoder<T> decoder) {
 		return ChannelSupplier.of(
-				() -> doParse(decoder,
+				() -> doDecode(decoder,
 						e -> {
-							if (e == UNEXPECTED_END_OF_STREAM_EXCEPTION && bufs.isEmpty()) return;
+							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
 							closeEx(e);
 						})
 						.thenEx((value, e) -> {
 							if (e == null) return Promise.of(value);
-							if (e == UNEXPECTED_END_OF_STREAM_EXCEPTION && bufs.isEmpty()) return Promise.of(null);
+							if (e instanceof TruncatedDataException && bufs.isEmpty()) return Promise.of(null);
 							return Promise.ofException(e);
 						}),
 				this);

@@ -138,7 +138,7 @@ public class StreamInput implements Closeable {
 		try {
 			T item = serializer.decode(in);
 			if (in.pos() - oldPos != messageSize) {
-				throw new CorruptedDataException("Deserialized size != parsed data size");
+				throw new CorruptedDataException("Deserialized size != decoded data size");
 			}
 			return item;
 		} catch (CorruptedDataException e) {

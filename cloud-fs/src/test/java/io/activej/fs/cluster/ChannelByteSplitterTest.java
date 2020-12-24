@@ -3,13 +3,13 @@ package io.activej.fs.cluster;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
 import io.activej.common.MemSize;
-import io.activej.common.exception.ExpectedException;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.promise.Promise;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -25,8 +25,10 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.joining;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 public final class ChannelByteSplitterTest {
 	@ClassRule
@@ -34,7 +36,8 @@ public final class ChannelByteSplitterTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-	public static final ExpectedException EXPECTED_EXCEPTION = new ExpectedException();
+
+	private static final ExpectedException EXPECTED_EXCEPTION = new ExpectedException();
 
 	@Test
 	public void noFailingOutput() {

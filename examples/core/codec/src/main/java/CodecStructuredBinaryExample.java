@@ -1,7 +1,7 @@
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.binary.BinaryUtils;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import util.Person;
 import util.Registry;
 
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 //[START EXAMPLE]
 public final class CodecStructuredBinaryExample {
-	public static void main(String[] args) throws ParseException {
+	public static void main(String[] args) throws MalformedDataException {
 		StructuredCodec<Person> PERSON_CODEC = Registry.REGISTRY.get(Person.class);
 
 		Person john = new Person(121, "John", LocalDate.of(1990, 3, 12));

@@ -18,8 +18,8 @@ package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -45,10 +45,10 @@ public interface BlockDecoder {
 	 * If this method returns {@link #END_OF_STREAM} it indicates that end of stream has been reached
 	 * and no more data is expected.
 	 * @throws UnknownFormatException if data is encoded using unknown format
-	 * @throws ParseException         if data is malformed
+	 * @throws MalformedDataException         if data is malformed
 	 */
 	@Nullable
-	ByteBuf decode(ByteBufQueue bufs) throws ParseException;
+	ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException;
 
 	/**
 	 * Attempts to reset some internal state of decoder.

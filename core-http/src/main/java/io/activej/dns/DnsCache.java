@@ -382,6 +382,9 @@ public final class DnsCache {
 		private final DnsResponse response;
 		private final boolean needsRefreshing;
 
+		@Nullable
+		private DnsQueryException exception;
+
 		public DnsQueryCacheResult(DnsResponse response, boolean needsRefreshing) {
 			this.response = response;
 			this.needsRefreshing = needsRefreshing;
@@ -391,7 +394,10 @@ public final class DnsCache {
 			if (response.getErrorCode() == ResponseErrorCode.NO_ERROR) {
 				return Promise.of(response);
 			}
-			return Promise.ofException(new DnsQueryException(DnsCache.class, response));
+			if (exception == null) {
+				exception = new DnsQueryException(response);
+			}
+			return Promise.ofException(exception);
 		}
 
 		public boolean doesNeedRefreshing() {

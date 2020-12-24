@@ -17,12 +17,9 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.NotNull;
 
 public interface RpcSender {
-	RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException(RpcSender.class, "No senders available");
-
 	<I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb);
 
 	default <I, O> void sendRequest(I request, @NotNull Callback<O> cb) {

@@ -158,7 +158,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		Promise<HttpResponse> processed = tryServe(request);
 		return processed != null ?
 				processed :
-				Promise.ofException(HttpException.notFound404());
+				Promise.ofException(HttpError.notFound404());
 	}
 
 	private void map(int ordinal, @NotNull AsyncServlet servlet) {

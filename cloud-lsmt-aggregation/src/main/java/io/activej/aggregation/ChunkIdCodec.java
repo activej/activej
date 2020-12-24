@@ -19,18 +19,18 @@ package io.activej.aggregation;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredInput;
 import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 	String toFileName(C chunkId);
 
-	C fromFileName(String chunkFileName) throws ParseException;
+	C fromFileName(String chunkFileName) throws MalformedDataException;
 
 	@Override
 	void encode(StructuredOutput out, C value);
 
 	@Override
-	C decode(StructuredInput in) throws ParseException;
+	C decode(StructuredInput in) throws MalformedDataException;
 
 	static ChunkIdCodec<Long> ofLong() {
 		return new ChunkIdCodec<Long>() {
@@ -40,11 +40,11 @@ public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 			}
 
 			@Override
-			public Long fromFileName(String chunkFileName) throws ParseException {
+			public Long fromFileName(String chunkFileName) throws MalformedDataException {
 				try {
 					return Long.parseLong(chunkFileName);
 				} catch (NumberFormatException e){
-					throw new ParseException(e);
+					throw new MalformedDataException(e);
 				}
 			}
 
@@ -54,7 +54,7 @@ public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 			}
 
 			@Override
-			public Long decode(StructuredInput in) throws ParseException {
+			public Long decode(StructuredInput in) throws MalformedDataException {
 				return in.readLong();
 			}
 		};
@@ -78,7 +78,7 @@ public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 			}
 
 			@Override
-			public String decode(StructuredInput in) throws ParseException {
+			public String decode(StructuredInput in) throws MalformedDataException {
 				return in.readString();
 			}
 		};

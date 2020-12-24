@@ -3,7 +3,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -11,7 +10,6 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
@@ -36,6 +34,7 @@ import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 @RunWith(Parameterized.class)
 public final class TestGzipProcessorUtils {
@@ -62,39 +61,34 @@ public final class TestGzipProcessorUtils {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Rule
-	public final ExpectedException expectedException = ExpectedException.none();
-
-	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
 	@Test
-	public void testEncodeDecode() throws ParseException {
+	public void testEncodeDecode() throws MalformedHttpException {
 		ByteBuf raw = toGzip(wrapUtf8(text));
 		ByteBuf actual = fromGzip(raw, 11_000_000);
 		assertEquals(text, actual.asString(UTF_8));
 	}
 
 	@Test
-	public void testEncodeDecodeWithTrailerInputSizeLessThenActual() throws ParseException {
-		expectedException.expect(ParseException.class);
-		expectedException.expectMessage("Decompressed data size is not equal to input size from GZIP trailer");
-
+	public void testEncodeDecodeWithTrailerInputSizeLessThenActual() {
 		ByteBuf raw = toGzip(wrapUtf8(text));
 		raw.moveTail(-4);
 		raw.writeInt(Integer.reverseBytes(2));
 
-		fromGzip(raw, 11_000_000);
+		assertThrows("Decompressed data size is not equal to input size from GZIP trailer",
+				MalformedHttpException.class,
+				() -> fromGzip(raw, 11_000_000));
 	}
 
 	@Test
-	public void recycleByteBufInCaseOfBadInput() throws ParseException {
-		expectedException.expect(ParseException.class);
-		expectedException.expectMessage("Corrupted GZIP header");
-
+	public void recycleByteBufInCaseOfBadInput() {
 		ByteBuf badBuf = ByteBufPool.allocate(100);
 		badBuf.put(new byte[]{-1, -1, -1, -1, -1, -1});
 
-		fromGzip(badBuf, 11_000_000);
+		assertThrows("Corrupted GZIP header",
+				MalformedHttpException.class,
+				() -> fromGzip(badBuf, 11_000_000));
 	}
 
 	@Test
@@ -142,7 +136,7 @@ public final class TestGzipProcessorUtils {
 	}
 
 	@Test
-	public void testGzipOutputStreamDataIsCorrectlyDecoded() throws IOException, ParseException {
+	public void testGzipOutputStreamDataIsCorrectlyDecoded() throws IOException, MalformedHttpException {
 		ByteBuf encodedData = encodeWithGzipOutputStream(wrapUtf8(text));
 		ByteBuf decoded = fromGzip(encodedData, 11_000_000);
 		assertEquals(text, decoded.asString(UTF_8));

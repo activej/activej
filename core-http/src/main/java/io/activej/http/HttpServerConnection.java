@@ -17,15 +17,15 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
+import io.activej.common.Utils;
 import io.activej.common.concurrent.ThreadLocalCharArray;
+import io.activej.common.exception.CloseException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpServer.Inspector;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketSsl;
 import io.activej.promise.Promise;
@@ -35,13 +35,13 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetAddress;
 import java.util.Arrays;
 
-import static io.activej.async.process.AsyncCloseable.CLOSE_EXCEPTION;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
 import static io.activej.csp.ChannelSupplier.ofLazyProvider;
 import static io.activej.csp.ChannelSuppliers.concat;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-import static io.activej.http.HttpHeaders.CONNECTION;
+import static io.activej.http.HttpHeaderValue.ofBytes;
+import static io.activej.http.HttpHeaderValue.ofDecimal;
+import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.HttpVersion.HTTP_1_0;
@@ -59,10 +59,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private static final boolean CHECK = Checks.isEnabled(HttpServerConnection.class);
 
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
-
-	public static final UnknownFormatException UNKNOWN_HTTP_METHOD = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP method");
-	public static final UnknownFormatException UNKNOWN_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unknown HTTP version");
-	public static final UnknownFormatException UNSUPPORTED_HTTP_VERSION = new UnknownFormatException(HttpServerConnection.class, "Unsupported HTTP version");
 
 	private static final int HEADERS_SLOTS = 256;
 	private static final int MAX_PROBINGS = 2;
@@ -91,8 +87,11 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private final char[] charBuffer;
 	@Nullable
 	private HttpRequest request;
+	// @Nullable
+	// private final Inspector inspector;
+
 	@Nullable
-	private final Inspector inspector;
+	private ByteBuf writeBuf;
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
 	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");
@@ -111,15 +110,15 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		this.remoteAddress = remoteAddress;
 		this.server = server;
 		this.servlet = servlet;
-		this.inspector = server.inspector;
+		// this.inspector = server.inspector;
 		this.charBuffer = charBuffer;
 	}
 
 	void serve() {
-		if (inspector != null) inspector.onAccept(this);
+		// if (inspector != null) inspector.onAccept(this);
 		(pool = server.poolNew).addLastNode(this);
 		poolTimestamp = eventloop.currentTimeMillis();
-		socket.read().whenComplete(startLineConsumer);
+		socket.read().whenComplete(readMessageConsumer);
 	}
 
 	public PoolLabel getCurrentPool() {
@@ -135,10 +134,38 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onClosedWithError(@NotNull Throwable e) {
-		if (inspector != null) {
-			inspector.onHttpError(this, e);
+	protected void readMessage() throws MalformedHttpException {
+		if ((flags & READING_MESSAGES) != 0) {
+			readStartLine();
+			return;
 		}
+		int loopCount = 0;
+		do {
+			loopCount++;
+			/*
+				as per RFC 7230, section 3.3.3,
+				if no Content-Length header is set, server can assume that a length of a message is 0
+			*/
+			contentLength = 0;
+			flags = READING_MESSAGES;
+			readStartLine();
+			if (isClosed()) return;
+		} while (isKeepAlive() && isBodyReceived() && isBodySent() && writeBuf != null && readQueue.hasRemaining());
+		flags &= ~READING_MESSAGES;
+		if (writeBuf != null && writeBuf.canRead()) {
+			ByteBuf writeBuf = this.writeBuf;
+			this.writeBuf = loopCount > 1 ? ByteBufPool.allocate(writeBuf.readRemaining()) : null;
+			writeBuf(writeBuf);
+		} else if (isBodyReceived() && isBodySent()) {
+			onHttpMessageComplete();
+		}
+	}
+
+	@Override
+	protected void onClosedWithError(@NotNull Throwable e) {
+		// if (inspector != null) {
+		// 	inspector.onHttpError(this, e);
+		// }
 	}
 
 	/**
@@ -148,14 +175,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 */
 	@SuppressWarnings("PointlessArithmeticExpression")
 	@Override
-	protected void onStartLine(byte[] line, int limit) throws ParseException {
+	protected void onStartLine(byte[] line, int limit) throws MalformedHttpException {
 		switchPool(server.poolReadWrite);
 
 		HttpMethod method = getHttpMethod(line);
 		if (method == null) {
-			if (!DETAILED_ERROR_MESSAGES) throw UNKNOWN_HTTP_METHOD;
-			throw new UnknownFormatException(HttpServerConnection.class,
-					"Unknown HTTP method. First line: " + new String(line, 0, limit, ISO_8859_1));
+			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP method");
+			throw new MalformedHttpException("Unknown HTTP method. First line: " +
+					new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int urlStart = method.size + 1;
@@ -183,13 +210,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			} else if (line[p + 7] == '0') {
 				version = HTTP_1_0;
 			} else {
-				if (!DETAILED_ERROR_MESSAGES) throw UNKNOWN_HTTP_VERSION;
-				throw new UnknownFormatException(HttpServerConnection.class,
-						"Unknown HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
+				if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP version");
+				throw new MalformedHttpException("Unknown HTTP version. First line: " +
+						new String(line, 0, limit, ISO_8859_1));
 			}
 		} else {
-			if (!DETAILED_ERROR_MESSAGES) throw UNSUPPORTED_HTTP_VERSION;
-			throw new UnknownFormatException(HttpServerConnection.class,
+			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unsupported HTTP version");
+			throw new MalformedHttpException(
 					"Unsupported HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
@@ -248,13 +275,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param header received header
 	 */
 	@Override
-	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws ParseException {
+	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException {
 		if (header == HttpHeaders.EXPECT && equalsLowerCaseAscii(EXPECT_100_CONTINUE, array, off, len)) {
 			socket.write(ByteBuf.wrapForReading(EXPECT_RESPONSE_CONTINUE));
 		}
 		//noinspection ConstantConditions
 		if (request.headers.size() >= MAX_HEADERS) {
-			throw TOO_MANY_HEADERS;
+			throw new MalformedHttpException("Too many headers");
 		}
 		request.addHeader(header, array, off, len);
 	}
@@ -274,17 +301,66 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				flags &= ~WEB_SOCKET;
 			}
 		}
-		ByteBuf buf = renderHttpMessage(httpResponse);
-		if (buf != null) {
-			if ((flags & KEEP_ALIVE) != 0) {
-				eventloop.post(wrapContext(this, () -> writeBuf(buf)));
+		if (renderHttpResponse(httpResponse)) {
+			if ((flags & READING_MESSAGES) != 0) {
+				flags |= BODY_SENT;
 			} else {
-				writeBuf(buf);
+				ByteBuf writeBuf = this.writeBuf;
+				this.writeBuf = null;
+				writeBuf(writeBuf);
 			}
 		} else {
-			writeHttpMessageAsStream(httpResponse);
+			ByteBuf writeBuf = this.writeBuf;
+			this.writeBuf = null;
+			writeHttpMessageAsStream(writeBuf, httpResponse);
 		}
 		httpResponse.recycle();
+	}
+
+	@SuppressWarnings("ConstantConditions")
+		// writeBuf is ensured before accessing
+	boolean renderHttpResponse(HttpMessage httpMessage) {
+		if (httpMessage.body != null) {
+			ByteBuf body = httpMessage.body;
+			httpMessage.body = null;
+			if ((httpMessage.flags & HttpMessage.USE_GZIP) == 0) {
+				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(body.readRemaining()));
+				int messageSize = httpMessage.estimateSize() + body.readRemaining();
+				ensureWriteBuffer(messageSize);
+				httpMessage.writeTo(writeBuf);
+				writeBuf.put(body);
+				body.recycle();
+			} else {
+				ByteBuf gzippedBody = GzipProcessorUtils.toGzip(body);
+				httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(gzippedBody.readRemaining()));
+				int messageSize = httpMessage.estimateSize() + gzippedBody.readRemaining();
+				ensureWriteBuffer(messageSize);
+				httpMessage.writeTo(writeBuf);
+				writeBuf.put(gzippedBody);
+				gzippedBody.recycle();
+			}
+			return true;
+		}
+
+		if (httpMessage.bodyStream == null) {
+			if (httpMessage.isContentLengthExpected()) {
+				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(0));
+			}
+			ensureWriteBuffer(httpMessage.estimateSize());
+			httpMessage.writeTo(writeBuf);
+			return true;
+		}
+
+		return false;
+	}
+
+	private void ensureWriteBuffer(int messageSize) {
+		if (writeBuf == null) {
+			writeBuf = ByteBufPool.allocate(messageSize);
+		} else {
+			writeBuf = ByteBufPool.ensureWriteRemaining(writeBuf, messageSize);
+		}
 	}
 
 	@Override
@@ -303,7 +379,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		request.setRemoteAddress(remoteAddress);
 
 		numberOfRequests++;
-		if (inspector != null) inspector.onHttpRequest(request);
+		// if (inspector != null) inspector.onHttpRequest(request);
 
 		switchPool(server.poolServing);
 
@@ -325,14 +401,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			}
 			switchPool(server.poolReadWrite);
 			if (e == null) {
-				if (inspector != null) {
-					inspector.onHttpResponse(request, response);
-				}
+				// if (inspector != null) {
+				// 	inspector.onHttpResponse(request, response);
+				// }
 				writeHttpResponse(response);
 			} else {
-				if (inspector != null) {
-					inspector.onServletException(request, e);
-				}
+				// if (inspector != null) {
+				// 	inspector.onServletException(request, e);
+				// }
 				writeException(e);
 			}
 
@@ -344,7 +420,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private boolean processWebSocketRequest(@Nullable ByteBuf body) {
 		if (body != null && body.readRemaining() == 0) {
 			ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> isClosed() ?
-					ChannelSupplier.ofException(CLOSE_EXCEPTION) :
+					ChannelSupplier.ofException(new CloseException("Connection closed")) :
 					ChannelSupplier.of(readQueue.takeRemaining()));
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
 			request.bodyStream = concat(ofQueueSupplier, ofSocketSupplier)
@@ -362,7 +438,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	protected void onBodyReceived() {
 		assert !isClosed();
 		flags |= BODY_RECEIVED;
-		if ((flags & BODY_SENT) != 0 && pool != server.poolServing) {
+		if ((flags & (READING_MESSAGES | BODY_RECEIVED | BODY_SENT)) == (BODY_RECEIVED | BODY_SENT) && pool != server.poolServing) {
 			onHttpMessageComplete();
 		}
 	}
@@ -371,7 +447,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	protected void onBodySent() {
 		assert !isClosed();
 		flags |= BODY_SENT;
-		if ((flags & BODY_RECEIVED) != 0 && pool != server.poolServing) {
+		if ((flags & (READING_MESSAGES | BODY_RECEIVED | BODY_SENT)) == (BODY_RECEIVED | BODY_SENT) && pool != server.poolServing) {
 			onHttpMessageComplete();
 		}
 	}
@@ -387,15 +463,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		if ((flags & KEEP_ALIVE) != 0 && server.keepAliveTimeoutMillis != 0) {
 			switchPool(server.poolKeepAlive);
-			flags = 0;
+
+			if (socket.isReadAvailable()) {
+				socket.read().whenResult(readQueue::add);
+			}
+
 			try {
-				/*
-					as per RFC 7230, section 3.3.3,
-					if no Content-Length header is set, server can assume that a length of a message is 0
-				 */
-				contentLength = 0;
-				readHttpMessage();
-			} catch (ParseException e) {
+				readMessage();
+			} catch (MalformedHttpException e) {
 				closeWithError(e);
 			}
 		} else {
@@ -413,12 +488,13 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			request.recycle();
 			request = null;
 		}
-		if (inspector != null) inspector.onDisconnect(this);
+		// if (inspector != null) inspector.onDisconnect(this);
 		//noinspection ConstantConditions
 		pool.removeNode(this);
 		//noinspection AssertWithSideEffects,ConstantConditions
 		assert (pool = null) == null;
 		server.onConnectionClosed();
+		writeBuf = Utils.nullify(writeBuf, ByteBuf::recycle);
 	}
 
 	@Override

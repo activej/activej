@@ -20,7 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
 import io.activej.common.api.WithInitializer;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsException;
@@ -51,7 +51,7 @@ import static java.util.stream.Collectors.toMap;
 public final class FsPartitions implements EventloopService, WithInitializer<FsPartitions> {
 	private static final Logger logger = LoggerFactory.getLogger(FsPartitions.class);
 
-	static final FsException LOCAL_EXCEPTION = new FsException(FsPartitions.class, "Local exception");
+	static final FsException LOCAL_EXCEPTION = new FsException("Local exception");
 
 	private final Map<Object, ActiveFs> alivePartitions = new HashMap<>();
 	private final Map<Object, ActiveFs> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
@@ -185,7 +185,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * or that there were no response at all
 	 */
 	public void markIfDead(Object partitionId, Throwable e) {
-		if (!(e instanceof FsException) && e != LOCAL_EXCEPTION || e instanceof FsIOException) {
+		if (!(e instanceof FsException) || e instanceof FsIOException) {
 			markDead(partitionId, e);
 		}
 	}
@@ -200,7 +200,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 				return Promise.ofException(e);
 			}
 			logger.warn("Node failed", e);
-			return Promise.ofException(new FsIOException(FsPartitions.class, "Node failed"));
+			return Promise.ofException(new FsIOException("Node failed"));
 		};
 	}
 
@@ -275,7 +275,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	}
 
 	@JmxOperation
-	public void setPartitions(List<String> partitions) throws ParseException {
+	public void setPartitions(List<String> partitions) throws MalformedDataException {
 		Map<String, Object> previousPartitions = this.partitions.keySet().stream()
 				.collect(toMap(Object::toString, Function.identity()));
 		Set<String> previousPartitionsKeyset = previousPartitions.keySet();

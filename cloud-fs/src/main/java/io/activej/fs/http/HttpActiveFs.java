@@ -18,15 +18,14 @@ package io.activej.fs.http;
 
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.codec.StructuredDecoder;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.exception.FsIOException;
+import io.activej.fs.exception.FsExceptionCodec;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -35,7 +34,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJsonBuf;
@@ -44,9 +42,8 @@ import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.Codecs.*;
-import static io.activej.fs.util.RemoteFsUtils.UNEXPECTED_END_OF_STREAM;
+import static io.activej.fs.util.RemoteFsUtils.decodeBody;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
-import static io.activej.http.AbstractHttpConnection.INCOMPLETE_MESSAGE;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -57,8 +54,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Inherits all of the limitations of {@link ActiveFs} implementation located on server.
  */
 public final class HttpActiveFs implements ActiveFs {
-	public static final FsIOException UNKNOWN_SERVER_ERROR = new FsIOException(HttpActiveFs.class, "Unknown server error occurred");
-
 	private final IAsyncHttpClient client;
 	private final String url;
 
@@ -110,7 +105,7 @@ public final class HttpActiveFs implements ActiveFs {
 						url + urlBuilder
 								.build()))
 				.then(HttpActiveFs::checkResponse)
-				.map(response -> wrapIncompleteMessages(response.getBodyStream()));
+				.map(HttpMessage::getBodyStream);
 	}
 
 	@Override
@@ -123,7 +118,7 @@ public final class HttpActiveFs implements ActiveFs {
 								.build()))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(parseBody(FILE_META_MAP_CODEC));
+				.then(decodeBody(FILE_META_MAP_CODEC));
 	}
 
 	@Override
@@ -136,7 +131,7 @@ public final class HttpActiveFs implements ActiveFs {
 								.build()))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(parseBody(FILE_META_CODEC_NULLABLE));
+				.then(decodeBody(FILE_META_CODEC_NULLABLE));
 	}
 
 	@Override
@@ -149,7 +144,7 @@ public final class HttpActiveFs implements ActiveFs {
 						.withBody(toJsonBuf(STRINGS_SET_CODEC, names)))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(parseBody(FILE_META_MAP_CODEC));
+				.then(decodeBody(FILE_META_MAP_CODEC));
 	}
 
 	@Override
@@ -252,24 +247,14 @@ public final class HttpActiveFs implements ActiveFs {
 				return response.loadBody()
 						.then(body -> {
 							try {
-								return Promise.ofException(fromJson(FS_EXCEPTION_CODEC, body.getString(UTF_8)));
-							} catch (ParseException ignored) {
-								return Promise.ofException(HttpException.ofCode(500));
+								return Promise.ofException(fromJson(FsExceptionCodec.CODEC, body.getString(UTF_8)));
+							} catch (MalformedDataException ignored) {
+								return Promise.ofException(HttpError.ofCode(500));
 							}
 						});
 			default:
-				return Promise.ofException(HttpException.ofCode(response.getCode()));
+				return Promise.ofException(HttpError.ofCode(response.getCode()));
 		}
-	}
-
-	private static <T> Function<ByteBuf, Promise<T>> parseBody(StructuredDecoder<T> decoder) {
-		return body -> {
-			try {
-				return Promise.of(fromJson(decoder, body.getString(UTF_8)));
-			} catch (ParseException e) {
-				return Promise.ofException(e);
-			}
-		};
 	}
 
 	@NotNull
@@ -295,7 +280,7 @@ public final class HttpActiveFs implements ActiveFs {
 							channelPromise.trySet(consumer
 									.transformWith(transformer)
 									.withAcknowledgement(ack -> ack.both(response.loadBody()
-											.then(parseBody(UploadAcknowledgement.CODEC))
+											.then(decodeBody(UploadAcknowledgement.CODEC))
 											.then(HttpActiveFs::failOnException)
 											.whenException(e -> {
 												channelPromise.trySetException(e);
@@ -316,13 +301,6 @@ public final class HttpActiveFs implements ActiveFs {
 		}
 		//noinspection ConstantConditions - checked above
 		return Promise.ofException(ack.getError());
-	}
-
-	private static ChannelSupplier<ByteBuf> wrapIncompleteMessages(ChannelSupplier<ByteBuf> supplier) {
-		return supplier.withEndOfStream(eos -> eos
-				.thenEx((v, e) -> e == INCOMPLETE_MESSAGE ?
-						Promise.ofException(UNEXPECTED_END_OF_STREAM) :
-						Promise.of(v, e)));
 	}
 
 }

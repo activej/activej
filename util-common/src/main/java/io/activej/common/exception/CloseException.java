@@ -16,12 +16,25 @@
 
 package io.activej.common.exception;
 
-public class CloseException extends StacklessException {
-	public CloseException(Class<?> component, String message) {
-		super(component, message);
+import io.activej.common.ApplicationSettings;
+
+public class CloseException extends Exception {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(CloseException.class, "withStackTrace", false);
+
+	public CloseException() {
+		super();
 	}
 
-	public CloseException(Class<?> component, String message, Throwable cause) {
-		super(component, message, cause);
+	public CloseException(String message) {
+		super(message);
+	}
+
+	public CloseException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	@Override
+	public final Throwable fillInStackTrace() {
+		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

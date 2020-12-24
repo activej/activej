@@ -17,7 +17,6 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.exception.StacklessException;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,10 +37,10 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 
 	private final ResultValidator<?> resultValidator;
 	@Nullable
-	private final StacklessException noValidResultException;
+	private final Exception noValidResultException;
 
 	private RpcStrategyFirstValidResult(RpcStrategyList list, ResultValidator<?> resultValidator,
-			@Nullable StacklessException noValidResultException) {
+			@Nullable Exception noValidResultException) {
 		this.list = list;
 		this.resultValidator = resultValidator;
 		this.noValidResultException = noValidResultException;
@@ -55,7 +54,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		return new RpcStrategyFirstValidResult(list, resultValidator, noValidResultException);
 	}
 
-	public RpcStrategyFirstValidResult withNoValidResultException(@NotNull StacklessException e) {
+	public RpcStrategyFirstValidResult withNoValidResultException(@NotNull Exception e) {
 		return new RpcStrategyFirstValidResult(list, resultValidator, e);
 	}
 
@@ -77,10 +76,10 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		private final RpcSender[] subSenders;
 		private final ResultValidator<?> resultValidator;
 		@Nullable
-		private final StacklessException noValidResultException;
+		private final Exception noValidResultException;
 
 		Sender(@NotNull List<RpcSender> senders, @NotNull ResultValidator<?> resultValidator,
-				@Nullable StacklessException noValidResultException) {
+				@Nullable Exception noValidResultException) {
 			assert !senders.isEmpty();
 			this.subSenders = senders.toArray(new RpcSender[0]);
 			this.resultValidator = resultValidator;
@@ -103,10 +102,10 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		private final Callback<T> resultCallback;
 		private Throwable lastException;
 		@Nullable
-		private final StacklessException noValidResultException;
+		private final Exception noValidResultException;
 
 		FirstResultCallback(int expectedCalls, @NotNull ResultValidator<T> resultValidator, @NotNull Callback<T> resultCallback,
-				@Nullable StacklessException noValidResultException) {
+				@Nullable Exception noValidResultException) {
 			assert expectedCalls > 0;
 			this.expectedCalls = expectedCalls;
 			this.resultCallback = resultCallback;

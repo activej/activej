@@ -17,15 +17,13 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.parse.ParseException;
 
 import java.nio.charset.Charset;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.http.HttpUtils.parseQ;
-import static io.activej.http.HttpUtils.skipSpaces;
+import static io.activej.http.HttpUtils.*;
 
 /**
  * This is a value class for the Accept-Charset header value.
@@ -63,7 +61,7 @@ public final class AcceptCharset {
 		return new AcceptCharset(charset, q);
 	}
 
-	public Charset getCharset() throws ParseException {
+	public Charset getCharset() throws MalformedHttpException {
 		return charset.toJavaCharset();
 	}
 
@@ -71,7 +69,7 @@ public final class AcceptCharset {
 		return q;
 	}
 
-	static void parse(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws ParseException {
+	static void decode(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws MalformedHttpException {
 		try {
 			int end = pos + len;
 
@@ -82,7 +80,7 @@ public final class AcceptCharset {
 				while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
 					pos++;
 				}
-				HttpCharset charset = HttpCharset.parse(bytes, start, pos - start);
+				HttpCharset charset = HttpCharset.decode(bytes, start, pos - start);
 
 				if (pos < end) {
 					if (bytes[pos++] == ',') {
@@ -97,7 +95,7 @@ public final class AcceptCharset {
 								while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
 									pos++;
 								}
-								q = parseQ(bytes, start, pos - start);
+								q = decodeQ(bytes, start, pos - start);
 								pos--;
 							} else if (bytes[pos] == ';') {
 								pos = skipSpaces(bytes, pos + 1, end);
@@ -113,7 +111,7 @@ public final class AcceptCharset {
 				}
 			}
 		} catch (RuntimeException e) {
-			throw new ParseException(AcceptCharset.class, "Failed to parse accept-charset", e);
+			throw new MalformedHttpException("Failed to decode accept-charset", e);
 		}
 	}
 
@@ -127,19 +125,19 @@ public final class AcceptCharset {
 			AcceptCharset charset = charsets.get(i);
 			pos += HttpCharset.render(charset.charset, bytes, pos);
 			if (charset.q != DEFAULT_Q) {
-				bytes[pos++] = ';';
-				bytes[pos++] = ' ';
-				bytes[pos++] = 'q';
-				bytes[pos++] = '=';
-				bytes[pos++] = '0';
-				bytes[pos++] = '.';
+				bytes[pos++] = SEMICOLON;
+				bytes[pos++] = SP;
+				bytes[pos++] = Q;
+				bytes[pos++] = EQUALS;
+				bytes[pos++] = ZERO;
+				bytes[pos++] = DOT;
 				int q = charset.q;
 				if (q % 10 == 0) q /= 10;
 				pos += encodePositiveInt(bytes, pos, q);
 			}
 			if (i < charsets.size() - 1) {
-				bytes[pos++] = ',';
-				bytes[pos++] = ' ';
+				bytes[pos++] = COMMA;
+				bytes[pos++] = SP;
 			}
 		}
 		return pos;

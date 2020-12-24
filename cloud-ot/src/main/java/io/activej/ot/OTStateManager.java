@@ -21,7 +21,7 @@ import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.EventloopService;
 import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
-import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.uplink.OTUplink.FetchData;
@@ -219,7 +219,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 			transformed = otSystem.transform(
 					otSystem.squash(workingDiffs),
 					otSystem.squash(fetchedDiffs));
-		} catch (OTTransformException e) {
+		} catch (TransformException e) {
 			invalidateInternalState();
 			throw new UncheckedException(e);
 		}

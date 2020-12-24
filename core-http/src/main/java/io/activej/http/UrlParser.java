@@ -17,15 +17,12 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
-import io.activej.common.exception.parse.UnknownFormatException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static io.activej.http.HttpUtils.decodeUtf8;
 import static io.activej.http.Protocol.*;
 import static java.util.Collections.emptyList;
 
@@ -105,29 +102,29 @@ public final class UrlParser {
 		UrlParser httpUrl = new UrlParser(url);
 		try {
 			httpUrl.parse(false);
-		} catch (ParseException e) {
+		} catch (MalformedHttpException e) {
 			throw new IllegalArgumentException(e);
 		}
 		return httpUrl;
 	}
 
 	@NotNull
-	public static UrlParser parse(@NotNull String url) throws ParseException {
+	public static UrlParser parse(@NotNull String url) throws MalformedHttpException {
 		UrlParser httpUrl = new UrlParser(url);
 		httpUrl.parse(true);
 		return httpUrl;
 	}
 	// endregion
 
-	private void parse(boolean isRelativePathAllowed) throws ParseException {
+	private void parse(boolean isRelativePathAllowed) throws MalformedHttpException {
 		if (raw.length() > Short.MAX_VALUE) {
-			throw new InvalidSizeException(UrlParser.class, "HttpUrl length cannot be greater than " + Short.MAX_VALUE);
+			throw new MalformedHttpException("HttpUrl length cannot be greater than " + Short.MAX_VALUE);
 		}
 
 		short index = (short) raw.indexOf("://");
 		if (index < 0 || index > 5) {
 			if (!isRelativePathAllowed)
-				throw new ParseException(UrlParser.class, "Partial URI is not allowed: " + raw);
+				throw new MalformedHttpException("Partial URI is not allowed: " + raw);
 			index = 0;
 		} else {
 			if (index == 5 && raw.startsWith(HTTPS.lowercase())) {
@@ -139,14 +136,14 @@ public final class UrlParser {
 			} else if (index == 2 && raw.startsWith(WS.lowercase())) {
 				protocol = WS;
 			} else {
-				throw new UnknownFormatException(UrlParser.class, "Unsupported schema: " + raw.substring(0, index));
+				throw new MalformedHttpException("Unsupported schema: " + raw.substring(0, index));
 			}
 			index += "://".length();
 			host = index;
 
 			short hostPortEnd = findHostPortEnd(host);
 			if (host == hostPortEnd || raw.indexOf(':', host) == host) {
-				throw new ParseException("Domain name cannot be null or empty");
+				throw new MalformedHttpException("Domain name cannot be null or empty");
 			}
 
 			if (raw.indexOf(IPV6_OPENING_BRACKET, index) != -1) {                   // parse IPv6
@@ -379,8 +376,7 @@ public final class UrlParser {
 
 	private static final int[] NO_PARAMETERS = {};
 
-	@NotNull
-	static int[] parseQueryParameters(@NotNull String query, int pos, int end) {
+	static @NotNull int[] parseQueryParameters(@NotNull String query, int pos, int end) {
 		if (pos == end)
 			return NO_PARAMETERS;
 		assert query.length() >= end;
@@ -501,24 +497,24 @@ public final class UrlParser {
 		return true;
 	}
 
-	private static int toInt(@NotNull String str, int pos, int end) throws ParseException {
+	private static int toInt(@NotNull String str, int pos, int end) throws MalformedHttpException {
 		if (pos == end) {
-			throw new ParseException(UrlParser.class, "Empty port value");
+			throw new MalformedHttpException("Empty port value");
 		}
 		if ((end - pos) > 5) {
-			throw new ParseException(UrlParser.class, "Bad port: " + str.substring(pos, end));
+			throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
 		}
 
 		int result = 0;
 		for (int i = pos; i < end; i++) {
 			int c = str.charAt(i) - '0';
 			if (c < 0 || c > 9)
-				throw new ParseException(UrlParser.class, "Bad port: " + str.substring(pos, end));
+				throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
 			result = c + result * 10;
 		}
 
 		if (result > 0xFFFF) {
-			throw new ParseException(UrlParser.class, "Bad port: " + str.substring(pos, end));
+			throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
 		}
 
 		return result;
@@ -526,29 +522,29 @@ public final class UrlParser {
 
 	@Nullable
 	private static String keyValueDecode(@NotNull String url, int keyEnd) {
-		return urlDecode(url, keyEnd < url.length() && url.charAt(keyEnd) == '=' ? keyEnd + 1 : keyEnd);
+		return urlParse(url, keyEnd < url.length() && url.charAt(keyEnd) == '=' ? keyEnd + 1 : keyEnd);
 	}
 
 	/**
-	 * Decodes a application/x-www-form-urlencoded string using a specific encoding scheme. The supplied
+	 * Parses an application/x-www-form-urlencoded string using a specific encoding scheme. The supplied
 	 * encoding is used to determine what characters are represented by any consecutive sequences of the
 	 * form "%xy".
 	 *
 	 * @param s string for decoding
-	 * @return the newly decoded String
+	 * @return the newly parsed String
 	 */
 	@Nullable
-	public static String urlDecode(@NotNull String s) {
-		return urlDecode(s, 0);
+	public static String urlParse(@NotNull String s) {
+		return urlParse(s, 0);
 	}
 
 	@Nullable
-	private static String urlDecode(String s, int pos) {
+	private static String urlParse(String s, int pos) {
 		int len = s.length();
 		for (int i = pos; i < len; i++) {
 			char c = s.charAt(i);
 			if (c == '+' || c == '%')
-				return urlDecode(s, pos, i); // inline hint
+				return urlParse(s, pos, i); // inline hint
 			if (c == '&' || c == '#')
 				return s.substring(pos, i);
 		}
@@ -556,7 +552,7 @@ public final class UrlParser {
 	}
 
 	@Nullable
-	private static String urlDecode(String s, int pos, int encodedSuffixPos) {
+	private static String urlParse(String s, int pos, int encodedSuffixPos) {
 		int len = s.length();
 
 		CachedBuffers cachedBuffers = CACHED_BUFFERS.get();
@@ -588,7 +584,7 @@ public final class UrlParser {
 						int bytesPos = 0;
 
 						while ((pos + 2 < len) && (c == '%')) {
-							bytes[bytesPos++] = (byte) ((parseHex(s.charAt(pos + 1)) << 4) + parseHex(s.charAt(pos + 2)));
+							bytes[bytesPos++] = (byte) ((decodeHex(s.charAt(pos + 1)) << 4) + decodeHex(s.charAt(pos + 2)));
 							pos += 3;
 							if (pos < len) {
 								c = s.charAt(pos);
@@ -598,7 +594,7 @@ public final class UrlParser {
 						if ((pos < len) && (c == '%'))
 							return null;
 
-						charsPos = ByteBufStrings.decodeUtf8(bytes, 0, bytesPos, chars, charsPos);
+						charsPos = decodeUtf8(bytes, 0, bytesPos, chars, charsPos);
 						break;
 					default:
 						chars[charsPos++] = c;
@@ -607,16 +603,16 @@ public final class UrlParser {
 				}
 			}
 			return new String(chars, 0, charsPos);
-		} catch (ParseException e) {
+		} catch (MalformedHttpException e) {
 			return null;
 		}
 	}
 
-	private static byte parseHex(char c) throws ParseException {
+	private static byte decodeHex(char c) throws MalformedHttpException {
 		if (c >= '0' && c <= '9') return (byte) (c - '0');
 		if (c >= 'a' && c <= 'f') return (byte) (c - 'a' + 10);
 		if (c >= 'A' && c <= 'F') return (byte) (c - 'A' + 10);
-		throw new ParseException(UrlParser.class, "Failed to parse hex digit from '" + c + '\'');
+		throw new MalformedHttpException("Failed to decode hex digit from '" + c + '\'');
 	}
 
 	@Override

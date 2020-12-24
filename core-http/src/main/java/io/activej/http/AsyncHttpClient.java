@@ -20,6 +20,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
+import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
@@ -58,8 +59,8 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.jmx.MBeanFormat.formatListAsMultilineString;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-import static io.activej.http.AbstractHttpConnection.READ_TIMEOUT_ERROR;
 import static io.activej.http.Protocol.*;
+import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -185,12 +186,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		@Override
 		public void onHttpError(HttpClientConnection connection, Throwable e) {
-			if (e == AbstractHttpConnection.READ_TIMEOUT_ERROR || e == AbstractHttpConnection.WRITE_TIMEOUT_ERROR) {
+			if (e instanceof AsyncTimeoutException) {
 				httpTimeouts.recordEvent();
 				return;
 			}
 			httpErrors.recordException(e);
-			if (SSLException.class == e.getClass()) {
+			if (e instanceof SSLException) {
 				sslErrors.recordEvent();
 			}
 			// when connection is in keep-alive state, it means that the response already happened,
@@ -355,7 +356,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 			boolean isClosing = closePromise != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(eventloop.currentTimeMillis() -
-						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), READ_TIMEOUT_ERROR);
+						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
 			}
 			if (getConnectionsCount() != 0) {
 				scheduleExpiredConnectionsCheck();
@@ -441,12 +442,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 							//noinspection ConstantConditions - dnsResponse is successful (not null)
 							return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
 						} else {
-							return Promise.ofException(new DnsQueryException(AsyncHttpClient.class, dnsResponse));
+							return Promise.ofException(new HttpException(new DnsQueryException(dnsResponse)));
 						}
 					} else {
 						if (inspector != null) inspector.onResolveError(request, e);
 						request.recycle();
-						return Promise.ofException(e);
+						return Promise.ofException(translateToHttpException(e));
 					}
 				});
 	}
@@ -502,7 +503,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 					} else {
 						if (inspector != null) inspector.onConnectError(request, address, e);
 						request.recycle();
-						return Promise.ofException(e);
+						return Promise.ofException(translateToHttpException(e));
 					}
 				});
 	}

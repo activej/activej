@@ -18,6 +18,8 @@ package io.activej.http;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.http.loader.ResourceIsADirectoryException;
+import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.http.loader.StaticLoader;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -148,7 +150,7 @@ public final class StaticServlet implements AsyncServlet {
 	@Override
 	public final Promise<HttpResponse> serve(@NotNull HttpRequest request) {
 		String mappedPath = pathMapper.apply(request);
-		if (mappedPath == null) return Promise.ofException(HttpException.notFound404());
+		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);
 		return Promise.complete()
 				.then(() -> (mappedPath.endsWith("/") || mappedPath.isEmpty()) ?
@@ -156,7 +158,7 @@ public final class StaticServlet implements AsyncServlet {
 						resourceLoader.load(mappedPath)
 								.map(byteBuf -> createHttpResponse(byteBuf, contentType))
 								.thenEx((value, e) -> {
-									if (e == StaticLoader.IS_A_DIRECTORY) {
+									if (e instanceof ResourceIsADirectoryException) {
 										return tryLoadIndexResource(mappedPath);
 									} else {
 										return Promise.of(value, e);
@@ -165,10 +167,10 @@ public final class StaticServlet implements AsyncServlet {
 				.thenEx((response, e) -> {
 					if (e == null) {
 						return Promise.of(response);
-					} else if (e == StaticLoader.NOT_FOUND_EXCEPTION) {
+					} else if (e instanceof ResourceNotFoundException) {
 						return tryLoadDefaultResource();
 					} else {
-						return Promise.ofException(HttpException.ofCode(400, e));
+						return Promise.ofException(HttpError.ofCode(400, e));
 					}
 				});
 	}
@@ -181,7 +183,9 @@ public final class StaticServlet implements AsyncServlet {
 						.map(indexResource -> AsyncSupplier.of(() ->
 								resourceLoader.load(dirPath + indexResource)
 										.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource))))))
-				.thenEx(((response, e) -> e == null ? Promise.of(response) : Promise.ofException(StaticLoader.NOT_FOUND_EXCEPTION)));
+				.thenEx(((response, e) -> e == null ?
+						Promise.of(response) :
+						Promise.ofException(new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e))));
 	}
 
 	@NotNull
@@ -189,6 +193,6 @@ public final class StaticServlet implements AsyncServlet {
 		return defaultResource != null ?
 				resourceLoader.load(defaultResource)
 						.map(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :
-				Promise.ofException(HttpException.notFound404());
+				Promise.ofException(HttpError.notFound404());
 	}
 }

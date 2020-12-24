@@ -18,9 +18,9 @@ package io.activej.bytebuf;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.exception.parse.InvalidSizeException;
-import io.activej.common.exception.parse.ParseException;
 import io.activej.common.recycle.Recyclable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -96,7 +96,7 @@ public final class ByteBufQueue implements Recyclable {
 					if (size > maxSize || queue.hasRemainingBytes(maxSize - size + 1)) {
 						queue.recycle();
 						buf.recycle();
-						throw new UncheckedException(new InvalidSizeException(ByteBufQueue.class,
+						throw new UncheckedException(new InvalidSizeException(
 								"ByteBufQueue exceeds maximum size of " + maxSize + " bytes"));
 					}
 					queue.add(buf);
@@ -617,14 +617,14 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	public interface ByteScanner {
-		boolean consume(int index, byte b) throws ParseException;
+		boolean consume(int index, byte b) throws MalformedDataException;
 	}
 
-	public int scanBytes(ByteScanner byteScanner) throws ParseException {
+	public int scanBytes(ByteScanner byteScanner) throws MalformedDataException {
 		return scanBytes(0, byteScanner);
 	}
 
-	public int scanBytes(int offset, ByteScanner byteScanner) throws ParseException {
+	public int scanBytes(int offset, ByteScanner byteScanner) throws MalformedDataException {
 		int n = first;
 		while (offset > 0 && n != last) {
 			int readRemaining = bufs[n].readRemaining();
@@ -650,19 +650,19 @@ public final class ByteBufQueue implements Recyclable {
 		return 0;
 	}
 
-	public int consumeBytes(ByteScanner byteScanner) throws ParseException {
+	public int consumeBytes(ByteScanner byteScanner) throws MalformedDataException {
 		return consumeBytes(0, byteScanner, $ -> {});
 	}
 
-	public int consumeBytes(ByteScanner byteScanner, Consumer<ByteBuf> recycledBufs) throws ParseException {
+	public int consumeBytes(ByteScanner byteScanner, Consumer<ByteBuf> recycledBufs) throws MalformedDataException {
 		return consumeBytes(0, byteScanner, recycledBufs);
 	}
 
-	public int consumeBytes(int offset, ByteScanner byteScanner) throws ParseException {
+	public int consumeBytes(int offset, ByteScanner byteScanner) throws MalformedDataException {
 		return consumeBytes(offset, byteScanner, $ -> {});
 	}
 
-	public int consumeBytes(int offset, ByteScanner byteScanner, Consumer<ByteBuf> recycledBufs) throws ParseException {
+	public int consumeBytes(int offset, ByteScanner byteScanner, Consumer<ByteBuf> recycledBufs) throws MalformedDataException {
 		int n = first;
 		while (offset > 0 && n != last) {
 			int readRemaining = bufs[n].readRemaining();

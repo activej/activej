@@ -19,6 +19,8 @@ package io.activej.fs.tcp;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -53,7 +55,8 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
-import static io.activej.fs.util.RemoteFsUtils.*;
+import static io.activej.fs.util.RemoteFsUtils.nullTerminatedJson;
+import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.util.Collections.emptyMap;
 
 /**
@@ -67,7 +70,6 @@ import static java.util.Collections.emptyMap;
 public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
-	public static final FsIOException INVALID_MESSAGE = new FsIOException(RemoteActiveFs.class, "Invalid or unexpected message received");
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectionTimeout", Duration.ZERO);
 
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
@@ -198,7 +200,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 								.then(msg -> {
 									long receivingSize = msg.getSize();
 									if (receivingSize > limit) {
-										return Promise.ofException(UNEXPECTED_DATA);
+										return Promise.ofException(new UnexpectedDataException());
 									}
 
 									logger.trace("download size for file {} is {}: {}", name, receivingSize, this);
@@ -216,7 +218,10 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 																" (offset " + offset + ", limit " + limit + ")," +
 																" expected: " + receivingSize +
 																" actual: " + size.get());
-														return Promise.ofException(size.get() < receivingSize ? UNEXPECTED_END_OF_STREAM : UNEXPECTED_DATA);
+														return Promise.ofException(size.get() < receivingSize ?
+																new TruncatedDataException() :
+																new UnexpectedDataException()
+														);
 													})
 													.whenComplete(downloadFinishPromise.recordStats())
 													.whenComplete(toLogger(logger, "onDownloadComplete", name, offset, limit, this))
@@ -333,7 +338,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		if (msg instanceof ServerError) {
 			return Promise.ofException(((ServerError) msg).getError());
 		}
-		return Promise.ofException(INVALID_MESSAGE);
+		return Promise.ofException(new FsIOException("Invalid or unexpected message received"));
 	}
 
 	private <T, R extends FsResponse> Promise<T> simpleCommand(FsCommand command, Class<R> responseType, Function<R, T> answerExtractor) {

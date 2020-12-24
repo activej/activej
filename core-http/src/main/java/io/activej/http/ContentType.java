@@ -18,14 +18,14 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.parse.ParseException;
 
 import java.nio.charset.Charset;
 import java.util.Objects;
 
+import static io.activej.bytebuf.ByteBufStrings.SP;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.http.ContentTypes.lookup;
-import static io.activej.http.HttpUtils.skipSpaces;
+import static io.activej.http.HttpUtils.*;
 
 /**
  * This is a value class for the Content-Type header value.
@@ -49,7 +49,7 @@ public final class ContentType {
 		return lookup(mime, HttpCharset.of(charset));
 	}
 
-	static ContentType parse(byte[] bytes, int pos, int length) throws ParseException {
+	static ContentType decode(byte[] bytes, int pos, int length) throws MalformedHttpException {
 		try {
 			// parsing media type
 			int end = pos + length;
@@ -80,7 +80,7 @@ public final class ContentType {
 						while (pos < end && bytes[pos] != ';') {
 							pos++;
 						}
-						charset = HttpCharset.parse(bytes, start, pos - start);
+						charset = HttpCharset.decode(bytes, start, pos - start);
 					} else if (bytes[pos] == ';' && pos + 1 < end) {
 						start = skipSpaces(bytes, pos + 1, end);
 					}
@@ -89,7 +89,7 @@ public final class ContentType {
 			}
 			return lookup(type, charset);
 		} catch (RuntimeException e) {
-			throw new ParseException(ContentType.class, "Failed to parse content-type", e);
+			throw new MalformedHttpException("Failed to decode content-type", e);
 		}
 	}
 
@@ -101,17 +101,18 @@ public final class ContentType {
 	static int render(ContentType type, byte[] container, int pos) {
 		pos += MediaTypes.render(type.getMediaType(), container, pos);
 		if (type.charset != null) {
-			container[pos++] = ';';
-			container[pos++] = ' ';
-			System.arraycopy(CHARSET_KEY, 0, container, pos, CHARSET_KEY.length);
-			pos += CHARSET_KEY.length;
-			container[pos++] = '=';
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte b : CHARSET_KEY) {
+				container[pos++] = b;
+			}
+			container[pos++] = EQUALS;
 			pos += HttpCharset.render(type.charset, container, pos);
 		}
 		return pos;
 	}
 
-	public Charset getCharset() throws ParseException {
+	public Charset getCharset() throws MalformedHttpException {
 		return charset == null ? null : charset.toJavaCharset();
 	}
 

@@ -22,7 +22,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -286,7 +286,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	}
 
 	private static <T> Promise<T> ofFailure(String message) {
-		return Promise.ofException(new FsIOException(ClusterActiveFs.class, message));
+		return Promise.ofException(new FsIOException(message));
 	}
 
 	private <T> Promise<T> checkStillNotDead(T value) {
@@ -366,7 +366,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	private <T> Promise<T> call(Object id, BiFunction<Object, ActiveFs, Promise<T>> action) {
 		ActiveFs fs = partitions.get(id);
 		if (fs == null) {  // marked as dead already by somebody
-			return Promise.ofException(new FsIOException(ClusterActiveFs.class, "Partition '" + id + "' is not alive"));
+			return Promise.ofException(new FsIOException("Partition '" + id + "' is not alive"));
 		}
 		return action.apply(id, fs)
 				.thenEx(partitions.wrapDeath(id));
@@ -566,7 +566,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	}
 
 	@JmxOperation
-	public void setPartitions(String partitionString) throws ParseException {
+	public void setPartitions(String partitionString) throws MalformedDataException {
 		this.partitions.setPartitions(Arrays.stream(partitionString.split(";"))
 				.map(String::trim)
 				.filter(s -> !s.isEmpty())

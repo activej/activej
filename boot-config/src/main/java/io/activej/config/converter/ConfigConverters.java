@@ -20,7 +20,7 @@ import io.activej.async.service.EventloopTaskScheduler.Schedule;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.concurrent.SimpleThreadFactory;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.eventloop.error.FatalErrorHandler;
 import io.activej.eventloop.inspector.ThrottlingController;
@@ -322,7 +322,7 @@ public final class ConfigConverters {
 			public InetSocketAddress fromString(String addressPort) {
 				try {
 					return parseInetSocketAddress(addressPort);
-				} catch (ParseException e) {
+				} catch (MalformedDataException e) {
 					throw new IllegalArgumentException(e);
 				}
 			}

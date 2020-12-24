@@ -1,6 +1,5 @@
 package io.activej.http;
 
-import io.activej.common.exception.parse.ParseException;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -24,25 +23,25 @@ public class HttpDateTest {
 	}
 
 	@Test
-	public void testParser() throws ParseException {
+	public void testDecoder() throws MalformedHttpException {
 		String date = "Thu, 01 Jan 2015 02:00:00 GMT";
-		long actual = HttpDate.parse(date.getBytes(ISO_8859_1), 0);
+		long actual = HttpDate.decode(date.getBytes(ISO_8859_1), 0);
 
 		LocalDateTime dateTime = LocalDateTime.of(2015, JANUARY, 1, 2, 0);
 		assertEquals(actual, dateTime.toInstant(UTC).getEpochSecond());
 	}
 
 	@Test
-	public void testFull() throws ParseException {
+	public void testFull() throws MalformedHttpException {
 		byte[] bytes = new byte[29];
 		HttpDate.render(4073580000L, bytes, 0);
-		assertEquals(4073580000L, HttpDate.parse(bytes, 0));
+		assertEquals(4073580000L, HttpDate.decode(bytes, 0));
 	}
 
 	@Test
-	public void testDateWithShortYear() throws ParseException {
+	public void testDateWithShortYear() throws MalformedHttpException {
 		String date = "Thu, 01 Jan 15 00:00:00 GMT";
-		long actual = HttpDate.parse(date.getBytes(ISO_8859_1), 0);
+		long actual = HttpDate.decode(date.getBytes(ISO_8859_1), 0);
 
 		LocalDate expected = LocalDate.of(2015, JANUARY, 1);
 		assertEquals(expected.atStartOfDay().toInstant(UTC).getEpochSecond(), actual);

@@ -2,8 +2,8 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.common.exception.StacklessException;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.InvalidSizeException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.promise.Promise;
@@ -19,13 +19,11 @@ import java.util.List;
 
 import static io.activej.http.TestUtils.AssertingConsumer;
 import static io.activej.http.TestUtils.chunkedByByte;
-import static io.activej.http.stream.BufsConsumerChunkedDecoder.MALFORMED_CHUNK_LENGTH;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 public final class BufsConsumerChunkedDecoderTest {
 
@@ -34,8 +32,6 @@ public final class BufsConsumerChunkedDecoderTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	private static final StacklessException IGNORE_EXCEPTION = new StacklessException();
 
 	public final AssertingConsumer consumer = new AssertingConsumer();
 	public final List<ByteBuf> list = new ArrayList<>();
@@ -113,20 +109,20 @@ public final class BufsConsumerChunkedDecoderTest {
 
 	@Test
 	public void shouldThrowChunkSizeException() {
-		consumer.setExpectedException(MALFORMED_CHUNK_LENGTH);
+		consumer.setExpectedExceptionType(InvalidSizeException.class);
 		String message = Integer.toHexString(-1) + "\r\n";
-		decodeOneString(message, MALFORMED_CHUNK_LENGTH);
+		decodeOneString(message, InvalidSizeException.class);
 	}
 
 	@Test
-	public void shouldThrowParseException() {
+	public void shouldThrowMalformedDataException() {
 		consumer.setExceptionValidator(e -> {
-			assertThat(e, instanceOf(ParseException.class));
+			assertThat(e, instanceOf(MalformedDataException.class));
 			assertThat(e.getMessage(), startsWith("Array of bytes differs at index 0"));
 		});
 		String message = Integer.toHexString(1);
 		message += "\r\nssss\r\n";
-		decodeOneString(message, IGNORE_EXCEPTION);
+		decodeOneString(message, MalformedDataException.class);
 	}
 
 	@Test
@@ -154,13 +150,13 @@ public final class BufsConsumerChunkedDecoderTest {
 		decodeThreeStrings(message1, message2, message3);
 	}
 
-	private void decodeOneString(String message, @Nullable Exception e) {
+	private void decodeOneString(String message, @Nullable Class<? extends Throwable> exceptionType) {
 		byte[] bytes = message.getBytes();
 		ByteBuf buf = ByteBufPool.allocate(bytes.length);
 		buf.put(bytes);
 		list.add(buf);
 
-		doTest(e);
+		doTest(exceptionType);
 	}
 
 	private void decodeTwoStrings(String message1, String message2) {
@@ -193,16 +189,14 @@ public final class BufsConsumerChunkedDecoderTest {
 		doTest(null);
 	}
 
-	private void doTest(@Nullable Exception expectedException) {
+	private void doTest(@Nullable Class<? extends Throwable> expectedExceptionType) {
 		chunkedDecoder.getInput().set(BinaryChannelSupplier.of(chunkedByByte(ChannelSupplier.ofList(list))));
 		Promise<?> processResult = chunkedDecoder.getProcessCompletion();
-		if (expectedException == null) {
+		if (expectedExceptionType == null) {
 			await(processResult);
 		} else {
 			Throwable actualException = awaitException(processResult);
-			if (expectedException != IGNORE_EXCEPTION){
-				assertEquals(expectedException, actualException);
-			}
+			assertThat(actualException, instanceOf(expectedExceptionType));
 		}
 	}
 }

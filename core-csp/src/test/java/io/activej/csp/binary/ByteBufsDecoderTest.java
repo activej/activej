@@ -3,7 +3,7 @@ package io.activej.csp.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufQueue;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -22,7 +22,7 @@ public final class ByteBufsDecoderTest {
 	private final ByteBufQueue tempQueue = new ByteBufQueue();
 
 	@Test
-	public void testOfNullTerminatedBytes() throws ParseException {
+	public void testOfNullTerminatedBytes() throws MalformedDataException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofNullTerminatedBytes();
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 0, 4, 5, 6}));
 		ByteBuf beforeNull = doDecode(decoder);
@@ -40,7 +40,7 @@ public final class ByteBufsDecoderTest {
 	}
 
 	@Test
-	public void ofCrlfTerminatedBytes() throws ParseException {
+	public void ofCrlfTerminatedBytes() throws MalformedDataException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofCrlfTerminatedBytes();
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, CR, LF, 4, 5, 6}));
 		ByteBuf beforeCrlf = doDecode(decoder);
@@ -58,7 +58,7 @@ public final class ByteBufsDecoderTest {
 	}
 
 	@Test
-	public void ofCrlfTerminatedBytesWithMaxSize() throws ParseException {
+	public void ofCrlfTerminatedBytesWithMaxSize() throws MalformedDataException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofCrlfTerminatedBytes(5);
 		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, CR, LF, 3, 4}));
 		ByteBuf beforeCrlf = doDecode(decoder);
@@ -78,13 +78,13 @@ public final class ByteBufsDecoderTest {
 		try {
 			doDecode(decoder);
 			fail();
-		} catch (ParseException e) {
+		} catch (MalformedDataException e) {
 			assertEquals("No CRLF is found in 5 bytes", e.getMessage());
 		}
 	}
 
 	@Test
-	public void ofIntSizePrefixedBytes() throws ParseException {
+	public void ofIntSizePrefixedBytes() throws MalformedDataException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofIntSizePrefixedBytes();
 		ByteBuf buf = ByteBufPool.allocate(4);
 		buf.writeInt(5);
@@ -98,7 +98,7 @@ public final class ByteBufsDecoderTest {
 	}
 
 	@Test
-	public void ofVarIntSizePrefixedBytes() throws ParseException {
+	public void ofVarIntSizePrefixedBytes() throws MalformedDataException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofVarIntSizePrefixedBytes();
 		ByteBuf buf = ByteBufPool.allocate(1005);
 		buf.writeVarInt(1000);
@@ -113,7 +113,7 @@ public final class ByteBufsDecoderTest {
 	}
 
 	@Test
-	public void assertBytes() throws ParseException {
+	public void assertBytes() throws MalformedDataException {
 		byte[] bytes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 		byte[] otherBytes = {11, 12, 13};
 		queue.add(ByteBuf.wrapForReading(bytes));
@@ -128,13 +128,13 @@ public final class ByteBufsDecoderTest {
 		try {
 			doDecode(decoder);
 			fail();
-		} catch (ParseException e) {
+		} catch (MalformedDataException e) {
 			assertEquals("Array of bytes differs at index " + 4 +
 					"[Expected: " + 5 + ", actual: " + 6 + ']', e.getMessage());
 		}
 	}
 
-	private <T> T doDecode(ByteBufsDecoder<T> decoder) throws ParseException {
+	private <T> T doDecode(ByteBufsDecoder<T> decoder) throws MalformedDataException {
 		while (true) {
 			T result = decoder.tryDecode(tempQueue);
 			if (result != null) {

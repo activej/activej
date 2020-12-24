@@ -20,20 +20,20 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.codec.StructuredDecoder;
 import io.activej.codec.StructuredEncoder;
-import io.activej.common.exception.parse.ParseException;
+import io.activej.common.exception.MalformedDataException;
 
 public final class BinaryUtils {
 
-	public static <T> T decode(StructuredDecoder<T> decoder, byte[] bytes) throws ParseException {
+	public static <T> T decode(StructuredDecoder<T> decoder, byte[] bytes) throws MalformedDataException {
 		return decode(decoder, ByteBuf.wrapForReading(bytes));
 	}
 
-	public static <T> T decode(StructuredDecoder<T> decoder, ByteBuf buf) throws ParseException {
+	public static <T> T decode(StructuredDecoder<T> decoder, ByteBuf buf) throws MalformedDataException {
 		try {
 			BinaryStructuredInput in = new BinaryStructuredInput(buf);
 			T result = decoder.decode(in);
 			if (buf.readRemaining() != 0) {
-				throw new ParseException("Byte buffer was not fully consumed when decoding");
+				throw new MalformedDataException("Byte buffer was not fully consumed when decoding");
 			}
 			return result;
 		} finally {

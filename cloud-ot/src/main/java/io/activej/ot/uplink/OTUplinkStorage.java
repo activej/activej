@@ -18,7 +18,7 @@ package io.activej.ot.uplink;
 
 import io.activej.common.exception.UncheckedException;
 import io.activej.ot.TransformResult;
-import io.activej.ot.exceptions.OTTransformException;
+import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplinkStorage.Storage.SyncData;
 import io.activej.promise.Promise;
@@ -184,7 +184,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 					TransformResult<D> transformResult;
 					try {
 						transformResult = otSystem.transform(uplinkDiffs, fetchData.getDiffs());
-					} catch (OTTransformException e) {
+					} catch (TransformException e) {
 						throw new UncheckedException(e);
 					}
 
@@ -241,7 +241,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 									TransformResult<D> transformResult;
 									try {
 										transformResult = otSystem.transform(fetchData.getDiffs(), diffs);
-									} catch (OTTransformException e) {
+									} catch (TransformException e) {
 										throw new UncheckedException(e);
 									}
 									doPush(fetchData.getCommitId(), transformResult.left, concat(fetchedDiffs, transformResult.right), cb);

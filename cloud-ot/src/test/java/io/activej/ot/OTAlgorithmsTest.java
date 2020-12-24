@@ -1,5 +1,6 @@
 package io.activej.ot;
 
+import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.reducers.DiffsReducer;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.utils.OTRepositoryStub;
@@ -21,8 +22,9 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class OTAlgorithmsTest {
@@ -47,7 +49,7 @@ public class OTAlgorithmsTest {
 		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, emptyList(), id1)));
 
 		Throwable exception = awaitException(checkout(REPOSITORY, TEST_OP, id2));
-		assertSame(GRAPH_EXHAUSTED, exception);
+		assertThat(exception, instanceOf(GraphExhaustedException.class));
 	}
 
 	@Test
@@ -61,7 +63,7 @@ public class OTAlgorithmsTest {
 		Throwable exception = awaitException(findParent(REPOSITORY, TEST_OP, singleton(id2), DiffsReducer.toVoid(),
 				commit -> REPOSITORY.loadSnapshot(commit.getId())
 						.map(Optional::isPresent)));
-		assertSame(GRAPH_EXHAUSTED, exception);
+		assertThat(exception, instanceOf(GraphExhaustedException.class));
 	}
 
 	@Test

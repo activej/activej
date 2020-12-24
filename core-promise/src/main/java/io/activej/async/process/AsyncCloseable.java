@@ -36,13 +36,11 @@ public interface AsyncCloseable {
 		Recyclers.register(AsyncCloseable.class, AsyncCloseable::close);
 	}};
 
-	CloseException CLOSE_EXCEPTION = new CloseException(AsyncCloseable.class, "Closed");
-
 	/**
 	 * Cancels the process.
 	 */
 	default void close() {
-		closeEx(CLOSE_EXCEPTION);
+		closeEx(new CloseException());
 	}
 
 	/**
