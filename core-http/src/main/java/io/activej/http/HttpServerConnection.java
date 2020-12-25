@@ -26,6 +26,7 @@ import io.activej.common.exception.CloseException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.AsyncHttpServer.Inspector;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketSsl;
 import io.activej.promise.Promise;
@@ -87,8 +88,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private final char[] charBuffer;
 	@Nullable
 	private HttpRequest request;
-	// @Nullable
-	// private final Inspector inspector;
+	@Nullable
+	private final Inspector inspector;
 
 	@Nullable
 	private ByteBuf writeBuf;
@@ -110,12 +111,12 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		this.remoteAddress = remoteAddress;
 		this.server = server;
 		this.servlet = servlet;
-		// this.inspector = server.inspector;
+		this.inspector = server.inspector;
 		this.charBuffer = charBuffer;
 	}
 
 	void serve() {
-		// if (inspector != null) inspector.onAccept(this);
+		if (inspector != null) inspector.onAccept(this);
 		(pool = server.poolNew).addLastNode(this);
 		poolTimestamp = eventloop.currentTimeMillis();
 		socket.read().whenComplete(readMessageConsumer);
@@ -135,10 +136,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void readMessage() throws MalformedHttpException {
-		if ((flags & READING_MESSAGES) != 0) {
-			readStartLine();
-			return;
-		}
 		int loopCount = 0;
 		do {
 			loopCount++;
@@ -163,9 +160,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void onClosedWithError(@NotNull Throwable e) {
-		// if (inspector != null) {
-		// 	inspector.onHttpError(this, e);
-		// }
+		if (inspector != null) {
+			inspector.onHttpError(this, e);
+		}
 	}
 
 	/**
@@ -379,7 +376,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		request.setRemoteAddress(remoteAddress);
 
 		numberOfRequests++;
-		// if (inspector != null) inspector.onHttpRequest(request);
+		if (inspector != null) inspector.onHttpRequest(request);
 
 		switchPool(server.poolServing);
 
@@ -401,14 +398,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			}
 			switchPool(server.poolReadWrite);
 			if (e == null) {
-				// if (inspector != null) {
-				// 	inspector.onHttpResponse(request, response);
-				// }
+				if (inspector != null) {
+					inspector.onHttpResponse(request, response);
+				}
 				writeHttpResponse(response);
 			} else {
-				// if (inspector != null) {
-				// 	inspector.onServletException(request, e);
-				// }
+				if (inspector != null) {
+					inspector.onServletException(request, e);
+				}
 				writeException(e);
 			}
 
@@ -488,7 +485,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			request.recycle();
 			request = null;
 		}
-		// if (inspector != null) inspector.onDisconnect(this);
+		if (inspector != null) inspector.onDisconnect(this);
 		//noinspection ConstantConditions
 		pool.removeNode(this);
 		//noinspection AssertWithSideEffects,ConstantConditions
