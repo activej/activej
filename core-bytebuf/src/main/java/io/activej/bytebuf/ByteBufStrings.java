@@ -328,16 +328,15 @@ public final class ByteBufStrings {
 
 	static {
 		for (int i = 0; i < positiveInts.length; i++) {
-			int number = i + 1;
-			byte[] bytes = new byte[digitsInt(number)];
-			doEncodePositiveInt(bytes, 0, number);
+			byte[] bytes = new byte[digitsInt(i)];
+			doEncodePositiveInt(bytes, 0, i);
 			positiveInts[i] = bytes;
 		}
 	}
 
 	public static int encodePositiveInt(byte[] array, int pos, int value) {
-		if (value <= CACHED_INT_SIZE && value > 0) {
-			byte[] positiveInt = positiveInts[value - 1];
+		if (value < CACHED_INT_SIZE && value >= 0) {
+			byte[] positiveInt = positiveInts[value];
 			for (byte b : positiveInt) {
 				array[pos++] = b;
 			}
