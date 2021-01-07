@@ -6,21 +6,37 @@
     <groupId>io.activej</groupId>
     <artifactId>activej</artifactId>
     <version>4.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activej-uikernel</artifactId>
+  <artifactId>activej-ot</artifactId>
 
-  <name>ActiveJ : UIKernel</name>
+  <name>ActiveJ : OT</name>
   <description>
-    Provides integration with UIKernel.io JS frontend library: JSON serializers, grid model, basic servlets.
+    Implementation of operational transformation technology which allows to build collaborative software systems.
   </description>
 
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-http</artifactId>
+      <artifactId>activej-eventloop</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-promise</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-codec</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-jmxapi</artifactId>
+      <version>${project.version}</version>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
@@ -29,9 +45,11 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -40,10 +58,17 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>io.activej.uikernel</Automatic-Module-Name>
+              <Automatic-Module-Name>io.activej.ot</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

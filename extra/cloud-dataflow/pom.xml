@@ -1,42 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>io.activej</groupId>
     <artifactId>activej</artifactId>
     <version>4.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activej-memcache</artifactId>
+  <artifactId>activej-dataflow</artifactId>
 
-  <name>ActiveJ : Memcache</name>
+  <name>ActiveJ : Dataflow</name>
   <description>
-    Provides means for implementing memcached-like RPC messaging.
+    Distributed stream-based batch processing engine for Big Data applications.
+    Contains tools for working with large datasets spanned multiple partitions.
   </description>
 
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-boot</artifactId>
+      <artifactId>activej-datastream</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-rpc</artifactId>
+      <artifactId>activej-codegen</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-launchers-common</artifactId>
+      <artifactId>activej-codec</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.carrotsearch</groupId>
-      <artifactId>hppc</artifactId>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-inject</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-http</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-fs</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-test</artifactId>
@@ -53,7 +67,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>io.activej.memcache</Automatic-Module-Name>
+              <Automatic-Module-Name>io.activej.dataflow</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

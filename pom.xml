@@ -44,23 +44,24 @@
     <module>core-http</module>
     <module>core-inject</module>
     <module>cloud-rpc</module>
-    <module>cloud-memcache</module>
     <module>cloud-fs</module>
-    <module>cloud-multilog</module>
-    <module>cloud-crdt</module>
-    <module>cloud-ot</module>
-    <module>cloud-lsmt-aggregation</module>
-    <module>cloud-lsmt-cube</module>
-    <module>cloud-etl</module>
-    <module>cloud-dataflow</module>
-    <module>cloud-redis</module>
     <module>launcher</module>
     <module>launchers</module>
     <module>util-codec</module>
     <module>util-common</module>
     <module>util-state</module>
-    <module>uikernel</module>
     <module>test</module>
+
+    <module>extra/cloud-dataflow</module>
+    <module>extra/cloud-crdt</module>
+    <module>extra/cloud-etl</module>
+    <module>extra/cloud-lsmt-aggregation</module>
+    <module>extra/cloud-lsmt-cube</module>
+    <module>extra/cloud-memcache</module>
+    <module>extra/cloud-multilog</module>
+    <module>extra/cloud-ot</module>
+    <module>extra/cloud-redis</module>
+    <module>extra/uikernel</module>
   </modules>
 
   <scm>

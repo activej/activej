@@ -6,33 +6,35 @@
     <groupId>io.activej</groupId>
     <artifactId>activej</artifactId>
     <version>4.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activej-crdt</artifactId>
+  <artifactId>activej-memcache</artifactId>
 
-  <name>ActiveJ : CRDT</name>
+  <name>ActiveJ : Memcache</name>
   <description>
-    Conflict-free replicated data type implementation
+    Provides means for implementing memcached-like RPC messaging.
   </description>
 
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-datastream</artifactId>
+      <artifactId>activej-boot</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-fs</artifactId>
+      <artifactId>activej-rpc</artifactId>
       <version>${project.version}</version>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-jmxapi</artifactId>
+      <artifactId>activej-launchers-common</artifactId>
       <version>${project.version}</version>
-      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.carrotsearch</groupId>
+      <artifactId>hppc</artifactId>
     </dependency>
 
     <dependency>
@@ -40,11 +42,6 @@
       <artifactId>activej-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.rocksdb</groupId>
-      <artifactId>rocksdbjni</artifactId>
     </dependency>
   </dependencies>
 
@@ -56,7 +53,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>io.activej.crdt</Automatic-Module-Name>
+              <Automatic-Module-Name>io.activej.memcache</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>
