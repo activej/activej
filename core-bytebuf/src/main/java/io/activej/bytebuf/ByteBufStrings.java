@@ -323,29 +323,34 @@ public final class ByteBufStrings {
 		}
 	}
 
-	private static final int CACHED_INT_SIZE = 1024;
-	private static final byte[][] positiveInts = new byte[CACHED_INT_SIZE][];
-
-	static {
-		for (int i = 0; i < positiveInts.length; i++) {
-			byte[] bytes = new byte[digitsInt(i)];
-			doEncodePositiveInt(bytes, 0, i);
-			positiveInts[i] = bytes;
-		}
-	}
-
 	public static int encodePositiveInt(byte[] array, int pos, int value) {
-		if (value < CACHED_INT_SIZE && value >= 0) {
-			byte[] positiveInt = positiveInts[value];
-			for (byte b : positiveInt) {
-				array[pos++] = b;
-			}
-			return positiveInt.length;
+		if (value < 10) {
+			array[pos] = (byte) ('0' + value);
+			return 1;
 		}
-		return doEncodePositiveInt(array, pos, value);
+		return encodePositiveInt2(array, pos, value);
 	}
 
-	private static int doEncodePositiveInt(byte[] array, int pos, int value) {
+	private static int encodePositiveInt2(byte[] array, int pos, int value) {
+		if (value < 100) {
+			array[pos] = (byte) ('0' + value / 10);
+			array[pos + 1] = (byte) ('0' + value % 10);
+			return 2;
+		}
+		return encodePositiveInt3(array, pos, value);
+	}
+
+	private static int encodePositiveInt3(byte[] array, int pos, int value) {
+		if (value < 1000) {
+			array[pos] = (byte) ('0' + value / 100);
+			array[pos + 1] = (byte) ('0' + (value / 10) % 10);
+			array[pos + 2] = (byte) ('0' + value % 10);
+			return 3;
+		}
+		return encodePositiveIntN(array, pos, value);
+	}
+
+	private static int encodePositiveIntN(byte[] array, int pos, int value) {
 		int digits = digitsInt(value);
 		for (int i = pos + digits - 1; i >= pos; i--) {
 			long digit = value % 10;
