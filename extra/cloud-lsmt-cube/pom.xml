@@ -99,6 +99,9 @@
                 <exclude>**/CubeMeasureRemovalTest.java</exclude>
                 <exclude>**/CubeCleanerControllerTest.java</exclude>
                 <exclude>**/LogToCubeTest.java</exclude>
+                <exclude>**/CubeGetIrrelevantChunksTest.java</exclude>
+                <exclude>**/CubeRemovingOfIrrelevantChunksTest.java</exclude>
+                <exclude>**/CubeLogProcessorControllerTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>
