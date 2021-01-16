@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
@@ -47,7 +47,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	private static final byte RSV_MASK = 0b01110000;
 	private static final byte LAST_7_BITS_MASK = 0b01111111;
 
-	private static final ByteBufsDecoder<Byte> SINGLE_BYTE_DECODER = queue -> queue.hasRemainingBytes(1) ? queue.getByte() : null;
+	private static final ByteBufsDecoder<Byte> SINGLE_BYTE_DECODER = bufs -> bufs.hasRemainingBytes(1) ? bufs.getByte() : null;
 
 	private final long maxMessageSize;
 	private final Consumer<ByteBuf> onPing;
@@ -56,7 +56,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	private final boolean masked;
 	private final SettablePromise<WebSocketException> closeReceivedPromise = new SettablePromise<>();
 
-	private ByteBufQueue bufs;
+	private ByteBufs bufs;
 	private BinaryChannelSupplier input;
 	private ChannelConsumer<Frame> output;
 
@@ -65,8 +65,8 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	private boolean waitingForFin;
 	private WebSocketConstants.OpCode currentOpCode;
 
-	private final ByteBufQueue frameQueue = new ByteBufQueue();
-	private final ByteBufQueue controlMessageQueue = new ByteBufQueue();
+	private final ByteBufs frameBufs = new ByteBufs();
+	private final ByteBufs controlMessageBufs = new ByteBufs();
 
 	// region creators
 	WebSocketBufsToFrames(long maxMessageSize, Consumer<ByteBuf> onPing, Consumer<ByteBuf> onPong, boolean masked) {
@@ -207,7 +207,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	}
 
 	private void processMask(long length) {
-		if (frameQueue.remainingBytes() + length > maxMessageSize) {
+		if (frameBufs.remainingBytes() + length > maxMessageSize) {
 			onProtocolError(MESSAGE_TOO_BIG);
 			return;
 		}
@@ -215,7 +215,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		if (maskIndex == -1) {
 			processPayload(length);
 		} else {
-			input.decode(queue -> !queue.hasRemainingBytes(4) ? null : queue)
+			input.decode(bufs -> !bufs.hasRemainingBytes(4) ? null : bufs)
 					.whenResult(bufs -> {
 						bufs.drainTo(mask, 0, 4);
 						processPayload(length);
@@ -229,7 +229,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		unmask(buf);
 		long newLength = length - buf.readRemaining();
 		if (buf.canRead()) {
-			(currentOpCode.isControlCode() ? controlMessageQueue : frameQueue).add(buf);
+			(currentOpCode.isControlCode() ? controlMessageBufs : frameBufs).add(buf);
 		}
 		if (newLength != 0) {
 			Promise.complete()
@@ -241,15 +241,15 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		if (currentOpCode.isControlCode()) {
 			processControlPayload();
 		} else {
-			output.accept(new Frame(opToFrameType(currentOpCode), frameQueue.takeRemaining(), isFin))
+			output.accept(new Frame(opToFrameType(currentOpCode), frameBufs.takeRemaining(), isFin))
 					.whenResult(this::processOpCode);
 		}
 	}
 
 	private void processControlPayload() {
-		ByteBuf controlPayload = controlMessageQueue.takeRemaining();
+		ByteBuf controlPayload = controlMessageBufs.takeRemaining();
 		if (currentOpCode == OP_CLOSE) {
-			frameQueue.recycle();
+			frameBufs.recycle();
 			if (controlPayload.canRead()) {
 				int payloadLength = controlPayload.readRemaining();
 				if (payloadLength < 2 || payloadLength > 125) {
@@ -316,8 +316,8 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		if (output != null) {
 			output.closeEx(e instanceof TruncatedDataException ? CLOSE_FRAME_MISSING : e);
 		}
-		frameQueue.recycle();
-		controlMessageQueue.recycle();
+		frameBufs.recycle();
+		controlMessageBufs.recycle();
 	}
 
 }

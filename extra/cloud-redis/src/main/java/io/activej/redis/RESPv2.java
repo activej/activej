@@ -18,7 +18,7 @@ package io.activej.redis;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +51,7 @@ final class RESPv2 implements RedisProtocol {
 
 	private final Charset charset;
 
-	private final ByteBufQueue tempQueue;
+	private final ByteBufs tempBufs;
 	private final List<byte[]> args = new ArrayList<>();
 
 	private byte parsing;
@@ -61,8 +61,8 @@ final class RESPv2 implements RedisProtocol {
 	@Nullable
 	private List<Object> arrayResult;
 
-	public RESPv2(ByteBufQueue tempQueue, Charset charset) {
-		this.tempQueue = tempQueue;
+	public RESPv2(ByteBufs tempBufs, Charset charset) {
+		this.tempBufs = tempBufs;
 		this.charset = charset;
 	}
 
@@ -104,7 +104,7 @@ final class RESPv2 implements RedisProtocol {
 
 	@Nullable
 	@Override
-	public RedisResponse tryDecode(ByteBufQueue bufs) throws MalformedDataException {
+	public RedisResponse tryDecode(ByteBufs bufs) throws MalformedDataException {
 		while (true) {
 			if (bufs.isEmpty()) return null;
 			if (parsing == 0) parsing = bufs.getByte();
@@ -173,21 +173,21 @@ final class RESPv2 implements RedisProtocol {
 	}
 
 	@Nullable
-	private String decodeString(ByteBufQueue bufs, int maxSize) throws MalformedDataException {
+	private String decodeString(ByteBufs bufs, int maxSize) throws MalformedDataException {
 		ByteBuf decoded = ofCrlfTerminatedBytes(maxSize + CR_LF_LENGTH).tryDecode(bufs);
 
 		if (decoded != null) {
-			tempQueue.add(decoded);
-			return tempQueue.takeRemaining().asString(charset);
+			tempBufs.add(decoded);
+			return tempBufs.takeRemaining().asString(charset);
 		}
 
 		if (!bufs.isEmpty()) {
-			tempQueue.add(bufs.takeExactSize(bufs.remainingBytes() - 1));
+			tempBufs.add(bufs.takeExactSize(bufs.remainingBytes() - 1));
 		}
 		return null;
 	}
 
-	private @Nullable byte [] decodeBulkString(ByteBufQueue bufs) throws MalformedDataException {
+	private @Nullable byte [] decodeBulkString(ByteBufs bufs) throws MalformedDataException {
 		if (remaining == -1) {
 			Integer length = decodeLength(bufs);
 			if (length == null) return null;
@@ -200,7 +200,7 @@ final class RESPv2 implements RedisProtocol {
 
 		ByteBuf result = ByteBufPool.allocate(min(bufs.remainingBytes(), remaining));
 		remaining -= bufs.drainTo(result, remaining);
-		tempQueue.add(result);
+		tempBufs.add(result);
 
 		if (remaining == 0) {
 			if (!bufs.hasRemainingBytes(2)) {
@@ -210,7 +210,7 @@ final class RESPv2 implements RedisProtocol {
 					throw new MalformedDataException("Missing CR LF");
 				}
 				remaining = -1;
-				return tempQueue.takeRemaining().asArray();
+				return tempBufs.takeRemaining().asArray();
 			}
 		}
 		return null;
@@ -218,7 +218,7 @@ final class RESPv2 implements RedisProtocol {
 
 	@Nullable
 	@SuppressWarnings("unchecked")
-	private List<?> decodeArray(ByteBufQueue bufs) throws MalformedDataException {
+	private List<?> decodeArray(ByteBufs bufs) throws MalformedDataException {
 		Integer length = decodeLength(bufs);
 		if (length == null) return null;
 		parsing = 0;
@@ -244,7 +244,7 @@ final class RESPv2 implements RedisProtocol {
 	}
 
 	@Nullable
-	private Integer decodeLength(ByteBufQueue bufs) throws MalformedDataException {
+	private Integer decodeLength(ByteBufs bufs) throws MalformedDataException {
 		String numString = decodeString(bufs, INTEGER_MAX_LEN);
 		if (numString == null) return null;
 

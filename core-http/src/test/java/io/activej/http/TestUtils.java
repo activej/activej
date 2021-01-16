@@ -1,7 +1,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -60,7 +60,7 @@ public class TestUtils {
 	}
 
 	public static class AssertingConsumer extends AbstractChannelConsumer<ByteBuf> {
-		private final ByteBufQueue queue = new ByteBufQueue();
+		private final ByteBufs bufs = new ByteBufs();
 
 		public boolean executed = false;
 		@Nullable
@@ -106,9 +106,9 @@ public class TestUtils {
 		@Override
 		protected Promise<Void> doAccept(@Nullable ByteBuf value) {
 			if (value != null) {
-				queue.add(value);
+				bufs.add(value);
 			} else {
-				ByteBuf actualBuf = queue.takeRemaining();
+				ByteBuf actualBuf = bufs.takeRemaining();
 
 				try {
 					if (expectedByteArray != null) {
@@ -135,7 +135,7 @@ public class TestUtils {
 
 		@Override
 		protected void onCleanup() {
-			queue.recycle();
+			bufs.recycle();
 			if (expectedBuf != null) {
 				expectedBuf.recycle();
 			}

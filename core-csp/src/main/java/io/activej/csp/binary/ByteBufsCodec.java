@@ -17,7 +17,7 @@
 package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.api.DecoderFunction;
 import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ public interface ByteBufsCodec<I, O> {
 	ByteBuf encode(O item);
 
 	@Nullable
-	I tryDecode(ByteBufQueue bufs) throws MalformedDataException;
+	I tryDecode(ByteBufs bufs) throws MalformedDataException;
 
 	@NotNull
 	default <I1, O1> ByteBufsCodec<I1, O1> andThen(DecoderFunction<? super I, ? extends I1> decoder, Function<? super O1, ? extends O> encoder) {
@@ -41,7 +41,7 @@ public interface ByteBufsCodec<I, O> {
 
 			@Nullable
 			@Override
-			public I1 tryDecode(ByteBufQueue bufs) throws MalformedDataException {
+			public I1 tryDecode(ByteBufs bufs) throws MalformedDataException {
 				I maybeResult = ByteBufsCodec.this.tryDecode(bufs);
 				if (maybeResult == null) return null;
 				return decoder.decode(maybeResult);
@@ -59,7 +59,7 @@ public interface ByteBufsCodec<I, O> {
 
 			@Nullable
 			@Override
-			public ByteBuf tryDecode(ByteBufQueue bufs) throws MalformedDataException {
+			public ByteBuf tryDecode(ByteBufs bufs) throws MalformedDataException {
 				return delimiterIn.tryDecode(bufs);
 			}
 		};

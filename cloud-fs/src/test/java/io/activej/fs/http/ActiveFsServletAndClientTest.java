@@ -1,7 +1,7 @@
 package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
@@ -153,7 +153,7 @@ public final class ActiveFsServletAndClientTest {
 	public void download() throws IOException {
 		String fileName = "directory/subdir/file3.txt";
 		ChannelSupplier<ByteBuf> supplier = await(fs.download(fileName));
-		ByteBuf result = await(supplier.toCollector(ByteBufQueue.collector()));
+		ByteBuf result = await(supplier.toCollector(ByteBufs.collector()));
 		byte[] expected = Files.readAllBytes(storage.resolve(fileName));
 
 		assertArrayEquals(expected, result.asArray());

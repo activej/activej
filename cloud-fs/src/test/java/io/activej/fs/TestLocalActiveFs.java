@@ -1,7 +1,7 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.TruncatedDataException;
@@ -223,7 +223,7 @@ public final class TestLocalActiveFs {
 		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
 
 		String result = await(await(client.download(filename, 3, Long.MAX_VALUE))
-				.toCollector(ByteBufQueue.collector())).asString(UTF_8);
+				.toCollector(ByteBufs.collector())).asString(UTF_8);
 		assertEquals("defgh", result);
 	}
 
@@ -242,7 +242,7 @@ public final class TestLocalActiveFs {
 		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
 
 		String result = await(await(client.download(filename, 3, 2))
-				.toCollector(ByteBufQueue.collector())).asString(UTF_8);
+				.toCollector(ByteBufs.collector())).asString(UTF_8);
 		assertEquals("de", result);
 	}
 
@@ -364,13 +364,13 @@ public final class TestLocalActiveFs {
 
 		await(ChannelSupplier.of(wrapUtf8("first")).streamTo(client.append("first", 4)));
 
-		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
-		assertEquals("test", await(await(client.download("second")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufs.collector())).asString(UTF_8));
+		assertEquals("test", await(await(client.download("second")).toCollector(ByteBufs.collector())).asString(UTF_8));
 
 		await(ChannelSupplier.of(wrapUtf8("second")).streamTo(client.append("second", 4)));
 
-		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
-		assertEquals("testsecond", await(await(client.download("second")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufs.collector())).asString(UTF_8));
+		assertEquals("testsecond", await(await(client.download("second")).toCollector(ByteBufs.collector())).asString(UTF_8));
 	}
 
 	@Test
@@ -382,13 +382,13 @@ public final class TestLocalActiveFs {
 
 		await(ChannelSupplier.of(wrapUtf8("first")).streamTo(client.append("first", 4)));
 
-		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
-		assertEquals("testfirst", await(await(client.download("second")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufs.collector())).asString(UTF_8));
+		assertEquals("testfirst", await(await(client.download("second")).toCollector(ByteBufs.collector())).asString(UTF_8));
 
 		await(ChannelSupplier.of(wrapUtf8("second")).streamTo(client.append("second", 9)));
 
-		assertEquals("testfirstsecond", await(await(client.download("first")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
-		assertEquals("testfirstsecond", await(await(client.download("second")).toCollector(ByteBufQueue.collector())).asString(UTF_8));
+		assertEquals("testfirstsecond", await(await(client.download("first")).toCollector(ByteBufs.collector())).asString(UTF_8));
+		assertEquals("testfirstsecond", await(await(client.download("second")).toCollector(ByteBufs.collector())).asString(UTF_8));
 	}
 
 	@Test
@@ -399,7 +399,7 @@ public final class TestLocalActiveFs {
 		await(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.upload(filename)));
 		await(ChannelSupplier.of(wrapUtf8("d")).streamTo(client.append(filename, 2)));
 
-		String result = await(await(client.download(filename)).toCollector(ByteBufQueue.collector())).asString(UTF_8);
+		String result = await(await(client.download(filename)).toCollector(ByteBufs.collector())).asString(UTF_8);
 		assertEquals("dada", result);
 	}
 
@@ -419,7 +419,7 @@ public final class TestLocalActiveFs {
 		}
 
 		String fileContents = await(client.download(filename)
-				.then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+				.then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
 
 		assertTrue(fileContents.contains("first"));
 		assertTrue(fileContents.contains("second"));
@@ -431,7 +431,7 @@ public final class TestLocalActiveFs {
 		String data = "test";
 		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
 
-		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
 		assertEquals(data, result);
 		for (Path emptyDir : emptyDirs) {
 			assertFalse(Files.isDirectory(emptyDir));
@@ -444,7 +444,7 @@ public final class TestLocalActiveFs {
 		String data = "test";
 		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.append("empty", 0)));
 
-		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
 		assertEquals(data, result);
 		for (Path emptyDir : emptyDirs) {
 			assertFalse(Files.isDirectory(emptyDir));
@@ -458,7 +458,7 @@ public final class TestLocalActiveFs {
 		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("source")));
 		await(client.move("source", "empty"));
 
-		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
 		assertEquals(data, result);
 		for (Path emptyDir : emptyDirs) {
 			assertFalse(Files.isDirectory(emptyDir));
@@ -472,7 +472,7 @@ public final class TestLocalActiveFs {
 		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("source")));
 		await(client.copy("source", "empty"));
 
-		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufQueue.collector()))).asString(UTF_8);
+		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
 		assertEquals(data, result);
 		for (Path emptyDir : emptyDirs) {
 			assertFalse(Files.isDirectory(emptyDir));

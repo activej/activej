@@ -17,7 +17,7 @@
 package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
@@ -39,7 +39,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	private final BlockDecoder decoder;
 	private boolean decoderResets;
 
-	private ByteBufQueue bufs;
+	private ByteBufs bufs;
 	private BinaryChannelSupplier input;
 	private ChannelConsumer<ByteBuf> output;
 

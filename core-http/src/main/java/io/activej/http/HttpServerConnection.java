@@ -147,7 +147,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			flags = READING_MESSAGES;
 			readStartLine();
 			if (isClosed()) return;
-		} while (isKeepAlive() && isBodyReceived() && isBodySent() && writeBuf != null && readQueue.hasRemaining());
+		} while (isKeepAlive() && isBodyReceived() && isBodySent() && writeBuf != null && readBufs.hasRemaining());
 		flags &= ~READING_MESSAGES;
 		if (writeBuf != null && writeBuf.canRead()) {
 			ByteBuf writeBuf = this.writeBuf;
@@ -416,11 +416,11 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@SuppressWarnings("ConstantConditions")
 	private boolean processWebSocketRequest(@Nullable ByteBuf body) {
 		if (body != null && body.readRemaining() == 0) {
-			ChannelSupplier<ByteBuf> ofQueueSupplier = ofLazyProvider(() -> isClosed() ?
+			ChannelSupplier<ByteBuf> ofBufsSupplier = ofLazyProvider(() -> isClosed() ?
 					ChannelSupplier.ofException(new CloseException("Connection closed")) :
-					ChannelSupplier.of(readQueue.takeRemaining()));
+					ChannelSupplier.of(readBufs.takeRemaining()));
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
-			request.bodyStream = concat(ofQueueSupplier, ofSocketSupplier)
+			request.bodyStream = concat(ofBufsSupplier, ofSocketSupplier)
 					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection));
 			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? WSS : WS);
 			request.maxBodySize = server.maxWebSocketMessageSize;
@@ -462,7 +462,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			switchPool(server.poolKeepAlive);
 
 			if (socket.isReadAvailable()) {
-				socket.read().whenResult(readQueue::add);
+				socket.read().whenResult(readBufs::add);
 			}
 
 			try {

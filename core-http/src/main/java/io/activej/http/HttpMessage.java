@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.exception.UncheckedException;
@@ -277,17 +277,17 @@ public abstract class HttpMessage {
 		if (bodyStream == null) throw new IllegalStateException("Body stream is missing or already consumed");
 		this.bodyStream = null;
 		return ChannelSuppliers.collect(bodyStream,
-				new ByteBufQueue(),
-				(queue, buf) -> {
-					if (maxBodySize != 0 && queue.hasRemainingBytes(maxBodySize)) {
-						queue.recycle();
+				new ByteBufs(),
+				(bufs, buf) -> {
+					if (maxBodySize != 0 && bufs.hasRemainingBytes(maxBodySize)) {
+						bufs.recycle();
 						buf.recycle();
 						throw new UncheckedException(new MalformedHttpException(
 								"HTTP body size exceeds load limit " + maxBodySize));
 					}
-					queue.add(buf);
+					bufs.add(buf);
 				},
-				ByteBufQueue::takeRemaining)
+				ByteBufs::takeRemaining)
 				.whenResult(body -> {
 					if (!isRecycled()) {
 						this.flags &= ~MUST_LOAD_BODY;

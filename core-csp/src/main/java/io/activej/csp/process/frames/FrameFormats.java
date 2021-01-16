@@ -18,7 +18,7 @@ package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
@@ -120,12 +120,12 @@ public class FrameFormats {
 				}
 
 				@Override
-				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
+				public @Nullable ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
 					if (decoder != null) return decoder.decode(bufs);
 					return tryNextDecoder(bufs);
 				}
 
-				private ByteBuf tryNextDecoder(ByteBufQueue bufs) throws MalformedDataException {
+				private ByteBuf tryNextDecoder(ByteBufs bufs) throws MalformedDataException {
 					while (true) {
 						if (possibleDecoder == null) {
 							if (!possibleDecoders.hasNext()) throw new UnknownFormatException();
@@ -175,7 +175,7 @@ public class FrameFormats {
 			return new BlockDecoder() {
 
 				@Override
-				public @Nullable ByteBuf decode(ByteBufQueue bufs) {
+				public @Nullable ByteBuf decode(ByteBufs bufs) {
 					return bufs.hasRemaining() ? bufs.takeRemaining() : null;
 				}
 
@@ -223,7 +223,7 @@ public class FrameFormats {
 				private final LengthScanner lengthScanner = new LengthScanner();
 
 				@Override
-				public @Nullable ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
+				public @Nullable ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
 					int bytes = bufs.scanBytes(lengthScanner);
 					if (bytes == 0) return null;
 					int length = lengthScanner.value;
@@ -247,7 +247,7 @@ public class FrameFormats {
 			};
 		}
 
-		private static final class LengthScanner implements ByteBufQueue.ByteScanner {
+		private static final class LengthScanner implements ByteBufs.ByteScanner {
 			public int value;
 
 			@Override
@@ -316,7 +316,7 @@ public class FrameFormats {
 				boolean validateMagicNumber = true;
 
 				@Override
-				public ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
+				public ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
 					if (validateMagicNumber) {
 						if (magicNumberValidator.tryDecode(bufs) == null) return null;
 						validateMagicNumber = false;

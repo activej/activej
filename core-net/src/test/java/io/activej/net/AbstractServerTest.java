@@ -1,7 +1,7 @@
 package io.activej.net;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.ref.RefLong;
 import io.activej.eventloop.net.SocketSettings;
@@ -59,17 +59,17 @@ public final class AbstractServerTest {
 						socket.write(ByteBufStrings.wrapAscii(message))
 								.then(() -> socket.write(null))
 								.then(() -> {
-									ByteBufQueue queue = new ByteBufQueue();
+									ByteBufs bufs = new ByteBufs();
 									return Promises.<ByteBuf>until(null,
 											$2 -> socket.read()
 													.then(buf -> {
 														if (buf != null) {
-															queue.add(buf);
+															bufs.add(buf);
 														}
 														return Promise.of(buf);
 													}),
 											Objects::isNull)
-											.map($2 -> queue.takeRemaining());
+											.map($2 -> bufs.takeRemaining());
 								})
 								.whenComplete(socket::close)));
 

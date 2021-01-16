@@ -1,7 +1,7 @@
 package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.test.rules.ByteBufRule;
@@ -29,7 +29,7 @@ public final class BinaryChannelSupplierTest {
 	public void testDecodeStream() {
 		ByteBuf buf = await(BinaryChannelSupplier.of(ChannelSupplier.of(wrapUtf8("Hello\r\n World\r\n")))
 				.decodeStream(ofCrlfTerminatedBytes())
-				.toCollector(ByteBufQueue.collector()));
+				.toCollector(ByteBufs.collector()));
 		assertEquals("Hello World", buf.asString(UTF_8));
 	}
 
@@ -37,7 +37,7 @@ public final class BinaryChannelSupplierTest {
 	public void testDecodeStreamLessData() {
 		Exception exception = awaitException(BinaryChannelSupplier.of(ChannelSupplier.of(wrapUtf8("Hello\r\n Wo")))
 				.decodeStream(ofCrlfTerminatedBytes())
-				.toCollector(ByteBufQueue.collector()));
+				.toCollector(ByteBufs.collector()));
 		assertThat(exception, instanceOf(TruncatedDataException.class));
 	}
 }

@@ -17,7 +17,7 @@
 package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -35,7 +35,7 @@ import static io.activej.common.Checks.checkState;
 public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<BufsConsumerDelimiter, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerDelimiter> {
 
-	private ByteBufQueue bufs;
+	private ByteBufs bufs;
 	private BinaryChannelSupplier input;
 	private ChannelConsumer<ByteBuf> output;
 
@@ -87,7 +87,7 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 					.whenResult(this::completeProcess);
 			return;
 		}
-		ByteBufQueue outputBufs = new ByteBufQueue();
+		ByteBufs outputBufs = new ByteBufs();
 		remaining -= bufs.drainTo(outputBufs, remaining);
 		output.acceptAll(outputBufs.asIterator())
 				.whenResult(() -> {

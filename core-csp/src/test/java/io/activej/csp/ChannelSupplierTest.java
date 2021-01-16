@@ -2,7 +2,7 @@ package io.activej.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
@@ -47,7 +47,7 @@ public class ChannelSupplierTest {
 				ByteBuf.wrapForReading("Test6".getBytes(UTF_8))
 		));
 
-		ByteBuf resultBuf = await(supplier.toCollector(ByteBufQueue.collector()));
+		ByteBuf resultBuf = await(supplier.toCollector(ByteBufs.collector()));
 		assertEquals("Test1Test2Test3Test4Test5Test6", resultBuf.asString(UTF_8));
 	}
 
@@ -61,7 +61,7 @@ public class ChannelSupplierTest {
 				ChannelSupplier.ofException(exception)
 		);
 
-		Throwable e = awaitException(supplier.toCollector(ByteBufQueue.collector()));
+		Throwable e = awaitException(supplier.toCollector(ByteBufs.collector()));
 		assertSame(exception, e);
 	}
 
@@ -72,12 +72,12 @@ public class ChannelSupplierTest {
 		ByteBuf byteBuf3 = ByteBuf.wrapForReading("Tes".getBytes(UTF_8));
 		ByteBuf byteBuf4 = ByteBuf.wrapForReading("Test".getBytes(UTF_8));
 
-		await(ChannelSupplier.of(byteBuf1).toCollector(ByteBufQueue.collector(2)));
-		await(ChannelSupplier.of(byteBuf2).toCollector(ByteBufQueue.collector(2)));
-		Throwable e1 = awaitException(ChannelSupplier.of(byteBuf3).toCollector(ByteBufQueue.collector(2)));
-		assertThat(e1.getMessage(), containsString("ByteBufQueue exceeds maximum size of 2 bytes"));
-		Throwable e2 = awaitException(ChannelSupplier.of(byteBuf4).toCollector(ByteBufQueue.collector(2)));
-		assertThat(e2.getMessage(), containsString("ByteBufQueue exceeds maximum size of 2 bytes"));
+		await(ChannelSupplier.of(byteBuf1).toCollector(ByteBufs.collector(2)));
+		await(ChannelSupplier.of(byteBuf2).toCollector(ByteBufs.collector(2)));
+		Throwable e1 = awaitException(ChannelSupplier.of(byteBuf3).toCollector(ByteBufs.collector(2)));
+		assertThat(e1.getMessage(), containsString("Size of ByteBufs exceeds maximum size of 2 bytes"));
+		Throwable e2 = awaitException(ChannelSupplier.of(byteBuf4).toCollector(ByteBufs.collector(2)));
+		assertThat(e2.getMessage(), containsString("Size of ByteBufs exceeds maximum size of 2 bytes"));
 	}
 
 	@Test

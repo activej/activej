@@ -1,7 +1,7 @@
 package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.MemSize;
 import io.activej.common.exception.UnexpectedDataException;
@@ -88,7 +88,7 @@ public class FrameFormatTest {
 		int buffersCount = 100;
 
 		List<ByteBuf> buffers = IntStream.range(0, buffersCount).mapToObj($ -> createRandomByteBuf()).collect(toList());
-		byte[] expected = buffers.stream().map(ByteBuf::slice).collect(ByteBufQueue.collector()).asArray();
+		byte[] expected = buffers.stream().map(ByteBuf::slice).collect(ByteBufs.collector()).asArray();
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(buffers)
 				.transformWith(ChannelByteChunker.create(MemSize.of(64), MemSize.of(128)))
@@ -96,7 +96,7 @@ public class FrameFormatTest {
 				.transformWith(ChannelByteChunker.create(MemSize.of(64), MemSize.of(128)))
 				.transformWith(ChannelFrameDecoder.create(frameFormat));
 
-		ByteBuf collected = await(supplier.toCollector(ByteBufQueue.collector()));
+		ByteBuf collected = await(supplier.toCollector(ByteBufs.collector()));
 		assertArrayEquals(expected, collected.asArray());
 		//[END EXAMPLE]
 	}
@@ -149,15 +149,15 @@ public class FrameFormatTest {
 
 		ChannelFrameEncoder compressor = ChannelFrameEncoder.create(frameFormat);
 		ChannelFrameDecoder decompressor = ChannelFrameDecoder.create(frameFormat);
-		ByteBufQueue queue = new ByteBufQueue();
+		ByteBufs bufs = new ByteBufs();
 
 		await(ChannelSupplier.of(ByteBufStrings.wrapAscii("TestData")).transformWith(compressor)
-				.streamTo(ChannelConsumer.ofConsumer(queue::add)));
+				.streamTo(ChannelConsumer.ofConsumer(bufs::add)));
 
 		// add trailing 0 - bytes
-		queue.add(ByteBuf.wrapForReading(new byte[10]));
+		bufs.add(ByteBuf.wrapForReading(new byte[10]));
 
-		Throwable e = awaitException(ChannelSupplier.of(queue.takeRemaining())
+		Throwable e = awaitException(ChannelSupplier.of(bufs.takeRemaining())
 				.transformWith(decompressor)
 				.streamTo(ChannelConsumer.ofConsumer(ByteBuf::recycle)));
 
@@ -200,7 +200,7 @@ public class FrameFormatTest {
 		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSupplier.of(ByteBuf.wrapForReading(data1), ByteBuf.wrapForReading(data2))
 				.transformWith(encoder);
 
-		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufQueue.collector()));
+		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
 
 		for (int i = 0; i < compressed.readRemaining(); i++) {
 			ChannelFrameDecoder decoder = ChannelFrameDecoder.create(frameFormat);
@@ -208,12 +208,12 @@ public class FrameFormatTest {
 				decoder = decoder.withDecoderResets();
 			}
 
-			ByteBufQueue queue = new ByteBufQueue();
-			queue.add(compressed.slice());
-			ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(queue.takeExactSize(i), queue.takeRemaining())
+			ByteBufs bufs = new ByteBufs();
+			bufs.add(compressed.slice());
+			ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(bufs.takeExactSize(i), bufs.takeRemaining())
 					.transformWith(decoder);
 
-			ByteBuf resultBuf = await(supplier.toCollector(ByteBufQueue.collector()));
+			ByteBuf resultBuf = await(supplier.toCollector(ByteBufs.collector()));
 			assertArrayEquals(expected, resultBuf.asArray());
 		}
 		compressed.recycle();
@@ -235,13 +235,13 @@ public class FrameFormatTest {
 				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
 				.transformWith(encoder);
 
-		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufQueue.collector()));
+		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(compressed)
 				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
 				.transformWith(decoder);
 
-		ByteBuf collected = await(supplier.toCollector(ByteBufQueue.collector()));
+		ByteBuf collected = await(supplier.toCollector(ByteBufs.collector()));
 		assertArrayEquals(data, collected.asArray());
 	}
 

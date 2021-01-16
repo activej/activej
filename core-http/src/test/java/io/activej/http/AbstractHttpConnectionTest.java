@@ -2,7 +2,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -185,7 +185,7 @@ public final class AbstractHttpConnectionTest {
 		server.listen();
 
 		ByteBuf result = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop()).request(HttpRequest.get("http://127.0.0.1:" + PORT))
-				.then(response -> response.getBodyStream().toCollector(ByteBufQueue.collector()))
+				.then(response -> response.getBodyStream().toCollector(ByteBufs.collector()))
 				.whenComplete(server::close));
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}
@@ -297,7 +297,7 @@ public final class AbstractHttpConnectionTest {
 
 		ByteBuf result = await(client.request(request)
 				.then(response -> response.getBodyStream()
-						.toCollector(ByteBufQueue.collector()))
+						.toCollector(ByteBufs.collector()))
 				.whenComplete(server::close));
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}

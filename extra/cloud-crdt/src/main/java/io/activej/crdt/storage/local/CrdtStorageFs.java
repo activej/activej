@@ -18,7 +18,7 @@ package io.activej.crdt.storage.local;
 
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.api.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFilter;
@@ -254,7 +254,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 						Promises.all(list.entrySet().stream()
 								.filter(entry -> entry.getValue().getTimestamp() > barrier)
 								.map(entry -> ChannelSupplier.ofPromise(fs.download(entry.getKey()))
-										.toCollector(ByteBufQueue.collector())
+										.toCollector(ByteBufs.collector())
 										.whenResult(byteBuf -> blacklist.addAll(Arrays.asList(byteBuf.asString(UTF_8).split("\n"))))
 										.toVoid())))
 				.then(() -> fs.list("*"))

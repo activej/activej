@@ -1,7 +1,7 @@
 package io.activej.redis;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
@@ -141,7 +141,7 @@ public final class RESPv2Test {
 	}
 
 	private ByteBufsDecoder<RedisResponse> codec() {
-		RESPv2 protocolCodec = new RESPv2(new ByteBufQueue(), UTF_8);
+		RESPv2 protocolCodec = new RESPv2(new ByteBufs(), UTF_8);
 		return protocolCodec::tryDecode;
 	}
 
@@ -160,79 +160,79 @@ public final class RESPv2Test {
 	}
 
 	private static ByteBuf encode(RedisResponse response) {
-		ByteBufQueue queue = new ByteBufQueue();
+		ByteBufs bufs = new ByteBufs();
 		if (response.isNil()) {
-			doEncodeNil(queue);
+			doEncodeNil(bufs);
 		} else if (response.isInteger()) {
-			doEncode(response.getInteger(), queue);
+			doEncode(response.getInteger(), bufs);
 		} else if (response.isString()) {
-			doEncode(response.getString(), queue);
+			doEncode(response.getString(), bufs);
 		} else if (response.isBytes()) {
-			doEncode(response.getBytes(), queue);
+			doEncode(response.getBytes(), bufs);
 		} else if (response.isError()) {
-			doEncode(response.getError(), queue);
+			doEncode(response.getError(), bufs);
 		} else if (response.isArray()) {
-			doEncode(response.getArray(), queue);
+			doEncode(response.getArray(), bufs);
 		} else {
 			throw new AssertionError();
 		}
-		return queue.takeRemaining();
+		return bufs.takeRemaining();
 	}
 
-	private static void doEncodeNil(ByteBufQueue queue) {
+	private static void doEncodeNil(ByteBufs bufs) {
 		boolean bulkNull = RANDOM.nextBoolean();
 		byte[] bytes = {(byte) (bulkNull ? '$' : '*'), '-', '1', 13, 10};
-		queue.add(ByteBuf.wrapForReading(bytes));
+		bufs.add(ByteBuf.wrapForReading(bytes));
 	}
 
-	private static void doEncode(String string, ByteBufQueue queue) {
-		queue.add(ByteBuf.wrapForReading(new byte[]{'+'}));
-		doEncodeString(string, queue);
+	private static void doEncode(String string, ByteBufs bufs) {
+		bufs.add(ByteBuf.wrapForReading(new byte[]{'+'}));
+		doEncodeString(string, bufs);
 	}
 
-	private static void doEncode(byte[] bytes, ByteBufQueue queue) {
-		queue.add(ByteBuf.wrapForReading(new byte[]{'$'}));
-		queue.add(ByteBuf.wrapForReading(String.valueOf(bytes.length).getBytes()));
-		queue.add(ByteBuf.wrapForReading(CR_LF));
-		queue.add(ByteBuf.wrapForReading(bytes));
-		queue.add(ByteBuf.wrapForReading(CR_LF));
+	private static void doEncode(byte[] bytes, ByteBufs bufs) {
+		bufs.add(ByteBuf.wrapForReading(new byte[]{'$'}));
+		bufs.add(ByteBuf.wrapForReading(String.valueOf(bytes.length).getBytes()));
+		bufs.add(ByteBuf.wrapForReading(CR_LF));
+		bufs.add(ByteBuf.wrapForReading(bytes));
+		bufs.add(ByteBuf.wrapForReading(CR_LF));
 	}
 
-	private static void doEncode(Long integer, ByteBufQueue queue) {
-		queue.add(ByteBuf.wrapForReading(new byte[]{':'}));
-		queue.add(ByteBuf.wrapForReading(String.valueOf(integer).getBytes()));
-		queue.add(ByteBuf.wrapForReading(CR_LF));
+	private static void doEncode(Long integer, ByteBufs bufs) {
+		bufs.add(ByteBuf.wrapForReading(new byte[]{':'}));
+		bufs.add(ByteBuf.wrapForReading(String.valueOf(integer).getBytes()));
+		bufs.add(ByteBuf.wrapForReading(CR_LF));
 	}
 
-	private static void doEncode(List<?> array, ByteBufQueue queue) {
-		queue.add(ByteBuf.wrapForReading(new byte[]{'*'}));
-		queue.add(ByteBuf.wrapForReading(String.valueOf(array.size()).getBytes()));
-		queue.add(ByteBuf.wrapForReading(CR_LF));
+	private static void doEncode(List<?> array, ByteBufs bufs) {
+		bufs.add(ByteBuf.wrapForReading(new byte[]{'*'}));
+		bufs.add(ByteBuf.wrapForReading(String.valueOf(array.size()).getBytes()));
+		bufs.add(ByteBuf.wrapForReading(CR_LF));
 		for (Object o : array) {
 			if (o == null) {
-				doEncodeNil(queue);
+				doEncodeNil(bufs);
 			} else if (o instanceof Long) {
-				doEncode((Long) o, queue);
+				doEncode((Long) o, bufs);
 			} else if (o instanceof String) {
-				doEncode((String) o, queue);
+				doEncode((String) o, bufs);
 			} else if (o instanceof byte[]) {
-				doEncode((byte[]) o, queue);
+				doEncode((byte[]) o, bufs);
 			} else if (o instanceof ServerError) {
-				doEncode((ServerError) o, queue);
+				doEncode((ServerError) o, bufs);
 			}else {
 				assert o instanceof List;
-				doEncode((List<?>) o, queue);
+				doEncode((List<?>) o, bufs);
 			}
 		}
 	}
 
-	private static void doEncode(ServerError error, ByteBufQueue queue) {
-		queue.add(ByteBuf.wrapForReading(new byte[]{'-'}));
-		doEncodeString(error.getMessage(), queue);
+	private static void doEncode(ServerError error, ByteBufs bufs) {
+		bufs.add(ByteBuf.wrapForReading(new byte[]{'-'}));
+		doEncodeString(error.getMessage(), bufs);
 	}
 
-	private static void doEncodeString(String string, ByteBufQueue queue) {
-		queue.add(ByteBuf.wrapForReading(string.getBytes()));
-		queue.add(ByteBuf.wrapForReading(new byte[]{13, 10}));
+	private static void doEncodeString(String string, ByteBufs bufs) {
+		bufs.add(ByteBuf.wrapForReading(string.getBytes()));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{13, 10}));
 	}
 }

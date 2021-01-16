@@ -210,7 +210,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private boolean processWebSocketResponse(@Nullable ByteBuf body) {
 		if (response.getCode() == 101) {
 			assert body != null && body.readRemaining() == 0;
-			response.bodyStream = concat(ChannelSupplier.of(readQueue.takeRemaining()), ChannelSupplier.ofSocket(socket));
+			response.bodyStream = concat(ChannelSupplier.of(readBufs.takeRemaining()), ChannelSupplier.ofSocket(socket));
 			return true;
 		} else {
 			closeWithError(HANDSHAKE_FAILED);
@@ -238,9 +238,9 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void onNoContentLength() {
-		ChannelSupplier<ByteBuf> ofQueue = readQueue.hasRemaining() ? ChannelSupplier.of(readQueue.takeRemaining()) : ChannelSupplier.of();
+		ChannelSupplier<ByteBuf> ofBufs = readBufs.hasRemaining() ? ChannelSupplier.of(readBufs.takeRemaining()) : ChannelSupplier.of();
 		ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
-		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(ofQueue, buffer.getSupplier());
+		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(ofBufs, buffer.getSupplier());
 		Promise<Void> inflaterFinished = Promise.complete();
 		if ((flags & GZIPPED) != 0) {
 			BufsConsumerGzipInflater gzipInflater = BufsConsumerGzipInflater.create();
@@ -328,7 +328,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			if no Content-Length header is set, client should read body until a server closes the connection
 		*/
 		contentLength = UNSET_CONTENT_LENGTH;
-		if (readQueue.isEmpty()) {
+		if (readBufs.isEmpty()) {
 			tryReadHttpMessage();
 		} else {
 			eventloop.post(() -> {

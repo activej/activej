@@ -18,7 +18,7 @@ package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
@@ -49,7 +49,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
+	public ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
 		if (readHeader) {
 			if (!readHeader(bufs)) return null;
 			readHeader = false;
@@ -81,7 +81,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		return false;
 	}
 
-	private boolean readHeader(ByteBufQueue bufs) throws MalformedDataException {
+	private boolean readHeader(ByteBufs bufs) throws MalformedDataException {
 		return bufs.consumeBytes((index, value) -> {
 			if (value != MAGIC[index]) throw new UnknownFormatException("Expected stream to start with bytes: " + Arrays.toString(MAGIC));
 			return index == MAGIC_LENGTH - 1;
@@ -89,7 +89,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	}
 
 	@Nullable
-	private ByteBuf decompress(ByteBufQueue bufs, int compressedSize) throws MalformedDataException {
+	private ByteBuf decompress(ByteBufs bufs, int compressedSize) throws MalformedDataException {
 		if (!bufs.hasRemainingBytes(4 + 4 + compressedSize + 1)) return null;
 
 		bufs.consumeBytes(4, intScanner);
@@ -130,7 +130,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		return buf;
 	}
 
-	private static final class IntScanner implements ByteBufQueue.ByteScanner {
+	private static final class IntScanner implements ByteBufs.ByteScanner {
 		public int value;
 
 		@Override

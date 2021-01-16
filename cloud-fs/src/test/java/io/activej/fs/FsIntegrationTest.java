@@ -1,7 +1,7 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.tuple.Tuple2;
@@ -201,7 +201,7 @@ public final class FsIntegrationTest {
 
 	private Promise<ByteBuf> download(String file) {
 		return fs.download(file)
-				.then(supplier -> supplier.toCollector(ByteBufQueue.collector()))
+				.then(supplier -> supplier.toCollector(ByteBufs.collector()))
 				.whenComplete(server::close);
 	}
 
@@ -343,7 +343,7 @@ public final class FsIntegrationTest {
 		String result = await(ChannelSupplier.of(wrapUtf8(appended))
 				.streamTo(fs.append(filename, offset))
 				.then(() -> fs.download(filename))
-				.then(supplier -> supplier.toCollector(ByteBufQueue.collector())
+				.then(supplier -> supplier.toCollector(ByteBufs.collector())
 						.map(byteBuf -> byteBuf.asString(UTF_8)))
 				.whenComplete(server::close));
 

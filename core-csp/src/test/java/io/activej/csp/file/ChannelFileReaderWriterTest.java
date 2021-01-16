@@ -1,7 +1,7 @@
 package io.activej.csp.file;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -41,7 +41,7 @@ public final class ChannelFileReaderWriterTest {
 	@Test
 	public void streamFileReader() throws IOException {
 		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat"))
-				.then(cfr -> cfr.toCollector(ByteBufQueue.collector())));
+				.then(cfr -> cfr.toCollector(ByteBufs.collector())));
 
 		assertArrayEquals(Files.readAllBytes(Paths.get("test_data/in.dat")), byteBuf.asArray());
 	}
@@ -51,7 +51,7 @@ public final class ChannelFileReaderWriterTest {
 		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat"))
 				.then(cfr -> cfr.withBufferSize(MemSize.of(1))
 						.mapAsync(buf -> Promises.delay(10L, buf))
-						.toCollector(ByteBufQueue.collector())));
+						.toCollector(ByteBufs.collector())));
 
 		assertArrayEquals(Files.readAllBytes(Paths.get("test_data/in.dat")), byteBuf.asArray());
 	}
@@ -123,7 +123,7 @@ public final class ChannelFileReaderWriterTest {
 
 		ByteBuf byteBuf = await(cfr.withOffset(Files.size(Paths.get("test_data/in.dat")) + 100)
 				.withBufferSize(MemSize.of(1))
-				.toCollector(ByteBufQueue.collector()));
+				.toCollector(ByteBufs.collector()));
 
 		assertEquals("", byteBuf.asString(UTF_8));
 	}

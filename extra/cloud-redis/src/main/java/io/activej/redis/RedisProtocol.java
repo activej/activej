@@ -16,7 +16,7 @@
 
 package io.activej.redis;
 
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,5 +24,5 @@ public interface RedisProtocol {
 	int encode(byte[] array, int offset, RedisCommand item) throws ArrayIndexOutOfBoundsException;
 
 	@Nullable
-	RedisResponse tryDecode(ByteBufQueue queue) throws MalformedDataException;
+	RedisResponse tryDecode(ByteBufs bufs) throws MalformedDataException;
 }

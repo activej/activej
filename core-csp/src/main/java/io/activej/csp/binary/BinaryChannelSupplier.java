@@ -20,7 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelSupplier;
@@ -31,17 +31,17 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
-	protected final ByteBufQueue bufs;
+	protected final ByteBufs bufs;
 
-	protected BinaryChannelSupplier(ByteBufQueue bufs) {
+	protected BinaryChannelSupplier(ByteBufs bufs) {
 		this.bufs = bufs;
 	}
 
 	protected BinaryChannelSupplier() {
-		this.bufs = new ByteBufQueue();
+		this.bufs = new ByteBufs();
 	}
 
-	public ByteBufQueue getBufs() {
+	public ByteBufs getBufs() {
 		return bufs;
 	}
 
@@ -100,9 +100,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 		};
 	}
 
-	public static BinaryChannelSupplier ofProvidedQueue(ByteBufQueue queue,
+	public static BinaryChannelSupplier ofProvidedBufs(ByteBufs bufs,
 			AsyncSupplier<Void> get, AsyncSupplier<Void> complete, AsyncCloseable closeable) {
-		return new BinaryChannelSupplier(queue) {
+		return new BinaryChannelSupplier(bufs) {
 			@Override
 			public Promise<Void> needMoreData() {
 				return get.get();

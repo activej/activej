@@ -1,6 +1,6 @@
 package io.activej.http;
 
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.WebSocket.Frame;
@@ -117,7 +117,7 @@ public final class WebSocketBufsToFramesTest {
 		// Unmasked Ping request, RFC 6455 - 5.7
 		byte[] pingFrame = new byte[]{(byte) 0x89, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f};
 
-		ByteBufQueue pingMessage = new ByteBufQueue();
+		ByteBufs pingMessage = new ByteBufs();
 		await(ChannelSupplier.of(wrapForReading(pingFrame), closeUnmasked())
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, pingMessage::add, failOnItem(), false))
@@ -132,7 +132,7 @@ public final class WebSocketBufsToFramesTest {
 		byte[] pingFrame = new byte[]{(byte) 0x8a, (byte) 0x85, (byte) 0x37, (byte) 0xfa, (byte) 0x21,
 				(byte) 0x3d, (byte) 0x7f, (byte) 0x9f, (byte) 0x4d, (byte) 0x51, (byte) 0x58};
 
-		ByteBufQueue pongMessage = new ByteBufQueue();
+		ByteBufs pongMessage = new ByteBufs();
 		await(ChannelSupplier.of(wrapForReading(pingFrame), closeMasked())
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), pongMessage::add, true))

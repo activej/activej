@@ -17,7 +17,7 @@
 package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
 import org.jetbrains.annotations.Nullable;
@@ -28,19 +28,19 @@ import org.jetbrains.annotations.Nullable;
 public interface BlockDecoder {
 	/**
 	 * A 'sentinel' value that indicates end of stream.
-	 * <b>It should never be used for anything other than indicating end of stream in {@link #decode(ByteBufQueue)} method</b>
+	 * <b>It should never be used for anything other than indicating end of stream in {@link #decode(ByteBufs)} method</b>
 	 */
 	ByteBuf END_OF_STREAM = ByteBuf.wrap(new byte[0], 0, 0);
 
 	/**
-	 * Attempts to decode data blocks contained in a {@link ByteBufQueue}.
+	 * Attempts to decode data blocks contained in a {@link ByteBufs}.
 	 * <p>
-	 * <b>Decoder is forbidden to consume any bytes from a queue if it has not yet determined that
+	 * <b>Decoder is forbidden to consume any bytes from bufs if it has not yet determined that
 	 * encoded data corresponds to decoder's format</b>
 	 *
 	 * @param bufs queue that contains encoded data
 	 * @return a {@link ByteBuf} that contains successfully decoded data
-	 * or {@code null} which indicates that there are not enough data in a queue for a block to be decoded.
+	 * or {@code null} which indicates that there are not enough data in bufs for a block to be decoded.
 	 * <p>
 	 * If this method returns {@link #END_OF_STREAM} it indicates that end of stream has been reached
 	 * and no more data is expected.
@@ -48,7 +48,7 @@ public interface BlockDecoder {
 	 * @throws MalformedDataException         if data is malformed
 	 */
 	@Nullable
-	ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException;
+	ByteBuf decode(ByteBufs bufs) throws MalformedDataException;
 
 	/**
 	 * Attempts to reset some internal state of decoder.

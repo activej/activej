@@ -4,7 +4,7 @@ import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
@@ -162,7 +162,7 @@ public final class CubeLogProcessorControllerTest {
 		ByteBuf serializedData = await(logsFs.download(logFile).then(supplier -> supplier
 				.transformWith(ChannelFrameDecoder.create(LZ4FrameFormat.create())
 						.withDecoderResets())
-				.toCollector(ByteBufQueue.collector())));
+				.toCollector(ByteBufs.collector())));
 
 		// offset right before string
 		int bufSize = serializedData.readRemaining();

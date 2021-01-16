@@ -2,7 +2,7 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncConsumer;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
@@ -238,7 +238,7 @@ public final class TestClusterActiveFs {
 		}
 
 		ByteBuf result = await(client.copy(source, target)
-				.then(() -> client.download(target).then(supplier -> supplier.toCollector(ByteBufQueue.collector())))
+				.then(() -> client.download(target).then(supplier -> supplier.toCollector(ByteBufs.collector())))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
 		assertEquals(content, result.asString(UTF_8));
@@ -545,7 +545,7 @@ public final class TestClusterActiveFs {
 		List<String> results = await(action.apply(sourceToTarget)
 				.then(() -> Promises.toList(sourceToTarget.values().stream()
 						.map(target -> client.download(target)
-								.then(supplier -> supplier.toCollector(ByteBufQueue.collector()))
+								.then(supplier -> supplier.toCollector(ByteBufs.collector()))
 								.map(byteBuf -> byteBuf.asString(UTF_8)))))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 

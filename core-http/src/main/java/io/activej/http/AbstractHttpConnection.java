@@ -20,7 +20,7 @@ import io.activej.async.callback.Callback;
 import io.activej.async.process.AsyncProcess;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
@@ -68,7 +68,7 @@ public abstract class AbstractHttpConnection {
 	protected final Eventloop eventloop;
 
 	protected final AsyncTcpSocket socket;
-	protected final ByteBufQueue readQueue = new ByteBufQueue();
+	protected final ByteBufs readBufs = new ByteBufs();
 	protected final int maxBodySize;
 
 	protected static final byte KEEP_ALIVE = 1 << 0;
@@ -222,7 +222,7 @@ public abstract class AbstractHttpConnection {
 		flags |= CLOSED;
 		onClosed();
 		socket.close();
-		readQueue.recycle();
+		readBufs.recycle();
 	}
 
 	protected final void closeWithError(@NotNull Throwable e) {
@@ -231,7 +231,7 @@ public abstract class AbstractHttpConnection {
 		onClosedWithError(e);
 		onClosed();
 		socket.close();
-		readQueue.recycle();
+		readBufs.recycle();
 	}
 
 	protected void readMessage() throws MalformedHttpException {
@@ -240,17 +240,17 @@ public abstract class AbstractHttpConnection {
 
 	protected final void readStartLine() throws MalformedHttpException {
 		int size = 1;
-		for (int i = 0; i < readQueue.remainingBufs(); i++) {
-			ByteBuf buf = readQueue.peekBuf(i);
+		for (int i = 0; i < readBufs.remainingBufs(); i++) {
+			ByteBuf buf = readBufs.peekBuf(i);
 			for (int p = buf.head(); p < buf.tail(); p++) {
 				if (buf.at(p) == LF) {
 					size += p - buf.head();
 					if (i == 0 && buf.head() == 0 && size >= 10) {
 						onStartLine(buf.array(), size);
-						readQueue.skip(size);
+						readBufs.skip(size);
 					} else {
 						ByteBuf line = ByteBufPool.allocate(max(10, size)); // allocate at least 16 bytes
-						readQueue.drainTo(line, size);
+						readBufs.drainTo(line, size);
 						try {
 							onStartLine(line.array(), size);
 						} finally {
@@ -263,15 +263,15 @@ public abstract class AbstractHttpConnection {
 			}
 			size += buf.readRemaining();
 		}
-		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
+		if (readBufs.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
 			throw new MalformedHttpException("Header line exceeds max header size");
 		socket.read().whenComplete(readMessageConsumer);
 	}
 
 	private void readHeaders() throws MalformedHttpException {
 		assert !isClosed();
-		while (readQueue.hasRemaining()) {
-			ByteBuf buf = readQueue.peekBuf(0);
+		while (readBufs.hasRemaining()) {
+			ByteBuf buf = readBufs.peekBuf(0);
 			byte[] array = buf.array();
 			int head = buf.head();
 			int tail = buf.tail();
@@ -285,12 +285,12 @@ public abstract class AbstractHttpConnection {
 					int limit = (i - 1 >= head && array[i - 1] == CR) ? i - 1 : i;
 					if (limit != head) {
 						processHeaderLine(array, head, limit);
-						readQueue.skip(i - head + 1, this::onHeaderBuf);
+						readBufs.skip(i - head + 1, this::onHeaderBuf);
 						head = buf.head();
 						continue;
 					} else {
 						onHeaderBuf(buf);
-						readQueue.skip(i - head + 1);
+						readBufs.skip(i - head + 1);
 						readBody();
 						return;
 					}
@@ -298,7 +298,7 @@ public abstract class AbstractHttpConnection {
 				break;
 			}
 
-			if (i == tail && readQueue.remainingBufs() <= 1) {
+			if (i == tail && readBufs.remainingBufs() <= 1) {
 				break; // cannot determine if this is multiline header or not, need more data
 			}
 
@@ -312,36 +312,36 @@ public abstract class AbstractHttpConnection {
 			}
 		}
 
-		if (readQueue.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
+		if (readBufs.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
 			throw new MalformedHttpException("Header line exceeds max header size");
 		socket.read().whenComplete(readHeadersConsumer);
 	}
 
 	private byte[] readHeaderEx(int i) throws MalformedHttpException {
-		int remainingBytes = readQueue.remainingBytes();
+		int remainingBytes = readBufs.remainingBytes();
 		while (true) {
 			try {
-				int n = readQueue.scanBytes(i, (index, b) -> b == CR || b == LF);
+				int n = readBufs.scanBytes(i, (index, b) -> b == CR || b == LF);
 				if (n == 0) return null;
 				i += n;
 			} catch (MalformedDataException ignored) {
 				throw new AssertionError("Cannot be caught here");
 			}
-			byte b = readQueue.peekByte(i - 1);
+			byte b = readBufs.peekByte(i - 1);
 			assert b == CR || b == LF;
 			byte[] bytes;
 			if (b == CR) {
 				if (i >= remainingBytes) return null;
-				b = readQueue.peekByte(i++);
+				b = readBufs.peekByte(i++);
 				if (b != LF) throw new MalformedHttpException("Invalid CRLF");
 				if (i == 2) {
 					bytes = EMPTY_HEADER;
 				} else {
 					if (i >= remainingBytes) return null;
-					b = readQueue.peekByte(i);
+					b = readBufs.peekByte(i);
 					if (b == SP || b == HT) {
-						readQueue.setByte(i - 2, SP);
-						readQueue.setByte(i - 1, SP);
+						readBufs.setByte(i - 2, SP);
+						readBufs.setByte(i - 1, SP);
 						continue;
 					}
 					bytes = new byte[i - 2];
@@ -351,17 +351,17 @@ public abstract class AbstractHttpConnection {
 					bytes = EMPTY_HEADER;
 				} else {
 					if (i >= remainingBytes) return null;
-					b = readQueue.peekByte(i);
+					b = readBufs.peekByte(i);
 					if (b == SP || b == HT) {
-						readQueue.setByte(i - 1, SP);
+						readBufs.setByte(i - 1, SP);
 						continue;
 					}
 					bytes = new byte[i - 1];
 				}
 			}
 
-			readQueue.drainTo(bytes, 0, bytes.length, this::onHeaderBuf);
-			readQueue.skip(i - bytes.length, this::onHeaderBuf);
+			readBufs.drainTo(bytes, 0, bytes.length, this::onHeaderBuf);
+			readBufs.skip(i - bytes.length, this::onHeaderBuf);
 			return bytes;
 		}
 	}
@@ -417,8 +417,8 @@ public abstract class AbstractHttpConnection {
 				onNoContentLength();
 				return;
 			}
-			if (((flags & GZIPPED) == 0) && readQueue.hasRemainingBytes(contentLength)) {
-				ByteBuf body = readQueue.takeExactSize(contentLength);
+			if (((flags & GZIPPED) == 0) && readBufs.hasRemainingBytes(contentLength)) {
+				ByteBuf body = readBufs.takeExactSize(contentLength);
 				onHeadersReceived(body, null);
 				if (isClosed()) return;
 				onBodyReceived();
@@ -426,13 +426,13 @@ public abstract class AbstractHttpConnection {
 			}
 		}
 
-		BinaryChannelSupplier encodedStream = BinaryChannelSupplier.ofProvidedQueue(
-				readQueue,
+		BinaryChannelSupplier encodedStream = BinaryChannelSupplier.ofProvidedBufs(
+				readBufs,
 				() -> socket.read()
 						.thenEx((buf, e) -> {
 							if (e == null) {
 								if (buf != null) {
-									readQueue.add(buf);
+									readBufs.add(buf);
 									return Promise.complete();
 								} else {
 									return Promise.ofException(new MalformedHttpException("Incomplete HTTP message"));
@@ -573,7 +573,7 @@ public abstract class AbstractHttpConnection {
 			assert !isClosed() || e != null;
 			if (e == null) {
 				if (buf != null) {
-					readQueue.add(buf);
+					readBufs.add(buf);
 					try {
 						thenRun();
 					} catch (MalformedHttpException e1) {
@@ -593,7 +593,7 @@ public abstract class AbstractHttpConnection {
 	@Override
 	public String toString() {
 		return ", socket=" + socket +
-				", readQueue=" + readQueue +
+				", readBufs=" + readBufs +
 				", closed=" + isClosed() +
 				", keepAlive=" + isKeepAlive() +
 				", gzipped=" + isGzipped() +

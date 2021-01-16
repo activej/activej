@@ -1,7 +1,7 @@
 package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.test.ExpectedException;
@@ -42,7 +42,7 @@ public final class ChannelByteCombinerTest {
 				wrapUtf8("6"), wrapUtf8("7"), wrapUtf8("8")).async());
 		combiner.addInput().set(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")).async());
 
-		String result = await(combiner.getOutput().getSupplier().toCollector(ByteBufQueue.collector())).asString(UTF_8);
+		String result = await(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector())).asString(UTF_8);
 
 		assertEquals("12345678", result);
 	}
@@ -55,7 +55,7 @@ public final class ChannelByteCombinerTest {
 				wrapUtf8("6"), wrapUtf8("7"), wrapUtf8("8")).async());
 		combiner.addInput().set(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")).async());
 
-		String result = await(combiner.getOutput().getSupplier().toCollector(ByteBufQueue.collector())).asString(UTF_8);
+		String result = await(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector())).asString(UTF_8);
 
 		assertEquals("12345678", result);
 	}
@@ -67,7 +67,7 @@ public final class ChannelByteCombinerTest {
 			combiner.addInput().set(failing());
 		}
 
-		Throwable exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufQueue.collector()));
+		Throwable exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector()));
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 	}
@@ -81,7 +81,7 @@ public final class ChannelByteCombinerTest {
 		combiner.addInput().set(ChannelSuppliers.concat(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")),
 				failing()).async());
 
-		Throwable exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufQueue.collector()));
+		Throwable exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector()));
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 	}

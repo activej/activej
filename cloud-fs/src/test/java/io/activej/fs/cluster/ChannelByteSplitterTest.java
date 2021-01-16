@@ -1,7 +1,7 @@
 package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.ChannelConsumer;
@@ -48,7 +48,7 @@ public final class ChannelByteSplitterTest {
 				.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))));
 		List<String> results = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
-			splitter.addOutput().set(ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufQueue.collector())
+			splitter.addOutput().set(ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
 					.then(buf -> {
 						results.add(buf.asString(UTF_8));
 						return Promise.complete();
@@ -73,7 +73,7 @@ public final class ChannelByteSplitterTest {
 				failingSupplier()));
 		List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
-			ChannelConsumer<ByteBuf> output = ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufQueue.collector())
+			ChannelConsumer<ByteBuf> output = ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
 					.then(buf -> {
 						buf.recycle();
 						return Promise.complete();
@@ -101,7 +101,7 @@ public final class ChannelByteSplitterTest {
 			ChannelConsumer<ByteBuf> consumer = i % 3 == 0 ?
 					failingConsumer() :
 					ChannelConsumer.ofSupplier(supplier -> supplier
-							.toCollector(ByteBufQueue.collector())
+							.toCollector(ByteBufs.collector())
 							.then(buf -> {
 								results.add(buf.asString(UTF_8));
 								return Promise.complete();
@@ -130,7 +130,7 @@ public final class ChannelByteSplitterTest {
 				splitter.addOutput().set(failingConsumer());
 			} else {
 				ChannelConsumer<ByteBuf> consumer = ChannelConsumer.ofSupplier(supplier -> supplier
-						.toCollector(ByteBufQueue.collector())
+						.toCollector(ByteBufs.collector())
 						.then(buf -> {
 							buf.recycle();
 							return Promise.complete();

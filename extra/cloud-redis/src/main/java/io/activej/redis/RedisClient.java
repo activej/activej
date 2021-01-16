@@ -18,7 +18,7 @@ package io.activej.redis;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.CloseException;
@@ -219,10 +219,10 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 									sslContext, sslExecutor) :
 							socket;
 
-					ByteBufQueue tempQueue = new ByteBufQueue();
+					ByteBufs tempBufs = new ByteBufs();
 					RedisMessaging messaging =
-							RedisMessaging.create(socket, new RESPv2(tempQueue, charset));
-					messaging.setCloseable($ -> tempQueue.recycle());
+							RedisMessaging.create(socket, new RESPv2(tempBufs, charset));
+					messaging.setCloseable($ -> tempBufs.recycle());
 					return messaging;
 				})
 				.thenEx(wrapException(() -> "Failed to connect to Redis server"))

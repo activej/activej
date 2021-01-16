@@ -17,7 +17,7 @@
 package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.promise.Promise;
 
@@ -58,6 +58,6 @@ class StaticLoaderFileReader implements StaticLoader {
 					}
 				})
 				.then(() -> ChannelFileReader.open(executor, file))
-				.then(cfr -> cfr.toCollector(ByteBufQueue.collector()));
+				.then(cfr -> cfr.toCollector(ByteBufs.collector()));
 	}
 }

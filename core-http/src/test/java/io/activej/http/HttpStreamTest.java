@@ -2,7 +2,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -65,7 +65,7 @@ public final class HttpStreamTest {
 		startTestServer(request -> request
 				.getBodyStream()
 				.async()
-				.toCollector(ByteBufQueue.collector())
+				.toCollector(ByteBufs.collector())
 				.whenComplete(assertComplete(buf -> assertEquals(requestBody, buf.asString(UTF_8))))
 				.then(s -> Promise.of(HttpResponse.ok200())));
 
@@ -90,7 +90,7 @@ public final class HttpStreamTest {
 				.request(HttpRequest.post("http://127.0.0.1:" + PORT))
 				.async()
 				.whenComplete(assertComplete(response -> assertEquals(200, response.getCode())))
-				.then(response -> response.getBodyStream().async().toCollector(ByteBufQueue.collector())));
+				.then(response -> response.getBodyStream().async().toCollector(ByteBufs.collector())));
 
 		assertEquals(requestBody, body.asString(UTF_8));
 	}
@@ -109,7 +109,7 @@ public final class HttpStreamTest {
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
 				.whenComplete(assertComplete(response -> assertEquals(200, response.getCode())))
-				.then(response -> response.getBodyStream().async().toCollector(ByteBufQueue.collector())));
+				.then(response -> response.getBodyStream().async().toCollector(ByteBufs.collector())));
 
 		assertEquals(requestBody, body.asString(UTF_8));
 	}
@@ -125,7 +125,7 @@ public final class HttpStreamTest {
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.request(HttpRequest.post("http://127.0.0.1:" + PORT)
 						.withBodyStream(supplier))
-				.then(response -> response.getBodyStream().toCollector(ByteBufQueue.collector())));
+				.then(response -> response.getBodyStream().toCollector(ByteBufs.collector())));
 
 		assertTrue(body.asString(UTF_8).contains(exceptionMessage));
 	}
@@ -151,7 +151,7 @@ public final class HttpStreamTest {
 		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(PORT))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
-						.then(() -> ChannelSupplier.ofSocket(socket).toCollector(ByteBufQueue.collector()))
+						.then(() -> ChannelSupplier.ofSocket(socket).toCollector(ByteBufs.collector()))
 						.whenComplete(socket::close)));
 
 		assertEquals(responseMessage, body.asString(UTF_8));
@@ -229,7 +229,7 @@ public final class HttpStreamTest {
 								.withBodyStream(ChannelSuppliers.concat(
 										ChannelSupplier.ofList(expectedList),
 										ChannelSupplier.ofException(exception))))
-						.then(response -> response.getBodyStream().toCollector(ByteBufQueue.collector())));
+						.then(response -> response.getBodyStream().toCollector(ByteBufs.collector())));
 
 		assertThat(e, instanceOf(HttpException.class));
 		assertSame(exception, e.getCause());

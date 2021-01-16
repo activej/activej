@@ -1,7 +1,7 @@
 package io.activej.dataflow.stream;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.codec.StructuredCodec;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.ref.RefBoolean;
@@ -587,7 +587,7 @@ public final class PartitionedStreamTest {
 							.thenEx((value, e) -> {
 								if (e == null) return Promise.of(value);
 								if (e instanceof TruncatedDataException) {
-									ByteBufQueue bufs = binaryChannelSupplier.getBufs();
+									ByteBufs bufs = binaryChannelSupplier.getBufs();
 									return Promise.of(bufs.isEmpty() ? null : bufs.takeRemaining().asString(UTF_8));
 								}
 								return Promise.ofException(e);

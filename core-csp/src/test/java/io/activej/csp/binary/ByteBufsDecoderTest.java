@@ -2,7 +2,7 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
@@ -18,22 +18,22 @@ public final class ByteBufsDecoderTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private final ByteBufQueue queue = new ByteBufQueue();
-	private final ByteBufQueue tempQueue = new ByteBufQueue();
+	private final ByteBufs bufs = new ByteBufs();
+	private final ByteBufs tempBufs = new ByteBufs();
 
 	@Test
 	public void testOfNullTerminatedBytes() throws MalformedDataException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofNullTerminatedBytes();
-		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 0, 4, 5, 6}));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 0, 4, 5, 6}));
 		ByteBuf beforeNull = doDecode(decoder);
-		ByteBuf afterNull = queue.takeRemaining();
+		ByteBuf afterNull = bufs.takeRemaining();
 
 		assertArrayEquals(new byte[]{1, 2, 3}, beforeNull.asArray());
 		assertArrayEquals(new byte[]{4, 5, 6}, afterNull.asArray());
 
-		queue.add(ByteBuf.wrapForReading(new byte[]{0, 1, 2, 3}));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{0, 1, 2, 3}));
 		beforeNull = doDecode(decoder);
-		afterNull = queue.takeRemaining();
+		afterNull = bufs.takeRemaining();
 
 		assertArrayEquals(new byte[]{}, beforeNull.asArray());
 		assertArrayEquals(new byte[]{1, 2, 3}, afterNull.asArray());
@@ -42,16 +42,16 @@ public final class ByteBufsDecoderTest {
 	@Test
 	public void ofCrlfTerminatedBytes() throws MalformedDataException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofCrlfTerminatedBytes();
-		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, CR, LF, 4, 5, 6}));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, CR, LF, 4, 5, 6}));
 		ByteBuf beforeCrlf = doDecode(decoder);
-		ByteBuf afterCrlf = queue.takeRemaining();
+		ByteBuf afterCrlf = bufs.takeRemaining();
 
 		assertArrayEquals(new byte[]{1, 2, 3}, beforeCrlf.asArray());
 		assertArrayEquals(new byte[]{4, 5, 6}, afterCrlf.asArray());
 
-		queue.add(ByteBuf.wrapForReading(new byte[]{CR, LF, 1, 2, 3}));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{CR, LF, 1, 2, 3}));
 		beforeCrlf = doDecode(decoder);
-		afterCrlf = queue.takeRemaining();
+		afterCrlf = bufs.takeRemaining();
 
 		assertArrayEquals(new byte[]{}, beforeCrlf.asArray());
 		assertArrayEquals(new byte[]{1, 2, 3}, afterCrlf.asArray());
@@ -60,21 +60,21 @@ public final class ByteBufsDecoderTest {
 	@Test
 	public void ofCrlfTerminatedBytesWithMaxSize() throws MalformedDataException {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofCrlfTerminatedBytes(5);
-		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, CR, LF, 3, 4}));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, CR, LF, 3, 4}));
 		ByteBuf beforeCrlf = doDecode(decoder);
-		ByteBuf afterCrlf = queue.takeRemaining();
+		ByteBuf afterCrlf = bufs.takeRemaining();
 
 		assertArrayEquals(new byte[]{1, 2}, beforeCrlf.asArray());
 		assertArrayEquals(new byte[]{3, 4}, afterCrlf.asArray());
 
-		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, CR, LF, 4}));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, CR, LF, 4}));
 		beforeCrlf = doDecode(decoder);
-		afterCrlf = queue.takeRemaining();
+		afterCrlf = bufs.takeRemaining();
 
 		assertArrayEquals(new byte[]{1, 2, 3}, beforeCrlf.asArray());
 		assertArrayEquals(new byte[]{4}, afterCrlf.asArray());
 
-		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4, CR, LF}));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4, CR, LF}));
 		try {
 			doDecode(decoder);
 			fail();
@@ -88,9 +88,9 @@ public final class ByteBufsDecoderTest {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofIntSizePrefixedBytes();
 		ByteBuf buf = ByteBufPool.allocate(4);
 		buf.writeInt(5);
-		queue.add(buf);
+		bufs.add(buf);
 		byte[] bytes = {1, 2, 3, 4, 5};
-		queue.add(ByteBuf.wrapForReading(bytes));
+		bufs.add(ByteBuf.wrapForReading(bytes));
 
 		ByteBuf decoded = doDecode(decoder);
 		assertNotNull(decoded);
@@ -102,10 +102,10 @@ public final class ByteBufsDecoderTest {
 		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofVarIntSizePrefixedBytes();
 		ByteBuf buf = ByteBufPool.allocate(1005);
 		buf.writeVarInt(1000);
-		queue.add(buf);
+		bufs.add(buf);
 		byte[] bytes = new byte[1000];
 		ThreadLocalRandom.current().nextBytes(bytes);
-		queue.add(ByteBuf.wrapForReading(bytes));
+		bufs.add(ByteBuf.wrapForReading(bytes));
 
 		ByteBuf decoded = doDecode(decoder);
 		assertNotNull(decoded);
@@ -116,15 +116,15 @@ public final class ByteBufsDecoderTest {
 	public void assertBytes() throws MalformedDataException {
 		byte[] bytes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 		byte[] otherBytes = {11, 12, 13};
-		queue.add(ByteBuf.wrapForReading(bytes));
-		queue.add(ByteBuf.wrapForReading(otherBytes));
+		bufs.add(ByteBuf.wrapForReading(bytes));
+		bufs.add(ByteBuf.wrapForReading(otherBytes));
 
 		ByteBufsDecoder<byte[]> decoder = ByteBufsDecoder.assertBytes(bytes);
 		byte[] decoded = doDecode(decoder);
 		assertArrayEquals(bytes, decoded);
-		assertArrayEquals(otherBytes, queue.takeRemaining().asArray());
+		assertArrayEquals(otherBytes, bufs.takeRemaining().asArray());
 
-		queue.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4, 6, 7, 8, 9, 10, 11}));
+		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 4, 6, 7, 8, 9, 10, 11}));
 		try {
 			doDecode(decoder);
 			fail();
@@ -136,12 +136,12 @@ public final class ByteBufsDecoderTest {
 
 	private <T> T doDecode(ByteBufsDecoder<T> decoder) throws MalformedDataException {
 		while (true) {
-			T result = decoder.tryDecode(tempQueue);
+			T result = decoder.tryDecode(tempBufs);
 			if (result != null) {
-				assertTrue(tempQueue.isEmpty());
+				assertTrue(tempBufs.isEmpty());
 				return result;
 			}
-			tempQueue.add(queue.takeExactSize(1));
+			tempBufs.add(bufs.takeExactSize(1));
 		}
 	}
 }

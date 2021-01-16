@@ -18,7 +18,7 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
@@ -116,36 +116,36 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 		input.streamTo(ChannelConsumer.of(buf -> {
 					crc32.update(buf.array(), buf.head(), buf.readRemaining());
 					deflater.setInput(buf.array(), buf.head(), buf.readRemaining());
-					ByteBufQueue queue = deflate();
+					ByteBufs bufs = deflate();
 					buf.recycle();
-					return output.acceptAll(queue.asIterator());
+					return output.acceptAll(bufs.asIterator());
 				}))
 				.whenResult(this::writeFooter);
 	}
 
 	private void writeFooter() {
 		deflater.finish();
-		ByteBufQueue queue = deflate();
+		ByteBufs bufs = deflate();
 		ByteBuf footer = ByteBufPool.allocate(GZIP_FOOTER_SIZE);
 		footer.writeInt(Integer.reverseBytes((int) crc32.getValue()));
 		footer.writeInt(Integer.reverseBytes(deflater.getTotalIn()));
-		queue.add(footer);
-		output.acceptAll(queue.asIterator())
+		bufs.add(footer);
+		output.acceptAll(bufs.asIterator())
 				.then(output::acceptEndOfStream)
 				.whenResult(this::completeProcess);
 	}
 
-	private ByteBufQueue deflate() {
-		ByteBufQueue queue = new ByteBufQueue();
+	private ByteBufs deflate() {
+		ByteBufs bufs = new ByteBufs();
 		while (true) {
 			ByteBuf out = ByteBufPool.allocate(maxBufSize);
 			int len = deflater.deflate(out.array(), out.tail(), out.writeRemaining());
 			if (len > 0) {
 				out.tail(len);
-				queue.add(out);
+				bufs.add(out);
 			} else {
 				out.recycle();
-				return queue;
+				return bufs;
 			}
 		}
 	}

@@ -18,7 +18,7 @@ package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
@@ -60,7 +60,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 
 	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufQueue bufs) throws MalformedDataException {
+	public ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
 		if (readingHeader) {
 			if (!readHeader(bufs)) return null;
 			readingHeader = false;
@@ -78,7 +78,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		return ignoreMissingEndOfStreamBlock;
 	}
 
-	private boolean readHeader(ByteBufQueue bufs) throws MalformedDataException {
+	private boolean readHeader(ByteBufs bufs) throws MalformedDataException {
 		bufs.scanBytes((index, value) -> {
 			if (value != MAGIC[index]) {
 				throw new UnknownFormatException(
@@ -117,13 +117,13 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		return true;
 	}
 
-	private int readInt(ByteBufQueue bufs) throws MalformedDataException {
+	private int readInt(ByteBufs bufs) throws MalformedDataException {
 		bufs.consumeBytes(intLEScanner);
 		return intLEScanner.value;
 	}
 
-	private ByteBuf decompressBody(ByteBufQueue queue) throws MalformedDataException {
-		ByteBuf inputBuf = queue.takeExactSize(compressedLen);
+	private ByteBuf decompressBody(ByteBufs bufs) throws MalformedDataException {
+		ByteBuf inputBuf = bufs.takeExactSize(compressedLen);
 		ByteBuf outputBuf = ByteBufPool.allocate(originalLen);
 		try {
 			byte[] bytes = inputBuf.array();
@@ -156,7 +156,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		}
 	}
 
-	private static final class IntLeScanner implements ByteBufQueue.ByteScanner {
+	private static final class IntLeScanner implements ByteBufs.ByteScanner {
 		public int value;
 
 		@Override

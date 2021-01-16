@@ -15,22 +15,22 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ByteBufQueueTest {
+public class ByteBufsTest {
 	static {
 		initByteBufPool();
 	}
 
 	private final Random random = new Random();
-	private ByteBufQueue queue;
+	private ByteBufs bufs;
 
 	@Before
 	public void setUp() {
-		queue = new ByteBufQueue();
+		bufs = new ByteBufs();
 	}
 
 	@After
 	public void tearDown() {
-		queue.recycle();
+		bufs.recycle();
 	}
 
 	@Test
@@ -45,19 +45,19 @@ public class ByteBufQueueTest {
 		while (left > 0) {
 			int bufSize = random.nextInt(Math.min(10, left) + 1);
 			ByteBuf buf = ByteBuf.wrap(test, pos, pos + bufSize);
-			queue.add(buf);
+			bufs.add(buf);
 			left -= bufSize;
 			pos += bufSize;
 		}
 
-		assertEquals(test.length, queue.remainingBytes());
+		assertEquals(test.length, bufs.remainingBytes());
 
 		left = test.length;
 		pos = 0;
 		while (left > 0) {
 			int requested = random.nextInt(50);
 			byte[] dest = new byte[100];
-			int drained = queue.drainTo(dest, 10, requested);
+			int drained = bufs.drainTo(dest, 10, requested);
 
 			assertTrue(drained <= requested);
 
@@ -69,31 +69,31 @@ public class ByteBufQueueTest {
 			pos += drained;
 		}
 
-		assertEquals(0, queue.remainingBytes());
+		assertEquals(0, bufs.remainingBytes());
 	}
 
 	@Test
 	public void testAsIterator() {
 		List<ByteBuf> expected = asList(wrapAscii("First"), wrapAscii("Second"), wrapAscii("Third"), wrapAscii("Fourth"));
-		queue.addAll(expected);
+		bufs.addAll(expected);
 
 		List<ByteBuf> actual = new ArrayList<>();
-		queue.asIterator().forEachRemaining(actual::add);
+		bufs.asIterator().forEachRemaining(actual::add);
 		assertEquals(expected, actual);
 	}
 
 	@Test
-	public void scanEmptyQueue() throws MalformedDataException {
-		assertTrue(queue.isEmpty());
-		assertEquals(0, queue.scanBytes((index, value) -> {
+	public void scanEmptyBufs() throws MalformedDataException {
+		assertTrue(bufs.isEmpty());
+		assertEquals(0, bufs.scanBytes((index, value) -> {
 			throw new AssertionError();
 		}));
 	}
 
 	@Test
-	public void scanOverQueueSize() throws MalformedDataException {
-		queue.add(ByteBuf.wrapForReading(new byte[5]));
-		assertEquals(0, queue.scanBytes(queue.remainingBytes(), (index, value) -> {
+	public void scanOverBufsSize() throws MalformedDataException {
+		bufs.add(ByteBuf.wrapForReading(new byte[5]));
+		assertEquals(0, bufs.scanBytes(bufs.remainingBytes(), (index, value) -> {
 			throw new AssertionError();
 		}));
 	}
@@ -101,10 +101,10 @@ public class ByteBufQueueTest {
 	@Test
 	public void scanWithOffsetOnBufBorder() throws MalformedDataException {
 		byte[] bytes = {1, 2, 3, 4, 5};
-		queue.add(ByteBuf.wrapForReading(bytes));
-		queue.add(ByteBuf.wrapForReading(bytes));
+		bufs.add(ByteBuf.wrapForReading(bytes));
+		bufs.add(ByteBuf.wrapForReading(bytes));
 
-		assertEquals(1, queue.scanBytes(bytes.length, (index, value) -> {
+		assertEquals(1, bufs.scanBytes(bytes.length, (index, value) -> {
 			assertEquals(0, index);
 			assertEquals(bytes[0], value);
 			return true;

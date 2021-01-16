@@ -18,7 +18,7 @@ package io.activej.csp.net;
 
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -37,7 +37,7 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 
 	private final ByteBufsCodec<I, O> codec;
 
-	private final ByteBufQueue bufs = new ByteBufQueue();
+	private final ByteBufs bufs = new ByteBufs();
 	private final BinaryChannelSupplier bufsSupplier;
 
 	private boolean readDone;
@@ -47,7 +47,7 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 	private MessagingWithBinaryStreaming(AsyncTcpSocket socket, ByteBufsCodec<I, O> codec) {
 		this.socket = socket;
 		this.codec = codec;
-		this.bufsSupplier = BinaryChannelSupplier.ofProvidedQueue(bufs,
+		this.bufsSupplier = BinaryChannelSupplier.ofProvidedBufs(bufs,
 				() -> this.socket.read()
 						.then(buf -> {
 							if (buf != null) {

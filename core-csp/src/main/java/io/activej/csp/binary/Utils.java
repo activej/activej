@@ -17,7 +17,7 @@
 package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 
@@ -43,7 +43,7 @@ class Utils {
 		};
 	}
 
-	static class VarIntScanner implements ByteBufQueue.ByteScanner {
+	static class VarIntScanner implements ByteBufs.ByteScanner {
 		int result;
 
 		@Override
@@ -59,7 +59,7 @@ class Utils {
 		}
 	}
 
-	static class IntScanner implements ByteBufQueue.ByteScanner {
+	static class IntScanner implements ByteBufs.ByteScanner {
 		int result;
 
 		@Override

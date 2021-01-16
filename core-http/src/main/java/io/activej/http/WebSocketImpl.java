@@ -19,7 +19,7 @@ package io.activej.http;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
@@ -81,7 +81,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	@NotNull
 	public Promise<Message> readMessage() {
 		return doRead(() -> {
-			ByteBufQueue messageQueue = new ByteBufQueue();
+			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
 			return Promises.repeat(() -> frameInput.get()
 					.then(frame -> {
@@ -96,15 +96,15 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 							typeRef.set(frameToMessageType(frame.getType()));
 						}
 						ByteBuf payload = frame.getPayload();
-						if (messageQueue.remainingBytes() + payload.readRemaining() > maxMessageSize) {
+						if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
 							return protocolError(MESSAGE_TOO_BIG);
 						}
-						messageQueue.add(payload);
+						messageBufs.add(payload);
 						return Promise.of(!frame.isLastFrame());
 					}))
-					.whenException(e -> messageQueue.recycle())
+					.whenException(e -> messageBufs.recycle())
 					.then($ -> {
-						ByteBuf payload = messageQueue.takeRemaining();
+						ByteBuf payload = messageBufs.takeRemaining();
 						MessageType type = typeRef.get();
 						if (type == MessageType.TEXT) {
 							try {

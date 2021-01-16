@@ -18,7 +18,7 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
@@ -68,7 +68,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 
 	private Inflater inflater = new Inflater(true);
 
-	private ByteBufQueue bufs;
+	private ByteBufs bufs;
 	private BinaryChannelSupplier input;
 	private ChannelConsumer<ByteBuf> output;
 
@@ -152,26 +152,26 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	}
 
 	private void processBody() {
-		ByteBufQueue queue = new ByteBufQueue();
+		ByteBufs bufs = new ByteBufs();
 
-		while (bufs.hasRemaining()) {
-			ByteBuf src = bufs.peekBuf();
+		while (this.bufs.hasRemaining()) {
+			ByteBuf src = this.bufs.peekBuf();
 			assert src != null; // hasRemaining() succeeded above
 			inflater.setInput(src.array(), src.head(), src.readRemaining());
 			try {
-				inflate(queue, src);
+				inflate(bufs, src);
 			} catch (DataFormatException e) {
-				queue.recycle();
+				bufs.recycle();
 				closeEx(e);
 				return;
 			}
 			if (inflater.finished()) {
-				output.acceptAll(queue.asIterator())
+				output.acceptAll(bufs.asIterator())
 						.whenResult(this::processFooter);
 				return;
 			}
 		}
-		output.acceptAll(queue.asIterator())
+		output.acceptAll(bufs.asIterator())
 				.then(() -> input.needMoreData())
 				.whenResult(this::processBody);
 	}
@@ -197,7 +197,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 				.whenException(this::closeEx);
 	}
 
-	private void inflate(ByteBufQueue queue, ByteBuf src) throws DataFormatException {
+	private void inflate(ByteBufs bufs, ByteBuf src) throws DataFormatException {
 		while (true) {
 			ByteBuf buf = ByteBufPool.allocate(max(src.readRemaining(), DEFAULT_BUF_SIZE));
 			int beforeInflation = inflater.getTotalIn();
@@ -206,13 +206,13 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 			src.moveHead(inflater.getTotalIn() - beforeInflation);
 			if (len == 0) {
 				if (!src.canRead()) {
-					bufs.take().recycle();
+					this.bufs.take().recycle();
 				}
 				buf.recycle();
 				return;
 			}
 			crc32.update(buf.array(), buf.head(), buf.readRemaining());
-			queue.add(buf);
+			bufs.add(buf);
 		}
 	}
 

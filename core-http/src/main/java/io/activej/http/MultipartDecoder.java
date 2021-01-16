@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
@@ -156,7 +156,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
 
 	@Nullable
 	@Override
-	public MultipartFrame tryDecode(ByteBufQueue bufs) throws MalformedDataException {
+	public MultipartFrame tryDecode(ByteBufs bufs) throws MalformedDataException {
 		if (finished) {
 			return null;
 		}
@@ -228,7 +228,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
 		return MultipartFrame.of(buf);
 	}
 
-	private boolean cannotBeBoundary(ByteBufQueue bufs) throws MalformedDataException {
+	private boolean cannotBeBoundary(ByteBufs bufs) throws MalformedDataException {
 		return bufs.scanBytes((index, nextByte) -> {
 			if (index == lastBoundary.length) {
 				return nextByte != CR;
@@ -308,7 +308,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
 			return new MultipartDataHandler() {
 				@Override
 				public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
-					return Promise.of(ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufQueue.collector())
+					return Promise.of(ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
 							.map(value -> {
 								fields.put(fieldName, value.asString(UTF_8));
 								return null;

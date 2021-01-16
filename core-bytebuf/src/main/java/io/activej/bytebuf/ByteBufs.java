@@ -36,23 +36,23 @@ import static io.activej.common.collection.CollectionUtils.emptyIterator;
 import static java.lang.System.arraycopy;
 
 /**
- * Represents a circular FIFO queue of ByteBufs optimized
- * for efficient work with multiple ByteBufs.
+ * Represents a circular FIFO queue of {@link ByteBuf}s optimized
+ * for efficient work with multiple {@link ByteBuf}s.
  * <p>
  * There are <i>first</i> and <i>last</i> indexes which
  * represent which ByteBuf of the queue is currently
  * the first and the last to be taken.
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class ByteBufQueue implements Recyclable {
-	private static final boolean CHECK = Checks.isEnabled(ByteBufQueue.class);
+public final class ByteBufs implements Recyclable {
+	private static final boolean CHECK = Checks.isEnabled(ByteBufs.class);
 
 	private static final int DEFAULT_CAPACITY = 8;
 	/**
 	 * If set, nullifies bytebufs when they are taken out of queue. Set this setting ON if you need more control over memory.
 	 * For example, it is reasonable to enable this setting if you explicitly clear {@link ByteBufPool}
 	 */
-	private static final boolean NULLIFY_ON_TAKE_OUT = ApplicationSettings.getBoolean(ByteBufQueue.class, "nullifyOnTakeOut", ByteBufPool.USE_WATCHDOG);
+	private static final boolean NULLIFY_ON_TAKE_OUT = ApplicationSettings.getBoolean(ByteBufs.class, "nullifyOnTakeOut", ByteBufPool.USE_WATCHDOG);
 
 	private ByteBuf[] bufs;
 
@@ -60,51 +60,51 @@ public final class ByteBufQueue implements Recyclable {
 	private int last = 0;
 
 	/**
-	 * Returns a ByteBufQueue whose capacity is 8.
+	 * Returns ByteBufs whose capacity is 8.
 	 */
-	public ByteBufQueue() {
+	public ByteBufs() {
 		this(DEFAULT_CAPACITY);
 	}
 
-	public ByteBufQueue(int capacity) {
+	public ByteBufs(int capacity) {
 		this.bufs = new ByteBuf[capacity];
 	}
 
-	private static final Collector<ByteBuf, ByteBufQueue, ByteBuf> COLLECTOR = Collector.of(
-			ByteBufQueue::new,
-			ByteBufQueue::add,
+	private static final Collector<ByteBuf, ByteBufs, ByteBuf> COLLECTOR = Collector.of(
+			ByteBufs::new,
+			ByteBufs::add,
 			(bufs1, bufs2) -> {
 				throw new UnsupportedOperationException("Parallel collection of byte bufs is not supported");
 			},
-			ByteBufQueue::takeRemaining);
+			ByteBufs::takeRemaining);
 
 	/**
-	 * Accumulates input {@code ByteBuf}s into {@code ByteBufQueue} and then transforms
-	 * accumulated result into another {@code ByteBuf}.
+	 * Accumulates input {@link ByteBuf}s into {@link ByteBufs} and then transforms
+	 * accumulated result into another {@link ByteBuf}.
 	 *
-	 * @return a {@link Collector} described with ByteBuf, ByteBufQueue and a resulting ByteBuf
+	 * @return a {@link Collector} described with ByteBuf, ByteBufs and a resulting ByteBuf
 	 */
-	public static Collector<ByteBuf, ByteBufQueue, ByteBuf> collector() {
+	public static Collector<ByteBuf, ByteBufs, ByteBuf> collector() {
 		return COLLECTOR;
 	}
 
-	public static Collector<ByteBuf, ByteBufQueue, ByteBuf> collector(int maxSize) {
+	public static Collector<ByteBuf, ByteBufs, ByteBuf> collector(int maxSize) {
 		return Collector.of(
-				ByteBufQueue::new,
-				(queue, buf) -> {
+				ByteBufs::new,
+				(bufs, buf) -> {
 					int size = buf.readRemaining();
-					if (size > maxSize || queue.hasRemainingBytes(maxSize - size + 1)) {
-						queue.recycle();
+					if (size > maxSize || bufs.hasRemainingBytes(maxSize - size + 1)) {
+						bufs.recycle();
 						buf.recycle();
 						throw new UncheckedException(new InvalidSizeException(
-								"ByteBufQueue exceeds maximum size of " + maxSize + " bytes"));
+								"Size of ByteBufs exceeds maximum size of " + maxSize + " bytes"));
 					}
-					queue.add(buf);
+					bufs.add(buf);
 				},
 				(bufs1, bufs2) -> {
 					throw new UnsupportedOperationException("Parallel collection of byte bufs is not supported");
 				},
-				ByteBufQueue::takeRemaining);
+				ByteBufs::takeRemaining);
 	}
 
 	private int next(int i) {
@@ -121,9 +121,9 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	/**
-	 * Adds provided ByteBuf to this ByteBufQueue.
-	 * If this ByteBuf hasn't readable bytes, it won't
-	 * be added to the queue and will be recycled.
+	 * Adds provided ByteBuf to this ByteBufs.
+	 * If this ByteBuf has no readable bytes, it won't
+	 * be added to the bufs and will be recycled.
 	 * <p>
 	 * The added ByteBuf is set at the current {@code last}
 	 * position of the queue. Then {@code last} index is
@@ -131,7 +131,7 @@ public final class ByteBufQueue implements Recyclable {
 	 * a full circle of the queue.
 	 * <p>
 	 * If {@code last} and {@code first} indexes become the same,
-	 * this ByteBufQueue size will be doubled.
+	 * this ByteBufs size will be doubled.
 	 *
 	 * @param buf the ByteBuf to be added to the queue
 	 */
@@ -159,7 +159,7 @@ public final class ByteBufQueue implements Recyclable {
 	 * Then {@code first} index is increased by 1 or set to the value 0
 	 * if it has run a full circle of the queue.
 	 *
-	 * @return the first ByteBuf of this {@code ByteBufQueue}
+	 * @return the first ByteBuf of this {@code ByteBufs}
 	 */
 	@NotNull
 	public ByteBuf take() {
@@ -174,7 +174,7 @@ public final class ByteBufQueue implements Recyclable {
 	 * Returns the first ByteBuf of the queue if the queue is not empty
 	 * otherwise returns {@code null}.
 	 *
-	 * @return the first ByteBuf of this {@code ByteBufQueue}. If the queue is
+	 * @return the first ByteBuf of this {@code ByteBufs}. If the queue is
 	 * empty, returns null
 	 * @see #take()
 	 */
@@ -232,7 +232,7 @@ public final class ByteBufQueue implements Recyclable {
 
 	@NotNull
 	public ByteBuf takeAtLeast(int size, @NotNull Consumer<ByteBuf> recycledBufs) {
-		if (CHECK) checkArgument(hasRemainingBytes(size), () -> "Queue does not have " + size + " bufs");
+		if (CHECK) checkArgument(hasRemainingBytes(size), () -> "There are less than " + size + " bufs");
 		if (size == 0) return ByteBuf.empty();
 		ByteBuf buf = bufs[first];
 		if (buf.readRemaining() >= size) {
@@ -265,7 +265,7 @@ public final class ByteBufQueue implements Recyclable {
 
 	@NotNull
 	public ByteBuf takeExactSize(int exactSize, @NotNull Consumer<ByteBuf> recycledBufs) {
-		if (CHECK) checkArgument(hasRemainingBytes(exactSize), () -> "Queue does not have " + exactSize + " bufs");
+		if (CHECK) checkArgument(hasRemainingBytes(exactSize), () -> "There are less than " + exactSize + " bufs");
 		if (exactSize == 0) return ByteBuf.empty();
 		ByteBuf buf = bufs[first];
 		if (buf.readRemaining() == exactSize) {
@@ -299,7 +299,7 @@ public final class ByteBufQueue implements Recyclable {
 	 * @param consumer a consumer for the ByteBuf
 	 */
 	public void consume(int size, @NotNull Consumer<ByteBuf> consumer) {
-		if (CHECK) checkArgument(hasRemainingBytes(size), () -> "Queue does not have " + size + " bufs");
+		if (CHECK) checkArgument(hasRemainingBytes(size), () -> "There are less than " + size + " bufs");
 		ByteBuf buf = bufs[first];
 		if (buf.readRemaining() >= size) {
 			int newPos = buf.head() + size;
@@ -352,7 +352,7 @@ public final class ByteBufQueue implements Recyclable {
 	@NotNull
 	@Contract(pure = true)
 	public ByteBuf peekBuf(int n) {
-		if (CHECK) checkArgument(n <= remainingBufs(), "Index exceeds queue size");
+		if (CHECK) checkArgument(n <= remainingBufs(), "Index exceeds bufs size");
 		return bufs[(first + n) % bufs.length];
 	}
 
@@ -437,7 +437,7 @@ public final class ByteBufQueue implements Recyclable {
 	public byte getByte() {
 		if (CHECK) checkState(hasRemaining(), "No bytes to get");
 		ByteBuf buf = bufs[first];
-		if (CHECK) checkState(buf.canRead(), "Empty buf is found in queue");
+		if (CHECK) checkState(buf.canRead(), "Empty buf is found in bufs");
 		byte result = buf.get();
 		if (!buf.canRead()) {
 			bufs[first].recycle();
@@ -448,7 +448,7 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	/**
-	 * Returns the first byte from this queue without any recycling.
+	 * Returns the first byte from this bufs without any recycling.
 	 *
 	 * @see #getByte().
 	 */
@@ -460,14 +460,14 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	/**
-	 * Returns the byte from this queue of the given index
-	 * (not necessarily from the first ByteBuf of the queue).
+	 * Returns the byte from this bufs of the given index
+	 * (not necessarily from the first ByteBuf of the bufs).
 	 *
 	 * @param index the index at which the bytes will be returned
 	 */
 	@Contract(pure = true)
 	public byte peekByte(int index) {
-		if (CHECK) checkState(hasRemainingBytes(index + 1), "Index exceeds the number of bytes in queue");
+		if (CHECK) checkState(hasRemainingBytes(index + 1), "Index exceeds the number of bytes in bufs");
 		for (int i = first; ; i = next(i)) {
 			ByteBuf buf = bufs[i];
 			if (index < buf.readRemaining())
@@ -477,7 +477,7 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	public void setByte(int index, byte b) {
-		if (CHECK) checkArgument(hasRemainingBytes(index + 1), "Index exceeds queue bytes length");
+		if (CHECK) checkArgument(hasRemainingBytes(index + 1), "Index exceeds bufs bytes length");
 		for (int i = first; ; i = next(i)) {
 			ByteBuf buf = bufs[i];
 			if (index < buf.readRemaining()) {
@@ -489,7 +489,7 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	/**
-	 * Removes {@code maxSize} bytes from this queue.
+	 * Removes {@code maxSize} bytes from this bufs.
 	 *
 	 * @param maxSize number of bytes to be removed
 	 * @return number of removed bytes
@@ -518,7 +518,7 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	/**
-	 * Adds {@code maxSize} bytes from this queue to {@code dest} if queue
+	 * Adds {@code maxSize} bytes from this bufs to {@code dest} if queue
 	 * contains more than {@code maxSize} bytes. Otherwise adds all
 	 * bytes from queue to {@code dest}. In both cases increases queue's
 	 * position to the number of drained bytes.
@@ -585,10 +585,10 @@ public final class ByteBufQueue implements Recyclable {
 	/**
 	 * Copies all bytes from this queue to {@code dest}, and removes it from this queue.
 	 *
-	 * @param dest ByteBufQueue  for draining
+	 * @param dest ByteBufs  for draining
 	 * @return number of adding bytes
 	 */
-	public int drainTo(@NotNull ByteBufQueue dest) {
+	public int drainTo(@NotNull ByteBufs dest) {
 		int size = 0;
 		while (hasRemaining()) {
 			ByteBuf buf = take();
@@ -599,14 +599,14 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	/**
-	 * Adds to ByteBufQueue {@code dest} {@code maxSize} bytes from this queue.
+	 * Adds to ByteBufs {@code dest} {@code maxSize} bytes from this queue.
 	 * If this queue doesn't contain enough bytes, adds all bytes from this queue.
 	 *
-	 * @param dest    {@code ByteBufQueue} for draining
+	 * @param dest    {@code ByteBufs} for draining
 	 * @param maxSize number of bytes for adding
 	 * @return number of added elements
 	 */
-	public int drainTo(@NotNull ByteBufQueue dest, int maxSize) {
+	public int drainTo(@NotNull ByteBufs dest, int maxSize) {
 		int s = maxSize;
 		while (s != 0 && hasRemaining()) {
 			ByteBuf buf = takeAtMost(s);
@@ -720,10 +720,10 @@ public final class ByteBufQueue implements Recyclable {
 		int first;
 		final int last;
 
-		private ByteBufIterator(@NotNull ByteBufQueue queue) {
-			bufs = queue.bufs;
-			first = queue.first;
-			last = queue.last;
+		private ByteBufIterator(@NotNull ByteBufs bufs) {
+			this.bufs = bufs.bufs;
+			first = bufs.first;
+			last = bufs.last;
 		}
 
 		@Override
@@ -750,7 +750,7 @@ public final class ByteBufQueue implements Recyclable {
 	}
 
 	/**
-	 * Recycles all ByteBufs of this queue and sets
+	 * Recycles all present {@link ByteBuf}s and sets
 	 * {@code first} and {@code last} indexes to 0.
 	 */
 	@Override

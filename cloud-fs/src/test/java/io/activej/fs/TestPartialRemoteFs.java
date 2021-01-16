@@ -1,7 +1,7 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
@@ -128,7 +128,7 @@ public final class TestPartialRemoteFs {
 	public void downloadOverSuffix() {
 		int offset = 13;
 		ByteBuf result = await(ChannelSupplier.ofPromise(client.download(FILE, offset, 123))
-				.toCollector(ByteBufQueue.collector())
+				.toCollector(ByteBufs.collector())
 				.whenComplete(server::close));
 
 		assertEquals(new String(CONTENT, offset, CONTENT.length - offset, UTF_8), result.asString(UTF_8));
@@ -137,7 +137,7 @@ public final class TestPartialRemoteFs {
 	@Test
 	public void downloadOver() {
 		Throwable exception = awaitException(ChannelSupplier.ofPromise(client.download(FILE, 123, 123))
-				.toCollector(ByteBufQueue.collector())
+				.toCollector(ByteBufs.collector())
 				.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(IllegalOffsetException.class));

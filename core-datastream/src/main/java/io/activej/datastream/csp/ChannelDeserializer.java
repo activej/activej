@@ -17,7 +17,7 @@
 package io.activej.datastream.csp;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
@@ -39,7 +39,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 	private ChannelSupplier<ByteBuf> input;
 	private final BinarySerializer<T> valueSerializer;
 
-	private final ByteBufQueue queue = new ByteBufQueue();
+	private final ByteBufs bufs = new ByteBufs();
 
 	private boolean explicitEndOfStream = false;
 
@@ -83,21 +83,21 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 			closeEx(new MalformedDataException("Data is corrupted", e));
 			return;
 		} catch (Exception e) {
-			closeEx(new UnknownFormatException(format("Parse exception, %s : %s", this, queue), e));
+			closeEx(new UnknownFormatException(format("Parse exception, %s : %s", this, bufs), e));
 			return;
 		}
 
 		if (endOfStream) {
-			assert queue.hasRemainingBytes(1);
-			queue.skip(1);
+			assert bufs.hasRemainingBytes(1);
+			bufs.skip(1);
 
 			if (!explicitEndOfStream) {
-				closeEx(new TruncatedDataException(format("Unexpected end-of-stream, %s : %s", this, queue)));
+				closeEx(new TruncatedDataException(format("Unexpected end-of-stream, %s : %s", this, bufs)));
 				return;
 			}
 
-			if (queue.hasRemaining()) {
-				closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, queue)));
+			if (bufs.hasRemaining()) {
+				closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, bufs)));
 				return;
 			}
 		}
@@ -108,21 +108,21 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 						if (buf != null) {
 							if (endOfStream) {
 								buf.recycle();
-								closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, queue)));
+								closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, bufs)));
 								return;
 							}
-							queue.add(buf);
+							bufs.add(buf);
 							asyncResume();
 						} else {
 							if (explicitEndOfStream && !endOfStream) {
-								closeEx(new UnknownFormatException(format("Explicit end-of-stream is missing, %s : %s", this, queue)));
+								closeEx(new UnknownFormatException(format("Explicit end-of-stream is missing, %s : %s", this, bufs)));
 								return;
 							}
 
-							if (queue.isEmpty()) {
+							if (bufs.isEmpty()) {
 								sendEndOfStream();
 							} else {
-								closeEx(new TruncatedDataException(format("Truncated serialized data stream, %s : %s", this, queue)));
+								closeEx(new TruncatedDataException(format("Truncated serialized data stream, %s : %s", this, bufs)));
 							}
 						}
 					})
@@ -134,7 +134,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 
 	private boolean process() {
 		ByteBuf firstBuf;
-		while (isReady() && (firstBuf = queue.peekBuf()) != null) {
+		while (isReady() && (firstBuf = bufs.peekBuf()) != null) {
 			int firstBufRemaining = firstBuf.readRemaining();
 			if (firstBufRemaining >= 4) {
 				byte[] array = firstBuf.array();
@@ -158,7 +158,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 					if (firstBufRemaining != messageSize) {
 						firstBuf.moveHead(messageSize);
 					} else {
-						queue.take().recycle();
+						bufs.take().recycle();
 					}
 					continue;
 				}
@@ -178,11 +178,11 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 		int messageSize = encodedSize & 0x0FFFFFFF;
 		int headerSize = encodedSize >>> 28;
 
-		if (!queue.hasRemainingBytes(messageSize)) {
+		if (!bufs.hasRemainingBytes(messageSize)) {
 			return -1;
 		}
 
-		queue.consume(messageSize, buf -> {
+		bufs.consume(messageSize, buf -> {
 			T item = valueSerializer.decode(buf.array(), buf.head() + headerSize);
 			send(item);
 		});
@@ -218,26 +218,26 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 	}
 
 	private int readEncodedSize() {
-		byte b = queue.peekByte();
+		byte b = bufs.peekByte();
 		if (b > 0) return b + 1 + (1 << 28);
 		if (b == 0) return 0;
-		if (queue.hasRemainingBytes(2)) {
+		if (bufs.hasRemainingBytes(2)) {
 			int dataSize = b & 0x7f;
-			b = queue.peekByte(1);
+			b = bufs.peekByte(1);
 			if (b >= 0) {
 				dataSize += (b << 7);
 				return dataSize + 2 + (2 << 28);
 			}
-			if (queue.hasRemainingBytes(3)) {
+			if (bufs.hasRemainingBytes(3)) {
 				dataSize += ((b & 0x7f) << 7);
-				b = queue.peekByte(2);
+				b = bufs.peekByte(2);
 				if (b >= 0) {
 					dataSize += (b << 14);
 					return dataSize + 3 + (3 << 28);
 				}
-				if (queue.hasRemainingBytes(4)) {
+				if (bufs.hasRemainingBytes(4)) {
 					dataSize += ((b & 0x7f) << 14);
-					b = queue.peekByte(3);
+					b = bufs.peekByte(3);
 					if (b >= 0) {
 						dataSize += (b << 21);
 						return dataSize + 4 + (4 << 28);
@@ -257,6 +257,6 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 
 	@Override
 	protected void onCleanup() {
-		queue.recycle();
+		bufs.recycle();
 	}
 }

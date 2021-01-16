@@ -17,8 +17,8 @@
 package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
-import io.activej.bytebuf.ByteBufQueue.ByteScanner;
+import io.activej.bytebuf.ByteBufs;
+import io.activej.bytebuf.ByteBufs.ByteScanner;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelConsumer;
@@ -46,7 +46,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	public static final int MAX_CHUNK_LENGTH_DIGITS = 8;
 	public static final byte[] CRLF = {13, 10};
 
-	private ByteBufQueue bufs;
+	private ByteBufs bufs;
 	private BinaryChannelSupplier input;
 	private ChannelConsumer<ByteBuf> output;
 
@@ -95,9 +95,9 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 
 	private void processLength() {
 		input.decode(
-				queue -> {
+				bufs -> {
 					chunkLength = 0;
-					int bytes = bufs.scanBytes((index, c) -> {
+					int bytes = this.bufs.scanBytes((index, c) -> {
 						if (c >= '0' && c <= '9') {
 							chunkLength = (chunkLength << 4) + (c - '0');
 						} else if (c >= 'a' && c <= 'f') {
@@ -119,7 +119,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 						return false;
 					});
 					if (bytes == 0) return null;
-					bufs.skip(bytes - 1);
+					this.bufs.skip(bytes - 1);
 					return chunkLength;
 				})
 				.whenException(this::closeEx)

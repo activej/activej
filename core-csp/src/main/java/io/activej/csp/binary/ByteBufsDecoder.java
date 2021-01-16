@@ -17,8 +17,8 @@
 package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufQueue;
-import io.activej.bytebuf.ByteBufQueue.ByteScanner;
+import io.activej.bytebuf.ByteBufs;
+import io.activej.bytebuf.ByteBufs.ByteScanner;
 import io.activej.common.api.DecoderFunction;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
@@ -34,7 +34,7 @@ import static io.activej.csp.binary.Utils.decodeUntilTerminatorByte;
 public interface ByteBufsDecoder<T> {
 
 	@Nullable
-	T tryDecode(ByteBufQueue bufs) throws MalformedDataException;
+	T tryDecode(ByteBufs bufs) throws MalformedDataException;
 
 	default <V> ByteBufsDecoder<V> andThen(DecoderFunction<? super T, ? extends V> after) {
 		return bufs -> {
