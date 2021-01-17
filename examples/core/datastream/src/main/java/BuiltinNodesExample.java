@@ -1,7 +1,6 @@
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamFilter;
-import io.activej.datastream.processor.StreamMapper;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.eventloop.Eventloop;
@@ -19,7 +18,7 @@ public final class BuiltinNodesExample {
 	private static void filter() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
-		StreamFilter<Integer> filter = StreamFilter.create(input -> input % 2 == 1);
+		StreamFilter<Integer, Integer> filter = StreamFilter.create(input -> input % 2 == 1);
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
@@ -60,7 +59,7 @@ public final class BuiltinNodesExample {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
 		//creating a mapper for the numbers
-		StreamMapper<Integer, String> simpleMap = StreamMapper.create(x -> x + " times ten = " + x * 10);
+		StreamFilter<Integer, String> simpleMap = StreamFilter.mapper(x -> x + " times ten = " + x * 10);
 
 		//creating a consumer which converts received values to list
 		StreamConsumerToList<String> consumer = StreamConsumerToList.create();

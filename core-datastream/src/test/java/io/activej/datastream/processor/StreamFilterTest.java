@@ -29,7 +29,7 @@ public class StreamFilterTest {
 	@Test
 	public void test1() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6);
-		StreamFilter<Integer> filter = StreamFilter.create(input -> input % 2 == 1);
+		StreamFilter<Integer, Integer> filter = StreamFilter.create(input -> input % 2 == 1);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		await(supplier.transformWith(filter)
@@ -44,7 +44,7 @@ public class StreamFilterTest {
 	@Test
 	public void testWithError() {
 		StreamSupplier<Integer> source = StreamSupplier.of(1, 2, 3, 4, 5, 6);
-		StreamFilter<Integer> streamFilter = StreamFilter.create(input -> input % 2 != 1);
+		StreamFilter<Integer, Integer> streamFilter = StreamFilter.create(input -> input % 2 != 1);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
@@ -68,7 +68,7 @@ public class StreamFilterTest {
 				StreamSupplier.ofIterable(Arrays.asList(1, 2, 3, 4, 5, 6)),
 				StreamSupplier.closingWithError(exception));
 
-		StreamFilter<Integer> streamFilter = StreamFilter.create(input -> input % 2 != 1);
+		StreamFilter<Integer, Integer> streamFilter = StreamFilter.create(input -> input % 2 != 1);
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
@@ -85,7 +85,7 @@ public class StreamFilterTest {
 	@Test
 	public void testFilterConsumer() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6);
-		StreamFilter<Integer> filter = StreamFilter.create(input -> input % 2 == 1);
+		StreamFilter<Integer, Integer> filter = StreamFilter.create(input -> input % 2 == 1);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		StreamConsumer<Integer> transformedConsumer = consumer

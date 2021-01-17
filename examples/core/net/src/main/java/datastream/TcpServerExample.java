@@ -4,7 +4,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.datastream.processor.StreamMapper;
+import io.activej.datastream.processor.StreamFilter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
@@ -38,7 +38,7 @@ public final class TcpServerExample {
 
 			ChannelSupplier.ofSocket(socket)
 					.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
-					.transformWith(StreamMapper.create(x -> x + " times 10 = " + x * 10))
+					.transformWith(StreamFilter.mapper(x -> x + " times 10 = " + x * 10))
 					.transformWith(ChannelSerializer.create(UTF8_SERIALIZER))
 					.streamTo(ChannelConsumer.ofSocket(socket));
 		});

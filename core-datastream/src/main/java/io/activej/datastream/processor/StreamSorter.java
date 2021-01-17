@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
+import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -56,7 +58,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 	private Executor sortingExecutor = Runnable::run;
 
 	private StreamSorter(StreamSorterStorage<T> storage,
-			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
+			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate,
 			int itemsInMemory) {
 		this.storage = storage;
 		this.keyFunction = keyFunction;
@@ -66,7 +68,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 			K key2 = keyFunction.apply(item2);
 			return keyComparator.compare(key1, key2);
 		};
-		this.distinct = distinct;
+		this.distinct = deduplicate;
 		this.itemsInMemory = itemsInMemory;
 
 		List<Integer> partitionIds = new ArrayList<>();
@@ -79,19 +81,18 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 							input.list = new ArrayList<>(itemsInMemory);
 							return Promise.ofBlockingRunnable(sortingExecutor, () -> sortedList.sort(itemComparator))
 									.map($ -> {
-										Iterator<T> iterator = !distinct ?
-												sortedList.iterator() :
-												new DistinctIterator<>(sortedList, keyFunction, keyComparator);
-										StreamSupplier<T> listSupplier = StreamSupplier.ofIterator(iterator);
+										StreamSupplier<T> listSupplier = StreamSupplier.ofIterator(deduplicate ?
+												new DistinctIterator<>(sortedList, keyFunction, keyComparator) :
+												sortedList.iterator());
 										logger.info("Items in memory: {}, files: {}", sortedList.size(), streamIds.size());
 										if (streamIds.isEmpty()) {
 											return listSupplier;
 										}
-										StreamMerger<K, T> streamMerger = StreamMerger.create(keyFunction, keyComparator, distinct);
-										listSupplier.streamTo(streamMerger.newInput());
+										StreamReducer<K, T, Void> streamMerger = StreamReducer.create(keyComparator);
+										listSupplier.streamTo(streamMerger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
 										for (Integer streamId : streamIds) {
 											StreamSupplier.ofPromise(storage.read(streamId))
-													.streamTo(streamMerger.newInput());
+													.streamTo(streamMerger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
 										}
 										return streamMerger.getOutput();
 									});

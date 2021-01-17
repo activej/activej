@@ -25,44 +25,48 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeUpload;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamMerger;
+import io.activej.datastream.processor.StreamReducer;
+import io.activej.datastream.processor.StreamReducers;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
+
+import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 
 public class MergeCollector<K, T> {
 	private final Dataset<T> input;
 	private final DataflowClient client;
 	private final Function<T, K> keyFunction;
 	private final Comparator<K> keyComparator;
-	private final boolean distinct;
+	private final boolean deduplicate;
 
-	public MergeCollector(SortedDataset<K, T> input, DataflowClient client, boolean distinct) {
-		this(input, client, input.keyFunction(), input.keyComparator(), distinct);
+	public MergeCollector(SortedDataset<K, T> input, DataflowClient client, boolean deduplicate) {
+		this(input, client, input.keyFunction(), input.keyComparator(), deduplicate);
 	}
 
 	public MergeCollector(Dataset<T> input, DataflowClient client,
-	                      Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct) {
+	                      Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
 		this.input = input;
 		this.client = client;
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
-		this.distinct = distinct;
+		this.deduplicate = deduplicate;
 	}
 
 	public StreamSupplier<T> compile(DataflowGraph graph) {
 		DataflowContext context = DataflowContext.of(graph);
 		List<StreamId> inputStreamIds = input.channels(context);
 
-		StreamMerger<K, T> merger = StreamMerger.create(keyFunction, keyComparator, distinct);
+		StreamReducer<K, T, Void> merger = StreamReducer.create(keyComparator);
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : inputStreamIds) {
 			NodeUpload<T> nodeUpload = new NodeUpload<>(index, input.valueType(), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
 			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.valueType());
-			supplier.streamTo(merger.newInput());
+			supplier.streamTo(merger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
 		}
 
 		return merger.getOutput();

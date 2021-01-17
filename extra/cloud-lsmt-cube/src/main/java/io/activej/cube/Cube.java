@@ -46,7 +46,6 @@ import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamFilter;
-import io.activej.datastream.processor.StreamMapper;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSplitter;
@@ -658,7 +657,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				keysToMap(dimensions.stream(), dimensionTypes::get),
 				queryClassLoader);
 
-		StreamReducer<K, T, A> streamReducer = StreamReducer.create(Comparable::compareTo);
+		StreamReducer<K, T, A> streamReducer = StreamReducer.create();
 		StreamSupplier<T> queryResultSupplier = streamReducer.getOutput();
 
 		storedMeasures = new ArrayList<>(storedMeasures);
@@ -686,7 +685,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				Function<S, T> mapper = createMapper(aggregationClass, resultClass, dimensions,
 						compatibleMeasures, queryClassLoader);
 				queryResultSupplier = aggregationSupplier
-						.transformWith(StreamMapper.create(mapper));
+						.transformWith(StreamFilter.mapper(mapper));
 				break;
 			}
 

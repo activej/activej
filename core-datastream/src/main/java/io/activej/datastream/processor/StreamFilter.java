@@ -17,20 +17,20 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.*;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
  * Provides you apply function before sending data to the destination. It is a {@link StreamFilter}
  * which receives specified type and streams set of function's result  to the destination .
  */
-public final class StreamFilter<T> implements StreamTransformer<T, T> {
-	private final Predicate<T> predicate;
+public abstract class StreamFilter<I, O> implements StreamTransformer<I, O> {
 	private final Input input;
 	private final Output output;
 
-	private StreamFilter(Predicate<T> predicate) {
-		this.predicate = predicate;
+	public StreamFilter() {
 		this.input = new Input();
 		this.output = new Output();
 
@@ -41,33 +41,49 @@ public final class StreamFilter<T> implements StreamTransformer<T, T> {
 				.whenException(input::closeEx);
 	}
 
-	public static <T> StreamFilter<T> create(Predicate<T> predicate) {
-		return new StreamFilter<>(predicate);
+	public static <T> StreamFilter<T, T> create(Predicate<T> predicate) {
+		return new StreamFilter<T, T>() {
+			@Override
+			protected @NotNull StreamDataAcceptor<T> onResumed(@NotNull StreamDataAcceptor<T> output) {
+				return item -> { if (predicate.test(item)) output.accept(item);};
+			}
+		};
+	}
+
+	public static <I, O> StreamFilter<I, O> mapper(Function<I, O> function) {
+		return new StreamFilter<I, O>() {
+			@Override
+			protected @NotNull StreamDataAcceptor<I> onResumed(@NotNull StreamDataAcceptor<O> output) {
+				return item -> output.accept(function.apply(item));
+			}
+		};
 	}
 
 	@Override
-	public StreamConsumer<T> getInput() {
+	public StreamConsumer<I> getInput() {
 		return input;
 	}
 
 	@Override
-	public StreamSupplier<T> getOutput() {
+	public StreamSupplier<O> getOutput() {
 		return output;
 	}
 
-	private final class Input extends AbstractStreamConsumer<T> {
+	private final class Input extends AbstractStreamConsumer<I> {
 		@Override
 		protected void onStarted() {
+			StreamFilter.this.onStarted(output::send);
 			sync();
 		}
 
 		@Override
 		protected void onEndOfStream() {
+			StreamFilter.this.onEndOfStream(output::send);
 			output.sendEndOfStream();
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<T> {
+	private final class Output extends AbstractStreamSupplier<O> {
 		@Override
 		protected void onResumed() {
 			sync();
@@ -80,17 +96,24 @@ public final class StreamFilter<T> implements StreamTransformer<T, T> {
 	}
 
 	private void sync() {
-		final StreamDataAcceptor<T> dataAcceptor = output.getDataAcceptor();
+		StreamDataAcceptor<O> dataAcceptor = output.getDataAcceptor();
 		if (dataAcceptor != null) {
-			final Predicate<T> predicate = this.predicate;
-			input.resume(item -> {
-				if (predicate.test(item)) {
-					dataAcceptor.accept(item);
-				}
-			});
+			input.resume(onResumed(isOneToMany() ? output.getBufferedDataAcceptor() : dataAcceptor));
 		} else {
 			input.suspend();
 		}
 	}
+
+	protected boolean isOneToMany() {
+		return false;
+	}
+
+	protected void onStarted(@NotNull StreamDataAcceptor<O> output) {
+	}
+
+	protected void onEndOfStream(@NotNull StreamDataAcceptor<O> output) {
+	}
+
+	protected abstract @NotNull StreamDataAcceptor<I> onResumed(@NotNull StreamDataAcceptor<O> output);
 
 }

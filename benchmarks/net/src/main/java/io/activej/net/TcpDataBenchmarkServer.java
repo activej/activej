@@ -4,7 +4,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.datastream.processor.StreamMapper;
+import io.activej.datastream.processor.StreamFilter;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
@@ -28,7 +28,7 @@ public class TcpDataBenchmarkServer extends Launcher {
 		return SimpleServer.create(eventloop,
 				socket -> ChannelSupplier.ofSocket(socket)
 						.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
-						.transformWith(StreamMapper.create(Function.identity()))
+						.transformWith(StreamFilter.mapper(Function.identity()))
 						.transformWith(ChannelSerializer.create(INT_SERIALIZER))
 						.streamTo(ChannelConsumer.ofSocket(socket)))
 				.withListenPort(9001);

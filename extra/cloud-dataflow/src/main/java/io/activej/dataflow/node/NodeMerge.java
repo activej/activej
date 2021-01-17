@@ -18,7 +18,8 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
-import io.activej.datastream.processor.StreamMerger;
+import io.activej.datastream.processor.StreamReducer;
+import io.activej.datastream.processor.StreamReducers;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +27,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
+import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static java.util.Collections.singletonList;
 
 /**
@@ -70,9 +73,9 @@ public final class NodeMerge<K, T> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamMerger<K, T> streamMerger = StreamMerger.create(keyFunction, keyComparator, deduplicate);
+		StreamReducer<K, T, Void> streamMerger = StreamReducer.create(keyComparator);
 		for (StreamId input : inputs) {
-			task.bindChannel(input, streamMerger.newInput());
+			task.bindChannel(input, streamMerger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
 		}
 		task.export(output, streamMerger.getOutput());
 	}

@@ -38,7 +38,7 @@ public interface StreamTransformer<I, O> extends HasStreamInput<I>, HasStreamOut
 	 * An identity transformer that does not change the elements.
 	 */
 	static <X> StreamTransformer<X, X> identity() {
-		return StreamMapper.create(Function.identity());
+		return StreamFilter.mapper(Function.identity());
 	}
 
 	@Override

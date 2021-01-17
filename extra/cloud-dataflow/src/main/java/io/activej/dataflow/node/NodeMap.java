@@ -18,7 +18,7 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
-import io.activej.datastream.processor.StreamMapper;
+import io.activej.datastream.processor.StreamFilter;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -59,7 +59,7 @@ public final class NodeMap<I, O> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamMapper<I, O> streamMap = StreamMapper.create(function);
+		StreamFilter<I, O> streamMap = StreamFilter.mapper(function);
 		task.bindChannel(input, streamMap.getInput());
 		task.export(output, streamMap.getOutput());
 	}

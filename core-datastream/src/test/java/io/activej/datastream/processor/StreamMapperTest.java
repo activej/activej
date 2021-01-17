@@ -30,7 +30,7 @@ public class StreamMapperTest {
 	public void testFunction() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
-		StreamMapper<Integer, Integer> mapper = StreamMapper.create(input -> input * input);
+		StreamFilter<Integer, Integer> mapper = StreamFilter.mapper(input -> input * input);
 
 		await(supplier.transformWith(mapper)
 				.streamTo(consumer.transformWith(oneByOne())));
@@ -44,7 +44,7 @@ public class StreamMapperTest {
 
 	@Test
 	public void testFunctionConsumerError() {
-		StreamMapper<Integer, Integer> mapper = StreamMapper.create(input -> input * input);
+		StreamFilter<Integer, Integer> mapper = StreamFilter.mapper(input -> input * input);
 
 		List<Integer> list = new ArrayList<>();
 		StreamSupplier<Integer> source1 = StreamSupplier.of(1, 2, 3);
@@ -66,7 +66,7 @@ public class StreamMapperTest {
 
 	@Test
 	public void testFunctionSupplierError() {
-		StreamMapper<Integer, Integer> mapper = StreamMapper.create(input -> input * input);
+		StreamFilter<Integer, Integer> mapper = StreamFilter.mapper(input -> input * input);
 
 		ExpectedException exception = new ExpectedException("Test Exception");
 		StreamSupplier<Integer> supplier = concat(
@@ -90,7 +90,7 @@ public class StreamMapperTest {
 	public void testMappedConsumer() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
-		StreamMapper<Integer, Integer> mapper = StreamMapper.create(input -> input * input);
+		StreamFilter<Integer, Integer> mapper = StreamFilter.mapper(input -> input * input);
 
 		StreamConsumer<Integer> mappedConsumer = consumer
 				.transformWith(mapper)
@@ -109,9 +109,9 @@ public class StreamMapperTest {
 	public void testConsecutiveMappers() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
-		StreamMapper<Integer, Integer> squareMapper = StreamMapper.create(input -> input * input);
-		StreamMapper<Integer, Integer> doubleMapper = StreamMapper.create(input -> input * 2);
-		StreamMapper<Integer, Integer> mul10Mapper = StreamMapper.create(input -> input * 10);
+		StreamFilter<Integer, Integer> squareMapper = StreamFilter.mapper(input -> input * input);
+		StreamFilter<Integer, Integer> doubleMapper = StreamFilter.mapper(input -> input * 2);
+		StreamFilter<Integer, Integer> mul10Mapper = StreamFilter.mapper(input -> input * 10);
 
 		await(supplier.transformWith(squareMapper).transformWith(doubleMapper)
 				.streamTo(consumer.transformWith(mul10Mapper).transformWith(randomlySuspending())));

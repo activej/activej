@@ -53,7 +53,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	private final CrdtFilter<S> filter = $ -> true;
 
-	private final SortedMap<K, CrdtData<K, S>> storage = new ConcurrentSkipListMap<>();
+	private final SortedMap<K, CrdtData<K, S>> map = new ConcurrentSkipListMap<>();
 
 	// region JMX
 	private boolean detailedStats;
@@ -103,7 +103,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
-		return Promise.of(StreamConsumer.<K>of(storage::remove)
+		return Promise.of(StreamConsumer.<K>of(map::remove)
 				.transformWith(detailedStats ? removeStatsDetailed : removeStats));
 	}
 
@@ -125,7 +125,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	}
 
 	private Stream<CrdtData<K, S>> extract(long timestamp) {
-		Stream<CrdtData<K, S>> stream = storage.values().stream();
+		Stream<CrdtData<K, S>> stream = map.values().stream();
 		if (timestamp == 0) {
 			return stream;
 		}
@@ -139,7 +139,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	private void doPut(CrdtData<K, S> data) {
 		K key = data.getKey();
-		storage.merge(key, data, (a, b) -> {
+		map.merge(key, data, (a, b) -> {
 			S merged = function.merge(a.getState(), b.getState());
 			return filter.test(merged) ? new CrdtData<>(key, merged) : null;
 		});
@@ -157,13 +157,13 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	@Nullable
 	public S get(K key) {
 		singleGets.recordEvent();
-		CrdtData<K, S> data = storage.get(key);
+		CrdtData<K, S> data = map.get(key);
 		return data != null ? data.getState() : null;
 	}
 
 	public boolean remove(K key) {
 		singleRemoves.recordEvent();
-		return storage.remove(key) != null;
+		return map.remove(key) != null;
 	}
 
 	public Iterator<CrdtData<K, S>> iterator(long timestamp) {

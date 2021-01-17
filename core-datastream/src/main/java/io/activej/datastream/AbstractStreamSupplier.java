@@ -38,7 +38,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Nullable
 	private StreamDataAcceptor<T> dataAcceptor;
-	private StreamDataAcceptor<T> dataAcceptorSafe;
+	private StreamDataAcceptor<T> dataAcceptorBuffered;
 	private final ArrayDeque<T> buffer = new ArrayDeque<>();
 
 	private StreamConsumer<T> consumer;
@@ -58,7 +58,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	protected final Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 	{
-		dataAcceptorSafe = buffer::addLast;
+		dataAcceptorBuffered = buffer::addLast;
 		if (eventloop.inEventloopThread()){
 			eventloop.post(this::ensureInitialized);
 		} else {
@@ -113,11 +113,11 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 		this.dataAcceptor = dataAcceptor;
 		if (dataAcceptor != null) {
 			if (!isEndOfStream()) {
-				this.dataAcceptorSafe = dataAcceptor;
+				this.dataAcceptorBuffered = dataAcceptor;
 			}
 			flush();
 		} else if (!isEndOfStream()) {
-			this.dataAcceptorSafe = buffer::addLast;
+			this.dataAcceptorBuffered = buffer::addLast;
 			onSuspended();
 		}
 	}
@@ -152,7 +152,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	 * and must never be called when supplier reaches {@link #sendEndOfStream() end of stream}.
 	 */
 	public final void send(T item) {
-		dataAcceptorSafe.accept(item);
+		dataAcceptorBuffered.accept(item);
 	}
 
 	/**
@@ -168,7 +168,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 		}
 		endOfStreamRequest = true;
 		//noinspection unchecked
-		this.dataAcceptorSafe = (StreamDataAcceptor<T>) NO_ACCEPTOR;
+		this.dataAcceptorBuffered = (StreamDataAcceptor<T>) NO_ACCEPTOR;
 		flush();
 		return getFlushPromise();
 	}
@@ -265,6 +265,11 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 		return dataAcceptor;
 	}
 
+	@NotNull
+	public final StreamDataAcceptor<T> getBufferedDataAcceptor() {
+		return dataAcceptorBuffered;
+	}
+
 	/**
 	 * Returns <code>true</code> when this supplier is in normal state and
 	 * <cod>false</cod> when it is suspended or closed.
@@ -307,7 +312,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 		endOfStreamRequest = true;
 		dataAcceptor = null;
 		//noinspection unchecked
-		dataAcceptorSafe = (StreamDataAcceptor<T>) NO_ACCEPTOR;
+		dataAcceptorBuffered = (StreamDataAcceptor<T>) NO_ACCEPTOR;
 		if (flushPromise != null) {
 			flushPromise.trySetException(e);
 		}

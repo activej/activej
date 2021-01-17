@@ -32,7 +32,7 @@ import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.TestNodeStat;
 import io.activej.datastream.processor.StreamJoin.Joiner;
-import io.activej.datastream.processor.StreamReducers.MergeSortReducer;
+import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToAccumulator;
@@ -58,7 +58,7 @@ import java.util.function.Predicate;
 import static io.activej.codec.StructuredCodec.ofObject;
 import static io.activej.codec.StructuredCodecs.*;
 import static io.activej.dataflow.inject.CodecsModule.codec;
-import static io.activej.datastream.processor.StreamReducers.MergeDistinctReducer;
+import static io.activej.datastream.processor.StreamReducers.DeduplicateReducer;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class DataflowCodecs extends AbstractModule {
@@ -167,13 +167,13 @@ public final class DataflowCodecs extends AbstractModule {
 	}
 
 	@Provides
-	StructuredCodec<MergeDistinctReducer> mergeDistinctReducer() {
-		return ofObject(MergeDistinctReducer::new);
+	StructuredCodec<DeduplicateReducer> mergeDistinctReducer() {
+		return ofObject(DeduplicateReducer::new);
 	}
 
 	@Provides
-	StructuredCodec<MergeSortReducer> mergeSortReducer() {
-		return ofObject(MergeSortReducer::new);
+	StructuredCodec<MergeReducer> mergeSortReducer() {
+		return ofObject(MergeReducer::new);
 	}
 
 	@Provides

@@ -19,7 +19,6 @@ package io.activej.datastream.processor;
 import io.activej.datastream.StreamDataAcceptor;
 
 import java.util.function.BinaryOperator;
-import java.util.function.Predicate;
 
 /**
  * Static utility methods pertaining to {@link Reducer}.
@@ -33,8 +32,8 @@ public final class StreamReducers {
 	 * @param <K> type of key
 	 * @param <T> type of output
 	 */
-	public static <K, T> Reducer<K, T, T, Void> mergeDistinctReducer() {
-		return new MergeDistinctReducer<>();
+	public static <K, T> Reducer<K, T, T, Void> deduplicateReducer() {
+		return new DeduplicateReducer<>();
 	}
 
 	/**
@@ -43,8 +42,8 @@ public final class StreamReducers {
 	 * @param <K> type of key
 	 * @param <T> type of output
 	 */
-	public static <K, T> Reducer<K, T, T, Void> mergeSortReducer() {
-		return new MergeSortReducer<>();
+	public static <K, T> Reducer<K, T, T, Void> mergeReducer() {
+		return new MergeReducer<>();
 	}
 
 	/**
@@ -443,7 +442,7 @@ public final class StreamReducers {
 	 * @param <K> type of keys
 	 * @param <T> type of input and output data
 	 */
-	public static class MergeDistinctReducer<K, T> implements Reducer<K, T, T, Void> {
+	public static class DeduplicateReducer<K, T> implements Reducer<K, T, T, Void> {
 		/**
 		 * On first item with new key it streams it
 		 *
@@ -473,7 +472,7 @@ public final class StreamReducers {
 	 * @param <K> type of keys
 	 * @param <T> type of input and output data
 	 */
-	public static class MergeSortReducer<K, T> implements Reducer<K, T, T, Void> {
+	public static class MergeReducer<K, T> implements Reducer<K, T, T, Void> {
 		@Override
 		public Void onFirstItem(StreamDataAcceptor<T> stream, K key, T firstValue) {
 			stream.accept(firstValue);
@@ -494,15 +493,12 @@ public final class StreamReducers {
 	public static class BinaryAccumulatorReducer<K, T> implements Reducer<K, T, T, T> {
 		private final BinaryOperator<T> combiner;
 
-		private Predicate<T> filter = $ -> true;
-
 		public BinaryAccumulatorReducer(BinaryOperator<T> combiner) {
 			this.combiner = combiner;
 		}
 
-		public BinaryAccumulatorReducer<K, T> withFilter(Predicate<T> filter) {
-			this.filter = filter;
-			return this;
+		protected boolean filter(T value) {
+			return true;
 		}
 
 		@Override
@@ -517,7 +513,7 @@ public final class StreamReducers {
 
 		@Override
 		public void onComplete(StreamDataAcceptor<T> stream, K key, T accumulator) {
-			if (filter.test(accumulator)) {
+			if (filter(accumulator)) {
 				stream.accept(accumulator);
 			}
 		}

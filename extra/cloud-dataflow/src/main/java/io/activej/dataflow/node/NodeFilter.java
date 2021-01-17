@@ -58,7 +58,7 @@ public final class NodeFilter<T> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamFilter<T> streamFilter = StreamFilter.create(predicate);
+		StreamFilter<T, T> streamFilter = StreamFilter.create(predicate);
 		task.bindChannel(input, streamFilter.getInput());
 		task.export(output, streamFilter.getOutput());
 	}

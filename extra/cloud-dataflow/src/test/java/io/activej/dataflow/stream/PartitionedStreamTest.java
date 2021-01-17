@@ -30,7 +30,7 @@ import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamMerger;
+import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.eventloop.Eventloop;
@@ -73,6 +73,7 @@ import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
@@ -336,12 +337,12 @@ public final class PartitionedStreamTest {
 					@DatasetId("sorted data source")
 					PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<ActiveFs> activeFss) {
 						return (partitionIndex, maxPartitions) -> {
-							StreamMerger<Integer, String> merger = StreamMerger.create(KEY_FUNCTION, Integer::compareTo, false);
+							StreamReducer<Integer, String, Void> merger = StreamReducer.create();
 
 							for (int i = partitionIndex; i < activeFss.size(); i += maxPartitions) {
 								ChannelSupplier.ofPromise(activeFss.get(i).download(SOURCE_FILENAME))
 										.transformWith(new CSVDecoder())
-										.streamTo(merger.newInput());
+										.streamTo(merger.newInput(KEY_FUNCTION, mergeReducer()));
 							}
 							return merger.getOutput();
 						};

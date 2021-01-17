@@ -11,16 +11,15 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.function.Function;
-
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
 import static io.activej.datastream.TestUtils.*;
-import static io.activej.datastream.processor.StreamReducers.mergeDistinctReducer;
+import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -33,14 +32,13 @@ public class StreamReducerTest {
 	public void testEmpty() {
 		StreamSupplier<Integer> source = StreamSupplier.of();
 
-		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>create(Integer::compareTo)
-				.withBufferSize(1);
-		Reducer<Integer, Integer, Integer, Void> reducer = mergeDistinctReducer();
+		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>create();
+		streamReducer.withBufferSize(1);
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		await(
-				source.streamTo(streamReducer.newInput(Function.identity(), reducer)),
+				source.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
 				streamReducer.getOutput()
 						.streamTo(consumer
 								.transformWith(randomlySuspending()))
@@ -63,22 +61,20 @@ public class StreamReducerTest {
 		StreamSupplier<Integer> source6 = StreamSupplier.of(1, 3);
 		StreamSupplier<Integer> source7 = StreamSupplier.of();
 
-		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>create(Integer::compareTo)
-				.withBufferSize(1);
-		Function<Integer, Integer> keyFunction = Function.identity();
-		Reducer<Integer, Integer, Integer, Void> reducer = mergeDistinctReducer();
+		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>create();
+		streamReducer.withBufferSize(1);
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		await(
-				source0.streamTo(streamReducer.newInput(keyFunction, reducer)),
-				source1.streamTo(streamReducer.newInput(keyFunction, reducer)),
-				source2.streamTo(streamReducer.newInput(keyFunction, reducer)),
-				source3.streamTo(streamReducer.newInput(keyFunction, reducer)),
-				source4.streamTo(streamReducer.newInput(keyFunction, reducer)),
-				source5.streamTo(streamReducer.newInput(keyFunction, reducer)),
-				source6.streamTo(streamReducer.newInput(keyFunction, reducer)),
-				source7.streamTo(streamReducer.newInput(keyFunction, reducer)),
+				source0.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+				source1.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+				source2.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+				source3.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+				source4.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+				source5.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+				source6.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+				source7.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
 
 				streamReducer.getOutput()
 						.streamTo(consumer.transformWith(randomlySuspending()))
@@ -110,8 +106,8 @@ public class StreamReducerTest {
 				new KeyValue3(2, 10.0, 20.0),
 				new KeyValue3(3, 10.0, 20.0));
 
-		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>create(Integer::compareTo)
-				.withBufferSize(1);
+		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create();
+		streamReducer.withBufferSize(1);
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
@@ -145,7 +141,7 @@ public class StreamReducerTest {
 
 		StreamSupplier<KeyValue3> source3 = StreamSupplier.of(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
-		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create(Integer::compareTo);
+		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create();
 		streamReducer.withBufferSize(1);
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
@@ -338,8 +334,8 @@ public class StreamReducerTest {
 		StreamSupplier<KeyValue2> source2 = StreamSupplier.of(new KeyValue2(1, 10.0), new KeyValue2(3, 30.0));
 		StreamSupplier<KeyValue3> source3 = StreamSupplier.of(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
-		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>create(Integer::compareTo)
-				.withBufferSize(1);
+		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create();
+		streamReducer.withBufferSize(1);
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 
@@ -367,8 +363,8 @@ public class StreamReducerTest {
 		StreamSupplier<KeyValue2> source2 = StreamSupplier.of(new KeyValue2(1, 10.0), new KeyValue2(3, 30.0));
 		StreamSupplier<KeyValue3> source3 = StreamSupplier.of(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
-		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>create(Integer::compareTo)
-				.withBufferSize(1);
+		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create();
+		streamReducer.withBufferSize(1);
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 

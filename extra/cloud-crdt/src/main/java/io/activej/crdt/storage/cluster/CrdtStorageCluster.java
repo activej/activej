@@ -29,7 +29,7 @@ import io.activej.crdt.util.RendezvousHashSharder;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamReducerSimple;
+import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.BinaryAccumulatorReducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.stats.StreamStats;
@@ -67,7 +67,7 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 	private List<I> orderedIds;
 
 	private int replicationCount = 1;
-	private CrdtFilter<S> filter = $ -> true;
+	private CrdtFilter<S> filter;
 
 	// region JMX
 	private boolean detailedStats;
@@ -225,14 +225,16 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return connect(CrdtStorage::upload)
-				.then(successes -> {
+				.then(consumers -> {
 					StreamSplitter<CrdtData<K, S>, CrdtData<K, S>> splitter = StreamSplitter.create(
 							(item, acceptors) -> {
 								for (int index : shardingFunction.shard(item.getKey())) {
 									acceptors[index].accept(item);
 								}
 							});
-					successes.forEach(consumer -> splitter.newOutput().streamTo(consumer));
+					for (StreamConsumer<CrdtData<K, S>> consumer : consumers) {
+						splitter.newOutput().streamTo(consumer);
+					}
 					return Promise.of(splitter.getInput()
 							.transformWith(detailedStats ? uploadStats : uploadStatsDetailed)
 							.withAcknowledgement(ack -> ack
@@ -244,15 +246,19 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return connect(storage -> storage.download(timestamp))
-				.then(successes -> {
-					StreamReducerSimple<K, CrdtData<K, S>, CrdtData<K, S>, CrdtData<K, S>> reducer =
-							StreamReducerSimple.create(CrdtData::getKey, Comparator.naturalOrder(),
-									new BinaryAccumulatorReducer<K, CrdtData<K, S>>((a, b) -> new CrdtData<>(a.getKey(), function.merge(a.getState(), b.getState())))
-											.withFilter(data -> filter.test(data.getState())));
-
-					successes.forEach(producer -> producer.streamTo(reducer.newInput()));
-
-					return Promise.of(reducer.getOutput()
+				.then(suppliers -> {
+					StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> streamReducer = StreamReducer.create();
+					for (StreamSupplier<CrdtData<K, S>> supplier : suppliers) {
+						supplier.streamTo(streamReducer.newInput(CrdtData::getKey, filter == null ?
+								new BinaryAccumulatorReducer<>((a, b) -> new CrdtData<>(a.getKey(), function.merge(a.getState(), b.getState()))) :
+								new BinaryAccumulatorReducer<K, CrdtData<K, S>>((a, b) -> new CrdtData<>(a.getKey(), function.merge(a.getState(), b.getState()))) {
+									@Override
+									protected boolean filter(CrdtData<K, S> value) {
+										return filter.test(value.getState());
+									}
+								}));
+					}
+					return Promise.of(streamReducer.getOutput()
 							.transformWith(detailedStats ? downloadStats : downloadStatsDetailed)
 							.withEndOfStream(eos -> eos
 									.thenEx(wrapException(() -> "Cluster 'download' failed")))

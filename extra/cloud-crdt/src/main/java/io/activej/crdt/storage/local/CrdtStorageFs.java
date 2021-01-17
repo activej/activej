@@ -34,8 +34,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.processor.StreamFilter;
-import io.activej.datastream.processor.StreamMapper;
-import io.activej.datastream.processor.StreamReducerSimple;
+import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
@@ -43,7 +42,6 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.FileMetadata;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
@@ -182,27 +180,27 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return Promises.toTuple(fs.list("*"), tombstoneFolderFs.list("*"))
 				.map(f -> {
-					StreamReducerSimple<K, CrdtReducingData<K, S>, CrdtData<K, S>, CrdtAccumulator<S>> reducer =
-							StreamReducerSimple.create(x -> x.key, Comparator.naturalOrder(), new CrdtReducer());
+					StreamReducer<K, CrdtData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
 
-					Stream<Map.Entry<String, FileMetadata>> stream = f.getValue1().entrySet().stream();
-
-					Stream<Promise<Void>> files = (timestamp == 0 ? stream : stream.filter(e -> e.getValue().getTimestamp() >= timestamp))
+					Stream<Promise<Void>> files = f.getValue1().entrySet()
+							.stream()
+							.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
 							.map(entry -> ChannelSupplier.ofPromise(fs.download(entry.getKey()))
 									.transformWith(ChannelDeserializer.create(serializer))
-									.transformWith(StreamMapper.create(data -> {
+									.transformWith(StreamFilter.mapper(data -> {
 										S partial = function.extract(data.getState(), timestamp);
 										return partial != null ? new CrdtReducingData<>(data.getKey(), partial, entry.getValue().getTimestamp()) : null;
 									}))
 									.transformWith(StreamFilter.create(Objects::nonNull))
-									.streamTo(reducer.newInput()));
+									.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
 
-					stream = f.getValue2().entrySet().stream();
-					Stream<Promise<Void>> tombstones = (timestamp == 0 ? stream : stream.filter(e -> e.getValue().getTimestamp() >= timestamp))
+					Stream<Promise<Void>> tombstones = f.getValue2().entrySet()
+							.stream()
+							.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
 							.map(entry -> ChannelSupplier.ofPromise(tombstoneFolderFs.download(entry.getKey()))
 									.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
-									.transformWith(StreamMapper.create(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
-									.streamTo(reducer.newInput()));
+									.transformWith(StreamFilter.mapper(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
+									.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
 
 					//noinspection ResultOfMethodCallIgnored
 					Promises.all(Stream.concat(files, tombstones));
@@ -315,7 +313,6 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	}
 
 	class CrdtReducer implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtData<K, S>, CrdtAccumulator<S>> {
-
 		@Override
 		public CrdtAccumulator<S> onFirstItem(StreamDataAcceptor<CrdtData<K, S>> stream, K key, CrdtReducingData<K, S> firstValue) {
 			if (firstValue.state != null) {

@@ -1,7 +1,7 @@
 package io.activej.datastream;
 
 import io.activej.config.Config;
-import io.activej.datastream.processor.StreamMapper;
+import io.activej.datastream.processor.StreamFilter;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.InstanceProvider;
 import io.activej.inject.annotation.Inject;
@@ -51,7 +51,7 @@ public class DatastreamBenchmark extends Launcher {
 	InstanceProvider<StreamSupplier<Integer>> inputProvider;
 
 	@Inject
-	InstanceProvider<StreamMapper<Integer, Integer>> mapperProvider;
+	InstanceProvider<StreamFilter<Integer, Integer>> mapperProvider;
 
 	@Inject
 	InstanceProvider<StreamConsumer<Integer>> outputProvider;
@@ -76,8 +76,8 @@ public class DatastreamBenchmark extends Launcher {
 
 	@Provides
 	@Transient
-	StreamMapper<Integer, Integer> mapper() {
-		return StreamMapper.create(Function.identity());
+	StreamFilter<Integer, Integer> mapper() {
+		return StreamFilter.mapper(Function.identity());
 	}
 
 	@Provides
@@ -146,7 +146,7 @@ public class DatastreamBenchmark extends Launcher {
 
 	private Promise<Long> roundCall() {
 		StreamSupplier<Integer> input = inputProvider.get();
-		StreamMapper<Integer, Integer> mapper = mapperProvider.get();
+		StreamFilter<Integer, Integer> mapper = mapperProvider.get();
 		StreamConsumer<Integer> output = outputProvider.get();
 		long start = System.currentTimeMillis();
 		return input

@@ -18,7 +18,7 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
-import io.activej.datastream.processor.StreamReducerSimple;
+import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.ArrayList;
@@ -74,10 +74,9 @@ public final class NodeReduceSimple<K, I, O, A> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamReducerSimple<K, I, O, A> streamReducerSimple =
-				StreamReducerSimple.create(keyFunction, keyComparator, reducer);
+		StreamReducer<K, O, A> streamReducerSimple = StreamReducer.create(keyComparator);
 		for (StreamId input : inputs) {
-			task.bindChannel(input, streamReducerSimple.newInput());
+			task.bindChannel(input, streamReducerSimple.newInput(keyFunction, reducer));
 		}
 		task.export(output, streamReducerSimple.getOutput());
 	}

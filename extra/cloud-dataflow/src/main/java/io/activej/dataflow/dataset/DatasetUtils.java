@@ -24,13 +24,14 @@ import io.activej.dataflow.node.NodeDownload;
 import io.activej.dataflow.node.NodeReduce;
 import io.activej.dataflow.node.NodeShard;
 import io.activej.dataflow.node.NodeUpload;
-import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
+
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 
 public class DatasetUtils {
 
@@ -75,7 +76,7 @@ public class DatasetUtils {
 
 	public static <K, T> List<StreamId> repartitionAndSort(DataflowContext context, LocallySortedDataset<K, T> input,
 	                                                       List<Partition> partitions) {
-		return repartitionAndReduce(context, input, StreamReducers.mergeSortReducer(), partitions);
+		return repartitionAndReduce(context, input, mergeReducer(), partitions);
 	}
 
 	public static <T> StreamId forwardChannel(DataflowContext context, Class<T> type,

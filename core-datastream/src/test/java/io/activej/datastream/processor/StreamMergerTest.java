@@ -8,13 +8,15 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.util.Collections;
-import java.util.function.Function;
 
 import static io.activej.datastream.TestStreamTransformers.*;
 import static io.activej.datastream.TestUtils.*;
+import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -29,14 +31,14 @@ public class StreamMergerTest {
 		StreamSupplier<Integer> source1 = StreamSupplier.of(3, 7);
 		StreamSupplier<Integer> source2 = StreamSupplier.of(3, 4, 6);
 
-		StreamMerger<Integer, Integer> merger = StreamMerger.create(Function.identity(), Integer::compareTo, true);
+		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		await(
-				source0.streamTo(merger.newInput()),
-				source1.streamTo(merger.newInput()),
-				source2.streamTo(merger.newInput()),
+				source0.streamTo(merger.newInput(identity(), deduplicateReducer())),
+				source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
+				source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
 
 				merger.getOutput()
 						.streamTo(consumer.transformWith(randomlySuspending()))
@@ -58,14 +60,14 @@ public class StreamMergerTest {
 		StreamSupplier<Integer> source1 = StreamSupplier.of(3, 7);
 		StreamSupplier<Integer> source2 = StreamSupplier.of(3, 4, 6);
 
-		StreamMerger<Integer, Integer> merger = StreamMerger.create(Function.identity(), Integer::compareTo, false);
+		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		await(
-				source0.streamTo(merger.newInput()),
-				source1.streamTo(merger.newInput()),
-				source2.streamTo(merger.newInput()),
+				source0.streamTo(merger.newInput(identity(), mergeReducer())),
+				source1.streamTo(merger.newInput(identity(), mergeReducer())),
+				source2.streamTo(merger.newInput(identity(), mergeReducer())),
 				merger.getOutput()
 						.streamTo(consumer.transformWith(randomlySuspending()))
 		);
@@ -98,14 +100,13 @@ public class StreamMergerTest {
 						d4 //DataItem1(1,5,1,5)
 				));
 
-		StreamMerger<Integer, DataItem1> merger = StreamMerger.create(
-				input -> input.key2, Integer::compareTo, false);
+		StreamReducer<Integer, DataItem1, Void> merger = StreamReducer.create();
 
 		StreamConsumerToList<DataItem1> consumer = StreamConsumerToList.create();
 
 		await(
-				source1.streamTo(merger.newInput()),
-				source2.streamTo(merger.newInput()),
+				source1.streamTo(merger.newInput(input -> input.key2, mergeReducer())),
+				source2.streamTo(merger.newInput(input -> input.key2, mergeReducer())),
 				merger.getOutput()
 						.streamTo(consumer.transformWith(oneByOne()))
 		);
@@ -129,14 +130,14 @@ public class StreamMergerTest {
 		StreamSupplier<Integer> source1 = StreamSupplier.of(7, 8);
 		StreamSupplier<Integer> source2 = StreamSupplier.of(3, 4, 6);
 
-		StreamMerger<Integer, Integer> merger = StreamMerger.create(Function.identity(), Integer::compareTo, true);
+		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 		Exception exception = new Exception("Test Exception");
 
 		Throwable e = awaitException(
-				source1.streamTo(merger.newInput()),
-				source2.streamTo(merger.newInput()),
+				source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
+				source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
 				merger.getOutput()
 						.streamTo(consumer
 								.transformWith(decorate(promise -> promise.then(
@@ -169,13 +170,13 @@ public class StreamMergerTest {
 				StreamSupplier.of(9)
 		);
 
-		StreamMerger<Integer, Integer> merger = StreamMerger.create(Function.identity(), Integer::compareTo, true);
+		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		awaitException(
-				source1.streamTo(merger.newInput()),
-				source2.streamTo(merger.newInput()),
+				source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
+				source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
 				merger.getOutput()
 						.streamTo(consumer.transformWith(oneByOne()))
 		);
