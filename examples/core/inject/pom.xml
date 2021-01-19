@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>examples-inject</artifactId>
-  <name>Examples : Core : ActiveInject</name>
+  <name>Examples : Core : Inject</name>
 
   <dependencies>
     <dependency>

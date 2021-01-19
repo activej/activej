@@ -19,13 +19,13 @@ import java.util.Set;
 import static junit.framework.TestCase.*;
 
 /**
- * To represent the main concepts and features of ActiveInject,
- * we've created an example which starts with low-level ActiveInject
+ * To represent the main concepts and features of ActiveJ Inject,
+ * we've created an example which starts with low-level ActiveJ Inject
  * concepts and gradually covers more specific advanced features.
  * <p>
  * In this example we have a kitchen, where you can
  * automatically create tasty cookies in different ways
- * with our wonderful ActiveInject.
+ * with our wonderful ActiveJ Inject.
  */
 public class DIFollowUpTest {
 	//[START REGION_9]

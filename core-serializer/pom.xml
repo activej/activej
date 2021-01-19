@@ -11,7 +11,7 @@
 
   <artifactId>activej-serializer</artifactId>
 
-  <name>ActiveSerializer</name>
+  <name>ActiveJ : Serializer</name>
   <description>
     Extremely fast and space-efficient serializers. Implemented using bytecode engineering.
   </description>

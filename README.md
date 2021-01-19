@@ -6,7 +6,7 @@
 [ActiveJ](https://activej.io) is a fully-featured alternative Java platform built from the ground up as a replacement of Spring, 
 Spark, Quarkus, Micronauts, and other solutions. It is minimalistic, boilerplate-free, and incomparably faster, which is proven by benchmarks.
 ActiveJ has very few third-party dependencies, yet features a full stack of technologies with an efficient async programming model and a powerful 
-DI library [ActiveInject](https://inject.activej.io)
+DI library [ActiveJ Inject](https://inject.activej.io)
 
 ## Quick start
 
@@ -36,17 +36,17 @@ public final class HttpHelloWorldExample extends HttpServerLauncher {
 Some technical details regarding the above example:
 - *Features a JAR file size of only 1.4 MB. In comparison, a minimal Spring web app size is approximately 17 MB*.
 - *The cold start time is 0.65 sec.*
-- *The [ActiveInject](https://inject.activej.io) DI library which is used, is 5.5 times faster than Guice and hundreds of times faster than Spring.*
+- *The [ActiveJ Inject](https://inject.activej.io) DI library which is used, is 5.5 times faster than Guice and hundreds of times faster than Spring.*
 
 To learn more about ActiveJ, please visit https://activej.io or follow our 5-minute [getting-started 
 guide](https://activej.io/tutorials/getting-started). 
 
 ## Repository Structure
 This repository contains the [ActiveJ](https://activej.io) platform components along with helper ActiveJ libraries:
-* [ActiveInject](https://inject.activej.io) - `core-inject` module;
-* [ActiveSerializer](https://serializer.activej.io) - `core-serializer` module;
-* [ActiveCodegen](https://codegen.activej.io) - `core-codegen` module;
-* [ActiveSpecializer](https://specializer.activej.io) - `core-specializer` module;
+* [ActiveJ Inject](https://inject.activej.io) - `core-inject` module;
+* [ActiveJ Serializer](https://serializer.activej.io) - `core-serializer` module;
+* [ActiveJ Codegen](https://codegen.activej.io) - `core-codegen` module;
+* [ActiveJ Specializer](https://specializer.activej.io) - `core-specializer` module;
 * [ActiveJ RPC](https://rpc.activej.io) - `cloud-rpc` module;
 * [ActiveJ FS](https://fs.activej.io) - `cloud-fs` module.
 

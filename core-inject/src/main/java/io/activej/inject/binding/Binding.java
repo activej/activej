@@ -35,7 +35,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 /**
- * A binding is one of the main components of ActiveInject.
+ * A binding is one of the main components of ActiveJ Inject.
  * It boils down to "introspectable function", since it only describes
  * a {@link BindingCompiler function} to create an instance of T from an array of objects and
  * an array of its {@link Dependency dependencies} in known terms.

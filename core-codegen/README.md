@@ -1,1 +1,1 @@
-This module forms ActiveCodegen library. To learn more, please visit [ActiveCodegen website](https://codegen.activej.io).
+This module forms ActiveJ Codegen library. To learn more, please visit [ActiveJ Codegen website](https://codegen.activej.io).

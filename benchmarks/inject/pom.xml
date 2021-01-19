@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>benchmarks-inject</artifactId>
-  <name>Benchmarks : ActiveInject</name>
+  <name>Benchmarks : Inject</name>
 
   <dependencies>
     <dependency>

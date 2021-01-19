@@ -101,7 +101,7 @@ class Utils {
 						.withPredicate(cls -> compiledBindingClass.isAssignableFrom(cls) &&
 								!cls.getName().startsWith("io.activej.inject.binding.Multibinders$"));
 			} catch (ClassNotFoundException e) {
-				throw new IllegalStateException("Can not access ActiveInject", e);
+				throw new IllegalStateException("Can not access ActiveJ Inject", e);
 			}
 		}
 

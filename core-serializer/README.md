@@ -1,1 +1,1 @@
-This module forms ActiveSerializer framework. To learn more, please visit [ActiveSerializer website](https://serializer.activej.io).
+This module forms ActiveJ Serializer framework. To learn more, please visit [ActiveJ Serializer website](https://serializer.activej.io).

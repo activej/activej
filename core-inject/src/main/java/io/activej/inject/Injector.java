@@ -51,7 +51,7 @@ import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * Injector is the main working component of the ActiveInject.
+ * Injector is the main working component of the ActiveJ Inject.
  * <p>
  * It stores a trie of binding graphs and a cache of already made singletons.
  * <p>
