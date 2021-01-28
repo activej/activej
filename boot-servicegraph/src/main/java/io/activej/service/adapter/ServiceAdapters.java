@@ -192,14 +192,26 @@ public final class ServiceAdapters {
 			@Override
 			public CompletableFuture<?> start(EventloopService instance, Executor executor) {
 				CompletableFuture<?> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> instance.start().whenComplete(completeFuture(future))));
+				instance.getEventloop().execute(wrapContext(instance, () -> {
+					try {
+						instance.start().whenComplete(completeFuture(future));
+					} catch (Exception e){
+						future.completeExceptionally(e);
+					}
+				}));
 				return future;
 			}
 
 			@Override
 			public CompletableFuture<?> stop(EventloopService instance, Executor executor) {
 				CompletableFuture<?> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> instance.stop().whenComplete(completeFuture(future))));
+				instance.getEventloop().execute(wrapContext(instance, () -> {
+					try {
+						instance.stop().whenComplete(completeFuture(future));
+					} catch (Exception e){
+						future.completeExceptionally(e);
+					}
+				}));
 				return future;
 			}
 		};

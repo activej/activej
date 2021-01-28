@@ -1,11 +1,15 @@
 package io.activej.service;
 
+import io.activej.async.service.EventloopService;
 import io.activej.common.service.BlockingService;
+import io.activej.eventloop.Eventloop;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.promise.Promise;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
@@ -21,7 +25,7 @@ public class ServiceGraphTest {
 		try {
 			graph.startFuture().get();
 			fail();
-		} catch (Exception e){
+		} catch (Exception e) {
 			assertSame(FailingModule.INTERRUPTED, e.getCause());
 		}
 	}
@@ -36,9 +40,30 @@ public class ServiceGraphTest {
 		try {
 			graph.startFuture().get();
 			fail();
-		} catch (Exception e){
+		} catch (Exception e) {
 			assertSame(FailingModule.INTERRUPTED, e.getCause());
 		}
+	}
+
+	@Test
+	public void testEventloopServiceStartStopWithRuntimeException() {
+		Injector injector = Injector.of(new FailingEventloopModule());
+		injector.getInstance(Key.ofName(EventloopService.class, "start"));
+		injector.getInstance(Key.ofName(EventloopService.class, "stop"));
+		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
+
+		try {
+			graph.startFuture().get();
+		} catch (Exception e) {
+			assertSame(FailingEventloopModule.ERROR, e.getCause());
+		}
+
+		try {
+			graph.stopFuture().get();
+		} catch (Exception e) {
+			assertSame(FailingEventloopModule.ERROR, e.getCause());
+		}
+
 	}
 
 	// region modules
@@ -56,7 +81,7 @@ public class ServiceGraphTest {
 		BlockingService failService() {
 			return new BlockingServiceEmpty() {
 				@Override
-				public void start() throws Exception{
+				public void start() throws Exception {
 					throw INTERRUPTED;
 				}
 			};
@@ -82,6 +107,65 @@ public class ServiceGraphTest {
 
 		@Override
 		public void stop() {
+		}
+	}
+
+	public static class FailingEventloopModule extends AbstractModule {
+		private static final RuntimeException ERROR = new RuntimeException();
+
+		@Override
+		protected void configure() {
+			install(ServiceGraphModule.create());
+		}
+
+		@Provides
+		Eventloop eventloop() {
+			return Eventloop.create();
+		}
+
+		@Provides
+		@Named("start")
+		EventloopService failedStart(Eventloop eventloop) {
+			return new EventloopServiceEmpty(eventloop) {
+				@Override
+				public @NotNull Promise<?> start() {
+					throw ERROR;
+				}
+			};
+		}
+
+		@Provides
+		@Named("stop")
+		EventloopService failStop(Eventloop eventloop) {
+			return new EventloopServiceEmpty(eventloop) {
+				@Override
+				public @NotNull Promise<?> stop() {
+					throw ERROR;
+				}
+			};
+		}
+	}
+
+	public static class EventloopServiceEmpty implements EventloopService {
+		private final Eventloop eventloop;
+
+		public EventloopServiceEmpty(Eventloop eventloop) {
+			this.eventloop = eventloop;
+		}
+
+		@Override
+		public @NotNull Eventloop getEventloop() {
+			return eventloop;
+		}
+
+		@Override
+		public @NotNull Promise<?> start() {
+			return Promise.complete();
+		}
+
+		@Override
+		public @NotNull Promise<?> stop() {
+			return Promise.complete();
 		}
 	}
 	// endregion
