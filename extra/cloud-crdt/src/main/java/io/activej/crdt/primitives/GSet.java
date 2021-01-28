@@ -36,8 +36,12 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 
 	@SafeVarargs
 	public static <T> GSet<T> of(T... items) {
+		return of(Arrays.asList(items));
+	}
+
+	public static <T> GSet<T> of(Collection<T> collection) {
 		GSet<T> set = new GSet<>();
-		set.addAll(Arrays.asList(items));
+		set.addAll(collection);
 		return set;
 	}
 

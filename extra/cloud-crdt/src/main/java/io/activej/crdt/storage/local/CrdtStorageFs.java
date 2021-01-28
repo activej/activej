@@ -276,11 +276,10 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 									.transformWith(ChannelSerializer.create(serializer))
 									.streamTo(ChannelConsumer.ofPromise(fs.upload(name))))
 							.then(() -> tombstoneFolderFs.list("*")
-									.map(fileMap -> Promises.sequence(fileMap.keySet().stream()
-											.map(filename -> () -> tombstoneFolderFs.delete(filename))))
+									.map(fileMap -> tombstoneFolderFs.deleteAll(fileMap.keySet()))
 							)
 							.then(() -> consolidationFolderFs.delete(metafile))
-							.then(() -> Promises.all(files.stream().map(fs::delete)));
+							.then(() -> fs.deleteAll(new HashSet<>(files)));
 				})
 				.thenEx(wrapException(() -> "Consolidation failed"))
 				.whenComplete(consolidationStats.recordStats());
