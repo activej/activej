@@ -215,36 +215,49 @@ public final class ByteBufStrings {
 	}
 
 	// UTF-8
-	public static int encodeUtf8(byte[] array, int pos, String string) {
-		int p = pos;
+	public static int encodeUtf8(byte[] array, int offset, String string) {
+		int pos = offset;
 		for (int i = 0; i < string.length(); i++) {
-			p += encodeUtf8(array, p, string.charAt(i));
+			char c = string.charAt(i);
+
+			if (c <= '\u007F') {
+				array[++pos] = (byte) c;
+			} else {
+				if (c <= '\u07FF') {
+					array[pos + 1] = (byte) (0xC0 | c >>> 6);
+					array[pos + 2] = (byte) (0x80 | c & 0x3F);
+					pos += 2;
+				} else if (c < '\uD800' || c > '\uDFFF') {
+					array[pos + 1] = (byte) (0xE0 | c >>> 12);
+					array[pos + 2] = (byte) (0x80 | c >> 6 & 0x3F);
+					array[pos + 3] = (byte) (0x80 | c & 0x3F);
+					pos += 3;
+				} else {
+					pos += writeUtf8char4(array, pos, c, string, i++);
+				}
+			}
+
 		}
-		return p - pos;
+		return pos - offset;
 	}
 
-	public static int encodeUtf8(byte[] array, int pos, char c) {
-		int p = pos;
-		if (c <= 0x007F) {
-			array[p++] = (byte) c;
-		} else if (c > 0x07FF) {
-			array[p++] = (byte) (0xE0 | c >> 12 & 0x0F);
-			array[p++] = (byte) (0x80 | c >> 6 & 0x3F);
-			array[p++] = (byte) (0x80 | c & 0x3F);
-		} else {
-			array[p++] = (byte) (0xC0 | c >> 6 & 0x1F);
-			array[p++] = (byte) (0x80 | c & 0x3F);
+	private static byte writeUtf8char4(byte[] buf, int pos, char c, String s, int i) {
+		if (i + 1 < s.length()) {
+			int cp = Character.toCodePoint(c, s.charAt(i + 1));
+			if ((cp >= 1 << 16) && (cp < 1 << 21)) {
+				buf[pos + 1] = (byte) (240 | cp >>> 18);
+				buf[pos + 2] = (byte) (128 | cp >>> 12 & 63);
+				buf[pos + 3] = (byte) (128 | cp >>> 6 & 63);
+				buf[pos + 4] = (byte) (128 | cp & 63);
+				return 4;
+			}
 		}
-		return p - pos;
+		buf[pos + 1] = (byte) '?';
+		return 1;
 	}
 
 	public static void putUtf8(ByteBuf buf, String string) {
 		int size = encodeUtf8(buf.array(), buf.tail(), string);
-		buf.moveTail(size);
-	}
-
-	public static void putUtf8(ByteBuf buf, char c) {
-		int size = encodeUtf8(buf.array(), buf.tail(), c);
 		buf.moveTail(size);
 	}
 
@@ -255,62 +268,24 @@ public final class ByteBufStrings {
 		return byteBuffer;
 	}
 
-	public static int decodeUtf8(byte[] array, int pos, int len, char[] buffer, int to) throws MalformedDataException {
-		int end = pos + len;
-		try {
-			while (pos < end) {
-				int c = array[pos++] & 0xff;
-				switch ((c >> 4) & 0x0F) {
-					case 0:
-					case 1:
-					case 2:
-					case 3:
-					case 4:
-					case 5:
-					case 6:
-					case 7:
-						buffer[to++] = (char) c;
-						break;
-					case 12:
-					case 13:
-						buffer[to++] = (char) ((c & 0x1F) << 6 | array[pos++] & 0x3F);
-						break;
-					case 14:
-						buffer[to++] = (char) ((c & 0x0F) << 12 | (array[pos++] & 0x3F) << 6 | (array[pos++] & 0x3F));
-						break;
-				}
-			}
-			if (pos > end) throw new MalformedDataException("Malformed utf-8 input: Read past end");
-		} catch (ArrayIndexOutOfBoundsException ignored) {
-			throw new MalformedDataException("Malformed utf-8 input");
-		}
-		return to;
-	}
-
-	public static String decodeUtf8(byte[] array, int pos, int len, char[] tmpBuffer) throws MalformedDataException {
-		int charIndex = 0;
-		charIndex = decodeUtf8(array, pos, len, tmpBuffer, charIndex);
-		return new String(tmpBuffer, 0, charIndex);
-	}
-
 	public static String decodeUtf8(byte[] array, int pos, int len) throws MalformedDataException {
-		return decodeUtf8(array, pos, len, ThreadLocalCharArray.ensure(len));
-	}
-
-	public static String decodeUtf8(ByteBuf buf, char[] tmpBuffer) throws MalformedDataException {
-		return decodeUtf8(buf.array(), buf.head(), buf.readRemaining(), tmpBuffer);
+		try {
+			return new String(array, pos, len);
+		} catch (Exception e) {
+			throw new MalformedDataException(e);
+		}
 	}
 
 	public static String decodeUtf8(ByteBuf buf) throws MalformedDataException {
-		return decodeUtf8(buf.array(), buf.head(), buf.readRemaining(), new char[buf.readRemaining()]);
+		return decodeUtf8(buf.array(), buf.head(), buf.readRemaining());
 	}
 
 	public static String decodeUtf8(byte[] array) throws MalformedDataException {
-		return decodeUtf8(array, 0, array.length, new char[array.length]);
+		return decodeUtf8(array, 0, array.length);
 	}
 
 	public static String asUtf8(ByteBuf buf) throws MalformedDataException {
-		String str = decodeUtf8(buf.array(), buf.head(), buf.readRemaining(), ThreadLocalCharArray.ensure(buf.readRemaining()));
+		String str = decodeUtf8(buf.array(), buf.head(), buf.readRemaining());
 		buf.recycle();
 		return str;
 	}

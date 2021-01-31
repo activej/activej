@@ -17,6 +17,9 @@
 package io.activej.common.exception;
 
 public class MalformedDataException extends Exception {
+	public MalformedDataException() {
+	}
+
 	public MalformedDataException(String message) {
 		super(message);
 	}

@@ -5,6 +5,7 @@ import io.activej.promise.Promise;
 import java.util.List;
 import java.util.function.Function;
 
+import static java.util.Objects.deepEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -14,12 +15,12 @@ public final class TestUtils {
 	}
 
 	public static <T> T await(RedisClient client, Function<RedisConnection, Promise<T>> clientCommand) {
-		return io.activej.promise.TestUtils.await(client.getConnection()
+		return io.activej.promise.TestUtils.await(client.connect()
 				.then(connection -> clientCommand.apply(connection)
 						.whenComplete(connection::quit)));
 	}
 
 	public static void assertDeepEquals(List<Object> expected, List<Object> actual) {
-		assertTrue(Utils.deepEquals(expected, actual));
+		assertTrue(deepEquals(expected, actual));
 	}
 }

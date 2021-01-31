@@ -16,284 +16,262 @@
 
 package io.activej.redis;
 
-import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufs;
-import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
-import org.jetbrains.annotations.Nullable;
 
+import java.nio.BufferUnderflowException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
-import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
-import static java.lang.Math.min;
-import static java.util.Collections.emptyList;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-final class RESPv2 implements RedisProtocol {
+public final class RESPv2 {
+	public static final byte STRING_MARKER = '+';
+	public static final byte ERROR_MARKER = '-';
+	public static final byte LONG_MARKER = ':';
+	public static final byte BYTES_MARKER = '$';
+	public static final byte ARRAY_MARKER = '*';
 
-	private static final int CR_LF_LENGTH = 2;
-	private static final int INTEGER_MAX_LEN = String.valueOf(Long.MIN_VALUE).length();
-	private static final int STRING_MAX_LEN = 512 * 1024 * 1024; // 512 MB
+	private final byte[] array;
+	private int head;
+	private final int tail;
 
-	private static final byte STRING_MARKER = '+';
-	private static final byte ERROR_MARKER = '-';
-	private static final byte INTEGER_MARKER = ':';
-	private static final byte BULK_STRING_MARKER = '$';
-	private static final byte ARRAY_MARKER = '*';
-
-	private static final List<?> NIL_ARRAY = new ArrayList<>();
-	private static final byte[] NIL_BULK_STRING = {};
-
-	private final Charset charset;
-
-	private final ByteBufs tempBufs;
-	private final List<byte[]> args = new ArrayList<>();
-
-	private byte parsing;
-	private int remaining = -1;
-	@Nullable
-	private List<Integer> arraysRemaining;
-	@Nullable
-	private List<Object> arrayResult;
-
-	public RESPv2(ByteBufs tempBufs, Charset charset) {
-		this.tempBufs = tempBufs;
-		this.charset = charset;
+	public RESPv2(byte[] array, int head, int tail) {
+		this.array = array;
+		this.head = head;
+		this.tail = tail;
 	}
 
-	@Override
-	public int encode(byte[] array, int offset, RedisCommand item) {
-		Command command = item.getCommand();
-
-		args.clear();
-		args.addAll(command.getParts());
-		args.addAll(item.getArguments());
-
-		array[offset++] = ARRAY_MARKER;
-		byte[] arrayLenBytes = String.valueOf(args.size()).getBytes(charset);
-		System.arraycopy(arrayLenBytes, 0, array, offset, arrayLenBytes.length);
-		offset += arrayLenBytes.length;
-
-		array[offset++] = CR;
-		array[offset++] = LF;
-
-		for (byte[] argument : args) {
-			array[offset++] = BULK_STRING_MARKER;
-
-			byte[] argLenBytes = String.valueOf(argument.length).getBytes(charset);
-			System.arraycopy(argLenBytes, 0, array, offset, argLenBytes.length);
-			offset += argLenBytes.length;
-
-			array[offset++] = CR;
-			array[offset++] = LF;
-
-			System.arraycopy(argument, 0, array, offset, argument.length);
-			offset += argument.length;
-
-			array[offset++] = CR;
-			array[offset++] = LF;
-		}
-
-		return offset;
+	public byte[] array() {
+		return array;
 	}
 
-	@Nullable
-	@Override
-	public RedisResponse tryDecode(ByteBufs bufs) throws MalformedDataException {
-		while (true) {
-			if (bufs.isEmpty()) return null;
-			if (parsing == 0) parsing = bufs.getByte();
+	public int head() {
+		return head;
+	}
 
-			RedisResponse result = null;
+	public void head(int head) {
+		this.head = head;
+	}
 
-			switch (parsing) {
-				case STRING_MARKER:
-					String string = decodeString(bufs, STRING_MAX_LEN);
-					if (string != null) {
-						result = addToArrayOr(string, RedisResponse::string);
-					} else {
-						return null;
-					}
-					break;
-				case ERROR_MARKER:
-					String message = decodeString(bufs, STRING_MAX_LEN);
-					if (message != null) {
-						ServerError error = new ServerError(message);
-						result = addToArrayOr(error, RedisResponse::error);
-					} else {
-						return null;
-					}
-					break;
-				case INTEGER_MARKER:
-					String integer = decodeString(bufs, INTEGER_MAX_LEN);
-					if (integer != null) {
-						try {
-							long value = Long.parseLong(integer);
-							result = addToArrayOr(value, RedisResponse::integer);
-						} catch (NumberFormatException e) {
-							throw new MalformedDataException("Malformed integer " + integer, e);
-						}
-					} else {
-						return null;
-					}
-					break;
-				case BULK_STRING_MARKER:
-					byte[] bulkStringBytes = decodeBulkString(bufs);
-					if (bulkStringBytes == NIL_BULK_STRING) {
-						result = addToArrayOr(null, $ -> RedisResponse.nil());
-					} else if (bulkStringBytes != null) {
-						result = addToArrayOr(bulkStringBytes, RedisResponse::bytes);
-					} else {
-						return null;
-					}
-					break;
-				case ARRAY_MARKER:
-					int before = bufs.remainingBytes();
-					List<?> array = decodeArray(bufs);
-					if (array == NIL_ARRAY) {
-						result = addToArrayOr(null, $ -> RedisResponse.nil());
-					} else if (array != null) {
-						result = addToArrayOr(array, RedisResponse::array);
-					} else if (before == bufs.remainingBytes()) {
-						// parsed nothing
-						return null;
-					}
-					break;
-				default:
-					throw new MalformedDataException("Unknown first byte '" + (char) parsing + "'");
-			}
+	public void moveHead(int delta) {
+		this.head += delta;
+	}
 
-			if (result != null) return result;
+	public int tail() {
+		return tail;
+	}
+
+	public int readRemaining() {
+		return head - tail;
+	}
+
+	public boolean canRead() {
+		return head < tail;
+	}
+
+	public Object readObject() throws MalformedDataException {
+		switch (array[head++]) {
+			case STRING_MARKER:
+				return decodeString();
+			case ERROR_MARKER:
+				return new ServerError(decodeString());
+			case LONG_MARKER:
+				return decodeLong();
+			case BYTES_MARKER:
+				return decodeBytes();
+			case ARRAY_MARKER:
+				return decodeArray();
+			default:
+				throw new MalformedDataException();
 		}
 	}
 
-	@Nullable
-	private String decodeString(ByteBufs bufs, int maxSize) throws MalformedDataException {
-		ByteBuf decoded = ofCrlfTerminatedBytes(maxSize + CR_LF_LENGTH).tryDecode(bufs);
-
-		if (decoded != null) {
-			tempBufs.add(decoded);
-			return tempBufs.takeRemaining().asString(charset);
+	public void skipObject() throws MalformedDataException {
+		switch (array[head++]) {
+			case STRING_MARKER:
+				skipString();
+				break;
+			case ERROR_MARKER:
+				skipString();
+				break;
+			case LONG_MARKER:
+				skipLong();
+				break;
+			case BYTES_MARKER:
+				skipBytes();
+				break;
+			case ARRAY_MARKER:
+				skipArray();
+				break;
+			default:
+				throw new MalformedDataException();
 		}
-
-		if (!bufs.isEmpty()) {
-			tempBufs.add(bufs.takeExactSize(bufs.remainingBytes() - 1));
-		}
-		return null;
 	}
 
-	private @Nullable byte [] decodeBulkString(ByteBufs bufs) throws MalformedDataException {
-		if (remaining == -1) {
-			Integer length = decodeLength(bufs);
-			if (length == null) return null;
-			if (length == -1) {
-				parsing = 0;
-				return NIL_BULK_STRING;
-			}
-			remaining = length;
+	public String readString() throws MalformedDataException {
+		if (array[head++] == STRING_MARKER) {
+			return decodeString();
 		}
+		throw new MalformedDataException();
+	}
 
-		ByteBuf result = ByteBufPool.allocate(min(bufs.remainingBytes(), remaining));
-		remaining -= bufs.drainTo(result, remaining);
-		tempBufs.add(result);
-
-		if (remaining == 0) {
-			if (!bufs.hasRemainingBytes(2)) {
-				return null;
-			} else {
-				if (bufs.getByte() != CR || bufs.getByte() != LF) {
-					throw new MalformedDataException("Missing CR LF");
+	public String decodeString() throws MalformedDataException {
+		for (int i = head; i < tail - 1; i++) {
+			if (array[i] == CR)
+				if (array[i + 1] == LF) {
+					head = i;
+					return new String(array, head, i, ISO_8859_1);
+				} else {
+					throw new MalformedDataException();
 				}
-				remaining = -1;
-				return tempBufs.takeRemaining().asArray();
-			}
 		}
-		return null;
+		throw new BufferUnderflowException();
 	}
 
-	@Nullable
-	@SuppressWarnings("unchecked")
-	private List<?> decodeArray(ByteBufs bufs) throws MalformedDataException {
-		Integer length = decodeLength(bufs);
-		if (length == null) return null;
-		parsing = 0;
-		if (length == -1) return NIL_ARRAY;
-		if (length != 0) {
-			if (arraysRemaining == null) {
-				arraysRemaining = new ArrayList<>();
-				arrayResult = new ArrayList<>();
-			} else {
-				assert arrayResult != null;
-				List<Object> array = arrayResult;
-				for (int i = 0; i < arraysRemaining.size() - 1; i++) {
-					array = (List<Object>) array.get(array.size() - 1);
+	private void skipString() throws MalformedDataException {
+		for (int i = head; i < tail - 1; i++) {
+			if (array[i] == CR)
+				if (array[i + 1] == LF) {
+					head = i;
+					return;
+				} else {
+					throw new MalformedDataException();
 				}
+		}
+		throw new BufferUnderflowException();
+	}
 
-				array.add(new ArrayList<>());
-			}
-			arraysRemaining.add(length);
+	public byte[] readBytes() throws MalformedDataException {
+		if (array[head++] == BYTES_MARKER) {
+			return decodeBytes();
+		}
+		throw new MalformedDataException();
+	}
+
+	public byte[] decodeBytes() throws MalformedDataException {
+		int length = (int) decodeLong();
+		if (length == -1) {
 			return null;
 		}
-		return emptyList();
-
+		if (tail - head < length) throw new BufferUnderflowException();
+		byte[] result = new byte[length];
+		System.arraycopy(array, head, result, 0, length);
+		head += length;
+		return result;
 	}
 
-	@Nullable
-	private Integer decodeLength(ByteBufs bufs) throws MalformedDataException {
-		String numString = decodeString(bufs, INTEGER_MAX_LEN);
-		if (numString == null) return null;
-
-		int len;
-		try {
-			len = Integer.parseInt(numString);
-		} catch (NumberFormatException e) {
-			throw new MalformedDataException("Malformed length: '" + numString + '\'', e);
+	public String readBytes(Charset charset) throws MalformedDataException {
+		if (array[head++] == BYTES_MARKER) {
+			return decodeBytes(charset);
 		}
-
-		if (len < -1) {
-			throw new InvalidSizeException("Unsupported negative length: '" + len + '\'');
-		}
-
-		return len;
+		throw new MalformedDataException();
 	}
 
-	@Nullable
-	@SuppressWarnings("unchecked")
-	private <T> RedisResponse addToArrayOr(T value, Function<T, RedisResponse> fn) {
-		parsing = 0;
-		if (arrayResult == null) {
-			assert arraysRemaining == null;
-			return fn.apply(value);
+	public String decodeBytes(Charset charset) throws MalformedDataException {
+		int length = (int) decodeLong();
+		if (length == -1) {
+			return null;
 		}
-		assert arraysRemaining != null;
+		if (tail - head < length) throw new BufferUnderflowException();
+		String result = new String(array, head, length, charset);
+		head += length;
+		return result;
+	}
 
-		List<Object> array = arrayResult;
-		for (int i = 0; i < arraysRemaining.size() - 1; i++) {
-			array = (List<Object>) array.get(array.size() - 1);
+	private void skipBytes() throws MalformedDataException {
+		int length = (int) decodeLong();
+		if (length == -1) {
+			return;
 		}
-		array.add(value);
+		if (tail - head < length) throw new BufferUnderflowException();
+		head += length;
+	}
 
-		int index = arraysRemaining.size() - 1;
-		while (true) {
-			Integer remaining = arraysRemaining.get(index);
-			if (remaining == 1) {
-				arraysRemaining.remove(index--);
-				if (arraysRemaining.isEmpty()) {
-					List<?> arrayResult = this.arrayResult;
-					this.arrayResult = null;
-					this.arraysRemaining = null;
-					return RedisResponse.array(arrayResult);
-				}
-			} else {
-				arraysRemaining.set(index, remaining - 1);
-				return null;
+	public Object[] parseObjectArray() throws MalformedDataException {
+		if (array[head++] == ARRAY_MARKER) {
+			return decodeArray();
+		}
+		throw new MalformedDataException();
+	}
+
+	public Object[] decodeArray() throws MalformedDataException {
+		int length = (int) decodeLong();
+		if (length == -1) return null;
+		Object[] result = new Object[length];
+		for (int i = 0; i < length; i++) {
+			result[i] = readObject();
+		}
+		return result;
+	}
+
+	private void skipArray() throws MalformedDataException {
+		int length = (int) decodeLong();
+		if (length == -1) return;
+		for (int i = 0; i < length; i++) {
+			skipObject();
+		}
+	}
+
+	public long readLong() throws MalformedDataException {
+		if (array[head++] == LONG_MARKER) {
+			return decodeLong();
+		}
+		throw new MalformedDataException();
+	}
+
+	public long decodeLong() throws MalformedDataException {
+		int i = head;
+		long negate = 0;
+		if (i != tail && array[i] == '-') {
+			negate = 1;
+			i++;
+		}
+		long result = 0;
+		for (; i < tail - 1; i++) {
+			if (array[i] >= '0' && array[i] <= '9') {
+				result = result * 10 + (array[i] - '0');
+				continue;
 			}
+			if (array[i] == CR && array[i + 1] == LF) {
+				head = i;
+				return (result ^ -negate) + negate;
+			}
+			throw new MalformedDataException();
 		}
+		throw new BufferUnderflowException();
+	}
+
+	private void skipLong() throws MalformedDataException {
+		int i = head;
+		if (i != tail && array[i] == '-') {
+			i++;
+		}
+		for (; i < tail - 1; i++) {
+			if (array[i] >= '0' && array[i] <= '9') {
+				continue;
+			}
+			if (array[i] == CR && array[i + 1] == LF) {
+				head = i;
+				return;
+			}
+			throw new MalformedDataException();
+		}
+		throw new BufferUnderflowException();
+	}
+
+	public void readOk() throws MalformedDataException {
+		try {
+			if (array[head] == STRING_MARKER &&
+					array[head + 1] == CR && array[head + 2] == LF &&
+					array[head + 3] == 'O' && array[head + 4] == 'K') {
+				head += 5;
+				return;
+			}
+		} catch (IndexOutOfBoundsException e) {
+			throw new BufferUnderflowException();
+		}
+		throw new MalformedDataException();
 	}
 
 }

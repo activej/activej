@@ -13,6 +13,8 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.redis.RedisClient;
 import io.activej.redis.RedisConnection;
+import io.activej.redis.RedisRequest;
+import io.activej.redis.RedisResponse;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
@@ -116,7 +118,7 @@ public abstract class AbstractRedisBenchamark extends Launcher {
 	}
 
 	protected Promise<?> afterRound(RedisConnection connection) {
-		return connection.del(key);
+		return connection.cmd(RedisRequest.of("DEL", key), RedisResponse.SKIP);
 	}
 
 	protected Config configOverride() {
@@ -165,7 +167,7 @@ public abstract class AbstractRedisBenchamark extends Launcher {
 	}
 
 	private Promise<Long> roundCall() {
-		return redisClient.getConnection()
+		return redisClient.connect()
 				.then(connection -> beforeRound(connection)
 						.then(() -> {
 							SettablePromise<Long> promise = new SettablePromise<>();
