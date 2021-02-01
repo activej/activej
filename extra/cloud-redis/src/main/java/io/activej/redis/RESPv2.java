@@ -71,6 +71,8 @@ public final class RESPv2 {
 	}
 
 	public Object readObject() throws MalformedDataException {
+		if (!canRead()) throw new BufferUnderflowException();
+
 		switch (array[head++]) {
 			case STRING_MARKER:
 				return decodeString();
@@ -88,6 +90,8 @@ public final class RESPv2 {
 	}
 
 	public void skipObject() throws MalformedDataException {
+		if (!canRead()) throw new BufferUnderflowException();
+
 		switch (array[head++]) {
 			case STRING_MARKER:
 				skipString();
@@ -110,6 +114,8 @@ public final class RESPv2 {
 	}
 
 	public String readString() throws MalformedDataException {
+		if (!canRead()) throw new BufferUnderflowException();
+
 		if (array[head++] == STRING_MARKER) {
 			return decodeString();
 		}
@@ -120,8 +126,9 @@ public final class RESPv2 {
 		for (int i = head; i < tail - 1; i++) {
 			if (array[i] == CR)
 				if (array[i + 1] == LF) {
-					head = i;
-					return new String(array, head, i, ISO_8859_1);
+					String string = new String(array, head, i - head, ISO_8859_1);
+					head = i + 2;
+					return string;
 				} else {
 					throw new MalformedDataException();
 				}
@@ -133,7 +140,7 @@ public final class RESPv2 {
 		for (int i = head; i < tail - 1; i++) {
 			if (array[i] == CR)
 				if (array[i + 1] == LF) {
-					head = i;
+					head = i + 2;
 					return;
 				} else {
 					throw new MalformedDataException();
@@ -143,6 +150,8 @@ public final class RESPv2 {
 	}
 
 	public byte[] readBytes() throws MalformedDataException {
+		if (!canRead()) throw new BufferUnderflowException();
+
 		if (array[head++] == BYTES_MARKER) {
 			return decodeBytes();
 		}
@@ -154,14 +163,16 @@ public final class RESPv2 {
 		if (length == -1) {
 			return null;
 		}
-		if (tail - head < length) throw new BufferUnderflowException();
+		if (tail - head < length + 2) throw new BufferUnderflowException();
 		byte[] result = new byte[length];
 		System.arraycopy(array, head, result, 0, length);
-		head += length;
+		head += length + 2;
 		return result;
 	}
 
 	public String readBytes(Charset charset) throws MalformedDataException {
+		if (!canRead()) throw new BufferUnderflowException();
+
 		if (array[head++] == BYTES_MARKER) {
 			return decodeBytes(charset);
 		}
@@ -173,9 +184,10 @@ public final class RESPv2 {
 		if (length == -1) {
 			return null;
 		}
-		if (tail - head < length) throw new BufferUnderflowException();
+		if (tail - head < length + 2) throw new BufferUnderflowException();
+		if (array[head + length] != CR || array[head + length + 1] != LF) throw new MalformedDataException();
 		String result = new String(array, head, length, charset);
-		head += length;
+		head += length + 2;
 		return result;
 	}
 
@@ -184,11 +196,13 @@ public final class RESPv2 {
 		if (length == -1) {
 			return;
 		}
-		if (tail - head < length) throw new BufferUnderflowException();
-		head += length;
+		if (tail - head < length + 2) throw new BufferUnderflowException();
+		head += length + 2;
 	}
 
 	public Object[] parseObjectArray() throws MalformedDataException {
+		if (!canRead()) throw new BufferUnderflowException();
+
 		if (array[head++] == ARRAY_MARKER) {
 			return decodeArray();
 		}
@@ -214,6 +228,8 @@ public final class RESPv2 {
 	}
 
 	public long readLong() throws MalformedDataException {
+		if (!canRead()) throw new BufferUnderflowException();
+
 		if (array[head++] == LONG_MARKER) {
 			return decodeLong();
 		}
@@ -234,7 +250,7 @@ public final class RESPv2 {
 				continue;
 			}
 			if (array[i] == CR && array[i + 1] == LF) {
-				head = i;
+				head = i + 2;
 				return (result ^ -negate) + negate;
 			}
 			throw new MalformedDataException();
@@ -261,10 +277,12 @@ public final class RESPv2 {
 	}
 
 	public void readOk() throws MalformedDataException {
+		if (tail - head < 5) throw new BufferUnderflowException();
+
 		try {
 			if (array[head] == STRING_MARKER &&
-					array[head + 1] == CR && array[head + 2] == LF &&
-					array[head + 3] == 'O' && array[head + 4] == 'K') {
+					array[head + 1] == 'O' && array[head + 2] == 'K' &&
+					array[head + 3] == CR && array[head + 4] == LF) {
 				head += 5;
 				return;
 			}

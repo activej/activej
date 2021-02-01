@@ -8,12 +8,15 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("ConstantConditions")
 public class RedisConnectionTestWithStub {
@@ -42,6 +45,38 @@ public class RedisConnectionTestWithStub {
 	@After
 	public void tearDown() {
 		if (server != null) server.stop();
+	}
+
+
+	@Test
+	public void getNil() {
+		String dummy = await(redis -> redis.cmd(RedisRequest.of("GET", "dummy"), RedisResponse.BYTES_UTF8));
+		assertNull(dummy);
+	}
+
+	@Test
+	public void getNilBinary() {
+		byte[] dummy = await(redis -> redis.cmd(RedisRequest.of("GET", "dummy"), RedisResponse.BYTES));
+		assertNull(dummy);
+	}
+
+	@Test
+	public void setValue() {
+		String key = "key";
+		String value = "value";
+		await(redis -> redis.cmd(RedisRequest.of("SET", key, value), RedisResponse.OK));
+
+		assertEquals(value, await(redis -> redis.cmd(RedisRequest.of("GET", key), RedisResponse.BYTES_UTF8)));
+	}
+
+	@Test
+	public void setBinaryValue() {
+		String key = "key";
+		byte[] value = new byte[1024];
+		RANDOM.nextBytes(value);
+		await(redis -> redis.cmd(RedisRequest.of("SET", key, value), RedisResponse.OK));
+
+		assertArrayEquals(value, await(redis -> redis.cmd(RedisRequest.of("GET", key), RedisResponse.BYTES)));
 	}
 
 	protected <T> T await(Function<RedisConnection, Promise<T>> clientCommand) {

@@ -221,16 +221,16 @@ public final class ByteBufStrings {
 			char c = string.charAt(i);
 
 			if (c <= '\u007F') {
-				array[++pos] = (byte) c;
+				array[pos++] = (byte) c;
 			} else {
 				if (c <= '\u07FF') {
-					array[pos + 1] = (byte) (0xC0 | c >>> 6);
-					array[pos + 2] = (byte) (0x80 | c & 0x3F);
+					array[pos] = (byte) (0xC0 | c >>> 6);
+					array[pos + 1] = (byte) (0x80 | c & 0x3F);
 					pos += 2;
 				} else if (c < '\uD800' || c > '\uDFFF') {
-					array[pos + 1] = (byte) (0xE0 | c >>> 12);
-					array[pos + 2] = (byte) (0x80 | c >> 6 & 0x3F);
-					array[pos + 3] = (byte) (0x80 | c & 0x3F);
+					array[pos] = (byte) (0xE0 | c >>> 12);
+					array[pos + 1] = (byte) (0x80 | c >> 6 & 0x3F);
+					array[pos + 2] = (byte) (0x80 | c & 0x3F);
 					pos += 3;
 				} else {
 					pos += writeUtf8char4(array, pos, c, string, i++);

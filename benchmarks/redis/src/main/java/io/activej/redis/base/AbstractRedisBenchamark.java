@@ -138,7 +138,7 @@ public abstract class AbstractRedisBenchamark extends Launcher {
 			System.out.printf("Round: %d; Round time: %dms; RPS : %d%n", i + 1, roundTime, rps);
 		}
 
-		System.out.println("Start benchmarking RPC");
+		System.out.println("Start benchmarking Redis");
 
 		for (int i = 0; i < benchmarkRounds; i++) {
 			long roundTime = round();

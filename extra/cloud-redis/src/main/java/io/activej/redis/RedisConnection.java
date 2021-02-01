@@ -22,6 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
+import io.activej.common.exception.CloseException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
@@ -62,7 +63,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	@SuppressWarnings("rawtypes")
 	private final ArrayDeque receiveQueue = new ArrayDeque<>();
 	@SuppressWarnings("rawtypes")
-	private ArrayList transactionQueue = new ArrayList<>();
+	private ArrayList transactionQueue;
 
 	RedisConnection(Eventloop eventloop, RedisClient client, AsyncTcpSocket socket) {
 		this.eventloop = eventloop;
@@ -72,6 +73,8 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	}
 
 	public <T> Promise<T> cmd(RedisRequest request, RedisResponse<T> response) {
+		if (isClosed()) return Promise.ofException(new CloseException());
+
 		int positionBegin, positionEnd;
 		while (true) {
 			positionBegin = writeBuf.tail();
@@ -133,7 +136,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		writeBuf = ByteBufPool.allocate(writeBufSize);
 	}
 
-	public void start() {
+	void start() {
 		read();
 		postFlush();
 	}
@@ -153,15 +156,22 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 				.whenResult(buf -> {
 					if (buf != null) {
 						readBuf = ByteBufPool.append(readBuf, buf);
-						protocol = new RESPv2(buf.array(), buf.head(), buf.tail());
+						protocol = new RESPv2(readBuf.array(), readBuf.head(), readBuf.tail());
 
-						while (!receiveQueue.isEmpty()) {
+						while (!receiveQueue.isEmpty() && readBuf.canRead()) {
 							RedisResponse<Object> response = (RedisResponse<Object>) receiveQueue.peek();
 							try {
-								Object result = response.parse(protocol);
-								receiveQueue.poll();
-								SettablePromise<Object> promise = (SettablePromise<Object>) receiveQueue.poll();
-								promise.set(result);
+								if (readBuf.peek() != RESPv2.ERROR_MARKER) {
+									Object result = response.parse(protocol);
+									readBuf.head(protocol.head());
+									receiveQueue.poll();
+									((SettablePromise<Object>) receiveQueue.poll()).set(result);
+								} else {
+									ServerError error = (ServerError) protocol.readObject();
+									readBuf.head(protocol.head());
+									receiveQueue.poll();
+									((SettablePromise<Object>) receiveQueue.poll()).setException(error);
+								}
 							} catch (BufferUnderflowException e) {
 								break;
 							} catch (MalformedDataException e) {
@@ -178,7 +188,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 				.whenException(this::closeEx);
 	}
 
-	public Promise<Void> sendEndOfStream() {
+	private Promise<Void> sendEndOfStream() {
 		return socket.write(null)
 				.whenResult(() -> {
 					writeDone = true;
@@ -187,10 +197,15 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 				.whenException(this::closeEx);
 	}
 
+	@SuppressWarnings({"unchecked", "ConstantConditions"})
 	protected void onClosed(@NotNull Throwable e) {
 		socket.closeEx(e);
 		writeBuf = nullify(writeBuf, ByteBuf::recycle);
 		readBuf = nullify(readBuf, ByteBuf::recycle);
+		while (!receiveQueue.isEmpty()) {
+			receiveQueue.poll();
+			((SettablePromise<Object>) receiveQueue.poll()).setException(e);
+		}
 	}
 
 	private void closeIfDone() {
@@ -269,14 +284,12 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	// endregion
 	// endregion
 
-
-
 	@Override
 	public String toString() {
 		return "RedisConnection{" +
 				"client=" + client +
 				", receiveQueue=" + receiveQueue.size() +
-				", transactionQueue=" + transactionQueue.size() +
+				(transactionQueue != null ? (", transactionQueue=" + transactionQueue.size()) : "") +
 				", closed=" + isClosed() +
 				'}';
 	}
