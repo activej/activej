@@ -16,6 +16,7 @@
 
 package io.activej.redis;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.MalformedDataException;
 
 import java.nio.BufferUnderflowException;
@@ -26,6 +27,8 @@ import static io.activej.bytebuf.ByteBufStrings.LF;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 public final class RESPv2 {
+	public static final boolean ASSERT_PROTOCOL = ApplicationSettings.getBoolean(RESPv2.class, "assertProtocol", false);
+
 	public static final byte STRING_MARKER = '+';
 	public static final byte ERROR_MARKER = '-';
 	public static final byte LONG_MARKER = ':';
@@ -116,7 +119,8 @@ public final class RESPv2 {
 	public String readString() throws MalformedDataException {
 		if (!canRead()) throw new BufferUnderflowException();
 
-		if (array[head++] == STRING_MARKER) {
+		if (!ASSERT_PROTOCOL || array[head] == STRING_MARKER) {
+			head++;
 			return decodeString();
 		}
 		throw new MalformedDataException();
@@ -124,27 +128,27 @@ public final class RESPv2 {
 
 	public String decodeString() throws MalformedDataException {
 		for (int i = head; i < tail - 1; i++) {
-			if (array[i] == CR)
-				if (array[i + 1] == LF) {
-					String string = new String(array, head, i - head, ISO_8859_1);
-					head = i + 2;
-					return string;
-				} else {
+			if (array[i] == CR) {
+				if (ASSERT_PROTOCOL && array[i + 1] != LF) {
 					throw new MalformedDataException();
 				}
+				String string = new String(array, head, i - head, ISO_8859_1);
+				head = i + 2;
+				return string;
+			}
 		}
 		throw new BufferUnderflowException();
 	}
 
 	private void skipString() throws MalformedDataException {
 		for (int i = head; i < tail - 1; i++) {
-			if (array[i] == CR)
-				if (array[i + 1] == LF) {
-					head = i + 2;
-					return;
-				} else {
+			if (array[i] == CR) {
+				if (ASSERT_PROTOCOL && array[i + 1] != LF) {
 					throw new MalformedDataException();
 				}
+				head = i + 2;
+				return;
+			}
 		}
 		throw new BufferUnderflowException();
 	}
@@ -152,7 +156,8 @@ public final class RESPv2 {
 	public byte[] readBytes() throws MalformedDataException {
 		if (!canRead()) throw new BufferUnderflowException();
 
-		if (array[head++] == BYTES_MARKER) {
+		if (!ASSERT_PROTOCOL || array[head] == BYTES_MARKER) {
+			head++;
 			return decodeBytes();
 		}
 		throw new MalformedDataException();
@@ -164,6 +169,9 @@ public final class RESPv2 {
 			return null;
 		}
 		if (tail - head < length + 2) throw new BufferUnderflowException();
+		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
+			throw new MalformedDataException();
+		}
 		byte[] result = new byte[length];
 		System.arraycopy(array, head, result, 0, length);
 		head += length + 2;
@@ -173,7 +181,8 @@ public final class RESPv2 {
 	public String readBytes(Charset charset) throws MalformedDataException {
 		if (!canRead()) throw new BufferUnderflowException();
 
-		if (array[head++] == BYTES_MARKER) {
+		if (!ASSERT_PROTOCOL || array[head] == BYTES_MARKER) {
+			head++;
 			return decodeBytes(charset);
 		}
 		throw new MalformedDataException();
@@ -185,7 +194,9 @@ public final class RESPv2 {
 			return null;
 		}
 		if (tail - head < length + 2) throw new BufferUnderflowException();
-		if (array[head + length] != CR || array[head + length + 1] != LF) throw new MalformedDataException();
+		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
+			throw new MalformedDataException();
+		}
 		String result = new String(array, head, length, charset);
 		head += length + 2;
 		return result;
@@ -197,13 +208,17 @@ public final class RESPv2 {
 			return;
 		}
 		if (tail - head < length + 2) throw new BufferUnderflowException();
+		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
+			throw new MalformedDataException();
+		}
 		head += length + 2;
 	}
 
 	public Object[] parseObjectArray() throws MalformedDataException {
 		if (!canRead()) throw new BufferUnderflowException();
 
-		if (array[head++] == ARRAY_MARKER) {
+		if (!ASSERT_PROTOCOL || array[head] == ARRAY_MARKER) {
+			head++;
 			return decodeArray();
 		}
 		throw new MalformedDataException();
@@ -230,7 +245,8 @@ public final class RESPv2 {
 	public long readLong() throws MalformedDataException {
 		if (!canRead()) throw new BufferUnderflowException();
 
-		if (array[head++] == LONG_MARKER) {
+		if (!ASSERT_PROTOCOL || array[head] == LONG_MARKER) {
+			head++;
 			return decodeLong();
 		}
 		throw new MalformedDataException();
@@ -245,15 +261,13 @@ public final class RESPv2 {
 		}
 		long result = 0;
 		for (; i < tail - 1; i++) {
-			if (array[i] >= '0' && array[i] <= '9') {
-				result = result * 10 + (array[i] - '0');
-				continue;
-			}
-			if (array[i] == CR && array[i + 1] == LF) {
+			if (array[i] == CR) {
+				if (ASSERT_PROTOCOL && array[i + 1] != LF) throw new MalformedDataException();
 				head = i + 2;
 				return (result ^ -negate) + negate;
 			}
-			throw new MalformedDataException();
+			if (ASSERT_PROTOCOL && (array[i] < '0' || array[i] > '9')) throw new MalformedDataException();
+			result = result * 10 + (array[i] - '0');
 		}
 		throw new BufferUnderflowException();
 	}
@@ -264,14 +278,12 @@ public final class RESPv2 {
 			i++;
 		}
 		for (; i < tail - 1; i++) {
-			if (array[i] >= '0' && array[i] <= '9') {
-				continue;
-			}
-			if (array[i] == CR && array[i + 1] == LF) {
+			if (array[i] == CR) {
+				if (ASSERT_PROTOCOL && array[i + 1] != LF) throw new MalformedDataException();
 				head = i;
 				return;
 			}
-			throw new MalformedDataException();
+			if (ASSERT_PROTOCOL && (array[i] < '0' || array[i] > '9')) throw new MalformedDataException();
 		}
 		throw new BufferUnderflowException();
 	}
@@ -280,16 +292,16 @@ public final class RESPv2 {
 		if (tail - head < 5) throw new BufferUnderflowException();
 
 		try {
-			if (array[head] == STRING_MARKER &&
-					array[head + 1] == 'O' && array[head + 2] == 'K' &&
-					array[head + 3] == CR && array[head + 4] == LF) {
-				head += 5;
-				return;
+			if (ASSERT_PROTOCOL &&
+					(array[head] != STRING_MARKER ||
+							array[head + 1] != 'O' || array[head + 2] != 'K' ||
+							array[head + 3] != CR || array[head + 4] != LF)) {
+				throw new MalformedDataException();
 			}
+			head += 5;
 		} catch (IndexOutOfBoundsException e) {
 			throw new BufferUnderflowException();
 		}
-		throw new MalformedDataException();
 	}
 
 }
