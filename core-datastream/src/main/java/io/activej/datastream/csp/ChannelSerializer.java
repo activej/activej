@@ -232,14 +232,14 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			int positionEnd;
 			for (; ; ) {
 				if (buf == null || buf.writeRemaining() < requiredRemainingSize) {
-					onFullBuffer();
+					ensureBuffer();
 				}
 				positionBegin = buf.tail();
 				positionData = positionBegin + estimatedHeaderSize;
 				try {
 					positionEnd = serializer.encode(buf.array(), positionData, item);
 				} catch (ArrayIndexOutOfBoundsException e) {
-					onUnderEstimate();
+					enlargeBuffer();
 					continue;
 				} catch (Exception e) {
 					onSerializationError(item, e);
@@ -250,17 +250,9 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			buf.tail(positionEnd);
 			int dataSize = positionEnd - positionData;
 			if (dataSize > estimatedDataSize) {
-				estimateMore(positionBegin, positionData, dataSize);
+				reestimate(positionBegin, positionData, dataSize);
 			}
 			writeSize(buf.array(), positionBegin, dataSize);
-		}
-
-		private void estimateMore(int positionBegin, int positionData, int dataSize) {
-			if (CHECK) checkArgument(dataSize < MAX_SIZE_INT, "Serialized data size exceeds 256MB");
-			estimatedDataSize = dataSize;
-			estimatedHeaderSize = varIntSize(estimatedDataSize);
-			requiredRemainingSize = estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2);
-			ensureHeaderSize(positionBegin, positionData, dataSize);
 		}
 
 		private void writeSize(byte[] buf, int pos, int size) {
@@ -289,8 +281,26 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			buf[pos + 3] = (byte) size;
 		}
 
-		private ByteBuf allocateBuffer() {
-			return ByteBufPool.allocate(max(initialBufferSize, requiredRemainingSize));
+		private void ensureBuffer() {
+			flush();
+			buf = ByteBufPool.allocate(max(initialBufferSize, requiredRemainingSize));
+			if (!flushPosted) {
+				postFlush();
+			}
+		}
+
+		private void enlargeBuffer() {
+			int writeRemaining = buf.writeRemaining();
+			flush();
+			buf = ByteBufPool.allocate(max(initialBufferSize, writeRemaining + (writeRemaining >>> 1) + 1));
+		}
+
+		private void reestimate(int positionBegin, int positionData, int dataSize) {
+			if (CHECK) checkArgument(dataSize < MAX_SIZE_INT, "Serialized data size exceeds 256MB");
+			estimatedDataSize = dataSize;
+			estimatedHeaderSize = varIntSize(estimatedDataSize);
+			requiredRemainingSize = estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2);
+			ensureHeaderSize(positionBegin, positionData, dataSize);
 		}
 
 		private void ensureHeaderSize(int positionBegin, int positionData, int dataSize) {
@@ -316,20 +326,6 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			buf.tail(newPositionEnd);
 		}
 
-		private void onFullBuffer() {
-			flush();
-			buf = allocateBuffer();
-			if (!flushPosted) {
-				postFlush();
-			}
-		}
-
-		private void onUnderEstimate() {
-			int writeRemaining = buf.writeRemaining();
-			flush();
-			buf = ByteBufPool.allocate(max(initialBufferSize, writeRemaining + (writeRemaining >>> 1) + 1));
-		}
-
 		private void postFlush() {
 			flushPosted = true;
 			if (autoFlushIntervalMillis <= 0) {
@@ -345,10 +341,6 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			}
 		}
 
-		private void onSerializationError(T item, Exception e) {
-			serializationErrorHandler.accept(item, e);
-		}
-
 		private void flush() {
 			if (buf == null) return;
 			if (buf.canRead()) {
@@ -362,6 +354,10 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 				buf.recycle();
 				buf = null;
 			}
+		}
+
+		private void onSerializationError(T item, Exception e) {
+			serializationErrorHandler.accept(item, e);
 		}
 	}
 

@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 
@@ -53,8 +54,10 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 	private final AsyncTcpSocket socket;
 
-	private int writeBufSize = INITIAL_BUFFER_SIZE;
-	private ByteBuf writeBuf = ByteBufPool.allocate(writeBufSize);
+	private int estimatedSize;
+	private int requiredRemainingSize;
+	@Nullable
+	private ByteBuf writeBuf = null;
 
 	private boolean readDone;
 	private boolean writeDone;
@@ -64,10 +67,18 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	@SuppressWarnings("rawtypes")
 	private ArrayList transactionQueue;
 
-	RedisConnection(Eventloop eventloop, RedisClient client, AsyncTcpSocket socket) {
+	private boolean flushPosted;
+	private final int autoFlushIntervalMillis;
+
+	RedisConnection(Eventloop eventloop, RedisClient client, AsyncTcpSocket socket, @NotNull Duration autoFlushInterval) {
 		this.eventloop = eventloop;
 		this.client = client;
 		this.socket = socket;
+		this.autoFlushIntervalMillis = (int) autoFlushInterval.toMillis();
+	}
+
+	void start() {
+		read();
 	}
 
 	public <T> Promise<T> cmd(RedisRequest request, RedisResponse<T> response) {
@@ -75,19 +86,22 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 		int positionBegin, positionEnd;
 		while (true) {
+			if (writeBuf == null || writeBuf.writeRemaining() < requiredRemainingSize) {
+				ensureBuffer();
+			}
 			positionBegin = writeBuf.tail();
 			try {
 				positionEnd = request.write(writeBuf.array(), positionBegin);
 				writeBuf.tail(positionEnd);
 			} catch (ArrayIndexOutOfBoundsException | NeedMoreDataException e) {
-				onUnderEstimate(positionBegin);
+				enlargeBuffer();
 				continue;
 			}
 			break;
 		}
 		int dataSize = positionEnd - positionBegin;
-		if (dataSize > writeBufSize) {
-			writeBufSize = dataSize;
+		if (dataSize > estimatedSize) {
+			reestimate(dataSize);
 		}
 		return receive(response);
 	}
@@ -113,74 +127,50 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		return promise;
 	}
 
-	private void onUnderEstimate(int positionBegin) {
-		writeBuf.tail(positionBegin);
+	private void ensureBuffer() {
+		flush();
+		writeBuf = ByteBufPool.allocate(max(INITIAL_BUFFER_SIZE, requiredRemainingSize));
+		if (!flushPosted) {
+			postFlush();
+		}
+	}
+
+	private void enlargeBuffer() {
+		//noinspection ConstantConditions
 		int writeRemaining = writeBuf.writeRemaining();
 		flush();
-		writeBuf = ByteBufPool.allocate(max(writeBufSize, writeRemaining + (writeRemaining >>> 1) + 1));
+		writeBuf = ByteBufPool.allocate(max(INITIAL_BUFFER_SIZE, writeRemaining + (writeRemaining >>> 1) + 1));
 	}
 
-	private void flush() {
-		if (writeBuf.canRead()) {
-			socket.write(writeBuf)
-					.whenException(this::closeEx);
-			writeBufSize = max(writeBufSize - (writeBufSize >>> 8), INITIAL_BUFFER_SIZE);
-		} else {
-			writeBuf.recycle();
-		}
-		writeBuf = ByteBufPool.allocate(writeBufSize);
-	}
-
-	void start() {
-		read();
-		postFlush();
+	private void reestimate(int dataSize) {
+		estimatedSize = dataSize;
+		requiredRemainingSize = dataSize + (dataSize >>> 2);
 	}
 
 	private void postFlush() {
-		eventloop.postLast(() -> {
-			if (!isClosed()) {
+		flushPosted = true;
+		if (autoFlushIntervalMillis <= 0) {
+			eventloop.postLast(() -> {
+				flushPosted = false;
 				flush();
-				postFlush();
-			}
-		});
+			});
+		} else {
+			eventloop.delayBackground(autoFlushIntervalMillis, () -> {
+				flushPosted = false;
+				flush();
+			});
+		}
 	}
 
-	@SuppressWarnings({"unchecked", "ConstantConditions"})
-	private void read() {
-		socket.read()
-				.whenResult(buf -> {
-					if (buf != null) {
-						readBuf = ByteBufPool.append(readBuf, buf);
-						RESPv2 protocol = new RESPv2(readBuf.array(), readBuf.head(), readBuf.tail());
-
-						while (!receiveQueue.isEmpty() && readBuf.canRead()) {
-							RedisResponse<Object> response = (RedisResponse<Object>) receiveQueue.peek();
-							try {
-								if (readBuf.peek() != RESPv2.ERROR_MARKER) {
-									Object result = response.parse(protocol);
-									readBuf.head(protocol.head());
-									receiveQueue.poll();
-									((Callback<Object>) receiveQueue.poll()).accept(result, null);
-								} else {
-									ServerError error = (ServerError) protocol.readObject();
-									readBuf.head(protocol.head());
-									receiveQueue.poll();
-									((Callback<Object>) receiveQueue.poll()).accept(null, error);
-								}
-							} catch (NeedMoreDataException e) {
-								break;
-							} catch (MalformedDataException e) {
-								closeEx(e);
-								return;
-							}
-						}
-						read();
-					} else {
-						readDone = true;
-						closeIfDone();
-					}
-				})
-				.whenException(this::closeEx);
+	private void flush() {
+		if (writeBuf == null) return;
+		if (writeBuf.canRead()) {
+			socket.write(writeBuf)
+					.whenException(this::closeEx);
+		} else {
+			writeBuf.recycle();
+		}
+		writeBuf = null;
 	}
 
 	private Promise<Void> sendEndOfStream() {
@@ -193,6 +183,58 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	}
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
+	private void read() {
+		socket.read()
+				.whenResult(buf -> {
+					if (buf != null) {
+						readBuf = ByteBufPool.append(readBuf, buf);
+						RESPv2 data = new RESPv2(readBuf.array(), readBuf.head(), readBuf.tail());
+
+						int head = data.head();
+						while (!receiveQueue.isEmpty() && data.canRead()) {
+							RedisResponse<Object> response = (RedisResponse<Object>) receiveQueue.peek();
+							try {
+								if (data.peek() != RESPv2.ERROR_MARKER) {
+									Object result = response.parse(data);
+									head = data.head();
+									receiveQueue.poll();
+									((Callback<Object>) receiveQueue.poll()).accept(result, null);
+								} else {
+									ServerError error = (ServerError) data.readObject();
+									head = data.head();
+									receiveQueue.poll();
+									((Callback<Object>) receiveQueue.poll()).accept(null, error);
+								}
+							} catch (NeedMoreDataException e) {
+								break;
+							} catch (MalformedDataException e) {
+								closeEx(e);
+								return;
+							}
+						}
+						if (readBuf != null) {
+							readBuf.head(head);
+							if (!readBuf.canRead()) {
+								readBuf.recycle();
+								readBuf = ByteBuf.empty();
+							}
+						}
+						read();
+					} else {
+						readDone = true;
+						closeIfDone();
+					}
+				})
+				.whenException(this::closeEx);
+	}
+
+	private void closeIfDone() {
+		if (readDone && writeDone) {
+			close();
+		}
+	}
+
+	@SuppressWarnings({"unchecked", "ConstantConditions"})
 	protected void onClosed(@NotNull Throwable e) {
 		socket.closeEx(e);
 		writeBuf = nullify(writeBuf, ByteBuf::recycle);
@@ -202,12 +244,6 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 			((Callback<Object>) receiveQueue.poll()).accept(null, e);
 		}
 		transactionQueue = nullify(transactionQueue, queue -> abortTransaction(queue, e));
-	}
-
-	private void closeIfDone() {
-		if (readDone && writeDone) {
-			close();
-		}
 	}
 
 	// region Redis API

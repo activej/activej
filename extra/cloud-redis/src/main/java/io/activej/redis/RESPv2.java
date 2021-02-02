@@ -73,6 +73,10 @@ public final class RESPv2 {
 		return head < tail;
 	}
 
+	public byte peek() {
+		return array[head];
+	}
+
 	public Object readObject() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
@@ -334,4 +338,5 @@ public final class RESPv2 {
 		}
 		throw new MalformedDataException();
 	}
+
 }

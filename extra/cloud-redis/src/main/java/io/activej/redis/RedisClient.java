@@ -51,6 +51,7 @@ public final class RedisClient {
 
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
+	private Duration autoFlushInterval = Duration.ZERO;
 
 	@Nullable
 	private SSLContext sslContext;
@@ -86,6 +87,11 @@ public final class RedisClient {
 		this.sslExecutor = sslExecutor;
 		return this;
 	}
+
+	public RedisClient withAutoFlushInterval(Duration autoFlushInterval) {
+		this.autoFlushInterval = autoFlushInterval;
+		return this;
+	}
 	// endregion
 
 	// region getters
@@ -114,7 +120,7 @@ public final class RedisClient {
 									address.getHostName(), address.getPort(),
 									sslContext, sslExecutor) :
 							socket;
-					RedisConnection connection = new RedisConnection(eventloop, this, socket);
+					RedisConnection connection = new RedisConnection(eventloop, this, socket, autoFlushInterval);
 					connection.start();
 					return connection;
 				})
