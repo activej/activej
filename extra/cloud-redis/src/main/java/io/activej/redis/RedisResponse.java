@@ -94,4 +94,12 @@ public abstract class RedisResponse<T> {
 		}
 	};
 
+	static final RedisResponse<Void> QUEUED = new RedisResponse<Void>() {
+		@Override
+		public Void parse(RESPv2 data) throws MalformedDataException {
+			data.readQueued();
+			return null;
+		}
+	};
+
 }

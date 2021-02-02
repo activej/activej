@@ -304,4 +304,34 @@ public final class RESPv2 {
 		}
 	}
 
+	void readQueued() throws MalformedDataException {
+		if (tail - head < 9) throw new BufferUnderflowException();
+
+		try {
+			if (ASSERT_PROTOCOL &&
+					(array[head] != STRING_MARKER ||
+							array[head + 1] != 'Q' ||
+							array[head + 2] != 'U' ||
+							array[head + 3] != 'E' ||
+							array[head + 4] != 'U' ||
+							array[head + 5] != 'E' ||
+							array[head + 6] != 'D' ||
+							array[head + 7] != CR || array[head + 8] != LF)) {
+				throw new MalformedDataException();
+			}
+			head += 9;
+		} catch (IndexOutOfBoundsException e) {
+			throw new BufferUnderflowException();
+		}
+	}
+
+	long readArraySize() throws MalformedDataException {
+		if (!canRead()) throw new BufferUnderflowException();
+
+		if (!ASSERT_PROTOCOL || array[head] == ARRAY_MARKER) {
+			head++;
+			return decodeLong();
+		}
+		throw new MalformedDataException();
+	}
 }

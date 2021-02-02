@@ -44,6 +44,7 @@ import static java.lang.Math.max;
 public final class RedisConnection extends AbstractAsyncCloseable {
 	private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
 	public static final boolean CHECK = Checks.isEnabled(RedisConnection.class);
+
 	static final int INITIAL_BUFFER_SIZE = ApplicationSettings.getInt(RedisConnection.class, "initialWriteBufferSize", 16384);
 
 	private final Eventloop eventloop;
@@ -52,7 +53,6 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	private ByteBuf readBuf = ByteBuf.empty();
 
 	private final AsyncTcpSocket socket;
-	private RESPv2 protocol;
 
 	private int writeBufSize = INITIAL_BUFFER_SIZE;
 	private ByteBuf writeBuf = ByteBufPool.allocate(writeBufSize);
@@ -69,7 +69,6 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		this.eventloop = eventloop;
 		this.client = client;
 		this.socket = socket;
-		this.protocol = new RESPv2(readBuf.array(), 0, 0);
 	}
 
 	public <T> Promise<T> cmd(RedisRequest request, RedisResponse<T> response) {
@@ -94,25 +93,22 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		return receive(response);
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({"unchecked"})
 	private <T> Promise<T> receive(RedisResponse<T> response) {
 		SettablePromise<T> promise = new SettablePromise<>();
 		if (transactionQueue == null) {
 			receiveQueue.add(response);
 			receiveQueue.add(promise);
 		} else {
-			Callback okCallback = new Callback() {
-				@Override
-				public void accept(Object result, @Nullable Throwable e) {
-					// TODO
+			receiveQueue.add(RedisResponse.QUEUED);
+			receiveQueue.add((Callback<Void>) (result, e) -> {
+				if (e != null) {
+					promise.setException(e);
 				}
-			};
-			SettablePromise<T> result = new SettablePromise<>();
-			receiveQueue.add(response);
-			receiveQueue.add(okCallback);
+			});
 
-			transactionQueue.add(response);
-			transactionQueue.add(promise);
+			this.transactionQueue.add(response);
+			this.transactionQueue.add(promise);
 		}
 
 		return promise;
@@ -156,7 +152,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 				.whenResult(buf -> {
 					if (buf != null) {
 						readBuf = ByteBufPool.append(readBuf, buf);
-						protocol = new RESPv2(readBuf.array(), readBuf.head(), readBuf.tail());
+						RESPv2 protocol = new RESPv2(readBuf.array(), readBuf.head(), readBuf.tail());
 
 						while (!receiveQueue.isEmpty() && readBuf.canRead()) {
 							RedisResponse<Object> response = (RedisResponse<Object>) receiveQueue.peek();
@@ -165,12 +161,12 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 									Object result = response.parse(protocol);
 									readBuf.head(protocol.head());
 									receiveQueue.poll();
-									((SettablePromise<Object>) receiveQueue.poll()).set(result);
+									((Callback<Object>) receiveQueue.poll()).accept(result, null);
 								} else {
 									ServerError error = (ServerError) protocol.readObject();
 									readBuf.head(protocol.head());
 									receiveQueue.poll();
-									((SettablePromise<Object>) receiveQueue.poll()).setException(error);
+									((Callback<Object>) receiveQueue.poll()).accept(null, error);
 								}
 							} catch (BufferUnderflowException e) {
 								break;
@@ -204,8 +200,9 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		readBuf = nullify(readBuf, ByteBuf::recycle);
 		while (!receiveQueue.isEmpty()) {
 			receiveQueue.poll();
-			((SettablePromise<Object>) receiveQueue.poll()).setException(e);
+			((Callback<Object>) receiveQueue.poll()).accept(null, e);
 		}
+		transactionQueue = nullify(transactionQueue, queue -> abortTransaction(queue, e));
 	}
 
 	private void closeIfDone() {
@@ -221,8 +218,9 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	public Promise<Void> multi() {
 		if (CHECK) checkState(!inTransaction(), "Nested MULTI call");
 		logger.trace("Transaction has been started");
+		Promise<Void> multiPromise = cmd(RedisRequest.of("MULTI"), RedisResponse.OK);
 		this.transactionQueue = new ArrayList();
-		return cmd(RedisRequest.of("MULTI"), RedisResponse.OK);
+		return multiPromise;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -246,23 +244,55 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		//noinspection rawtypes
 		ArrayList transactionQueue = this.transactionQueue;
 		this.transactionQueue = null;
-		return cmd(RedisRequest.of("EXEC"), new RedisResponse<Object[]>() {
-			@SuppressWarnings({"rawtypes", "unchecked"})
-			@Override
-			public Object[] parse(RESPv2 data) throws MalformedDataException {
-				int count = transactionQueue.size() / 2;
-				Object[] results = new Object[count];
-				for (int i = 0; i < count; i++) {
-					RedisResponse response = (RedisResponse) transactionQueue.get(i * 2);
-					results[i] = response.parse(data);
-				}
-				for (int i = 0; i < count; i++) {
-					SettablePromise promise = (SettablePromise) transactionQueue.get(i * 2 + 1);
-					promise.trySet(results[i]);
-				}
-				return results;
-			}
-		});
+		int count = transactionQueue.size() / 2;
+		return cmd(RedisRequest.of("EXEC"),
+				new RedisResponse<Object[]>() {
+					@SuppressWarnings({"rawtypes", "unchecked"})
+					@Override
+					public Object[] parse(RESPv2 data) throws MalformedDataException {
+						Object[] results = parseResponses(data);
+
+						if (results == null) return null;
+
+						for (int i = 0; i < count; i++) {
+							SettablePromise promise = (SettablePromise) transactionQueue.get(2 * i + 1);
+							Object result = results[i];
+							if (result instanceof ServerError) {
+								promise.trySetException((ServerError) result);
+							} else {
+								promise.set(result);
+							}
+						}
+						return results;
+					}
+
+					@Nullable
+					private Object[] parseResponses(RESPv2 data) throws MalformedDataException {
+						long len = data.readArraySize();
+						if (len == -1) return null;
+
+						if (len != count) throw new MalformedDataException();
+
+						Object[] results = new Object[count];
+
+						byte[] array = data.array();
+						for (int i = 0; i < count; i++) {
+							if (!data.canRead()) throw new BufferUnderflowException();
+							RedisResponse<?> response = (RedisResponse<?>) transactionQueue.get(2 * i);
+
+							if (array[data.head()] != RESPv2.ERROR_MARKER) {
+								results[i] = response.parse(data);
+							} else {
+								results[i] = data.readObject();
+							}
+						}
+						return results;
+					}
+				})
+				.then(results -> results == null ?
+						Promise.ofException(new TransactionFailedException()) :
+						Promise.of(results))
+				.whenException(e -> abortTransaction(transactionQueue, e));
 	}
 
 	public boolean inTransaction() {
@@ -272,11 +302,12 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 	// region connection
 	public Promise<Void> quit() {
-		// TODO
-//		transactionResult = null;
-//		while (completedTransactions++ != transactions) {
-//			abortTransaction(new QuitCalledException());
-//		}
+		if (transactionQueue != null) {
+			QuitCalledException e = new QuitCalledException();
+			ArrayList<?> transactionQueue = this.transactionQueue;
+			this.transactionQueue = null;
+			abortTransaction(transactionQueue, e);
+		}
 		return cmd(RedisRequest.of("QUIT"), RedisResponse.OK)
 				.then(this::sendEndOfStream)
 				.whenComplete(this::close);
@@ -284,12 +315,19 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	// endregion
 	// endregion
 
+	private void abortTransaction(ArrayList<?> transactionQueue, Throwable e) {
+		for (int i = 0; i < transactionQueue.size() / 2; i++) {
+			SettablePromise<?> promise = (SettablePromise<?>) transactionQueue.get(2 * i + 1);
+			promise.trySetException(e);
+		}
+	}
+
 	@Override
 	public String toString() {
 		return "RedisConnection{" +
 				"client=" + client +
-				", receiveQueue=" + receiveQueue.size() +
-				(transactionQueue != null ? (", transactionQueue=" + transactionQueue.size()) : "") +
+				", receiveQueue=" + receiveQueue.size() / 2 +
+				(transactionQueue != null ? (", transactionQueue=" + transactionQueue.size() / 2) : "") +
 				", closed=" + isClosed() +
 				'}';
 	}

@@ -97,7 +97,7 @@ public abstract class RedisRequest {
 		array[offset++] = LF;
 		for (int j = 0; j < str.length(); j++) {
 			char c = str.charAt(j);
-			if (CHECK && (c <= 0x20 || c >= 0x80)) throw new IllegalArgumentException();
+			if (CHECK && (c < 0x20 || c >= 0x80)) throw new IllegalArgumentException();
 			array[offset++] = (byte) c;
 		}
 		return offset;
