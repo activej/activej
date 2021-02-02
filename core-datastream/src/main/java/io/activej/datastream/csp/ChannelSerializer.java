@@ -36,15 +36,15 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.function.BiConsumer;
 
-import static io.activej.common.Checks.checkState;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullify;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.max;
 
 /**
  * An adapter that converts a {@link ChannelConsumer} of {@link ByteBuf ByteBufs} to a {@link StreamConsumer} of some type,
  * that is serialized into binary data using given {@link BinarySerializer}.
  */
+@SuppressWarnings("NullableProblems")
 public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implements WithStreamToChannel<ChannelSerializer<T>, T, ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelSerializer.class);
 	private static final boolean CHECK = Checks.isEnabled(ChannelSerializer.class);
@@ -64,7 +64,8 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	private final BinarySerializer<T> serializer;
 
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
-	private boolean explicitEndOfStream = false;
+	@Nullable
+	private byte[] explicitEndOfStream;
 
 	@Nullable
 	private Duration autoFlushInterval;
@@ -74,7 +75,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	private ChannelConsumer<ByteBuf> output;
 
 	private final ArrayDeque<ByteBuf> bufs = new ArrayDeque<>();
-	private boolean flushing;
+	private boolean sending;
 
 	// region creators
 	private ChannelSerializer(BinarySerializer<T> serializer) {
@@ -132,6 +133,10 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	}
 
 	public ChannelSerializer<T> withExplicitEndOfStream(boolean explicitEndOfStream) {
+		return withExplicitEndOfStream(explicitEndOfStream ? new byte[]{0} : null);
+	}
+
+	public ChannelSerializer<T> withExplicitEndOfStream(@Nullable byte[] explicitEndOfStream) {
 		this.explicitEndOfStream = explicitEndOfStream;
 		return this;
 	}
@@ -147,7 +152,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 
 	@Override
 	protected void onInit() {
-		input = new Input(serializer, initialBufferSize.toInt(), autoFlushInterval, serializationErrorHandler);
+		input = new Input(serializer, initialBufferSize.toInt(), serializationErrorHandler);
 	}
 
 	@Override
@@ -160,6 +165,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	@Override
 	protected void onEndOfStream() {
 		input.flush();
+		send();
 	}
 
 	@Override
@@ -174,38 +180,37 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 		input.buf = nullify(input.buf, ByteBuf::recycle);
 	}
 
-	private void doFlush() {
-		if (flushing) return;
+	private void send() {
+		if (sending) return;
 		if (!bufs.isEmpty()) {
-			flushing = true;
+			sending = true;
 			output.accept(bufs.poll())
 					.whenResult(() -> {
-						flushing = false;
-						doFlush();
+						sending = false;
+						send();
 					})
 					.whenException(this::closeEx);
+		} else if (isEndOfStream()) {
+			sending = true;
+			Promise.complete()
+					.then(() ->
+							explicitEndOfStream != null ?
+									output.accept(ByteBuf.wrapForReading(explicitEndOfStream)) :
+									Promise.complete())
+					.then(output::acceptEndOfStream)
+					.whenResult(this::acknowledge);
 		} else {
-			if (isEndOfStream()) {
-				flushing = true;
-				Promise.complete()
-						.then(() ->
-								explicitEndOfStream ?
-										output.accept(ByteBuf.wrapForReading(new byte[]{0})) :
-										Promise.complete())
-						.then(output::acceptEndOfStream)
-						.whenResult(this::acknowledge);
-			} else {
-				resume(input);
-			}
+			resume(input);
 		}
 	}
 
 	private final class Input implements StreamDataAcceptor<T> {
 		private final BinarySerializer<T> serializer;
 
-		private ByteBuf buf = ByteBuf.empty();
+		private ByteBuf buf = null;
 		private int estimatedDataSize;
 		private int estimatedHeaderSize;
+		private int requiredRemainingSize;
 
 		private final int initialBufferSize;
 
@@ -213,38 +218,36 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 		private boolean flushPosted;
 		private final BiConsumer<T, Throwable> serializationErrorHandler;
 
-		public Input(@NotNull BinarySerializer<T> serializer, int initialBufferSize, @Nullable Duration autoFlushInterval, BiConsumer<T, Throwable> serializationErrorHandler) {
-			this.serializationErrorHandler = serializationErrorHandler;
+		public Input(@NotNull BinarySerializer<T> serializer, int initialBufferSize, BiConsumer<T, Throwable> serializationErrorHandler) {
 			this.serializer = serializer;
-			this.estimatedDataSize = 1;
-			this.estimatedHeaderSize = 1;
 			this.initialBufferSize = initialBufferSize;
-			this.autoFlushIntervalMillis = autoFlushInterval == null ? -1 : (int) autoFlushInterval.toMillis();
+			this.autoFlushIntervalMillis = autoFlushInterval == null ? Integer.MAX_VALUE : (int) autoFlushInterval.toMillis();
+			this.serializationErrorHandler = serializationErrorHandler;
 		}
 
 		@Override
 		public void accept(T item) {
 			int positionBegin;
 			int positionData;
+			int positionEnd;
 			for (; ; ) {
-				if (buf.writeRemaining() < estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2)) {
+				if (buf == null || buf.writeRemaining() < requiredRemainingSize) {
 					onFullBuffer();
 				}
 				positionBegin = buf.tail();
 				positionData = positionBegin + estimatedHeaderSize;
-				buf.tail(positionData);
 				try {
-					buf.tail(serializer.encode(buf.array(), buf.tail(), item));
+					positionEnd = serializer.encode(buf.array(), positionData, item);
 				} catch (ArrayIndexOutOfBoundsException e) {
-					onUnderEstimate(positionBegin);
+					onUnderEstimate();
 					continue;
 				} catch (Exception e) {
-					onSerializationError(item, positionBegin, e);
+					onSerializationError(item, e);
 					return;
 				}
 				break;
 			}
-			int positionEnd = buf.tail();
+			buf.tail(positionEnd);
 			int dataSize = positionEnd - positionData;
 			if (dataSize > estimatedDataSize) {
 				estimateMore(positionBegin, positionData, dataSize);
@@ -253,13 +256,10 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 		}
 
 		private void estimateMore(int positionBegin, int positionData, int dataSize) {
-			if (CHECK) checkState(dataSize < MAX_SIZE_INT, "Serialized data size exceeds 256MB");
-
-			if (dataSize >= MAX_SIZE_INT) {
-				throw new IllegalStateException("Size of data exceeds 256MB");
-			}
+			if (CHECK) checkArgument(dataSize < MAX_SIZE_INT, "Serialized data size exceeds 256MB");
 			estimatedDataSize = dataSize;
 			estimatedHeaderSize = varIntSize(estimatedDataSize);
+			requiredRemainingSize = estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2);
 			ensureHeaderSize(positionBegin, positionData, dataSize);
 		}
 
@@ -290,7 +290,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 		}
 
 		private ByteBuf allocateBuffer() {
-			return ByteBufPool.allocate(max(initialBufferSize, estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2)));
+			return ByteBufPool.allocate(max(initialBufferSize, requiredRemainingSize));
 		}
 
 		private void ensureHeaderSize(int positionBegin, int positionData, int dataSize) {
@@ -324,15 +324,28 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 			}
 		}
 
-		private void onUnderEstimate(int positionBegin) {
-			buf.tail(positionBegin);
+		private void onUnderEstimate() {
 			int writeRemaining = buf.writeRemaining();
 			flush();
 			buf = ByteBufPool.allocate(max(initialBufferSize, writeRemaining + (writeRemaining >>> 1) + 1));
 		}
 
-		private void onSerializationError(T item, int positionBegin, Exception e) {
-			buf.tail(positionBegin);
+		private void postFlush() {
+			flushPosted = true;
+			if (autoFlushIntervalMillis <= 0) {
+				eventloop.postLast(() -> {
+					flushPosted = false;
+					flush();
+				});
+			} else if (autoFlushIntervalMillis < Integer.MAX_VALUE) {
+				eventloop.delayBackground(autoFlushIntervalMillis, () -> {
+					flushPosted = false;
+					flush();
+				});
+			}
+		}
+
+		private void onSerializationError(T item, Exception e) {
 			serializationErrorHandler.accept(item, e);
 		}
 
@@ -343,29 +356,11 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 					suspend();
 				}
 				bufs.add(buf);
-				estimatedDataSize -= estimatedDataSize >>> 8;
-				estimatedHeaderSize = varIntSize(estimatedDataSize);
+				buf = null;
+				send();
 			} else {
 				buf.recycle();
-			}
-			buf = ByteBuf.empty();
-			doFlush();
-		}
-
-		private void postFlush() {
-			flushPosted = true;
-			if (autoFlushIntervalMillis == -1)
-				return;
-			if (autoFlushIntervalMillis == 0) {
-				eventloop.postLast(wrapContext(this, () -> {
-					flushPosted = false;
-					flush();
-				}));
-			} else {
-				eventloop.delayBackground(autoFlushIntervalMillis, wrapContext(this, () -> {
-					flushPosted = false;
-					flush();
-				}));
+				buf = null;
 			}
 		}
 	}
