@@ -8,7 +8,6 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.nio.BufferUnderflowException;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
@@ -147,7 +146,7 @@ public final class RESPv2Test {
 				break;
 			} catch (MalformedDataException e) {
 				throw new AssertionError(e);
-			} catch (BufferUnderflowException e) {
+			} catch (NeedMoreDataException e) {
 				len++;
 			}
 		}

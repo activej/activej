@@ -19,11 +19,11 @@ package io.activej.redis;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.MalformedDataException;
 
-import java.nio.BufferUnderflowException;
 import java.nio.charset.Charset;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
+import static io.activej.redis.NeedMoreDataException.NEED_MORE_DATA;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 public final class RESPv2 {
@@ -74,7 +74,7 @@ public final class RESPv2 {
 	}
 
 	public Object readObject() throws MalformedDataException {
-		if (!canRead()) throw new BufferUnderflowException();
+		if (!canRead()) throw NEED_MORE_DATA;
 
 		switch (array[head++]) {
 			case STRING_MARKER:
@@ -93,7 +93,7 @@ public final class RESPv2 {
 	}
 
 	public void skipObject() throws MalformedDataException {
-		if (!canRead()) throw new BufferUnderflowException();
+		if (!canRead()) throw NEED_MORE_DATA;
 
 		switch (array[head++]) {
 			case STRING_MARKER:
@@ -117,7 +117,7 @@ public final class RESPv2 {
 	}
 
 	public String readString() throws MalformedDataException {
-		if (!canRead()) throw new BufferUnderflowException();
+		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == STRING_MARKER) {
 			head++;
@@ -137,7 +137,7 @@ public final class RESPv2 {
 				return string;
 			}
 		}
-		throw new BufferUnderflowException();
+		throw NEED_MORE_DATA;
 	}
 
 	private void skipString() throws MalformedDataException {
@@ -150,11 +150,11 @@ public final class RESPv2 {
 				return;
 			}
 		}
-		throw new BufferUnderflowException();
+		throw NEED_MORE_DATA;
 	}
 
 	public byte[] readBytes() throws MalformedDataException {
-		if (!canRead()) throw new BufferUnderflowException();
+		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == BYTES_MARKER) {
 			head++;
@@ -168,7 +168,7 @@ public final class RESPv2 {
 		if (length == -1) {
 			return null;
 		}
-		if (tail - head < length + 2) throw new BufferUnderflowException();
+		if (tail - head < length + 2) throw NEED_MORE_DATA;
 		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
 			throw new MalformedDataException();
 		}
@@ -179,7 +179,7 @@ public final class RESPv2 {
 	}
 
 	public String readBytes(Charset charset) throws MalformedDataException {
-		if (!canRead()) throw new BufferUnderflowException();
+		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == BYTES_MARKER) {
 			head++;
@@ -193,7 +193,7 @@ public final class RESPv2 {
 		if (length == -1) {
 			return null;
 		}
-		if (tail - head < length + 2) throw new BufferUnderflowException();
+		if (tail - head < length + 2) throw NEED_MORE_DATA;
 		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
 			throw new MalformedDataException();
 		}
@@ -207,7 +207,7 @@ public final class RESPv2 {
 		if (length == -1) {
 			return;
 		}
-		if (tail - head < length + 2) throw new BufferUnderflowException();
+		if (tail - head < length + 2) throw NEED_MORE_DATA;
 		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
 			throw new MalformedDataException();
 		}
@@ -215,7 +215,7 @@ public final class RESPv2 {
 	}
 
 	public Object[] parseObjectArray() throws MalformedDataException {
-		if (!canRead()) throw new BufferUnderflowException();
+		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == ARRAY_MARKER) {
 			head++;
@@ -243,7 +243,7 @@ public final class RESPv2 {
 	}
 
 	public long readLong() throws MalformedDataException {
-		if (!canRead()) throw new BufferUnderflowException();
+		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == LONG_MARKER) {
 			head++;
@@ -269,7 +269,7 @@ public final class RESPv2 {
 			if (ASSERT_PROTOCOL && (array[i] < '0' || array[i] > '9')) throw new MalformedDataException();
 			result = result * 10 + (array[i] - '0');
 		}
-		throw new BufferUnderflowException();
+		throw NEED_MORE_DATA;
 	}
 
 	private void skipLong() throws MalformedDataException {
@@ -285,11 +285,11 @@ public final class RESPv2 {
 			}
 			if (ASSERT_PROTOCOL && (array[i] < '0' || array[i] > '9')) throw new MalformedDataException();
 		}
-		throw new BufferUnderflowException();
+		throw NEED_MORE_DATA;
 	}
 
 	public void readOk() throws MalformedDataException {
-		if (tail - head < 5) throw new BufferUnderflowException();
+		if (tail - head < 5) throw NEED_MORE_DATA;
 
 		try {
 			if (ASSERT_PROTOCOL &&
@@ -300,12 +300,12 @@ public final class RESPv2 {
 			}
 			head += 5;
 		} catch (IndexOutOfBoundsException e) {
-			throw new BufferUnderflowException();
+			throw NEED_MORE_DATA;
 		}
 	}
 
 	void readQueued() throws MalformedDataException {
-		if (tail - head < 9) throw new BufferUnderflowException();
+		if (tail - head < 9) throw NEED_MORE_DATA;
 
 		try {
 			if (ASSERT_PROTOCOL &&
@@ -321,12 +321,12 @@ public final class RESPv2 {
 			}
 			head += 9;
 		} catch (IndexOutOfBoundsException e) {
-			throw new BufferUnderflowException();
+			throw NEED_MORE_DATA;
 		}
 	}
 
 	long readArraySize() throws MalformedDataException {
-		if (!canRead()) throw new BufferUnderflowException();
+		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == ARRAY_MARKER) {
 			head++;

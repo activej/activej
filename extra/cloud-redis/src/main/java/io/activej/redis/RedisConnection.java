@@ -33,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.BufferUnderflowException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 
@@ -80,7 +79,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 			try {
 				positionEnd = request.write(writeBuf.array(), positionBegin);
 				writeBuf.tail(positionEnd);
-			} catch (ArrayIndexOutOfBoundsException | BufferUnderflowException e) {
+			} catch (ArrayIndexOutOfBoundsException | NeedMoreDataException e) {
 				onUnderEstimate(positionBegin);
 				continue;
 			}
@@ -168,7 +167,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 									receiveQueue.poll();
 									((Callback<Object>) receiveQueue.poll()).accept(null, error);
 								}
-							} catch (BufferUnderflowException e) {
+							} catch (NeedMoreDataException e) {
 								break;
 							} catch (MalformedDataException e) {
 								closeEx(e);
@@ -277,7 +276,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 						byte[] array = data.array();
 						for (int i = 0; i < count; i++) {
-							if (!data.canRead()) throw new BufferUnderflowException();
+							if (!data.canRead()) throw NeedMoreDataException.NEED_MORE_DATA;
 							RedisResponse<?> response = (RedisResponse<?>) transactionQueue.get(2 * i);
 
 							if (array[data.head()] != RESPv2.ERROR_MARKER) {
