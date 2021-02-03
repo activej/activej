@@ -20,7 +20,12 @@ import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.MalformedDataException;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 import static io.activej.common.Checks.checkArgument;
+import static java.lang.Character.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * This class contains various fast string utilities for {@link ByteBuf ByteBufs} and byte arrays
@@ -241,18 +246,19 @@ public final class ByteBufStrings {
 		return pos - offset;
 	}
 
-	private static byte writeUtf8char4(byte[] buf, int pos, char c, String s, int i) {
+	private static byte writeUtf8char4(byte[] buf, int pos, char high, String s, int i) {
 		if (i + 1 < s.length()) {
-			int cp = Character.toCodePoint(c, s.charAt(i + 1));
-			if ((cp >= 1 << 16) && (cp < 1 << 21)) {
-				buf[pos + 1] = (byte) (240 | cp >>> 18);
-				buf[pos + 2] = (byte) (128 | cp >>> 12 & 63);
-				buf[pos + 3] = (byte) (128 | cp >>> 6 & 63);
-				buf[pos + 4] = (byte) (128 | cp & 63);
+			char low = s.charAt(i + 1);
+			int cp = toCodePoint(high, low);
+			if (cp >= 0x10000 && cp < 0x110000) {
+				buf[pos + 0] = (byte) (0b11110000 | cp >>> 18);
+				buf[pos + 1] = (byte) (0b10000000 | cp >>> 12 & 0b00111111);
+				buf[pos + 2] = (byte) (0b10000000 | cp >>> 6 & 0b00111111);
+				buf[pos + 3] = (byte) (0b10000000 | cp & 0b00111111);
 				return 4;
 			}
 		}
-		buf[pos + 1] = (byte) '?';
+		buf[pos] = (byte) '?';
 		return 1;
 	}
 
@@ -270,7 +276,7 @@ public final class ByteBufStrings {
 
 	public static String decodeUtf8(byte[] array, int pos, int len) throws MalformedDataException {
 		try {
-			return new String(array, pos, len);
+			return new String(array, pos, len, UTF_8);
 		} catch (Exception e) {
 			throw new MalformedDataException(e);
 		}

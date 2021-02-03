@@ -259,14 +259,15 @@ public final class BinaryOutputUtils {
 		return off + bytes;
 	}
 
-	private static byte writeUtf8char4(byte[] buf, int pos, char c, String s, int i) {
+	private static byte writeUtf8char4(byte[] buf, int pos, char high, String s, int i) {
 		if (i + 1 < s.length()) {
-			int cp = Character.toCodePoint(c, s.charAt(i + 1));
-			if ((cp >= 1 << 16) && (cp < 1 << 21)) {
-				buf[pos + 1] = (byte) (240 | cp >>> 18);
-				buf[pos + 2] = (byte) (128 | cp >>> 12 & 63);
-				buf[pos + 3] = (byte) (128 | cp >>> 6 & 63);
-				buf[pos + 4] = (byte) (128 | cp & 63);
+			char low = s.charAt(i + 1);
+			int cp = Character.toCodePoint(high, low);
+			if (cp >= 0x10000 && cp < 0x110000) {
+				buf[pos + 1] = (byte) (0b11110000 | cp >>> 18);
+				buf[pos + 2] = (byte) (0b10000000 | cp >>> 12 & 0b00111111);
+				buf[pos + 3] = (byte) (0b10000000 | cp >>> 6 & 0b00111111);
+				buf[pos + 4] = (byte) (0b10000000 | cp & 0b00111111);
 				return 4;
 			}
 		}
