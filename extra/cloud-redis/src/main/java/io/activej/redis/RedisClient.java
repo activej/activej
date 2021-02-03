@@ -43,7 +43,6 @@ public final class RedisClient {
 			RedisClient.class, "address", new InetSocketAddress("localhost", 6379)
 	);
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RedisClient.class, "connectTimeout", Duration.ZERO);
-	public static final Duration DEFAULT_POOL_TTL = ApplicationSettings.getDuration(RedisClient.class, "poolTTL", Duration.ZERO);
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 
 	private final Eventloop eventloop;

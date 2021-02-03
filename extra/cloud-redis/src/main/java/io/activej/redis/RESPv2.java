@@ -92,7 +92,7 @@ public final class RESPv2 {
 			case ARRAY_MARKER:
 				return decodeArray();
 			default:
-				throw new MalformedDataException();
+				throw new MalformedDataException("Unknown RESP data type: " + array[head - 1]);
 		}
 	}
 
@@ -116,7 +116,7 @@ public final class RESPv2 {
 				skipArray();
 				break;
 			default:
-				throw new MalformedDataException();
+				throw new MalformedDataException("Unknown RESP data type: " + array[head - 1]);
 		}
 	}
 
@@ -127,14 +127,14 @@ public final class RESPv2 {
 			head++;
 			return decodeString();
 		}
-		throw new MalformedDataException();
+		throw new MalformedDataException("Expected Simple String, got " + getDataType(array[head]));
 	}
 
 	public String decodeString() throws MalformedDataException {
 		for (int i = head; i < tail - 1; i++) {
 			if (array[i] == CR) {
 				if (ASSERT_PROTOCOL && array[i + 1] != LF) {
-					throw new MalformedDataException();
+					throw new MalformedDataException("\\n does not follow \\r");
 				}
 				String string = new String(array, head, i - head, ISO_8859_1);
 				head = i + 2;
@@ -148,7 +148,7 @@ public final class RESPv2 {
 		for (int i = head; i < tail - 1; i++) {
 			if (array[i] == CR) {
 				if (ASSERT_PROTOCOL && array[i + 1] != LF) {
-					throw new MalformedDataException();
+					throw new MalformedDataException("\\n does not follow \\r");
 				}
 				head = i + 2;
 				return;
@@ -164,7 +164,7 @@ public final class RESPv2 {
 			head++;
 			return decodeBytes();
 		}
-		throw new MalformedDataException();
+		throw new MalformedDataException("Expected Bulk String, got " + getDataType(array[head]));
 	}
 
 	public byte[] decodeBytes() throws MalformedDataException {
@@ -174,7 +174,7 @@ public final class RESPv2 {
 		}
 		if (tail - head < length + 2) throw NEED_MORE_DATA;
 		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
-			throw new MalformedDataException();
+			throw new MalformedDataException("Bulk String does not end with \\r\\n");
 		}
 		byte[] result = new byte[length];
 		System.arraycopy(array, head, result, 0, length);
@@ -189,7 +189,7 @@ public final class RESPv2 {
 			head++;
 			return decodeBytes(charset);
 		}
-		throw new MalformedDataException();
+		throw new MalformedDataException("Expected Bulk String, got " + getDataType(array[head]));
 	}
 
 	public String decodeBytes(Charset charset) throws MalformedDataException {
@@ -199,7 +199,7 @@ public final class RESPv2 {
 		}
 		if (tail - head < length + 2) throw NEED_MORE_DATA;
 		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
-			throw new MalformedDataException();
+			throw new MalformedDataException("Bulk String does not end with \\r\\n");
 		}
 		String result = new String(array, head, length, charset);
 		head += length + 2;
@@ -213,7 +213,7 @@ public final class RESPv2 {
 		}
 		if (tail - head < length + 2) throw NEED_MORE_DATA;
 		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
-			throw new MalformedDataException();
+			throw new MalformedDataException("Bulk String does not end with \\r\\n");
 		}
 		head += length + 2;
 	}
@@ -225,7 +225,7 @@ public final class RESPv2 {
 			head++;
 			return decodeArray();
 		}
-		throw new MalformedDataException();
+		throw new MalformedDataException("Expected Array, got " + getDataType(array[head]));
 	}
 
 	public Object[] decodeArray() throws MalformedDataException {
@@ -253,7 +253,7 @@ public final class RESPv2 {
 			head++;
 			return decodeLong();
 		}
-		throw new MalformedDataException();
+		throw new MalformedDataException("Expected Integer, got " + getDataType(array[head]));
 	}
 
 	public long decodeLong() throws MalformedDataException {
@@ -266,11 +266,15 @@ public final class RESPv2 {
 		long result = 0;
 		for (; i < tail - 1; i++) {
 			if (array[i] == CR) {
-				if (ASSERT_PROTOCOL && array[i + 1] != LF) throw new MalformedDataException();
+				if (ASSERT_PROTOCOL && array[i + 1] != LF) {
+					throw new MalformedDataException("\\n does not follow \\r");
+				}
 				head = i + 2;
 				return (result ^ -negate) + negate;
 			}
-			if (ASSERT_PROTOCOL && (array[i] < '0' || array[i] > '9')) throw new MalformedDataException();
+			if (ASSERT_PROTOCOL && (array[i] < '0' || array[i] > '9')) {
+				throw new MalformedDataException("Malformed Integer: " + array[i]);
+			}
 			result = result * 10 + (array[i] - '0');
 		}
 		throw NEED_MORE_DATA;
@@ -283,11 +287,15 @@ public final class RESPv2 {
 		}
 		for (; i < tail - 1; i++) {
 			if (array[i] == CR) {
-				if (ASSERT_PROTOCOL && array[i + 1] != LF) throw new MalformedDataException();
+				if (ASSERT_PROTOCOL && array[i + 1] != LF) {
+					throw new MalformedDataException("\\n does not follow \\r");
+				}
 				head = i;
 				return;
 			}
-			if (ASSERT_PROTOCOL && (array[i] < '0' || array[i] > '9')) throw new MalformedDataException();
+			if (ASSERT_PROTOCOL && (array[i] < '0' || array[i] > '9')) {
+				throw new MalformedDataException("Malformed Integer: " + array[i]);
+			}
 		}
 		throw NEED_MORE_DATA;
 	}
@@ -300,7 +308,7 @@ public final class RESPv2 {
 					(array[head] != STRING_MARKER ||
 							array[head + 1] != 'O' || array[head + 2] != 'K' ||
 							array[head + 3] != CR || array[head + 4] != LF)) {
-				throw new MalformedDataException();
+				throw new MalformedDataException("Simple String 'OK' expected, got: " + new String(array, head, 5));
 			}
 			head += 5;
 		} catch (IndexOutOfBoundsException e) {
@@ -321,7 +329,7 @@ public final class RESPv2 {
 							array[head + 5] != 'E' ||
 							array[head + 6] != 'D' ||
 							array[head + 7] != CR || array[head + 8] != LF)) {
-				throw new MalformedDataException();
+				throw new MalformedDataException("Simple String 'QUEUED' expected, got: " + new String(array, head, 9));
 			}
 			head += 9;
 		} catch (IndexOutOfBoundsException e) {
@@ -336,7 +344,24 @@ public final class RESPv2 {
 			head++;
 			return decodeLong();
 		}
-		throw new MalformedDataException();
+		throw new MalformedDataException("Expected Array, got " + getDataType(array[head]));
+	}
+
+	private static String getDataType(byte firstByte) {
+		switch (firstByte) {
+			case STRING_MARKER:
+				return "Simple String";
+			case ERROR_MARKER:
+				return "Error";
+			case LONG_MARKER:
+				return "Integer";
+			case BYTES_MARKER:
+				return "Bulk String";
+			case ARRAY_MARKER:
+				return "Array";
+			default:
+				return String.format("Unknown first byte: 0x%02X", firstByte);
+		}
 	}
 
 }

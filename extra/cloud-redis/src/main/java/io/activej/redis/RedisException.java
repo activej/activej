@@ -22,8 +22,4 @@ public class RedisException extends Exception {
 	public RedisException(@NotNull String message) {
 		super(message);
 	}
-
-	public RedisException(@NotNull String message, @NotNull Throwable cause) {
-		super(message, cause);
-	}
 }

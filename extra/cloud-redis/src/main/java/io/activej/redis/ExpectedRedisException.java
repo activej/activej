@@ -22,8 +22,4 @@ public class ExpectedRedisException extends RedisException {
 	public ExpectedRedisException(@NotNull String message) {
 		super(message);
 	}
-
-	public ExpectedRedisException(@NotNull String message, @NotNull Throwable cause) {
-		super(message, cause);
-	}
 }

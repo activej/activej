@@ -306,7 +306,8 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 						long len = data.readArraySize();
 						if (len == -1) return null;
 
-						if (len != count) throw new MalformedDataException();
+						if (len != count) throw new MalformedDataException(
+								"Sent " + count + " requests in a transaction, got responses for " + len);
 
 						Object[] results = new Object[count];
 
