@@ -101,25 +101,25 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 				DnsQueryCacheResult cacheResult = cache.tryToResolve(query);
 				if (cacheResult != null) {
 					if (cacheResult.doesNeedRefreshing() && !refreshingNow.add(query)) {
-						eventloop.execute(wrapContext(this, () -> refresh(query)));
+						eventloop.execute(() -> refresh(query));
 					}
 					return cacheResult.getResponseAsPromise();
 				}
 
 				anotherEventloop.startExternalTask(); // keep other eventloop alive while we wait for an answer in main one
 				return Promise.ofCallback(cb ->
-						eventloop.execute(wrapContext(CachedAsyncDnsClient.this, () ->
+						eventloop.execute(() ->
 								CachedAsyncDnsClient.this.resolve(query)
 										.whenComplete((result, e) -> {
 											anotherEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
 											anotherEventloop.completeExternalTask();
-										}))));
+										})));
 			}
 
 			@Override
 			public void close() {
 				if (CHECK) checkState(anotherEventloop.inEventloopThread());
-				eventloop.execute(wrapContext(CachedAsyncDnsClient.this, CachedAsyncDnsClient.this::close));
+				eventloop.execute(CachedAsyncDnsClient.this::close);
 			}
 		};
 	}

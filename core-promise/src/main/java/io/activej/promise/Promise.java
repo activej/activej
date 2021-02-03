@@ -197,7 +197,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
 			try {
-				executor.execute(wrapContext(cb, () -> {
+				executor.execute(() -> {
 					try {
 						T value = future.get();
 						eventloop.execute(wrapContext(cb, () -> cb.set(value)));
@@ -210,7 +210,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					} finally {
 						eventloop.completeExternalTask();
 					}
-				}));
+				});
 			} catch (RejectedExecutionException e) {
 				eventloop.completeExternalTask();
 				cb.setException(e);
@@ -237,7 +237,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
 			try {
-				executor.execute(wrapContext(cb, () -> {
+				executor.execute(() -> {
 					try {
 						T result = callable.call();
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
@@ -252,7 +252,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					} finally {
 						eventloop.completeExternalTask();
 					}
-				}));
+				});
 			} catch (RejectedExecutionException e) {
 				eventloop.completeExternalTask();
 				cb.setException(e);
@@ -275,7 +275,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
 			try {
-				executor.execute(wrapContext(cb, () -> {
+				executor.execute(() -> {
 					try {
 						runnable.run();
 						eventloop.execute(wrapContext(cb, () -> cb.set(null)));
@@ -290,7 +290,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					} finally {
 						eventloop.completeExternalTask();
 					}
-				}));
+				});
 			} catch (RejectedExecutionException e) {
 				eventloop.completeExternalTask();
 				cb.setException(e);

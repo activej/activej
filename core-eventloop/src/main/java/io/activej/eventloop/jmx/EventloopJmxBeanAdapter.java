@@ -72,7 +72,7 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 			List<JmxRefreshable> list = new ArrayList<>();
 			list.add(refreshStats);
 			eventloopToJmxRefreshables.put(eventloop, list);
-			eventloop.execute(wrapContext(this, () -> refresh(eventloop, list, 0, refreshStats)));
+			eventloop.execute(() -> refresh(eventloop, list, 0, refreshStats));
 		}
 
 		Set<JmxRefreshable> beanRefreshablesFiltered = new HashSet<>();
@@ -135,7 +135,7 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 		refreshStats.recordValue(refreshTime);
 
 		long nextTimestamp = currentTime + computeEffectiveRefreshPeriod(list.size());
-		eventloop.scheduleBackground(nextTimestamp, wrapContext(this, () -> refresh(eventloop, list, endIndex, refreshStats)));
+		eventloop.scheduleBackground(nextTimestamp, () -> refresh(eventloop, list, endIndex, refreshStats));
 	}
 
 	private long computeEffectiveRefreshPeriod(int totalCount) {

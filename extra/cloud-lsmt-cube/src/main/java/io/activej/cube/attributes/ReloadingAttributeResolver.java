@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.common.Utils.nullify;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A> implements EventloopService, EventloopJmxBean {
 	protected final Eventloop eventloop;
@@ -84,7 +83,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	}
 
 	private void scheduleReload(long period) {
-		scheduledRunnable = eventloop.delayBackground(period, wrapContext(this, this::doReload));
+		scheduledRunnable = eventloop.delayBackground(period, this::doReload);
 	}
 
 	@NotNull

@@ -22,8 +22,6 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-
 /**
  * A stub client which forwards requests straight to the underlying servlet without any real I/O operations.
  * Used for testing.
@@ -57,7 +55,7 @@ public final class StubHttpClient implements IAsyncHttpClient {
 							.withEndOfStream(eos -> eos
 									.whenComplete(() -> eventloop.post(res::recycle))));
 				} else {
-					eventloop.post(wrapContext(res, res::recycle));
+					eventloop.post(res::recycle);
 				}
 				return Promise.of(res);
 			} else {

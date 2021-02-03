@@ -145,7 +145,7 @@ public final class Promises {
 	public static <T> Promise<T> delay(long delayMillis, @NotNull Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentEventloop().delay(delayMillis, wrapContext(promise, () -> promise.whenComplete(cb))));
+				getCurrentEventloop().delay(delayMillis, wrapContext(cb, () -> promise.whenComplete(cb))));
 	}
 
 	@Contract(pure = true)
@@ -159,7 +159,7 @@ public final class Promises {
 	public static <T> Promise<T> interval(long intervalMillis, @NotNull Promise<T> promise) {
 		return intervalMillis <= 0 ?
 				promise :
-				promise.then(value -> Promise.ofCallback(cb -> getCurrentEventloop().delay(intervalMillis, wrapContext(promise, () -> cb.set(value)))));
+				promise.then(value -> Promise.ofCallback(cb -> getCurrentEventloop().delay(intervalMillis, wrapContext(cb, () -> cb.set(value)))));
 	}
 
 	/**
@@ -218,7 +218,7 @@ public final class Promises {
 	@NotNull
 	public static <T> Promise<T> schedule(@NotNull Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentEventloop().schedule(timestamp, wrapContext(promise, () -> promise.whenComplete(cb))));
+				getCurrentEventloop().schedule(timestamp, wrapContext(cb, () -> promise.whenComplete(cb))));
 	}
 
 	/**

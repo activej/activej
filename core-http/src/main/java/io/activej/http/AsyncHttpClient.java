@@ -58,9 +58,8 @@ import java.util.concurrent.Executor;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.jmx.MBeanFormat.formatListAsMultilineString;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-import static io.activej.http.Protocol.*;
 import static io.activej.http.HttpUtils.translateToHttpException;
+import static io.activej.http.Protocol.*;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -350,7 +349,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 	private void scheduleExpiredConnectionsCheck() {
 		assert expiredConnectionsCheck == null;
-		expiredConnectionsCheck = eventloop.delayBackground(1000L, wrapContext(this, () -> {
+		expiredConnectionsCheck = eventloop.delayBackground(1000L, () -> {
 			expiredConnectionsCheck = null;
 			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(eventloop.currentTimeMillis() - keepAliveTimeoutMillis);
 			boolean isClosing = closePromise != null;
@@ -364,7 +363,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 					logger.info("...Waiting for {}", this);
 				}
 			}
-		}));
+		});
 	}
 
 	@Nullable

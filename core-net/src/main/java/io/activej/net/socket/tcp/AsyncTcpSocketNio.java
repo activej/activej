@@ -50,7 +50,6 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.MemSize.kilobytes;
 import static io.activej.common.Utils.nullify;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 @SuppressWarnings("WeakerAccess")
 public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventHandler {
@@ -310,20 +309,20 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	// timeouts management
 	private void scheduleReadTimeout() {
 		assert scheduledReadTimeout == null && readTimeout != NO_TIMEOUT;
-		scheduledReadTimeout = eventloop.delayBackground(readTimeout, wrapContext(this, () -> {
+		scheduledReadTimeout = eventloop.delayBackground(readTimeout, () -> {
 			if (inspector != null) inspector.onReadTimeout(this);
 			scheduledReadTimeout = null;
 			closeEx(new AsyncTimeoutException("Timed out"));
-		}));
+		});
 	}
 
 	private void scheduleWriteTimeout() {
 		assert scheduledWriteTimeout == null && writeTimeout != NO_TIMEOUT;
-		scheduledWriteTimeout = eventloop.delayBackground(writeTimeout, wrapContext(this, () -> {
+		scheduledWriteTimeout = eventloop.delayBackground(writeTimeout, () -> {
 			if (inspector != null) inspector.onWriteTimeout(this);
 			scheduledWriteTimeout = null;
 			closeEx(new AsyncTimeoutException("Timed out"));
-		}));
+		});
 	}
 
 	private void updateInterests() {
