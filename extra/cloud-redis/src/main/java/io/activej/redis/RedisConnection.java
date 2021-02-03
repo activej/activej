@@ -166,7 +166,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		if (writeBuf == null) return;
 		if (writeBuf.canRead()) {
 			socket.write(writeBuf)
-					.whenException(this::closeEx);
+					.whenException(e -> closeEx(new RedisException("Failed to write data", e)));
 		} else {
 			writeBuf.recycle();
 		}
@@ -179,7 +179,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 					writeDone = true;
 					closeIfDone();
 				})
-				.whenException(this::closeEx);
+				.whenException(e -> closeEx(new RedisException("Failed to send end of stream", e)));
 	}
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
@@ -208,7 +208,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 							} catch (NeedMoreDataException e) {
 								break;
 							} catch (MalformedDataException e) {
-								closeEx(e);
+								closeEx(new RedisException(e));
 								return;
 							}
 						}
@@ -225,7 +225,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 						closeIfDone();
 					}
 				})
-				.whenException(this::closeEx);
+				.whenException(e -> closeEx(new RedisException("Failed to read data", e)));
 	}
 
 	private void closeIfDone() {
