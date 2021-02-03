@@ -404,7 +404,13 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	 *
 	 * @param <I>     request class
 	 * @param <O>     response class
-	 * @param request request for server
+	 * @param request request to a server
+	 * @param timeout timeout in milliseconds. If there is no answer from the server after the timeout passes,
+	 *                the request will end exceptionally with {@link AsyncTimeoutException}.
+	 *                Note, that setting a timeout schedules a task to the {@link Eventloop}, so a lot of
+	 *                requests with large timeouts may degrade performance. In the most common scenarios
+	 *                timeouts for RPC requests should not be very big (a few seconds should be enough)
+	 * @param cb      a callback that will be completed after receiving a response or encountering some error
 	 */
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
