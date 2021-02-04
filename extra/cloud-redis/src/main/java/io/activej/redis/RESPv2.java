@@ -201,9 +201,19 @@ public final class RESPv2 {
 	}
 
 	/**
-	 * Decodes a Redis Simple String
+	 * Reads a Redis Error
 	 */
-	public String decodeString() throws MalformedDataException {
+	public ServerError readError() throws MalformedDataException {
+		if (!canRead()) throw NEED_MORE_DATA;
+
+		if (!ASSERT_PROTOCOL || array[head] == ERROR_MARKER) {
+			head++;
+			return new ServerError(decodeString());
+		}
+		throw new MalformedDataException("Expected Simple String, got " + getDataType(array[head]));
+	}
+
+	private String decodeString() throws MalformedDataException {
 		for (int i = head; i < tail - 1; i++) {
 			if (array[i] == CR) {
 				if (ASSERT_PROTOCOL && array[i + 1] != LF) {
@@ -244,11 +254,8 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Bulk String, got " + getDataType(array[head]));
 	}
 
-	/**
-	 * Decodes a Redis Bulk String as an array of bytes
-	 */
 	@Nullable
-	public byte[] decodeBytes() throws MalformedDataException {
+	private byte[] decodeBytes() throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) {
 			return null;
@@ -278,12 +285,8 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Bulk String, got " + getDataType(array[head]));
 	}
 
-	/**
-	 * Decodes a Redis Bulk String as a {@link String} of a provided charset
-	 * @param charset charset for encoding a string
-	 */
 	@Nullable
-	public String decodeBytes(Charset charset) throws MalformedDataException {
+	private String decodeBytes(Charset charset) throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) {
 			return null;
@@ -333,20 +336,7 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Array, got " + getDataType(array[head]));
 	}
 
-	/**
-	 * Decodes a Redis Array
-	 * <p>
-	 * Array may contain any of:
-	 * <ul>
-	 *     <li><b>{@code String}</b> - Redis Simple String</li>
-	 *     <li><b>{@code Long}</b> - Redis Integer</li>
-	 *     <li><b>{@code byte[]}</b> - Redis Bulk String</li>
-	 *     <li><b>{@code ServerError}</b> - Redis Error</li>
-	 *     <li><b>{@code null}</b> - Redis Nil</li>
-	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
-	 * </ul>
-	 */
-	public Object[] decodeArray() throws MalformedDataException {
+	private Object[] decodeArray() throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) return null;
 		Object[] result = new Object[length];
@@ -377,10 +367,7 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Integer, got " + getDataType(array[head]));
 	}
 
-	/**
-	 * Decodes a Redis Integer as Long
-	 */
-	public long decodeLong() throws MalformedDataException {
+	private long decodeLong() throws MalformedDataException {
 		int i = head;
 		long negate = 0;
 		if (i != tail && array[i] == '-') {

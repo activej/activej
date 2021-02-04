@@ -198,6 +198,16 @@ public abstract class RedisResponse<T> {
 		}
 	};
 
+	/**
+	 * Parses a Redis Error
+	 */
+	public static final RedisResponse<ServerError> ERROR = new RedisResponse<ServerError>() {
+		@Override
+		public ServerError parse(RESPv2 data) throws MalformedDataException {
+			return data.readError();
+		}
+	};
+
 	static final RedisResponse<Void> QUEUED = new RedisResponse<Void>() {
 		@Override
 		public Void parse(RESPv2 data) throws MalformedDataException {

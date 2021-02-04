@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.redis.RedisResponse.ERROR;
 import static io.activej.redis.TestUtils.assertDeepEquals;
 import static org.junit.Assert.*;
 
@@ -51,20 +52,11 @@ public final class RESPv2Test {
 		test(Long.MAX_VALUE, RedisResponse.LONG);
 	}
 
-	private static final RedisResponse<ServerError> ERROR_PARSER = new RedisResponse<ServerError>() {
-		@Override
-		public ServerError parse(RESPv2 data) throws MalformedDataException {
-			if (data.array()[0] != RESPv2.ERROR_MARKER) throw new MalformedDataException();
-			data.head(data.head() + 1);
-			return new ServerError(data.decodeString());
-		}
-	};
-
 	@Test
 	public void error() {
-		test(new ServerError(""), ERROR_PARSER);
-		test(new ServerError("ERROR"), ERROR_PARSER);
-		test(new ServerError("ERROR : something went wrong"), ERROR_PARSER);
+		test(new ServerError(""), ERROR);
+		test(new ServerError("ERROR"), ERROR);
+		test(new ServerError("ERROR : something went wrong"), ERROR);
 	}
 
 	@Test
