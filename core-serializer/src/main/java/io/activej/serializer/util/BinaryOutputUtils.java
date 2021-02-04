@@ -16,6 +16,9 @@
 
 package io.activej.serializer.util;
 
+import static java.lang.Character.isHighSurrogate;
+import static java.lang.Character.isLowSurrogate;
+
 /**
  * Provides methods for writing primitives
  * and Strings to byte arrays
@@ -206,7 +209,9 @@ public final class BinaryOutputUtils {
 					buf[pos + 3] = (byte) (0x80 | c & 0x3F);
 					pos += 3;
 				} else {
-					pos += writeUtf8char4(buf, pos, c, s, i++);
+					byte inc = writeUtf8char4(buf, pos, c, s, i);
+					pos += inc;
+					i += inc >>> 2;
 				}
 			}
 		}
@@ -243,7 +248,9 @@ public final class BinaryOutputUtils {
 					buf[pos + 3] = (byte) (0x80 | c & 0x3F);
 					pos += 3;
 				} else {
-					pos += writeUtf8char4(buf, pos, c, s, i++);
+					byte inc = writeUtf8char4(buf, pos, c, s, i);
+					pos += inc;
+					i += inc >> 2;
 				}
 			}
 		}
@@ -260,15 +267,17 @@ public final class BinaryOutputUtils {
 	}
 
 	private static byte writeUtf8char4(byte[] buf, int pos, char high, String s, int i) {
-		if (i + 1 < s.length()) {
+		if (isHighSurrogate(high) && i + 1 < s.length()) {
 			char low = s.charAt(i + 1);
-			int cp = Character.toCodePoint(high, low);
-			if (cp >= 0x10000 && cp < 0x110000) {
-				buf[pos + 1] = (byte) (0b11110000 | cp >>> 18);
-				buf[pos + 2] = (byte) (0b10000000 | cp >>> 12 & 0b00111111);
-				buf[pos + 3] = (byte) (0b10000000 | cp >>> 6 & 0b00111111);
-				buf[pos + 4] = (byte) (0b10000000 | cp & 0b00111111);
-				return 4;
+			if (isLowSurrogate(low)) {
+				int cp = Character.toCodePoint(high, low);
+				if (cp >= 0x10000 && cp <= 0x10FFFF) {
+					buf[pos + 1] = (byte) (0b11110000 | cp >>> 18);
+					buf[pos + 2] = (byte) (0b10000000 | cp >>> 12 & 0b00111111);
+					buf[pos + 3] = (byte) (0b10000000 | cp >>> 6 & 0b00111111);
+					buf[pos + 4] = (byte) (0b10000000 | cp & 0b00111111);
+					return 4;
+				}
 			}
 		}
 		buf[pos + 1] = (byte) '?';

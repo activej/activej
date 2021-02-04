@@ -16,12 +16,10 @@
 
 package io.activej.bytebuf;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.MalformedDataException;
-
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Character.*;
@@ -32,6 +30,19 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public final class ByteBufStrings {
 	private static final boolean CHECK = Checks.isEnabled(ByteBufStrings.class);
+
+	public static final char REPLACEMENT_CHAR;
+
+	static {
+		String replacementStr = ApplicationSettings.getString(ByteBufStrings.class, "replacementChar", "�");
+		if (replacementStr.length() > 1) {
+			throw new IllegalArgumentException(replacementStr);
+		}
+		REPLACEMENT_CHAR = replacementStr.isEmpty() ? 0 : replacementStr.charAt(0);
+		if (!(REPLACEMENT_CHAR < '\uD800' || REPLACEMENT_CHAR > '\uDFFF')) {
+			throw new IllegalArgumentException(replacementStr);
+		}
+	}
 
 	public static final byte CR = (byte) '\r';
 	public static final byte LF = (byte) '\n';
@@ -238,7 +249,9 @@ public final class ByteBufStrings {
 					array[pos + 2] = (byte) (0x80 | c & 0x3F);
 					pos += 3;
 				} else {
-					pos += writeUtf8char4(array, pos, c, string, i++);
+					byte inc = writeUtf8char4(array, pos, c, string, i);
+					pos += inc;
+					i += inc >>> 2;
 				}
 			}
 
@@ -247,19 +260,34 @@ public final class ByteBufStrings {
 	}
 
 	private static byte writeUtf8char4(byte[] buf, int pos, char high, String s, int i) {
-		if (i + 1 < s.length()) {
+		if (isHighSurrogate(high) && i + 1 < s.length()) {
 			char low = s.charAt(i + 1);
-			int cp = toCodePoint(high, low);
-			if (cp >= 0x10000 && cp < 0x110000) {
-				buf[pos + 0] = (byte) (0b11110000 | cp >>> 18);
-				buf[pos + 1] = (byte) (0b10000000 | cp >>> 12 & 0b00111111);
-				buf[pos + 2] = (byte) (0b10000000 | cp >>> 6 & 0b00111111);
-				buf[pos + 3] = (byte) (0b10000000 | cp & 0b00111111);
-				return 4;
+			if (isLowSurrogate(low)) {
+				int cp = toCodePoint(high, low);
+				if (cp >= 0x10000 && cp <= 0x10FFFF) {
+					buf[pos + 0] = (byte) (0b11110000 | cp >>> 18);
+					buf[pos + 1] = (byte) (0b10000000 | cp >>> 12 & 0b00111111);
+					buf[pos + 2] = (byte) (0b10000000 | cp >>> 6 & 0b00111111);
+					buf[pos + 3] = (byte) (0b10000000 | cp & 0b00111111);
+					return 4;
+				}
 			}
 		}
-		buf[pos] = (byte) '?';
-		return 1;
+		if (REPLACEMENT_CHAR == 0) return 0;
+		if (REPLACEMENT_CHAR <= '\u007F') {
+			buf[pos] = (byte) REPLACEMENT_CHAR;
+			return 1;
+		}
+		if (REPLACEMENT_CHAR <= '\u07FF') {
+			buf[pos] = (byte) (0xC0 | REPLACEMENT_CHAR >>> 6);
+			buf[pos + 1] = (byte) (0x80 | REPLACEMENT_CHAR & 0x3F);
+			return 2;
+		} else {
+			buf[pos] = (byte) (0xE0 | REPLACEMENT_CHAR >>> 12);
+			buf[pos + 1] = (byte) (0x80 | REPLACEMENT_CHAR >> 6 & 0x3F);
+			buf[pos + 2] = (byte) (0x80 | REPLACEMENT_CHAR & 0x3F);
+			return 3;
+		}
 	}
 
 	public static void putUtf8(ByteBuf buf, String string) {

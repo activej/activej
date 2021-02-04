@@ -1,14 +1,13 @@
 package io.activej.bytebuf;
 
 import io.activej.common.exception.MalformedDataException;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class CharsetEncodersTest {
@@ -20,10 +19,10 @@ public class CharsetEncodersTest {
 		assertEquals(SMILES2, SMILES1);
 		assertEncode(SMILES2, SMILES1);
 		assertEncode("Миру - мир!", "Миру - мир!");
-//		assertEncode("\uD83D ", "? ");
-//		assertEncode("BEGIN \uDE35 END", "BEGIN ? END");
-		assertEncode("BEGIN \uD83D", "BEGIN ?");
-		assertEncode("BEGIN \uDE35", "BEGIN ?");
+		assertReplacement("\uD83D ", "� ");
+		assertReplacement("BEGIN \uDE35 END", "BEGIN � END");
+		assertReplacement("BEGIN \uD83D", "BEGIN �");
+		assertReplacement("BEGIN \uDE35", "BEGIN �");
 	}
 
 	private static void assertEncode(String s, String expected) throws MalformedDataException {
@@ -42,6 +41,12 @@ public class CharsetEncodersTest {
 
 		decodedJava = decodeJava(encoded);
 		assertEquals(expected, decodedJava);
+	}
+
+	private static void assertReplacement(String s, String expected) throws MalformedDataException {
+		byte[] encoded = encode(s);
+		String decoded = decode(encoded);
+		assertEquals(expected, decoded);
 	}
 
 	private static byte[] encodeJava(String s) {
