@@ -16,6 +16,9 @@
 
 package io.activej.redis;
 
+/**
+ * This exception is thrown once a transaction has been discarded by calling {@link RedisConnection#discard()}
+ */
 public final class TransactionDiscardedException extends RedisTransactionException {
 	public TransactionDiscardedException() {
 		super("Transaction has been discarded");

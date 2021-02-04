@@ -17,13 +17,41 @@
 package io.activej.redis;
 
 import io.activej.common.exception.MalformedDataException;
+import org.jetbrains.annotations.Nullable;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+/**
+ * This class defines how a Redis response should be parsed.
+ * There are some predefined common constant {@code RedisResponse}s for Redis data types.
+ * A user can extend this class to provide a more specialized response parser and a more
+ * complex in terms of a given Redis command/response.
+ *
+ * @param <T> result of parsing a Redis response
+ */
 public abstract class RedisResponse<T> {
-	public abstract T parse(RESPv2 data) throws MalformedDataException;
 
+	/**
+	 * Parses a response data into result of some type
+	 *
+	 * @param data Redis response buffer
+	 * @return result of parsing a Redis response
+	 * @throws MalformedDataException if the response is malformed
+	 *                                (either server is misbehaving or parser is incorrect)
+	 * @throws NeedMoreDataException  when there is not enough bytes in {@code data} to parse
+	 *                                a Redis response
+	 */
+	public abstract T parse(RESPv2 data) throws MalformedDataException, NeedMoreDataException;
+
+	/**
+	 * Allows mapping a {@code RedisResponse} of some type to a {@code RedisResponse}
+	 * of some other type.
+	 *
+	 * @param fn  mapping function
+	 * @param <V> resulting type
+	 * @return a mapped {@code RedisResponse}
+	 */
 	public <V> RedisResponse<V> map(Mapping<T, V> fn) {
 		return new RedisResponse<V>() {
 			@Override
@@ -34,10 +62,18 @@ public abstract class RedisResponse<T> {
 		};
 	}
 
+	/**
+	 * Mapping interface that may throw {@link MalformedDataException}
+	 * @param <T> the type of the input
+	 * @param <R> the type of the output
+	 */
 	public interface Mapping<T, R> {
 		R map(T value) throws MalformedDataException;
 	}
 
+	/**
+	 * Skips a received Redis response
+	 */
 	public static final RedisResponse<Void> SKIP = new RedisResponse<Void>() {
 		@Override
 		public Void parse(RESPv2 data) throws MalformedDataException {
@@ -46,13 +82,30 @@ public abstract class RedisResponse<T> {
 		}
 	};
 
-	public static final RedisResponse<Object> OBJECT = new RedisResponse<Object>() {
+	/**
+	 * Parses an arbitrary Redis response.
+	 * <p>
+	 * May return either of:
+	 * <ul>
+	 *     <li><b>{@code String}</b> - Redis Simple String</li>
+	 *     <li><b>{@code Long}</b> - Redis Integer</li>
+	 *     <li><b>{@code byte[]}</b> - Redis Bulk String</li>
+	 *     <li><b>{@code ServerError}</b> - Redis Error</li>
+	 *     <li><b>{@code null}</b> - Redis Nil</li>
+	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
+	 * </ul>
+	 */
+	public static final RedisResponse<@Nullable Object> OBJECT = new RedisResponse<Object>() {
 		@Override
+		@Nullable
 		public Object parse(RESPv2 data) throws MalformedDataException {
 			return data.readObject();
 		}
 	};
 
+	/**
+	 * Parses a Redis Simple String
+	 */
 	public static final RedisResponse<String> STRING = new RedisResponse<String>() {
 		@Override
 		public String parse(RESPv2 data) throws MalformedDataException {
@@ -60,20 +113,31 @@ public abstract class RedisResponse<T> {
 		}
 	};
 
-	public static final RedisResponse<byte[]> BYTES = new RedisResponse<byte[]>() {
+	/**
+	 * Parses a Redis Bulk String as an array of bytes (may parse {@code null} indicating Redis Nil)
+	 */
+	public static final RedisResponse<@Nullable byte[]> BYTES = new RedisResponse<byte[]>() {
 		@Override
+		@Nullable
 		public byte[] parse(RESPv2 data) throws MalformedDataException {
 			return data.readBytes();
 		}
 	};
 
-	public static final RedisResponse<String> BYTES_UTF8 = new RedisResponse<String>() {
+	/**
+	 * Parses a Redis Bulk String as an UTF-8 string (may parse {@code null} indicating Redis Nil)
+	 */
+	public static final RedisResponse<@Nullable String> BYTES_UTF8 = new RedisResponse<String>() {
 		@Override
+		@Nullable
 		public String parse(RESPv2 data) throws MalformedDataException {
 			return data.readBytes(UTF_8);
 		}
 	};
 
+	/**
+	 * Parses a Redis Bulk String as an ISO 8859-1 string (may parse {@code null} indicating Redis Nil)
+	 */
 	public static final RedisResponse<String> BYTES_ISO_8859_1 = new RedisResponse<String>() {
 		@Override
 		public String parse(RESPv2 data) throws MalformedDataException {
@@ -81,6 +145,9 @@ public abstract class RedisResponse<T> {
 		}
 	};
 
+	/**
+	 * Parses a Redis Integer as {@code Long}
+	 */
 	public static final RedisResponse<Long> LONG = new RedisResponse<Long>() {
 		@Override
 		public Long parse(RESPv2 data) throws MalformedDataException {
@@ -88,6 +155,10 @@ public abstract class RedisResponse<T> {
 		}
 	};
 
+	/**
+	 * Parses a Redis Integer as {@code Boolean}. Redis Integer {@code 0} means {@code false},
+	 * any other Redis Integer is interpreted as {@code true}
+	 */
 	public static final RedisResponse<Boolean> BOOLEAN = new RedisResponse<Boolean>() {
 		@Override
 		public Boolean parse(RESPv2 data) throws MalformedDataException {
@@ -95,13 +166,30 @@ public abstract class RedisResponse<T> {
 		}
 	};
 
-	public static final RedisResponse<Object[]> ARRAY = new RedisResponse<Object[]>() {
+	/**
+	 * Parses a Redis Array (may parse {@code null} indicating Redis Nil)
+	 * <p>
+	 * Array may contain any of:
+	 * <ul>
+	 *     <li><b>{@code String}</b> - Redis Simple String</li>
+	 *     <li><b>{@code Long}</b> - Redis Integer</li>
+	 *     <li><b>{@code byte[]}</b> - Redis Bulk String</li>
+	 *     <li><b>{@code ServerError}</b> - Redis Error</li>
+	 *     <li><b>{@code null}</b> - Redis Nil</li>
+	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
+	 * </ul>
+	 */
+	public static final RedisResponse<@Nullable Object[]> ARRAY = new RedisResponse<Object[]>() {
 		@Override
+		@Nullable
 		public Object[] parse(RESPv2 data) throws MalformedDataException {
-			return data.parseObjectArray();
+			return data.readObjectArray();
 		}
 	};
 
+	/**
+	 * Parses a Redis Simple String 'OK'
+	 */
 	public static final RedisResponse<Void> OK = new RedisResponse<Void>() {
 		@Override
 		public Void parse(RESPv2 data) throws MalformedDataException {

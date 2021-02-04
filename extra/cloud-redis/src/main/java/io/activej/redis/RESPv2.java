@@ -18,6 +18,7 @@ package io.activej.redis;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.MalformedDataException;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.Charset;
 
@@ -26,7 +27,16 @@ import static io.activej.bytebuf.ByteBufStrings.LF;
 import static io.activej.redis.NeedMoreDataException.NEED_MORE_DATA;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
+/**
+ * A Redis response buffer that holds a byte array of received responses from the server.
+ * Contains several helpful methods for parsing Redis responses.
+ */
 public final class RESPv2 {
+	/**
+	 * This setting controls whether responses received from a server should be validated.
+	 * By default, a server is considered to be trusted, so the setting is turned <b>OFF</b>
+	 * for a minor performance boost
+	 */
 	public static final boolean ASSERT_PROTOCOL = ApplicationSettings.getBoolean(RESPv2.class, "assertProtocol", false);
 
 	public static final byte STRING_MARKER = '+';
@@ -39,44 +49,98 @@ public final class RESPv2 {
 	private int head;
 	private final int tail;
 
-	public RESPv2(byte[] array, int head, int tail) {
+	RESPv2(byte[] array, int head, int tail) {
 		this.array = array;
 		this.head = head;
 		this.tail = tail;
 	}
 
+	/**
+	 * Returns an underlying byte array that contains raw responses from a server
+	 *
+	 * @return underlying array
+	 */
 	public byte[] array() {
 		return array;
 	}
 
+	/**
+	 * Returns a current {@code head} position of the buffer
+	 *
+	 * @return head position
+	 */
 	public int head() {
 		return head;
 	}
 
+	/**
+	 * Sets a current {@code head} position to the new position
+	 *
+	 * @param head new head position
+	 */
 	public void head(int head) {
 		this.head = head;
 	}
 
+	/**
+	 * Change a current {@code head} position by some delta
+	 *
+	 * @param delta amount by which head will be changed
+	 */
 	public void moveHead(int delta) {
 		this.head += delta;
 	}
 
+	/**
+	 * Returns a current {@code tail} position of the buffer
+	 *
+	 * @return tail position
+	 */
 	public int tail() {
 		return tail;
 	}
 
+	/**
+	 * Returns a remaining amount of unread bytes in the buffer
+	 *
+	 * @return amount of unread bytes
+	 */
 	public int readRemaining() {
 		return head - tail;
 	}
 
+	/**
+	 * Indicates whether there are any unread bytes in the buffer
+	 *
+	 * @return whether there are bytes to be read from the buffer
+	 */
 	public boolean canRead() {
 		return head < tail;
 	}
 
+	/**
+	 * Returns the next byte in the buffer without changing a position of head
+	 *
+	 * @return next byte in the buffer
+	 */
 	public byte peek() {
 		return array[head];
 	}
 
+	/**
+	 * Reads an arbitrary Object from the buffer.
+	 * <p>
+	 * May return either of:
+	 * <ul>
+	 *     <li><b>{@code String}</b> - Redis Simple String</li>
+	 *     <li><b>{@code Long}</b> - Redis Integer</li>
+	 *     <li><b>{@code byte[]}</b> - Redis Bulk String</li>
+	 *     <li><b>{@code ServerError}</b> - Redis Error</li>
+	 *     <li><b>{@code null}</b> - Redis Nil</li>
+	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
+	 * </ul>
+	 */
+	@Nullable
 	public Object readObject() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
@@ -96,6 +160,9 @@ public final class RESPv2 {
 		}
 	}
 
+	/**
+	 * Skips the next Redis object found in the buffer
+	 */
 	public void skipObject() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
@@ -120,6 +187,9 @@ public final class RESPv2 {
 		}
 	}
 
+	/**
+	 * Reads a Redis Simple String
+	 */
 	public String readString() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
@@ -130,6 +200,9 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Simple String, got " + getDataType(array[head]));
 	}
 
+	/**
+	 * Decodes a Redis Simple String
+	 */
 	public String decodeString() throws MalformedDataException {
 		for (int i = head; i < tail - 1; i++) {
 			if (array[i] == CR) {
@@ -157,6 +230,10 @@ public final class RESPv2 {
 		throw NEED_MORE_DATA;
 	}
 
+	/**
+	 * Reads a Redis Bulk String as an array of bytes
+	 */
+	@Nullable
 	public byte[] readBytes() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
@@ -167,6 +244,10 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Bulk String, got " + getDataType(array[head]));
 	}
 
+	/**
+	 * Decodes a Redis Bulk String as an array of bytes
+	 */
+	@Nullable
 	public byte[] decodeBytes() throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) {
@@ -182,6 +263,11 @@ public final class RESPv2 {
 		return result;
 	}
 
+	/**
+	 * Reads a Redis Bulk String as a {@link String} of a provided charset
+	 * @param charset charset for encoding a string
+	 */
+	@Nullable
 	public String readBytes(Charset charset) throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
@@ -192,6 +278,11 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Bulk String, got " + getDataType(array[head]));
 	}
 
+	/**
+	 * Decodes a Redis Bulk String as a {@link String} of a provided charset
+	 * @param charset charset for encoding a string
+	 */
+	@Nullable
 	public String decodeBytes(Charset charset) throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) {
@@ -218,7 +309,21 @@ public final class RESPv2 {
 		head += length + 2;
 	}
 
-	public Object[] parseObjectArray() throws MalformedDataException {
+	/**
+	 * Reads a Redis Array
+	 * <p>
+	 * Array may contain any of:
+	 * <ul>
+	 *     <li><b>{@code String}</b> - Redis Simple String</li>
+	 *     <li><b>{@code Long}</b> - Redis Integer</li>
+	 *     <li><b>{@code byte[]}</b> - Redis Bulk String</li>
+	 *     <li><b>{@code ServerError}</b> - Redis Error</li>
+	 *     <li><b>{@code null}</b> - Redis Nil</li>
+	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
+	 * </ul>
+	 */
+	@Nullable
+	public Object[] readObjectArray() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == ARRAY_MARKER) {
@@ -228,6 +333,19 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Array, got " + getDataType(array[head]));
 	}
 
+	/**
+	 * Decodes a Redis Array
+	 * <p>
+	 * Array may contain any of:
+	 * <ul>
+	 *     <li><b>{@code String}</b> - Redis Simple String</li>
+	 *     <li><b>{@code Long}</b> - Redis Integer</li>
+	 *     <li><b>{@code byte[]}</b> - Redis Bulk String</li>
+	 *     <li><b>{@code ServerError}</b> - Redis Error</li>
+	 *     <li><b>{@code null}</b> - Redis Nil</li>
+	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
+	 * </ul>
+	 */
 	public Object[] decodeArray() throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) return null;
@@ -246,6 +364,9 @@ public final class RESPv2 {
 		}
 	}
 
+	/**
+	 * Reads a Redis Integer as Long
+	 */
 	public long readLong() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
@@ -256,6 +377,9 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Integer, got " + getDataType(array[head]));
 	}
 
+	/**
+	 * Decodes a Redis Integer as Long
+	 */
 	public long decodeLong() throws MalformedDataException {
 		int i = head;
 		long negate = 0;
@@ -300,6 +424,9 @@ public final class RESPv2 {
 		throw NEED_MORE_DATA;
 	}
 
+	/**
+	 * Reads a Redis Simple String 'OK'
+	 */
 	public void readOk() throws MalformedDataException {
 		if (tail - head < 5) throw NEED_MORE_DATA;
 

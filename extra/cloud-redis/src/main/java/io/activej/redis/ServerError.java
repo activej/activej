@@ -19,6 +19,9 @@ package io.activej.redis;
 import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * This exception represents errors that are returned by a Redis server
+ */
 public final class ServerError extends ExpectedRedisException {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(ServerError.class, "withStackTrace", false);
 

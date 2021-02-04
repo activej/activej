@@ -16,6 +16,9 @@
 
 package io.activej.redis;
 
+/**
+ * This exception is thrown once a {@link RedisConnection#quit()} has been called during an active transaction
+ */
 public final class QuitCalledException extends RedisTransactionException {
 	public QuitCalledException() {
 		super("'QUIT' has been called during transaction");

@@ -81,6 +81,18 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		read();
 	}
 
+	// region Redis API
+
+	/**
+	 * Basic method that is used for sending any Redis command and parsing response.
+	 * <p>
+	 * May be used as a basis for implementing predefined Redis commands
+	 *
+	 * @param request  a request to be sent to a Redis server
+	 * @param response an expected response parser
+	 * @param <T>      type of parsed response
+	 * @return promise of parsed response
+	 */
 	public <T> Promise<T> cmd(RedisRequest request, RedisResponse<T> response) {
 		if (isClosed()) return Promise.ofException(new CloseException());
 
@@ -105,6 +117,150 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		}
 		return receive(response);
 	}
+
+	// region transactions
+
+	/**
+	 * Begins a new Redis transaction
+	 *
+	 * @return a promise of {@link Void} indicating that transaction has started.
+	 * <b>Note, that it is not necessary to wait for this promise to resolve before issuing commands
+	 * that should be part of a transaction (e.g. pipelined)</b>
+	 * @throws IllegalStateException if another transaction is in progress
+	 * @see <a href="https://redis.io/commands/multi">MULTI</a>
+	 */
+	public Promise<Void> multi() {
+		if (CHECK) checkState(!inTransaction(), "Nested MULTI call");
+		logger.trace("Transaction has been started");
+		Promise<Void> multiPromise = cmd(RedisRequest.of("MULTI"), RedisResponse.OK);
+		this.transactionQueue = new ArrayList<>();
+		return multiPromise;
+	}
+
+	/**
+	 * Discards an active transaction. Any promise that waits for the result of the transaction
+	 * will be completed exceptionally with {@link TransactionDiscardedException}
+	 *
+	 * @return a promise of {@link Void} indicating that transaction has been discarded.
+	 * @throws IllegalStateException if there is no active transaction
+	 * @see <a href="https://redis.io/commands/discard">DISCARD</a>
+	 */
+	public Promise<Void> discard() {
+		if (CHECK) checkState(inTransaction(), "DISCARD without MULTI");
+		logger.trace("Transaction is being discarded");
+		ArrayList<?> transactionQueue = this.transactionQueue;
+		this.transactionQueue = null;
+		int count = transactionQueue.size() / 2;
+		if (count != 0) {
+			TransactionDiscardedException e = new TransactionDiscardedException();
+			for (int i = 0; i < count; i++) {
+				SettablePromise<?> promise = (SettablePromise<?>) transactionQueue.get(i * 2 + 1);
+				promise.trySetException(e);
+			}
+		}
+		return cmd(RedisRequest.of("DISCARD"), RedisResponse.OK);
+	}
+
+	/**
+	 * Executes all commands sent as part of an active transaction.
+	 * <p>
+	 * Once commands are executed and server sends a response, all of the promises waiting for
+	 * the result of the transaction will be completed with a corresponding result.
+	 * If there are watched keys that have changed during this transaction, all of the promises
+	 * waiting for the result of the transaction will be completed exceptionally
+	 * with {@link TransactionFailedException}.
+	 *
+	 * @return promise of an array containing all of the results of commands
+	 * issued during this transaction
+	 * @throws IllegalStateException if there is no active transaction
+	 * @see <a href="https://redis.io/commands/exec">EXEC</a>
+	 */
+	public Promise<Object[]> exec() {
+		if (CHECK) checkState(inTransaction(), "EXEC without MULTI");
+		logger.trace("Executing transaction");
+		//noinspection rawtypes
+		ArrayList transactionQueue = this.transactionQueue;
+		this.transactionQueue = null;
+		int count = transactionQueue.size() / 2;
+		return cmd(RedisRequest.of("EXEC"),
+				new RedisResponse<Object[]>() {
+					@SuppressWarnings({"rawtypes", "unchecked"})
+					@Override
+					public Object[] parse(RESPv2 data) throws MalformedDataException {
+						Object[] results = parseResponses(data);
+
+						if (results == null) return null;
+
+						for (int i = 0; i < count; i++) {
+							SettablePromise promise = (SettablePromise) transactionQueue.get(2 * i + 1);
+							Object result = results[i];
+							if (result instanceof ServerError) {
+								promise.trySetException((ServerError) result);
+							} else {
+								promise.set(result);
+							}
+						}
+						return results;
+					}
+
+					@Nullable
+					private Object[] parseResponses(RESPv2 data) throws MalformedDataException {
+						long len = data.readArraySize();
+						if (len == -1) return null;
+
+						if (len != count) throw new MalformedDataException(
+								"Sent " + count + " requests in a transaction, got responses for " + len);
+
+						Object[] results = new Object[count];
+
+						byte[] array = data.array();
+						for (int i = 0; i < count; i++) {
+							if (!data.canRead()) throw NeedMoreDataException.NEED_MORE_DATA;
+							RedisResponse<?> response = (RedisResponse<?>) transactionQueue.get(2 * i);
+
+							if (array[data.head()] != RESPv2.ERROR_MARKER) {
+								results[i] = response.parse(data);
+							} else {
+								results[i] = data.readObject();
+							}
+						}
+						return results;
+					}
+				})
+				.then(results -> results == null ?
+						Promise.ofException(new TransactionFailedException()) :
+						Promise.of(results))
+				.whenException(e -> abortTransaction(transactionQueue, e));
+	}
+
+	/**
+	 * Shows whether there is an active transaction in progress
+	 */
+	public boolean inTransaction() {
+		return transactionQueue != null;
+	}
+	// endregion
+
+	// region connection
+
+	/**
+	 * Gracefully ends current connection
+	 *
+	 * @return promise of {@link Void} indicating that connection has been closed
+	 */
+	public Promise<Void> quit() {
+		if (transactionQueue != null) {
+			QuitCalledException e = new QuitCalledException();
+			ArrayList<?> transactionQueue = this.transactionQueue;
+			this.transactionQueue = null;
+			abortTransaction(transactionQueue, e);
+		}
+		return cmd(RedisRequest.of("QUIT"), RedisResponse.OK)
+				.then(this::sendEndOfStream)
+				.whenComplete(this::close);
+	}
+	// endregion
+	// endregion
 
 	@SuppressWarnings({"unchecked"})
 	private <T> Promise<T> receive(RedisResponse<T> response) {
@@ -245,111 +401,6 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		}
 		transactionQueue = nullify(transactionQueue, queue -> abortTransaction(queue, e));
 	}
-
-	// region Redis API
-
-	// region transactions
-	@SuppressWarnings("rawtypes")
-	public Promise<Void> multi() {
-		if (CHECK) checkState(!inTransaction(), "Nested MULTI call");
-		logger.trace("Transaction has been started");
-		Promise<Void> multiPromise = cmd(RedisRequest.of("MULTI"), RedisResponse.OK);
-		this.transactionQueue = new ArrayList();
-		return multiPromise;
-	}
-
-	@SuppressWarnings("rawtypes")
-	public Promise<Void> discard() {
-		if (CHECK) checkState(inTransaction(), "DISCARD without MULTI");
-		logger.trace("Transaction is being discarded");
-		ArrayList transactionQueue = this.transactionQueue;
-		this.transactionQueue = null;
-		int count = transactionQueue.size() / 2;
-		TransactionDiscardedException e = new TransactionDiscardedException();
-		for (int i = 0; i < count; i++) {
-			SettablePromise promise = (SettablePromise) transactionQueue.get(i * 2 + 1);
-			promise.trySetException(e);
-		}
-		return cmd(RedisRequest.of("DISCARD"), RedisResponse.OK);
-	}
-
-	public Promise<Object[]> exec() {
-		if (CHECK) checkState(inTransaction(), "EXEC without MULTI");
-		logger.trace("Executing transaction");
-		//noinspection rawtypes
-		ArrayList transactionQueue = this.transactionQueue;
-		this.transactionQueue = null;
-		int count = transactionQueue.size() / 2;
-		return cmd(RedisRequest.of("EXEC"),
-				new RedisResponse<Object[]>() {
-					@SuppressWarnings({"rawtypes", "unchecked"})
-					@Override
-					public Object[] parse(RESPv2 data) throws MalformedDataException {
-						Object[] results = parseResponses(data);
-
-						if (results == null) return null;
-
-						for (int i = 0; i < count; i++) {
-							SettablePromise promise = (SettablePromise) transactionQueue.get(2 * i + 1);
-							Object result = results[i];
-							if (result instanceof ServerError) {
-								promise.trySetException((ServerError) result);
-							} else {
-								promise.set(result);
-							}
-						}
-						return results;
-					}
-
-					@Nullable
-					private Object[] parseResponses(RESPv2 data) throws MalformedDataException {
-						long len = data.readArraySize();
-						if (len == -1) return null;
-
-						if (len != count) throw new MalformedDataException(
-								"Sent " + count + " requests in a transaction, got responses for " + len);
-
-						Object[] results = new Object[count];
-
-						byte[] array = data.array();
-						for (int i = 0; i < count; i++) {
-							if (!data.canRead()) throw NeedMoreDataException.NEED_MORE_DATA;
-							RedisResponse<?> response = (RedisResponse<?>) transactionQueue.get(2 * i);
-
-							if (array[data.head()] != RESPv2.ERROR_MARKER) {
-								results[i] = response.parse(data);
-							} else {
-								results[i] = data.readObject();
-							}
-						}
-						return results;
-					}
-				})
-				.then(results -> results == null ?
-						Promise.ofException(new TransactionFailedException()) :
-						Promise.of(results))
-				.whenException(e -> abortTransaction(transactionQueue, e));
-	}
-
-	public boolean inTransaction() {
-		return transactionQueue != null;
-	}
-	// endregion
-
-	// region connection
-	public Promise<Void> quit() {
-		if (transactionQueue != null) {
-			QuitCalledException e = new QuitCalledException();
-			ArrayList<?> transactionQueue = this.transactionQueue;
-			this.transactionQueue = null;
-			abortTransaction(transactionQueue, e);
-		}
-		return cmd(RedisRequest.of("QUIT"), RedisResponse.OK)
-				.then(this::sendEndOfStream)
-				.whenComplete(this::close);
-	}
-	// endregion
-	// endregion
 
 	private void abortTransaction(ArrayList<?> transactionQueue, Throwable e) {
 		for (int i = 0; i < transactionQueue.size() / 2; i++) {

@@ -23,14 +23,37 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.redis.RESPv2.ARRAY_MARKER;
 import static io.activej.redis.RESPv2.BYTES_MARKER;
 
+/**
+ * Redis request that will be serialized and written to the server.
+ * There are some predefined static methods that can be used for building a request.
+ * A user can extend this class to provide a more specialized request and a more
+ * efficient way of writing request data to the buffer array.
+ */
 public abstract class RedisRequest {
 	public static final boolean CHECK = Checks.isEnabled(RedisRequest.class);
 
+	/**
+	 * Serializes this request and writes to the provided array.
+	 *
+	 * @param array  an array containing request data which will be sent to the Redis server
+	 * @param offset offset, starting from which a serialized request should be written to the array
+	 * @return a new offset after writing serialized request to the array
+	 * @throws ArrayIndexOutOfBoundsException thrown when there is not enough space in the provided array
+	 *                                        to hold a serialized request
+	 */
 	public abstract int write(byte[] array, int offset) throws ArrayIndexOutOfBoundsException;
 
+	/**
+	 * Creates a RedisRequest that contains a Redis command with no parameters.
+	 * <b>Only {@code String} or {@code byte[]} argument is supported</b>
+	 *
+	 * @param cmd Redis command to be serialized
+	 * @return RedisRequest of a Redis command with no parameters
+	 */
 	public static RedisRequest of(Object cmd) {
 		return new RedisRequest() {
 			@Override
@@ -40,6 +63,14 @@ public abstract class RedisRequest {
 		};
 	}
 
+	/**
+	 * Creates a RedisRequest that contains a Redis command with a single parameter.
+	 * <b>Only {@code String} or {@code byte[]} arguments are supported</b>
+	 *
+	 * @param cmd  Redis command to be serialized
+	 * @param arg1 a parameter to a Redis command
+	 * @return RedisRequest of a Redis command with a single parameter
+	 */
 	public static RedisRequest of(Object cmd, Object arg1) {
 		return new RedisRequest() {
 			@Override
@@ -49,7 +80,16 @@ public abstract class RedisRequest {
 		};
 	}
 
+	/**
+	 * Creates a RedisRequest that contains a Redis command with an arbitrary number of parameters.
+	 * <b>Array may hold only {@code String} or {@code byte[]} elements, may be mixed</b>
+	 *
+	 * @param args an array that contains Redis command and its parameters. <b>Cannot be empty.</b>
+	 * @return RedisRequest of a Redis command with an arbitrary number of parameters
+	 */
 	public static RedisRequest of(Object... args) {
+		if (CHECK) checkArgument(args.length != 0, "No Redis command is present");
+
 		return new RedisRequest() {
 			@Override
 			public int write(byte[] array, int offset) throws ArrayIndexOutOfBoundsException {
@@ -68,7 +108,16 @@ public abstract class RedisRequest {
 		};
 	}
 
+	/**
+	 * Creates a RedisRequest that contains a Redis command with an arbitrary number of parameters.
+	 * <b>List may hold only {@code String} or {@code byte[]} elements, may be mixed</b>
+	 *
+	 * @param args a list that contains Redis command and its parameters. <b>Cannot be empty</b>.
+	 * @return RedisRequest of a Redis command with an arbitrary number of parameters
+	 */
 	public static RedisRequest of(List<Object> args) {
+		if (CHECK) checkArgument(!args.isEmpty(), "No Redis command is present");
+
 		return new RedisRequest() {
 			@Override
 			public int write(byte[] array, int offset) throws ArrayIndexOutOfBoundsException {

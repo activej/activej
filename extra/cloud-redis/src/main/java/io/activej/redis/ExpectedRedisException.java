@@ -16,8 +16,18 @@
 
 package io.activej.redis;
 
+import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
+/**
+ * A base exception for any 'expected' Redis exceptions.
+ * <p>
+ * Expected exceptions are the ones returned from Redis server or caused by actions of a user.
+ * <p>
+ * Any other exception (e.g. {@link IOException}, {@link MalformedDataException} etc.) are wrapped into {@link RedisException}
+ */
 public class ExpectedRedisException extends RedisException {
 	public ExpectedRedisException(@NotNull String message) {
 		super(message);

@@ -36,6 +36,10 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 
+/**
+ * A client for Redis.
+ * Allows to connect to Redis server, supports SSL.
+ */
 public final class RedisClient {
 	private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
 
@@ -111,6 +115,10 @@ public final class RedisClient {
 	}
 	// endregion
 
+	/**
+	 * Creates a connection to Redis server.
+	 * @return promise of {@link RedisConnection}
+	 */
 	public Promise<RedisConnection> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.thenEx((AsyncTcpSocket socket, Throwable e) -> {

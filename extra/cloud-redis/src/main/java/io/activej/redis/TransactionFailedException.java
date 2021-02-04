@@ -16,6 +16,11 @@
 
 package io.activej.redis;
 
+/**
+ * This exception is thrown once a transaction has failed.
+ * <p>
+ * More specifically, a watched key has changed before transaction has ended.
+ */
 public final class TransactionFailedException extends RedisTransactionException {
 	public TransactionFailedException() {
 		super("Transaction has failed");
