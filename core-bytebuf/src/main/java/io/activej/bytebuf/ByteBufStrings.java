@@ -31,19 +31,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class ByteBufStrings {
 	private static final boolean CHECK = Checks.isEnabled(ByteBufStrings.class);
 
-	public static final char REPLACEMENT_CHAR;
-
-	static {
-		String replacementStr = ApplicationSettings.getString(ByteBufStrings.class, "replacementChar", "�");
-		if (replacementStr.length() > 1) {
-			throw new IllegalArgumentException(replacementStr);
-		}
-		REPLACEMENT_CHAR = replacementStr.isEmpty() ? 0 : replacementStr.charAt(0);
-		if (!(REPLACEMENT_CHAR < '\uD800' || REPLACEMENT_CHAR > '\uDFFF')) {
-			throw new IllegalArgumentException(replacementStr);
-		}
-	}
-
 	public static final byte CR = (byte) '\r';
 	public static final byte LF = (byte) '\n';
 	public static final byte SP = (byte) ' ';
@@ -273,21 +260,7 @@ public final class ByteBufStrings {
 				}
 			}
 		}
-		if (REPLACEMENT_CHAR == 0) return 0;
-		if (REPLACEMENT_CHAR <= '\u007F') {
-			buf[pos] = (byte) REPLACEMENT_CHAR;
-			return 1;
-		}
-		if (REPLACEMENT_CHAR <= '\u07FF') {
-			buf[pos] = (byte) (0xC0 | REPLACEMENT_CHAR >>> 6);
-			buf[pos + 1] = (byte) (0x80 | REPLACEMENT_CHAR & 0x3F);
-			return 2;
-		} else {
-			buf[pos] = (byte) (0xE0 | REPLACEMENT_CHAR >>> 12);
-			buf[pos + 1] = (byte) (0x80 | REPLACEMENT_CHAR >> 6 & 0x3F);
-			buf[pos + 2] = (byte) (0x80 | REPLACEMENT_CHAR & 0x3F);
-			return 3;
-		}
+		return 0;
 	}
 
 	public static void putUtf8(ByteBuf buf, String string) {
