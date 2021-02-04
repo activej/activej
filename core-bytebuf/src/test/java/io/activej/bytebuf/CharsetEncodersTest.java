@@ -19,8 +19,8 @@ public class CharsetEncodersTest {
 		assertEquals(SMILES2, SMILES1);
 		assertEncode(SMILES2, SMILES1);
 		assertEncode("Миру - мир!", "Миру - мир!");
-		assertReplacement("\uD83D ", " ");
-		assertReplacement("BEGIN \uDE35 END", "BEGIN  END");
+		assertReplacement("\uD83D ", "");
+		assertReplacement("BEGIN \uDE35 END", "BEGIN END");
 		assertReplacement("BEGIN \uD83D", "BEGIN ");
 		assertReplacement("BEGIN \uDE35", "BEGIN ");
 	}
