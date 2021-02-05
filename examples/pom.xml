@@ -42,6 +42,7 @@
     <module>cloud/fs</module>
     <module>cloud/rpc</module>
     <module>cloud/crdt</module>
+    <module>cloud/redis</module>
   </modules>
 
   <dependencies>
