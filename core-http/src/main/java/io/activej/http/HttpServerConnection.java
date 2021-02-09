@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
+import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.CloseException;
@@ -60,6 +61,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private static final boolean CHECK = Checks.isEnabled(HttpServerConnection.class);
 
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
+	private static final int INITIAL_WRITE_BUFFER_SIZE = ApplicationSettings.getMemSize(HttpServerConnection.class, "initialWriteBufferSize", MemSize.ZERO).toInt();
 
 	private static final int HEADERS_SLOTS = 256;
 	private static final int MAX_PROBINGS = 2;
@@ -136,9 +138,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void readMessage() throws MalformedHttpException {
-		int loopCount = 0;
 		do {
-			loopCount++;
 			/*
 				as per RFC 7230, section 3.3.3,
 				if no Content-Length header is set, server can assume that a length of a message is 0
@@ -151,7 +151,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		flags &= ~READING_MESSAGES;
 		if (writeBuf != null && writeBuf.canRead()) {
 			ByteBuf writeBuf = this.writeBuf;
-			this.writeBuf = loopCount > 1 ? ByteBufPool.allocate(writeBuf.readRemaining()) : null;
+			this.writeBuf = null;
 			writeBuf(writeBuf);
 		} else if (isBodyReceived() && isBodySent()) {
 			onHttpMessageComplete();
@@ -354,7 +354,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private void ensureWriteBuffer(int messageSize) {
 		if (writeBuf == null) {
-			writeBuf = ByteBufPool.allocate(messageSize);
+			writeBuf = ByteBufPool.allocate(Math.max(messageSize, INITIAL_WRITE_BUFFER_SIZE));
 		} else {
 			writeBuf = ByteBufPool.ensureWriteRemaining(writeBuf, messageSize);
 		}
