@@ -17,10 +17,10 @@
 package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.CloseException;
+import io.activej.common.recycle.Recyclers;
 import io.activej.common.time.Stopwatch;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.eventloop.Eventloop;
@@ -138,6 +138,8 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 			if (scheduledRunnable != null) {
 				scheduledRunnable.cancel();
 				cb.accept(result, e);
+			} else {
+				Recyclers.recycle(result);
 			}
 		}
 
@@ -146,11 +148,12 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 			scheduledRunnable = null;
 			Callback<?> expiredCb = activeRequests.remove(cookie);
 			if (expiredCb != null) {
+				assert expiredCb == this;
 				// jmx
 				connectionStats.getExpiredRequests().recordEvent();
 				rpcClient.getGeneralRequestsStats().getExpiredRequests().recordEvent();
 
-				expiredCb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
+				cb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 			}
 
 			if (serverClosing && activeRequests.size() == 0) {
