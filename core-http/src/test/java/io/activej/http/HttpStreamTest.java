@@ -144,8 +144,8 @@ public final class HttpStreamTest {
 
 		String responseMessage =
 				"HTTP/1.1 200 OK" + crlf +
-						"Content-Length: 4" + crlf +
-						"Connection: keep-alive" + crlf + crlf +
+						"Connection: keep-alive" + crlf +
+						"Content-Length: 4" + crlf + crlf +
 						"Test";
 
 		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(PORT))

@@ -379,9 +379,7 @@ public abstract class AbstractHttpConnection {
 			byte b = array[pos];
 			if (b == ':')
 				break;
-			if (b >= 'A' && b <= 'Z')
-				b += 'a' - 'A';
-			hashCode = 31 * hashCode + b;
+			hashCode = hashCode + (b | 0x20);
 			pos++;
 		}
 		if (pos == limit) throw new MalformedHttpException("Header name is absent");

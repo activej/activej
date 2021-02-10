@@ -22,23 +22,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 
-import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Utils.arraysEquals;
+import static io.activej.http.HttpUtils.hashCodeLowerCaseAscii;
 
 /**
  * This is a specialized token to be used in {@link CaseInsensitiveTokenMap} for media type header values.
  */
 public final class MediaType extends Token {
 	// All media type values, subtype values, and parameter names as defined are case-insensitive RFC2045 section 2
-	final byte[] bytes;
-	final int offset;
-	final int length;
-
 	MediaType(@NotNull byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
-		super(lowerCaseBytes, lowerCaseHashCode);
-		this.bytes = bytes;
-		this.offset = offset;
-		this.length = length;
+		super(bytes, offset, length, lowerCaseBytes, lowerCaseHashCode);
 	}
 
 	public static MediaType of(String mime) {

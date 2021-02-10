@@ -134,7 +134,7 @@ public final class ByteBufStrings {
 	public static boolean equalsLowerCaseAscii(byte[] lowerCasePattern, byte[] array, int offset, int size) {
 		if (lowerCasePattern.length != size)
 			return false;
-		for (int i = 0; i < lowerCasePattern.length; i++) {
+		for (int i = 0; i < size; i++) {
 			byte p = lowerCasePattern[i];
 			if (CHECK) checkArgument(p < 'A' || p > 'Z');
 			byte a = array[offset + i];
@@ -150,7 +150,7 @@ public final class ByteBufStrings {
 	public static boolean equalsUpperCaseAscii(byte[] upperCasePattern, byte[] array, int offset, int size) {
 		if (upperCasePattern.length != size)
 			return false;
-		for (int i = 0; i < upperCasePattern.length; i++) {
+		for (int i = 0; i < size; i++) {
 			byte p = upperCasePattern[i];
 			if (CHECK) checkArgument(p < 'a' || p > 'z');
 			byte a = array[offset + i];

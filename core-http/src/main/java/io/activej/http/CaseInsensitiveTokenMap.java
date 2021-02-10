@@ -21,8 +21,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Array;
 
-import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.http.HttpUtils.hashCodeLowerCaseAscii;
 
 /**
  * This is a case-insensitive token registry used as permanent header value cache.
@@ -30,10 +31,17 @@ import static io.activej.common.Checks.checkArgument;
  */
 public final class CaseInsensitiveTokenMap<T extends Token> {
 	public abstract static class Token {
+		protected final byte[] bytes;
+		protected final int offset;
+		protected final int length;
+
 		protected final byte[] lowerCaseBytes;
 		protected final int lowerCaseHashCode;
 
-		protected Token(@Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
+		protected Token(byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
+			this.bytes = bytes;
+			this.offset = offset;
+			this.length = length;
 			this.lowerCaseBytes = lowerCaseBytes;
 			this.lowerCaseHashCode = lowerCaseHashCode;
 		}
@@ -77,11 +85,9 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 		int lowerCaseHashCode = 1;
 		for (int i = 0; i < bytes.length; i++) {
 			byte b = bytes[i];
-			if (b >= 'A' && b <= 'Z') {
-				b += 'a' - 'A';
-			}
+			b |= 0x20;
 			lowerCaseBytes[i] = b;
-			lowerCaseHashCode = lowerCaseHashCode * 31 + b;
+			lowerCaseHashCode = lowerCaseHashCode + b;
 		}
 
 		return factory.create(bytes, 0, bytes.length, lowerCaseBytes, lowerCaseHashCode);
@@ -114,11 +120,43 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 			if (t == null) {
 				break;
 			}
-			if (t.lowerCaseHashCode == lowerCaseHashCode && equalsLowerCaseAscii(t.lowerCaseBytes, bytes, offset, length)) {
-				return t;
+			if (t.lowerCaseHashCode != lowerCaseHashCode) continue;
+			int i = 0;
+			for (; i < length; i++) {
+				if (bytes[offset + i] != t.bytes[i]) {
+					break;
+				}
 			}
+			if (i == length) return t;
+
+			if (slowPathEquals(bytes, offset, length, t, i)) return t;
 		}
 		return null;
+	}
+
+	private boolean slowPathEquals(byte[] bytes, int offset, int length, T t, int i) {
+		for (; i < length; i++) {
+			if (bytes[offset + i] != t.lowerCaseBytes[i]) {
+				return false;
+			}
+		}
+		if (i == length) return true;
+		return equalsLowerCaseAscii(t.lowerCaseBytes, i, bytes, offset, length);
+	}
+
+	private static boolean equalsLowerCaseAscii(byte[] lowerCasePattern, int patternOffset, byte[] array, int offset, int size) {
+		if (lowerCasePattern.length != size)
+			return false;
+		for (int i = patternOffset; i < size; i++) {
+			byte p = lowerCasePattern[i];
+			byte a = array[offset + i];
+
+			if (a != p) {
+				// 32 =='a' - 'A'
+				if (a < 'A' || a > 'Z' || p - a != 32) return false;
+			}
+		}
+		return true;
 	}
 
 	@FunctionalInterface

@@ -59,10 +59,7 @@ public final class ContentType {
 			int lowerCaseHashCode = 1;
 			while (pos < end && bytes[pos] != ';') {
 				byte b = bytes[pos];
-				if (b >= 'A' && b <= 'Z') {
-					b += 'a' - 'A';
-				}
-				lowerCaseHashCode = lowerCaseHashCode * 31 + b;
+				lowerCaseHashCode = lowerCaseHashCode + (b | 0x20);
 				pos++;
 			}
 			MediaType type = MediaTypes.of(bytes, start, pos - start, lowerCaseHashCode);

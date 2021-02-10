@@ -26,16 +26,9 @@ import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
  * This is a specialized token to be used in {@link CaseInsensitiveTokenMap} for header names.
  */
 public final class HttpHeader extends Token {
-	@NotNull
-	protected final byte[] bytes;
-	protected final int offset;
-	protected final int length;
 
 	HttpHeader(@NotNull byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
-		super(lowerCaseBytes, lowerCaseHashCode);
-		this.bytes = bytes;
-		this.offset = offset;
-		this.length = length;
+		super(bytes, offset, length, lowerCaseBytes, lowerCaseHashCode);
 	}
 
 	public int size() {

@@ -35,7 +35,7 @@ import static java.nio.charset.Charset.forName;
  * This is a specialized token to be used in {@link CaseInsensitiveTokenMap} for charset header values.
  */
 public final class HttpCharset extends Token {
-	private static final int SLOTS_NUMBER = ApplicationSettings.getInt(HttpCharset.class, "slotsNumber", 256);
+	private static final int SLOTS_NUMBER = ApplicationSettings.getInt(HttpCharset.class, "slotsNumber", 512);
 	private static final int MAX_PROBINGS = ApplicationSettings.getInt(HttpCharset.class, "maxProbings", 2);
 
 	private static final CaseInsensitiveTokenMap<HttpCharset> charsets = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, MAX_PROBINGS, HttpCharset.class, HttpCharset::new);
@@ -45,18 +45,12 @@ public final class HttpCharset extends Token {
 	public static final HttpCharset US_ASCII = register("us-ascii", StandardCharsets.US_ASCII);
 	public static final HttpCharset LATIN_1 = register("iso-8859-1", StandardCharsets.ISO_8859_1);
 
-	// maximum of 40 characters, us-ascii, see rfc2978,
-	// http://www.iana.org/assignments/character-sets/character-sets.txt
-	private final byte[] bytes;
-	private final int offset;
-	private final int length;
 	private Charset javaCharset;
 
+	// maximum of 40 characters, us-ascii, see rfc2978,
+	// http://www.iana.org/assignments/character-sets/character-sets.txt
 	private HttpCharset(byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
-		super(lowerCaseBytes, lowerCaseHashCode);
-		this.bytes = bytes;
-		this.offset = offset;
-		this.length = length;
+		super(bytes, offset, length, lowerCaseBytes, lowerCaseHashCode);
 	}
 
 	public static HttpCharset register(String charsetName, Charset charset){

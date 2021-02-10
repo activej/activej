@@ -6,7 +6,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.bytebuf.ByteBufStrings.asAscii;
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.http.HttpUtils.decodeQ;
 import static io.activej.http.MediaTypes.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -17,7 +18,7 @@ public class ContentTypeTest {
 	@Test
 	public void testMediaType() {
 		byte[] mediaType = encodeAscii("application/json");
-		int hash = hashCodeLowerCaseAscii(mediaType);
+		int hash = HttpUtils.hashCodeLowerCaseAscii(mediaType);
 		MediaType actual = MediaTypes.of(mediaType, 0, mediaType.length, hash);
 		assertSame(JSON, actual);
 	}

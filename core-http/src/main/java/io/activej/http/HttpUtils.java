@@ -23,7 +23,6 @@ import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLDecoder;
@@ -481,5 +480,17 @@ public final class HttpUtils {
 			throw new MalformedHttpException("Malformed utf-8 input");
 		}
 		return to;
+	}
+
+	static int hashCodeLowerCaseAscii(byte[] array, int offset, int size) {
+		int result = 1;
+		for (int i = offset; i < offset + size; i++) {
+			result = result + (array[i] | 0x20);
+		}
+		return result;
+	}
+
+	static int hashCodeLowerCaseAscii(byte[] array) {
+		return hashCodeLowerCaseAscii(array, 0, array.length);
 	}
 }
