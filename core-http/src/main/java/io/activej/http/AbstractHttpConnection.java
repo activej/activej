@@ -98,6 +98,8 @@ public abstract class AbstractHttpConnection {
 	@Nullable
 	private Object userData;
 
+	private byte[] startLineBuffer;
+
 	protected final ReadConsumer readMessageConsumer = new ReadConsumer() {
 		@Override
 		public void thenRun() throws MalformedHttpException {
@@ -223,6 +225,7 @@ public abstract class AbstractHttpConnection {
 		onClosed();
 		socket.close();
 		readBufs.recycle();
+		startLineBuffer = null;
 	}
 
 	protected final void closeWithError(@NotNull Throwable e) {
@@ -249,13 +252,9 @@ public abstract class AbstractHttpConnection {
 						onStartLine(buf.array(), size);
 						readBufs.skip(size);
 					} else {
-						ByteBuf line = ByteBufPool.allocate(max(10, size)); // allocate at least 16 bytes
-						readBufs.drainTo(line, size);
-						try {
-							onStartLine(line.array(), size);
-						} finally {
-							line.recycle();
-						}
+						ensureStartLineBuffer(max(10, size));
+						readBufs.drainTo(startLineBuffer, 0, size);
+						onStartLine(startLineBuffer, size);
 					}
 					readHeaders();
 					return;
@@ -266,6 +265,13 @@ public abstract class AbstractHttpConnection {
 		if (readBufs.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
 			throw new MalformedHttpException("Header line exceeds max header size");
 		socket.read().whenComplete(readMessageConsumer);
+	}
+
+	private void ensureStartLineBuffer(int size) {
+		if (startLineBuffer != null && startLineBuffer.length >= size) {
+			return;
+		}
+		startLineBuffer = new byte[size];
 	}
 
 	private void readHeaders() throws MalformedHttpException {
