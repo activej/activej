@@ -23,7 +23,7 @@ import java.lang.reflect.Array;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.http.HttpUtils.hashCodeLowerCaseAscii;
+import static io.activej.http.HttpUtils.hashCodeCI;
 
 /**
  * This is a case-insensitive token registry used as permanent header value cache.
@@ -31,23 +31,22 @@ import static io.activej.http.HttpUtils.hashCodeLowerCaseAscii;
  */
 public final class CaseInsensitiveTokenMap<T extends Token> {
 	public abstract static class Token {
+		protected final int hashCodeCI;
 		protected final byte[] bytes;
 		protected final int offset;
 		protected final int length;
+		protected final @Nullable byte[] lowerCase;
 
-		protected final byte[] lowerCaseBytes;
-		protected final int lowerCaseHashCode;
-
-		protected Token(byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
+		protected Token(int hashCodeCI, byte[] bytes, int offset, int length, @Nullable byte[] lowerCase) {
+			this.hashCodeCI = hashCodeCI;
 			this.bytes = bytes;
 			this.offset = offset;
 			this.length = length;
-			this.lowerCaseBytes = lowerCaseBytes;
-			this.lowerCaseHashCode = lowerCaseHashCode;
+			this.lowerCase = lowerCase;
 		}
 	}
 
-	protected final T[] TOKENS;
+	protected final T[] tokens;
 	protected final int maxProbings;
 	private final TokenFactory<T> factory;
 
@@ -56,7 +55,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 		this.maxProbings = maxProbings;
 		this.factory = factory;
 		//noinspection unchecked
-		TOKENS = (T[]) Array.newInstance(elementsType, slotsNumber);
+		this.tokens = (T[]) Array.newInstance(elementsType, slotsNumber);
 	}
 
 	/**
@@ -66,9 +65,9 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 		T token = create(name);
 
 		for (int p = 0; p < maxProbings; p++) {
-			int slot = (token.lowerCaseHashCode + p) & (TOKENS.length - 1);
-			if (TOKENS[slot] == null) {
-				TOKENS[slot] = token;
+			int slot = (token.hashCodeCI + p) & (tokens.length - 1);
+			if (tokens[slot] == null) {
+				tokens[slot] = token;
 				return token;
 			}
 		}
@@ -81,87 +80,99 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 	public final T create(String name) {
 		byte[] bytes = encodeAscii(name);
 
-		byte[] lowerCaseBytes = new byte[bytes.length];
-		int lowerCaseHashCode = 1;
+		byte[] lowerCase = new byte[bytes.length];
+		int hashCodeCI = 0;
 		for (int i = 0; i < bytes.length; i++) {
 			byte b = bytes[i];
-			b |= 0x20;
-			lowerCaseBytes[i] = b;
-			lowerCaseHashCode = lowerCaseHashCode + b;
+			lowerCase[i] = (b >= 'A' && b <= 'Z') ? (byte) (b + 'a' - 'A') : b;
+			hashCodeCI += (b | 0x20);
 		}
 
-		return factory.create(bytes, 0, bytes.length, lowerCaseBytes, lowerCaseHashCode);
+		return factory.create(hashCodeCI, bytes, 0, bytes.length, lowerCase);
 	}
 
 	/**
-	 * @see #getOrCreate(byte[], int, int, int)
+	 * @see #getOrCreate(int, byte[], int, int)
 	 */
 	public final T getOrCreate(byte[] bytes, int offset, int length) {
-		int lowerCaseHashCode = hashCodeLowerCaseAscii(bytes, offset, length);
-		return getOrCreate(bytes, offset, length, lowerCaseHashCode);
+		int hashCodeCI = hashCodeCI(bytes, offset, length);
+		return getOrCreate(hashCodeCI, bytes, offset, length);
 	}
 
 	/**
 	 * Gets the cached token value for given input, or creates a new one without putting it in the registry.
 	 */
-	public final T getOrCreate(byte[] bytes, int offset, int length, int lowerCaseHashCode) {
-		T t = get(bytes, offset, length, lowerCaseHashCode);
-		return t != null ? t : factory.create(bytes, offset, length, null, lowerCaseHashCode);
+	public final T getOrCreate(int hashCodeCI, byte[] bytes, int offset, int length) {
+		T t = get(hashCodeCI, bytes, offset, length);
+		return t != null ? t : factory.create(hashCodeCI, bytes, offset, length, null);
 	}
 
 	/**
 	 * Returns registered token value for given input, or null if no such value was registered.
-	 * This method is very fast.
 	 */
-	public final T get(byte[] bytes, int offset, int length, int lowerCaseHashCode) {
-		for (int p = 0; p < maxProbings; p++) {
-			int slot = (lowerCaseHashCode + p) & (TOKENS.length - 1);
-			T t = TOKENS[slot];
-			if (t == null) {
-				break;
-			}
-			if (t.lowerCaseHashCode != lowerCaseHashCode) continue;
+	public final T get(int hashCodeCI, byte[] array, int offset, int length) {
+		int slot = hashCodeCI & (tokens.length - 1);
+		T t = tokens[slot];
+		if (t == null) return null;
+		byte[] bytes = t.bytes;
+		if (t.hashCodeCI == hashCodeCI && bytes.length == length) {
 			int i = 0;
 			for (; i < length; i++) {
-				if (bytes[offset + i] != t.bytes[i]) {
-					break;
+				if (array[offset + i] != bytes[i]) {
+					if (equalsLowerCase(i, t.lowerCase, array, offset, length)) return t;
+					return probeNext(hashCodeCI, array, offset, length);
 				}
 			}
-			if (i == length) return t;
+			return t;
+		}
+		return probeNext(hashCodeCI, array, offset, length);
+	}
 
-			if (slowPathEquals(bytes, offset, length, t, i)) return t;
+	private T probeNext(int hashCodeCI, byte[] array, int offset, int length) {
+		probe:
+		for (int p = 1; p < maxProbings; p++) {
+			int slot = (hashCodeCI + p) & (tokens.length - 1);
+			T t = tokens[slot];
+			if (t == null) break;
+			byte[] bytes = t.bytes;
+			if (t.hashCodeCI == hashCodeCI && bytes.length == length) {
+				int i = 0;
+				for (; i < length; i++) {
+					if (array[offset + i] != bytes[i]) {
+						if (equalsLowerCase(i, t.lowerCase, array, offset, length)) return t;
+						continue probe;
+					}
+				}
+				return t;
+			}
 		}
 		return null;
 	}
 
-	private boolean slowPathEquals(byte[] bytes, int offset, int length, T t, int i) {
+	private static boolean equalsLowerCase(int i, byte[] lowerCase, byte[] array, int offset, int length) {
+		assert lowerCase.length == length;
 		for (; i < length; i++) {
-			if (bytes[offset + i] != t.lowerCaseBytes[i]) {
-				return false;
+			if (array[offset + i] != lowerCase[i]) {
+				return equalsCaseInsensitive(i, lowerCase, array, offset, length);
 			}
 		}
-		if (i == length) return true;
-		return equalsLowerCaseAscii(t.lowerCaseBytes, i, bytes, offset, length);
+		return true;
 	}
 
-	private static boolean equalsLowerCaseAscii(byte[] lowerCasePattern, int patternOffset, byte[] array, int offset, int size) {
-		if (lowerCasePattern.length != size)
+	private static boolean equalsCaseInsensitive(int i, byte[] lowerCase, byte[] array, int offset, int length) {
+		assert lowerCase.length == length;
+		for (; i < length; i++) {
+			byte p = lowerCase[i];
+			byte b = array[offset + i];
+			if (b == p) continue;
+			if (b >= 'A' && b <= 'Z' && b + ('a' - 'A') == p) continue;
 			return false;
-		for (int i = patternOffset; i < size; i++) {
-			byte p = lowerCasePattern[i];
-			byte a = array[offset + i];
-
-			if (a != p) {
-				// 32 =='a' - 'A'
-				if (a < 'A' || a > 'Z' || p - a != 32) return false;
-			}
 		}
 		return true;
 	}
 
 	@FunctionalInterface
 	public interface TokenFactory<T> {
-
-		T create(byte[] bytes, int offset, int length, byte[] lowerCaseBytes, int lowerCaseHashCode);
+		T create(int hashCodeCI, byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes);
 	}
 }

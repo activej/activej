@@ -374,16 +374,16 @@ public abstract class AbstractHttpConnection {
 
 	private void processHeaderLine(byte[] array, int off, int limit) throws MalformedHttpException {
 		int pos = off;
-		int hashCode = 1;
+		int hashCodeCI = 0;
 		while (pos < limit) {
 			byte b = array[pos];
 			if (b == ':')
 				break;
-			hashCode = hashCode + (b | 0x20);
+			hashCodeCI += (b | 0x20);
 			pos++;
 		}
 		if (pos == limit) throw new MalformedHttpException("Header name is absent");
-		HttpHeader header = HttpHeaders.of(array, off, pos - off, hashCode);
+		HttpHeader header = HttpHeaders.of(hashCodeCI, array, off, pos - off);
 		pos++;
 
 		// RFC 2616, section 19.3 Tolerant Applications

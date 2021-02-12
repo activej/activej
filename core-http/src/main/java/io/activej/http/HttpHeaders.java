@@ -121,8 +121,8 @@ public final class HttpHeaders {
 		return headers.register(headerName);
 	}
 
-	public static HttpHeader of(byte[] array, int offset, int length, int lowerCaseHashCode) {
-		return headers.getOrCreate(array, offset, length, lowerCaseHashCode);
+	public static HttpHeader of(int hashCodeCI, byte[] array, int offset, int length) {
+		return headers.getOrCreate(hashCodeCI, array, offset, length);
 	}
 
 	public static HttpHeader of(String string) {

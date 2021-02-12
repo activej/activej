@@ -9,6 +9,7 @@ import java.util.List;
 import static io.activej.bytebuf.ByteBufStrings.asAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.http.HttpUtils.decodeQ;
+import static io.activej.http.HttpUtils.hashCodeCI;
 import static io.activej.http.MediaTypes.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -18,8 +19,7 @@ public class ContentTypeTest {
 	@Test
 	public void testMediaType() {
 		byte[] mediaType = encodeAscii("application/json");
-		int hash = HttpUtils.hashCodeLowerCaseAscii(mediaType);
-		MediaType actual = MediaTypes.of(mediaType, 0, mediaType.length, hash);
+		MediaType actual = MediaTypes.of(hashCodeCI(mediaType), mediaType, 0, mediaType.length);
 		assertSame(JSON, actual);
 	}
 

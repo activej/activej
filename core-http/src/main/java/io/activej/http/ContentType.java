@@ -56,13 +56,12 @@ public final class ContentType {
 
 			pos = skipSpaces(bytes, pos, end);
 			int start = pos;
-			int lowerCaseHashCode = 1;
+			int hashCodeCI = 0;
 			while (pos < end && bytes[pos] != ';') {
-				byte b = bytes[pos];
-				lowerCaseHashCode = lowerCaseHashCode + (b | 0x20);
-				pos++;
+				byte b = bytes[pos++];
+				hashCodeCI += (b | 0x20);
 			}
-			MediaType type = MediaTypes.of(bytes, start, pos - start, lowerCaseHashCode);
+			MediaType type = MediaTypes.of(hashCodeCI, bytes, start, pos - start);
 			pos++;
 
 			// parsing parameters if any (interested in 'charset' only)

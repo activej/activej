@@ -59,13 +59,12 @@ public final class AcceptMediaType {
 			// parsing media type
 			pos = skipSpaces(bytes, pos, end);
 			int start = pos;
-			int lowerCaseHashCode = 1;
+			int hashCodeCI = 0;
 			while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
-				byte b = bytes[pos];
-				lowerCaseHashCode = lowerCaseHashCode + (b | 0x20);
-				pos++;
+				byte b = bytes[pos++];
+				hashCodeCI += (b | 0x20);
 			}
-			MediaType mime = MediaTypes.of(bytes, start, pos - start, lowerCaseHashCode);
+			MediaType mime = MediaTypes.of(hashCodeCI, bytes, start, pos - start);
 
 			if (pos < end) {
 				if (bytes[pos++] == ',') {

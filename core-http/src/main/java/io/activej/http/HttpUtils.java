@@ -482,15 +482,16 @@ public final class HttpUtils {
 		return to;
 	}
 
-	static int hashCodeLowerCaseAscii(byte[] array, int offset, int size) {
-		int result = 1;
+	static int hashCodeCI(byte[] array, int offset, int size) {
+		int result = 0;
 		for (int i = offset; i < offset + size; i++) {
-			result = result + (array[i] | 0x20);
+			byte b = array[i];
+			result += (b | 0x20);
 		}
 		return result;
 	}
 
-	static int hashCodeLowerCaseAscii(byte[] array) {
-		return hashCodeLowerCaseAscii(array, 0, array.length);
+	static int hashCodeCI(byte[] array) {
+		return hashCodeCI(array, 0, array.length);
 	}
 }

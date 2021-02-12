@@ -49,8 +49,8 @@ public final class HttpCharset extends Token {
 
 	// maximum of 40 characters, us-ascii, see rfc2978,
 	// http://www.iana.org/assignments/character-sets/character-sets.txt
-	private HttpCharset(byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
-		super(bytes, offset, length, lowerCaseBytes, lowerCaseHashCode);
+	private HttpCharset(int hashCodeCI, byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes) {
+		super(hashCodeCI, bytes, offset, length, lowerCaseBytes);
 	}
 
 	public static HttpCharset register(String charsetName, Charset charset){

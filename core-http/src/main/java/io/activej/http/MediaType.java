@@ -25,20 +25,20 @@ import java.util.Arrays;
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Utils.arraysEquals;
-import static io.activej.http.HttpUtils.hashCodeLowerCaseAscii;
+import static io.activej.http.HttpUtils.hashCodeCI;
 
 /**
  * This is a specialized token to be used in {@link CaseInsensitiveTokenMap} for media type header values.
  */
 public final class MediaType extends Token {
 	// All media type values, subtype values, and parameter names as defined are case-insensitive RFC2045 section 2
-	MediaType(@NotNull byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes, int lowerCaseHashCode) {
-		super(bytes, offset, length, lowerCaseBytes, lowerCaseHashCode);
+	MediaType(int hashCodeCI, byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes) {
+		super(hashCodeCI, bytes, offset, length, lowerCaseBytes);
 	}
 
 	public static MediaType of(String mime) {
 		byte[] bytes = encodeAscii(mime);
-		return MediaTypes.of(bytes, 0, bytes.length, hashCodeLowerCaseAscii(bytes));
+		return MediaTypes.of(hashCodeCI(bytes), bytes, 0, bytes.length);
 	}
 
 	int size() {

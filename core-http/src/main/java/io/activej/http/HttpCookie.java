@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufStrings;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -240,7 +239,7 @@ public final class HttpCookie {
 						break;
 					}
 				}
-				AvHandler handler = getCookieHandler(ByteBufStrings.hashCodeLowerCaseAscii
+				AvHandler handler = getCookieHandler(hashCodeLowerCaseAscii
 						(bytes, keyStart, (equalSign == -1 ? valueEnd : equalSign) - keyStart));
 				if (equalSign == -1 && handler == null) {
 					cookie.setExtension(decodeAscii(bytes, keyStart, valueEnd - keyStart));
