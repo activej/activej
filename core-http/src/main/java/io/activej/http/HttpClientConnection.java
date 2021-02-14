@@ -122,6 +122,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		return remoteAddress;
 	}
 
+	protected void readMessage() throws MalformedHttpException {
+		readStartLine();
+	}
+
 	@Override
 	protected void onClosedWithError(@NotNull Throwable e) {
 		if (inspector != null) inspector.onHttpError(this, e);
@@ -133,16 +137,16 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onStartLine(byte[] line, int limit) throws MalformedHttpException {
-		boolean http1x = line[0] == 'H' && line[1] == 'T' && line[2] == 'T' && line[3] == 'P' && line[4] == '/' && line[5] == '1';
-		boolean http11 = line[6] == '.' && line[7] == '1' && line[8] == SP;
+	protected void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException {
+		boolean http1x = line[pos + 0] == 'H' && line[pos + 1] == 'T' && line[pos + 2] == 'T' && line[pos + 3] == 'P' && line[pos + 4] == '/' && line[pos + 5] == '1';
+		boolean http11 = line[pos + 6] == '.' && line[pos + 7] == '1' && line[pos + 8] == SP;
 
 		if (!http1x) {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Invalid response");
 			throw new MalformedHttpException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
-		int pos = 9;
+		pos += 9;
 		HttpVersion version = HttpVersion.HTTP_1_1;
 		if (http11) {
 			flags |= KEEP_ALIVE;
@@ -150,7 +154,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			version = HttpVersion.HTTP_1_0;
 		} else if (line[6] == SP) {
 			version = HttpVersion.HTTP_1_0;
-			pos = 7;
+			pos += 7 - 9;
 		} else {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Invalid response");
 			throw new MalformedHttpException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
@@ -171,12 +175,6 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			// Reset Content-Length for the case keep-alive connection
 			contentLength = 0;
 		}
-	}
-
-	@Override
-	protected void onHeaderBuf(ByteBuf buf) {
-		//noinspection ConstantConditions
-		response.addHeaderBuf(buf);
 	}
 
 	@Override
@@ -210,7 +208,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private boolean processWebSocketResponse(@Nullable ByteBuf body) {
 		if (response.getCode() == 101) {
 			assert body != null && body.readRemaining() == 0;
-			response.bodyStream = concat(ChannelSupplier.of(readBufs.takeRemaining()), ChannelSupplier.ofSocket(socket));
+			response.bodyStream = concat(ChannelSupplier.of(detachReadBuf()), ChannelSupplier.ofSocket(socket));
 			return true;
 		} else {
 			closeWithError(HANDSHAKE_FAILED);
@@ -238,9 +236,8 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void onNoContentLength() {
-		ChannelSupplier<ByteBuf> ofBufs = readBufs.hasRemaining() ? ChannelSupplier.of(readBufs.takeRemaining()) : ChannelSupplier.of();
 		ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
-		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(ofBufs, buffer.getSupplier());
+		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(ChannelSupplier.of(detachReadBuf()), buffer.getSupplier());
 		Promise<Void> inflaterFinished = Promise.complete();
 		if ((flags & GZIPPED) != 0) {
 			BufsConsumerGzipInflater gzipInflater = BufsConsumerGzipInflater.create();
@@ -251,7 +248,14 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		ChannelSupplier.of(socket::read, socket)
 				.streamTo(buffer.getConsumer())
 				.both(inflaterFinished)
-				.whenComplete(afterProcessCb);
+				.whenComplete(($, e) -> {
+					if (isClosed()) return;
+					if (e == null) {
+						onBodyReceived();
+					} else {
+						closeWithError(translateToHttpException(e));
+					}
+				});
 	}
 
 	@NotNull
@@ -328,12 +332,12 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			if no Content-Length header is set, client should read body until a server closes the connection
 		*/
 		contentLength = UNSET_CONTENT_LENGTH;
-		if (readBufs.isEmpty()) {
-			tryReadHttpMessage();
+		if (readBuf == null) {
+			read();
 		} else {
 			eventloop.post(() -> {
 				if (isClosed()) return;
-				tryReadHttpMessage();
+				read();
 			});
 		}
 	}
@@ -341,9 +345,17 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private void onHttpMessageComplete() {
 		if (isWebSocket()) return;
 
-		assert response != null;
+		//noinspection ConstantConditions
 		response.recycle();
 		response = null;
+		if (stashedBufs != null) {
+			stashedBufs.recycle();
+			stashedBufs = null;
+		}
+		if (readBuf != null && !readBuf.canRead()) {
+			readBuf.recycle();
+			readBuf = null;
+		}
 
 		if ((flags & KEEP_ALIVE) != 0 && client.keepAliveTimeoutMillis != 0 && contentLength != UNSET_CONTENT_LENGTH) {
 			flags = 0;
@@ -395,14 +407,6 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			readHttpResponse();
 		}
 		return promise;
-	}
-
-	private void tryReadHttpMessage() {
-		try {
-			readMessage();
-		} catch (MalformedHttpException e) {
-			closeWithError(e);
-		}
 	}
 
 	/**

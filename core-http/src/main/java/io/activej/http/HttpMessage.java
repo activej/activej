@@ -21,7 +21,6 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.promise.Promise;
@@ -70,27 +69,12 @@ public abstract class HttpMessage {
 	final HttpHeadersMultimap<HttpHeader, HttpHeaderValue> headers = new HttpHeadersMultimap<>();
 	@Nullable ByteBuf body;
 	@Nullable ChannelSupplier<ByteBuf> bodyStream;
-	Recyclable bufs;
 
 	protected int maxBodySize;
 	protected Map<Object, Object> attachments;
 
 	protected HttpMessage(HttpVersion version) {
 		this.version = version;
-	}
-
-	void addHeaderBuf(@NotNull ByteBuf buf) {
-		if (CHECK) checkState(!isRecycled());
-		buf.addRef();
-		if (bufs == null) {
-			bufs = buf;
-		} else {
-			Recyclable prev = this.bufs;
-			this.bufs = () -> {
-				prev.recycle();
-				buf.recycle();
-			};
-		}
 	}
 
 	public HttpVersion getVersion() {
@@ -409,9 +393,6 @@ public abstract class HttpMessage {
 	final void recycle() {
 		if (isRecycled()) return;
 		flags |= RECYCLED;
-		if (bufs != null) {
-			bufs.recycle();
-		}
 		if (body != null) {
 			body.recycle();
 		}

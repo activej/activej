@@ -23,7 +23,7 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
-import io.activej.common.exception.MalformedDataException;
+import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.ChannelSupplier;
@@ -40,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.common.Utils.nullify;
 import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
@@ -60,7 +61,6 @@ public abstract class AbstractHttpConnection {
 	protected static final byte[] CONNECTION_KEEP_ALIVE = encodeAscii("keep-alive");
 	protected static final byte[] TRANSFER_ENCODING_CHUNKED = encodeAscii("chunked");
 	protected static final byte[] CONTENT_ENCODING_GZIP = encodeAscii("gzip");
-	protected static final byte[] EMPTY_HEADER = new byte[0];
 
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
@@ -68,7 +68,6 @@ public abstract class AbstractHttpConnection {
 	protected final Eventloop eventloop;
 
 	protected final AsyncTcpSocket socket;
-	protected final ByteBufs readBufs = new ByteBufs();
 	protected final int maxBodySize;
 
 	protected static final byte KEEP_ALIVE = 1 << 0;
@@ -82,6 +81,8 @@ public abstract class AbstractHttpConnection {
 
 	@MagicConstant(flags = {KEEP_ALIVE, GZIPPED, CHUNKED, WEB_SOCKET, BODY_RECEIVED, BODY_SENT, READING_MESSAGES, CLOSED})
 	protected byte flags = 0;
+
+	protected ByteBuf readBuf;
 
 	@Nullable
 	protected ConnectionsLinkedList pool;
@@ -98,28 +99,19 @@ public abstract class AbstractHttpConnection {
 	@Nullable
 	private Object userData;
 
-	private byte[] startLineBuffer;
+	protected Recyclable stashedBufs;
 
 	protected final ReadConsumer readMessageConsumer = new ReadConsumer() {
 		@Override
-		public void thenRun() throws MalformedHttpException {
+		protected void thenRun() throws MalformedHttpException {
 			readMessage();
 		}
 	};
 
 	protected final ReadConsumer readHeadersConsumer = new ReadConsumer() {
 		@Override
-		public void thenRun() throws MalformedHttpException {
-			readHeaders();
-		}
-	};
-
-	protected final Callback<Void> afterProcessCb = ($, e) -> {
-		if (isClosed()) return;
-		if (e == null) {
-			onBodyReceived();
-		} else {
-			closeWithError(translateToHttpException(e));
+		protected void thenRun() throws MalformedHttpException {
+			readHeaders(readBuf.array(), readBuf.head(), readBuf.tail());
 		}
 	};
 
@@ -135,9 +127,7 @@ public abstract class AbstractHttpConnection {
 		this.maxBodySize = maxBodySize;
 	}
 
-	protected abstract void onStartLine(byte[] line, int limit) throws MalformedHttpException;
-
-	protected abstract void onHeaderBuf(ByteBuf buf);
+	protected abstract void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException;
 
 	protected abstract void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException;
 
@@ -147,7 +137,7 @@ public abstract class AbstractHttpConnection {
 
 	protected abstract void onBodySent();
 
-	protected abstract void onNoContentLength();
+	protected abstract void onNoContentLength(); // TODO - remove
 
 	protected abstract void onClosed();
 
@@ -224,8 +214,8 @@ public abstract class AbstractHttpConnection {
 		flags |= CLOSED;
 		onClosed();
 		socket.close();
-		readBufs.recycle();
-		startLineBuffer = null;
+		readBuf = nullify(readBuf, ByteBuf::recycle);
+		stashedBufs = nullify(stashedBufs, Recyclable::recycle);
 	}
 
 	protected final void closeWithError(@NotNull Throwable e) {
@@ -234,53 +224,43 @@ public abstract class AbstractHttpConnection {
 		onClosedWithError(e);
 		onClosed();
 		socket.close();
-		readBufs.recycle();
+		readBuf = nullify(readBuf, ByteBuf::recycle);
+		stashedBufs = nullify(stashedBufs, Recyclable::recycle);
 	}
 
-	protected void readMessage() throws MalformedHttpException {
-		readStartLine();
+	protected void read() {
+		if (readBuf == null) {
+			socket.read().whenComplete(readMessageConsumer);
+			return;
+		}
+		try {
+			readMessage();
+		} catch (MalformedHttpException e) {
+			closeWithError(e);
+		}
 	}
+
+	protected abstract void readMessage() throws MalformedHttpException;
 
 	protected final void readStartLine() throws MalformedHttpException {
-		int size = 1;
-		for (int i = 0; i < readBufs.remainingBufs(); i++) {
-			ByteBuf buf = readBufs.peekBuf(i);
-			for (int p = buf.head(); p < buf.tail(); p++) {
-				if (buf.at(p) == LF) {
-					size += p - buf.head();
-					if (i == 0 && buf.head() == 0 && size >= 10) {
-						onStartLine(buf.array(), size);
-						readBufs.skip(size);
-					} else {
-						ensureStartLineBuffer(max(10, size));
-						readBufs.drainTo(startLineBuffer, 0, size);
-						onStartLine(startLineBuffer, size);
-					}
-					readHeaders();
-					return;
-				}
+		byte[] array = readBuf.array();
+		int head = readBuf.head();
+		int tail = readBuf.tail();
+		for (int p = head; p < tail; p++) {
+			if (array[p] == LF) {
+				onStartLine(array, head, p + 1);
+				readHeaders(array, p + 1, tail);
+				return;
 			}
-			size += buf.readRemaining();
 		}
-		if (readBufs.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
+		if (readBuf.readRemaining() > MAX_HEADER_LINE_SIZE_BYTES)
 			throw new MalformedHttpException("Header line exceeds max header size");
 		socket.read().whenComplete(readMessageConsumer);
 	}
 
-	private void ensureStartLineBuffer(int size) {
-		if (startLineBuffer != null && startLineBuffer.length >= size) {
-			return;
-		}
-		startLineBuffer = new byte[size];
-	}
-
-	private void readHeaders() throws MalformedHttpException {
+	private void readHeaders(byte[] array, int head, final int tail) throws MalformedHttpException {
 		assert !isClosed();
-		while (readBufs.hasRemaining()) {
-			ByteBuf buf = readBufs.peekBuf(0);
-			byte[] array = buf.array();
-			int head = buf.head();
-			int tail = buf.tail();
+		while (head < tail) {
 			int i;
 			for (i = head; i < tail; i++) {
 				if (array[i] != LF) continue;
@@ -290,13 +270,11 @@ public abstract class AbstractHttpConnection {
 					// fast processing path
 					int limit = (i - 1 >= head && array[i - 1] == CR) ? i - 1 : i;
 					if (limit != head) {
-						processHeaderLine(array, head, limit);
-						readBufs.skip(i - head + 1, this::onHeaderBuf);
-						head = buf.head();
+						readHeader(array, head, limit);
+						head = i + 1;
 						continue;
 					} else {
-						onHeaderBuf(buf);
-						readBufs.skip(i - head + 1);
+						readBuf.head(i + 1);
 						readBody();
 						return;
 					}
@@ -304,75 +282,75 @@ public abstract class AbstractHttpConnection {
 				break;
 			}
 
-			if (i == tail && readBufs.remainingBufs() <= 1) {
+			if (i == tail && tail - head <= 1) {
 				break; // cannot determine if this is multiline header or not, need more data
 			}
 
-			byte[] header = readHeaderEx(max(0, i - head - 1));
-			if (header == null) break;
-			if (header.length != 0) {
-				processHeaderLine(header, 0, header.length);
-			} else {
+			int headerLen = scanHeader(max(head, i - 1), array, head, tail);
+
+			if (headerLen == -1) {
+				break;
+			}
+			if (headerLen != 0) {
+				readHeader(array, head, head + headerLen);
+			}
+			head += headerLen;
+			if (array[head] == CR) head++;
+			if (array[head] == LF) head++;
+			if (headerLen == 0) {
+				readBuf.head(head);
 				readBody();
 				return;
 			}
 		}
-
-		if (readBufs.hasRemainingBytes(MAX_HEADER_LINE_SIZE_BYTES))
+		readBuf.head(head);
+		if (readBuf.readRemaining() > MAX_HEADER_LINE_SIZE_BYTES)
 			throw new MalformedHttpException("Header line exceeds max header size");
 		socket.read().whenComplete(readHeadersConsumer);
 	}
 
-	private byte[] readHeaderEx(int i) throws MalformedHttpException {
-		int remainingBytes = readBufs.remainingBytes();
+	private int scanHeader(int i, byte[] array, int head, int tail) throws MalformedHttpException {
 		while (true) {
-			try {
-				int n = readBufs.scanBytes(i, (index, b) -> b == CR || b == LF);
-				if (n == 0) return null;
-				i += n;
-			} catch (MalformedDataException ignored) {
-				throw new AssertionError("Cannot be caught here");
+			for (; i < tail; i++) {
+				byte b = array[i];
+				if (b == CR || b == LF) break;
 			}
-			byte b = readBufs.peekByte(i - 1);
-			assert b == CR || b == LF;
-			byte[] bytes;
+			if (i >= tail) return -1;
+			byte b = array[i];
 			if (b == CR) {
-				if (i >= remainingBytes) return null;
-				b = readBufs.peekByte(i++);
+				if (++i >= tail) return -1;
+				b = array[i];
 				if (b != LF) throw new MalformedHttpException("Invalid CRLF");
-				if (i == 2) {
-					bytes = EMPTY_HEADER;
+				if (i - head == 1) {
+					return 0;
 				} else {
-					if (i >= remainingBytes) return null;
-					b = readBufs.peekByte(i);
+					if (++i >= tail) return -1;
+					b = array[i];
 					if (b == SP || b == HT) {
-						readBufs.setByte(i - 2, SP);
-						readBufs.setByte(i - 1, SP);
+						array[i - 2] = SP;
+						array[i - 1] = SP;
 						continue;
 					}
-					bytes = new byte[i - 2];
+					return i - 2 - head;
 				}
 			} else {
-				if (i == 1) {
-					bytes = EMPTY_HEADER;
+				assert b == LF;
+				if (i - head == 0) {
+					return 0;
 				} else {
-					if (i >= remainingBytes) return null;
-					b = readBufs.peekByte(i);
+					if (++i >= tail) return -1;
+					b = array[i];
 					if (b == SP || b == HT) {
-						readBufs.setByte(i - 1, SP);
+						array[i - 1] = SP;
 						continue;
 					}
-					bytes = new byte[i - 1];
+					return i - 1 - head;
 				}
 			}
-
-			readBufs.drainTo(bytes, 0, bytes.length, this::onHeaderBuf);
-			readBufs.skip(i - bytes.length, this::onHeaderBuf);
-			return bytes;
 		}
 	}
 
-	private void processHeaderLine(byte[] array, int off, int limit) throws MalformedHttpException {
+	private void readHeader(byte[] array, int off, int limit) throws MalformedHttpException {
 		int pos = off;
 		int hashCodeCI = 0;
 		while (pos < limit) {
@@ -421,8 +399,15 @@ public abstract class AbstractHttpConnection {
 				onNoContentLength();
 				return;
 			}
-			if (((flags & GZIPPED) == 0) && readBufs.hasRemainingBytes(contentLength)) {
-				ByteBuf body = readBufs.takeExactSize(contentLength);
+			if (((flags & GZIPPED) == 0) && readBuf.readRemaining() >= contentLength) {
+				ByteBuf body;
+				if (readBuf.readRemaining() == contentLength) {
+					body = readBuf;
+					readBuf = null;
+				} else {
+					body = readBuf.slice(contentLength);
+					readBuf.moveHead(contentLength);
+				}
 				onHeadersReceived(body, null);
 				if (isClosed()) return;
 				onBodyReceived();
@@ -430,6 +415,9 @@ public abstract class AbstractHttpConnection {
 			}
 		}
 
+		ByteBuf readBuf = detachReadBuf();
+		ByteBufs readBufs = new ByteBufs();
+		readBufs.add(readBuf);
 		BinaryChannelSupplier encodedStream = BinaryChannelSupplier.ofProvidedBufs(
 				readBufs,
 				() -> socket.read()
@@ -479,7 +467,16 @@ public abstract class AbstractHttpConnection {
 		onHeadersReceived(null, supplier);
 
 		process.getProcessCompletion()
-				.whenComplete(afterProcessCb);
+				.whenComplete(($, e) -> {
+					if (isClosed()) return;
+					if (e == null) {
+						assert this.readBuf == null;
+						this.readBuf = readBufs.hasRemaining() ? readBufs.takeRemaining() : null;
+						onBodyReceived();
+					} else {
+						closeWithError(translateToHttpException(e));
+					}
+				});
 	}
 
 	static ByteBuf renderHttpMessage(HttpMessage httpMessage) {
@@ -577,7 +574,26 @@ public abstract class AbstractHttpConnection {
 			assert !isClosed() || e != null;
 			if (e == null) {
 				if (buf != null) {
-					readBufs.add(buf);
+					ByteBuf readBuf = AbstractHttpConnection.this.readBuf;
+					if (readBuf == null) {
+						AbstractHttpConnection.this.readBuf = buf;
+					} else {
+						if (readBuf.writeRemaining() >= buf.readRemaining()) {
+							readBuf.put(buf);
+							buf.recycle();
+						} else {
+							stashBuf(readBuf);
+							if (!readBuf.canRead()) {
+								AbstractHttpConnection.this.readBuf = buf;
+							} else {
+								ByteBuf newBuf = ByteBufPool.allocate(readBuf.readRemaining() + buf.readRemaining());
+								newBuf.put(readBuf);
+								newBuf.put(buf);
+								buf.recycle();
+								AbstractHttpConnection.this.readBuf = newBuf;
+							}
+						}
+					}
 					try {
 						thenRun();
 					} catch (MalformedHttpException e1) {
@@ -591,13 +607,33 @@ public abstract class AbstractHttpConnection {
 			}
 		}
 
-		public abstract void thenRun() throws MalformedHttpException;
+		protected abstract void thenRun() throws MalformedHttpException;
+	}
+
+	protected final void stashBuf(@NotNull ByteBuf buf) {
+		if (stashedBufs == null) {
+			stashedBufs = buf;
+		} else {
+			Recyclable prev = this.stashedBufs;
+			this.stashedBufs = () -> {
+				prev.recycle();
+				buf.recycle();
+			};
+		}
+	}
+
+	protected final ByteBuf detachReadBuf() {
+		ByteBuf readBuf = this.readBuf;
+		this.readBuf = null;
+		stashBuf(readBuf);
+		readBuf.addRef();
+		return readBuf;
 	}
 
 	@Override
 	public String toString() {
 		return ", socket=" + socket +
-				", readBufs=" + readBufs +
+				", readBuf=" + readBuf +
 				", closed=" + isClosed() +
 				", keepAlive=" + isKeepAlive() +
 				", gzipped=" + isGzipped() +

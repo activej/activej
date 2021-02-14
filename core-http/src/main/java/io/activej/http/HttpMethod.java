@@ -35,11 +35,15 @@ public enum HttpMethod {
 		this.size = this.bytes.length;
 	}
 
-	public void write(ByteBuf buf) {
+	public byte[] bytes() {
+		return bytes;
+	}
+
+	void write(ByteBuf buf) {
 		buf.put(bytes);
 	}
 
-	public boolean compareTo(byte[] array, int offset, int size) {
+	boolean compareTo(byte[] array, int offset, int size) {
 		if (bytes.length != size)
 			return false;
 		for (int i = 0; i < bytes.length; i++) {
