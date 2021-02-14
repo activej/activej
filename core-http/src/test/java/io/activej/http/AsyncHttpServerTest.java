@@ -11,7 +11,6 @@ import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -238,8 +237,8 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testPipelining() throws Exception {
-//		doTestPipelining(eventloop, blockingHttpServer(eventloop));
-//		doTestPipelining(eventloop, asyncHttpServer(eventloop));
+		doTestPipelining(blockingHttpServer());
+		doTestPipelining(asyncHttpServer());
 		doTestPipelining(delayedHttpServer());
 	}
 
@@ -253,63 +252,22 @@ public final class AsyncHttpServerTest {
 		socket.connect(new InetSocketAddress("localhost", port));
 
 		for (int i = 0; i < 100; i++) {
-			writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nConnection: Keep-Alive\r\nHost: localhost\r\n\r\n"
-					+ "GET /123456 HTTP/1.1\r\nHost: localhost\r\n\r\n" +
+			writeByRandomParts(socket, "" +
+					"GET /abc HTTP/1.1\r\nConnection: Keep-Alive\r\nHost: localhost\r\n\r\n" +
+					"GET /123456 HTTP/1.1\r\nHost: localhost\r\n\r\n" +
+
 					"POST /post1 HTTP/1.1\r\n" +
 					"Host: localhost\r\n" +
 					"Content-Length: 8\r\n" +
 					"Content-Type: application/json\r\n\r\n" +
 					"{\"at\":2}" +
+
 					"POST /post2 HTTP/1.1\r\n" +
 					"Host: localhost\r\n" +
 					"Content-Length: 8\r\n" +
 					"Content-Type: application/json\r\n\r\n" +
 					"{\"at\":2}" +
-					"");
-		}
 
-		for (int i = 0; i < 100; i++) {
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 7\r\n\r\n/123456");
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 6\r\n\r\n/post1");
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 6\r\n\r\n/post2");
-		}
-
-		server.closeFuture().get();
-		thread.join();
-		resetPort();
-	}
-
-	@Test
-	@Ignore("does not work")
-	public void testPipelining2() throws Exception {
-//		doTestPipelining(eventloop, blockingHttpServer(eventloop));
-//		doTestPipelining(eventloop, asyncHttpServer(eventloop));
-		doTestPipelining2(delayedHttpServer());
-	}
-
-	private void doTestPipelining2(AsyncHttpServer server) throws Exception {
-		server.withListenPort(port);
-		server.listen();
-		Thread thread = new Thread(eventloop);
-		thread.start();
-
-		Socket socket = new Socket();
-		socket.connect(new InetSocketAddress("localhost", port));
-
-		for (int i = 0; i < 100; i++) {
-			writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\n\r\n"
-					+ "GET /123456 HTTP/1.1\r\nHost: localhost\r\n\r\n" +
-					"POST /post1 HTTP/1.1\r\n" +
-					"Host: localhost\r\n" +
-					"Content-Length: 8\r\n" +
-					"Content-Type: application/json\r\n\r\n" +
-					"{\"at\":2}" +
-					"POST /post2 HTTP/1.1\r\n" +
-					"Host: localhost\r\n" +
-					"Content-Length: 8\r\n" +
-					"Content-Type: application/json\r\n\r\n" +
-					"{\"at\":2}" +
 					"");
 		}
 

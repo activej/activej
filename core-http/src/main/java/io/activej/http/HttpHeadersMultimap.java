@@ -128,4 +128,8 @@ final class HttpHeadersMultimap<K, V> {
 		};
 	}
 
+	@Override
+	public String toString() {
+		return Arrays.toString(kvPairs);
+	}
 }

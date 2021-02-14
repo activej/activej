@@ -21,7 +21,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.http.stream.BufsConsumerChunkedDecoder.CRLF;
@@ -72,7 +74,7 @@ public final class HttpStreamTest {
 		Integer code = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
-								.mapAsync(item -> Promises.delay(1L, item))))
+								.mapAsync(item -> Promises.delay(200L, item))))
 				.async()
 				.map(HttpResponse::getCode));
 

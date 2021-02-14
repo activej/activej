@@ -46,8 +46,7 @@ public final class TestGzipProcessorUtils {
 	@Parameters
 	public static List<String> testData() {
 		return Arrays.asList(
-				"I",
-				"I grant! I've never seen a goddess go.",
+				"",
 				"I grant! I've never seen a goddess go. My mistress, when she walks, treads on the ground",
 				generateLargeText()
 		);

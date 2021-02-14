@@ -35,7 +35,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
-import java.util.Arrays;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
@@ -45,11 +44,13 @@ import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
-import static io.activej.http.HttpMethod.*;
+import static io.activej.http.HttpMethod.DELETE;
+import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpVersion.HTTP_1_0;
 import static io.activej.http.HttpVersion.HTTP_1_1;
 import static io.activej.http.Protocol.*;
 import static io.activej.http.WebSocketConstants.UPGRADE_WITH_BODY;
+import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -63,23 +64,19 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
 	private static final int INITIAL_WRITE_BUFFER_SIZE = ApplicationSettings.getMemSize(HttpServerConnection.class, "initialWriteBufferSize", MemSize.ZERO).toInt();
 
-	private static final int HEADERS_SLOTS = 256;
-	private static final int MAX_PROBINGS = 2;
-	private static final HttpMethod[] METHODS = new HttpMethod[HEADERS_SLOTS];
+	private static final HttpMethod[] METHODS = new HttpMethod[128];
 
 	static {
 		assert Integer.bitCount(METHODS.length) == 1;
-		nxt:
 		for (HttpMethod httpMethod : HttpMethod.values()) {
-			int hashCode = Arrays.hashCode(httpMethod.bytes);
-			for (int p = 0; p < MAX_PROBINGS; p++) {
-				int slot = (hashCode + p) & (METHODS.length - 1);
-				if (METHODS[slot] == null) {
-					METHODS[slot] = httpMethod;
-					continue nxt;
-				}
+			int hashCode = 0;
+			for (int i = 0; i < httpMethod.bytes.length; i++) {
+				hashCode += httpMethod.bytes[i];
 			}
-			throw new IllegalArgumentException("HTTP METHODS hash collision, try to increase METHODS size");
+			int slot = hashCode & (METHODS.length - 1);
+			if (METHODS[slot] != null)
+				throw new IllegalArgumentException("HTTP METHODS hash collision, try to increase METHODS size");
+			METHODS[slot] = httpMethod;
 		}
 	}
 
@@ -139,21 +136,17 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@Override
 	protected void readMessage() throws MalformedHttpException {
 		do {
-			/*
-				as per RFC 7230, section 3.3.3,
-				if no Content-Length header is set, server can assume that a length of a message is 0
-			*/
-			contentLength = 0;
+			contentLength = 0; // RFC 7230, section 3.3.3: if no Content-Length header is set, server can assume that a length of a message is 0
 			flags = READING_MESSAGES;
 			readStartLine();
 			if (isClosed()) return;
-		} while (isKeepAlive() && isBodyReceived() && isBodySent() && writeBuf != null && readBufs.hasRemaining());
+		} while ((flags & (KEEP_ALIVE | BODY_RECEIVED | BODY_SENT)) == (KEEP_ALIVE | BODY_RECEIVED | BODY_SENT) && readBuf != null);
 		flags &= ~READING_MESSAGES;
-		if (writeBuf != null && writeBuf.canRead()) {
+		if (writeBuf != null) {
 			ByteBuf writeBuf = this.writeBuf;
 			this.writeBuf = null;
 			writeBuf(writeBuf);
-		} else if (isBodyReceived() && isBodySent()) {
+		} else if ((flags & (BODY_RECEIVED | BODY_SENT)) == (BODY_RECEIVED | BODY_SENT)) {
 			onHttpMessageComplete();
 		}
 	}
@@ -172,17 +165,17 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 */
 	@SuppressWarnings("PointlessArithmeticExpression")
 	@Override
-	protected void onStartLine(byte[] line, int limit) throws MalformedHttpException {
+	protected void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException {
 		switchPool(server.poolReadWrite);
 
-		HttpMethod method = getHttpMethod(line);
+		HttpMethod method = getHttpMethod(line, pos);
 		if (method == null) {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP method");
 			throw new MalformedHttpException("Unknown HTTP method. First line: " +
 					new String(line, 0, limit, ISO_8859_1));
 		}
 
-		int urlStart = method.size + 1;
+		int urlStart = pos + method.size + 1;
 
 		int urlEnd;
 		for (urlEnd = urlStart; urlEnd < limit; urlEnd++) {
@@ -226,42 +219,24 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 	}
 
-	@Override
-	protected void onHeaderBuf(ByteBuf buf) {
-		//noinspection ConstantConditions
-		request.addHeaderBuf(buf);
-	}
-
-	private static HttpMethod getHttpMethod(byte[] line) {
-		boolean get = line[0] == 'G' && line[1] == 'E' && line[2] == 'T' && (line[3] == SP || line[3] == HT);
+	private static HttpMethod getHttpMethod(byte[] line, int pos) {
+		boolean get = line[pos] == 'G' && line[pos + 1] == 'E' && line[pos + 2] == 'T' && (line[pos + 3] == SP || line[pos + 3] == HT);
 		if (get) {
 			return GET;
 		}
-		boolean post = line[0] == 'P' && line[1] == 'O' && line[2] == 'S' && line[3] == 'T' && (line[4] == SP || line[4] == HT);
-		if (post) {
-			return POST;
-		}
-		return getHttpMethodFromMap(line);
+		return getHttpMethodFromMap(line, pos);
 	}
 
-	private static HttpMethod getHttpMethodFromMap(byte[] line) {
-		int hashCode = 1;
-		for (int i = 0; i < 10; i++) {
+	private static HttpMethod getHttpMethodFromMap(byte[] line, int pos) {
+		int hashCode = 0;
+		for (int i = pos; i < min(pos + 10, line.length); i++) {
 			byte b = line[i];
 			if (b == SP || b == HT) {
-				for (int p = 0; p < MAX_PROBINGS; p++) {
-					int slot = (hashCode + p) & (METHODS.length - 1);
-					HttpMethod method = METHODS[slot];
-					if (method == null) {
-						break;
-					}
-					if (method.compareTo(line, 0, i)) {
-						return method;
-					}
-				}
-				return null;
+				int slot = hashCode & (METHODS.length - 1);
+				HttpMethod method = METHODS[slot];
+				return method != null && method.compareTo(line, pos, i - pos) ? method : null;
 			}
-			hashCode = 31 * hashCode + b;
+			hashCode += b;
 		}
 		return null;
 	}
@@ -410,6 +385,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			}
 
 			request.recycle();
+			if (stashedBufs != null) {
+				stashedBufs.recycle();
+				stashedBufs = null;
+			}
+			if (readBuf != null && !readBuf.canRead()) {
+				readBuf.recycle();
+				readBuf = null;
+			}
 		});
 	}
 
@@ -418,7 +401,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (body != null && body.readRemaining() == 0) {
 			ChannelSupplier<ByteBuf> ofBufsSupplier = ofLazyProvider(() -> isClosed() ?
 					ChannelSupplier.ofException(new CloseException("Connection closed")) :
-					ChannelSupplier.of(readBufs.takeRemaining()));
+					ChannelSupplier.of(detachReadBuf()));
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
 			request.bodyStream = concat(ofBufsSupplier, ofSocketSupplier)
 					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection));
@@ -462,14 +445,10 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			switchPool(server.poolKeepAlive);
 
 			if (socket.isReadAvailable()) {
-				socket.read().whenResult(readBufs::add);
+				socket.read().whenResult(buf -> readBuf = readBuf == null ? buf : ByteBufPool.append(readBuf, buf));
 			}
 
-			try {
-				readMessage();
-			} catch (MalformedHttpException e) {
-				closeWithError(e);
-			}
+			read();
 		} else {
 			close();
 		}
