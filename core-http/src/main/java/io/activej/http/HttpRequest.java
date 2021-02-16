@@ -81,7 +81,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	@NotNull
 	public static HttpRequest of(@NotNull HttpMethod method, @NotNull String url) {
 		UrlParser urlParser = UrlParser.of(url);
-		HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, method, UrlParser.of(url), null);
+		HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, method, urlParser, null);
 		String hostAndPort = urlParser.getHostAndPort();
 		if (hostAndPort != null) {
 			request.headers.add(HOST, HttpHeaderValue.of(hostAndPort));
