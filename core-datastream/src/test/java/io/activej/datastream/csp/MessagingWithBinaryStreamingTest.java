@@ -13,6 +13,7 @@ import io.activej.promise.Promise;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,9 +32,6 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 
 public final class MessagingWithBinaryStreamingTest {
-	private static final int LISTEN_PORT = getFreePort();
-	public static final InetSocketAddress ADDRESS = new InetSocketAddress("localhost", LISTEN_PORT);
-
 	private static final ByteBufsCodec<String, String> STRING_SERIALIZER = ByteBufsCodec
 			.ofDelimiter(
 					ofNullTerminatedBytes(),
@@ -55,6 +53,9 @@ public final class MessagingWithBinaryStreamingTest {
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
+
+	private int listenPort;
+	private InetSocketAddress address;
 
 	private static void pong(Messaging<Integer, Integer> messaging) {
 		messaging.receive()
@@ -83,15 +84,21 @@ public final class MessagingWithBinaryStreamingTest {
 				.whenException(e -> messaging.close());
 	}
 
+	@Before
+	public void setUp() {
+		listenPort = getFreePort();
+		address = new InetSocketAddress("localhost", listenPort);
+	}
+
 	@Test
 	public void testPing() throws Exception {
 		SimpleServer.create(socket ->
 				pong(MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))
-				.withListenPort(LISTEN_PORT)
+				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
 
-		await(AsyncTcpSocketNio.connect(ADDRESS)
+		await(AsyncTcpSocketNio.connect(address)
 				.whenComplete(assertComplete(socket -> ping(3, MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))));
 	}
 
@@ -113,11 +120,11 @@ public final class MessagingWithBinaryStreamingTest {
 										.streamTo(messaging.sendBinaryStream());
 							});
 				})
-				.withListenPort(LISTEN_PORT)
+				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
 
-		List<Long> list = await(AsyncTcpSocketNio.connect(ADDRESS)
+		List<Long> list = await(AsyncTcpSocketNio.connect(address)
 				.then(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
@@ -153,11 +160,11 @@ public final class MessagingWithBinaryStreamingTest {
 													messaging.sendEndOfStream().map($2 -> list)))
 							.whenComplete(assertComplete(list -> assertEquals(source, list)));
 				})
-				.withListenPort(LISTEN_PORT)
+				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
 
-		await(AsyncTcpSocketNio.connect(ADDRESS)
+		await(AsyncTcpSocketNio.connect(address)
 				.whenResult(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, serializer);
@@ -193,11 +200,11 @@ public final class MessagingWithBinaryStreamingTest {
 															.map($ -> list)))
 							.whenComplete(assertComplete(list -> assertEquals(source, list)));
 				})
-				.withListenPort(LISTEN_PORT)
+				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
 
-		String msg = await(AsyncTcpSocketNio.connect(ADDRESS)
+		String msg = await(AsyncTcpSocketNio.connect(address)
 				.then(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, serializer);
@@ -232,11 +239,11 @@ public final class MessagingWithBinaryStreamingTest {
 											.toList())
 							.whenComplete(assertComplete(list -> assertEquals(source, list)));
 				})
-				.withListenPort(LISTEN_PORT)
+				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
 
-		await(AsyncTcpSocketNio.connect(ADDRESS)
+		await(AsyncTcpSocketNio.connect(address)
 				.whenResult(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);

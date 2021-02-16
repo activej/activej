@@ -2,6 +2,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -16,9 +17,16 @@ public class RpcStrategyFirstAvailableTest {
 
 	private static final String HOST = "localhost";
 
-	private static final InetSocketAddress ADDRESS_1 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_2 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_3 = new InetSocketAddress(HOST, getFreePort());
+	private InetSocketAddress address1;
+	private InetSocketAddress address2;
+	private InetSocketAddress address3;
+
+	@Before
+	public void setUp() {
+		address1 = new InetSocketAddress(HOST, getFreePort());
+		address2 = new InetSocketAddress(HOST, getFreePort());
+		address3 = new InetSocketAddress(HOST, getFreePort());
+	}
 
 	@SuppressWarnings("ConstantConditions")
 	@Test
@@ -27,26 +35,26 @@ public class RpcStrategyFirstAvailableTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy firstAvailableStrategy = firstAvailable(servers(ADDRESS_1, ADDRESS_2, ADDRESS_3));
+		RpcStrategy firstAvailableStrategy = firstAvailable(servers(address1, address2, address3));
 		RpcSender sender;
 		int callsToSender1 = 10;
 		int callsToSender2 = 25;
 		int callsToSender3 = 32;
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
 		sender = firstAvailableStrategy.createSender(pool);
 		for (int i = 0; i < callsToSender1; i++) {
 			sender.sendRequest(new Object(), 50, assertNoCalls());
 		}
-		pool.remove(ADDRESS_1);
+		pool.remove(address1);
 		// we should recreate sender after changing in pool
 		sender = firstAvailableStrategy.createSender(pool);
 		for (int i = 0; i < callsToSender2; i++) {
 			sender.sendRequest(new Object(), 50, assertNoCalls());
 		}
-		pool.remove(ADDRESS_2);
+		pool.remove(address2);
 		// we should recreate sender after changing in pool
 		sender = firstAvailableStrategy.createSender(pool);
 		for (int i = 0; i < callsToSender3; i++) {
@@ -63,9 +71,9 @@ public class RpcStrategyFirstAvailableTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection = new RpcSenderStub();
 		// one connection is added
-		pool.put(ADDRESS_2, connection);
+		pool.put(address2, connection);
 		RpcStrategy firstAvailableStrategy =
-				firstAvailable(servers(ADDRESS_1, ADDRESS_2));
+				firstAvailable(servers(address1, address2));
 
 		assertNotNull(firstAvailableStrategy.createSender(pool));
 	}
@@ -74,7 +82,7 @@ public class RpcStrategyFirstAvailableTest {
 	public void itShouldNotBeCreatedWhenThereAreNoActiveSubSenders() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategy firstAvailableStrategy = firstAvailable(servers(ADDRESS_1, ADDRESS_2, ADDRESS_3));
+		RpcStrategy firstAvailableStrategy = firstAvailable(servers(address1, address2, address3));
 
 		assertNull(firstAvailableStrategy.createSender(pool));
 	}

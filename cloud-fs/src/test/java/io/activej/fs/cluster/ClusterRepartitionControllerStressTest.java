@@ -26,6 +26,7 @@ import static io.activej.fs.Utils.initTempDir;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -81,7 +82,7 @@ public final class ClusterRepartitionControllerStressTest {
 		partitions.put(localPartitionId, localFsClient);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-			InetSocketAddress address = new InetSocketAddress("localhost", 5560 + i);
+			InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
 
 			serverStorages[i] = storage.resolve("storage_" + i);
 

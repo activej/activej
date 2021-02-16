@@ -19,6 +19,7 @@ import io.activej.serializer.SerializerBuilder;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,8 +37,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public final class RpcBinaryProtocolTest {
-	private static final int LISTEN_PORT = getFreePort();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -47,18 +46,25 @@ public final class RpcBinaryProtocolTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
+	private int listenPort;
+
+	@Before
+	public void setUp() {
+		listenPort = getFreePort();
+	}
+
 	@Test
 	public void test() throws Exception {
 		String testMessage = "Test";
 
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", LISTEN_PORT)));
+				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 
 		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withHandler(String.class, request -> Promise.of("Hello, " + request + "!"))
-				.withListenPort(LISTEN_PORT);
+				.withListenPort(listenPort);
 		server.listen();
 
 		int countRequests = 10;

@@ -16,7 +16,7 @@ import static org.junit.Assert.assertSame;
 
 public class RecordProjectionTest {
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 		ClassBuilder.clearStaticConstants();
 	}
 

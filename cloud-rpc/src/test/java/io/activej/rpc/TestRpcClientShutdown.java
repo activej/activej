@@ -10,6 +10,7 @@ import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,13 +31,19 @@ import static org.hamcrest.Matchers.instanceOf;
 public final class TestRpcClientShutdown {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-	public static final int PORT = getFreePort();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+
+	private int port;
+
+	@Before
+	public void setUp() {
+		port = getFreePort();
+	}
 
 	@Test
 	public void testServerOnClientShutdown() throws IOException {
@@ -51,11 +58,11 @@ public final class TestRpcClientShutdown {
 							Thread.sleep(100);
 							return new Response();
 						}))
-				.withListenPort(PORT);
+				.withListenPort(port);
 
 		RpcClient rpcClient = RpcClient.create(eventloop)
 				.withMessageTypes(messageTypes)
-				.withStrategy(server(new InetSocketAddress(PORT)));
+				.withStrategy(server(new InetSocketAddress(port)));
 
 		rpcServer.listen();
 

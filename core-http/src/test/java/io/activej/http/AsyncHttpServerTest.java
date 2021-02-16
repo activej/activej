@@ -9,6 +9,7 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -22,7 +23,6 @@ import java.util.LinkedHashSet;
 import java.util.Random;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
@@ -41,15 +41,24 @@ public final class AsyncHttpServerTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	public static AsyncHttpServer blockingHttpServer(Eventloop primaryEventloop, int port) {
-		return AsyncHttpServer.create(primaryEventloop,
+	private Eventloop eventloop;
+	private int port;
+
+	@Before
+	public void setUp() {
+		eventloop = Eventloop.getCurrentEventloop();
+		port = getFreePort();
+	}
+
+	public AsyncHttpServer blockingHttpServer() {
+		return AsyncHttpServer.create(eventloop,
 				request ->
 						HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))
 				.withListenPort(port);
 	}
 
-	public static AsyncHttpServer asyncHttpServer(Eventloop primaryEventloop, int port) {
-		return AsyncHttpServer.create(primaryEventloop,
+	public AsyncHttpServer asyncHttpServer() {
+		return AsyncHttpServer.create(eventloop,
 				request ->
 						Promise.ofCallback(cb -> cb.post(
 								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))))
@@ -58,8 +67,8 @@ public final class AsyncHttpServerTest {
 
 	static final Random RANDOM = new Random();
 
-	public static AsyncHttpServer delayedHttpServer(Eventloop primaryEventloop, int port) {
-		return AsyncHttpServer.create(primaryEventloop,
+	public AsyncHttpServer delayedHttpServer() {
+		return AsyncHttpServer.create(eventloop,
 				request -> Promises.delay(RANDOM.nextInt(3),
 						HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery()))))
 				.withListenPort(port);
@@ -84,16 +93,12 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testKeepAlive_Http_1_0() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		int port = getFreePort();
-
-		doTestKeepAlive_Http_1_0(eventloop, blockingHttpServer(eventloop, port), port);
-		doTestKeepAlive_Http_1_0(eventloop, asyncHttpServer(eventloop, port), port);
-		doTestKeepAlive_Http_1_0(eventloop, delayedHttpServer(eventloop, port), port);
+		doTestKeepAlive_Http_1_0(blockingHttpServer());
+		doTestKeepAlive_Http_1_0(asyncHttpServer());
+		doTestKeepAlive_Http_1_0(delayedHttpServer());
 	}
 
-	private void doTestKeepAlive_Http_1_0(Eventloop eventloop, AsyncHttpServer server, int port) throws Exception {
+	private void doTestKeepAlive_Http_1_0(AsyncHttpServer server) throws Exception {
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -116,20 +121,17 @@ public final class AsyncHttpServerTest {
 
 		server.closeFuture().get();
 		thread.join();
+		resetPort();
 	}
 
 	@Test
 	public void testKeepAlive_Http_1_1() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		int port = getFreePort();
-
-		doTestKeepAlive_Http_1_1(eventloop, blockingHttpServer(eventloop, port), port);
-		doTestKeepAlive_Http_1_1(eventloop, asyncHttpServer(eventloop, port), port);
-		doTestKeepAlive_Http_1_1(eventloop, delayedHttpServer(eventloop, port), port);
+		doTestKeepAlive_Http_1_1(blockingHttpServer());
+		doTestKeepAlive_Http_1_1(asyncHttpServer());
+		doTestKeepAlive_Http_1_1(delayedHttpServer());
 	}
 
-	private void doTestKeepAlive_Http_1_1(Eventloop eventloop, AsyncHttpServer server, int port) throws Exception {
+	private void doTestKeepAlive_Http_1_1(AsyncHttpServer server) throws Exception {
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -152,14 +154,12 @@ public final class AsyncHttpServerTest {
 
 		server.closeFuture().get();
 		thread.join();
+		resetPort();
 	}
 
 	@Test
 	public void testClosed() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		int port = getFreePort();
-		AsyncHttpServer server = blockingHttpServer(eventloop, port);
+		AsyncHttpServer server = blockingHttpServer();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -176,9 +176,6 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testBodySupplierClosingOnDisconnect() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		int port = getFreePort();
 		SettablePromise<Throwable> throwablePromise = new SettablePromise<>();
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(() -> Promise.of(wrapAscii("Hello")), throwablePromise::set);
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier))
@@ -201,10 +198,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testNoKeepAlive_Http_1_0() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		int port = getFreePort();
-		AsyncHttpServer server = blockingHttpServer(eventloop, port);
+		AsyncHttpServer server = blockingHttpServer();
 		server.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -224,10 +218,7 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testNoKeepAlive_Http_1_1() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		int port = getFreePort();
-		AsyncHttpServer server = blockingHttpServer(eventloop, port);
+		AsyncHttpServer server = blockingHttpServer();
 		server.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -247,14 +238,12 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testPipelining() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		int port = getFreePort();
 //		doTestPipelining(eventloop, blockingHttpServer(eventloop));
 //		doTestPipelining(eventloop, asyncHttpServer(eventloop));
-		doTestPipelining(eventloop, delayedHttpServer(eventloop, port), port);
+		doTestPipelining(delayedHttpServer());
 	}
 
-	private void doTestPipelining(Eventloop eventloop, AsyncHttpServer server, int port) throws Exception {
+	private void doTestPipelining(AsyncHttpServer server) throws Exception {
 		server.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -288,19 +277,18 @@ public final class AsyncHttpServerTest {
 
 		server.closeFuture().get();
 		thread.join();
+		resetPort();
 	}
 
 	@Test
 	@Ignore("does not work")
 	public void testPipelining2() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		int port = getFreePort();
 //		doTestPipelining(eventloop, blockingHttpServer(eventloop));
 //		doTestPipelining(eventloop, asyncHttpServer(eventloop));
-		doTestPipelining2(eventloop, delayedHttpServer(eventloop, port), port);
+		doTestPipelining2(delayedHttpServer());
 	}
 
-	private void doTestPipelining2(Eventloop eventloop, AsyncHttpServer server, int port) throws Exception {
+	private void doTestPipelining2(AsyncHttpServer server) throws Exception {
 		server.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -334,13 +322,11 @@ public final class AsyncHttpServerTest {
 
 		server.closeFuture().get();
 		thread.join();
+		resetPort();
 	}
 
 	@Test
 	public void testBigHttpMessage() throws Exception {
-		int port = getFreePort();
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
 		byte[] body = encodeAscii("Test big HTTP message body");
 		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
 				.withBody(body);
@@ -372,8 +358,6 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testExpectContinue() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		int port = getFreePort();
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 				request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())))
 				.withListenPort(port);
@@ -402,14 +386,10 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testBodyRecycledOnce() throws IOException, InterruptedException {
-		int port = getFreePort();
-
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 				request -> {
 					// imitate network problems
-					shutdownAllChannels(eventloop);
+					shutdownAllChannels();
 					return HttpResponse.ok200();
 				})
 				.withListenPort(port)
@@ -433,7 +413,7 @@ public final class AsyncHttpServerTest {
 		thread.join();
 	}
 
-	private static void shutdownAllChannels(Eventloop eventloop) {
+	private void shutdownAllChannels() {
 		try {
 			Selector selector = eventloop.getSelector();
 			assert selector != null;
@@ -443,10 +423,7 @@ public final class AsyncHttpServerTest {
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
-		AsyncHttpServer server = blockingHttpServer(eventloop, 8888);
-		server.listen();
-		eventloop.run();
+	private void resetPort() {
+		port = getFreePort();
 	}
 }

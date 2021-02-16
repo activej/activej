@@ -13,6 +13,7 @@ import io.activej.service.ServiceGraph;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.worker.annotation.Worker;
 import io.activej.worker.annotation.WorkerId;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -30,10 +31,15 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public final class HttpWorkerServerTest {
-	public static final int PORT = getFreePort();
-
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
+	public int port;
+
+	@Before
+	public void setUp() {
+		port = getFreePort();
+	}
 
 	@Test
 	public void test() throws Exception {
@@ -52,7 +58,7 @@ public final class HttpWorkerServerTest {
 					@Provides
 					Config config() {
 						return Config.create()
-								.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(HttpWorkerServerTest.PORT)));
+								.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(port)));
 					}
 				};
 			}
@@ -64,7 +70,7 @@ public final class HttpWorkerServerTest {
 		try (Socket socket0 = new Socket(); Socket socket1 = new Socket()) {
 			serviceGraph.startFuture().get();
 
-			InetSocketAddress localhost = new InetSocketAddress("localhost", PORT);
+			InetSocketAddress localhost = new InetSocketAddress("localhost", port);
 			socket0.connect(localhost);
 			socket1.connect(localhost);
 

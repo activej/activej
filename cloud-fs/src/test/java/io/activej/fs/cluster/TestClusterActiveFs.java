@@ -40,6 +40,7 @@ import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.concurrent.Executors.newCachedThreadPool;
@@ -83,7 +84,7 @@ public final class TestClusterActiveFs {
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-			int port = 5600 + i;
+			int port = getFreePort();
 
 			partitions.put("server_" + i, HttpActiveFs.create("http://localhost:" + port, httpClient));
 

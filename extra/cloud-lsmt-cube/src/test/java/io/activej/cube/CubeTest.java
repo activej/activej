@@ -48,8 +48,6 @@ import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
 public final class CubeTest {
-	private static final int LISTEN_PORT = getFreePort();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -69,9 +67,11 @@ public final class CubeTest {
 
 	private AggregationChunkStorage<Long> chunkStorage;
 	private Cube cube;
+	private int listenPort;
 
 	@Before
 	public void setUp() throws Exception {
+		listenPort = getFreePort();
 		LocalActiveFs fs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
 		chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
@@ -132,7 +132,7 @@ public final class CubeTest {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, serverStorage);
 		await(fs.start());
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, ActiveFsServlet.create(fs))
-				.withListenPort(LISTEN_PORT);
+				.withListenPort(listenPort);
 		server.listen();
 		return server;
 	}
@@ -143,7 +143,7 @@ public final class CubeTest {
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		AsyncHttpServer server1 = startServer(executor, serverStorage);
 		AsyncHttpClient httpClient = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		HttpActiveFs storage = HttpActiveFs.create("http://localhost:" + LISTEN_PORT, httpClient);
+		HttpActiveFs storage = HttpActiveFs.create("http://localhost:" + listenPort, httpClient);
 		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 

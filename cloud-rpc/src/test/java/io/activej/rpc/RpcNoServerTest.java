@@ -12,6 +12,7 @@ import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,7 +77,7 @@ public final class RpcNoServerTest {
 		};
 	}
 
-	private static RpcServer createServer(Eventloop eventloop) {
+	private RpcServer createServer(Eventloop eventloop) {
 		return RpcServer.create(eventloop)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
@@ -85,10 +86,17 @@ public final class RpcNoServerTest {
 					}
 					return "Hello, " + name + "!";
 				}))
-				.withListenPort(PORT);
+				.withListenPort(port);
 	}
 
-	private static final int PORT = getFreePort(), TIMEOUT = 1500;
+	private static final int TIMEOUT = 1500;
+
+	private int port;
+
+	@Before
+	public void setUp() {
+		port = getFreePort();
+	}
 
 	@Test
 	public void testRpcClientStopBug1() throws Exception {
@@ -118,7 +126,7 @@ public final class RpcNoServerTest {
 
 		RpcClient rpcClient = RpcClient.create(eventloopClient)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), PORT)))
+				.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
 				.withConnectTimeout(Duration.ofMillis(TIMEOUT));
 
 		try {

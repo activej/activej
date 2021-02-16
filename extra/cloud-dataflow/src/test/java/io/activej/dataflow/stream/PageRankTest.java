@@ -41,6 +41,7 @@ import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -58,11 +59,17 @@ public class PageRankTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
+	private InetSocketAddress address1;
+	private InetSocketAddress address2;
+
 	private ExecutorService executor;
 	private ExecutorService sortingExecutor;
 
 	@Before
 	public void setUp() {
+		address1 = new InetSocketAddress(getFreePort());
+		address2 = new InetSocketAddress(getFreePort());
+
 		executor = Executors.newCachedThreadPool();
 		sortingExecutor = Executors.newCachedThreadPool();
 	}
@@ -243,9 +250,6 @@ public class PageRankTest {
 				.build();
 	}
 
-	private static final InetSocketAddress address1 = new InetSocketAddress(3535);
-	private static final InetSocketAddress address2 = new InetSocketAddress(3540);
-
 	public DataflowServer launchServer(InetSocketAddress address, Object items, Object result) throws Exception {
 		Injector env = Injector.of(ModuleBuilder.create()
 				.install(createModule())
@@ -281,7 +285,7 @@ public class PageRankTest {
 	@Ignore
 	public void launchServers() throws Exception {
 		launchServer(address1, generatePages(100000), (Consumer<Rank>) $ -> {});
-		launchServer(address2, generatePages( 90000), (Consumer<Rank>) $ -> {});
+		launchServer(address2, generatePages(90000), (Consumer<Rank>) $ -> {});
 		await();
 	}
 

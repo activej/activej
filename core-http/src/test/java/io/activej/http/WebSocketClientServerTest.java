@@ -15,10 +15,7 @@ import io.activej.promise.SettablePromise;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,8 +39,6 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class WebSocketClientServerTest {
-	private static final int PORT = getFreePort();
-
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -53,6 +48,13 @@ public final class WebSocketClientServerTest {
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
+	private int port;
+
+	@Before
+	public void setUp() {
+		port = getFreePort();
+	}
+
 	@Test
 	public void testEcho() throws IOException {
 		startTestServer(ws -> ws.messageReadChannel().streamTo(ws.messageWriteChannel()));
@@ -60,7 +62,7 @@ public final class WebSocketClientServerTest {
 		Stream<String> inputStream = IntStream.range(0, 100).mapToObj(String::valueOf);
 
 		String result = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + PORT))
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(ws -> {
 					ChannelSupplier.ofStream(inputStream)
 							.mapAsync(item -> Promises.delay(1L, Message.text(item)))
@@ -93,7 +95,7 @@ public final class WebSocketClientServerTest {
 				.streamTo(webSocket.messageWriteChannel()));
 
 		Throwable receivedEx = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + PORT))
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.messageReadChannel().streamTo(ChannelConsumer.ofConsumer(messages::add))));
 
 		assertThat(receivedEx, instanceOf(WebSocketException.class));
@@ -117,7 +119,7 @@ public final class WebSocketClientServerTest {
 
 		await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withSslEnabled(createTestSslContext(), executor)
-				.webSocketRequest(HttpRequest.get("wss://127.0.0.1:" + PORT))
+				.webSocketRequest(HttpRequest.get("wss://127.0.0.1:" + port))
 				.whenResult(webSocket -> webSocket.closeEx(testError)));
 
 		WebSocketException exception = awaitException(settablePromise);
@@ -136,7 +138,7 @@ public final class WebSocketClientServerTest {
 
 		WebSocketException exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withSslEnabled(createTestSslContext(), executor)
-				.webSocketRequest(HttpRequest.get("wss://127.0.0.1:" + PORT))
+				.webSocketRequest(HttpRequest.get("wss://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.messageReadChannel()
 						.streamTo(ChannelConsumer.ofConsumer($ -> fail()))));
 
@@ -158,11 +160,11 @@ public final class WebSocketClientServerTest {
 					protected void onWebSocket(WebSocket webSocket) {
 					}
 				}))
-				.withListenPort(PORT)
+				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
 		Throwable exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + PORT)));
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
 	}
@@ -181,7 +183,7 @@ public final class WebSocketClientServerTest {
 		List<String> result = new ArrayList<>();
 		WebSocketException exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withSslEnabled(createTestSslContext(), executor)
-				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + PORT))
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.readMessage()
 						.then(message -> {
 							result.add(message.getText());
@@ -217,7 +219,7 @@ public final class WebSocketClientServerTest {
 		List<String> result = new ArrayList<>();
 		Message lastMessage = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withSslEnabled(createTestSslContext(), executor)
-				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + PORT))
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.readMessage()
 						.then(message -> {
 							result.add(message.getText());
@@ -262,7 +264,7 @@ public final class WebSocketClientServerTest {
 
 		await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withSslEnabled(createTestSslContext(), executor)
-				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + PORT))
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
 						.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
 						.then(() -> webSocket.writeMessage(Message.text(messages.get(2))))
@@ -303,7 +305,7 @@ public final class WebSocketClientServerTest {
 
 		await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withSslEnabled(createTestSslContext(), executor)
-				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + PORT))
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
 						.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
 						.then(() -> webSocket.writeMessage(Message.text(messages.get(2))))
@@ -319,7 +321,7 @@ public final class WebSocketClientServerTest {
 	private void startTestServer(Consumer<WebSocket> webSocketConsumer) throws IOException {
 		AsyncHttpServer.create(Eventloop.getCurrentEventloop(), RoutingServlet.create()
 				.mapWebSocket("/", webSocketConsumer))
-				.withListenPort(PORT)
+				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
 	}
@@ -328,7 +330,7 @@ public final class WebSocketClientServerTest {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), RoutingServlet.create()
 				.mapWebSocket("/", webSocketConsumer))
-				.withSslListenPort(createTestSslContext(), executor, PORT)
+				.withSslListenPort(createTestSslContext(), executor, port)
 				.withAcceptOnce();
 		server.getCloseNotification().whenComplete(executor::shutdown);
 		server.listen();

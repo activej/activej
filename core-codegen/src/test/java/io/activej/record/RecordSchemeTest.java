@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 public class RecordSchemeTest {
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 		ClassBuilder.clearStaticConstants();
 	}
 

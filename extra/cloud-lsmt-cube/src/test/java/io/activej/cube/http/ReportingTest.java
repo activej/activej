@@ -79,6 +79,7 @@ public final class ReportingTest {
 	private AsyncHttpServer cubeHttpServer;
 	private CubeHttpClient cubeHttpClient;
 	private Cube cube;
+	private int serverPort;
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -88,8 +89,6 @@ public final class ReportingTest {
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
-
-	private static final int SERVER_PORT = getFreePort();
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
 			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
@@ -272,6 +271,7 @@ public final class ReportingTest {
 
 	@Before
 	public void setUp() throws Exception {
+		serverPort = getFreePort();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
 		eventloop = Eventloop.getCurrentEventloop();
@@ -366,7 +366,7 @@ public final class ReportingTest {
 
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
 				.withNoKeepAlive();
-		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + SERVER_PORT)
+		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
 				.withAttribute("advertiser", int.class)
 				.withAttribute("campaign", int.class)
@@ -390,7 +390,7 @@ public final class ReportingTest {
 
 	private AsyncHttpServer startHttpServer() {
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, ReportingServiceServlet.createRootServlet(eventloop, cube))
-				.withListenPort(SERVER_PORT)
+				.withListenPort(serverPort)
 				.withAcceptOnce();
 		try {
 			server.listen();

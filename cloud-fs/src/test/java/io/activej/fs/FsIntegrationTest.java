@@ -39,6 +39,7 @@ import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -47,7 +48,6 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class FsIntegrationTest {
-	private static final InetSocketAddress address = new InetSocketAddress("localhost", 5560);
 	private static final byte[] BIG_FILE = new byte[2 * 1024 * 1024]; // 2 MB
 	private static final byte[] CONTENT = "content".getBytes(UTF_8);
 
@@ -70,6 +70,7 @@ public final class FsIntegrationTest {
 
 	@Before
 	public void setup() throws IOException {
+		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
 		Executor executor = newCachedThreadPool();
 
 		storage = temporaryFolder.newFolder("server_storage").toPath();

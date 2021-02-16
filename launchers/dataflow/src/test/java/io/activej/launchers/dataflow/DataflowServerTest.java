@@ -75,14 +75,16 @@ public class DataflowServerTest {
 	private ExecutorService executor;
 	private ExecutorService sortingExecutor;
 
-	private static final int PORT_1 = getFreePort();
-	private static final int PORT_2 = getFreePort();
+	private int port1;
+	private int port2;
 
 	private TestServerLauncher serverLauncher1;
 	private TestServerLauncher serverLauncher2;
 
 	@Before
 	public void setUp() {
+		port1 = getFreePort();
+		port2 = getFreePort();
 		executor = Executors.newSingleThreadExecutor();
 		sortingExecutor = Executors.newSingleThreadExecutor();
 	}
@@ -182,8 +184,8 @@ public class DataflowServerTest {
 
 	// region stubs & helpers
 	private Promise<Void> mapReduce(List<StringCount> result) throws IOException {
-		Partition partition1 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), PORT_1));
-		Partition partition2 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), PORT_2));
+		Partition partition1 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port1));
+		Partition partition2 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2));
 
 		Injector injector = Injector.of(createModule(asList(partition1, partition2)));
 
@@ -202,8 +204,8 @@ public class DataflowServerTest {
 	}
 
 	private Promise<Void> repartitionAndSort() throws IOException {
-		Partition partition1 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), PORT_1));
-		Partition partition2 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), PORT_2));
+		Partition partition1 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port1));
+		Partition partition2 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2));
 
 		Injector injector = Injector.of(createModule(asList(partition1, partition2)));
 
@@ -233,8 +235,8 @@ public class DataflowServerTest {
 	}
 
 	private void launchServers(List<String> server1Words, List<String> server2Words, List<String> server1Result, List<String> server2Result, boolean oneMalformed) {
-		serverLauncher1 = launchServer(PORT_1, server1Words, server1Result, oneMalformed);
-		serverLauncher2 = launchServer(PORT_2, server2Words, server2Result, false);
+		serverLauncher1 = launchServer(port1, server1Words, server1Result, oneMalformed);
+		serverLauncher2 = launchServer(port2, server2Words, server2Result, false);
 	}
 
 	private TestServerLauncher launchServer(int port, List<String> words, List<String> result, boolean malformed) {

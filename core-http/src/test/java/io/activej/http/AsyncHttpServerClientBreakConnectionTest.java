@@ -2,7 +2,6 @@ package io.activej.http;
 
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promises;
-import io.activej.test.TestUtils;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -14,11 +13,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class AsyncHttpServerClientBreakConnectionTest {
 	private final Logger logger = LoggerFactory.getLogger(AsyncHttpServerClientBreakConnectionTest.class);
-	private final int FREE_PORT = TestUtils.getFreePort();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -29,9 +28,11 @@ public class AsyncHttpServerClientBreakConnectionTest {
 	private final Eventloop eventloop = Eventloop.getCurrentEventloop();
 	private AsyncHttpServer server;
 	private AsyncHttpClient client;
+	private int freePort;
 
 	@Before
 	public void init() throws IOException {
+		freePort = getFreePort();
 		server = AsyncHttpServer.create(eventloop,
 				request -> {
 					logger.info("Closing server...");
@@ -42,7 +43,7 @@ public class AsyncHttpServerClientBreakConnectionTest {
 									.withBody("Hello World".getBytes())
 					);
 				})
-				.withListenPort(FREE_PORT)
+				.withListenPort(freePort)
 				.withAcceptOnce();
 
 		client = AsyncHttpClient.create(eventloop);
@@ -52,7 +53,7 @@ public class AsyncHttpServerClientBreakConnectionTest {
 	@Test
 	public void testBreakConnection() {
 		await(client.request(
-				HttpRequest.post("http://127.0.0.1:" + FREE_PORT)
+				HttpRequest.post("http://127.0.0.1:" + freePort)
 						.withBody("Hello World".getBytes()))
 				.map(response ->
 						response.loadBody()

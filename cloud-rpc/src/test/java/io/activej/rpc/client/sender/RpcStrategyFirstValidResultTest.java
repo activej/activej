@@ -7,6 +7,7 @@ import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.test.ExpectedException;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -25,12 +26,18 @@ import static org.junit.Assert.*;
 public class RpcStrategyFirstValidResultTest {
 
 	private static final String HOST = "localhost";
-
-	private static final InetSocketAddress ADDRESS_1 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_2 = new InetSocketAddress(HOST, getFreePort());
-	private static final InetSocketAddress ADDRESS_3 = new InetSocketAddress(HOST, getFreePort());
-
 	private static final Exception NO_VALID_RESULT_EXCEPTION = new ExpectedException("No valid result");
+
+	private InetSocketAddress address1;
+	private InetSocketAddress address2;
+	private InetSocketAddress address3;
+
+	@Before
+	public void setUp() {
+		address1 = new InetSocketAddress(HOST, getFreePort());
+		address2 = new InetSocketAddress(HOST, getFreePort());
+		address3 = new InetSocketAddress(HOST, getFreePort());
+	}
 
 	@Test
 	public void itShouldSendRequestToAllAvailableSenders() {
@@ -38,19 +45,19 @@ public class RpcStrategyFirstValidResultTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy firstValidResult = firstValidResult(servers(ADDRESS_1, ADDRESS_2, ADDRESS_3));
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2, address3));
 		int callsAmountIterationOne = 10;
 		int callsAmountIterationTwo = 25;
 		RpcSender senderToAll;
 
-		pool.put(ADDRESS_1, connection1);
-		pool.put(ADDRESS_2, connection2);
-		pool.put(ADDRESS_3, connection3);
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		pool.put(address3, connection3);
 		senderToAll = firstValidResult.createSender(pool);
 		for (int i = 0; i < callsAmountIterationOne; i++) {
 			senderToAll.sendRequest(new Object(), 50, ignore());
 		}
-		pool.remove(ADDRESS_1);
+		pool.remove(address1);
 		// we should recreate sender after changing in pool
 		senderToAll = firstValidResult.createSender(pool);
 		for (int i = 0; i < callsAmountIterationTwo; i++) {
@@ -137,8 +144,8 @@ public class RpcStrategyFirstValidResultTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection = new RpcSenderStub();
 		// one connection is added
-		pool.put(ADDRESS_2, connection);
-		RpcStrategy firstValidResult = firstValidResult(servers(ADDRESS_1, ADDRESS_2));
+		pool.put(address2, connection);
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2));
 		assertNotNull(firstValidResult.createSender(pool));
 	}
 
@@ -146,7 +153,7 @@ public class RpcStrategyFirstValidResultTest {
 	public void itShouldNotBeCreatedWhenThereAreNoActiveSubSenders() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategy firstValidResult = firstValidResult(servers(ADDRESS_1, ADDRESS_2, ADDRESS_3));
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2, address3));
 		assertNull(firstValidResult.createSender(pool));
 	}
 

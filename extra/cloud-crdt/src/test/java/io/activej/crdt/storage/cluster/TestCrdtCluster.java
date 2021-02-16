@@ -25,6 +25,7 @@ import java.util.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
+import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Collections.singleton;
 
 public final class TestCrdtCluster {
@@ -47,7 +48,7 @@ public final class TestCrdtCluster {
 		Map<String, CrdtStorageMap<String, TimestampContainer<Integer>>> remoteStorages = new LinkedHashMap<>();
 		for (int i = 0; i < 10; i++) {
 			CrdtStorageMap<String, TimestampContainer<Integer>> storage = CrdtStorageMap.create(eventloop, TimestampContainer.createCrdtFunction(Integer::max));
-			InetSocketAddress address = new InetSocketAddress(5555 + i);
+			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, TimestampContainer<Integer>> server = CrdtServer.create(eventloop, storage, serializer);
 			server.withListenAddresses(address).listen();
 			servers.add(server);
@@ -91,7 +92,7 @@ public final class TestCrdtCluster {
 			storage.put("test_2", TimestampContainer.now(new HashSet<>(singleton(i / 2))));
 			storage.put("test_3", TimestampContainer.now(new HashSet<>(singleton(123))));
 
-			InetSocketAddress address = new InetSocketAddress(5555 + i);
+			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, TimestampContainer<Set<Integer>>> server = CrdtServer.create(eventloop, storage, serializer);
 			server.withListenAddresses(address).listen();
 			servers.add(server);

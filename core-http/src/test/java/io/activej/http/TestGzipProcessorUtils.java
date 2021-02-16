@@ -7,6 +7,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,8 +39,9 @@ import static org.junit.Assert.assertThrows;
 
 @RunWith(Parameterized.class)
 public final class TestGzipProcessorUtils {
-	private static final int PORT = getFreePort();
 	public static final int CHARACTERS_COUNT = 10_000_000;
+
+	private int port;
 
 	@Parameters
 	public static List<String> testData() {
@@ -62,6 +64,11 @@ public final class TestGzipProcessorUtils {
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
+
+	@Before
+	public void setUp() {
+		port = getFreePort();
+	}
 
 	@Test
 	public void testEncodeDecode() throws MalformedHttpException {
@@ -105,11 +112,11 @@ public final class TestGzipProcessorUtils {
 									.withBodyGzipCompression()
 									.withBody(ByteBufStrings.wrapAscii(receivedData));
 						}))
-				.withListenPort(PORT);
+				.withListenPort(port);
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
 
-		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + PORT)
+		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT_ENCODING, "gzip")
 				.withBodyGzipCompression()
 				.withBody(wrapUtf8(text));

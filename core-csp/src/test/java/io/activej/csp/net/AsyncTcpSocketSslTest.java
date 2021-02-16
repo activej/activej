@@ -24,7 +24,6 @@ import org.junit.Test;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +56,6 @@ public final class AsyncTcpSocketSslTest {
 
 	private static final String TEST_STRING = "Hello world";
 
-	private static final InetSocketAddress ADDRESS = new InetSocketAddress("localhost", getFreePort());
 
 	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoder.ofFixedSize(TEST_STRING.length())
 			.andThen(ByteBuf::asArray)
@@ -83,12 +81,14 @@ public final class AsyncTcpSocketSslTest {
 	private Executor executor;
 	private SSLContext sslContext;
 	private StringBuilder sentData;
+	private InetSocketAddress address;
 
 	@Before
 	public void setUp() throws Exception {
 		executor = Executors.newSingleThreadExecutor();
 		sslContext = createSslContext();
 		sentData = new StringBuilder();
+		address = new InetSocketAddress("localhost", getFreePort());
 	}
 
 	@Test
@@ -98,7 +98,7 @@ public final class AsyncTcpSocketSslTest {
 				.whenComplete(sslSocket::close)
 				.whenComplete(assertComplete(result -> assertEquals(TEST_STRING, result))));
 
-		await(AsyncTcpSocketNio.connect(ADDRESS)
+		await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
@@ -111,7 +111,7 @@ public final class AsyncTcpSocketSslTest {
 				sslSocket.write(wrapAscii(TEST_STRING))
 						.whenComplete(assertComplete()));
 
-		String result = await(AsyncTcpSocketNio.connect(ADDRESS)
+		String result = await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 						.decode(DECODER)
@@ -128,7 +128,7 @@ public final class AsyncTcpSocketSslTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertComplete()));
 
-		String result = await(AsyncTcpSocketNio.connect(ADDRESS)
+		String result = await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
@@ -150,7 +150,7 @@ public final class AsyncTcpSocketSslTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertComplete()));
 
-		String result = await(AsyncTcpSocketNio.connect(ADDRESS)
+		String result = await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING_PART_1))
@@ -170,7 +170,7 @@ public final class AsyncTcpSocketSslTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertComplete(result -> assertEquals(result, sentData.toString()))));
 
-		await(AsyncTcpSocketNio.connect(ADDRESS)
+		await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.whenResult(sslSocket ->
 						sendData(sslSocket)
@@ -184,7 +184,7 @@ public final class AsyncTcpSocketSslTest {
 						.whenComplete(serverSsl::close)
 						.whenComplete(assertComplete()));
 
-		String result = await(AsyncTcpSocketNio.connect(ADDRESS)
+		String result = await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 						.decode(DECODER_LARGE)
@@ -201,7 +201,7 @@ public final class AsyncTcpSocketSslTest {
 						.then(() -> socket.write(wrapAscii("ello")))
 						.whenComplete(($, e) -> assertThat(e, instanceOf(CloseException.class))));
 
-		Throwable e = awaitException(AsyncTcpSocketNio.connect(ADDRESS)
+		Throwable e = awaitException(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket -> {
 					BinaryChannelSupplier supplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket));
@@ -214,7 +214,7 @@ public final class AsyncTcpSocketSslTest {
 
 	@Test
 	public void testPeerClosingDuringHandshake() throws IOException {
-		ServerSocket listener = new ServerSocket(ADDRESS.getPort());
+		ServerSocket listener = new ServerSocket(address.getPort());
 		Thread serverThread = new Thread(() -> {
 			try (Socket ignored = listener.accept()) {
 				listener.close();
@@ -225,7 +225,7 @@ public final class AsyncTcpSocketSslTest {
 
 		serverThread.start();
 
-		Throwable exception = awaitException(AsyncTcpSocketNio.connect(ADDRESS)
+		Throwable exception = awaitException(AsyncTcpSocketNio.connect(address)
 				.whenResult(asyncTcpSocket -> {
 					try {
 						// noinspection ConstantConditions - Imitating a suddenly closed channel
@@ -239,9 +239,9 @@ public final class AsyncTcpSocketSslTest {
 		assertThat(exception, instanceOf(CloseException.class));
 	}
 
-	static void startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {
+	void startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {
 		SimpleServer.create(logic)
-				.withSslListenAddress(sslContext, Executors.newSingleThreadExecutor(), ADDRESS)
+				.withSslListenAddress(sslContext, Executors.newSingleThreadExecutor(), address)
 				.withAcceptOnce()
 				.listen();
 	}
@@ -251,14 +251,14 @@ public final class AsyncTcpSocketSslTest {
 
 		KeyStore keyStore = KeyStore.getInstance("JKS");
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-		try (InputStream input = new FileInputStream(new File(KEYSTORE_PATH))) {
+		try (InputStream input = new FileInputStream(KEYSTORE_PATH)) {
 			keyStore.load(input, KEYSTORE_PASS.toCharArray());
 		}
 		kmf.init(keyStore, KEY_PASS.toCharArray());
 
 		KeyStore trustStore = KeyStore.getInstance("JKS");
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-		try (InputStream input = new FileInputStream(new File(TRUSTSTORE_PATH))) {
+		try (InputStream input = new FileInputStream(TRUSTSTORE_PATH)) {
 			trustStore.load(input, TRUSTSTORE_PASS.toCharArray());
 		}
 		tmf.init(trustStore);

@@ -5,7 +5,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
-import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -23,6 +22,7 @@ import java.util.concurrent.Executors;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -43,13 +43,13 @@ public final class RpcTimeoutTest {
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static final int SERVER_DELAY = 100;
-	private static final int PORT = TestUtils.getFreePort();
 
 	private RpcClient client;
 	private RpcServer server;
 
 	@Before
 	public void setUp() throws Exception {
+		int port = getFreePort();
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		Executor executor = Executors.newSingleThreadExecutor();
 		List<Class<?>> messageTypes = singletonList(String.class);
@@ -61,11 +61,11 @@ public final class RpcTimeoutTest {
 							Thread.sleep(SERVER_DELAY);
 							return request;
 						}))
-				.withListenPort(PORT);
+				.withListenPort(port);
 
 		client = RpcClient.create(eventloop)
 				.withMessageTypes(messageTypes)
-				.withStrategy(server(new InetSocketAddress(PORT)));
+				.withStrategy(server(new InetSocketAddress(port)));
 
 		server.listen();
 	}

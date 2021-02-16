@@ -8,6 +8,7 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,6 +20,7 @@ import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static io.activej.promise.Promises.loop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
@@ -27,8 +29,6 @@ public final class PingPongSocketConnectionTest {
 
 	private static final String REQUEST_MSG = "PING";
 	private static final String RESPONSE_MSG = "PONG";
-
-	private static final InetSocketAddress ADDRESS = new InetSocketAddress("localhost", 9022);
 
 	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoder.ofFixedSize(4)
 			.andThen(buf -> buf.asString(UTF_8));
@@ -41,6 +41,13 @@ public final class PingPongSocketConnectionTest {
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
+
+	private InetSocketAddress address;
+
+	@Before
+	public void setUp() {
+		address = new InetSocketAddress("localhost", getFreePort());
+	}
 
 	@Test
 	public void test() throws IOException {
@@ -56,11 +63,11 @@ public final class PingPongSocketConnectionTest {
 							.whenComplete(socket::close)
 							.whenComplete(assertComplete());
 				})
-				.withListenAddress(ADDRESS)
+				.withListenAddress(address)
 				.withAcceptOnce()
 				.listen();
 
-		await(AsyncTcpSocketNio.connect(ADDRESS)
+		await(AsyncTcpSocketNio.connect(address)
 				.then(socket -> {
 					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
 					return loop(ITERATIONS,
