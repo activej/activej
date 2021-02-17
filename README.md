@@ -91,3 +91,5 @@ To learn more about ActiveJ, please visit https://activej.io or follow our
 
 Examples for usage of the ActiveJ platform and all the ActiveJ libraries can be found
 in [`examples`](https://github.com/activej/activej/tree/master/examples) module.
+
+**Release notes for ActiveJ can be found [here](https://activej.io/blog/release-notes)**
