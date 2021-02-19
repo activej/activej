@@ -55,7 +55,7 @@ public final class Utils {
 			} else {
 				for (; first < second; first++) {
 					sb.append(versions.get(first));
-					if (second != size) sb.append(',');
+					if (first < size - 1) sb.append(',');
 				}
 			}
 		}
