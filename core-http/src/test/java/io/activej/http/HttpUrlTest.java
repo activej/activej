@@ -272,7 +272,7 @@ public final class HttpUrlTest {
 		assertEquals(fragment, httpUrl.getFragment());
 	}
 
-	@Test(expected = NoSuchElementException.class)
+	@Test
 	public void testQuery() {
 //                                00000000001111111111222222222233333333334444444444555555555566
 //  							  01234567890123456789012345678901234567890123456789012345678901
@@ -298,7 +298,11 @@ public final class HttpUrlTest {
 		assertEquals(new QueryParameter("key3", "another_value"), paramsIterator.next());
 		assertEquals(new QueryParameter("k", ""), paramsIterator.next());
 
-		paramsIterator.next();
+		try {
+			paramsIterator.next();
+			fail();
+		} catch (NoSuchElementException ignored) {
+		}
 	}
 
 	@Test

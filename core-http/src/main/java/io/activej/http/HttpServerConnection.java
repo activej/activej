@@ -22,7 +22,6 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
-import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.CloseException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelSupplier;
@@ -84,7 +83,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private final AsyncHttpServer server;
 	private final AsyncServlet servlet;
-	private final char[] charBuffer;
 	@Nullable
 	private HttpRequest request;
 	@Nullable
@@ -105,13 +103,12 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param servlet       servlet for handling requests
 	 */
 	HttpServerConnection(Eventloop eventloop, AsyncTcpSocket asyncTcpSocket, InetAddress remoteAddress,
-			AsyncHttpServer server, AsyncServlet servlet, char[] charBuffer) {
+			AsyncHttpServer server, AsyncServlet servlet) {
 		super(eventloop, asyncTcpSocket, server.maxBodySize);
 		this.remoteAddress = remoteAddress;
 		this.server = server;
 		this.servlet = servlet;
 		this.inspector = server.inspector;
-		this.charBuffer = charBuffer;
 	}
 
 	void serve() {
@@ -210,8 +207,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 					"Unsupported HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
-		request = new HttpRequest(version, method,
-				UrlParser.parse(decodeAscii(line, urlStart, urlEnd - urlStart, ThreadLocalCharArray.ensure(charBuffer, urlEnd - urlStart))), this);
+		request = new HttpRequest(version, method, UrlParser.parse(line, urlStart, urlEnd), this);
 		request.maxBodySize = maxBodySize;
 
 		if (method == GET || method == DELETE) {

@@ -8,6 +8,7 @@ import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import static io.activej.http.HttpUtils.urlEncode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -36,7 +37,7 @@ public final class ReadSettingsTest {
 		String query = "fields=[first, second, third]" +
 				"&offset=0" +
 				"&limit=55" +
-				"&filters={age:12, name:Арт%26уሴр}" + // added utf-8 symbol and encoded ampersand
+				"&filters={age:12, name:" + urlEncode("Арт&уሴр", "UTF-8") + "}" +
 				"&sort=[[name,asc]]" +
 				"&extra=[]";
 

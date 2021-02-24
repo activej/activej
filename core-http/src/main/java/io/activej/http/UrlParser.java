@@ -17,30 +17,33 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.Charset;
 import java.util.*;
 
-import static io.activej.http.HttpUtils.decodeUtf8;
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.http.Protocol.*;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 
 @SuppressWarnings("WeakerAccess")
 public final class UrlParser {
-	private static class QueryParamIterator implements Iterator<QueryParameter> {
-		private final String src;
-		private final int[] positions;
-		private int i = 0;
 
-		private QueryParamIterator(String src, int[] positions) {
-			this.src = src;
-			this.positions = positions;
-		}
+	public static final byte COLON = ':';
+	public static final byte HASH = '#';
+	public static final byte SLASH = '/';
+	public static final byte QUESTION_MARK = '?';
+
+	private class QueryParamIterator implements Iterator<QueryParameter> {
+		private int i = 0;
 
 		@Override
 		public boolean hasNext() {
-			return i < positions.length && positions[i] != 0;
+			return i < queryPositions.length && queryPositions[i] != 0;
 		}
 
 		@NotNull
@@ -48,11 +51,11 @@ public final class UrlParser {
 		public QueryParameter next() {
 			if (!hasNext())
 				throw new NoSuchElementException();
-			int record = positions[i++];
+			int record = queryPositions[i++];
 			int keyStart = record & 0xFFFF;
 			int keyEnd = record >>> 16;
-			String key = src.substring(keyStart, keyEnd);
-			String value = keyValueDecode(src, keyEnd);
+			String key = new String(raw, keyStart, keyEnd - keyStart, CHARSET);
+			String value = keyValueDecode(raw, keyEnd, limit);
 			return new QueryParameter(key, value);
 		}
 
@@ -62,22 +65,16 @@ public final class UrlParser {
 		}
 	}
 
-	private static final class CachedBuffers {
-		private final char[] chars;
-		private final byte[] bytes;
+	private static final ThreadLocal<byte[]> CACHED_BUFFERS = new ThreadLocal<>();
+	private static final Charset CHARSET = ApplicationSettings.getCharset(UrlParser.class, "charset", ISO_8859_1);
 
-		private CachedBuffers(char[] chars, byte[] bytes) {
-			this.chars = chars;
-			this.bytes = bytes;
-		}
-	}
+	private static final byte IPV6_OPENING_BRACKET = '[';
+	private static final byte[] IPV6_CLOSING_SECTION_WITH_PORT = encodeAscii("]:");
+	private static final byte[] PROTOCOL_DELIMITER = encodeAscii("://");
 
-	private static final ThreadLocal<CachedBuffers> CACHED_BUFFERS = new ThreadLocal<>();
-
-	private static final char IPV6_OPENING_BRACKET = '[';
-	private static final String IPV6_CLOSING_SECTION_WITH_PORT = "]:";
-
-	private final String raw;
+	private final byte[] raw;
+	private final short limit;
+	private final short offset;
 
 	private int portValue = -1;
 	private Protocol protocol;
@@ -93,13 +90,23 @@ public final class UrlParser {
 	int[] queryPositions;
 
 	// region creators
-	private UrlParser(String raw) {
+	private UrlParser(byte[] raw, short offset, short limit) {
 		this.raw = raw;
+		this.offset = offset;
+		this.limit = limit;
 	}
 
 	@NotNull
 	public static UrlParser of(@NotNull String url) {
-		UrlParser httpUrl = new UrlParser(url);
+		return of(url.getBytes(ISO_8859_1), 0, url.length());
+	}
+
+	@NotNull
+	public static UrlParser of(@NotNull byte[] url, int offset, int limit) {
+		if (limit > Short.MAX_VALUE) {
+			throw new IllegalArgumentException(new MalformedHttpException("HttpUrl length cannot be greater than " + Short.MAX_VALUE));
+		}
+		UrlParser httpUrl = new UrlParser(url, (short) offset, (short) limit);
 		try {
 			httpUrl.parse(false);
 		} catch (MalformedHttpException e) {
@@ -110,53 +117,58 @@ public final class UrlParser {
 
 	@NotNull
 	public static UrlParser parse(@NotNull String url) throws MalformedHttpException {
-		UrlParser httpUrl = new UrlParser(url);
+		return parse(url.getBytes(ISO_8859_1), 0, url.length());
+	}
+
+	@NotNull
+	public static UrlParser parse(byte[] url, int offset, int limit) throws MalformedHttpException {
+		if (limit > Short.MAX_VALUE) {
+			throw new IllegalArgumentException(new MalformedHttpException("HttpUrl length cannot be greater than " + Short.MAX_VALUE));
+		}
+		UrlParser httpUrl = new UrlParser(url, (short) offset, (short) limit);
 		httpUrl.parse(true);
 		return httpUrl;
 	}
 	// endregion
 
 	private void parse(boolean isRelativePathAllowed) throws MalformedHttpException {
-		if (raw.length() > Short.MAX_VALUE) {
-			throw new MalformedHttpException("HttpUrl length cannot be greater than " + Short.MAX_VALUE);
-		}
-
-		short index = (short) raw.indexOf("://");
-		if (index < 0 || index > 5) {
+		int index = indexOf(PROTOCOL_DELIMITER, offset);
+		int protocolLength = index - offset;
+		if (protocolLength < 0 || protocolLength > 5) {
 			if (!isRelativePathAllowed)
-				throw new MalformedHttpException("Partial URI is not allowed: " + raw);
-			index = 0;
+				throw new MalformedHttpException("Partial URI is not allowed: " + this);
+			index = offset;
 		} else {
-			if (index == 5 && raw.startsWith(HTTPS.lowercase())) {
+			if (protocolLength == 5 && startsWith(HTTPS.lowercaseBytes(), offset)) {
 				protocol = HTTPS;
-			} else if (index == 4 && raw.startsWith(HTTP.lowercase())) {
+			} else if (protocolLength == 4 && startsWith(HTTP.lowercaseBytes(), offset)) {
 				protocol = HTTP;
-			} else if (index == 3 && raw.startsWith(WSS.lowercase())) {
+			} else if (protocolLength == 3 && startsWith(WSS.lowercaseBytes(), offset)) {
 				protocol = WSS;
-			} else if (index == 2 && raw.startsWith(WS.lowercase())) {
+			} else if (protocolLength == 2 && startsWith(WS.lowercaseBytes(), offset)) {
 				protocol = WS;
 			} else {
-				throw new MalformedHttpException("Unsupported schema: " + raw.substring(0, index));
+				throw new MalformedHttpException("Unsupported schema: " + new String(raw, offset, protocolLength, CHARSET));
 			}
-			index += "://".length();
-			host = index;
+			index += PROTOCOL_DELIMITER.length;
+			host = (short) index;
 
-			short hostPortEnd = findHostPortEnd(host);
-			if (host == hostPortEnd || raw.indexOf(':', host) == host) {
+			int hostPortEnd = findHostPortEnd(host);
+			if (host == hostPortEnd || indexOf(COLON, host) == host) {
 				throw new MalformedHttpException("Domain name cannot be null or empty");
 			}
 
-			if (raw.indexOf(IPV6_OPENING_BRACKET, index) != -1) {                   // parse IPv6
-				int closingSection = raw.indexOf(IPV6_CLOSING_SECTION_WITH_PORT, index);
-				port = (short) (closingSection != -1 ? closingSection + 2 : closingSection);
+			if (indexOf(IPV6_OPENING_BRACKET, index) != -1) {                   // parse IPv6
+				int closingSection = indexOf(IPV6_CLOSING_SECTION_WITH_PORT, index);
+				port = (short) (closingSection != -1 ? (closingSection + 2) : closingSection);
 			} else {
 				// parse IPv4
-				int colon = raw.indexOf(':', index);
-				port = (short) ((colon != -1 && colon < hostPortEnd) ? colon + 1 : -1);
+				int colon = indexOf(COLON, index);
+				port = colon != -1 && colon < hostPortEnd ? (short) (colon + 1) : -1;
 			}
 
 			if (port != -1) {
-				portValue = toInt(raw, port, hostPortEnd);
+				portValue = parsePort(hostPortEnd);
 			} else {
 				if (host != -1) {
 					portValue = protocol.isSecure() ? 443 : 80;
@@ -166,65 +178,61 @@ public final class UrlParser {
 			index = hostPortEnd;
 		}
 
-		if (index == raw.length()) {
+		if (index == limit) {
 			return;
 		}
 
 		// parse path
-		if (raw.charAt(index) == '/') {
-			path = index;
+		if (raw[index] == '/') {
+			path = (short) index;
 			pos = path;
-			pathEnd = findPathEnd(path);
+			pathEnd = (short) findPathEnd(path);
 			index = pathEnd;
 		}
 
-		if (index == raw.length()) {
+		if (index == limit) {
 			return;
 		}
 
 		// parse query
-		if (raw.charAt(index) == '?') {
+		if (raw[index] == '?') {
 			query = (short) (index + 1);
 			index = findQueryEnd(query);
 		}
 
-		if (index == raw.length()) {
+		if (index == limit) {
 			return;
 		}
 
 		// parse fragment
-		if (raw.charAt(index) == '#') {
+		if (raw[index] == '#') {
 			fragment = (short) (index + 1);
 		}
 	}
 
-	private short findHostPortEnd(short from) {
-		short hostPortEnd = -1;
-		for (short i = from; i < raw.length(); i++) {
-			char ch = raw.charAt(i);
-			if (ch == '/' || ch == '?' || ch == '#') {
-				hostPortEnd = i;
-				break;
+	private int findHostPortEnd(int from) {
+		for (int i = from; i < limit; i++) {
+			byte b = raw[i];
+			if (b == '/' || b == '?' || b == '#') {
+				return i;
 			}
 		}
-		return hostPortEnd != -1 ? hostPortEnd : (short) raw.length();
+		return limit;
 	}
 
-	private short findPathEnd(short from) {
-		short pathEnd = -1;
-		for (short i = from; i < raw.length(); i++) {
-			char ch = raw.charAt(i);
-			if (ch == '?' || ch == '#') {
-				pathEnd = i;
-				break;
+	private int findPathEnd(int from) {
+		for (int i = from; i < limit; i++) {
+			byte b = raw[i];
+			if (b == '?' || b == '#') {
+				return i;
 			}
 		}
-		return pathEnd != -1 ? pathEnd : (short) raw.length();
+		return limit;
 	}
 
-	private short findQueryEnd(short from) {
-		short queryEnd = (short) raw.indexOf('#', from);
-		return queryEnd != -1 ? queryEnd : (short) raw.length();
+	private int findQueryEnd(int from) {
+		int queryEnd = indexOf(HASH, from);
+		return queryEnd != -1 ? queryEnd : limit;
 	}
 
 	// getters
@@ -245,8 +253,8 @@ public final class UrlParser {
 		if (host == -1) {
 			return null;
 		}
-		int end = path != -1 ? path : query != -1 ? query - 1 : fragment != -1 ? fragment - 1 : raw.length();
-		return raw.substring(host, end);
+		int end = path != -1 ? path : query != -1 ? query - 1 : fragment != -1 ? fragment - 1 : limit;
+		return new String(raw, host, end - host, CHARSET);
 	}
 
 	@Nullable
@@ -254,8 +262,8 @@ public final class UrlParser {
 		if (host == -1) {
 			return null;
 		}
-		int end = port != -1 ? port - 1 : path != -1 ? path : query != -1 ? query - 1 : raw.length();
-		return raw.substring(host, end);
+		int end = port != -1 ? port - 1 : path != -1 ? path : query != -1 ? query - 1 : limit;
+		return new String(raw, host, end - host, CHARSET);
 	}
 
 	public int getPort() {
@@ -268,12 +276,12 @@ public final class UrlParser {
 			if (query == -1)
 				return "/";
 			else {
-				int queryEnd = fragment == -1 ? raw.length() : fragment - 1;
-				return raw.substring(query, queryEnd);
+				int queryEnd = fragment == -1 ? limit : fragment - 1;
+				return new String(raw, query, queryEnd - query, CHARSET);
 			}
 		} else {
-			int queryEnd = fragment == -1 ? raw.length() : fragment - 1;
-			return raw.substring(path, queryEnd);
+			int queryEnd = fragment == -1 ? limit : fragment - 1;
+			return new String(raw, path, queryEnd - path, CHARSET);
 		}
 	}
 
@@ -282,7 +290,7 @@ public final class UrlParser {
 		if (path == -1) {
 			return "/";
 		}
-		return raw.substring(path, pathEnd);
+		return new String(raw, path, pathEnd - path, CHARSET);
 	}
 
 	@NotNull
@@ -290,8 +298,8 @@ public final class UrlParser {
 		if (query == -1) {
 			return "";
 		}
-		int queryEnd = fragment == -1 ? raw.length() : fragment - 1;
-		return raw.substring(query, queryEnd);
+		int queryEnd = fragment == -1 ? limit : fragment - 1;
+		return new String(raw, query, queryEnd - query, CHARSET);
 	}
 
 	@NotNull
@@ -299,29 +307,29 @@ public final class UrlParser {
 		if (fragment == -1) {
 			return "";
 		}
-		return raw.substring(fragment);
+		return new String(raw, fragment, limit - fragment, CHARSET);
 	}
 
 	int getPathAndQueryLength() {
 		int len = 0;
 		len += path == -1 ? 1 : pathEnd - path;
-		len += query == -1 ? 0 : (fragment == -1 ? raw.length() : fragment - 1) - query + 1;
+		len += query == -1 ? 0 : (fragment == -1 ? limit : fragment - 1) - query + 1;
 		return len;
 	}
 
 	void writePathAndQuery(@NotNull ByteBuf buf) {
 		if (path == -1) {
-			buf.put((byte) '/');
+			buf.put(SLASH);
 		} else {
 			for (int i = path; i < pathEnd; i++) {
-				buf.put((byte) raw.charAt(i));
+				buf.put(raw[i]);
 			}
 		}
 		if (query != -1) {
-			buf.put((byte) '?');
-			int queryEnd = fragment == -1 ? raw.length() : fragment - 1;
+			buf.put(QUESTION_MARK);
+			int queryEnd = fragment == -1 ? limit : fragment - 1;
 			for (int i = query; i < queryEnd; i++) {
-				buf.put((byte) raw.charAt(i));
+				buf.put(raw[i]);
 			}
 		}
 	}
@@ -335,7 +343,7 @@ public final class UrlParser {
 		if (queryPositions == null) {
 			parseQueryParameters();
 		}
-		return findParameter(raw, queryPositions, key);
+		return findParameter(key);
 	}
 
 	@NotNull
@@ -346,7 +354,7 @@ public final class UrlParser {
 		if (queryPositions == null) {
 			parseQueryParameters();
 		}
-		return findParameters(raw, queryPositions, key);
+		return findParameters(key);
 	}
 
 	@NotNull
@@ -357,7 +365,7 @@ public final class UrlParser {
 		if (queryPositions == null) {
 			parseQueryParameters();
 		}
-		return () -> new QueryParamIterator(raw, queryPositions);
+		return QueryParamIterator::new;
 	}
 
 	@NotNull
@@ -370,28 +378,27 @@ public final class UrlParser {
 	}
 
 	void parseQueryParameters() {
-		int queryEnd = fragment == -1 ? raw.length() : fragment - 1;
-		queryPositions = parseQueryParameters(raw, query, queryEnd);
+		int queryEnd = fragment == -1 ? limit : fragment - 1;
+		queryPositions = parseQueryParameters(queryEnd);
 	}
 
 	private static final int[] NO_PARAMETERS = {};
 
-	static @NotNull int[] parseQueryParameters(@NotNull String query, int pos, int end) {
-		if (pos == end)
+	@NotNull int[] parseQueryParameters(int end) {
+		if (query == end)
 			return NO_PARAMETERS;
-		assert query.length() >= end;
-		assert pos != -1;
-		assert query.length() <= 0xFFFF;
+		assert limit >= end;
+		assert query != -1;
 
 		int[] positions = new int[8];
 
 		int k = 0;
-		int keyStart = pos;
+		int keyStart = query;
 		while (keyStart < end) {
 			int keyEnd = keyStart;
 			while (keyEnd < end) {
-				char c = query.charAt(keyEnd);
-				if (c == '&' || c == '=') break;
+				byte b = raw[keyEnd];
+				if (b == '&' || b == '=') break;
 				keyEnd++;
 			}
 			if (keyStart != keyEnd) {
@@ -401,7 +408,7 @@ public final class UrlParser {
 				positions[k++] = keyStart | (keyEnd << 16);
 			}
 			while (keyStart < end) {
-				if (query.charAt(keyStart++) == '&') break;
+				if (raw[keyStart++] == '&') break;
 			}
 		}
 
@@ -410,22 +417,26 @@ public final class UrlParser {
 
 	@NotNull
 	public static Map<String, String> parseQueryIntoMap(@NotNull String query) {
+		return parseQueryIntoMap(query.getBytes(ISO_8859_1), 0, query.length());
+	}
+
+	@NotNull
+	static Map<String, String> parseQueryIntoMap(byte[] query, int offset, int limit) {
 		Map<String, String> result = new LinkedHashMap<>();
 
-		int end = query.length();
-		int keyStart = 0;
-		while (keyStart < end) {
+		int keyStart = offset;
+		while (keyStart < limit) {
 			int keyEnd = keyStart;
-			while (keyEnd < end) {
-				char c = query.charAt(keyEnd);
-				if (c == '&' || c == '=') break;
+			while (keyEnd < limit) {
+				byte b = query[keyEnd];
+				if (b == '&' || b == '=') break;
 				keyEnd++;
 			}
 			if (keyStart != keyEnd) {
-				result.putIfAbsent(query.substring(keyStart, keyEnd), keyValueDecode(query, keyEnd));
+				result.putIfAbsent(new String(query, keyStart, keyEnd - keyStart, CHARSET), keyValueDecode(query, keyEnd, limit));
 			}
-			while (keyStart < end) {
-				if (query.charAt(keyStart++) == '&') break;
+			while (keyStart < limit) {
+				if (query[keyStart++] == '&') break;
 			}
 		}
 
@@ -433,27 +444,27 @@ public final class UrlParser {
 	}
 
 	@Nullable
-	static String findParameter(@NotNull String src, @NotNull int[] parsedPositions, @NotNull String key) {
-		for (int record : parsedPositions) {
+	String findParameter(@NotNull String key) {
+		for (int record : queryPositions) {
 			if (record == 0) break;
 			int keyStart = record & 0xFFFF;
 			int keyEnd = record >>> 16;
-			if (isEqual(key, src, keyStart, keyEnd)) {
-				return keyValueDecode(src, keyEnd);
+			if (isEqual(key, keyStart, keyEnd)) {
+				return keyValueDecode(raw, keyEnd, limit);
 			}
 		}
 		return null;
 	}
 
 	@NotNull
-	static List<String> findParameters(@NotNull String src, @NotNull int[] parsedPositions, @NotNull String key) {
+	List<String> findParameters(@NotNull String key) {
 		List<String> container = new ArrayList<>();
-		for (int record : parsedPositions) {
+		for (int record : queryPositions) {
 			if (record == 0) break;
 			int keyStart = record & 0xFFFF;
 			int keyEnd = record >>> 16;
-			if (isEqual(key, src, keyStart, keyEnd)) {
-				container.add(keyValueDecode(src, keyEnd));
+			if (isEqual(key, keyStart, keyEnd)) {
+				container.add(keyValueDecode(raw, keyEnd, limit));
 			}
 		}
 		return container;
@@ -465,20 +476,20 @@ public final class UrlParser {
 		if (pos == -1 || pos > pathEnd) {
 			return "/";
 		}
-		return raw.substring(pos, pathEnd);
+		return new String(raw, pos, pathEnd - pos, CHARSET);
 	}
 
 	String pollUrlPart() {
 		if (pos < pathEnd) {
 			int start = pos + 1;
-			int nextSlash = raw.indexOf('/', start);
-			pos = (short) (nextSlash > pathEnd ? pathEnd : nextSlash);
+			int nextSlash = indexOf(SLASH, start);
+			pos = nextSlash > pathEnd ? pathEnd : (short) nextSlash;
 			String part;
 			if (pos == -1) {
-				part = raw.substring(start, pathEnd);
-				pos = (short) raw.length();
+				part = new String(raw, start, pathEnd - start, CHARSET);
+				pos = limit;
 			} else {
-				part = raw.substring(start, pos);
+				part = new String(raw, start, pos - start, CHARSET);
 			}
 			return part;
 		} else {
@@ -486,43 +497,43 @@ public final class UrlParser {
 		}
 	}
 
-	private static boolean isEqual(@NotNull String key, @NotNull String raw, int start, int end) {
+	private boolean isEqual(@NotNull String key, int start, int end) {
 		if (end - start != key.length()) {
 			return false;
 		}
 		for (int i = 0; i < key.length(); i++) {
-			if (key.charAt(i) != raw.charAt(start + i))
+			if (key.charAt(i) != raw[start + i])
 				return false;
 		}
 		return true;
 	}
 
-	private static int toInt(@NotNull String str, int pos, int end) throws MalformedHttpException {
-		if (pos == end) {
+	private int parsePort(int end) throws MalformedHttpException {
+		if (port == end) {
 			throw new MalformedHttpException("Empty port value");
 		}
-		if ((end - pos) > 5) {
-			throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
+		if ((end - port) > 5) {
+			throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
 		}
 
 		int result = 0;
-		for (int i = pos; i < end; i++) {
-			int c = str.charAt(i) - '0';
+		for (int i = port; i < end; i++) {
+			int c = raw[i] - '0';
 			if (c < 0 || c > 9)
-				throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
+				throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
 			result = c + result * 10;
 		}
 
 		if (result > 0xFFFF) {
-			throw new MalformedHttpException("Bad port: " + str.substring(pos, end));
+			throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
 		}
 
 		return result;
 	}
 
 	@Nullable
-	private static String keyValueDecode(@NotNull String url, int keyEnd) {
-		return urlParse(url, keyEnd < url.length() && url.charAt(keyEnd) == '=' ? keyEnd + 1 : keyEnd);
+	private static String keyValueDecode(byte[] url, int keyEnd, int limit) {
+		return urlParse(url, keyEnd < limit && url[keyEnd] == '=' ? keyEnd + 1 : keyEnd, limit);
 	}
 
 	/**
@@ -535,88 +546,110 @@ public final class UrlParser {
 	 */
 	@Nullable
 	public static String urlParse(@NotNull String s) {
-		return urlParse(s, 0);
+		return urlParse(encodeAscii(s), 0, s.length());
 	}
 
 	@Nullable
-	private static String urlParse(String s, int pos) {
-		int len = s.length();
-		for (int i = pos; i < len; i++) {
-			char c = s.charAt(i);
+	private static String urlParse(byte[] url, int pos, int limit) {
+		for (int i = pos; i < limit; i++) {
+			byte c = url[i];
 			if (c == '+' || c == '%')
-				return urlParse(s, pos, i); // inline hint
+				return urlParse(url, pos, limit, i); // inline hint
 			if (c == '&' || c == '#')
-				return s.substring(pos, i);
+				return new String(url, pos, i - pos, CHARSET);
 		}
-		return s.substring(pos);
+		return new String(url, pos, limit - pos, CHARSET);
 	}
 
 	@Nullable
-	private static String urlParse(String s, int pos, int encodedSuffixPos) {
-		int len = s.length();
-
-		CachedBuffers cachedBuffers = CACHED_BUFFERS.get();
-		if (cachedBuffers == null || cachedBuffers.bytes.length < len - pos) {
-			int newCount = len - pos + (len - pos << 1);
-			cachedBuffers = new CachedBuffers(new char[newCount], new byte[newCount]);
-			CACHED_BUFFERS.set(cachedBuffers);
+	private static String urlParse(byte[] url, int pos, int limit, int encodedSuffixPos) {
+		byte[] bytes = CACHED_BUFFERS.get();
+		if (bytes == null || bytes.length < limit - pos) {
+			int newCount = limit - pos + (limit - pos << 1);
+			bytes = new byte[newCount];
+			CACHED_BUFFERS.set(bytes);
 		}
-		char[] chars = cachedBuffers.chars;
-		byte[] bytes = cachedBuffers.bytes;
 
-		int charsPos = 0;
+		int bytesPos = 0;
 		for (; pos < encodedSuffixPos; pos++) {
-			chars[charsPos++] = s.charAt(pos);
+			bytes[bytesPos++] = url[pos];
 		}
 		try {
 			LOOP:
-			while (pos < len) {
-				char c = s.charAt(pos);
-				switch (c) {
+			while (pos < limit) {
+				byte b = url[pos];
+				switch (b) {
 					case '&':
 					case '#':
 						break LOOP;
 					case '+':
-						chars[charsPos++] = ' ';
+						bytes[bytesPos++] = ' ';
 						pos++;
 						break;
 					case '%':
-						int bytesPos = 0;
-
-						while ((pos + 2 < len) && (c == '%')) {
-							bytes[bytesPos++] = (byte) ((decodeHex(s.charAt(pos + 1)) << 4) + decodeHex(s.charAt(pos + 2)));
+						while ((pos + 2 < limit) && (b == '%')) {
+							bytes[bytesPos++] = (byte) ((decodeHex(url[pos + 1]) << 4) + decodeHex(url[pos + 2]));
 							pos += 3;
-							if (pos < len) {
-								c = s.charAt(pos);
+							if (pos < limit) {
+								b = url[pos];
 							}
 						}
 
-						if ((pos < len) && (c == '%'))
+						if ((pos < limit) && (b == '%'))
 							return null;
-
-						charsPos = decodeUtf8(bytes, 0, bytesPos, chars, charsPos);
 						break;
 					default:
-						chars[charsPos++] = c;
+						bytes[bytesPos++] = b;
 						pos++;
 						break;
 				}
 			}
-			return new String(chars, 0, charsPos);
+			return new String(bytes, 0, bytesPos, UTF_8);
 		} catch (MalformedHttpException e) {
 			return null;
 		}
 	}
 
-	private static byte decodeHex(char c) throws MalformedHttpException {
-		if (c >= '0' && c <= '9') return (byte) (c - '0');
-		if (c >= 'a' && c <= 'f') return (byte) (c - 'a' + 10);
-		if (c >= 'A' && c <= 'F') return (byte) (c - 'A' + 10);
-		throw new MalformedHttpException("Failed to decode hex digit from '" + c + '\'');
+	private static byte decodeHex(byte b) throws MalformedHttpException {
+		if (b >= '0' && b <= '9') return (byte) (b - '0');
+		if (b >= 'a' && b <= 'f') return (byte) (b - 'a' + 10);
+		if (b >= 'A' && b <= 'F') return (byte) (b - 'A' + 10);
+		throw new MalformedHttpException("Failed to decode hex digit from '" + b + '\'');
+	}
+
+	private boolean startsWith(byte[] subArray, int from) {
+		for (int j = 0; j < subArray.length; j++) {
+			if (subArray[j] != raw[from + j]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private int indexOf(byte[] subArray, int from) {
+		first:
+		for (int i = from; i < limit - subArray.length + 1; i++) {
+			for (int j = 0; j < subArray.length; j++) {
+				if (subArray[j] != raw[i + j]) {
+					continue first;
+				}
+			}
+			return i;
+		}
+		return -1;
+	}
+
+	private int indexOf(byte b, int from) {
+		for (int i = from; i < limit; i++) {
+			if (raw[i] == b) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	@Override
 	public String toString() {
-		return raw;
+		return new String(raw, offset, limit - offset, CHARSET);
 	}
 }
