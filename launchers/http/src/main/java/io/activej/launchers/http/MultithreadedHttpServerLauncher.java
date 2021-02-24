@@ -28,7 +28,6 @@ import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
-import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;
 import io.activej.service.ServiceGraphModule;
@@ -105,8 +104,6 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 		return combine(
 				ServiceGraphModule.create(),
 				WorkerPoolModule.create(),
-				JmxModule.create()
-						.withInitializer(ofGlobalEventloopStats()),
 				ConfigModule.create()
 						.withEffectiveConfigLogger(),
 				getBusinessLogicModule()
