@@ -111,7 +111,7 @@ public abstract class AbstractHttpConnection {
 	protected final ReadConsumer readHeadersConsumer = new ReadConsumer() {
 		@Override
 		protected void thenRun() throws MalformedHttpException {
-			readHeaders(readBuf.array(), readBuf.head(), readBuf.tail());
+			readHeaders();
 		}
 	};
 
@@ -127,9 +127,9 @@ public abstract class AbstractHttpConnection {
 		this.maxBodySize = maxBodySize;
 	}
 
-	protected abstract void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException;
+	protected abstract void onStartLine(int limit) throws MalformedHttpException;
 
-	protected abstract void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException;
+	protected abstract void onHeader(HttpHeader header, int off, int len) throws MalformedHttpException;
 
 	protected abstract void onHeadersReceived(@Nullable ByteBuf body, @Nullable ChannelSupplier<ByteBuf> bodySupplier);
 
@@ -248,8 +248,9 @@ public abstract class AbstractHttpConnection {
 		int tail = readBuf.tail();
 		for (int p = head; p < tail; p++) {
 			if (array[p] == LF) {
-				onStartLine(array, head, p + 1);
-				readHeaders(array, p + 1, tail);
+				onStartLine(p + 1);
+				readBuf.head(p + 1);
+				readHeaders();
 				return;
 			}
 		}
@@ -258,7 +259,11 @@ public abstract class AbstractHttpConnection {
 		socket.read().whenComplete(readMessageConsumer);
 	}
 
-	private void readHeaders(byte[] array, int head, final int tail) throws MalformedHttpException {
+	private void readHeaders() throws MalformedHttpException {
+		byte[] array = readBuf.array();
+		int head = readBuf.head();
+		int tail = readBuf.tail();
+
 		assert !isClosed();
 		while (head < tail) {
 			int i;
@@ -270,7 +275,7 @@ public abstract class AbstractHttpConnection {
 					// fast processing path
 					int limit = (i - 1 >= head && array[i - 1] == CR) ? i - 1 : i;
 					if (limit != head) {
-						readHeader(array, head, limit);
+						readHeader(head, limit);
 						head = i + 1;
 						continue;
 					} else {
@@ -286,13 +291,13 @@ public abstract class AbstractHttpConnection {
 				break; // cannot determine if this is multiline header or not, need more data
 			}
 
-			int headerLen = scanHeader(max(head, i - 1), array, head, tail);
+			int headerLen = scanHeader(max(head, i - 1), head);
 
 			if (headerLen == -1) {
 				break;
 			}
 			if (headerLen != 0) {
-				readHeader(array, head, head + headerLen);
+				readHeader(head, head + headerLen);
 			}
 			head += headerLen;
 			if (array[head] == CR) head++;
@@ -309,7 +314,10 @@ public abstract class AbstractHttpConnection {
 		socket.read().whenComplete(readHeadersConsumer);
 	}
 
-	private int scanHeader(int i, byte[] array, int head, int tail) throws MalformedHttpException {
+	private int scanHeader(int i, int head) throws MalformedHttpException {
+		byte[] array = readBuf.array();
+		int tail = readBuf.tail();
+
 		while (true) {
 			for (; i < tail; i++) {
 				byte b = array[i];
@@ -350,7 +358,8 @@ public abstract class AbstractHttpConnection {
 		}
 	}
 
-	private void readHeader(byte[] array, int off, int limit) throws MalformedHttpException {
+	private void readHeader(int off, int limit) throws MalformedHttpException {
+		byte[] array = readBuf.array();
 		int pos = off;
 		int hashCodeCI = 0;
 		while (pos < limit) {
@@ -383,7 +392,7 @@ public abstract class AbstractHttpConnection {
 			flags |= equalsLowerCaseAscii(CONTENT_ENCODING_GZIP, array, pos, len) ? GZIPPED : 0;
 		}
 
-		onHeader(header, array, pos, len);
+		onHeader(header, pos, len);
 	}
 
 	private void readBody() {

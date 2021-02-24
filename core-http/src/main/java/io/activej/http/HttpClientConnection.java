@@ -137,7 +137,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException {
+	protected void onStartLine(int limit) throws MalformedHttpException {
+		byte[] line = readBuf.array();
+		int pos = readBuf.head();
+
 		boolean http1x = line[pos + 0] == 'H' && line[pos + 1] == 'T' && line[pos + 2] == 'T' && line[pos + 3] == 'P' && line[pos + 4] == '/' && line[pos + 5] == '1';
 		boolean http11 = line[pos + 6] == '.' && line[pos + 7] == '1' && line[pos + 8] == SP;
 
@@ -178,10 +181,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException {
+	protected void onHeader(HttpHeader header, int off, int len) throws MalformedHttpException {
 		assert response != null;
 		if (response.headers.size() >= MAX_HEADERS) throw new MalformedHttpException("Too many headers");
-		response.addHeader(header, array, off, len);
+		response.addHeader(header, readBuf.array(), off, len);
 	}
 
 	@Override
