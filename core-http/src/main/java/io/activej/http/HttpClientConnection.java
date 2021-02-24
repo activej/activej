@@ -146,7 +146,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			throw new MalformedHttpException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
-		pos += 9;
+		int i = pos + 9;
 		HttpVersion version = HttpVersion.HTTP_1_1;
 		if (http11) {
 			flags |= KEEP_ALIVE;
@@ -154,13 +154,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			version = HttpVersion.HTTP_1_0;
 		} else if (line[6] == SP) {
 			version = HttpVersion.HTTP_1_0;
-			pos += 7 - 9;
+			i += 7 - 9;
 		} else {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Invalid response");
 			throw new MalformedHttpException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
-		int statusCode = decodePositiveInt(line, pos, 3);
+		int statusCode = decodePositiveInt(line, i, 3);
 		if (!(statusCode >= 100 && statusCode < 600)) {
 			throw new MalformedHttpException("Invalid HTTP Status Code " + statusCode);
 		}

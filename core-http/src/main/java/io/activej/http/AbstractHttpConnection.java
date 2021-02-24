@@ -111,7 +111,7 @@ public abstract class AbstractHttpConnection {
 	protected final ReadConsumer readHeadersConsumer = new ReadConsumer() {
 		@Override
 		protected void thenRun() throws MalformedHttpException {
-			readHeaders(readBuf.array(), readBuf.head(), readBuf.tail());
+			readHeaders(readBuf.head());
 		}
 	};
 
@@ -249,7 +249,7 @@ public abstract class AbstractHttpConnection {
 		for (int p = head; p < tail; p++) {
 			if (array[p] == LF) {
 				onStartLine(array, head, p + 1);
-				readHeaders(array, p + 1, tail);
+				readHeaders(p + 1);
 				return;
 			}
 		}
@@ -258,20 +258,24 @@ public abstract class AbstractHttpConnection {
 		socket.read().whenComplete(readMessageConsumer);
 	}
 
-	private void readHeaders(byte[] array, int head, final int tail) throws MalformedHttpException {
+	private void readHeaders(int from) throws MalformedHttpException {
+		byte[] array = readBuf.array();
+		int offset = from;
+		int tail = readBuf.tail();
+
 		assert !isClosed();
-		while (head < tail) {
+		while (offset < tail) {
 			int i;
-			for (i = head; i < tail; i++) {
+			for (i = offset; i < tail; i++) {
 				if (array[i] != LF) continue;
 
 				// check next byte to see if this is multiline header(CRLF + 1*(SP|HT)) rfc2616#2.2
-				if (i <= head + 1 || (i + 1 < tail && (array[i + 1] != SP && array[i + 1] != HT))) {
+				if (i <= offset + 1 || (i + 1 < tail && (array[i + 1] != SP && array[i + 1] != HT))) {
 					// fast processing path
-					int limit = (i - 1 >= head && array[i - 1] == CR) ? i - 1 : i;
-					if (limit != head) {
-						readHeader(array, head, limit);
-						head = i + 1;
+					int limit = (i - 1 >= offset && array[i - 1] == CR) ? i - 1 : i;
+					if (limit != offset) {
+						readHeader(array, offset, limit);
+						offset = i + 1;
 						continue;
 					} else {
 						readBuf.head(i + 1);
@@ -282,34 +286,35 @@ public abstract class AbstractHttpConnection {
 				break;
 			}
 
-			if (i == tail && tail - head <= 1) {
+			if (i == tail && tail - offset <= 1) {
 				break; // cannot determine if this is multiline header or not, need more data
 			}
 
-			int headerLen = scanHeader(max(head, i - 1), array, head, tail);
+			int headerLen = scanHeader(max(offset, i - 1), array, offset, tail);
 
 			if (headerLen == -1) {
 				break;
 			}
 			if (headerLen != 0) {
-				readHeader(array, head, head + headerLen);
+				readHeader(array, offset, offset + headerLen);
 			}
-			head += headerLen;
-			if (array[head] == CR) head++;
-			if (array[head] == LF) head++;
+			offset += headerLen;
+			if (array[offset] == CR) offset++;
+			if (array[offset] == LF) offset++;
 			if (headerLen == 0) {
-				readBuf.head(head);
+				readBuf.head(offset);
 				readBody();
 				return;
 			}
 		}
-		readBuf.head(head);
+		readBuf.head(offset);
 		if (readBuf.readRemaining() > MAX_HEADER_LINE_SIZE_BYTES)
 			throw new MalformedHttpException("Header line exceeds max header size");
 		socket.read().whenComplete(readHeadersConsumer);
 	}
 
-	private int scanHeader(int i, byte[] array, int head, int tail) throws MalformedHttpException {
+	private int scanHeader(int from, byte[] array, int head, int tail) throws MalformedHttpException {
+		int i = from;
 		while (true) {
 			for (; i < tail; i++) {
 				byte b = array[i];
