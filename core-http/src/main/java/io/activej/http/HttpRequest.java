@@ -33,7 +33,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.bytebuf.ByteBufStrings.SP;
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullToEmpty;
@@ -302,7 +303,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (body == null) throw new NullPointerException("Body must be loaded to decode post parameters");
 		return postParameters =
 				containsPostParameters() ?
-						UrlParser.parseQueryIntoMap(decodeAscii(body.array(), body.head(), body.readRemaining())) :
+						UrlParser.parseQueryIntoMap(body.array(), body.head(), body.readRemaining()) :
 						emptyMap();
 	}
 

@@ -16,6 +16,8 @@
 
 package io.activej.http;
 
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
+
 public enum Protocol {
 	HTTP,
 	HTTPS,
@@ -23,9 +25,14 @@ public enum Protocol {
 	WSS;
 
 	private final String lowercase;
+	private final byte[] lowercaseBytes;
 
 	public String lowercase() {
 		return lowercase;
+	}
+
+	byte[] lowercaseBytes() {
+		return lowercaseBytes;
 	}
 
 	public boolean isSecure() {
@@ -34,5 +41,6 @@ public enum Protocol {
 
 	Protocol() {
 		lowercase = name().toLowerCase();
+		lowercaseBytes = encodeAscii(lowercase);
 	}
 }

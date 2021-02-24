@@ -58,7 +58,6 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 
 	@NotNull
 	private final AsyncServlet servlet;
-	private final char[] charBuffer = new char[1024];
 	@NotNull
 	private HttpExceptionFormatter errorFormatter = HttpExceptionFormatter.COMMON_FORMATTER;
 
@@ -286,7 +285,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		if (expiredConnectionsCheck == null) {
 			scheduleExpiredConnectionsCheck();
 		}
-		HttpServerConnection connection = new HttpServerConnection(eventloop, socket, remoteAddress, this, servlet, charBuffer);
+		HttpServerConnection connection = new HttpServerConnection(eventloop, socket, remoteAddress, this, servlet);
 		connection.serve();
 	}
 

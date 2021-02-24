@@ -272,7 +272,7 @@ public final class HttpUrlTest {
 		assertEquals(fragment, httpUrl.getFragment());
 	}
 
-	@Test(expected = NoSuchElementException.class)
+	@Test
 	public void testQuery() {
 //                                00000000001111111111222222222233333333334444444444555555555566
 //  							  01234567890123456789012345678901234567890123456789012345678901
@@ -298,7 +298,11 @@ public final class HttpUrlTest {
 		assertEquals(new QueryParameter("key3", "another_value"), paramsIterator.next());
 		assertEquals(new QueryParameter("k", ""), paramsIterator.next());
 
-		paramsIterator.next();
+		try {
+			paramsIterator.next();
+			fail();
+		} catch (NoSuchElementException ignored) {
+		}
 	}
 
 	@Test
@@ -308,6 +312,12 @@ public final class HttpUrlTest {
 		assertEquals("google.com", url.getHost());
 		assertEquals("/", url.getPath());
 		assertEquals("query=one:two/something", url.getQuery());
+	}
+
+	@Test
+	public void testQueryUnicode() {
+		UrlParser url = UrlParser.of("http://example.com?x=%25%C2%A7%CA%AC%E0%AE%87%E2%9C%85%F0%9F%8C%89%EF%B8%99");
+		assertEquals("%§ʬஇ✅\uD83C\uDF09︙", url.getQueryParameter("x"));
 	}
 
 	private static Map<String, String> map(String[]... values) {
