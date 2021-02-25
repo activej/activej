@@ -1,5 +1,6 @@
 package banner;
 
+import io.activej.common.api.Initializer;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
@@ -10,9 +11,12 @@ import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.wal.InMemoryWriteAheadLog;
 import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.module.AbstractModule;
 import io.activej.rpc.server.RpcRequestHandler;
+import io.activej.service.ServiceGraphModuleSettings;
 
 import java.util.Map;
 
@@ -71,5 +75,11 @@ public class BannerServerModule extends AbstractModule {
 	@Provides
 	CrdtStorage<Long, GSet<Integer>> storage(Eventloop eventloop, CrdtFunction<GSet<Integer>> function) {
 		return CrdtStorageMap.create(eventloop, function);
+	}
+
+	@ProvidesIntoSet
+	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
+		// add logical dependency so that service graph starts CrdtMap only after it has started the WriteAheadLog
+		return settings -> settings.addDependency(new Key<CrdtMap<Long, GSet<Integer>>>() {}, new Key<WriteAheadLog<Long, GSet<Integer>>>() {});
 	}
 }

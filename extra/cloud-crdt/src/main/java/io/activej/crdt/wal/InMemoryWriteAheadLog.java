@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, EventloopService {
-	private final Map<K, S> map = new TreeMap<>(); // TODO: how to flush based on size (RAM) ?
+	private final Map<K, S> map = new TreeMap<>();
 
 	private final Eventloop eventloop;
 	private final CrdtFunction<S> function;

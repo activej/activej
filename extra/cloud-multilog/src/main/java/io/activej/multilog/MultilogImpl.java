@@ -226,24 +226,23 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 											.transformWith(
 													ChannelFrameDecoder.create(countingFormat)
 															.withDecoderResets())
-											.transformWith(supplier ->
-													supplier.withEndOfStream(eos ->
-															eos.thenEx(($, e) -> {
-																if (e == null ||
-																		e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
-																	return Promise.complete();
-																}
+											.withEndOfStream(eos ->
+													eos.thenEx(($, e) -> {
+														if (e == null ||
+																e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
+															return Promise.complete();
+														}
 
-																if (ignoreMalformedLogs && e instanceof MalformedDataException) {
-																	if (logger.isWarnEnabled()) {
-																		logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
-																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
-																				sw, countingFormat.getCount(), e);
-																	}
-																	return Promise.complete();
-																}
-																return Promise.ofException(e);
-															})))
+														if (ignoreMalformedLogs && e instanceof MalformedDataException) {
+															if (logger.isWarnEnabled()) {
+																logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
+																		fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+																		sw, countingFormat.getCount(), e);
+															}
+															return Promise.complete();
+														}
+														return Promise.ofException(e);
+													}))
 											.transformWith(ChannelDeserializer.create(serializer))
 											.withEndOfStream(eos ->
 													eos.whenComplete(($, e) -> log(e)));

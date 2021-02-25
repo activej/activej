@@ -22,10 +22,7 @@ import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public final class GMap<K, V extends CrdtMergable<V>> implements Map<K, V>, CrdtMergable<GMap<K, V>> {
 
@@ -108,6 +105,23 @@ public final class GMap<K, V extends CrdtMergable<V>> implements Map<K, V>, Crdt
 	@Override
 	public Set<Entry<K, V>> entrySet() {
 		throw new UnsupportedOperationException("GMap#entrySet is not implemented yet");
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		return map.equals(((GMap<?, ?>) o).map);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(map);
+	}
+
+	@Override
+	public String toString() {
+		return map.toString();
 	}
 
 	public static class Serializer<K, V extends CrdtMergable<V>> implements BinarySerializer<GMap<K, V>> {

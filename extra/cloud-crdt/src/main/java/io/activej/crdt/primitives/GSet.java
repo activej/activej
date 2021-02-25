@@ -119,6 +119,18 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		return set.equals(((GSet<?>) o).set);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(set);
+	}
+
+	@Override
 	public String toString() {
 		return set.toString();
 	}

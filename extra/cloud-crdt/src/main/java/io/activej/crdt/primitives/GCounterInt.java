@@ -21,6 +21,8 @@ import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 
+import java.util.Arrays;
+
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.max;
 
@@ -59,6 +61,18 @@ public final class GCounterInt implements CrdtMergable<GCounterInt> {
 			newState[i] = max(state[i], other.state[i]);
 		}
 		return new GCounterInt(newState);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		return Arrays.equals(state, ((GCounterInt) o).state);
+	}
+
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(state);
 	}
 
 	@Override
