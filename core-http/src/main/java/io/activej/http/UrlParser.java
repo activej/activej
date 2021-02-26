@@ -98,12 +98,7 @@ public final class UrlParser {
 
 	@NotNull
 	public static UrlParser of(@NotNull String url) {
-		return of(url, UTF_8);
-	}
-
-	@NotNull
-	public static UrlParser of(@NotNull String url, Charset charset) {
-		return of(url.getBytes(charset), 0, url.length());
+		return of(url.getBytes(ISO_8859_1), 0, url.length());
 	}
 
 	@NotNull
@@ -122,12 +117,7 @@ public final class UrlParser {
 
 	@NotNull
 	public static UrlParser parse(@NotNull String url) throws MalformedHttpException {
-		return parse(url, UTF_8);
-	}
-
-	@NotNull
-	public static UrlParser parse(@NotNull String url, Charset charset) throws MalformedHttpException {
-		return parse(url.getBytes(charset), 0, url.length());
+		return parse(url.getBytes(ISO_8859_1), 0, url.length());
 	}
 
 	@NotNull
@@ -427,12 +417,7 @@ public final class UrlParser {
 
 	@NotNull
 	public static Map<String, String> parseQueryIntoMap(@NotNull String query) {
-		return parseQueryIntoMap(query, UTF_8);
-	}
-
-	@NotNull
-	public static Map<String, String> parseQueryIntoMap(@NotNull String query, Charset charset) {
-		return parseQueryIntoMap(query.getBytes(charset), 0, query.length());
+		return parseQueryIntoMap(query.getBytes(ISO_8859_1), 0, query.length());
 	}
 
 	@NotNull
@@ -619,7 +604,7 @@ public final class UrlParser {
 						break;
 				}
 			}
-			return new String(bytes, 0, bytesPos, CHARSET);
+			return new String(bytes, 0, bytesPos, UTF_8);
 		} catch (MalformedHttpException e) {
 			return null;
 		}
