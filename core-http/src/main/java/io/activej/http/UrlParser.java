@@ -142,7 +142,7 @@ public final class UrlParser {
 	// endregion
 
 	private void parse(boolean isRelativePathAllowed) throws MalformedHttpException {
-		short index = indexOf(PROTOCOL_DELIMITER, offset);
+		int index = indexOf(PROTOCOL_DELIMITER, offset);
 		int protocolLength = index - offset;
 		if (protocolLength < 0 || protocolLength > 5) {
 			if (!isRelativePathAllowed)
@@ -161,20 +161,20 @@ public final class UrlParser {
 				throw new MalformedHttpException("Unsupported schema: " + new String(raw, offset, protocolLength, CHARSET));
 			}
 			index += PROTOCOL_DELIMITER.length;
-			host = index;
+			host = (short) index;
 
-			short hostPortEnd = findHostPortEnd(host);
+			int hostPortEnd = findHostPortEnd(host);
 			if (host == hostPortEnd || indexOf(COLON, host) == host) {
 				throw new MalformedHttpException("Domain name cannot be null or empty");
 			}
 
 			if (indexOf(IPV6_OPENING_BRACKET, index) != -1) {                   // parse IPv6
-				short closingSection = indexOf(IPV6_CLOSING_SECTION_WITH_PORT, index);
-				port = (closingSection != -1 ? (short) (closingSection + 2) : closingSection);
+				int closingSection = indexOf(IPV6_CLOSING_SECTION_WITH_PORT, index);
+				port = (short) (closingSection != -1 ? (closingSection + 2) : closingSection);
 			} else {
 				// parse IPv4
-				short colon = indexOf(COLON, index);
-				port = ((colon != -1 && colon < hostPortEnd) ? (short) (colon + 1) : -1);
+				int colon = indexOf(COLON, index);
+				port = colon != -1 && colon < hostPortEnd ? (short) (colon + 1) : -1;
 			}
 
 			if (port != -1) {
@@ -194,9 +194,9 @@ public final class UrlParser {
 
 		// parse path
 		if (raw[index] == '/') {
-			path = index;
+			path = (short) index;
 			pos = path;
-			pathEnd = findPathEnd(path);
+			pathEnd = (short) findPathEnd(path);
 			index = pathEnd;
 		}
 
@@ -220,8 +220,8 @@ public final class UrlParser {
 		}
 	}
 
-	private short findHostPortEnd(short from) {
-		for (short i = from; i < limit; i++) {
+	private int findHostPortEnd(int from) {
+		for (int i = from; i < limit; i++) {
 			byte b = raw[i];
 			if (b == '/' || b == '?' || b == '#') {
 				return i;
@@ -230,8 +230,8 @@ public final class UrlParser {
 		return limit;
 	}
 
-	private short findPathEnd(short from) {
-		for (short i = from; i < limit; i++) {
+	private int findPathEnd(int from) {
+		for (int i = from; i < limit; i++) {
 			byte b = raw[i];
 			if (b == '?' || b == '#') {
 				return i;
@@ -240,8 +240,8 @@ public final class UrlParser {
 		return limit;
 	}
 
-	private short findQueryEnd(short from) {
-		short queryEnd = indexOf(HASH, from);
+	private int findQueryEnd(int from) {
+		int queryEnd = indexOf(HASH, from);
 		return queryEnd != -1 ? queryEnd : limit;
 	}
 
@@ -496,9 +496,9 @@ public final class UrlParser {
 
 	String pollUrlPart() {
 		if (pos < pathEnd) {
-			short start = (short) (pos + 1);
-			short nextSlash = indexOf(SLASH, start);
-			pos = nextSlash > pathEnd ? pathEnd : nextSlash;
+			int start = pos + 1;
+			int nextSlash = indexOf(SLASH, start);
+			pos = nextSlash > pathEnd ? pathEnd : (short) nextSlash;
 			String part;
 			if (pos == -1) {
 				part = new String(raw, start, pathEnd - start, CHARSET);
@@ -632,7 +632,7 @@ public final class UrlParser {
 		throw new MalformedHttpException("Failed to decode hex digit from '" + b + '\'');
 	}
 
-	private boolean startsWith(byte[] subArray, short from) {
+	private boolean startsWith(byte[] subArray, int from) {
 		for (int j = 0; j < subArray.length; j++) {
 			if (subArray[j] != raw[from + j]) {
 				return false;
@@ -641,9 +641,9 @@ public final class UrlParser {
 		return true;
 	}
 
-	private short indexOf(byte[] subArray, short from) {
+	private int indexOf(byte[] subArray, int from) {
 		first:
-		for (short i = from; i < limit - subArray.length + 1; i++) {
+		for (int i = from; i < limit - subArray.length + 1; i++) {
 			for (int j = 0; j < subArray.length; j++) {
 				if (subArray[j] != raw[i + j]) {
 					continue first;
@@ -654,8 +654,8 @@ public final class UrlParser {
 		return -1;
 	}
 
-	private short indexOf(byte b, short from) {
-		for (short i = from; i < limit; i++) {
+	private int indexOf(byte b, int from) {
+		for (int i = from; i < limit; i++) {
 			if (raw[i] == b) {
 				return i;
 			}
