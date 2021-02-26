@@ -41,6 +41,7 @@ import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_ACCEPT;
 import static io.activej.http.WebSocket.Frame.FrameType.*;
 import static io.activej.http.WebSocketConstants.MAGIC_STRING;
 import static io.activej.http.WebSocketConstants.OpCode.*;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -379,7 +380,7 @@ public final class HttpUtils {
 
 	static boolean isAnswerInvalid(HttpResponse response, byte[] key) {
 		String header = response.getHeader(SEC_WEBSOCKET_ACCEPT);
-		return header == null || !getWebSocketAnswer(new String(key)).equals(header.trim());
+		return header == null || !getWebSocketAnswer(new String(key, ISO_8859_1)).equals(header.trim());
 	}
 
 	static boolean isReservedCloseCode(int closeCode) {
@@ -440,11 +441,11 @@ public final class HttpUtils {
 		for (int i = pos; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new MalformedHttpException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedHttpException("Not a decimal value: " + new String(array, pos, len, ISO_8859_1));
 			}
 			result = b + result * 10;
 			if (result < 0) {
-				throw new MalformedHttpException("Bigger than max int value: " + new String(array, pos, len));
+				throw new MalformedHttpException("Bigger than max int value: " + new String(array, pos, len, ISO_8859_1));
 			}
 		}
 		return result;

@@ -22,6 +22,7 @@ import io.activej.common.exception.MalformedDataException;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Character.*;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -438,14 +439,14 @@ public final class ByteBufStrings {
 		for (; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len, ISO_8859_1));
 			}
 			result = b + result * 10;
 			if (result < 0) {
 				if (result == Integer.MIN_VALUE && (i + 1 == pos + len)) {
 					return Integer.MIN_VALUE;
 				}
-				throw new MalformedDataException("Bigger than max int value: " + new String(array, pos, len));
+				throw new MalformedDataException("Bigger than max int value: " + new String(array, pos, len, ISO_8859_1));
 			}
 		}
 		return (result ^ -negate) + negate;
@@ -464,14 +465,14 @@ public final class ByteBufStrings {
 		for (; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len, ISO_8859_1));
 			}
 			result = b + result * 10;
 			if (result < 0) {
 				if (result == Long.MIN_VALUE && (i + 1 == pos + len)) {
 					return Long.MIN_VALUE;
 				}
-				throw new MalformedDataException("Bigger than max long value: " + new String(array, pos, len));
+				throw new MalformedDataException("Bigger than max long value: " + new String(array, pos, len, ISO_8859_1));
 			}
 		}
 		return (result ^ -negate) + negate;
@@ -482,11 +483,11 @@ public final class ByteBufStrings {
 		for (int i = pos; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len, ISO_8859_1));
 			}
 			result = b + result * 10;
 			if (result < 0) {
-				throw new MalformedDataException("Bigger than max int value: " + new String(array, pos, len));
+				throw new MalformedDataException("Bigger than max int value: " + new String(array, pos, len, ISO_8859_1));
 			}
 		}
 		return result;
@@ -497,11 +498,11 @@ public final class ByteBufStrings {
 		for (int i = pos; i < pos + len; i++) {
 			byte b = (byte) (array[i] - '0');
 			if (b < 0 || b >= 10) {
-				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len));
+				throw new MalformedDataException("Not a decimal value: " + new String(array, pos, len, ISO_8859_1));
 			}
 			result = b + result * 10;
 			if (result < 0) {
-				throw new MalformedDataException("Bigger than max long value: " + new String(array, pos, len));
+				throw new MalformedDataException("Bigger than max long value: " + new String(array, pos, len, ISO_8859_1));
 			}
 		}
 		return result;
