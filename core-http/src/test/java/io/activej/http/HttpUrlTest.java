@@ -314,12 +314,6 @@ public final class HttpUrlTest {
 		assertEquals("query=one:two/something", url.getQuery());
 	}
 
-	@Test
-	public void testQueryUnicode() {
-		UrlParser url = UrlParser.of("http://example.com?x=%25%C2%A7%CA%AC%E0%AE%87%E2%9C%85%F0%9F%8C%89%EF%B8%99");
-		assertEquals("%§ʬஇ✅\uD83C\uDF09︙", url.getQueryParameter("x"));
-	}
-
 	private static Map<String, String> map(String[]... values) {
 		return Arrays.stream(values).collect(Collectors.toMap(o -> o[0], o -> o[1]));
 	}

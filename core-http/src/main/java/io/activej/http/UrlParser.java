@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,6 +26,7 @@ import java.util.*;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.http.Protocol.*;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 
@@ -52,7 +54,7 @@ public final class UrlParser {
 			int record = queryPositions[i++];
 			int keyStart = record & 0xFFFF;
 			int keyEnd = record >>> 16;
-			String key = new String(raw, keyStart, keyEnd - keyStart);
+			String key = new String(raw, keyStart, keyEnd - keyStart, CHARSET);
 			String value = keyValueDecode(raw, keyEnd, limit);
 			return new QueryParameter(key, value);
 		}
@@ -64,6 +66,7 @@ public final class UrlParser {
 	}
 
 	private static final ThreadLocal<byte[]> CACHED_BUFFERS = new ThreadLocal<>();
+	private static final Charset CHARSET = ApplicationSettings.getCharset(UrlParser.class, "charset", ISO_8859_1);
 
 	private static final byte IPV6_OPENING_BRACKET = '[';
 	private static final byte[] IPV6_CLOSING_SECTION_WITH_PORT = encodeAscii("]:");
@@ -155,7 +158,7 @@ public final class UrlParser {
 			} else if (protocolLength == 2 && startsWith(WS.lowercaseBytes(), offset)) {
 				protocol = WS;
 			} else {
-				throw new MalformedHttpException("Unsupported schema: " + new String(raw, offset, protocolLength));
+				throw new MalformedHttpException("Unsupported schema: " + new String(raw, offset, protocolLength, CHARSET));
 			}
 			index += PROTOCOL_DELIMITER.length;
 			host = index;
@@ -261,7 +264,7 @@ public final class UrlParser {
 			return null;
 		}
 		int end = path != -1 ? path : query != -1 ? query - 1 : fragment != -1 ? fragment - 1 : limit;
-		return new String(raw, host, end - host);
+		return new String(raw, host, end - host, CHARSET);
 	}
 
 	@Nullable
@@ -270,7 +273,7 @@ public final class UrlParser {
 			return null;
 		}
 		int end = port != -1 ? port - 1 : path != -1 ? path : query != -1 ? query - 1 : limit;
-		return new String(raw, host, end - host);
+		return new String(raw, host, end - host, CHARSET);
 	}
 
 	public int getPort() {
@@ -284,11 +287,11 @@ public final class UrlParser {
 				return "/";
 			else {
 				int queryEnd = fragment == -1 ? limit : fragment - 1;
-				return new String(raw, query, queryEnd - query);
+				return new String(raw, query, queryEnd - query, CHARSET);
 			}
 		} else {
 			int queryEnd = fragment == -1 ? limit : fragment - 1;
-			return new String(raw, path, queryEnd - path);
+			return new String(raw, path, queryEnd - path, CHARSET);
 		}
 	}
 
@@ -297,7 +300,7 @@ public final class UrlParser {
 		if (path == -1) {
 			return "/";
 		}
-		return new String(raw, path, pathEnd - path);
+		return new String(raw, path, pathEnd - path, CHARSET);
 	}
 
 	@NotNull
@@ -306,7 +309,7 @@ public final class UrlParser {
 			return "";
 		}
 		int queryEnd = fragment == -1 ? limit : fragment - 1;
-		return new String(raw, query, queryEnd - query);
+		return new String(raw, query, queryEnd - query, CHARSET);
 	}
 
 	@NotNull
@@ -314,7 +317,7 @@ public final class UrlParser {
 		if (fragment == -1) {
 			return "";
 		}
-		return new String(raw, fragment, limit - fragment);
+		return new String(raw, fragment, limit - fragment, CHARSET);
 	}
 
 	int getPathAndQueryLength() {
@@ -445,7 +448,7 @@ public final class UrlParser {
 				keyEnd++;
 			}
 			if (keyStart != keyEnd) {
-				result.putIfAbsent(new String(query, keyStart, keyEnd - keyStart), keyValueDecode(query, keyEnd, limit));
+				result.putIfAbsent(new String(query, keyStart, keyEnd - keyStart, CHARSET), keyValueDecode(query, keyEnd, limit));
 			}
 			while (keyStart < limit) {
 				if (query[keyStart++] == '&') break;
@@ -488,7 +491,7 @@ public final class UrlParser {
 		if (pos == -1 || pos > pathEnd) {
 			return "/";
 		}
-		return new String(raw, pos, pathEnd - pos);
+		return new String(raw, pos, pathEnd - pos, CHARSET);
 	}
 
 	String pollUrlPart() {
@@ -498,10 +501,10 @@ public final class UrlParser {
 			pos = nextSlash > pathEnd ? pathEnd : nextSlash;
 			String part;
 			if (pos == -1) {
-				part = new String(raw, start, pathEnd - start);
+				part = new String(raw, start, pathEnd - start, CHARSET);
 				pos = limit;
 			} else {
-				part = new String(raw, start, pos - start);
+				part = new String(raw, start, pos - start, CHARSET);
 			}
 			return part;
 		} else {
@@ -525,19 +528,19 @@ public final class UrlParser {
 			throw new MalformedHttpException("Empty port value");
 		}
 		if ((end - port) > 5) {
-			throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port));
+			throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
 		}
 
 		int result = 0;
 		for (int i = port; i < end; i++) {
 			int c = raw[i] - '0';
 			if (c < 0 || c > 9)
-				throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port));
+				throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
 			result = c + result * 10;
 		}
 
 		if (result > 0xFFFF) {
-			throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port));
+			throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
 		}
 
 		return result;
@@ -568,9 +571,9 @@ public final class UrlParser {
 			if (c == '+' || c == '%')
 				return urlParse(url, pos, limit, i); // inline hint
 			if (c == '&' || c == '#')
-				return new String(url, pos, i - pos);
+				return new String(url, pos, i - pos, CHARSET);
 		}
-		return new String(url, pos, limit - pos);
+		return new String(url, pos, limit - pos, CHARSET);
 	}
 
 	@Nullable
@@ -616,7 +619,7 @@ public final class UrlParser {
 						break;
 				}
 			}
-			return new String(bytes, 0, bytesPos);
+			return new String(bytes, 0, bytesPos, CHARSET);
 		} catch (MalformedHttpException e) {
 			return null;
 		}
@@ -662,6 +665,6 @@ public final class UrlParser {
 
 	@Override
 	public String toString() {
-		return new String(raw, offset, limit - offset);
+		return new String(raw, offset, limit - offset, CHARSET);
 	}
 }
