@@ -137,10 +137,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onStartLine(int limit) throws MalformedHttpException {
-		byte[] line = readBuf.array();
-		int pos = readBuf.head();
-
+	protected void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException {
 		boolean http1x = line[pos + 0] == 'H' && line[pos + 1] == 'T' && line[pos + 2] == 'T' && line[pos + 3] == 'P' && line[pos + 4] == '/' && line[pos + 5] == '1';
 		boolean http11 = line[pos + 6] == '.' && line[pos + 7] == '1' && line[pos + 8] == SP;
 
@@ -149,7 +146,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			throw new MalformedHttpException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
-		pos += 9;
+		int i = pos + 9;
 		HttpVersion version = HttpVersion.HTTP_1_1;
 		if (http11) {
 			flags |= KEEP_ALIVE;
@@ -157,13 +154,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			version = HttpVersion.HTTP_1_0;
 		} else if (line[6] == SP) {
 			version = HttpVersion.HTTP_1_0;
-			pos += 7 - 9;
+			i += 7 - 9;
 		} else {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Invalid response");
 			throw new MalformedHttpException("Invalid response. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
-		int statusCode = decodePositiveInt(line, pos, 3);
+		int statusCode = decodePositiveInt(line, i, 3);
 		if (!(statusCode >= 100 && statusCode < 600)) {
 			throw new MalformedHttpException("Invalid HTTP Status Code " + statusCode);
 		}
@@ -181,10 +178,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onHeader(HttpHeader header, int off, int len) throws MalformedHttpException {
+	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException {
 		assert response != null;
 		if (response.headers.size() >= MAX_HEADERS) throw new MalformedHttpException("Too many headers");
-		response.addHeader(header, readBuf.array(), off, len);
+		response.addHeader(header, array, off, len);
 	}
 
 	@Override

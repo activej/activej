@@ -157,16 +157,15 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	/**
 	 * This method is called after received line of header.
+	 *
+	 * @param line received line of header.
 	 */
 	@SuppressWarnings("PointlessArithmeticExpression")
 	@Override
-	protected void onStartLine(int limit) throws MalformedHttpException {
-		byte[] line = readBuf.array();
-		int pos = readBuf.head();
-
+	protected void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException {
 		switchPool(server.poolReadWrite);
 
-		HttpMethod method = getHttpMethod();
+		HttpMethod method = getHttpMethod(line, pos);
 		if (method == null) {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP method");
 			throw new MalformedHttpException("Unknown HTTP method. First line: " +
@@ -216,20 +215,15 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 	}
 
-	private HttpMethod getHttpMethod() {
-		byte[] line = readBuf.array();
-		int pos = readBuf.head();
+	private static HttpMethod getHttpMethod(byte[] line, int pos) {
 		boolean get = line[pos] == 'G' && line[pos + 1] == 'E' && line[pos + 2] == 'T' && (line[pos + 3] == SP || line[pos + 3] == HT);
 		if (get) {
 			return GET;
 		}
-		return getHttpMethodFromMap();
+		return getHttpMethodFromMap(line, pos);
 	}
 
-	private HttpMethod getHttpMethodFromMap() {
-		byte[] line = readBuf.array();
-		int pos = readBuf.head();
-
+	private static HttpMethod getHttpMethodFromMap(byte[] line, int pos) {
 		int hashCode = 0;
 		for (int i = pos; i < min(pos + 10, line.length); i++) {
 			byte b = line[i];
@@ -249,8 +243,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param header received header
 	 */
 	@Override
-	protected void onHeader(HttpHeader header, int off, int len) throws MalformedHttpException {
-		byte[] array = readBuf.array();
+	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException {
 		if (header == HttpHeaders.EXPECT && equalsLowerCaseAscii(EXPECT_100_CONTINUE, array, off, len)) {
 			socket.write(ByteBuf.wrapForReading(EXPECT_RESPONSE_CONTINUE));
 		}
