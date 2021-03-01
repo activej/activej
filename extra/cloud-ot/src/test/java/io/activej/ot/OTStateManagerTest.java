@@ -63,10 +63,8 @@ public class OTStateManagerTest {
 		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
 			@Override
 			public Promise<FetchData<Integer, TestOp>> fetch(Integer currentCommitId) {
-				return super.fetch(currentCommitId).then(fetchData -> {
-					getCurrentEventloop();
-					return Promises.delay(100L, fetchData);
-				});
+				return super.fetch(currentCommitId)
+						.then(fetchData -> Promises.delay(100L, fetchData));
 			}
 		};
 		OTStateManager<Integer, TestOp> stateManager = OTStateManager.create(getCurrentEventloop(), SYSTEM, uplink, testOpState);
@@ -290,6 +288,154 @@ public class OTStateManagerTest {
 		Set<Integer> heads = await(repository.getHeads());
 		assertEquals(singleton(5), heads);
 		assertEquals(131, testOpState.getValue());
+	}
+
+	@Test
+	public void fetchSimple() {
+		for (int i = 1; i <= 3; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+		}
+		await(stateManager.sync());
+
+		assertFalse(await(stateManager.fetch()));
+
+		assertEquals(3, testOpState.getValue());
+		assertEquals(Integer.valueOf(3), stateManager.getCommitId());
+		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+
+		for (int i = 4; i <= 10; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+		}
+		assertTrue(await(stateManager.fetch()));
+
+		assertEquals(3, testOpState.getValue());
+		assertEquals(Integer.valueOf(3), stateManager.getCommitId());
+		assertNotSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+		assertEquals(Integer.valueOf(10), stateManager.getOriginCommitId());
+
+		await(stateManager.sync());
+		assertEquals(10, testOpState.getValue());
+		assertEquals(Integer.valueOf(10), stateManager.getCommitId());
+		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+	}
+
+	@Test
+	public void fetchWithWorkingDiffs() {
+		repository.revisionIdSupplier = asList(11, 16).iterator()::next;
+		for (int i = 1; i <= 3; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+		}
+		await(stateManager.sync());
+
+		assertEquals(3, testOpState.getValue());
+		assertEquals(Integer.valueOf(3), stateManager.getCommitId());
+		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+
+		for (int i = 4; i <= 10; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+		}
+		stateManager.add(add(-5));
+		assertEquals(-2, testOpState.getValue());
+		assertTrue(await(stateManager.fetch()));
+
+		assertEquals(-2, testOpState.getValue());
+		assertEquals(Integer.valueOf(3), stateManager.getCommitId());
+		assertNotSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+		assertEquals(Integer.valueOf(10), stateManager.getOriginCommitId());
+
+		await(stateManager.sync());
+		assertEquals(5, testOpState.getValue());
+		assertEquals(Integer.valueOf(11), stateManager.getCommitId());
+		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+
+		for (int i = 12; i <= 15; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+		}
+		assertTrue(await(stateManager.fetch()));
+
+		assertEquals(5, testOpState.getValue());
+		assertEquals(Integer.valueOf(11), stateManager.getCommitId());
+		assertNotSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+		assertEquals(Integer.valueOf(15), stateManager.getOriginCommitId());
+
+		stateManager.add(add(-3));
+		assertEquals(2, testOpState.getValue());
+
+		await(stateManager.sync());
+
+		assertEquals(6, testOpState.getValue());
+		assertEquals(Integer.valueOf(16), stateManager.getCommitId());
+		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+	}
+
+	@Test
+	public void fetchWithBranching() {
+		repository.revisionIdSupplier = asList(17, 18).iterator()::next;
+		for (int i = 1; i <= 3; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+		}
+		await(stateManager.sync());
+
+		assertEquals(3, testOpState.getValue());
+		assertEquals(Integer.valueOf(3), stateManager.getCommitId());
+		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+
+		stateManager.add(add(100));
+		assertEquals(103, testOpState.getValue());
+
+		for (int i = 4; i <= 10; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+		}
+
+		assertTrue(await(stateManager.fetch()));
+		assertEquals(Integer.valueOf(10), stateManager.getOriginCommitId());
+
+		repository.doPushAndUpdateHead(ofCommit(0, 11, 3, asList(add(10)), 5));
+		for (int i = 12; i <= 16; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(10)), i - 6));
+		}
+		assertFalse(await(stateManager.fetch()));
+		assertEquals(Integer.valueOf(10), stateManager.getOriginCommitId());
+
+		await(stateManager.sync());
+
+		assertEquals(170, testOpState.getValue());
+		assertEquals(Integer.valueOf(18), stateManager.getCommitId());
+		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+	}
+
+	@Test
+	public void fetchWithPendingCommit() {
+		repository.revisionIdSupplier = asList(1, 6).iterator()::next;
+		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
+			@Override
+			public Promise<FetchData<Integer, TestOp>> push(OTCommit<Integer, TestOp> protoCommit) {
+				return failOnce(() -> super.push(protoCommit));
+			}
+		};
+		OTStateManager<Integer, TestOp> stateManager = OTStateManager.create(getCurrentEventloop(), SYSTEM, uplink, testOpState);
+		initializeRepository(repository, stateManager);
+
+		stateManager.add(add(1));
+		Throwable exception = awaitException(stateManager.sync());
+		assertSame(FAILED, exception);
+		assertTrue(stateManager.hasPendingCommits());
+
+		assertFalse(await(stateManager.fetch()));
+
+		repository.doPushAndUpdateHead(ofCommit(0, 2, 0, asList(add(10)), 2));
+		for (int i = 3; i <= 5; i++) {
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(10)), i));
+		}
+		assertFalse(await(stateManager.fetch()));
+
+		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
+
+		await(stateManager.sync());
+		assertFalse(await(stateManager.fetch()));
+
+		assertEquals(Integer.valueOf(6), stateManager.getCommitId());
+		assertEquals(41, testOpState.getValue());
 	}
 
 	static class OTUplinkDecorator implements OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
