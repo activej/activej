@@ -52,6 +52,8 @@ public final class OTStateManager<K, D> implements EventloopService {
 	private final OTSystem<D> otSystem;
 	private final OTUplink<K, D, Object> uplink;
 
+	private final AsyncSupplier<Boolean> fetch = reuse(this::doFetch);
+
 	private OTState<D> state;
 
 	@Nullable
@@ -167,22 +169,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	 */
 	public Promise<Boolean> fetch() {
 		checkState(isValid());
-
-		if (pendingProtoCommit != null) return Promise.of(false);
-
-		K fetchCommitId = this.originCommitId;
-		return uplink.fetch(fetchCommitId)
-				.map(fetchData -> {
-					if (fetchCommitId == this.originCommitId && pendingProtoCommit == null) {
-						if (fetchData.getCommitId() != fetchCommitId) {
-							updateOrigin(fetchData);
-							return true;
-						}
-						return false;
-					}
-					return false;
-				})
-				.whenComplete(toLogger(logger, thisMethod(), this));
+		return fetch.get();
 	}
 
 	private void updateOrigin(OTUplink.FetchData<K, D> fetchData) {
@@ -242,6 +229,24 @@ public final class OTStateManager<K, D> implements EventloopService {
 					}
 				})
 				.toVoid()
+				.whenComplete(toLogger(logger, thisMethod(), this));
+	}
+
+	private Promise<Boolean> doFetch() {
+		if (pendingProtoCommit != null) return Promise.of(false);
+
+		K fetchCommitId = this.originCommitId;
+		return uplink.fetch(fetchCommitId)
+				.map(fetchData -> {
+					if (fetchCommitId == this.originCommitId && pendingProtoCommit == null) {
+						if (fetchData.getCommitId() != fetchCommitId) {
+							updateOrigin(fetchData);
+							return true;
+						}
+						return false;
+					}
+					return false;
+				})
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
