@@ -5,6 +5,7 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
+import io.activej.etl.LogOTState;
 import io.activej.etl.LogPositionDiff;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
@@ -16,13 +17,13 @@ import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static io.activej.aggregation.PrimaryKey.ofArray;
+import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.cube.TestUtils.STUB_CUBE_STATE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -87,4 +88,28 @@ public class CubeOTTest {
 		assertEquals(result, transform.left.get(0));
 	}
 
+	@Test
+	public void testInversion() {
+		LogOTState<CubeDiff> state = LogOTState.create(STUB_CUBE_STATE);
+		state.init();
+
+		assertTrue(state.getPositions().isEmpty());
+
+		LogPosition fromPosition = LogPosition.initial();
+		LogFile toLogfile = new LogFile("myLog", 100);
+		LogPosition toPosition = LogPosition.create(toLogfile, 500);
+
+		LogDiff<CubeDiff> logDiff = LogDiff.of(map("test", new LogPositionDiff(fromPosition, toPosition)), CubeDiff.empty());
+
+		state.apply(logDiff);
+		Map<String, LogPosition> positions = state.getPositions();
+		assertEquals(map("test", toPosition), positions);
+
+		List<LogDiff<CubeDiff>> inverted = logSystem.invert(singletonList(logDiff));
+		for (LogDiff<CubeDiff> invertedDiff : inverted) {
+			state.apply(invertedDiff);
+		}
+
+		assertTrue(state.getPositions().isEmpty());
+	}
 }

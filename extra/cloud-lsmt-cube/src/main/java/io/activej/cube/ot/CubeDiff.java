@@ -48,6 +48,10 @@ public class CubeDiff {
 		return diffs.keySet();
 	}
 
+	public Set<Map.Entry<String, AggregationDiff>> entrySet() {
+		return diffs.entrySet();
+	}
+
 	public AggregationDiff get(String id) {
 		return diffs.get(id);
 	}
