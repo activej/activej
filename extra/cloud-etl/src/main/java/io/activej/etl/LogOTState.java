@@ -22,9 +22,11 @@ import io.activej.ot.OTState;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.activej.common.Checks.checkState;
 import static java.util.Collections.unmodifiableMap;
 
 public final class LogOTState<D> implements OTState<LogDiff<D>> {
+
 	private final Map<String, LogPosition> positions = new HashMap<>();
 	private final OTState<D> dataState;
 
@@ -52,9 +54,22 @@ public final class LogOTState<D> implements OTState<LogDiff<D>> {
 
 	@Override
 	public void apply(LogDiff<D> op) {
-		for (String log : op.getPositions().keySet()) {
-			LogPositionDiff positionDiff = op.getPositions().get(log);
-			positions.put(log, positionDiff.to);
+		for (Map.Entry<String, LogPositionDiff> entry : op.getPositions().entrySet()) {
+			String key = entry.getKey();
+			LogPositionDiff diff = entry.getValue();
+
+			LogPosition previous = positions.get(key);
+			if (previous != null) {
+				checkState(diff.from.equals(previous), "'From' position should equal previous 'To' position");
+			} else {
+				checkState(diff.from.isInitial(), "Adding new log that does not start from initial position");
+			}
+
+			if (diff.to.isInitial()) {
+				positions.remove(key);
+			} else {
+				positions.put(key, diff.to);
+			}
 		}
 		for (D d : op.getDiffs()) {
 			dataState.apply(d);

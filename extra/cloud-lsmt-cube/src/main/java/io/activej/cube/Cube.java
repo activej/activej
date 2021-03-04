@@ -501,9 +501,8 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 	@Override
 	public void apply(CubeDiff op) {
-		for (String aggregationId : op.keySet()) {
-			AggregationDiff aggregationDiff = op.get(aggregationId);
-			aggregations.get(aggregationId).aggregation.getState().apply(aggregationDiff);
+		for (Entry<String, AggregationDiff> entry : op.entrySet()) {
+			aggregations.get(entry.getKey()).aggregation.getState().apply(entry.getValue());
 		}
 	}
 

@@ -5,6 +5,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.ot.OTCommit;
+import io.activej.ot.OTState;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.repository.OTRepositoryMySql;
 
@@ -36,5 +37,15 @@ public final class TestUtils {
 		logCubeStateManager.add(logDiff);
 		await(logCubeStateManager.sync());
 	}
+
+	public static final OTState<CubeDiff> STUB_CUBE_STATE = new OTState<CubeDiff>() {
+		@Override
+		public void init() {
+		}
+
+		@Override
+		public void apply(CubeDiff op) {
+		}
+	};
 
 }

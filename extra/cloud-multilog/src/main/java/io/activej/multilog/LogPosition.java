@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 public final class LogPosition implements Comparable<LogPosition> {
+	private static final LogPosition INITIAL_LOG_POSITION = new LogPosition(new LogFile("", 0), 0);
+
 	@NotNull
 	private final LogFile logFile;
 	private final long position;
@@ -34,8 +36,16 @@ public final class LogPosition implements Comparable<LogPosition> {
 		return new LogPosition(logFile, position);
 	}
 
+	public static LogPosition initial() {
+		return INITIAL_LOG_POSITION;
+	}
+
 	public boolean isBeginning() {
 		return position == 0L;
+	}
+
+	public boolean isInitial() {
+		return INITIAL_LOG_POSITION.equals(this);
 	}
 
 	@NotNull

@@ -81,8 +81,7 @@ public class LogOT {
 				})
 				.withInvertFunction(LogDiff.class, commit -> singletonList(LogDiff.of(
 						transformMapValues(commit.getPositions(), LogPositionDiff::inverse),
-						otSystem.invert(commit.getDiffs()))))
-				;
+						otSystem.invert(commit.getDiffs()))));
 
 	}
 

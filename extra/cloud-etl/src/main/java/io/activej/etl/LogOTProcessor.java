@@ -29,7 +29,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.multilog.Multilog;
 import io.activej.promise.Promise;
@@ -131,7 +130,7 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 			String logName = logName(partition);
 			LogPosition logPosition = state.getPositions().get(logName);
 			if (logPosition == null) {
-				logPosition = LogPosition.create(new LogFile("", 0), 0L);
+				logPosition = LogPosition.initial();
 			}
 			logger.info("Starting reading '{}' from position {}", logName, logPosition);
 
