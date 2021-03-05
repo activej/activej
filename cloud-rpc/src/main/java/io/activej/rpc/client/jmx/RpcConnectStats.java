@@ -23,21 +23,26 @@ public final class RpcConnectStats {
 	private long successfulConnects;
 	private long failedConnects;
 	private long closedConnects;
+	private boolean connected;
 
 	public void reset() {
 		successfulConnects = failedConnects = closedConnects = 0;
+		connected = false;
 	}
 
 	public void recordSuccessfulConnection() {
 		successfulConnects++;
+		connected = true;
 	}
 
 	public void recordFailedConnection() {
 		failedConnects++;
+		connected = false;
 	}
 
 	public void recordClosedConnection() {
 		closedConnects++;
+		connected = false;
 	}
 
 	@JmxAttribute(reducer = JmxReducerSum.class)
@@ -53,6 +58,10 @@ public final class RpcConnectStats {
 	@JmxAttribute(reducer = JmxReducerSum.class)
 	public long getClosedConnects() {
 		return closedConnects;
+	}
+
+	public boolean isConnected() {
+		return connected;
 	}
 
 }

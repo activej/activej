@@ -61,6 +61,7 @@ import java.util.concurrent.Executor;
 import static io.activej.async.callback.Callback.toAnotherEventloop;
 import static io.activej.common.Utils.nullToSupplier;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
+import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -558,25 +559,15 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		return statsSocket;
 	}
 
-	//	@JmxAttribute
-	//	public StreamBinarySerializer.JmxInspector getStatsSerializer() {
-	//		return statsSerializer;
-	//	}
-	//
-	//	@JmxAttribute
-	//	public StreamBinaryDeserializer.JmxInspector getStatsDeserializer() {
-	//		return statsDeserializer;
-	//	}
-	//
-	//	@JmxAttribute
-	//	public StreamLZ4Compressor.JmxInspector getStatsCompressor() {
-	//		return compression ? statsCompressor : null;
-	//	}
-	//
-	//	@JmxAttribute
-	//	public StreamLZ4Decompressor.JmxInspector getStatsDecompressor() {
-	//		return compression ? statsDecompressor : null;
-	//	}
+	@JmxAttribute
+	public List<String> getUnresponsiveServers() {
+		if (stopPromise != null) return Collections.emptyList();
+
+		return connectsStatsPerAddress.entrySet().stream()
+				.filter(entry -> !entry.getValue().isConnected())
+				.map(entry -> entry.getKey().toString())
+				.collect(toList());
+	}
 
 	RpcRequestStats ensureRequestStatsPerClass(Class<?> requestClass) {
 		if (!requestStatsPerClass.containsKey(requestClass)) {

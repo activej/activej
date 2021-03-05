@@ -148,6 +148,8 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 	}
 
 	public JmxModule withGlobalMBean(Type type, Key<?> key) {
+		checkArgument(key.getType() == type, "Type " + type + " does not match key type " + key.getType());
+
 		globalMBeans.put(type, key);
 		return this;
 	}
