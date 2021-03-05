@@ -107,6 +107,15 @@
               <mainClass>WorkerPoolModuleExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>LauncherArgsExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>LauncherArgsExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>

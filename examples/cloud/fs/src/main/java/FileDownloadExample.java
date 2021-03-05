@@ -65,8 +65,11 @@ public final class FileDownloadExample extends Launcher {
 						.whenResult(() -> System.out.printf("%nFile '%s' successfully downloaded to '%s'%n%n",
 								REQUIRED_FILE, clientStorage))
 		);
-		future.get();
-		executor.shutdown();
+		try {
+			future.get();
+		} finally {
+			executor.shutdown();
+		}
 	}
 	//[END EXAMPLE]
 

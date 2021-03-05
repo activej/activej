@@ -63,6 +63,15 @@
               <mainClass>ServerSetupExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>DecoratedActiveFsExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>DecoratedActiveFsExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>

@@ -65,8 +65,11 @@ public final class FileUploadExample extends Launcher {
 						.then(cfr -> cfr.streamTo(client.upload(FILE_NAME, EXAMPLE_TEXT.length())))
 						.whenResult(() -> System.out.printf("%nFile '%s' successfully uploaded%n%n", FILE_NAME))
 		);
-		future.get();
-		executor.shutdown();
+		try {
+			future.get();
+		} finally {
+			executor.shutdown();
+		}
 	}
 	//[END EXAMPLE]
 

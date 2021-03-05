@@ -53,6 +53,15 @@
               <mainClass>SimpleObjectExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>LocalDateSerializerExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>LocalDateSerializerExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>

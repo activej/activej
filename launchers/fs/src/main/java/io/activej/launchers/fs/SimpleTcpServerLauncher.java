@@ -78,7 +78,7 @@ public class SimpleTcpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	ActiveFs localActivefs(Eventloop eventloop, Executor executor, Config config) {
+	ActiveFs localActiveFs(Eventloop eventloop, Executor executor, Config config) {
 		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
 	}
 

@@ -167,6 +167,69 @@
               <mainClass>WebSocketPongServerExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>HostRoutingExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>HostRoutingExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>MimeTypeRoutingExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>MimeTypeRoutingExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>CookieRoutingExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>CookieRoutingExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>DynamicRoutingExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>DynamicRoutingExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>WebSocketEchoClientExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>WebSocketEchoClientExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>WebSocketEchoServerExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>WebSocketEchoServerExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>MultipartDataHandlingExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>MultipartDataHandlingExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
