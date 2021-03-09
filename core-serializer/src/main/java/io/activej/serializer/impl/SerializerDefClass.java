@@ -18,6 +18,7 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
@@ -305,7 +306,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 					for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 						FieldDef fieldDef = entry.getValue();
 						if (!fieldDef.hasVersion(version)) continue;
-						map.put(entry.getKey(), cast(fieldValues.get(i++), fieldDef.getRawType()));
+						map.put(entry.getKey(), fieldValues.get(i++));
 					}
 
 					return let(factory == null ?
@@ -325,15 +326,19 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 										}
 									}
 									if (found) {
-										Expression[] temp = new Expression[method.getParameterTypes().length];
+										Class<?>[] parameterTypes = method.getParameterTypes();
+										Expression[] temp = new Expression[parameterTypes.length];
 										int j = 0;
-										for (String fieldName : entry.getValue()) {
+										List<String> value = entry.getValue();
+										for (int k = 0, valueSize = value.size(); k < valueSize; k++) {
+											String fieldName = value.get(k);
 											FieldDef fieldDef = fields.get(fieldName);
 											assert fieldDef != null;
+											Class<?> parameterType = parameterTypes[k];
 											if (fieldDef.hasVersion(version)) {
-												temp[j++] = map.get(fieldName);
+												temp[j++] = cast(map.get(fieldName), parameterType);
 											} else {
-												temp[j++] = pushDefaultValue(fieldDef.getAsmType());
+												temp[j++] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterType);
 											}
 										}
 										list.add(call(instance, method.getName(), temp));
@@ -348,7 +353,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 									if (fieldDef.field == null || isFinal(fieldDef.field.getModifiers()))
 										continue;
 									Variable property = property(instance, fieldName);
-									list.add(set(property, map.get(fieldName)));
+									list.add(set(property, cast(map.get(fieldName), fieldDef.getRawType())));
 								}
 
 								list.add(instance);
@@ -360,14 +365,17 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 	private Expression callFactory(Map<String, Expression> map, int version) {
 		Expression[] param = new Expression[factoryParams.size()];
 		int i = 0;
-		for (String fieldName : factoryParams) {
+		Class<?>[] parameterTypes = factory.getParameterTypes();
+		for (int j = 0, factoryParamsSize = factoryParams.size(); j < factoryParamsSize; j++) {
+			String fieldName = factoryParams.get(j);
 			FieldDef fieldDef = fields.get(fieldName);
 			if (fieldDef == null)
 				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, factory));
+			Class<?> parameterType = parameterTypes[j];
 			if (fieldDef.hasVersion(version)) {
-				param[i++] = map.get(fieldName);
+				param[i++] = cast(map.get(fieldName), parameterType);
 			} else {
-				param[i++] = pushDefaultValue(fieldDef.getAsmType());
+				param[i++] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterType);
 			}
 		}
 		return staticCall(factory.getDeclaringClass(), factory.getName(), param);
@@ -382,14 +390,17 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		param = new Expression[constructorParams.size()];
 
 		int i = 0;
-		for (String fieldName : constructorParams) {
+		Class<?>[] parameterTypes = constructor.getParameterTypes();
+		for (int j = 0, constructorParamsSize = constructorParams.size(); j < constructorParamsSize; j++) {
+			String fieldName = constructorParams.get(j);
 			FieldDef fieldDef = fields.get(fieldName);
 			if (fieldDef == null)
 				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, constructor));
+			Class<?> parameterType = parameterTypes[j];
 			if (fieldDef.hasVersion(version)) {
-				param[i++] = map.get(fieldName);
+				param[i++] = Expressions.cast(map.get(fieldName), parameterType);
 			} else {
-				param[i++] = pushDefaultValue(fieldDef.getAsmType());
+				param[i++] = Expressions.cast(pushDefaultValue(fieldDef.getAsmType()), parameterType);
 			}
 
 		}

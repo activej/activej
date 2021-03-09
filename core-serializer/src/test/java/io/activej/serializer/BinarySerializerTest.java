@@ -2211,4 +2211,29 @@ public class BinarySerializerTest {
 		assertEquals(testData1.data.value, ((DataHolder.ValueData) testData2.getData()).value);
 	}
 
+	@Test
+	public void testMorePreciseFieldType() {
+		LinkedListHolderImpl testData1 = new LinkedListHolderImpl(asList("first", "second", "third"));
+		LinkedListHolder testData2 = doTest(LinkedListHolderImpl.class, testData1);
+
+		assertEquals(testData1.list(), testData2.list());
+	}
+
+	public interface LinkedListHolder {
+		LinkedList<String> list();
+	}
+
+	public static class LinkedListHolderImpl implements LinkedListHolder {
+		@Serialize(order = 0)
+		public final LinkedList<String> list;
+
+		public LinkedListHolderImpl(@Deserialize("list") List<String> list) {
+			this.list = new LinkedList<>(list);
+		}
+
+		@Override
+		public LinkedList<String> list() {
+			return this.list;
+		}
+	}
 }
