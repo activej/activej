@@ -34,7 +34,7 @@ public final class Utils {
 		return null;
 	}
 
-	public static <T> T of(Supplier<T> supplier) {
+	public static <T> T eval(Supplier<T> supplier) {
 		return supplier.get();
 	}
 

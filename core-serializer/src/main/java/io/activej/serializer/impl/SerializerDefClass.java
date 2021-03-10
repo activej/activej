@@ -23,7 +23,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import io.activej.serializer.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -34,6 +33,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.util.Utils.eval;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Collections.singletonList;
@@ -291,7 +291,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 			return deserializeClassSimple(staticDecoders, in, version, compatibilityLevel, instanceInitializer);
 		}
 
-		return let(Utils.of(() -> {
+		return let(eval(() -> {
 					List<Expression> fieldDeserializers = new ArrayList<>();
 					for (FieldDef fieldDef : fields.values()) {
 						if (!fieldDef.hasVersion(version)) continue;
@@ -311,13 +311,14 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 
 					return let(factory == null ?
 									callConstructor(decodeType, map, version) :
-									callFactory(map, version),
+									callFactoryMethod(map, version),
 							instance -> sequence(list -> {
 								list.add(instanceInitializer.apply(instance));
 								for (Map.Entry<Method, List<String>> entry : setters.entrySet()) {
 									Method method = entry.getKey();
+									List<String> fieldNames = entry.getValue();
 									boolean found = false;
-									for (String fieldName : entry.getValue()) {
+									for (String fieldName : fieldNames) {
 										FieldDef fieldDef = fields.get(fieldName);
 										if (fieldDef == null) throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, method));
 										if (fieldDef.hasVersion(version)) {
@@ -328,17 +329,14 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 									if (found) {
 										Class<?>[] parameterTypes = method.getParameterTypes();
 										Expression[] temp = new Expression[parameterTypes.length];
-										int j = 0;
-										List<String> value = entry.getValue();
-										for (int k = 0, valueSize = value.size(); k < valueSize; k++) {
-											String fieldName = value.get(k);
+										for (int j = 0; j < fieldNames.size(); j++) {
+											String fieldName = fieldNames.get(j);
 											FieldDef fieldDef = fields.get(fieldName);
 											assert fieldDef != null;
-											Class<?> parameterType = parameterTypes[k];
 											if (fieldDef.hasVersion(version)) {
-												temp[j++] = cast(map.get(fieldName), parameterType);
+												temp[j] = cast(map.get(fieldName), parameterTypes[j]);
 											} else {
-												temp[j++] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterType);
+												temp[j] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[j]);
 											}
 										}
 										list.add(call(instance, method.getName(), temp));
@@ -362,20 +360,18 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 				});
 	}
 
-	private Expression callFactory(Map<String, Expression> map, int version) {
+	private Expression callFactoryMethod(Map<String, Expression> map, int version) {
 		Expression[] param = new Expression[factoryParams.size()];
-		int i = 0;
 		Class<?>[] parameterTypes = factory.getParameterTypes();
-		for (int j = 0, factoryParamsSize = factoryParams.size(); j < factoryParamsSize; j++) {
-			String fieldName = factoryParams.get(j);
+		for (int i = 0; i < factoryParams.size(); i++) {
+			String fieldName = factoryParams.get(i);
 			FieldDef fieldDef = fields.get(fieldName);
 			if (fieldDef == null)
 				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, factory));
-			Class<?> parameterType = parameterTypes[j];
 			if (fieldDef.hasVersion(version)) {
-				param[i++] = cast(map.get(fieldName), parameterType);
+				param[i] = cast(map.get(fieldName), parameterTypes[i]);
 			} else {
-				param[i++] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterType);
+				param[i] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[i]);
 			}
 		}
 		return staticCall(factory.getDeclaringClass(), factory.getName(), param);
@@ -389,18 +385,16 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		}
 		param = new Expression[constructorParams.size()];
 
-		int i = 0;
 		Class<?>[] parameterTypes = constructor.getParameterTypes();
-		for (int j = 0, constructorParamsSize = constructorParams.size(); j < constructorParamsSize; j++) {
-			String fieldName = constructorParams.get(j);
+		for (int i = 0; i < constructorParams.size(); i++) {
+			String fieldName = constructorParams.get(i);
 			FieldDef fieldDef = fields.get(fieldName);
 			if (fieldDef == null)
 				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, constructor));
-			Class<?> parameterType = parameterTypes[j];
 			if (fieldDef.hasVersion(version)) {
-				param[i++] = Expressions.cast(map.get(fieldName), parameterType);
+				param[i] = cast(map.get(fieldName), parameterTypes[i]);
 			} else {
-				param[i++] = Expressions.cast(pushDefaultValue(fieldDef.getAsmType()), parameterType);
+				param[i] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[i]);
 			}
 
 		}

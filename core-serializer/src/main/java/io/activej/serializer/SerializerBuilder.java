@@ -904,7 +904,7 @@ public final class SerializerBuilder {
 		classBuilder.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),
 				asList(BinaryInput.class, byte.class),
-				of(() -> {
+				eval(() -> {
 					List<Expression> listKey = new ArrayList<>();
 					List<Expression> listValue = new ArrayList<>();
 					for (int i = decodeVersions.size() - 2; i >= 0; i--) {
