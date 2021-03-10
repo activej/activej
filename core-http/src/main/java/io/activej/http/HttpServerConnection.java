@@ -367,6 +367,16 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				}
 				return;
 			}
+
+			if (stashedBufs != null) {
+				stashedBufs.recycle();
+				stashedBufs = null;
+			}
+			if (readBuf != null && !readBuf.canRead()) {
+				readBuf.recycle();
+				readBuf = null;
+			}
+
 			switchPool(server.poolReadWrite);
 			if (e == null) {
 				if (inspector != null) {
@@ -379,16 +389,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				}
 				writeException(e);
 			}
-
 			request.recycle();
-			if (stashedBufs != null) {
-				stashedBufs.recycle();
-				stashedBufs = null;
-			}
-			if (readBuf != null && !readBuf.canRead()) {
-				readBuf.recycle();
-				readBuf = null;
-			}
 		});
 	}
 
