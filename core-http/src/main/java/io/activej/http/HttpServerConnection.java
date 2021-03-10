@@ -282,7 +282,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			this.writeBuf = null;
 			writeHttpMessageAsStream(writeBuf, httpResponse);
 		}
-		httpResponse.recycle();
 	}
 
 	@SuppressWarnings("ConstantConditions")
@@ -363,7 +362,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			if (isClosed()) {
 				request.recycle();
 				if (response != null) {
-					response.recycle();
+					response.recycleBody();
 				}
 				return;
 			}

@@ -170,12 +170,8 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 
 	@Override
 	protected void onCleanup() {
-		if (!request.isRecycled()) {
-			request.recycle();
-		}
-		if (!response.isRecycled()) {
-			response.recycle();
-		}
+		request.recycle();
+		response.recycle();
 	}
 
 	private <T> Promise<T> protocolError(WebSocketException exception) {

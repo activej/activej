@@ -82,7 +82,7 @@ public interface AsyncServletDecorator {
 						.map(response -> {
 							HttpResponse newResponse = fn.apply(response);
 							if (response != newResponse) {
-								response.recycle();
+								response.recycleBody();
 							}
 							return newResponse;
 						});
@@ -94,7 +94,7 @@ public interface AsyncServletDecorator {
 						.map(response -> {
 							HttpResponse newResponse = fn.apply(request, response);
 							if (response != newResponse) {
-								response.recycle();
+								response.recycleBody();
 							}
 							return newResponse;
 						});

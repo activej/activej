@@ -445,7 +445,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 						}
 					} else {
 						if (inspector != null) inspector.onResolveError(request, e);
-						request.recycle();
+						request.recycleBody();
 						return Promise.ofException(translateToHttpException(e));
 					}
 				});
@@ -501,7 +501,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 						}
 					} else {
 						if (inspector != null) inspector.onConnectError(request, address, e);
-						request.recycle();
+						request.recycleBody();
 						return Promise.ofException(translateToHttpException(e));
 					}
 				});

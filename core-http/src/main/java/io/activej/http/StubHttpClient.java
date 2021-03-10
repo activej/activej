@@ -46,7 +46,7 @@ public final class StubHttpClient implements IAsyncHttpClient {
 			servletResult = Promise.ofException(u.getCause());
 		}
 		return servletResult.thenEx((res, e) -> {
-			request.recycle();
+			request.recycleBody();
 			if (e == null) {
 				ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
 				Eventloop eventloop = Eventloop.getCurrentEventloop();

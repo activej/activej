@@ -33,6 +33,7 @@ import java.util.*;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.nullify;
 import static io.activej.csp.ChannelConsumers.recycling;
 import static java.util.Collections.emptySet;
 
@@ -409,6 +410,11 @@ public abstract class HttpMessage {
 		if (bodyStream != null) {
 			bodyStream.streamTo(recycling());
 		}
+	}
+
+	void recycleBody() {
+		body = nullify(body, ByteBuf::recycle);
+		bodyStream = nullify(bodyStream, stream -> stream.streamTo(recycling()));
 	}
 
 	protected void writeHeaders(@NotNull ByteBuf buf) {

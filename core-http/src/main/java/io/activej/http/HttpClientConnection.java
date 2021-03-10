@@ -274,7 +274,6 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		request.setBodyStream(buffer.getSupplier());
 
 		writeHttpMessageAsStream(null, request);
-		request.recycle();
 
 		if (!isClosed()) {
 			readHttpResponse();
@@ -402,7 +401,6 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		} else {
 			writeHttpMessageAsStream(null, request);
 		}
-		request.recycle();
 		if (!isClosed()) {
 			readHttpResponse();
 		}
