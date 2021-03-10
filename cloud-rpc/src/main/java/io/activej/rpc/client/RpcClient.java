@@ -132,16 +132,11 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 	private boolean monitoring = false;
 	private final RpcRequestStats generalRequestsStats = RpcRequestStats.create(SMOOTHING_WINDOW);
-	private final RpcConnectStats generalConnectsStats = new RpcConnectStats();
 	private final Map<Class<?>, RpcRequestStats> requestStatsPerClass = new HashMap<>();
 	private final Map<InetSocketAddress, RpcConnectStats> connectsStatsPerAddress = new HashMap<>();
 	private final ExceptionStats lastProtocolError = ExceptionStats.create();
 
 	private final JmxInspector statsSocket = new JmxInspector();
-	//	private final StreamBinarySerializer.JmxInspector statsSerializer = new StreamBinarySerializer.JmxInspector();
-	//	private final StreamBinaryDeserializer.JmxInspector statsDeserializer = new StreamBinaryDeserializer.JmxInspector();
-	//	private final StreamLZ4Compressor.JmxInspector statsCompressor = new StreamLZ4Compressor.JmxInspector();
-	//	private final StreamLZ4Decompressor.JmxInspector statsDecompressor = new StreamLZ4Decompressor.JmxInspector();
 
 	// region builders
 	private RpcClient(Eventloop eventloop) {
@@ -218,7 +213,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		// jmx
 		for (InetSocketAddress address : this.addresses) {
 			if (!connectsStatsPerAddress.containsKey(address)) {
-				connectsStatsPerAddress.put(address, new RpcConnectStats());
+				connectsStatsPerAddress.put(address, new RpcConnectStats(eventloop));
 			}
 		}
 
@@ -359,8 +354,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					requestSender = nullToSupplier(strategy.createSender(pool), NoSenderAvailable::new);
 
 					// jmx
-					generalConnectsStats.recordSuccessfulConnection();
-					connectsStatsPerAddress.get(address).recordSuccessfulConnection();
+					connectsStatsPerAddress.get(address).recordSuccessfulConnect();
 
 					logger.info("Connection to {} established", address);
 				})
@@ -382,8 +376,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	private void processClosedConnection(InetSocketAddress address) {
 		//jmx
-		generalConnectsStats.recordFailedConnection();
-		connectsStatsPerAddress.get(address).recordFailedConnection();
+		connectsStatsPerAddress.get(address).recordFailedConnect();
 
 		if (stopPromise == null) {
 			eventloop.delayBackground(reconnectIntervalMillis, () -> {
@@ -514,9 +507,18 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		return generalRequestsStats;
 	}
 
-	@JmxAttribute(name = "connects")
-	public RpcConnectStats getGeneralConnectsStats() {
-		return generalConnectsStats;
+	@JmxAttribute(reducer = JmxReducerSum.class)
+	public long getTotalSuccessfulConnects() {
+		return connectsStatsPerAddress.values().stream()
+				.mapToLong(RpcConnectStats::getSuccessfulConnects)
+				.sum();
+	}
+
+	@JmxAttribute(reducer = JmxReducerSum.class)
+	public long getTotalFailedConnects() {
+		return connectsStatsPerAddress.values().stream()
+				.mapToLong(RpcConnectStats::getFailedConnects)
+				.sum();
 	}
 
 	@JmxAttribute(description = "request stats distributed by request class")

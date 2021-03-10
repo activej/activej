@@ -16,52 +16,80 @@
 
 package io.activej.rpc.client.jmx;
 
+import io.activej.common.time.CurrentTimeProvider;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
+import org.jetbrains.annotations.Nullable;
+
+import java.time.Duration;
+import java.time.Instant;
 
 public final class RpcConnectStats {
+	private final CurrentTimeProvider now;
+
 	private long successfulConnects;
 	private long failedConnects;
-	private long closedConnects;
-	private boolean connected;
+
+	private int reconnectAttempts;
+	private long connectionLostAt;
+
+	public RpcConnectStats(CurrentTimeProvider now) {
+		this.now = now;
+	}
 
 	public void reset() {
-		successfulConnects = failedConnects = closedConnects = 0;
-		connected = false;
+		successfulConnects = failedConnects = 0;
+		reconnectAttempts = 0;
+		connectionLostAt = -1;
 	}
 
-	public void recordSuccessfulConnection() {
+	public void recordSuccessfulConnect() {
 		successfulConnects++;
-		connected = true;
+		reconnectAttempts = 0;
+		connectionLostAt = -1;
 	}
 
-	public void recordFailedConnection() {
+	public void recordFailedConnect() {
 		failedConnects++;
-		connected = false;
+		if (connectionLostAt == -1) {
+			connectionLostAt = now.currentTimeMillis();
+		} else {
+			reconnectAttempts++;
+		}
 	}
 
-	public void recordClosedConnection() {
-		closedConnects++;
-		connected = false;
-	}
-
-	@JmxAttribute(reducer = JmxReducerSum.class)
+	@JmxAttribute
 	public long getSuccessfulConnects() {
 		return successfulConnects;
 	}
 
-	@JmxAttribute(reducer = JmxReducerSum.class)
+	@JmxAttribute
 	public long getFailedConnects() {
 		return failedConnects;
 	}
 
-	@JmxAttribute(reducer = JmxReducerSum.class)
-	public long getClosedConnects() {
-		return closedConnects;
-	}
-
+	@JmxAttribute
 	public boolean isConnected() {
-		return connected;
+		return connectionLostAt == -1;
 	}
 
+	@JmxAttribute
+	@Nullable
+	public Duration getConnectionLostFor() {
+		if (connectionLostAt == -1) return null;
+
+		return Duration.ofMillis(now.currentTimeMillis() - connectionLostAt);
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Instant getConnectionLostAt() {
+		if (connectionLostAt == -1) return null;
+
+		return Instant.ofEpochMilli(connectionLostAt);
+	}
+
+	@JmxAttribute
+	public int getReconnectAttempts() {
+		return reconnectAttempts;
+	}
 }
