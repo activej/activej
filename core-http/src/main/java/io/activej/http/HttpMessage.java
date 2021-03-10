@@ -78,6 +78,7 @@ public abstract class HttpMessage {
 	}
 
 	public HttpVersion getVersion() {
+		if (CHECK) checkState(!isRecycled());
 		return version;
 	}
 
@@ -102,11 +103,13 @@ public abstract class HttpMessage {
 	}
 
 	public final Collection<Map.Entry<HttpHeader, HttpHeaderValue>> getHeaders() {
+		if (CHECK) checkState(!isRecycled());
 		return headers.getEntries();
 	}
 
 	@NotNull
 	public final <T> List<T> getHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue.DecoderIntoList<T> decoder) {
+		if (CHECK) checkState(!isRecycled());
 		List<T> list = new ArrayList<>();
 		for (int i = header.hashCode() & (headers.kvPairs.length - 2); ; i = (i + 2) & (headers.kvPairs.length - 2)) {
 			HttpHeader k = (HttpHeader) headers.kvPairs[i];
@@ -125,6 +128,7 @@ public abstract class HttpMessage {
 
 	@Nullable
 	public <T> T getHeader(HttpHeader header, HttpDecoderFunction<T> decoder) {
+		if (CHECK) checkState(!isRecycled());
 		try {
 			ByteBuf buf = getHeaderBuf(header);
 			if (buf != null) {
@@ -137,12 +141,14 @@ public abstract class HttpMessage {
 
 	@Nullable
 	public final String getHeader(@NotNull HttpHeader header) {
+		if (CHECK) checkState(!isRecycled());
 		HttpHeaderValue headerValue = headers.get(header);
 		return headerValue != null ? headerValue.toString() : null;
 	}
 
 	@Nullable
 	public final ByteBuf getHeaderBuf(@NotNull HttpHeader header) {
+		if (CHECK) checkState(!isRecycled());
 		HttpHeaderValue headerBuf = headers.get(header);
 		return headerBuf != null ? headerBuf.getBuf() : null;
 	}
@@ -335,6 +341,7 @@ public abstract class HttpMessage {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T getAttachment(Class<T> type) {
+		if (CHECK) checkState(!isRecycled());
 		if (attachments == null) {
 			return null;
 		}
@@ -347,6 +354,7 @@ public abstract class HttpMessage {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T getAttachment(Type type) {
+		if (CHECK) checkState(!isRecycled());
 		if (attachments == null) {
 			return null;
 		}
@@ -359,6 +367,7 @@ public abstract class HttpMessage {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T getAttachment(String key) {
+		if (CHECK) checkState(!isRecycled());
 		if (attachments == null) {
 			return null;
 		}
@@ -370,6 +379,7 @@ public abstract class HttpMessage {
 	 * Retrieves a set of all attachment keys for this HttpMessage
 	 */
 	public Set<Object> getAttachmentKeys() {
+		if (CHECK) checkState(!isRecycled());
 		return attachments != null ? attachments.keySet() : emptySet();
 	}
 

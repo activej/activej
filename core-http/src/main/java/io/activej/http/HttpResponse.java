@@ -373,15 +373,18 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	public HttpClientConnection getConnection() {
+		if (CHECK) checkState(!isRecycled());
 		return connection;
 	}
 
 	public int getCode() {
+		if (CHECK) checkState(!isRecycled());
 		return code;
 	}
 
 	@NotNull
 	public Map<String, HttpCookie> getCookies() {
+		if (CHECK) checkState(!isRecycled());
 		if (parsedCookies != null) {
 			return parsedCookies;
 		}
@@ -394,6 +397,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@Nullable
 	public HttpCookie getCookie(@NotNull String cookie) {
+		if (CHECK) checkState(!isRecycled());
 		return getCookies().get(cookie);
 	}
 
@@ -607,12 +611,14 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@Override
 	protected void writeTo(@NotNull ByteBuf buf) {
+		if (CHECK) checkState(!isRecycled());
 		writeCodeMessage(buf, code);
 		writeHeaders(buf);
 	}
 
 	@Override
 	public String toString() {
+		if (isRecycled()) return "{Recycled HttpResponse}";
 		return HttpResponse.class.getSimpleName() + ": " + code;
 	}
 	// endregion

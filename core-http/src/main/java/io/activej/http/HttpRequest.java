@@ -187,13 +187,17 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	@NotNull
 	@Contract(pure = true)
 	public HttpMethod getMethod() {
+		if (CHECK) checkState(!isRecycled());
 		return method;
 	}
 
 	@Contract(pure = true)
 	public InetAddress getRemoteAddress() {
-		// it makes sense to call this method only on server
-		if (CHECK) checkNotNull(remoteAddress);
+		if (CHECK) {
+			checkState(!isRecycled());
+			// it makes sense to call this method only on server
+			checkNotNull(remoteAddress);
+		}
 		return remoteAddress;
 	}
 
@@ -203,6 +207,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	public Protocol getProtocol() {
+		if (CHECK) checkState(!isRecycled());
 		return url.getProtocol();
 	}
 
@@ -221,16 +226,19 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	@Nullable
 	public String getHostAndPort() {
+		if (CHECK) checkState(!isRecycled());
 		return url.getHostAndPort();
 	}
 
 	@NotNull
 	public String getPath() {
+		if (CHECK) checkState(!isRecycled());
 		return url.getPath();
 	}
 
 	@NotNull
 	public String getPathAndQuery() {
+		if (CHECK) checkState(!isRecycled());
 		return url.getPathAndQuery();
 	}
 
@@ -239,6 +247,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	@NotNull
 	public Map<String, String> getCookies() {
+		if (CHECK) checkState(!isRecycled());
 		if (parsedCookies != null) {
 			return parsedCookies;
 		}
@@ -250,26 +259,31 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	public HttpServerConnection getConnection() {
+		if (CHECK) checkState(!isRecycled());
 		return connection;
 	}
 
 	@Nullable
 	public String getCookie(@NotNull String cookie) {
+		if (CHECK) checkState(!isRecycled());
 		return getCookies().get(cookie);
 	}
 
 	@NotNull
 	public String getQuery() {
+		if (CHECK) checkState(!isRecycled());
 		return url.getQuery();
 	}
 
 	@NotNull
 	public String getFragment() {
+		if (CHECK) checkState(!isRecycled());
 		return url.getFragment();
 	}
 
 	@NotNull
 	public Map<String, String> getQueryParameters() {
+		if (CHECK) checkState(!isRecycled());
 		if (queryParameters != null) {
 			return queryParameters;
 		}
@@ -279,26 +293,31 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	@Nullable
 	public String getQueryParameter(@NotNull String key) {
+		if (CHECK) checkState(!isRecycled());
 		return url.getQueryParameter(key);
 	}
 
 	@NotNull
 	public List<String> getQueryParameters(@NotNull String key) {
+		if (CHECK) checkState(!isRecycled());
 		return url.getQueryParameters(key);
 	}
 
 	@NotNull
 	public Iterable<QueryParameter> getQueryParametersIterable() {
+		if (CHECK) checkState(!isRecycled());
 		return url.getQueryParametersIterable();
 	}
 
 	@Nullable
 	public String getPostParameter(String name) {
+		if (CHECK) checkState(!isRecycled());
 		return getPostParameters().get(name);
 	}
 
 	@NotNull
 	public Map<String, String> getPostParameters() {
+		if (CHECK) checkState(!isRecycled());
 		if (postParameters != null) return postParameters;
 		if (body == null) throw new NullPointerException("Body must be loaded to decode post parameters");
 		return postParameters =
@@ -308,6 +327,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	public boolean containsPostParameters() {
+		if (CHECK) checkState(!isRecycled());
 		if (method != POST && method != PUT) {
 			return false;
 		}
@@ -316,6 +336,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	public boolean containsMultipartData() {
+		if (CHECK) checkState(!isRecycled());
 		if (method != POST && method != PUT) {
 			return false;
 		}
@@ -325,11 +346,13 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	@NotNull
 	public Map<String, String> getPathParameters() {
+		if (CHECK) checkState(!isRecycled());
 		return pathParameters != null ? pathParameters : emptyMap();
 	}
 
 	@NotNull
 	public String getPathParameter(@NotNull String key) {
+		if (CHECK) checkState(!isRecycled());
 		if (pathParameters != null) {
 			String pathParameter = pathParameters.get(key);
 			if (pathParameter != null) {
@@ -354,6 +377,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	int getPos() {
+		if (CHECK) checkState(!isRecycled());
 		return url.pos;
 	}
 
@@ -364,19 +388,23 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	@NotNull
 	public String getRelativePath() {
+		if (CHECK) checkState(!isRecycled());
 		String partialPath = url.getPartialPath();
 		return partialPath.startsWith("/") ? partialPath.substring(1) : partialPath; // strip first '/'
 	}
 
 	String pollUrlPart() {
+		if (CHECK) checkState(!isRecycled());
 		return url.pollUrlPart();
 	}
 
 	void removePathParameter(String key) {
+		if (CHECK) checkState(!isRecycled());
 		pathParameters.remove(key);
 	}
 
 	void putPathParameter(String key, @NotNull String value) {
+		if (CHECK) checkState(!isRecycled());
 		if (pathParameters == null) {
 			pathParameters = new HashMap<>();
 		}
@@ -402,6 +430,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	@Override
 	public String toString() {
+		if (isRecycled()) return "{Recycled HttpRequest}";
 		if (url.isRelativePath()) {
 			String host = getHeader(HOST);
 			return nullToEmpty(host) + url.getPathAndQuery();
