@@ -172,8 +172,8 @@ public final class TestLocalBlockingFsInvariants {
 		both(client -> {
 			try {
 				client.move("file2", "file/newFile");
-			} catch (FileSystemException e) {
-				assertThat(e.getMessage(), containsString("Not a directory"));
+				fail();
+			} catch (FileSystemException ignored) {
 			}
 		});
 
@@ -301,8 +301,8 @@ public final class TestLocalBlockingFsInvariants {
 		both(client -> {
 			try {
 				client.copy("file2", "file/newFile");
-			} catch (FileSystemException e) {
-				assertThat(e.getMessage(), containsString("Not a directory"));
+				fail();
+			} catch (FileSystemException ignored) {
 			}
 		});
 		assertFilesAreSame(firstPath, secondPath);
