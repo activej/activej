@@ -5,20 +5,15 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ConstantConditions")
 public class RedisConnectionTestWithStub {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -26,10 +21,6 @@ public class RedisConnectionTestWithStub {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private static final String EXPIRATION_KEY = "expireKey";
-	private static final String EXPIRATION_VALUE = "expireValue";
-	private static final Duration TTL_MILLIS = Duration.ofMillis(100);
-	private static final Duration TTL_SECONDS = Duration.ofSeconds(1);
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
 	private RedisServer server;
@@ -62,6 +53,8 @@ public class RedisConnectionTestWithStub {
 
 	@Test
 	public void setValue() {
+		Assume.assumeTrue(canBeRun());
+
 		String key = "key";
 		String value = "value";
 		await(redis -> redis.cmd(RedisRequest.of("SET", key, value), RedisResponse.OK));
@@ -71,6 +64,8 @@ public class RedisConnectionTestWithStub {
 
 	@Test
 	public void setBinaryValue() {
+		Assume.assumeTrue(canBeRun());
+
 		String key = "key";
 		byte[] value = new byte[1024];
 		RANDOM.nextBytes(value);
@@ -81,5 +76,14 @@ public class RedisConnectionTestWithStub {
 
 	protected <T> T await(Function<RedisConnection, Promise<T>> clientCommand) {
 		return io.activej.redis.TestUtils.await(client, clientCommand);
+	}
+
+	/*
+	 Redis-mock uses OS-specific line separator for response encoding
+	 */
+	private boolean canBeRun() {
+		return "\n".equals(System.lineSeparator())
+				||
+				getClass() != RedisConnectionTestWithStub.class;
 	}
 }
