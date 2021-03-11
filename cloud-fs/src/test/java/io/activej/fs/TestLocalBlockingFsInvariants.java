@@ -10,10 +10,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.*;
 import java.util.Arrays;
 import java.util.Collection;
@@ -580,7 +577,7 @@ public final class TestLocalBlockingFsInvariants {
 						"file2", "../new"
 				));
 			} catch (FileSystemException e) {
-				assertThat(e.getMessage(), containsString("Path '../new' is forbidden"));
+				assertThat(e.getMessage(), containsString("Path '.." + File.separatorChar + "new' is forbidden"));
 			}
 		});
 	}
@@ -594,7 +591,7 @@ public final class TestLocalBlockingFsInvariants {
 						"../new", "newFile2"
 				));
 			} catch (FileSystemException e) {
-				assertThat(e.getMessage(), containsString("Path '../new' is forbidden"));
+				assertThat(e.getMessage(), containsString("Path '.." + File.separatorChar + "new' is forbidden"));
 			}
 		});
 		assertFilesAreSame(firstPath, secondPath);
@@ -758,7 +755,7 @@ public final class TestLocalBlockingFsInvariants {
 						"file2", "../new"
 				));
 			} catch (FileSystemException e) {
-				assertThat(e.getMessage(), containsString("Path '../new' is forbidden"));
+				assertThat(e.getMessage(), containsString("Path '.." + File.separatorChar + "new' is forbidden"));
 			}
 		});
 	}
@@ -772,7 +769,7 @@ public final class TestLocalBlockingFsInvariants {
 						"../new", "newFile2"
 				));
 			} catch (FileSystemException e) {
-				assertThat(e.getMessage(), containsString("Path '../new' is forbidden"));
+				assertThat(e.getMessage(), containsString("Path '.." + File.separatorChar + "new' is forbidden"));
 			}
 		});
 	}
