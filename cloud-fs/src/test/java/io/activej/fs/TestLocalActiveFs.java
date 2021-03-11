@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
@@ -138,7 +139,9 @@ public final class TestLocalActiveFs {
 	public void testAppendToEmptyDirectory() throws IOException {
 		Path empty = CollectionUtils.getLast(createEmptyDirectories(storagePath));
 		assertTrue(Files.isDirectory(empty));
-		assertEquals(0, Files.list(empty).count());
+		try (Stream<Path> list = Files.list(empty)) {
+			assertEquals(0, list.count());
+		}
 
 		await(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.append(storagePath.relativize(empty).toString(), 0)));
 

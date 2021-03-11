@@ -8,8 +8,8 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
-import io.activej.test.ExpectedException;
 import io.activej.promise.Promises;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static io.activej.datastream.TestStreamTransformers.*;
 import static io.activej.datastream.TestUtils.assertClosedWithError;
@@ -162,19 +163,23 @@ public final class StreamSorterTest {
 		List<Integer> list = new ArrayList<>();
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
 
-		assertFalse(Files.list(storagePath).findAny().isPresent());
+		try (Stream<Path> contents = Files.list(storagePath)) {
+			assertFalse(contents.findAny().isPresent());
+		}
 
 		Promise<Void> inputPromise = source.streamTo(sorter.getInput());
 
 		// wait some time till files are actually created
 		await(Promise.complete().async());
 
-		assertEquals(6, Files.list(storagePath).count());
+		try (Stream<Path> contents = Files.list(storagePath)) {
+			assertEquals(6, contents.count());
+		}
 
 		await(Promises.all(inputPromise, sorter.getOutput().streamTo(consumer.transformWith(randomlySuspending())))
 				.whenResult(() -> {
-					try {
-						assertFalse(Files.list(storagePath).findAny().isPresent());
+					try (Stream<Path> contents = Files.list(storagePath)) {
+						assertFalse(contents.findAny().isPresent());
 					} catch (IOException e) {
 						throw new AssertionError(e);
 					}
@@ -235,7 +240,9 @@ public final class StreamSorterTest {
 
 		validator.validate(streamPromise, sorter, source, consumerToList);
 
-		assertEquals(failingStorage.failCleanup, Files.list(path).findAny().isPresent());
+		try (Stream<Path> list = Files.list(path)) {
+			assertEquals(failingStorage.failCleanup, list.findAny().isPresent());
+		}
 	}
 
 	private interface StreamSorterValidator<K, T> {

@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.fs.LocalBlockingFs.DEFAULT_TEMP_DIR;
@@ -107,7 +108,9 @@ public final class TestLocalBlockingFs {
 		byte[] data = "data".getBytes();
 		Path empty = CollectionUtils.getLast(createEmptyDirectories(storagePath));
 		assertTrue(Files.isDirectory(empty));
-		assertEquals(0, Files.list(empty).count());
+		try (Stream<Path> list = Files.list(empty)) {
+			assertEquals(0, list.count());
+		}
 
 		try (OutputStream outputStream = client.append(storagePath.relativize(empty).toString(), 0)) {
 			outputStream.write(data);

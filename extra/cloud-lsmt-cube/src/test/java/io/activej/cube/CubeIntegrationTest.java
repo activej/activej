@@ -32,6 +32,7 @@ import org.junit.rules.TemporaryFolder;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -137,7 +138,7 @@ public class CubeIntegrationTest {
 		List<LogItem> listOfRandomLogItems = LogItem.getListOfRandomLogItems(100);
 		await(StreamSupplier.ofIterable(listOfRandomLogItems).streamTo(
 				StreamConsumer.ofPromise(multilog.write("partitionA"))));
-		Files.list(logsDir).forEach(System.out::println);
+		printDirContents(logsDir);
 
 		//		AsynchronousFileChannel channel = AsynchronousFileChannel.open(Files.list(logsDir).findFirst().get(),
 		//				EnumSet.of(StandardOpenOption.WRITE), executor);
@@ -152,14 +153,14 @@ public class CubeIntegrationTest {
 		List<LogItem> listOfRandomLogItems2 = LogItem.getListOfRandomLogItems(300);
 		await(StreamSupplier.ofIterable(listOfRandomLogItems2).streamTo(
 				StreamConsumer.ofPromise(multilog.write("partitionA"))));
-		Files.list(logsDir).forEach(System.out::println);
+		printDirContents(logsDir);
 
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
 		List<LogItem> listOfRandomLogItems3 = LogItem.getListOfRandomLogItems(50);
 		await(StreamSupplier.ofIterable(listOfRandomLogItems3).streamTo(
 				StreamConsumer.ofPromise(multilog.write("partitionA"))));
-		Files.list(logsDir).forEach(System.out::println);
+		printDirContents(logsDir);
 
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
@@ -200,6 +201,12 @@ public class CubeIntegrationTest {
 				.collect(toSet());
 		assertEquals(concat(Stream.of("backups"), cube.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
 				actualChunkFileNames);
+	}
+
+	private void printDirContents(Path logsDir) throws IOException {
+		try (Stream<Path> list = Files.list(logsDir)) {
+			list.forEach(System.out::println);
+		}
 	}
 
 	private void aggregateToMap(Map<Integer, Long> map, List<LogItem> logItems) {

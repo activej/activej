@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 
 import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
@@ -145,7 +146,10 @@ public final class Utils {
 
 	private static void list(Path directoryPath, List<Path> paths, boolean includeDirs) {
 		try {
-			List<Path> subPaths = Files.list(directoryPath).collect(toList());
+			List<Path> subPaths;
+			try (Stream<Path> list = Files.list(directoryPath)) {
+				subPaths = list.collect(toList());
+			}
 			for (Path path : subPaths) {
 				if (Files.isRegularFile(path)) {
 					paths.add(path);

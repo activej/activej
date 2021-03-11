@@ -81,8 +81,8 @@ public class ActiveFsChunkStorageTest {
 
 		List<Path> paths = await(supplier.streamTo(chunker)
 				.map($ -> {
-					try {
-						return Files.list(storageDir).collect(toList());
+					try (Stream<Path> list = Files.list(storageDir)) {
+						return list.collect(toList());
 					} catch (IOException e) {
 						throw new AssertionError(e);
 					}
