@@ -35,10 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.file.FileSystemException;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -412,10 +409,14 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	private <V> V ensureTarget(Path target, IOCallable<V> afterCreation) throws IOException {
+		if (tempDir.startsWith(target)) throw new DirectoryNotEmptyException(storage.relativize(target).toString());
+
 		return LocalFileUtils.ensureTarget(null, target, fsyncDirectories, afterCreation);
 	}
 
 	private void ensureTarget(@Nullable Path source, Path target, IORunnable afterCreation) throws IOException {
+		if (tempDir.startsWith(target)) throw new DirectoryNotEmptyException(storage.relativize(target).toString());
+
 		LocalFileUtils.ensureTarget(source, target, fsyncDirectories, () -> {
 			afterCreation.run();
 			return null;

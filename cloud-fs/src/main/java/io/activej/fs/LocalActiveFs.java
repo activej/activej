@@ -487,7 +487,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				translateBatchErrors(entry, () -> {
 					Path path = resolve(entry.getKey());
 					if (Files.readAttributes(path, BasicFileAttributes.class).isDirectory()) {
-						throw new IsADirectoryException("File '" + entry.getKey() + "' is a directory");
+						throw new IsADirectoryException("Path '" + entry.getKey() + "' is a directory");
 					}
 					Path targetPath = resolve(entry.getValue());
 					if (path.equals(targetPath)) {
@@ -550,6 +550,10 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private <V> V ensureTarget(@Nullable Path source, Path target, IOCallable<V> afterCreation) throws IOException, FsScalarException {
+		if (tempDir.startsWith(target)) {
+			throw new IsADirectoryException("Path '" + storage.relativize(target) + "' is a directory");
+		}
+
 		try {
 			return LocalFileUtils.ensureTarget(source, target, fsyncDirectories, afterCreation);
 		} catch (DirectoryNotEmptyException e) {
