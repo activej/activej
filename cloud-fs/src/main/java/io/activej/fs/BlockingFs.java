@@ -45,9 +45,15 @@ public interface BlockingFs {
 	 * @param target file name of copy
 	 */
 	default void copy(@NotNull String name, @NotNull String target) throws IOException {
-		try (InputStream from = download(name);
-				OutputStream to = upload(target)) {
-			LocalFileUtils.copy(from, to);
+		try (InputStream from = download(name)) {
+			OutputStream to = upload(target);
+			//noinspection TryFinallyCanBeTryWithResources
+			try {
+				LocalFileUtils.copy(from, to);
+			} finally {
+				from.close();
+				to.close();
+			}
 		}
 	}
 
