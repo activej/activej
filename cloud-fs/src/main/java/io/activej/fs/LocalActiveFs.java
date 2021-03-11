@@ -552,8 +552,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private <V> V ensureTarget(@Nullable Path source, Path target, IOCallable<V> afterCreation) throws IOException, FsScalarException {
 		try {
 			return LocalFileUtils.ensureTarget(source, target, fsyncDirectories, afterCreation);
-		} catch (NoSuchFileException e) {
-			throw e;
 		} catch (DirectoryNotEmptyException e) {
 			throw dirEx(storage.relativize(target).toString());
 		} catch (FileSystemException e) {
