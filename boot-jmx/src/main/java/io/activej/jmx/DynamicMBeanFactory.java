@@ -464,8 +464,8 @@ public final class DynamicMBeanFactory {
 	}
 
 	private static String createErrorMessageForInvalidJmxStatsAttribute(@Nullable Method getter) {
-		String msg = "Return type of JmxRefreshableStats attribute must be concrete class that implements" +
-				" JmxRefreshableStats interface and contains" +
+		String msg = "Return type of JmxStats attribute must be a concrete class that implements" +
+				" JmxStats interface and contains" +
 				" static factory \"" + CREATE_ACCUMULATOR + "()\" method or" +
 				" static factory \"" + CREATE + "()\" method or" +
 				" public no-arg constructor";
