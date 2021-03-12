@@ -19,16 +19,22 @@ package io.activej.launchers.fs;
 import io.activej.common.api.Initializer;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
+import io.activej.fs.LocalActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.FsPartitions;
 import io.activej.fs.tcp.ActiveFsServer;
+import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.trigger.TriggersModuleSettings;
 
 import java.util.List;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
+import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStats;
+import static io.activej.trigger.Severity.HIGH;
+import static io.activej.trigger.Severity.WARNING;
 
 public final class Initializers {
 
@@ -72,4 +78,43 @@ public final class Initializers {
 		};
 	}
 
+	public static Initializer<TriggersModuleSettings> ofLocalFsClient() {
+		return triggersModule -> triggersModule
+				.with(LocalActiveFs.class, HIGH, "errorUploadBegin", fs -> ofPromiseStats(fs.getUploadBeginPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorUploadFinish", fs -> ofPromiseStats(fs.getUploadFinishPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorAppendBegin", fs -> ofPromiseStats(fs.getAppendBeginPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorDownloadBegin", fs -> ofPromiseStats(fs.getDownloadBeginPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorDownloadFinish", fs -> ofPromiseStats(fs.getDownloadFinishPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorMove", fs -> ofPromiseStats(fs.getMovePromise()))
+				.with(LocalActiveFs.class, HIGH, "errorMoveAll", fs -> ofPromiseStats(fs.getMoveAllPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorCopy", fs -> ofPromiseStats(fs.getCopyPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorCopyAll", fs -> ofPromiseStats(fs.getCopyAllPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorList", fs -> ofPromiseStats(fs.getListPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorDelete", fs -> ofPromiseStats(fs.getDeletePromise()))
+				.with(LocalActiveFs.class, HIGH, "errorDeleteAll", fs -> ofPromiseStats(fs.getDeleteAllPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
+				.with(LocalActiveFs.class, HIGH, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()));
+	}
+
+	public static Initializer<TriggersModuleSettings> ofRemoteActiveFs() {
+		return triggersModule -> triggersModule
+				.with(RemoteActiveFs.class, WARNING, "errorUploadStart", fs -> ofPromiseStats(fs.getUploadStartPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorUploadFinish", fs -> ofPromiseStats(fs.getUploadFinishPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorDownloadStart", fs -> ofPromiseStats(fs.getDownloadStartPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorDownloadFinish", fs -> ofPromiseStats(fs.getDownloadFinishPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorMove", fs -> ofPromiseStats(fs.getMovePromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorMoveAll", fs -> ofPromiseStats(fs.getMoveAllPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorCopy", fs -> ofPromiseStats(fs.getCopyPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorCopyAll", fs -> ofPromiseStats(fs.getCopyAllPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorList", fs -> ofPromiseStats(fs.getListPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorDelete", fs -> ofPromiseStats(fs.getDeletePromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorDeleteAll", fs -> ofPromiseStats(fs.getDeleteAllPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorConnect", fs -> ofPromiseStats(fs.getConnectPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorAppendStart", fs -> ofPromiseStats(fs.getAppendStartPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorPing", fs -> ofPromiseStats(fs.getPingPromise()));
+	}
 }

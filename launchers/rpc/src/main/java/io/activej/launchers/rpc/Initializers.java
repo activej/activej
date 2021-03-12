@@ -18,15 +18,20 @@ package io.activej.launchers.rpc;
 
 import io.activej.common.api.Initializer;
 import io.activej.config.Config;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
+import io.activej.trigger.TriggerResult;
+import io.activej.trigger.TriggersModuleSettings;
 
 import java.time.Duration;
+import java.util.List;
 
 import static io.activej.config.converter.ConfigConverters.ofDuration;
 import static io.activej.config.converter.ConfigConverters.ofMemSize;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
+import static io.activej.trigger.Severity.HIGH;
 
 public final class Initializers {
 
@@ -37,5 +42,15 @@ public final class Initializers {
 						config.get(ofMemSize(), "rpc.streamProtocol.defaultPacketSize", DEFAULT_INITIAL_BUFFER_SIZE),
 						config.get(ofFrameFormat(), "rpc.streamProtocol.frameFormat", null))
 				.withAutoFlushInterval(config.get(ofDuration(), "rpc.flushDelay", Duration.ZERO));
+	}
+
+	public static Initializer<TriggersModuleSettings> ofRpcClient() {
+		return triggersSettings -> triggersSettings
+				.with(RpcClient.class, HIGH, "unresponsiveServers",
+						rpcClient -> {
+							List<String> unresponsiveServers = rpcClient.getUnresponsiveServers();
+							return unresponsiveServers.isEmpty() ? TriggerResult.none() :
+									TriggerResult.ofValue(unresponsiveServers);
+						});
 	}
 }
