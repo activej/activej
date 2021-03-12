@@ -68,7 +68,7 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 			if (smoothingWindows == null) {
 				smoothingWindows = DEFAULT_SMOOTHING_WINDOW;
 			}
-			ValueStats refreshStats = ValueStats.create(smoothingWindows).withRate().withUnit("ms");
+			ValueStats refreshStats = ValueStats.create(smoothingWindows).withRate().withUnit("ns");
 			List<JmxRefreshable> list = new ArrayList<>();
 			list.add(refreshStats);
 			eventloopToJmxRefreshables.put(eventloop, list);
@@ -123,18 +123,19 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 	private void refresh(@NotNull Eventloop eventloop, @NotNull List<JmxRefreshable> list, int startIndex, ValueStats refreshStats) {
 		checkState(eventloop.inEventloopThread());
 
-		long currentTime = eventloop.currentTimeMillis();
+		long timestamp = eventloop.currentTimeMillis();
 
 		int index = startIndex < list.size() ? startIndex : 0;
 		int endIndex = Math.min(list.size(), index + maxRefreshesPerCycle);
+		long currentNanos = System.nanoTime();
 		while (index < endIndex) {
-			list.get(index++).refresh(currentTime);
+			list.get(index++).refresh(timestamp);
 		}
 
-		long refreshTime = eventloop.currentTimeMillis() - currentTime;
-		refreshStats.recordValue(refreshTime);
+		long refreshTimeNanos = System.nanoTime() - currentNanos;
+		refreshStats.recordValue(refreshTimeNanos);
 
-		long nextTimestamp = currentTime + computeEffectiveRefreshPeriod(list.size());
+		long nextTimestamp = timestamp + computeEffectiveRefreshPeriod(list.size());
 		eventloop.scheduleBackground(nextTimestamp, () -> refresh(eventloop, list, endIndex, refreshStats));
 	}
 
