@@ -21,9 +21,11 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.IntStream;
 
 import static io.activej.common.Checks.checkArgument;
@@ -33,9 +35,10 @@ import static java.util.stream.Collectors.toList;
 /**
  * Counts added values and computes dynamic average using exponential smoothing algorithm
  * <p>
- * Class is supposed to work in single thread
+ * Class is supposed to work in a single thread
  */
 public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxStatsWithReset, JmxStatsWithSmoothingWindow {
+	private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
 	private static final long MAX_INTERVAL_BETWEEN_REFRESHES = ApplicationSettings.getDuration(JmxStats.class, "maxIntervalBetweenRefreshes", Duration.ofHours(1)).toMillis();
 	private static final double LN_2 = log(2);
 	private static final String NEG_INF = "-∞";
@@ -552,9 +555,9 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		}
 
 		if (precision == -1) {
-			decimalFormat = new DecimalFormat("0.0####E0#");
+			decimalFormat = new DecimalFormat("0.0####E0#", DECIMAL_FORMAT_SYMBOLS);
 		} else {
-			decimalFormat = new DecimalFormat("0");
+			decimalFormat = new DecimalFormat("0", DECIMAL_FORMAT_SYMBOLS);
 			decimalFormat.setMaximumFractionDigits((int) ceil(min(max(-log10((max - min) / precision), 0), 6)));
 		}
 

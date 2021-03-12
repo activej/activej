@@ -21,7 +21,9 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Duration;
+import java.util.Locale;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.*;
@@ -29,9 +31,10 @@ import static java.lang.Math.*;
 /**
  * Computes total amount of events and dynamic rate using exponential smoothing algorithm
  * <p>
- * Class is supposed to work in single thread
+ * Class is supposed to work in a single thread
  */
 public final class EventStats implements JmxRefreshableStats<EventStats>, JmxStatsWithSmoothingWindow, JmxStatsWithReset {
+	private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
 	private static final long MAX_INTERVAL_BETWEEN_REFRESHES = ApplicationSettings.getDuration(JmxStats.class, "maxIntervalBetweenRefreshes", Duration.ofHours(1)).toMillis();
 	private static final double LN_2 = log(2);
 
@@ -221,9 +224,9 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 		DecimalFormat decimalFormat;
 		double smoothedRate = getSmoothedRate();
 		if (precision == -1) {
-			decimalFormat = new DecimalFormat("0.0####E0#");
+			decimalFormat = new DecimalFormat("0.0####E0#", DECIMAL_FORMAT_SYMBOLS);
 		} else {
-			decimalFormat = new DecimalFormat("0");
+			decimalFormat = new DecimalFormat("0", DECIMAL_FORMAT_SYMBOLS);
 			decimalFormat.setMaximumFractionDigits((int) ceil(min(max(-log10(smoothedRate / precision), 0), 6)));
 		}
 		String result = format(totalCount, smoothedRate, rateUnit, decimalFormat);
