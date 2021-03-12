@@ -17,6 +17,7 @@
 package io.activej.jmx;
 
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.api.Initializer;
@@ -59,8 +60,8 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * Automatically builds MBeans for parts of application and adds Jmx attributes and operations to it.
  */
 public final class JmxModule extends AbstractModule implements WithInitializer<JmxModule> {
-	public static final Duration REFRESH_PERIOD_DEFAULT = Duration.ofSeconds(1);
-	public static final int MAX_JMX_REFRESHES_PER_ONE_CYCLE_DEFAULT = 50;
+	public static final Duration REFRESH_PERIOD_DEFAULT = ApplicationSettings.getDuration(JmxModule.class, "refreshPeriod", Duration.ofSeconds(1));
+	public static final int MAX_JMX_REFRESHES_PER_ONE_CYCLE_DEFAULT = ApplicationSettings.getInt(JmxModule.class, "maxJmxRefreshesPerOneCycle", 50);
 
 	private final Set<Object> globalSingletons = new HashSet<>();
 
