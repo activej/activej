@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class EventStatsTest {
 
@@ -282,6 +283,17 @@ public class EventStatsTest {
 			currentTimestamp += periodInMillis;
 		}
 		assertNumberOfDigitsAfterDot(eventStats, 0);
+	}
+
+	@Test
+	public void itShouldNotPrintNaNRate() {
+		Duration smoothingWindow = Duration.ofSeconds(1);
+		EventStats eventStats = EventStats.create(smoothingWindow);
+
+		eventStats.recordEvent();
+		eventStats.refresh(System.currentTimeMillis());
+
+		assertFalse(eventStats.toString().contains("NaN"));
 	}
 
 	private void assertNumberOfDigitsAfterDot(EventStats stats, int number) {

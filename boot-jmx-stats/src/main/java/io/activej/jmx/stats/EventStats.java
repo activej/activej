@@ -137,12 +137,12 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 			double smoothingFactor = exp(timeElapsed * smoothingWindowCoef);
 			smoothedRateCount = lastCount + smoothedRateCount * smoothingFactor;
 			smoothedRateTime = timeElapsed + smoothedRateTime * smoothingFactor;
+			totalCount += lastCount;
+			lastCount = 0;
 		} else {
 			// skip stats of last time period
 		}
 
-		totalCount += lastCount;
-		lastCount = 0;
 		lastTimestampMillis = timestamp;
 	}
 
@@ -227,7 +227,7 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 			decimalFormat.setMaximumFractionDigits((int) ceil(min(max(-log10(smoothedRate / precision), 0), 6)));
 		}
 		String result = format(totalCount, smoothedRate, rateUnit, decimalFormat);
-		if (addedStats != 0){
+		if (addedStats != 0) {
 			result += "  [" + addedStats + ']';
 		}
 		return result;
