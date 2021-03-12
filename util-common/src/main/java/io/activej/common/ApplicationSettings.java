@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
@@ -106,6 +107,10 @@ public final class ApplicationSettings {
 				throw new RuntimeException("Unsupported charset: " + charset, e);
 			}
 		}, type, name, defValue);
+	}
+
+	public static Locale getLocale(Class<?> type, String name, Locale defValue) {
+		return get(Locale::forLanguageTag, type, name, defValue);
 	}
 
 	@Nullable
