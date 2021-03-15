@@ -55,6 +55,8 @@ import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventHandler {
 	private static final boolean CHECK = Checks.isEnabled(AsyncTcpSocketNio.class);
 
+	private static final int DEBUG_READ_OFFSET = ApplicationSettings.getInt(AsyncTcpSocketNio.class, "debugReadOffset", 0);
+
 	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(AsyncTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
 	public static final int NO_TIMEOUT = 0;
 
@@ -389,7 +391,16 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	private void doRead() throws IOException {
 		assert channel != null;
-		ByteBuf buf = ByteBufPool.allocate(readBufferSize);
+		ByteBuf buf;
+		if (DEBUG_READ_OFFSET == 0) {
+			buf = ByteBufPool.allocate(readBufferSize);
+		} else {
+			checkState(DEBUG_READ_OFFSET > 0);
+
+			buf = ByteBufPool.allocate(readBufferSize + DEBUG_READ_OFFSET);
+			buf.tail(DEBUG_READ_OFFSET);
+			buf.head(DEBUG_READ_OFFSET);
+		}
 		ByteBuffer buffer = buf.toWriteByteBuffer();
 
 		int numRead;

@@ -294,6 +294,7 @@
         <configuration>
           <systemPropertyVariables>
             <chk>on</chk>
+            <AsyncTcpSocketNio.debugReadOffset>1</AsyncTcpSocketNio.debugReadOffset>
           </systemPropertyVariables>
         </configuration>
       </plugin>
