@@ -19,7 +19,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.Selector;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.TestUtils.readFully;
@@ -368,6 +370,48 @@ public final class AsyncHttpServerTest {
 
 		thread.start();
 		eventloop.run();
+		thread.join();
+	}
+
+	@Test
+	public void testPostParameters() throws IOException, ExecutionException, InterruptedException {
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, request ->
+				request.loadBody()
+						.then(() -> {
+							Map<String, String> postParameters = request.getPostParameters();
+							StringBuilder sb = new StringBuilder();
+							for (Map.Entry<String, String> entry : postParameters.entrySet()) {
+								sb.append(entry.getKey())
+										.append("=")
+										.append(entry.getValue())
+										.append(";");
+							}
+
+							return Promise.of(HttpResponse.ok200().withBody(encodeAscii(sb.toString())));
+						}));
+		server.withListenPort(port);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		Socket socket = new Socket();
+
+		socket.connect(new InetSocketAddress("localhost", port));
+		writeByRandomParts(socket, "POST / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: close\r\n" +
+				"Content-Type: application/x-www-form-urlencoded\r\n" +
+				"Content-Length: 27\r\n\r\n" +
+				"field1=value1&field2=value2");
+
+		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\n" +
+				"Connection: close\r\n" +
+				"Content-Length: 28\r\n\r\n" +
+				"field1=value1;field2=value2;");
+		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		socket.close();
+
+		server.closeFuture().get();
 		thread.join();
 	}
 

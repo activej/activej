@@ -322,7 +322,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (body == null) throw new NullPointerException("Body must be loaded to decode post parameters");
 		return postParameters =
 				containsPostParameters() ?
-						UrlParser.parseQueryIntoMap(body.array(), body.head(), body.readRemaining()) :
+						UrlParser.parseQueryIntoMap(body.array(), body.head(), body.tail()) :
 						emptyMap();
 	}
 
