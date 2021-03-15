@@ -32,7 +32,7 @@ import static io.activej.common.Checks.checkState;
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
 public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
-	private final boolean CHECK = Checks.isEnabled(getClass());
+	private static final boolean CHECK = Checks.isEnabled(AbstractStreamSupplier.class);
 
 	public static final StreamDataAcceptor<?> NO_ACCEPTOR = item -> {};
 

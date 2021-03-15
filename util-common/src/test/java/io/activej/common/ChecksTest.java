@@ -72,4 +72,9 @@ public final class ChecksTest {
 		assertTrue(Checks.isEnabled(Function.class));
 	}
 
+	@Test(expected = IllegalStateException.class)
+	public void testAnonymousClass() {
+		Checks.isEnabled(new Object() {}.getClass());
+	}
+
 }

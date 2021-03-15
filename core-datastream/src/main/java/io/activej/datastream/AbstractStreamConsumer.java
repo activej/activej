@@ -30,7 +30,7 @@ import static io.activej.common.Checks.checkState;
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
 public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
-	private final boolean CHECK = Checks.isEnabled(getClass());
+	private static final boolean CHECK = Checks.isEnabled(AbstractStreamConsumer.class);
 
 	private StreamSupplier<T> supplier;
 	private final SettablePromise<Void> acknowledgement = new SettablePromise<>();

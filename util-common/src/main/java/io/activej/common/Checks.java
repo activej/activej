@@ -61,6 +61,8 @@ public final class Checks {
 	 * @return {@code true} if checks are enabled for the given class, {@code false} otherwise
 	 */
 	public static boolean isEnabled(Class<?> cls) {
+		checkState(!cls.isAnonymousClass(), "Anonymous classes cannot be used for checks");
+
 		String property;
 		String path = cls.getName();
 		if ((property = System.getProperty(ENV_PREFIX + path)) == null) {
@@ -82,122 +84,126 @@ public final class Checks {
 		return enabled;
 	}
 
+	public static boolean isEnabledByDefault() {
+		return ENABLED_BY_DEFAULT;
+	}
+
+	@NotNull
+	public static <T> T checkNotNull(@Nullable T reference) {
+		if (reference != null) {
+			return reference;
+		}
+		throw new NullPointerException();
+	}
+
+	@NotNull
+	public static <T> T checkNotNull(@Nullable T reference, Object message) {
+		if (reference != null) {
+			return reference;
+		}
+		throw new NullPointerException(String.valueOf(message));
+	}
+
+	@NotNull
+	public static <T> T checkNotNull(@Nullable T reference, Supplier<String> message) {
+		if (reference != null) {
+			return reference;
+		}
+		throw new NullPointerException(message.get());
+	}
+
+	@NotNull
+	public static <T> T checkNotNull(@Nullable T reference, String template, Object... args) {
+		if (reference != null) {
+			return reference;
+		}
+		throw new NullPointerException(String.format(template, args));
+	}
+
+	public static void checkState(boolean expression) {
+		if (!expression) {
+			throw new IllegalStateException();
+		}
+	}
+
+	public static void checkState(boolean expression, Object message) {
+		if (!expression) {
+			throw new IllegalStateException(String.valueOf(message));
+		}
+	}
+
+	public static void checkState(boolean expression, Supplier<String> message) {
+		if (!expression) {
+			throw new IllegalStateException(message.get());
+		}
+	}
+
+	public static void checkState(boolean expression, String template, Object... args) {
+		if (!expression) {
+			throw new IllegalStateException(String.format(template, args));
+		}
+	}
+
+	public static void checkArgument(boolean expression) {
+		if (!expression) {
+			throw new IllegalArgumentException();
+		}
+	}
+
+	public static void checkArgument(boolean expression, Object message) {
+		if (!expression) {
+			throw new IllegalArgumentException(String.valueOf(message));
+		}
+	}
+
+	public static void checkArgument(boolean expression, Supplier<String> message) {
+		if (!expression) {
+			throw new IllegalArgumentException(message.get());
+		}
+	}
+
+	public static void checkArgument(boolean expression, String template, Object... args) {
+		if (!expression) {
+			throw new IllegalArgumentException(String.format(template, args));
+		}
+	}
+
+	public static <T> T checkArgument(T argument, Predicate<T> predicate) {
+		if (predicate.test(argument)) {
+			return argument;
+		}
+		throw new IllegalArgumentException();
+	}
+
+	public static <T> T checkArgument(T argument, Predicate<T> predicate, Object message) {
+		if (predicate.test(argument)) {
+			return argument;
+		}
+		throw new IllegalArgumentException(String.valueOf(message));
+	}
+
+	public static <T> T checkArgument(T argument, Predicate<T> predicate, Supplier<String> message) {
+		if (predicate.test(argument)) {
+			return argument;
+		}
+		throw new IllegalArgumentException(message.get());
+	}
+
+	public static <T> T checkArgument(T argument, Predicate<T> predicate, Function<T, String> message) {
+		if (predicate.test(argument)) {
+			return argument;
+		}
+		throw new IllegalArgumentException(message.apply(argument));
+	}
+
+	public static <T> T checkArgument(T argument, Predicate<T> predicate, String template, Object... args) {
+		if (predicate.test(argument)) {
+			return argument;
+		}
+		throw new IllegalArgumentException(String.format(template, args));
+	}
+
 	private static String getErrorMessage(String value) {
 		return "Only 'on' and 'off' values are allowed for 'chk' system properties, was '" + value + '\'';
 	}
-
-    @NotNull
-    public static <T> T checkNotNull(@Nullable T reference) {
-        if (reference != null) {
-            return reference;
-        }
-        throw new NullPointerException();
-    }
-
-    @NotNull
-    public static <T> T checkNotNull(@Nullable T reference, Object message) {
-        if (reference != null) {
-            return reference;
-        }
-        throw new NullPointerException(String.valueOf(message));
-    }
-
-    @NotNull
-    public static <T> T checkNotNull(@Nullable T reference, Supplier<String> message) {
-        if (reference != null) {
-            return reference;
-        }
-        throw new NullPointerException(message.get());
-    }
-
-    @NotNull
-    public static <T> T checkNotNull(@Nullable T reference, String template, Object... args) {
-        if (reference != null) {
-            return reference;
-        }
-        throw new NullPointerException(String.format(template, args));
-    }
-
-    public static void checkState(boolean expression) {
-        if (!expression) {
-            throw new IllegalStateException();
-        }
-    }
-
-    public static void checkState(boolean expression, Object message) {
-        if (!expression) {
-            throw new IllegalStateException(String.valueOf(message));
-        }
-    }
-
-    public static void checkState(boolean expression, Supplier<String> message) {
-        if (!expression) {
-            throw new IllegalStateException(message.get());
-        }
-    }
-
-    public static void checkState(boolean expression, String template, Object... args) {
-        if (!expression) {
-            throw new IllegalStateException(String.format(template, args));
-        }
-    }
-
-    public static void checkArgument(boolean expression) {
-        if (!expression) {
-            throw new IllegalArgumentException();
-        }
-    }
-
-    public static void checkArgument(boolean expression, Object message) {
-        if (!expression) {
-            throw new IllegalArgumentException(String.valueOf(message));
-        }
-    }
-
-    public static void checkArgument(boolean expression, Supplier<String> message) {
-        if (!expression) {
-            throw new IllegalArgumentException(message.get());
-        }
-    }
-
-    public static void checkArgument(boolean expression, String template, Object... args) {
-        if (!expression) {
-            throw new IllegalArgumentException(String.format(template, args));
-        }
-    }
-
-    public static <T> T checkArgument(T argument, Predicate<T> predicate) {
-        if (predicate.test(argument)) {
-            return argument;
-        }
-        throw new IllegalArgumentException();
-    }
-
-    public static <T> T checkArgument(T argument, Predicate<T> predicate, Object message) {
-        if (predicate.test(argument)) {
-            return argument;
-        }
-        throw new IllegalArgumentException(String.valueOf(message));
-    }
-
-    public static <T> T checkArgument(T argument, Predicate<T> predicate, Supplier<String> message) {
-        if (predicate.test(argument)) {
-            return argument;
-        }
-        throw new IllegalArgumentException(message.get());
-    }
-
-    public static <T> T checkArgument(T argument, Predicate<T> predicate, Function<T, String> message) {
-        if (predicate.test(argument)) {
-            return argument;
-        }
-        throw new IllegalArgumentException(message.apply(argument));
-    }
-
-    public static <T> T checkArgument(T argument, Predicate<T> predicate, String template, Object... args) {
-        if (predicate.test(argument)) {
-            return argument;
-        }
-        throw new IllegalArgumentException(String.format(template, args));
-    }
 }

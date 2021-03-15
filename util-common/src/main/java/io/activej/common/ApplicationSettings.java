@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 
+import static io.activej.common.Checks.checkState;
 import static java.util.Collections.emptyMap;
 
 public final class ApplicationSettings {
@@ -49,6 +50,8 @@ public final class ApplicationSettings {
 
 	@SuppressWarnings("unchecked")
 	public static <T> T get(Function<String, T> parser, Class<?> type, String name, T defValue) {
+		checkState(!type.isAnonymousClass(), "Anonymous classes cannot be used for application settings");
+
 		firstLookupDone = true;
 		T customSetting = (T) customSettings.getOrDefault(type, emptyMap()).get(name);
 		if (customSetting != null) {
