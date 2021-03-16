@@ -38,6 +38,7 @@
     <module>core/inject-2</module>
     <module>core/specializer</module>
     <module>core/dataflow</module>
+    <module>core/sql</module>
 
     <module>cloud/fs</module>
     <module>cloud/rpc</module>

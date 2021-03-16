@@ -1,0 +1,9 @@
+# Copy this file to 'mysql.properties' file in the 'resources' directory
+# Set proper MySql 'user', 'password', 'db' fields
+# User should have permissions to create new tables
+
+user=
+password=
+db=
+timeZone=UTC
+server=localhost
