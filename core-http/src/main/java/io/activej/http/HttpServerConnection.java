@@ -367,29 +367,34 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				return;
 			}
 
-			if (stashedBufs != null) {
-				stashedBufs.recycle();
-				stashedBufs = null;
-			}
-			if (readBuf != null && !readBuf.canRead()) {
-				readBuf.recycle();
-				readBuf = null;
-			}
-
 			switchPool(server.poolReadWrite);
 			if (e == null) {
 				if (inspector != null) {
 					inspector.onHttpResponse(request, response);
 				}
+				recycle();
 				writeHttpResponse(response);
 			} else {
 				if (inspector != null) {
 					inspector.onServletException(request, e);
 				}
+				recycle();
 				writeException(e);
 			}
-			request.recycle();
 		});
+	}
+
+	private void recycle() {
+		if (stashedBufs != null) {
+			stashedBufs.recycle();
+			stashedBufs = null;
+		}
+		if (readBuf != null && !readBuf.canRead()) {
+			readBuf.recycle();
+			readBuf = null;
+		}
+		//noinspection ConstantConditions
+		request.recycle();
 	}
 
 	@SuppressWarnings("ConstantConditions")
