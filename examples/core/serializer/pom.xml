@@ -62,6 +62,15 @@
               <mainClass>LocalDateSerializerExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>SerializeSubclassesExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>SerializeSubclassesExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
