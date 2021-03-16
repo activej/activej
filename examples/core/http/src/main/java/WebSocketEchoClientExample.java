@@ -42,6 +42,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 		return ServiceGraphModule.create();
 	}
 
+	//[START MAIN]
 	@Override
 	protected void run() throws Exception {
 		String url = args.length != 0 ? args[0] : "ws://127.0.0.1:8080/";
@@ -64,6 +65,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 			future.get();
 		}
 	}
+	//[END MAIN]
 
 	public static void main(String[] args) throws Exception {
 		WebSocketEchoClientExample launcher = new WebSocketEchoClientExample();

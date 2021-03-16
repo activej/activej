@@ -9,12 +9,16 @@ import java.util.List;
 import static java.util.Arrays.asList;
 
 public final class SerializeSubclassesExample {
+
+	//[START HOLDER]
 	public static class ListHolder {
 		@Serialize(order = 0)
 		@SerializeSubclasses(extraSubclassesId = "list", path = 0)
 		public List<Object> list = new ArrayList<>();
 	}
+	//[END HOLDER]
 
+	//[START MAIN]
 	public static void main(String[] arg) {
 		List<Object> list1 = asList(123, 456L, "text", false, "content", true);
 		serializeList(list1, Integer.class, Long.class, String.class, Boolean.class);
@@ -24,7 +28,9 @@ public final class SerializeSubclassesExample {
 		List<Object> list2 = asList((byte) 1, 12.34, 4353.323f, 'X');
 		serializeList(list2, Byte.class, Double.class, Float.class, String.class, Character.class);
 	}
+	//[END MAIN]
 
+	//[START SERIALIZE]
 	private static void serializeList(List<Object> list, Class<?>... subClasses) {
 		ListHolder holder = new ListHolder();
 
@@ -40,6 +46,7 @@ public final class SerializeSubclassesExample {
 
 		printLists(list, decoded.list);
 	}
+	//[END SERIALIZE]
 
 	private static final String FORMAT_PATTERN = "%-10s%-10s%n";
 

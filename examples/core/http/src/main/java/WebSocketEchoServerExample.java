@@ -17,6 +17,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public final class WebSocketEchoServerExample extends HttpServerLauncher {
 
+	//[START MAIN]
 	@Provides
 	AsyncServlet servlet() {
 		return RoutingServlet.create()
@@ -24,6 +25,7 @@ public final class WebSocketEchoServerExample extends HttpServerLauncher {
 						.peek(this::logMessage)
 						.streamTo(webSocket.messageWriteChannel()));
 	}
+	//[END MAIN]
 
 	private void logMessage(Message message) {
 		String msg;

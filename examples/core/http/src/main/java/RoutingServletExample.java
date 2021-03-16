@@ -32,18 +32,21 @@ public final class RoutingServletExample extends HttpServerLauncher {
 								.withHtml("<h1>Hello from the second path!</h1>" +
 										"<a href=\"/\">Go home</a>"))
 
+				//[START REGION_3]
 				.map(GET, "/user/:user_id", request -> {
 					String userId = request.getPathParameter("user_id");
 					return HttpResponse.ok200()
 							.withHtml("<h1>You have requested data for user with ID: " + userId + "</h1>" +
 									"<h3>Try changing URL after <i>'.../user/'</i> to get data for users with different IDs</h3>");
 				})
-				//[START REGION_3]
+				//[END REGION_3]
+
+				//[START REGION_4]
 				.map("/*", request ->
 						HttpResponse.ofCode(404)
 								.withHtml("<h1>404</h1><p>Path '" + request.getRelativePath() + "' not found</p>" +
 										"<a href=\"/\">Go home</a>"));
-		//[END REGION_3]
+				//[END REGION_4]
 	}
 	//[END REGION_1]
 

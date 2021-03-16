@@ -25,11 +25,12 @@ import static io.activej.serializer.impl.SerializerExpressions.writeVarInt;
  */
 public final class LocalDateSerializerExample {
 	public static void main(String[] args) {
-		final BinarySerializer<LocalDateHolder> serializer =
+		//[START SERIALIZER_CREATE]
+		BinarySerializer<LocalDateHolder> serializer =
 				SerializerBuilder.create()
-						// Adding a custom serializer for LocalDate
 						.withSerializer(LocalDate.class, new SerializerDefLocalDate())
 						.build(LocalDateHolder.class);
+		//[END SERIALIZER_CREATE]
 
 		byte[] array = new byte[1024];
 
@@ -46,6 +47,7 @@ public final class LocalDateSerializerExample {
 		System.out.println("Deserialized LocalDateHolder: " + decoded);
 	}
 
+	//[START HOLDER]
 	public static class LocalDateHolder {
 		@Serialize(order = 0)
 		public final LocalDate date;
@@ -56,12 +58,12 @@ public final class LocalDateSerializerExample {
 
 		@Override
 		public String toString() {
-			return "LocalDateHolder{" +
-					"date=" + date +
-					'}';
+			return "LocalDateHolder{date=" + date + '}';
 		}
 	}
+	//[END HOLDER]
 
+	//[START SERIALIZER]
 	public static class SerializerDefLocalDate extends AbstractSerializerDef {
 
 		@Override
@@ -95,4 +97,5 @@ public final class LocalDateSerializerExample {
 			);
 		}
 	}
+	//[END SERIALIZER]
 }

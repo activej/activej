@@ -39,9 +39,12 @@ import static io.activej.http.HttpMethod.POST;
 
 public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 
+	//[START MULTIBINDER]
 	public static final Multibinder<RoutingServlet> SERVLET_MULTIBINDER = Multibinders.ofBinaryOperator((servlet1, servlet2) ->
 			servlet1.merge(servlet2));
+	//[END MULTIBINDER]
 
+	//[START MAIN_MODULE]
 	@Override
 	protected Module getBusinessLogicModule() {
 		return Modules.combine(
@@ -54,11 +57,13 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 						.build()
 		);
 	}
+	//[END MAIN_MODULE]
 
 	public static void main(String[] args) throws Exception {
 		new RoutingServletMultibinderExample().launch(args);
 	}
 
+	//[START MODULE_A]
 	private static final class ModuleA extends AbstractModule {
 		@Provides
 		RoutingServlet servlet() {
@@ -68,7 +73,9 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 					.map(GET, "/", request -> HttpResponse.ok200().withPlainText("Hello from '/' path\n"));
 		}
 	}
+	//[END MODULE_A]
 
+	//[START MODULE_B]
 	private static final class ModuleB extends AbstractModule {
 		@Provides
 		RoutingServlet servlet() {
@@ -78,7 +85,9 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 					.map(GET, "/d", request -> HttpResponse.ok200().withPlainText("Hello from '/d' path\n"));
 		}
 	}
+	//[END MODULE_B]
 
+	//[START MODULE_C]
 	private static final class ModuleC extends AbstractModule {
 		@Provides
 		RoutingServlet servlet() {
@@ -87,6 +96,6 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 					.map(GET, "/b/c", request -> HttpResponse.ok200().withPlainText("Hello from '/b/c' path\n"))
 					.map(POST, "/d", request -> HttpResponse.ok200().withPlainText("Hello from POST '/d' path\n"));
 		}
-
 	}
+	//[END MODULE_C]
 }

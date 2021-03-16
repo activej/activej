@@ -22,13 +22,12 @@ import static io.activej.launchers.fs.Initializers.ofActiveFsServer;
 /**
  * This example demonstrates using Decorator pattern to add extra functionality to ActiveFs instance
  */
-//[START EXAMPLE]
 public class DecoratedActiveFsExample extends ServerSetupExample {
 
+	//[START OVERRIDE]
 	@Override
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
-
 			@Eager
 			@Provides
 			ActiveFsServer activeFsServer(Eventloop eventloop, @Named("decorated") ActiveFs decoratedFs, Config config) {
@@ -41,15 +40,16 @@ public class DecoratedActiveFsExample extends ServerSetupExample {
 			ActiveFs decoratedActiveFs(ActiveFs fs) {
 				return new LoggingActiveFs(fs);
 			}
-
 		};
 	}
+	//[END OVERRIDE]
 
 	public static void main(String[] args) throws Exception {
 		Launcher launcher = new DecoratedActiveFsExample();
 		launcher.launch(args);
 	}
 
+	//[START WRAPPER]
 	private static final class LoggingActiveFs extends ForwardingActiveFs {
 		private static final Logger logger = LoggerFactory.getLogger(LoggingActiveFs.class);
 
@@ -72,7 +72,7 @@ public class DecoratedActiveFsExample extends ServerSetupExample {
 		public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 			return super.download(name, offset, limit)
 					.map(supplier -> {
-						logger.info("Starting downloading file: {}}", name);
+						logger.info("Starting downloading file: {}", name);
 						return supplier
 								.withEndOfStream(eos -> eos
 										.whenResult(() -> logger.info("Download of file {} finished", name)));
@@ -80,5 +80,5 @@ public class DecoratedActiveFsExample extends ServerSetupExample {
 
 		}
 	}
+	//[END WRAPPER]
 }
-//[END EXAMPLE]

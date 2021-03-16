@@ -56,7 +56,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 
 	@Override
 	protected void onInit(Injector injector) throws Exception {
-		path = Files.createTempDirectory("upload-example");
+		path = Files.createTempDirectory("multipart-data-files");
 	}
 
 	@Inject
@@ -78,6 +78,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 		return Executors.newSingleThreadExecutor();
 	}
 
+	//[START SERVLET]
 	@Provides
 	AsyncServlet servlet() {
 		return RoutingServlet.create()
@@ -92,21 +93,24 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 							});
 				});
 	}
+	//[END SERVLET]
 
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
-		CompletableFuture<HttpResponse> future = eventloop.submit(() ->
+		CompletableFuture<Integer> future = eventloop.submit(() ->
 				client.request(HttpRequest.post("http://localhost:8080/handleMultipart")
 						.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
-						.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST))));
+						.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST)))
+						.map(HttpResponse::getCode));
 
-		HttpResponse response = future.get();
+		int code = future.get();
 
-		if (response.getCode() != 200){
-			throw new RuntimeException("Did not receive OK response: " + response);
+		if (code != 200) {
+			throw new RuntimeException("Did not receive OK response: " + code);
 		}
 	}
 
+	//[START UPLOAD]
 	@NotNull
 	private Promise<ChannelConsumer<ByteBuf>> upload(String filename) {
 		logger.info("Uploading file '{}' to {}", filename, path);
@@ -117,6 +121,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 							fileUploadsCount++;
 						})));
 	}
+	//[END UPLOAD]
 
 	public static void main(String[] args) throws Exception {
 		Injector.useSpecializer();
