@@ -230,6 +230,15 @@
               <mainClass>MultipartDataHandlingExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>RoutingServletMultibinderExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>RoutingServletMultibinderExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
