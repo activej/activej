@@ -6,7 +6,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpMessage;
 import io.activej.http.HttpRequest;
-import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
@@ -86,8 +85,6 @@ public final class HttpClientExample extends Launcher {
 	//[END REGION_3]
 
 	public static void main(String[] args) throws Exception {
-		Injector.useSpecializer();
-
 		HttpClientExample example = new HttpClientExample();
 		example.launch(args);
 	}

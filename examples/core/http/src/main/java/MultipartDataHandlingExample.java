@@ -124,8 +124,6 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	//[END UPLOAD]
 
 	public static void main(String[] args) throws Exception {
-		Injector.useSpecializer();
-
 		Launcher launcher = new MultipartDataHandlingExample();
 		launcher.launch(args);
 	}

@@ -1,6 +1,5 @@
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.MultithreadedHttpServerLauncher;
 import io.activej.worker.annotation.Worker;
@@ -20,8 +19,6 @@ public final class MultithreadedHttpServerExample extends MultithreadedHttpServe
 	}
 
 	public static void main(String[] args) throws Exception {
-		Injector.useSpecializer();
-
 		MultithreadedHttpServerExample example = new MultithreadedHttpServerExample();
 		example.launch(args);
 	}

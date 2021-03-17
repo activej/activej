@@ -2,7 +2,6 @@ import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StaticServlet;
-import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 
@@ -42,8 +41,6 @@ public final class ServletDecoratorExample extends HttpServerLauncher {
 	//[END REGION_1]
 
 	public static void main(String[] args) throws Exception {
-		Injector.useSpecializer();
-
 		ServletDecoratorExample launcher = new ServletDecoratorExample();
 		launcher.launch(args);
 	}

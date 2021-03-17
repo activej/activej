@@ -2,7 +2,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.inject.Injector;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
@@ -42,8 +41,6 @@ public final class CustomHttpServerExample extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Injector.useSpecializer();
-
 		Launcher launcher = new CustomHttpServerExample();
 		launcher.launch(args);
 	}
