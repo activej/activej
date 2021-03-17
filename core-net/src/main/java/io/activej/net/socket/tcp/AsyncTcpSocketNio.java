@@ -397,7 +397,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		} else {
 			checkState(DEBUG_READ_OFFSET > 0);
 
-			buf = ByteBufPool.allocate(readBufferSize + DEBUG_READ_OFFSET);
+			buf = ByteBufPool.allocate(readBufferSize);
 			buf.tail(DEBUG_READ_OFFSET);
 			buf.head(DEBUG_READ_OFFSET);
 		}
