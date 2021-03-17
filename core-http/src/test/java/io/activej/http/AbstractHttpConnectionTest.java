@@ -333,7 +333,7 @@ public final class AbstractHttpConnectionTest {
 				.whenComplete(server::close));
 	}
 
-	private void resetPort(){
+	private void resetPort() {
 		port = getFreePort();
 		url = "http://127.0.0.1:" + port;
 	}

@@ -24,6 +24,7 @@ import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.exception.CloseException;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpServer.Inspector;
@@ -37,6 +38,7 @@ import java.net.InetAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.nullify;
 import static io.activej.csp.ChannelSupplier.ofLazyProvider;
 import static io.activej.csp.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaderValue.ofBytes;
@@ -361,6 +363,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			if (CHECK) checkState(eventloop.inEventloopThread());
 			if (isClosed()) {
 				request.recycle();
+				readBuf = nullify(readBuf, ByteBuf::recycle);
+				stashedBufs = nullify(stashedBufs, Recyclable::recycle);
 				if (response != null) {
 					response.recycleBody();
 				}
@@ -461,9 +465,10 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void onClosed() {
-		if (request != null && pool != server.poolServing) {
-			request.recycle();
-			request = null;
+		if (pool != server.poolServing) {
+			request = nullify(request, HttpMessage::recycle);
+			readBuf = nullify(readBuf, ByteBuf::recycle);
+			stashedBufs = nullify(stashedBufs, Recyclable::recycle);
 		}
 		if (inspector != null) inspector.onDisconnect(this);
 		//noinspection ConstantConditions

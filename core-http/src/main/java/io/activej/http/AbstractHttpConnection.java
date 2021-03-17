@@ -40,7 +40,6 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.Utils.nullify;
 import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
@@ -214,8 +213,6 @@ public abstract class AbstractHttpConnection {
 		flags |= CLOSED;
 		onClosed();
 		socket.close();
-		readBuf = nullify(readBuf, ByteBuf::recycle);
-		stashedBufs = nullify(stashedBufs, Recyclable::recycle);
 	}
 
 	protected final void closeWithError(@NotNull Throwable e) {
@@ -224,8 +221,6 @@ public abstract class AbstractHttpConnection {
 		onClosedWithError(e);
 		onClosed();
 		socket.close();
-		readBuf = nullify(readBuf, ByteBuf::recycle);
-		stashedBufs = nullify(stashedBufs, Recyclable::recycle);
 	}
 
 	protected void read() {

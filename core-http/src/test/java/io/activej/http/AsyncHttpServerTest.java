@@ -32,8 +32,7 @@ import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public final class AsyncHttpServerTest {
 	@ClassRule
@@ -408,6 +407,42 @@ public final class AsyncHttpServerTest {
 				"Connection: close\r\n" +
 				"Content-Length: 28\r\n\r\n" +
 				"field1=value1;field2=value2;");
+		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		socket.close();
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testIncompleteRequest() throws IOException, ExecutionException, InterruptedException {
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, request ->
+				request.loadBody()
+						.mapEx(($, e) -> {
+							assertTrue(e instanceof MalformedHttpException);
+
+							assertFalse(request.isRecycled());
+							assertTrue(request.getConnection().isClosed());
+
+							assertEquals(request.getHeader(HttpHeaders.HOST), "localhost");
+							return HttpResponse.ofCode(400);
+						}));
+		server.withListenPort(port);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		Socket socket = new Socket();
+
+		socket.connect(new InetSocketAddress("localhost", port));
+		writeByRandomParts(socket, "POST / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: close\r\n" +
+				"Content-Type: application/x-www-form-urlencoded\r\n" +
+				"Content-Length: 100\r\n\r\n" +
+				"field1=value1&field2=value2");
+		socket.shutdownOutput();
+
 		assertEquals(0, toByteArray(socket.getInputStream()).length);
 		socket.close();
 

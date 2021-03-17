@@ -19,6 +19,7 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.CloseException;
+import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.queue.ChannelZeroBuffer;
@@ -35,6 +36,7 @@ import java.net.InetSocketAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.SP;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
+import static io.activej.common.Utils.nullify;
 import static io.activej.csp.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_KEY;
@@ -433,10 +435,9 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		pool.removeNode(this);
 
 		client.onConnectionClosed();
-		if (response != null) {
-			response.recycle();
-			response = null;
-		}
+		response = nullify(response, HttpMessage::recycle);
+		readBuf = nullify(readBuf, ByteBuf::recycle);
+		stashedBufs = nullify(stashedBufs, Recyclable::recycle);
 	}
 
 	@Override
