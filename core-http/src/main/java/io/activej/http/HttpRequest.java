@@ -187,17 +187,13 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	@NotNull
 	@Contract(pure = true)
 	public HttpMethod getMethod() {
-		if (CHECK) checkState(!isRecycled());
 		return method;
 	}
 
 	@Contract(pure = true)
 	public InetAddress getRemoteAddress() {
-		if (CHECK) {
-			checkState(!isRecycled());
-			// it makes sense to call this method only on server
-			checkNotNull(remoteAddress);
-		}
+		// it makes sense to call this method only on server
+		if (CHECK) checkNotNull(remoteAddress);
 		return remoteAddress;
 	}
 
@@ -207,7 +203,6 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	public Protocol getProtocol() {
-		if (CHECK) checkState(!isRecycled());
 		return url.getProtocol();
 	}
 
@@ -259,7 +254,6 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	public HttpServerConnection getConnection() {
-		if (CHECK) checkState(!isRecycled());
 		return connection;
 	}
 

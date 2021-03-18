@@ -373,12 +373,10 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	public HttpClientConnection getConnection() {
-		if (CHECK) checkState(!isRecycled());
 		return connection;
 	}
 
 	public int getCode() {
-		if (CHECK) checkState(!isRecycled());
 		return code;
 	}
 

@@ -79,7 +79,6 @@ public abstract class HttpMessage {
 	}
 
 	public HttpVersion getVersion() {
-		if (CHECK) checkState(!isRecycled());
 		return version;
 	}
 
@@ -342,7 +341,6 @@ public abstract class HttpMessage {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T getAttachment(Class<T> type) {
-		if (CHECK) checkState(!isRecycled());
 		if (attachments == null) {
 			return null;
 		}
@@ -355,7 +353,6 @@ public abstract class HttpMessage {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T getAttachment(Type type) {
-		if (CHECK) checkState(!isRecycled());
 		if (attachments == null) {
 			return null;
 		}
@@ -368,7 +365,6 @@ public abstract class HttpMessage {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T getAttachment(String key) {
-		if (CHECK) checkState(!isRecycled());
 		if (attachments == null) {
 			return null;
 		}
@@ -380,7 +376,6 @@ public abstract class HttpMessage {
 	 * Retrieves a set of all attachment keys for this HttpMessage
 	 */
 	public Set<Object> getAttachmentKeys() {
-		if (CHECK) checkState(!isRecycled());
 		return attachments != null ? attachments.keySet() : emptySet();
 	}
 
