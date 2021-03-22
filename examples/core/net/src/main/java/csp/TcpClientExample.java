@@ -24,7 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class TcpClientExample {
 	private final Eventloop eventloop = Eventloop.create();
 
-	/* Thread, which sends characters and prints received responses to the console. */
+	/* Thread, which reads user input */
 	private void startCommandLineInterface(AsyncTcpSocket socket) {
 		Thread thread = new Thread(() -> {
 			Scanner scanIn = new Scanner(System.in);

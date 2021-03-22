@@ -81,6 +81,24 @@
               <mainClass>csp.TcpServerExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>udp.UdpPongServerExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>udp.UdpPongServerExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>udp.UdpPingClientExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>udp.UdpPingClientExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>

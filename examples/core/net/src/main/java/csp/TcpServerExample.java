@@ -15,7 +15,7 @@ import static io.activej.bytebuf.ByteBufStrings.LF;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Example of creating a simple echo server.
+ * Example of creating a simple echo TCP server.
  */
 public final class TcpServerExample {
 	private static final int PORT = 9922;
