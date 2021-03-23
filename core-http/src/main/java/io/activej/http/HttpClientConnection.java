@@ -195,7 +195,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		response.flags |= MUST_LOAD_BODY;
 		response.body = body;
 		response.bodyStream = bodySupplier;
-		if (isWebSocket()) {
+		if (WebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
 		}
 		if (inspector != null) inspector.onHttpResponse(response);
@@ -344,7 +344,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	private void onHttpMessageComplete() {
-		if (isWebSocket()) return;
+		if (WebSocket.ENABLED && isWebSocket()) return;
 
 		//noinspection ConstantConditions
 		response.recycle();

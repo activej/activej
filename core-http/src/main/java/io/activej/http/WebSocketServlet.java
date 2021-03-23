@@ -34,18 +34,22 @@ import static io.activej.http.HttpUtils.getWebSocketAnswer;
 import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
 import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
 
+/**
+ * A servlet for handling web socket upgrade requests.
+ * An implementation may inspect incoming HTTP request, based on which an implementation MUST call a provided function
+ * with a corresponding HTTP response.
+ * <p>
+ * If a response has a code {@code 101} it is considered successful and the resulted promise of a web socket will be
+ * completed with a {@link WebSocket}. A successful response must have no body or body stream.
+ * <p>
+ * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
+ * exceptionally.
+ */
 public abstract class WebSocketServlet implements AsyncServlet {
-	/**
-	 * A servlet for handling web socket upgrade requests.
-	 * An implementation may inspect incoming HTTP request, based on which an implementation MUST call a provided function
-	 * with a corresponding HTTP response.
-	 * <p>
-	 * If a response has a code {@code 101} it is considered successful and the resulted promise of a web socket will be
-	 * completed with a {@link WebSocket}. A successful response must have no body or body stream.
-	 * <p>
-	 * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
-	 * exceptionally.
-	 */
+	public WebSocketServlet() {
+		checkState(WebSocket.ENABLED, "Web sockets are disabled by application settings");
+	}
+
 	protected Promisable<HttpResponse> onRequest(HttpRequest request) {
 		return HttpResponse.ofCode(101);
 	}

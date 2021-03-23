@@ -418,6 +418,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	 */
 	@Override
 	public Promise<WebSocket> webSocketRequest(HttpRequest request) {
+		checkState(WebSocket.ENABLED, "Web sockets are disabled by application settings");
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
 

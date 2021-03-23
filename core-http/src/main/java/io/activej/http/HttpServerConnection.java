@@ -255,7 +255,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	private void writeHttpResponse(HttpResponse httpResponse) {
-		boolean isWebSocket = isWebSocket();
+		boolean isWebSocket = WebSocket.ENABLED && isWebSocket();
 		if (!isWebSocket || httpResponse.getCode() != 101) {
 			HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
 			if (server.keepAliveTimeoutMillis == 0 ||
@@ -338,7 +338,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		request.flags |= MUST_LOAD_BODY;
 		request.body = body;
 		request.bodyStream = bodySupplier;
-		if (isWebSocket()) {
+		if (WebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketRequest(body)) return;
 		} else {
 			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? HTTPS : HTTP);
@@ -440,7 +440,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private void onHttpMessageComplete() {
 		assert !isClosed();
-		if (isWebSocket()) return;
+		if (WebSocket.ENABLED && isWebSocket()) return;
 
 		if ((flags & KEEP_ALIVE) != 0 && server.keepAliveTimeoutMillis != 0) {
 			switchPool(server.poolKeepAlive);

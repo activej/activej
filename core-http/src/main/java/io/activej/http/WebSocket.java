@@ -18,6 +18,7 @@ package io.activej.http;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -33,16 +34,16 @@ import static io.activej.http.WebSocket.Message.MessageType.TEXT;
 /**
  * Abstraction that allows to send and receive web socket data as frames or messages.
  * <p>
- *
  * Since this interface extends {@link AsyncCloseable} interface, it is possible to close
  * a web socket with an appropriate exception. If an exception is an instance of {@link WebSocketException}
  * it will be translated to an appropriate close frame with corresponding close code and close reason.
  * <p>
- *
  * Any other exception will result into close frame with close code {@code 1001} on a client
  * and {@code 1011} on a server.
  */
 public interface WebSocket extends AsyncCloseable {
+	boolean ENABLED = ApplicationSettings.getBoolean(WebSocket.class, "enabled", true);
+
 	/**
 	 * Returns a promise of a complete web socket message which consists of one or multiple data frames.
 	 * <p>
