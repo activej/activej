@@ -22,7 +22,6 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
-import io.activej.common.exception.CloseException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
@@ -39,7 +38,6 @@ import java.net.InetAddress;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
-import static io.activej.csp.ChannelSupplier.ofLazyProvider;
 import static io.activej.csp.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
@@ -404,11 +402,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@SuppressWarnings("ConstantConditions")
 	private boolean processWebSocketRequest(@Nullable ByteBuf body) {
 		if (body != null && body.readRemaining() == 0) {
-			ChannelSupplier<ByteBuf> ofBufsSupplier = ofLazyProvider(() -> isClosed() ?
-					ChannelSupplier.ofException(new CloseException("Connection closed")) :
-					ChannelSupplier.of(detachReadBuf()));
+			ChannelSupplier<ByteBuf> ofReadBufSupplier = ChannelSupplier.of(detachReadBuf());
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
-			request.bodyStream = concat(ofBufsSupplier, ofSocketSupplier)
+			request.bodyStream = concat(ofReadBufSupplier, ofSocketSupplier)
 					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection));
 			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? WSS : WS);
 			request.maxBodySize = server.maxWebSocketMessageSize;

@@ -1,6 +1,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.ref.RefInt;
@@ -170,6 +171,28 @@ public final class WebSocketClientServerTest {
 	}
 
 	@Test
+	public void testRejectedWithException() throws IOException {
+		AsyncHttpServer.create(Eventloop.getCurrentEventloop(), RoutingServlet.create()
+				.mapWebSocket("/", new WebSocketServlet() {
+					@Override
+					protected Promisable<HttpResponse> onRequest(HttpRequest request) {
+						return Promise.ofException(new MalformedDataException());
+					}
+
+					@Override
+					protected void onWebSocket(WebSocket webSocket) {
+					}
+				}))
+				.withListenPort(port)
+				.withAcceptOnce()
+				.listen();
+		Throwable exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
+
+		assertEquals(HANDSHAKE_FAILED, exception);
+	}
+
+	@Test
 	public void testCloseByServerWithError() throws IOException {
 		WebSocketException testError = new WebSocketException(4321, "Test error");
 		ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -298,7 +321,7 @@ public final class WebSocketClientServerTest {
 					return webSocket.readMessage();
 				})
 				.whenResult(lastMessage -> {
-					if (lastMessage == null){
+					if (lastMessage == null) {
 						lastMessageNull.set(true);
 					}
 				}));
@@ -316,6 +339,35 @@ public final class WebSocketClientServerTest {
 		assertTrue(lastMessageNull.get());
 		assertEquals(result, messages);
 		executor.shutdown();
+	}
+
+	@Test
+	public void testNonWebSocketServlet() throws IOException {
+		AsyncHttpServer.create(Eventloop.getCurrentEventloop(), RoutingServlet.create()
+				.map("/", $ -> HttpResponse.ok200()))
+				.withListenPort(port)
+				.withAcceptOnce()
+				.listen();
+
+		Throwable exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
+
+		assertEquals(HANDSHAKE_FAILED, exception);
+	}
+
+	@Test
+	public void testNonWebSocketClient() throws IOException {
+		AsyncHttpServer.create(Eventloop.getCurrentEventloop(), RoutingServlet.create()
+				.mapWebSocket("/", ws -> fail()))
+				.withListenPort(port)
+				.withAcceptOnce()
+				.listen();
+
+		int responseCode = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.request(HttpRequest.get("http://127.0.0.1:" + port))
+				.map(HttpResponse::getCode));
+
+		assertEquals(404, responseCode);
 	}
 
 	private void startTestServer(Consumer<WebSocket> webSocketConsumer) throws IOException {

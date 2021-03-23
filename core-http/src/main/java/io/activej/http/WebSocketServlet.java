@@ -18,6 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
+import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.promise.Promisable;
@@ -62,8 +63,10 @@ public abstract class WebSocketServlet implements AsyncServlet {
 
 					return onRequest(request)
 							.promise()
+							.whenException(e -> recycleStream(rawStream))
 							.map(response -> {
 								if (response.getCode() != 101) {
+									recycleStream(rawStream);
 									return response;
 								}
 
@@ -142,4 +145,7 @@ public abstract class WebSocketServlet implements AsyncServlet {
 		return Promise.of(getWebSocketAnswer(header.trim()));
 	}
 
+	private static void recycleStream(ChannelSupplier<ByteBuf> rawStream) {
+		rawStream.streamTo(ChannelConsumers.recycling());
+	}
 }
