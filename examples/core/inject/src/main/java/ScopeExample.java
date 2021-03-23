@@ -11,7 +11,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Scopes in ActiveJ Inject are a bit different from other DI frameworks.
+ * Scopes in ActiveInject are a bit different from other DI frameworks.
  * The internal structure of the injector is not simply a map of Key -> Binding.
  * It is actually a <a href="https://en.wikipedia.org/wiki/Trie">prefix tree</a> of such maps, and the prefix is a scope.
  * The identifiers (or prefixes of the tree) just like Names are annotations, this is highly useful for the DSL.
@@ -46,7 +46,7 @@ import java.lang.annotation.Target;
  * when making a set of sub-injectors each of which created its own "singleton" instance we requested.
  * <p>
  * Scopes are a very powerful tool for managing numbers of instances that you create (since one Injector creates at most one instance per key)
- * yet still maintaining the simplicity and speed of the ActiveJ Inject framework.
+ * yet still maintaining the simplicity and speed of the ActiveInject framework.
  */
 //[START EXAMPLE]
 public final class ScopeExample {

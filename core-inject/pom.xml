@@ -11,7 +11,7 @@
 
   <artifactId>activej-inject</artifactId>
 
-  <name>ActiveJ : Inject</name>
+  <name>ActiveInject</name>
   <description>
     An extremely fast and lightweight Dependency Injection framework.
     It supports nested scopes, singletons, object factories, modules and plugins which
