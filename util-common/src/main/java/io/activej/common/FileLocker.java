@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,7 +29,7 @@ import java.nio.channels.FileLock;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings("unused")
-public final class FileLocker {
+public final class FileLocker implements Closeable {
 	private static final Logger logger = LoggerFactory.getLogger(FileLocker.class);
 
 	public static synchronized FileLocker obtainLockOrDie(String filename) {
@@ -82,25 +83,39 @@ public final class FileLocker {
 
 	public synchronized void releaseLock() {
 		try {
-			if (fileLock != null) {
-				fileLock.release();
-				fileLock = null;
-			}
+			releaseFileLock();
 		} catch (IOException e) {
 			logger.error("IO Exception during releasing FileLock on {}", lockFile, e);
 		}
 		try {
-			if (lockStream != null) {
-				lockStream.close();
-				lockStream = null;
-			}
+			closeLockStream();
 		} catch (IOException e) {
 			logger.error("IO Exception during closing FileOutputStream on {}", lockFile, e);
 		}
 	}
 
+	private void releaseFileLock() throws IOException {
+		if (fileLock != null) {
+			fileLock.release();
+			fileLock = null;
+		}
+	}
+
+	private void closeLockStream() throws IOException {
+		if (lockStream != null) {
+			lockStream.close();
+			lockStream = null;
+		}
+	}
+
 	public boolean isLocked() {
 		return fileLock != null;
+	}
+
+	@Override
+	public void close() throws IOException {
+		releaseFileLock();
+		closeLockStream();
 	}
 
 	@Override
