@@ -19,6 +19,7 @@ package io.activej.record;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.codegen.util.WithInitializer;
@@ -28,6 +29,8 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.*;
 
+import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
+import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
@@ -39,6 +42,9 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	protected RecordGetter<?>[] recordGetters;
 	protected RecordSetter<?>[] recordSetters;
 
+	@Nullable
+	protected Comparator<Record> comparator;
+
 	protected final HashMap<String, RecordGetter<?>> recordGettersMap = new HashMap<>();
 	protected final HashMap<String, RecordSetter<?>> recordSettersMap = new HashMap<>();
 
@@ -49,7 +55,10 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	protected final HashMap<String, String> classFields = new HashMap<>();
 
 	@Nullable
-	protected Set<String> hashCodeEqualsFields;
+	protected List<String> hashCodeEqualsFields;
+
+	@Nullable
+	protected List<String> comparedFields;
 
 	@NotNull
 	private final DefiningClassLoader classLoader;
@@ -73,14 +82,26 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return this;
 	}
 
-	public RecordScheme withHashCodeEqualsFields(Collection<String> hashCodeEqualsFields) {
+	public RecordScheme withHashCodeEqualsFields(List<String> hashCodeEqualsFields) {
 		if (factory != null) throw new IllegalStateException("Already initialized");
-		this.hashCodeEqualsFields = new LinkedHashSet<>(hashCodeEqualsFields);
+		checkUnique(hashCodeEqualsFields);
+		this.hashCodeEqualsFields = hashCodeEqualsFields;
 		return this;
 	}
 
 	public RecordScheme withHashCodeEqualsFields(String... hashCodeEqualsFields) {
 		return withHashCodeEqualsFields(asList(hashCodeEqualsFields));
+	}
+
+	public RecordScheme withComparator(List<String> comparedFields) {
+		if (factory != null) throw new IllegalStateException("Already initialized");
+		checkUnique(comparedFields);
+		this.comparedFields = comparedFields;
+		return this;
+	}
+
+	public RecordScheme withComparator(String... comparedFields) {
+		return withComparator(asList(comparedFields));
 	}
 
 	public void addField(@NotNull String field, @NotNull Type type) {
@@ -118,6 +139,13 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 
 	public Record record() {
 		return factory.create();
+	}
+
+	public Comparator<Record> recordComparator() {
+		if (factory == null) throw new IllegalStateException("Not yet initialized");
+		if (comparator == null) throw new IllegalStateException("Compared fields were not specified");
+
+		return comparator;
 	}
 
 	public Record recordOfArray(Object... values) {
@@ -182,11 +210,9 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 
 	synchronized private void doEnsureBuild() {
 		Collection<String> hashCodeEqualsFields;
-		if (this.hashCodeEqualsFields != null){
-			Set<String> missing = this.hashCodeEqualsFields.stream()
-					.filter(field -> !fieldTypes.containsKey(field))
-					.collect(toSet());
-			if (!missing.isEmpty()){
+		if (this.hashCodeEqualsFields != null) {
+			Set<String> missing = getMissingFields(this.hashCodeEqualsFields);
+			if (!missing.isEmpty()) {
 				throw new IllegalStateException("Missing some fields to generate 'hashCode' and 'equals' methods: " + missing);
 			}
 			hashCodeEqualsFields = this.hashCodeEqualsFields;
@@ -257,6 +283,24 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			recordSettersMap.put(field, recordSetter);
 		}
 
+		if (comparedFields != null) {
+			Set<String> missing = getMissingFields(comparedFields);
+			if (!missing.isEmpty()) {
+				throw new IllegalStateException("Missing some fields to be compared: " + missing);
+			}
+
+			ExpressionComparator expressionComparator = ExpressionComparator.create();
+			for (String comparedField : comparedFields) {
+				String classField = classFields.get(comparedField);
+				expressionComparator.with(leftProperty(generatedClass, classField), rightProperty(generatedClass, classField));
+			}
+
+			//noinspection unchecked
+			comparator = ClassBuilder.create(this.classLoader, Comparator.class)
+					.withMethod("compare", expressionComparator)
+					.buildClassAndCreateNewInstance();
+		}
+
 		factory = ClassBuilder.create(this.classLoader, RecordFactory.class)
 				.withClassKey(this)
 //				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
@@ -264,6 +308,18 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 				.withMethod("create", Record.class, asList(),
 						constructor(generatedClass, staticField("SCHEME")))
 				.buildClassAndCreateNewInstance();
+	}
+
+	private Set<String> getMissingFields(List<String> fields) {
+		return fields.stream()
+				.filter(field -> !fieldTypes.containsKey(field))
+				.collect(toSet());
+	}
+
+	private static void checkUnique(List<String> fields) {
+		if (new HashSet<>(fields).size() != fields.size()) {
+			throw new IllegalArgumentException("Fields should be unique");
+		}
 	}
 
 	public <T> RecordGetter<T> getter(String field) {

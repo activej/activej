@@ -4,6 +4,8 @@ import io.activej.codegen.ClassBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Comparator;
+
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
 import static org.junit.Assert.*;
 
@@ -143,6 +145,46 @@ public class RecordSchemeTest {
 		record1.set("code", 200L);
 		assertNotEquals(record1, record2);
 		assertNotEquals(record1.hashCode(), record2.hashCode());
+
+		assertStaticConstantsCleared();
+	}
+
+	@Test
+	public void testComparator() {
+		RecordScheme scheme = RecordScheme.create()
+				.withField("id", int.class)
+				.withField("code", long.class)
+				.withField("name", String.class)
+				.withComparator("id", "code")
+				.build();
+
+		Comparator<Record> comparator = scheme.recordComparator();
+
+		Record record1 = scheme.record();
+		Record record2 = scheme.record();
+
+		record1.set("id", 10);
+		record1.set("code", 100L);
+		record1.set("name", "abc");
+
+		record2.set("id", 10);
+		record2.set("code", 100L);
+		record2.set("name", "abc");
+
+		assertEquals(0, comparator.compare(record1, record2));
+
+		record1.set("name", "abc2");
+		assertEquals(0, comparator.compare(record1, record2));
+
+		record1.set("name", "abc");
+		record1.set("id", 5);
+		assertEquals(-1, comparator.compare(record1, record2));
+
+		record1.set("code", 200L);
+		assertEquals(-1, comparator.compare(record1, record2));
+
+		record1.set("id", 10);
+		assertEquals(1, comparator.compare(record1, record2));
 
 		assertStaticConstantsCleared();
 	}
