@@ -107,4 +107,43 @@ public class RecordSchemeTest {
 		assertStaticConstantsCleared();
 	}
 
+	@Test
+	public void testHashCodeEquals() {
+		RecordScheme scheme = RecordScheme.create()
+				.withField("id", int.class)
+				.withField("code", long.class)
+				.withField("name", String.class)
+				.withHashCodeEqualsFields("id", "code")
+				.build();
+
+		Record record1 = scheme.record();
+		Record record2 = scheme.record();
+
+		record1.set("id", 10);
+		record1.set("code", 100L);
+		record1.set("name", "abc");
+
+		record2.set("id", 10);
+		record2.set("code", 100L);
+		record2.set("name", "abc");
+
+		assertEquals(record1, record2);
+		assertEquals(record1.hashCode(), record2.hashCode());
+
+		record1.set("name", "abc2");
+		assertEquals(record1, record2);
+		assertEquals(record1.hashCode(), record2.hashCode());
+
+		record1.set("name", "abc");
+		record1.set("id", 5);
+		assertNotEquals(record1, record2);
+		assertNotEquals(record1.hashCode(), record2.hashCode());
+
+		record1.set("id", 10);
+		record1.set("code", 200L);
+		assertNotEquals(record1, record2);
+		assertNotEquals(record1.hashCode(), record2.hashCode());
+
+		assertStaticConstantsCleared();
+	}
 }

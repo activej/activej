@@ -23,14 +23,14 @@ import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.codegen.util.WithInitializer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 @SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
 public final class RecordScheme implements WithInitializer<RecordScheme> {
@@ -47,6 +47,9 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	protected String[] fields = {};
 	protected Type[] types = {};
 	protected final HashMap<String, String> classFields = new HashMap<>();
+
+	@Nullable
+	protected Set<String> hashCodeEqualsFields;
 
 	@NotNull
 	private final DefiningClassLoader classLoader;
@@ -68,6 +71,16 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	public RecordScheme withField(@NotNull String field, @NotNull Type type) {
 		addField(field, type);
 		return this;
+	}
+
+	public RecordScheme withHashCodeEqualsFields(Collection<String> hashCodeEqualsFields) {
+		if (factory != null) throw new IllegalStateException("Already initialized");
+		this.hashCodeEqualsFields = new LinkedHashSet<>(hashCodeEqualsFields);
+		return this;
+	}
+
+	public RecordScheme withHashCodeEqualsFields(String... hashCodeEqualsFields) {
+		return withHashCodeEqualsFields(asList(hashCodeEqualsFields));
 	}
 
 	public void addField(@NotNull String field, @NotNull Type type) {
@@ -168,16 +181,28 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	}
 
 	synchronized private void doEnsureBuild() {
+		Collection<String> hashCodeEqualsFields;
+		if (this.hashCodeEqualsFields != null){
+			Set<String> missing = this.hashCodeEqualsFields.stream()
+					.filter(field -> !fieldTypes.containsKey(field))
+					.collect(toSet());
+			if (!missing.isEmpty()){
+				throw new IllegalStateException("Missing some fields to generate 'hashCode' and 'equals' methods: " + missing);
+			}
+			hashCodeEqualsFields = this.hashCodeEqualsFields;
+		} else {
+			hashCodeEqualsFields = fieldTypes.keySet();
+		}
+
 		ClassBuilder<Record> builder = ClassBuilder.create(this.classLoader, Record.class)
 				.withClassKey(this)
 //				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 				.withConstructor(asList(RecordScheme.class),
 						superConstructor(arg(0)))
 				.withMethod("hashCode",
-						hash(Arrays.stream(fields).map(this::getClassField).map(f -> Expressions.property(self(), f)).collect(toList())))
+						hash(hashCodeEqualsFields.stream().map(this::getClassField).map(f -> Expressions.property(self(), f)).collect(toList())))
 				.withMethod("equals",
-						equalsImpl(Arrays.stream(fields).map(this::getClassField).collect(toList())))
-						;
+						equalsImpl(hashCodeEqualsFields.stream().map(this::getClassField).collect(toList())));
 		for (String field : fieldTypes.keySet()) {
 			Type type = fieldTypes.get(field);
 			//noinspection rawtypes
