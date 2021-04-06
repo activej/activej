@@ -47,11 +47,11 @@ public final class FileLocker {
 	@Nullable
 	private FileLock fileLock;
 
-	private FileLocker(String lockFile) {
+	public FileLocker(String lockFile) {
 		this(new File(lockFile));
 	}
 
-	private FileLocker(File lockFile) {
+	public FileLocker(File lockFile) {
 		this.lockFile = lockFile.getAbsoluteFile();
 	}
 
