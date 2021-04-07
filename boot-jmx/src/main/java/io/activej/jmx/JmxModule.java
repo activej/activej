@@ -52,6 +52,7 @@ import java.util.function.Supplier;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static java.util.Arrays.asList;
+import static java.util.Collections.newSetFromMap;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
@@ -217,7 +218,7 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 	}
 
 	private void doStart(Injector injector, JmxRegistry jmxRegistry, DynamicMBeanFactory mbeanFactory) {
-		Map<Type, List<Object>> globalMBeanObjects = new HashMap<>();
+		Map<Type, Set<Object>> globalMBeanObjects = new HashMap<>();
 
 		// register global singletons
 		for (Object globalSingleton : globalSingletons) {
@@ -234,7 +235,7 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 
 			Type type = key.getType();
 			if (globalMBeans.containsKey(type)) {
-				globalMBeanObjects.computeIfAbsent(type, type1 -> new ArrayList<>()).add(instance);
+				globalMBeanObjects.computeIfAbsent(type, $ -> newSetFromMap(new IdentityHashMap<>())).add(instance);
 			}
 		}
 
@@ -256,17 +257,17 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 					Type type = key.getType();
 					if (globalMBeans.containsKey(type)) {
 						for (Object instance : workerInstances) {
-							globalMBeanObjects.computeIfAbsent(type, $ -> new ArrayList<>()).add(instance);
+							globalMBeanObjects.computeIfAbsent(type, $ -> newSetFromMap(new IdentityHashMap<>())).add(instance);
 						}
 					}
 				}
 			}
 		}
 
-		for (Map.Entry<Type, List<Object>> entry : globalMBeanObjects.entrySet()) {
+		for (Map.Entry<Type, Set<Object>> entry : globalMBeanObjects.entrySet()) {
 			Key<?> key = globalMBeans.get(entry.getKey());
 			DynamicMBean globalMBean =
-					mbeanFactory.createDynamicMBean(entry.getValue(), ensureSettingsFor(key), false);
+					mbeanFactory.createDynamicMBean(new ArrayList<>(entry.getValue()), ensureSettingsFor(key), false);
 			jmxRegistry.registerSingleton(key, globalMBean, defaultSettings());
 		}
 	}
