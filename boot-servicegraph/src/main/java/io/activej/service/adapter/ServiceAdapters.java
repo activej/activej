@@ -291,8 +291,9 @@ public final class ServiceAdapters {
 	}
 
 	public static ServiceAdapter<Eventloop> forEventloop() {
+		ThreadFactory threadFactory = Executors.defaultThreadFactory();
 		return forEventloop(r -> {
-			Thread thread = Executors.defaultThreadFactory().newThread(r);
+			Thread thread = threadFactory.newThread(r);
 			thread.setName("eventloop: " + thread.getName());
 			return thread;
 		});
