@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 
 import static io.activej.common.Checks.checkState;
 
@@ -75,7 +76,7 @@ public final class FileLocker implements Closeable {
 			lockStream.write(0);
 			fileLock = lockStream.getChannel().tryLock();
 			return fileLock != null;
-		} catch (IOException e) {
+		} catch (IOException | OverlappingFileLockException e) {
 			logger.error("IO Exception during locking {}", lockFile, e);
 			return false;
 		}
