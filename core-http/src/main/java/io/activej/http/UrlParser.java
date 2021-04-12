@@ -103,16 +103,13 @@ public final class UrlParser {
 
 	@NotNull
 	public static UrlParser of(@NotNull byte[] url, int offset, int limit) {
-		if (limit > Short.MAX_VALUE) {
-			throw new IllegalArgumentException(new MalformedHttpException("HttpUrl length cannot be greater than " + Short.MAX_VALUE));
-		}
-		UrlParser httpUrl = new UrlParser(url, (short) offset, (short) limit);
 		try {
+			UrlParser httpUrl = createParser(url, offset, limit);
 			httpUrl.parse(false);
+			return httpUrl;
 		} catch (MalformedHttpException e) {
 			throw new IllegalArgumentException(e);
 		}
-		return httpUrl;
 	}
 
 	@NotNull
@@ -122,14 +119,24 @@ public final class UrlParser {
 
 	@NotNull
 	public static UrlParser parse(byte[] url, int offset, int limit) throws MalformedHttpException {
-		if (limit > Short.MAX_VALUE) {
-			throw new IllegalArgumentException(new MalformedHttpException("HttpUrl length cannot be greater than " + Short.MAX_VALUE));
-		}
-		UrlParser httpUrl = new UrlParser(url, (short) offset, (short) limit);
+		UrlParser httpUrl = createParser(url, offset, limit);
 		httpUrl.parse(true);
 		return httpUrl;
 	}
 	// endregion
+
+	private static UrlParser createParser(byte[] url, int offset, int limit) throws MalformedHttpException {
+		if (limit <= Short.MAX_VALUE) {
+			return new UrlParser(url, (short) offset, (short) limit);
+		}
+		int urlLength = limit - offset;
+		if (urlLength > Short.MAX_VALUE) {
+			throw new MalformedHttpException("URL length exceeds " + Short.MAX_VALUE + " bytes");
+		}
+		byte[] urlBytes = new byte[urlLength];
+		System.arraycopy(url, offset, urlBytes, 0, urlLength);
+		return new UrlParser(urlBytes, (short) 0, (short) urlLength);
+	}
 
 	private void parse(boolean isRelativePathAllowed) throws MalformedHttpException {
 		int index = indexOf(PROTOCOL_DELIMITER, offset);

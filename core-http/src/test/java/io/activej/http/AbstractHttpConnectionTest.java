@@ -4,11 +4,13 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
+import io.activej.common.exception.CloseException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.stats.EventStats;
+import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ActivePromisesRule;
@@ -18,6 +20,7 @@ import org.junit.*;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -29,10 +32,14 @@ import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class AbstractHttpConnectionTest {
@@ -234,6 +241,32 @@ public final class AbstractHttpConnectionTest {
 		);
 
 		doTestEmptyRequestResponsePermutations(messageDecorators);
+	}
+
+	@Test
+	public void testHugeUrls() throws IOException {
+		char[] chars = new char[16 * 1024];
+		Arrays.fill(chars, 'a');
+
+		client.withKeepAliveTimeout(Duration.ofSeconds(30));
+
+		AsyncHttpServer.JmxInspector inspector = new AsyncHttpServer.JmxInspector();
+		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), request -> HttpResponse.ok200())
+				.withListenPort(port)
+				.withInspector(inspector)
+				.withAcceptOnce(true);
+		server.listen();
+
+		Throwable exception = awaitException(client.request(HttpRequest.get(url + '/' + new String(chars))));
+
+		assertThat(exception, instanceOf(CloseException.class));
+
+		ExceptionStats httpErrors = inspector.getHttpErrors();
+		assertEquals(1, httpErrors.getTotal());
+		Throwable lastException = httpErrors.getLastException();
+		assert lastException != null;
+		assertThat(lastException, instanceOf(MalformedHttpException.class));
+		assertThat(lastException.getMessage(), containsString("Header line exceeds max header size"));
 	}
 
 	private void doTestEmptyRequestResponsePermutations(List<Consumer<HttpMessage>> messageDecorators) {
