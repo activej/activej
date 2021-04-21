@@ -48,6 +48,12 @@ public class FileStateManagerTest {
 	}
 
 	@Test
+	public void tryLoadNone() throws IOException {
+		assertNull(manager.tryLoad());
+		assertNull(manager.tryLoad(100, 1L));
+	}
+
+	@Test
 	public void saveAndLoadWithRevisions() throws IOException {
 		manager.withMaxSaveDiffs(3);
 

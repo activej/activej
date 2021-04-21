@@ -123,14 +123,30 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	}
 
 	public @NotNull FileState<T> load() throws IOException {
+		FileState<T> state = tryLoad();
+		if (state == null) {
+			throw new IOException("State is empty");
+		}
+		return state;
+	}
+
+	public @Nullable FileState<T> tryLoad() throws IOException {
 		Long lastRevision = getLastSnapshotRevision();
 		if (lastRevision != null) {
 			return new FileState<>(loadSnapshot(lastRevision), lastRevision);
 		}
-		throw new IOException("State is empty");
+		return null;
 	}
 
 	public @NotNull FileState<T> load(@NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
+		FileState<T> state = tryLoad(stateFrom, revisionFrom);
+		if (state == null) {
+			throw new IOException("State is empty");
+		}
+		return state;
+	}
+
+	public @Nullable FileState<T> tryLoad(@NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
 		Long lastRevision = getLastSnapshotRevision();
 		if (revisionFrom.equals(lastRevision)) {
 			return new FileState<>(stateFrom, revisionFrom);
@@ -146,7 +162,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 			T state = loadSnapshot(lastRevision);
 			return new FileState<>(state, lastRevision);
 		}
-		throw new IOException("State is empty");
+		return null;
 	}
 
 	public @NotNull Long save(@NotNull T state) throws IOException {
