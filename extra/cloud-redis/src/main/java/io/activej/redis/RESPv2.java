@@ -47,6 +47,7 @@ public final class RESPv2 {
 
 	public static final String NO_AUTH_PREFIX = "NOAUTH";
 	public static final String ERR_AUTH_PREFIX = "ERR AUTH";
+	public static final String NO_PERM_PREFIX = "NOPERM";
 
 	private final byte[] array;
 	private int head;
@@ -486,6 +487,9 @@ public final class RESPv2 {
 		String errorMessage = decodeString();
 		if (errorMessage.startsWith(NO_AUTH_PREFIX) || errorMessage.startsWith(ERR_AUTH_PREFIX)) {
 			return new RedisAuthenticationException(errorMessage);
+		}
+		if (errorMessage.startsWith(NO_PERM_PREFIX)){
+			return new RedisPermissionException(errorMessage);
 		}
 		return new ServerError(errorMessage);
 	}

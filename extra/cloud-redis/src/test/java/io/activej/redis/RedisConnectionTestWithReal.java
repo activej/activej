@@ -395,6 +395,68 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		assertThat(exception, instanceOf(RedisAuthenticationException.class));
 	}
 
+	@Test
+	public void missingCommandPermissions() {
+		assumeTrue(RUN_AUTH_TESTS);
+
+		byte[] username = new byte[100];
+		byte[] password = new byte[100];
+		ThreadLocalRandom.current().nextBytes(username);
+		ThreadLocalRandom.current().nextBytes(password);
+
+		escapeUsername(username);
+
+		await(connection -> connection.cmd(RedisRequest.of("ACL", "SETUSER", username, "on", setPass(password), "+PING"), OK));
+
+		try {
+			String response = io.activej.promise.TestUtils.await(client.connect(username, password)
+					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
+							.whenComplete(connection::close)));
+
+			assertEquals("PONG", response);
+
+			Throwable exception = awaitException(client.connect(username, password)
+					.then(connection -> connection.cmd(RedisRequest.of("GET", "x"), STRING)
+							.whenComplete(connection::close)));
+
+			assertThat(exception, instanceOf(RedisPermissionException.class));
+		} finally {
+			Long deleted = await(connection -> connection.cmd(RedisRequest.of("ACL", "DELUSER", username), LONG));
+			assertEquals(1, deleted.longValue());
+		}
+	}
+
+	@Test
+	public void missingKeyPermissions() {
+		assumeTrue(RUN_AUTH_TESTS);
+
+		byte[] username = new byte[100];
+		byte[] password = new byte[100];
+		ThreadLocalRandom.current().nextBytes(username);
+		ThreadLocalRandom.current().nextBytes(password);
+
+		escapeUsername(username);
+
+		await(connection -> connection.cmd(RedisRequest.of("ACL", "SETUSER", username, "on", setPass(password), "allcommands", "~a"), OK));
+
+		try {
+			String result = io.activej.promise.TestUtils.await(client.connect(username, password)
+					.then(connection -> connection.cmd(RedisRequest.of("GET", "a"), BYTES_ISO_8859_1)
+							.whenComplete(connection::close)));
+
+			assertNull(result);
+
+			Throwable exception = awaitException(client.connect(username, password)
+					.then(connection -> connection.cmd(RedisRequest.of("GET", "b"), BYTES_ISO_8859_1)
+							.whenComplete(connection::close)));
+
+			assertThat(exception, instanceOf(RedisPermissionException.class));
+		} finally {
+			Long deleted = await(connection -> connection.cmd(RedisRequest.of("ACL", "DELUSER", username), LONG));
+			assertEquals(1, deleted.longValue());
+		}
+	}
+
 	// Spaces and NULL are forbidden in usernames
 	private static void escapeUsername(byte[] username) {
 		for (int i = 0; i < username.length; i++) {
