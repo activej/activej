@@ -90,7 +90,18 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 	@Override
 	public @NotNull T loadSnapshot(@NotNull Long revision) throws IOException {
+		T loaded = tryLoadSnapshot(revision);
+		if (loaded == null) {
+			throw new IOException("Cannot find snapshot with revision " + revision);
+		}
+		return loaded;
+	}
+
+	@Override
+	public @Nullable T tryLoadSnapshot(@NotNull Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
+		if (fs.info(filename) == null) return null;
+
 		InputStream inputStream = fs.download(filename);
 		try (StreamInput input = StreamInput.create(inputStream)) {
 			return decoder.decode(input);
@@ -99,11 +110,22 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 	@Override
 	public @NotNull T loadDiff(@NotNull T state, @NotNull Long revisionFrom, @NotNull Long revisionTo) throws IOException {
+		T loaded = tryLoadDiff(state, revisionFrom, revisionTo);
+		if (loaded == null) {
+			throw new IOException("Cannot find diffs between revision " + revisionFrom + " and " + revisionTo);
+		}
+		return loaded;
+	}
+
+	@Override
+	public @Nullable T tryLoadDiff(@NotNull T state, @NotNull Long revisionFrom, @NotNull Long revisionTo) throws IOException {
 		if (revisionFrom.equals(revisionTo)) return state;
 		if (!(this.decoder instanceof DiffStreamDecoder)) {
 			throw new UnsupportedOperationException();
 		}
 		String filename = fileNamingScheme.encodeDiff(revisionFrom, revisionTo);
+		if (fs.info(filename) == null) return null;
+
 		InputStream inputStream = fs.download(filename);
 		try (StreamInput input = StreamInput.create(inputStream)) {
 			return ((DiffStreamDecoder<T>) this.decoder).decodeDiff(input, state);

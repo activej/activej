@@ -15,6 +15,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
 
@@ -149,6 +150,31 @@ public class FileStateManagerTest {
 			assertSame(expectedException, e);
 			assertEquals(2, fs.list("**").size()); // no new files are created
 		}
+	}
+
+	@Test
+	public void tryLoadSnapshotNone() throws IOException {
+		long revision = ThreadLocalRandom.current().nextLong();
+		try {
+			manager.loadSnapshot(revision);
+			fail();
+		} catch (IOException ignored) {
+		}
+
+		assertNull(manager.tryLoadSnapshot(revision));
+	}
+
+	@Test
+	public void tryLoadDiffNone() throws IOException {
+		long revisionFrom = ThreadLocalRandom.current().nextLong();
+		long revisionTo = revisionFrom + 1;
+		try {
+			manager.loadDiff(0, revisionFrom, revisionTo);
+			fail();
+		} catch (IOException ignored) {
+		}
+
+		assertNull(manager.tryLoadDiff(0, revisionFrom, revisionTo));
 	}
 
 	private static class IntegerCodec implements DiffStreamCodec<Integer> {

@@ -14,7 +14,11 @@ public interface StateManager<T, R extends Comparable<R>> {
 
 	@NotNull T loadSnapshot(@NotNull R revision) throws IOException;
 
+	@Nullable T tryLoadSnapshot(@NotNull R revision) throws IOException;
+
 	@NotNull T loadDiff(@NotNull T state, @NotNull R revisionFrom, @NotNull R revisionTo) throws IOException;
+
+	@Nullable T tryLoadDiff(@NotNull T state, @NotNull R revisionFrom, @NotNull R revisionTo) throws IOException;
 
 	void saveSnapshot(@NotNull T state, @NotNull R revision) throws IOException;
 
