@@ -177,6 +177,25 @@ public class FileStateManagerTest {
 		assertNull(manager.tryLoadDiff(0, revisionFrom, revisionTo));
 	}
 
+	@Test
+	public void saveArbitraryRevision() throws IOException {
+		manager.save(100, 10L);
+		manager.save(200, 20L);
+		manager.save(150, 30L);
+
+		try {
+			manager.save(500, 25L);
+			fail();
+		} catch (IllegalArgumentException ignored){
+		}
+
+		FileState<Integer> load1 = manager.load();
+		assertEquals(150, load1.getState().intValue());
+		assertEquals(30L, load1.getRevision());
+
+		assertEquals(100, manager.loadSnapshot(10L).intValue());
+	}
+
 	private static class IntegerCodec implements DiffStreamCodec<Integer> {
 		@Override
 		public Integer decode(StreamInput input) throws IOException {

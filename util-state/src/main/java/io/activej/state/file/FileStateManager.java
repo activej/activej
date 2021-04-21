@@ -189,7 +189,19 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 	public @NotNull Long save(@NotNull T state) throws IOException {
 		long revision = newRevision();
+		doSave(state, revision);
+		return revision;
+	}
 
+	public void save(@NotNull T state, Long revision) throws IOException {
+		Long lastRevision = getLastSnapshotRevision();
+		if (lastRevision != null && lastRevision >= revision){
+			throw new IllegalArgumentException("Revision cannot be less than last revision [" + lastRevision + ']');
+		}
+		doSave(state, revision);
+	}
+
+	private void doSave(@NotNull T state, long revision) throws IOException {
 		if (maxSaveDiffs != 0) {
 			Map<String, FileMetadata> list = fs.list(fileNamingScheme.snapshotGlob());
 			long[] revisionsFrom = list.keySet().stream()
@@ -217,8 +229,6 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		safeUpload(filename, output -> encoder.encode(output, state));
-
-		return revision;
 	}
 
 	private void safeUpload(String filename, StreamOutputConsumer consumer) throws IOException {
