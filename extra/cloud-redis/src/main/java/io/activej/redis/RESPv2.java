@@ -45,6 +45,9 @@ public final class RESPv2 {
 	public static final byte BYTES_MARKER = '$';
 	public static final byte ARRAY_MARKER = '*';
 
+	public static final String NO_AUTH_PREFIX = "NOAUTH";
+	public static final String ERR_AUTH_PREFIX = "ERR AUTH";
+
 	private final byte[] array;
 	private int head;
 	private final int tail;
@@ -148,7 +151,7 @@ public final class RESPv2 {
 			case STRING_MARKER:
 				return decodeString();
 			case ERROR_MARKER:
-				return new ServerError(decodeString());
+				return serverError();
 			case LONG_MARKER:
 				return decodeLong();
 			case BYTES_MARKER:
@@ -208,7 +211,7 @@ public final class RESPv2 {
 
 		if (!ASSERT_PROTOCOL || array[head] == ERROR_MARKER) {
 			head++;
-			return new ServerError(decodeString());
+			return serverError();
 		}
 		throw new MalformedDataException("Expected Simple String, got " + getDataType(array[head]));
 	}
@@ -272,6 +275,7 @@ public final class RESPv2 {
 
 	/**
 	 * Reads a Redis Bulk String as a {@link String} of a provided charset
+	 *
 	 * @param charset charset for encoding a string
 	 */
 	@Nullable
@@ -476,6 +480,14 @@ public final class RESPv2 {
 			default:
 				return String.format("Unknown first byte: 0x%02X", firstByte);
 		}
+	}
+
+	private ServerError serverError() throws MalformedDataException {
+		String errorMessage = decodeString();
+		if (errorMessage.startsWith(NO_AUTH_PREFIX) || errorMessage.startsWith(ERR_AUTH_PREFIX)) {
+			return new RedisAuthenticationException(errorMessage);
+		}
+		return new ServerError(errorMessage);
 	}
 
 }

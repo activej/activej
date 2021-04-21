@@ -343,7 +343,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		await(connection -> connection.cmd(RedisRequest.of("ACL", "SETUSER", "default", "resetpass", setPass(password)), OK));
 
 		try {
-			ServerError exception = awaitException(client.connect()
+			RedisAuthenticationException exception = awaitException(client.connect()
 					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
 							.whenException(connection::close)));
 
@@ -384,6 +384,15 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 			Long deleted = await(connection -> connection.cmd(RedisRequest.of("ACL", "DELUSER", username), LONG));
 			assertEquals(1, deleted.longValue());
 		}
+	}
+
+	@Test
+	public void invalidCredentials() {
+		byte[] password = new byte[100];
+		ThreadLocalRandom.current().nextBytes(password);
+
+		Throwable exception = awaitException(client.connect(password));
+		assertThat(exception, instanceOf(RedisAuthenticationException.class));
 	}
 
 	// Spaces and NULL are forbidden in usernames

@@ -16,21 +16,10 @@
 
 package io.activej.redis;
 
-import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * This exception represents errors that are returned by a Redis server
- */
-public class ServerError extends ExpectedRedisException {
-	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(ServerError.class, "withStackTrace", false);
-
-	public ServerError(@NotNull String message) {
+public class RedisAuthenticationException extends ServerError {
+	public RedisAuthenticationException(@NotNull String message) {
 		super(message);
-	}
-
-	@Override
-	public Throwable fillInStackTrace() {
-		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }
