@@ -127,7 +127,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 		if (lastRevision != null) {
 			return new FileState<>(loadSnapshot(lastRevision), lastRevision);
 		}
-		throw new IOException();
+		throw new IOException("State is empty");
 	}
 
 	public @NotNull FileState<T> load(@NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
@@ -146,7 +146,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 			T state = loadSnapshot(lastRevision);
 			return new FileState<>(state, lastRevision);
 		}
-		throw new IOException();
+		throw new IOException("State is empty");
 	}
 
 	public @NotNull Long save(@NotNull T state) throws IOException {
@@ -184,7 +184,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 	}
 
 	private void safeUpload(String filename, StreamOutputConsumer consumer) throws IOException {
-		String tempFilename = tempDir + UUID.randomUUID().toString();
+		String tempFilename = tempDir + UUID.randomUUID();
 		OutputStream outputStream = fs.upload(tempFilename);
 		try (StreamOutput outputStreamEx = StreamOutput.create(outputStream)) {
 			consumer.accept(outputStreamEx);
