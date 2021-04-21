@@ -6,11 +6,14 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.hamcrest.Matchers;
 import org.junit.*;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.redis.RedisResponse.*;
 import static io.activej.redis.TestUtils.assertDeepEquals;
 import static java.util.Arrays.asList;
@@ -18,9 +21,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 public final class RedisConnectionTestWithReal extends RedisConnectionTestWithStub {
 	private static final InetSocketAddress ADDRESS = ApplicationSettings.getInetSocketAddress(RedisConnectionTestWithReal.class, "address", null);
+
+	// Authentication tests modify ACL configuration, run at your own risk
+	private static final boolean RUN_AUTH_TESTS = ApplicationSettings.getBoolean(RedisConnectionTestWithReal.class, "runAuthTests", false);
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -324,5 +331,75 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 									});
 						})
 				));
+	}
+
+	@Test
+	public void passwordAuthentication() {
+		assumeTrue(RUN_AUTH_TESTS);
+
+		byte[] password = new byte[100];
+		ThreadLocalRandom.current().nextBytes(password);
+
+		await(connection -> connection.cmd(RedisRequest.of("ACL", "SETUSER", "default", "resetpass", setPass(password)), OK));
+
+		try {
+			ServerError exception = awaitException(client.connect()
+					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
+							.whenException(connection::close)));
+
+			assertThat(exception.getMessage(), Matchers.containsString("Authentication required"));
+
+			String response = io.activej.promise.TestUtils.await(client.connect(password)
+					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
+							.whenComplete(connection::close)));
+
+			assertEquals("PONG", response);
+		} finally {
+			io.activej.promise.TestUtils.await(client.connect(password)
+					.then(connection -> connection.cmd(RedisRequest.of("ACL", "SETUSER", "default", "nopass"), OK)
+							.whenComplete(connection::close)));
+		}
+	}
+
+	@Test
+	public void usernamePasswordAuthentication() {
+		assumeTrue(RUN_AUTH_TESTS);
+
+		byte[] username = new byte[100];
+		byte[] password = new byte[100];
+		ThreadLocalRandom.current().nextBytes(username);
+		ThreadLocalRandom.current().nextBytes(password);
+
+		escapeUsername(username);
+
+		await(connection -> connection.cmd(RedisRequest.of("ACL", "SETUSER", username, "on", setPass(password), "+PING"), OK));
+
+		try {
+			String response = io.activej.promise.TestUtils.await(client.connect(username, password)
+					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
+							.whenComplete(connection::close)));
+
+			assertEquals("PONG", response);
+		} finally {
+			Long deleted = await(connection -> connection.cmd(RedisRequest.of("ACL", "DELUSER", username), LONG));
+			assertEquals(1, deleted.longValue());
+		}
+	}
+
+	// Spaces and NULL are forbidden in usernames
+	private static void escapeUsername(byte[] username) {
+		for (int i = 0; i < username.length; i++) {
+			byte b = username[i];
+			if (b == 0 || (b >= 9 && b <= 13) || b == ' ') {
+				username[i] = '.';
+			}
+		}
+	}
+
+	private static byte[] setPass(byte[] password) {
+		byte[] setPassword = new byte[101];
+		setPassword[0] = '>';
+		System.arraycopy(password, 0, setPassword, 1, password.length);
+		return setPassword;
 	}
 }

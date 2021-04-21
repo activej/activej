@@ -117,6 +117,7 @@ public final class RedisClient {
 
 	/**
 	 * Creates a connection to Redis server.
+	 *
 	 * @return promise of {@link RedisConnection}
 	 */
 	public Promise<RedisConnection> connect() {
@@ -136,6 +137,56 @@ public final class RedisClient {
 					return Promise.of(connection);
 				})
 				.whenComplete(toLogger(logger, TRACE, "connect", this));
+	}
+
+	/**
+	 * Creates a connection to Redis server and performs authentication using password.
+	 * <p>
+	 * If ACL is used on the server, the username is {@code default}
+	 *
+	 * @return promise of {@link RedisConnection}
+	 * @see <a href="https://redis.io/commands/auth">AUTH</a>
+	 * @see <a href="https://redis.io/topics/acl">ACL</a>
+	 */
+	public Promise<RedisConnection> connect(byte[] password) {
+		return connectAndAuth("AUTH", password);
+	}
+
+	/**
+	 * @see #connect(byte[])
+	 */
+	public Promise<RedisConnection> connect(String password) {
+		return connectAndAuth("AUTH", password);
+	}
+
+	/**
+	 * Creates a connection to Redis server and performs ACL authentication using username and password.
+	 *
+	 * @return promise of {@link RedisConnection}
+	 * @see <a href="https://redis.io/commands/auth">AUTH</a>
+	 * @see <a href="https://redis.io/topics/acl">ACL</a>
+	 */
+	public Promise<RedisConnection> connect(byte[] username, byte[] password) {
+		return connectAndAuth("AUTH", username, password);
+	}
+
+	/**
+	 * @see #connect(byte[], byte[])
+	 */
+	public Promise<RedisConnection> connect(String username, String password) {
+		return connectAndAuth("AUTH", username, password);
+	}
+
+	private Promise<RedisConnection> connectAndAuth(Object... args) {
+		return connect()
+				.then(connection ->
+						connection.cmd(RedisRequest.of(args), RedisResponse.OK)
+								.thenEx(($, e) -> {
+									if (e == null) return Promise.of(connection);
+
+									connection.close();
+									return Promise.ofException(e);
+								}));
 	}
 
 	@Override
