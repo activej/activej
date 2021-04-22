@@ -4,7 +4,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
-import io.activej.common.exception.CloseException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.eventloop.Eventloop;
@@ -257,9 +256,7 @@ public final class AbstractHttpConnectionTest {
 				.withAcceptOnce(true);
 		server.listen();
 
-		Throwable exception = awaitException(client.request(HttpRequest.get(url + '/' + new String(chars))));
-
-		assertThat(exception, instanceOf(CloseException.class));
+		awaitException(client.request(HttpRequest.get(url + '/' + new String(chars))));
 
 		ExceptionStats httpErrors = inspector.getHttpErrors();
 		assertEquals(1, httpErrors.getTotal());
