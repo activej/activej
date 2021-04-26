@@ -118,7 +118,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	@NotNull
-	public HttpRequest withHeader(@NotNull HttpHeader header, byte @NotNull [] value) {
+	public HttpRequest withHeader(@NotNull HttpHeader header, byte[] value) {
 		addHeader(header, value);
 		return this;
 	}
@@ -130,7 +130,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	@NotNull
-	public HttpRequest withBody(byte @NotNull [] array) {
+	public HttpRequest withBody(byte[] array) {
 		setBody(array);
 		return this;
 	}
@@ -154,7 +154,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	@NotNull
-	public HttpRequest withCookies(HttpCookie @NotNull ... cookie) {
+	public HttpRequest withCookies(HttpCookie... cookie) {
 		addCookies(cookie);
 		return this;
 	}

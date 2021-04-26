@@ -744,7 +744,7 @@ public final class DynamicMBeanFactory {
 		private final String name;
 		private final String[] argTypes;
 
-		public OperationKey(@NotNull String name, String @NotNull [] argTypes) {
+		public OperationKey(@NotNull String name, String[] argTypes) {
 			this.name = name;
 			this.argTypes = argTypes;
 		}
@@ -849,7 +849,7 @@ public final class DynamicMBeanFactory {
 		}
 
 		@Override
-		public AttributeList getAttributes(String @NotNull [] attributes) {
+		public AttributeList getAttributes(String[] attributes) {
 			AttributeList attrList = new AttributeList();
 			Set<String> attrNames = new HashSet<>(Arrays.asList(attributes));
 			try {

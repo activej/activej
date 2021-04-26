@@ -511,9 +511,9 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 										}
 									}))
 							.collect(toList()))
-					.thenApply(v -> (@Nullable Throwable) null)
+					.thenApply(v -> (Throwable) null)
 					.exceptionally(e -> e)
-					.thenCompose((@Nullable Throwable e) ->
+					.thenCompose((Throwable e) ->
 							e == null ?
 									completedFuture(null) :
 									combineAll(startedServices.stream().map(service -> safeCall(service::stop)).collect(toList()))

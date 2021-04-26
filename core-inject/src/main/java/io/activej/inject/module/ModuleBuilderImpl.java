@@ -94,7 +94,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	}
 
 	@Override
-	public ModuleBuilder1<T> in(Scope @NotNull [] scope) {
+	public ModuleBuilder1<T> in(Scope[] scope) {
 		BindingDesc desc = ensureCurrent();
 		if (desc.scope.length != 0) {
 			throw new IllegalStateException("Already bound to scope " + getScopeDisplayString(desc.scope));
@@ -104,7 +104,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	}
 
 	@Override
-	public ModuleBuilder1<T> in(@NotNull Scope scope, Scope @NotNull ... scopes) {
+	public ModuleBuilder1<T> in(@NotNull Scope scope, Scope... scopes) {
 		Scope[] joined = new Scope[scopes.length + 1];
 		joined[0] = scope;
 		System.arraycopy(scopes, 0, joined, 1, scopes.length);
@@ -113,7 +113,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public ModuleBuilder1<T> in(@NotNull Class<? extends Annotation> annotationClass, Class<?> @NotNull ... annotationClasses) {
+	public ModuleBuilder1<T> in(@NotNull Class<? extends Annotation> annotationClass, Class<?>... annotationClasses) {
 		return in(Stream.concat(Stream.of(annotationClass), Arrays.stream((Class<? extends Annotation>[]) annotationClasses)).map(Scope::of).toArray(Scope[]::new));
 	}
 

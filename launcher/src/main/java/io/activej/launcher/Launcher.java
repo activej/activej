@@ -86,7 +86,7 @@ public abstract class Launcher {
 	protected final Logger logger0 = getLogger(getClass().getName() + ".0");
 
 	public static final String[] NO_ARGS = {};
-	protected String @NotNull [] args = NO_ARGS;
+	protected String[] args = NO_ARGS;
 
 	private Thread mainThread;
 
@@ -128,7 +128,7 @@ public abstract class Launcher {
 	 *
 	 * @param args program args that will be injected into @Args string array
 	 */
-	public final void launch(String @NotNull [] args) throws Exception {
+	public final void launch(String[] args) throws Exception {
 		mainThread = Thread.currentThread();
 		instantOfLaunch = Instant.now();
 
@@ -268,7 +268,7 @@ public abstract class Launcher {
 	}
 
 	@NotNull
-	public final Injector createInjector(String @NotNull [] args) {
+	public final Injector createInjector(String[] args) {
 		this.args = args;
 		return createInjector();
 	}
@@ -378,7 +378,7 @@ public abstract class Launcher {
 		return mainThread;
 	}
 
-	public final String @NotNull [] getArgs() {
+	public final String[] getArgs() {
 		return args;
 	}
 

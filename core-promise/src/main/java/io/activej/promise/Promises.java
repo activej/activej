@@ -255,7 +255,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@NotNull
-	public static Promise<Void> all(Promise<?> @NotNull ... promises) {
+	public static Promise<Void> all(Promise<?>... promises) {
 		return all(asList(promises));
 	}
 
@@ -356,7 +356,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	@SafeVarargs
-	public static <T> Promise<T> any(@NotNull Promise<? extends T>... promises) {
+	public static <T> Promise<T> any(Promise<? extends T>... promises) {
 		return any(isResult(), asList(promises));
 	}
 
@@ -402,7 +402,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	@SafeVarargs
-	public static <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Promise<? extends T>... promises) {
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, Promise<? extends T>... promises) {
 		return any(predicate, asList(promises));
 	}
 
@@ -485,7 +485,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	@SafeVarargs
-	public static <T> Promise<List<T>> toList(@NotNull Promise<? extends T>... promises) {
+	public static <T> Promise<List<T>> toList(Promise<? extends T>... promises) {
 		return toList(asList(promises));
 	}
 
@@ -569,7 +569,7 @@ public final class Promises {
 	@NotNull
 	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T> promise1) {
 		return promise1.map(value -> {
-			T @NotNull [] array = (T[]) Array.newInstance(type, 1);
+			T[] array = (T[]) Array.newInstance(type, 1);
 			array[0] = value;
 			return array;
 		});
@@ -582,7 +582,7 @@ public final class Promises {
 	@NotNull
 	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
 		return promise1.combine(promise2, (value1, value2) -> {
-			T @NotNull [] array = (T[]) Array.newInstance(type, 2);
+			T[] array = (T[]) Array.newInstance(type, 2);
 			array[0] = value1;
 			array[1] = value2;
 			return array;
@@ -595,7 +595,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@NotNull
 	@SafeVarargs
-	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T>... promises) {
+	public static <T> Promise<T[]> toArray(@NotNull Class<T> type, Promise<? extends T>... promises) {
 		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
 	}
 
@@ -867,7 +867,7 @@ public final class Promises {
 	 */
 	@NotNull
 	@SafeVarargs
-	public static Promise<Void> sequence(AsyncSupplier<Void> @NotNull ... promises) {
+	public static Promise<Void> sequence(AsyncSupplier<Void>... promises) {
 		return sequence(asList(promises));
 	}
 
@@ -960,7 +960,7 @@ public final class Promises {
 	@NotNull
 	@SafeVarargs
 	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
-			@NotNull AsyncSupplier<? extends T>... promises) {
+			AsyncSupplier<? extends T>... promises) {
 		return first(predicate, asList(promises));
 	}
 
@@ -1207,7 +1207,7 @@ public final class Promises {
 	 * to a collection of {@code Promise}s.
 	 */
 	@SafeVarargs
-	public static <T> Iterator<Promise<T>> asPromises(@NotNull AsyncSupplier<? extends T>... tasks) {
+	public static <T> Iterator<Promise<T>> asPromises(AsyncSupplier<? extends T>... tasks) {
 		return asPromises(iteratorOf(tasks));
 	}
 
@@ -1313,9 +1313,7 @@ public final class Promises {
 		private final BiPredicate<? super T, ? super Exception> predicate;
 		int countdown = 1;
 
-		private PromiseAny(BiPredicate<? super T, ? super Exception> predicate) {
-			this.predicate = predicate;
-		}
+		private PromiseAny(BiPredicate<? super T, ? super Exception> predicate) {this.predicate = predicate;}
 
 		@Override
 		public void accept(@Nullable T result, @Nullable Exception e) {

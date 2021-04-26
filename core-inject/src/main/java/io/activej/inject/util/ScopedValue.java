@@ -30,10 +30,10 @@ import static io.activej.inject.util.Utils.getScopeDisplayString;
  * It is generic only because it is used as both ScopedValue&lt;Key&lt;?&gt;&gt;, and ScopedValue&lt;Dependency&gt;.
  */
 public final class ScopedValue<T> {
-	private final Scope @NotNull [] scope;
+	private final Scope[] scope;
 	private final T value;
 
-	private ScopedValue(Scope @NotNull [] scope, T value) {
+	private ScopedValue(Scope[] scope, T value) {
 		this.scope = scope;
 		this.value = value;
 	}
@@ -46,11 +46,12 @@ public final class ScopedValue<T> {
 		return new ScopedValue<>(new Scope[]{scope}, value);
 	}
 
-	public static <T> ScopedValue<T> of(Scope @NotNull [] scope, @NotNull T value) {
+	public static <T> ScopedValue<T> of(Scope[] scope, @NotNull T value) {
 		return new ScopedValue<>(scope.length != 0 ? scope : UNSCOPED, value);
 	}
 
-	public Scope @NotNull [] getScope() {
+	public Scope[] getScope() {
+
 		return scope;
 	}
 

@@ -102,7 +102,7 @@ public final class UrlParser {
 	}
 
 	@NotNull
-	public static UrlParser of(byte @NotNull [] url, int offset, int limit) {
+	public static UrlParser of(byte[] url, int offset, int limit) {
 		try {
 			UrlParser httpUrl = createParser(url, offset, limit);
 			httpUrl.parse(false);
@@ -391,7 +391,7 @@ public final class UrlParser {
 
 	private static final int[] NO_PARAMETERS = {};
 
-	int @NotNull [] parseQueryParameters(int end) {
+	int[] parseQueryParameters(int end) {
 		if (query == end)
 			return NO_PARAMETERS;
 		assert limit >= end;
