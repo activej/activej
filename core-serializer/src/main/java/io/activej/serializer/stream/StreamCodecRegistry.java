@@ -138,6 +138,8 @@ public final class StreamCodecRegistry implements StreamCodecFactory {
 		}
 
 		BiFunction<StreamCodecFactory, StreamCodec<?>[], StreamCodec<?>> fn = map.get(rawType);
+		if (fn == null)
+			throw new IllegalArgumentException("Codec is not registered for " + type);
 		return (StreamCodec<T>) fn.apply(this, subCodecs);
 
 	}

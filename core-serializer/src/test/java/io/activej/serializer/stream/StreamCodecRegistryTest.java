@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class StreamCodecRegistryTest {
 
@@ -107,6 +106,17 @@ public class StreamCodecRegistryTest {
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 		try (StreamInput input = StreamInput.create(bais)) {
 			assertArrayEquals(new int[][]{new int[]{1, 2, 3}, new int[]{4, 5}}, codec.decode(input));
+		}
+	}
+
+	@Test
+	public void notRegisteredCodec() {
+		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
+		try {
+			registry.get(new StreamCodecT<Object>() {});
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("Codec is not registered for " + Object.class, e.getMessage());
 		}
 	}
 
