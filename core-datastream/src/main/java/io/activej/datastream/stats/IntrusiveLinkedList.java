@@ -16,6 +16,7 @@
 
 package io.activej.datastream.stats;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -27,7 +28,7 @@ import static io.activej.common.Checks.checkState;
 final class IntrusiveLinkedList<T> implements Iterable<T> {
 
 	@Override
-	public Iterator<T> iterator() {
+	public @NotNull Iterator<T> iterator() {
 		return new Iterator<T>() {
 			@Nullable
 			Node<T> node = getFirstNode();

@@ -175,7 +175,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	 * @param messageTypes classes of messages processed by a server
 	 * @return client instance capable for handling provided message types
 	 */
-	public RpcClient withMessageTypes(@NotNull Class<?>... messageTypes) {
+	public RpcClient withMessageTypes(Class<?> @NotNull ... messageTypes) {
 		return withMessageTypes(Arrays.asList(messageTypes));
 	}
 
@@ -312,12 +312,12 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					return addresses;
 				})
 				.then(addresses -> Promises.all(
-						addresses.stream()
-								.map(address -> {
-									logger.info("Connecting: {}", address);
-									return connect(address)
-											.then(($, e) -> Promise.complete());
-								}))
+								addresses.stream()
+										.map(address -> {
+											logger.info("Connecting: {}", address);
+											return connect(address)
+													.then(($, e) -> Promise.complete());
+										}))
 						.then(() -> !forcedStart && requestSender instanceof NoSenderAvailable ?
 								Promise.ofException(START_EXCEPTION) :
 								Promise.complete()))

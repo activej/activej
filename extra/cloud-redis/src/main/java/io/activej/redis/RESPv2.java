@@ -247,8 +247,7 @@ public final class RESPv2 {
 	/**
 	 * Reads a Redis Bulk String as an array of bytes
 	 */
-	@Nullable
-	public byte[] readBytes() throws MalformedDataException {
+	public byte @Nullable [] readBytes() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == BYTES_MARKER) {
@@ -258,8 +257,7 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Bulk String, got " + getDataType(array[head]));
 	}
 
-	@Nullable
-	private byte[] decodeBytes() throws MalformedDataException {
+	private byte @Nullable [] decodeBytes() throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) {
 			return null;
@@ -330,8 +328,7 @@ public final class RESPv2 {
 	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
 	 * </ul>
 	 */
-	@Nullable
-	public Object[] readObjectArray() throws MalformedDataException {
+	public @Nullable Object @Nullable [] readObjectArray() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == ARRAY_MARKER) {
@@ -341,7 +338,7 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Array, got " + getDataType(array[head]));
 	}
 
-	private Object[] decodeArray() throws MalformedDataException {
+	private @Nullable Object @Nullable [] decodeArray() throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) return null;
 		Object[] result = new Object[length];
@@ -488,7 +485,7 @@ public final class RESPv2 {
 		if (errorMessage.startsWith(NO_AUTH_PREFIX) || errorMessage.startsWith(ERR_AUTH_PREFIX)) {
 			return new RedisAuthenticationException(errorMessage);
 		}
-		if (errorMessage.startsWith(NO_PERM_PREFIX)){
+		if (errorMessage.startsWith(NO_PERM_PREFIX)) {
 			return new RedisPermissionException(errorMessage);
 		}
 		return new ServerError(errorMessage);

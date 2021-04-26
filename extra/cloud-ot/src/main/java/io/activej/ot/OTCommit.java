@@ -41,8 +41,7 @@ public final class OTCommit<K, D> {
 	private final long level;
 
 	private long timestamp;
-	@Nullable
-	private byte[] serializedData;
+	private byte @Nullable [] serializedData;
 
 	private OTCommit(int epoch, K id, Map<K, DiffsWithLevel<D>> parents) {
 		this.epoch = epoch;
@@ -127,12 +126,11 @@ public final class OTCommit<K, D> {
 		return Instant.ofEpochMilli(timestamp);
 	}
 
-	@Nullable
-	public byte[] getSerializedData() {
+	public byte @Nullable [] getSerializedData() {
 		return serializedData;
 	}
 
-	public void setSerializedData(@Nullable byte[] serializedData) {
+	public void setSerializedData(byte @Nullable [] serializedData) {
 		this.serializedData = serializedData;
 	}
 

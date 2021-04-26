@@ -188,9 +188,8 @@ public class Types {
 			return rawType;
 		}
 
-		@NotNull
 		@Override
-		public Type[] getActualTypeArguments() {
+		public Type @NotNull [] getActualTypeArguments() {
 			return actualTypeArguments;
 		}
 

@@ -17,7 +17,6 @@
 package io.activej.datastream.stats;
 
 import io.activej.common.Utils;
-import io.activej.datastream.stats.IntrusiveLinkedList.Node;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -26,8 +25,10 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
+import io.activej.datastream.stats.IntrusiveLinkedList.Node;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -116,7 +117,7 @@ public final class StreamRegistry<V> implements Iterable<V> {
 	}
 
 	@Override
-	public Iterator<V> iterator() {
+	public @NotNull Iterator<V> iterator() {
 		Iterator<Entry<V>> iterator = list.iterator();
 		return new Iterator<V>() {
 			@Override

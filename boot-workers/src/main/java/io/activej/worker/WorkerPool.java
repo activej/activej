@@ -66,7 +66,7 @@ public final class WorkerPool {
 		}
 
 		@Override
-		public Iterator<T> iterator() {
+		public @NotNull Iterator<T> iterator() {
 			return list.iterator();
 		}
 	}

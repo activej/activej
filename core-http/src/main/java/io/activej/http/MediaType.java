@@ -31,7 +31,7 @@ import static io.activej.http.HttpUtils.hashCodeCI;
  */
 public final class MediaType extends Token {
 	// All media type values, subtype values, and parameter names as defined are case-insensitive RFC2045 section 2
-	MediaType(int hashCodeCI, byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes) {
+	MediaType(int hashCodeCI, byte[] bytes, int offset, int length, byte @Nullable [] lowerCaseBytes) {
 		super(hashCodeCI, bytes, offset, length, lowerCaseBytes);
 	}
 

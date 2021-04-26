@@ -125,7 +125,7 @@ public final class ChannelConsumers {
 			}
 
 			@Override
-			public void write(@NotNull byte[] b, int off, int len) throws IOException {
+			public void write(byte @NotNull [] b, int off, int len) throws IOException {
 				submit(ByteBuf.wrap(b, off, off + len));
 			}
 

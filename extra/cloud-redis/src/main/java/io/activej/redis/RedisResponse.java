@@ -64,6 +64,7 @@ public abstract class RedisResponse<T> {
 
 	/**
 	 * Mapping interface that may throw {@link MalformedDataException}
+	 *
 	 * @param <T> the type of the input
 	 * @param <R> the type of the output
 	 */
@@ -95,7 +96,7 @@ public abstract class RedisResponse<T> {
 	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
 	 * </ul>
 	 */
-	public static final RedisResponse<@Nullable Object> OBJECT = new RedisResponse<Object>() {
+	public static final RedisResponse<Object> OBJECT = new RedisResponse<Object>() {
 		@Override
 		@Nullable
 		public Object parse(RESPv2 data) throws MalformedDataException {
@@ -116,10 +117,9 @@ public abstract class RedisResponse<T> {
 	/**
 	 * Parses a Redis Bulk String as an array of bytes (may parse {@code null} indicating Redis Nil)
 	 */
-	public static final RedisResponse<@Nullable byte[]> BYTES = new RedisResponse<byte[]>() {
+	public static final RedisResponse<byte []> BYTES = new RedisResponse<byte[]>() {
 		@Override
-		@Nullable
-		public byte[] parse(RESPv2 data) throws MalformedDataException {
+		public byte @Nullable [] parse(RESPv2 data) throws MalformedDataException {
 			return data.readBytes();
 		}
 	};
@@ -127,7 +127,7 @@ public abstract class RedisResponse<T> {
 	/**
 	 * Parses a Redis Bulk String as an UTF-8 string (may parse {@code null} indicating Redis Nil)
 	 */
-	public static final RedisResponse<@Nullable String> BYTES_UTF8 = new RedisResponse<String>() {
+	public static final RedisResponse<String> BYTES_UTF8 = new RedisResponse<String>() {
 		@Override
 		@Nullable
 		public String parse(RESPv2 data) throws MalformedDataException {
@@ -179,10 +179,10 @@ public abstract class RedisResponse<T> {
 	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
 	 * </ul>
 	 */
-	public static final RedisResponse<@Nullable Object[]> ARRAY = new RedisResponse<Object[]>() {
+	public static final RedisResponse<Object[]> ARRAY = new RedisResponse<Object[]>() {
 		@Override
 		@Nullable
-		public Object[] parse(RESPv2 data) throws MalformedDataException {
+		public Object @Nullable [] parse(RESPv2 data) throws MalformedDataException {
 			return data.readObjectArray();
 		}
 	};

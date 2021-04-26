@@ -44,7 +44,6 @@ import static java.lang.Math.max;
  * An adapter that converts a {@link ChannelConsumer} of {@link ByteBuf ByteBufs} to a {@link StreamConsumer} of some type,
  * that is serialized into binary data using given {@link BinarySerializer}.
  */
-@SuppressWarnings("NullableProblems")
 public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implements WithStreamToChannel<ChannelSerializer<T>, T, ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelSerializer.class);
 	private static final boolean CHECK = Checks.isEnabled(ChannelSerializer.class);
@@ -64,8 +63,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	private final BinarySerializer<T> serializer;
 
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
-	@Nullable
-	private byte[] explicitEndOfStream;
+	private byte @Nullable [] explicitEndOfStream;
 
 	@Nullable
 	private Duration autoFlushInterval;
@@ -136,7 +134,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 		return withExplicitEndOfStream(explicitEndOfStream ? new byte[]{0} : null);
 	}
 
-	public ChannelSerializer<T> withExplicitEndOfStream(@Nullable byte[] explicitEndOfStream) {
+	public ChannelSerializer<T> withExplicitEndOfStream(byte @Nullable [] explicitEndOfStream) {
 		this.explicitEndOfStream = explicitEndOfStream;
 		return this;
 	}

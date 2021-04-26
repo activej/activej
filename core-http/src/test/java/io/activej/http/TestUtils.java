@@ -63,8 +63,7 @@ public class TestUtils {
 		private final ByteBufs bufs = new ByteBufs();
 
 		public boolean executed = false;
-		@Nullable
-		private byte[] expectedByteArray;
+		private byte @Nullable [] expectedByteArray;
 		@Nullable
 		private String expectedString;
 		@Nullable
@@ -74,7 +73,7 @@ public class TestUtils {
 		@Nullable
 		private Consumer<Exception> exceptionValidator;
 
-		public void setExpectedByteArray(@Nullable byte[] expectedByteArray) {
+		public void setExpectedByteArray(byte @Nullable [] expectedByteArray) {
 			this.expectedByteArray = expectedByteArray;
 		}
 

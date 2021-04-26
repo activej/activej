@@ -68,18 +68,18 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 	}
 
 	@Override
-	public Iterator<E> iterator() {
+	public @NotNull Iterator<E> iterator() {
 		return set.iterator();
 	}
 
 	@Override
-	public Object[] toArray() {
+	public Object @NotNull [] toArray() {
 		return set.toArray();
 	}
 
 	@Override
 	@SuppressWarnings("SuspiciousToArrayCall")
-	public <T> T[] toArray(@NotNull T[] a) {
+	public <T> T @NotNull [] toArray(T @NotNull [] a) {
 		return set.toArray(a);
 	}
 

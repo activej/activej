@@ -71,19 +71,19 @@ public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 	}
 
 	@Override
-	public Iterator<E> iterator() {
+	public @NotNull Iterator<E> iterator() {
 		return stream().iterator();
 	}
 
 	@Override
-	public Object[] toArray() {
+	public Object @NotNull [] toArray() {
 		//noinspection SimplifyStreamApiCallChains
 		return stream().toArray();
 	}
 
 	@SuppressWarnings("SuspiciousToArrayCall")
 	@Override
-	public <T> T[] toArray(@NotNull T[] a) {
+	public <T> T @NotNull [] toArray(T @NotNull [] a) {
 		return stream().toArray($ -> a);
 	}
 

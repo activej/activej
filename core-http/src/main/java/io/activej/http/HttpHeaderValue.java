@@ -44,12 +44,12 @@ public abstract class HttpHeaderValue {
 	}
 
 	@NotNull
-	public static HttpHeaderValue ofBytes(@NotNull byte[] array, int offset, int size) {
+	public static HttpHeaderValue ofBytes(byte @NotNull [] array, int offset, int size) {
 		return new HttpHeaderValueOfBytes(array, offset, size);
 	}
 
 	@NotNull
-	public static HttpHeaderValue ofBytes(@NotNull byte[] array) {
+	public static HttpHeaderValue ofBytes(byte @NotNull [] array) {
 		return ofBytes(array, 0, array.length);
 	}
 
@@ -64,7 +64,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	@NotNull
-	public static HttpHeaderValue ofAcceptCharsets(@NotNull AcceptCharset... charsets) {
+	public static HttpHeaderValue ofAcceptCharsets(AcceptCharset @NotNull ... charsets) {
 		return ofAcceptCharsets(asList(charsets));
 	}
 
@@ -84,7 +84,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	@NotNull
-	public static HttpHeaderValue ofAcceptMediaTypes(@NotNull AcceptMediaType... types) {
+	public static HttpHeaderValue ofAcceptMediaTypes(AcceptMediaType @NotNull ... types) {
 		return ofAcceptMediaTypes(asList(types));
 	}
 
@@ -369,11 +369,11 @@ public abstract class HttpHeaderValue {
 	}
 
 	static final class HttpHeaderValueOfBytes extends HttpHeaderValue {
-		private final @NotNull byte[] array;
+		private final byte @NotNull [] array;
 		private final int offset;
 		private final int size;
 
-		HttpHeaderValueOfBytes(@NotNull byte[] array, int offset, int size) {
+		HttpHeaderValueOfBytes(byte @NotNull [] array, int offset, int size) {
 			this.array = array;
 			this.offset = offset;
 			this.size = size;

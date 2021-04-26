@@ -204,7 +204,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 					}
 
 					@Nullable
-					private Object[] parseResponses(RESPv2 data) throws MalformedDataException {
+					private Object @Nullable [] parseResponses(RESPv2 data) throws MalformedDataException {
 						long len = data.readArraySize();
 						if (len == -1) return null;
 

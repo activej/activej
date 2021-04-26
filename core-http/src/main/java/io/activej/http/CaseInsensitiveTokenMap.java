@@ -35,9 +35,9 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 		protected final byte[] bytes;
 		protected final int offset;
 		protected final int length;
-		protected final @Nullable byte[] lowerCase;
+		protected final byte @Nullable [] lowerCase;
 
-		protected Token(int hashCodeCI, byte[] bytes, int offset, int length, @Nullable byte[] lowerCase) {
+		protected Token(int hashCodeCI, byte[] bytes, int offset, int length, byte @Nullable [] lowerCase) {
 			this.hashCodeCI = hashCodeCI;
 			this.bytes = bytes;
 			this.offset = offset;
@@ -173,6 +173,6 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 
 	@FunctionalInterface
 	public interface TokenFactory<T> {
-		T create(int hashCodeCI, byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes);
+		T create(int hashCodeCI, byte[] bytes, int offset, int length, byte @Nullable [] lowerCaseBytes);
 	}
 }

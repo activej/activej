@@ -61,7 +61,7 @@ public final class ByteBufWriter extends Writer {
 	}
 
 	@Override
-	public void write(@NotNull char[] cbuf, int off, int len) {
+	public void write(char @NotNull [] cbuf, int off, int len) {
 		ByteBuffer buffer = charset.encode(CharBuffer.wrap(cbuf, off, len));
 		this.byteBuf = ByteBufPool.append(byteBuf, buffer.array(), buffer.position(), buffer.limit());
 	}
@@ -90,7 +90,7 @@ public final class ByteBufWriter extends Writer {
 	}
 
 	@Override
-	public void write(@NotNull char[] cbuf) {
+	public void write(char @NotNull [] cbuf) {
 		try {
 			super.write(cbuf);
 		} catch (IOException ignored) {

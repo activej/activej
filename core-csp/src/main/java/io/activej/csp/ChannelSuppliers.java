@@ -355,7 +355,7 @@ public final class ChannelSuppliers {
 			}
 
 			@Override
-			public int read(@NotNull byte[] b, int off, int len) throws IOException {
+			public int read(byte @NotNull [] b, int off, int len) throws IOException {
 				return doRead(buf -> buf.read(b, off, min(buf.readRemaining(), len)));
 			}
 

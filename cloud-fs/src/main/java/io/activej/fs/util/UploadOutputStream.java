@@ -57,7 +57,7 @@ public class UploadOutputStream extends OutputStream {
 	}
 
 	@Override
-	public final void write(@NotNull byte[] b) throws IOException {
+	public final void write(byte @NotNull [] b) throws IOException {
 		run(() -> {
 			onBytes(b.length);
 			peer.write(b);
@@ -65,7 +65,7 @@ public class UploadOutputStream extends OutputStream {
 	}
 
 	@Override
-	public final void write(@NotNull byte[] b, int off, int len) throws IOException {
+	public final void write(byte @NotNull [] b, int off, int len) throws IOException {
 		run(() -> {
 			onBytes(len);
 			peer.write(b, off, len);

@@ -98,8 +98,7 @@ public class ByteBuf implements Recyclable {
 	/**
 	 * Stores bytes of this {@code ByteBuf}.
 	 */
-	@NotNull
-	protected final byte[] array;
+	protected final byte @NotNull [] array;
 
 	/**
 	 * Stores <i>head</i> of this {@code ByteBuf}.
@@ -137,7 +136,7 @@ public class ByteBuf implements Recyclable {
 	 * @param head  value of {@link #head} of {@code ByteBuf}
 	 * @param tail  value of {@link #tail} of {@code ByteBuf}
 	 */
-	private ByteBuf(@NotNull byte[] array, int head, int tail) {
+	private ByteBuf(byte @NotNull [] array, int head, int tail) {
 		if (CHECK) {
 			checkArgument(head >= 0 && head <= tail && tail <= array.length,
 					() -> "Wrong ByteBuf boundaries - readPos: " + head + ", writePos: " + tail + ", array.length: " + array.length);
@@ -167,7 +166,7 @@ public class ByteBuf implements Recyclable {
 	 */
 	@NotNull
 	@Contract("_ -> new")
-	public static ByteBuf wrapForWriting(@NotNull byte[] bytes) {
+	public static ByteBuf wrapForWriting(byte @NotNull [] bytes) {
 		return wrap(bytes, 0, 0);
 	}
 
@@ -179,7 +178,7 @@ public class ByteBuf implements Recyclable {
 	 */
 	@NotNull
 	@Contract("_ -> new")
-	public static ByteBuf wrapForReading(@NotNull byte[] bytes) {
+	public static ByteBuf wrapForReading(byte @NotNull [] bytes) {
 		return wrap(bytes, 0, bytes.length);
 	}
 
@@ -194,7 +193,7 @@ public class ByteBuf implements Recyclable {
 	 */
 	@NotNull
 	@Contract("_, _, _ -> new")
-	public static ByteBuf wrap(@NotNull byte[] bytes, int head, int tail) {
+	public static ByteBuf wrap(byte @NotNull [] bytes, int head, int tail) {
 		return new ByteBuf(bytes, head, tail);
 	}
 
@@ -349,9 +348,8 @@ public class ByteBuf implements Recyclable {
 	 *
 	 * @return {@link #array}
 	 */
-	@NotNull
 	@Contract(pure = true)
-	public byte[] array() {
+	public byte @NotNull [] array() {
 		return array;
 	}
 
@@ -564,7 +562,7 @@ public class ByteBuf implements Recyclable {
 	 *               must be smaller or equal to {@link #tail}
 	 * @return number of bytes that were drained.
 	 */
-	public int drainTo(@NotNull byte[] array, int offset, int length) {
+	public int drainTo(byte @NotNull [] array, int offset, int length) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		if (CHECK) {
 			checkArgument(length >= 0, () -> "Length should be a positive value");
@@ -637,7 +635,7 @@ public class ByteBuf implements Recyclable {
 	 *
 	 * @param bytes the byte array which will be put to the {@link #array}
 	 */
-	public void put(@NotNull byte[] bytes) {
+	public void put(byte @NotNull [] bytes) {
 		put(bytes, 0, bytes.length);
 	}
 
@@ -657,7 +655,7 @@ public class ByteBuf implements Recyclable {
 	 * @param length length of the byte array which
 	 *               will be put to the {@link #array}
 	 */
-	public void put(@NotNull byte[] bytes, int offset, int length) {
+	public void put(byte @NotNull [] bytes, int offset, int length) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		if (CHECK) {
 			checkArgument(tail + length <= array.length, () -> "This buf cannot hold " + length + " more bytes");
@@ -692,7 +690,7 @@ public class ByteBuf implements Recyclable {
 	 * @return the position of byte array in the {@link #array}. If the byte wasn't found,
 	 * returns -1
 	 */
-	public int find(@NotNull byte[] bytes) {
+	public int find(byte @NotNull [] bytes) {
 		return find(bytes, 0, bytes.length);
 	}
 
@@ -706,7 +704,7 @@ public class ByteBuf implements Recyclable {
 	 * @return the position of byte array in the {@link #array}. If the byte wasn't found,
 	 * returns -1
 	 */
-	public int find(@NotNull byte[] bytes, int off, int len) {
+	public int find(byte @NotNull [] bytes, int off, int len) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		L:
 		for (int pos = head; pos <= tail - len; pos++) {
@@ -729,7 +727,7 @@ public class ByteBuf implements Recyclable {
 	 * @return {@code true} if the byte array is equal to the array, otherwise {@code false}
 	 */
 	@Contract(pure = true)
-	public boolean isContentEqual(@NotNull byte[] array, int offset, int length) {
+	public boolean isContentEqual(byte @NotNull [] array, int offset, int length) {
 		return Utils.arraysEquals(this.array, head, readRemaining(), array, offset, length);
 	}
 
@@ -764,8 +762,7 @@ public class ByteBuf implements Recyclable {
 	 * @return byte array from {@link #head} to {@link #tail}
 	 */
 	@Contract(pure = true)
-	@NotNull
-	public byte[] getArray() {
+	public byte @NotNull [] getArray() {
 		byte[] bytes = new byte[readRemaining()];
 		System.arraycopy(array, head, bytes, 0, bytes.length);
 		return bytes;
@@ -778,8 +775,7 @@ public class ByteBuf implements Recyclable {
 	 * @return byte array created from this {@code ByteBuf}
 	 */
 	@Contract(pure = false)
-	@NotNull
-	public byte[] asArray() {
+	public byte @NotNull [] asArray() {
 		byte[] bytes = getArray();
 		recycle();
 		return bytes;
@@ -813,12 +809,12 @@ public class ByteBuf implements Recyclable {
 
 	// region serialization input
 
-	public int read(@NotNull byte[] b) {
+	public int read(byte @NotNull [] b) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		return read(b, 0, b.length);
 	}
 
-	public int read(@NotNull byte[] b, int off, int len) {
+	public int read(byte @NotNull [] b, int off, int len) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		return drainTo(b, off, len);
 	}
@@ -932,12 +928,12 @@ public class ByteBuf implements Recyclable {
 	// endregion
 
 	// region serialization output
-	public void write(@NotNull byte[] b) {
+	public void write(byte @NotNull [] b) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		write(b, 0, b.length);
 	}
 
-	public void write(@NotNull byte[] b, int off, int len) {
+	public void write(byte @NotNull [] b, int off, int len) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		System.arraycopy(b, off, array, tail, len);
 		tail = tail + len;

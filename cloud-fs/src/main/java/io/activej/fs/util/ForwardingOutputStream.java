@@ -29,12 +29,12 @@ public class ForwardingOutputStream extends OutputStream{
 	}
 
 	@Override
-	public void write(@NotNull byte[] b) throws IOException {
+	public void write(byte @NotNull [] b) throws IOException {
 		peer.write(b);
 	}
 
 	@Override
-	public void write(@NotNull byte[] b, int off, int len) throws IOException {
+	public void write(byte @NotNull [] b, int off, int len) throws IOException {
 		peer.write(b, off, len);
 	}
 

@@ -96,7 +96,7 @@ public class Utils {
 
 	@Nullable
 	@Contract("_, _ -> null")
-	public static <V> V nullify(@Nullable V value, @NotNull Consumer<@NotNull ? super V> action) {
+	public static <V> V nullify(@Nullable V value, @NotNull Consumer<? super V> action) {
 		if (value != null) {
 			action.accept(value);
 		}
@@ -105,7 +105,7 @@ public class Utils {
 
 	@Nullable
 	@Contract("_, _, _ -> null")
-	public static <V, A> V nullify(@Nullable V value, @NotNull BiConsumer<@NotNull ? super V, A> action, A actionArg) {
+	public static <V, A> V nullify(@Nullable V value, @NotNull BiConsumer<? super V, A> action, A actionArg) {
 		if (value != null) {
 			action.accept(value, actionArg);
 		}

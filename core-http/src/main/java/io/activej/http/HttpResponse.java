@@ -270,7 +270,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	@NotNull
-	public HttpResponse withHeader(@NotNull HttpHeader header, @NotNull byte[] bytes) {
+	public HttpResponse withHeader(@NotNull HttpHeader header, byte @NotNull [] bytes) {
 		addHeader(header, bytes);
 		return this;
 	}
@@ -288,7 +288,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	@NotNull
-	public HttpResponse withCookies(@NotNull HttpCookie... cookies) {
+	public HttpResponse withCookies(HttpCookie @NotNull ... cookies) {
 		addCookies(cookies);
 		return this;
 	}
@@ -312,7 +312,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	@NotNull
-	public HttpResponse withBody(@NotNull byte[] array) {
+	public HttpResponse withBody(byte @NotNull [] array) {
 		setBody(array);
 		return this;
 	}

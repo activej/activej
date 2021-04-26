@@ -27,7 +27,7 @@ import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
  */
 public final class HttpHeader extends Token {
 
-	HttpHeader(int hashCodeCI, byte[] bytes, int offset, int length, @Nullable byte[] lowerCaseBytes) {
+	HttpHeader(int hashCodeCI, byte[] bytes, int offset, int length, byte @Nullable [] lowerCaseBytes) {
 		super(hashCodeCI, bytes, offset, length, lowerCaseBytes);
 	}
 

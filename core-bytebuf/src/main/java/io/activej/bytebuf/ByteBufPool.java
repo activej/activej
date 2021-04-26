@@ -391,7 +391,7 @@ public final class ByteBufPool {
 	 * @return ByteBuf which contains the result of the appending
 	 */
 	@NotNull
-	public static ByteBuf append(@NotNull ByteBuf to, @NotNull byte[] from, int offset, int length) {
+	public static ByteBuf append(@NotNull ByteBuf to, byte @NotNull [] from, int offset, int length) {
 		checkArgument(!to.isRecycled());
 		to = ensureWriteRemaining(to, length);
 		to.put(from, offset, length);
@@ -399,7 +399,7 @@ public final class ByteBufPool {
 	}
 
 	@NotNull
-	public static ByteBuf append(@NotNull ByteBuf to, @NotNull byte[] from) {
+	public static ByteBuf append(@NotNull ByteBuf to, byte @NotNull [] from) {
 		return append(to, from, 0, from.length);
 	}
 
