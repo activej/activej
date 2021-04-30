@@ -194,7 +194,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		//noinspection ConstantConditions
 		response.flags |= MUST_LOAD_BODY;
 		response.body = body;
-		response.bodyStream = bodySupplier;
+		response.bodyStream = bodySupplier == null ? null : sanitize(bodySupplier);
 		if (WebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
 		}
@@ -210,7 +210,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private boolean processWebSocketResponse(@Nullable ByteBuf body) {
 		if (response.getCode() == 101) {
 			assert body != null && body.readRemaining() == 0;
-			response.bodyStream = concat(ChannelSupplier.of(detachReadBuf()), ChannelSupplier.ofSocket(socket));
+			response.bodyStream = sanitize(concat(ChannelSupplier.of(detachReadBuf()), ChannelSupplier.ofSocket(socket)));
 			return true;
 		} else {
 			closeWithError(HANDSHAKE_FAILED);
@@ -273,7 +273,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		request.addHeader(SEC_WEBSOCKET_KEY, encodedKey);
 
 		ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
-		request.setBodyStream(buffer.getSupplier());
+		request.bodyStream = sanitize(buffer.getSupplier());
 
 		writeHttpMessageAsStream(null, request);
 

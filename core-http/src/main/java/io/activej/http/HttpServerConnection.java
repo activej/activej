@@ -337,7 +337,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		//noinspection ConstantConditions
 		request.flags |= MUST_LOAD_BODY;
 		request.body = body;
-		request.bodyStream = bodySupplier;
+		request.bodyStream = bodySupplier == null ? null : sanitize(bodySupplier);
 		if (WebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketRequest(body)) return;
 		} else {
@@ -404,8 +404,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (body != null && body.readRemaining() == 0) {
 			ChannelSupplier<ByteBuf> ofReadBufSupplier = ChannelSupplier.of(detachReadBuf());
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
-			request.bodyStream = concat(ofReadBufSupplier, ofSocketSupplier)
-					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection));
+			request.bodyStream = sanitize(concat(ofReadBufSupplier, ofSocketSupplier)
+					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection)));
 			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? WSS : WS);
 			request.maxBodySize = server.maxWebSocketMessageSize;
 			return true;

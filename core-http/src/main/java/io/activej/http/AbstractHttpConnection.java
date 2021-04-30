@@ -24,10 +24,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.recycle.Recyclable;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelOutput;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.*;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.stream.*;
@@ -94,6 +91,9 @@ public abstract class AbstractHttpConnection {
 	protected int numberOfRequests;
 
 	protected int contentLength;
+
+	@Nullable
+	protected Throwable closeException;
 
 	@Nullable
 	private Object userData;
@@ -221,6 +221,7 @@ public abstract class AbstractHttpConnection {
 		onClosedWithError(e);
 		onClosed();
 		socket.close();
+		closeException = e;
 	}
 
 	protected void read() {
@@ -628,6 +629,29 @@ public abstract class AbstractHttpConnection {
 		stashBuf(readBuf);
 		readBuf.addRef();
 		return readBuf;
+	}
+
+	protected final ChannelSupplier<ByteBuf> sanitize(ChannelSupplier<ByteBuf> bodyStream) {
+		return new AbstractChannelSupplier<ByteBuf>(bodyStream) {
+			@Override
+			protected Promise<ByteBuf> doGet() {
+				if (closeException != null) {
+					closeEx(closeException);
+					return Promise.ofException(closeException);
+				}
+				return bodyStream.get()
+						.then(result -> {
+							if (closeException != null) {
+								if (result != null) {
+									result.recycle();
+								}
+								closeEx(closeException);
+								return Promise.ofException(closeException);
+							}
+							return Promise.of(result);
+						});
+			}
+		};
 	}
 
 	@Override

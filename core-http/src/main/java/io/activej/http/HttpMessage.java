@@ -134,7 +134,8 @@ public abstract class HttpMessage {
 			if (buf != null) {
 				return decoder.decode(buf);
 			}
-		} catch (MalformedHttpException ignore) {}
+		} catch (MalformedHttpException ignore) {
+		}
 
 		return null;
 	}
@@ -279,12 +280,10 @@ public abstract class HttpMessage {
 				},
 				ByteBufs::takeRemaining)
 				.whenResult(body -> {
-					if (!isRecycled()) {
-						this.flags &= ~MUST_LOAD_BODY;
-						this.body = body;
-					} else {
-						body.recycle();
-					}
+					assert !isRecycled();
+
+					this.flags &= ~MUST_LOAD_BODY;
+					this.body = body;
 				});
 	}
 
