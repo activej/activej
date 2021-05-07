@@ -442,6 +442,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 							//noinspection ConstantConditions - dnsResponse is successful (not null)
 							return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
 						} else {
+							request.recycleBody();
 							return Promise.ofException(new HttpException(new DnsQueryException(dnsResponse)));
 						}
 					} else {
