@@ -1,6 +1,7 @@
 package io.activej.datastream;
 
 import io.activej.common.ref.RefInt;
+import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
 import static org.junit.Assert.assertEquals;
 
 public class StreamSuppliersTest {
@@ -18,7 +20,7 @@ public class StreamSuppliersTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@Test
-	public void testSupplierSupplier() {
+	public void streamSupplierOfSupplier() {
 		List<Integer> actual = new ArrayList<>();
 		RefInt count = new RefInt(-1);
 		await(StreamSupplier.ofSupplier(
@@ -31,5 +33,15 @@ public class StreamSuppliersTest {
 				.streamTo(StreamConsumerToList.create(actual)));
 
 		assertEquals(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), actual);
+	}
+
+	@Test
+	public void withEndOfStream() {
+		StreamSupplier<Integer> failingSupplier = StreamSupplier.of(1, 2, 3)
+				.withEndOfStream(eos -> eos
+						.thenEx(($, e) -> Promise.ofException(new Exception("Test"))));
+
+		Throwable exception = awaitException(failingSupplier.toList());
+		assertEquals("Test", exception.getMessage());
 	}
 }

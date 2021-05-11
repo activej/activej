@@ -32,7 +32,12 @@ public abstract class ForwardingStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public Promise<Void> streamTo(@NotNull StreamConsumer<T> consumer) {
-		return supplier.streamTo(consumer);
+		return supplier.streamTo(new ForwardingStreamConsumer<T>(consumer) {
+			@Override
+			public void consume(@NotNull StreamSupplier<T> streamSupplier) {
+				super.consume(ForwardingStreamSupplier.this);
+			}
+		});
 	}
 
 	@Override
