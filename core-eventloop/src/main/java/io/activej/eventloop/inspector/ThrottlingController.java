@@ -73,8 +73,10 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 	private long infoRoundsZeroThrottling;
 	private long infoRoundsExceededTargetTime;
 	private long infoRoundsGc;
+	private long infoGcExceeds;
 	// endregion
 
+	private int gcExceededCount;
 	private float throttling;
 
 	// region creators
@@ -214,10 +216,17 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 
 		int throttlingKeys = lastSelectedKeys + concurrentTasksSize;
 		int lastTimePredicted = (int) (throttlingKeys * smoothedTimePerKeyMillis);
-		if (gcTimeMillis != 0.0 && businessLogicTime > lastTimePredicted + gcTimeMillis) {
-			logger.debug("GC detected {} ms, {} keys", businessLogicTime, throttlingKeys);
-			businessLogicTime = lastTimePredicted + (long) gcTimeMillis;
-			infoRoundsGc++;
+		if (gcTimeMillis != 0.0) {
+			if (businessLogicTime > lastTimePredicted + gcTimeMillis) {
+				logger.debug("GC detected {} ms, {} keys", businessLogicTime, throttlingKeys);
+				businessLogicTime = lastTimePredicted + (long) gcTimeMillis;
+				infoRoundsGc++;
+				if (++gcExceededCount > 1) {
+					infoGcExceeds++;
+				}
+			} else {
+				gcExceededCount = 0;
+			}
 		}
 
 		double weight = 1.0 - 1.0 / smoothingWindow;
@@ -260,7 +269,7 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 			infoRoundsZeroThrottling++;
 		infoRounds++;
 
-		throttling = (float) newThrottling;
+		throttling = gcExceededCount >= 2 ? 1.0f : (float) newThrottling;
 	}
 
 	@Override
@@ -367,6 +376,11 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 	@JmxAttribute(reducer = JmxReducerSum.class)
 	public long getInfoRoundsGc() {
 		return infoRoundsGc;
+	}
+
+	@JmxAttribute(reducer = JmxReducerSum.class)
+	public long getInfoGcExceeds() {
+		return infoGcExceeds;
 	}
 
 	@JmxAttribute
