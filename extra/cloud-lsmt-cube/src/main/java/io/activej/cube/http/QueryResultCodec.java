@@ -127,6 +127,10 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 				}
 			}
 
+			if (recordScheme == null){
+				throw new MalformedDataException("Missing '" + METADATA_FIELD + "' field");
+			}
+
 			return QueryResult.create(recordScheme, attributes, measures,
 					nullToEmpty(sortedBy),
 					nullToEmpty(records),

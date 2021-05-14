@@ -105,7 +105,7 @@ public final class StringFormatUtils {
 			long denominator = 1;
 			String floatingPoint = matcher.group("floating");
 			if (floatingPoint != null) {
-				if (unit.equals("") || unit.equals("b")) {
+				if (unit.equals("b")) {
 					throw new IllegalArgumentException("MemSize unit bytes cannot be fractional");
 				}
 				numerator = Long.parseLong(floatingPoint);

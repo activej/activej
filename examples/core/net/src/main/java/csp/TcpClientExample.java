@@ -51,7 +51,7 @@ public final class TcpClientExample {
 				try {
 					socket = AsyncTcpSocketNio.wrapChannel(getCurrentEventloop(), socketChannel, null);
 				} catch (IOException ioException) {
-					throw new RuntimeException(e);
+					throw new RuntimeException(ioException);
 				}
 
 				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
