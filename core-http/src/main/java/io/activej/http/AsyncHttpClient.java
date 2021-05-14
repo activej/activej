@@ -127,6 +127,9 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onResolveError(HttpRequest request, Throwable e);
 
+		default void onConnecting(HttpRequest request, InetSocketAddress address) {
+		}
+
 		void onConnect(HttpRequest request, HttpClientConnection connection);
 
 		void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e);
@@ -152,6 +155,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		private long responsesErrors;
 		private final EventStats sslErrors = EventStats.create(SMOOTHING_WINDOW);
 		private long activeConnections;
+		private int connecting;
 
 		@Override
 		public void onRequest(HttpRequest request) {
@@ -168,13 +172,20 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
+		public void onConnecting(HttpRequest request, InetSocketAddress address) {
+			connecting++;
+		}
+
+		@Override
 		public void onConnect(HttpRequest request, HttpClientConnection connection) {
 			activeConnections++;
+			connecting--;
 			connected.recordEvent();
 		}
 
 		@Override
 		public void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e) {
+			connecting--;
 			connectErrors.recordException(e, request.getUrl().getHost());
 		}
 
@@ -254,6 +265,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		@JmxAttribute
 		public long getActiveConnections() {
 			return activeConnections;
+		}
+
+		@JmxAttribute(description = "number of \"currently connecting\" sockets)")
+		public int getConnecting() {
+			return connecting;
 		}
 	}
 
@@ -466,18 +482,21 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 			}
 		}
 
+		boolean isSecure = request.getProtocol().isSecure();
+		if (isSecure && sslContext == null) {
+			request.recycleBody();
+			throw new IllegalArgumentException("Cannot send Secure Request without SSL enabled");
+		}
+
+		if (inspector != null) inspector.onConnecting(request, address);
+
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.thenEx((asyncTcpSocketImpl, e) -> {
 					if (e == null) {
-						boolean isSecure = request.getProtocol().isSecure();
 						AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
 						if (socketInspector != null) {
 							socketInspector.onConnect(asyncTcpSocketImpl);
 							asyncTcpSocketImpl.setInspector(socketInspector);
-						}
-
-						if (isSecure && sslContext == null) {
-							throw new IllegalArgumentException("Cannot send Secure Request without SSL enabled");
 						}
 
 						String host = request.getUrl().getHost();
