@@ -415,8 +415,8 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	 */
 	@Override
 	protected void onClosed() {
+		if (inspector != null) inspector.onDisconnect(this);
 		if (promise != null) {
-			if (inspector != null) inspector.onDisconnect(this);
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
 			promise.setException(new CloseException("Connection closed"));

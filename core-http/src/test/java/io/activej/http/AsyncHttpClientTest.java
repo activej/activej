@@ -285,6 +285,29 @@ public final class AsyncHttpClientTest {
 		assertEquals((Integer) 200, await(customResponse(req, false).map(HttpResponse::getCode)));
 	}
 
+	@Test
+	public void testActiveConnectionsCountWithFailingServer() throws IOException {
+		SimpleServer.create(socket ->
+				socket.read()
+						.whenResult(ByteBuf::recycle)
+						.then(() -> socket.write(wrapAscii("\r\n")))
+						.whenComplete(socket::close))
+				.withListenPort(port)
+				.withAcceptOnce()
+				.listen();
+
+		JmxInspector inspector = new JmxInspector();
+		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.withInspector(inspector);
+
+		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+				.then(HttpMessage::loadBody));
+
+		assertThat(e, instanceOf(MalformedHttpException.class));
+
+		assertEquals(0, inspector.getActiveConnections());
+	}
+
 	private static final ByteBufsDecoder<ByteBuf> REQUEST_DECODER = bufs -> {
 		for (int i = 0; i < bufs.remainingBytes() - 3; i++) {
 			if (bufs.peekByte(i) == CR &&
