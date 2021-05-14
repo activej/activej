@@ -184,12 +184,19 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 		if (sending) return;
 		if (!bufs.isEmpty()) {
 			sending = true;
-			output.accept(bufs.poll())
-					.whenResult(() -> {
-						sending = false;
-						send();
-					})
-					.whenException(this::closeEx);
+			while (!bufs.isEmpty()) {
+				Promise<Void> acceptPromise = output.accept(bufs.poll());
+				if (acceptPromise.isResult()) continue;
+				acceptPromise
+						.whenResult(() -> {
+							sending = false;
+							send();
+						})
+						.whenException(this::closeEx);
+				return;
+			}
+			sending = false;
+			send();
 		} else if (isEndOfStream()) {
 			sending = true;
 			Promise.complete()
