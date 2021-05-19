@@ -18,6 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.QueryPlan.Sequence;
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.Utils;
@@ -28,8 +29,11 @@ import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.*;
+import io.activej.datastream.processor.StreamFilter;
+import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.StreamSorter;
+import io.activej.datastream.processor.StreamSorterStorageImpl;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
@@ -58,6 +62,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static java.lang.Math.min;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.isEqual;
@@ -218,7 +223,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 			List<String> keys, List<String> measures,
 			DefiningClassLoader classLoader) {
 		return Utils.aggregationReducer(structure, inputClass, outputClass,
-				keys, measures, classLoader);
+				keys, measures, emptyMap(), classLoader);
 	}
 
 	/**
@@ -448,7 +453,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 		StreamReducer<K, R, Object> streamReducer = StreamReducer.create();
 		if (reducerBufferSize != 0 && reducerBufferSize != DEFAULT_REDUCER_BUFFER_SIZE) {
-			streamReducer = streamReducer.withBufferSize(reducerBufferSize);
+			streamReducer.withBufferSize(reducerBufferSize);
 		}
 
 		Class<K> keyClass = createKeyClass(
@@ -458,9 +463,19 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		for (SequenceStream<S> sequence : sequences) {
 			Function<S, K> extractKeyFunction = createKeyFunction(sequence.type, keyClass, queryKeys, this.classLoader);
 
+			List<String> fields = new ArrayList<>();
+			Map<String, Measure> extraFields = new LinkedHashMap<>();
+			for (String measure : measures) {
+				if (sequence.fields.contains(measure)) {
+					fields.add(measure);
+				} else {
+					extraFields.put(measure, structure.getMeasure(measure));
+				}
+			}
 			Reducer<K, S, R, Object> reducer = Utils.aggregationReducer(structure,
 					sequence.type, resultClass,
-					queryKeys, measures.stream().filter(sequence.fields::contains).collect(toList()),
+					queryKeys, fields,
+					extraFields,
 					classLoader);
 
 			sequence.stream.streamTo(

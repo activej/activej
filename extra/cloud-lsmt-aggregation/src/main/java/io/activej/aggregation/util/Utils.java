@@ -168,11 +168,11 @@ public class Utils {
 	}
 
 	public static <K extends Comparable, I, O, A> Reducer<K, I, O, A> aggregationReducer(AggregationStructure aggregation, Class<I> inputClass, Class<O> outputClass,
-			List<String> keys, List<String> fields,
+			List<String> keys, List<String> fields, Map<String, Measure> extraFields,
 			DefiningClassLoader classLoader) {
 
 		return ClassBuilder.create(classLoader, Reducer.class)
-				.withClassKey(inputClass, outputClass, keys, fields)
+				.withClassKey(inputClass, outputClass, keys, fields, extraFields.keySet())
 				.withMethod("onFirstItem",
 						let(constructor(outputClass), accumulator ->
 								sequence(expressions -> {
@@ -190,6 +190,10 @@ public class Utils {
 																property(accumulator, field),
 																property(cast(arg(2), inputClass), field)
 														));
+									}
+									for (Entry<String, Measure> entry : extraFields.entrySet()) {
+										expressions.add(entry.getValue()
+												.zeroAccumulator(property(accumulator, entry.getKey())));
 									}
 									expressions.add(accumulator);
 								})))

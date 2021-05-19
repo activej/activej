@@ -660,6 +660,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		StreamSupplier<T> queryResultSupplier = streamReducer.getOutput();
 
 		storedMeasures = new ArrayList<>(storedMeasures);
+		Set<String> allMeasures = new LinkedHashSet<>(storedMeasures);
 		for (AggregationContainerWithScore aggregationContainerWithScore : containerWithScores) {
 			AggregationContainer aggregationContainer = aggregationContainerWithScore.aggregationContainer;
 			List<String> compatibleMeasures = storedMeasures.stream().filter(aggregationContainer.measures::contains).collect(toList());
@@ -690,8 +691,10 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 			Function<S, K> keyFunction = io.activej.aggregation.util.Utils.createKeyFunction(aggregationClass, resultKeyClass, dimensions, queryClassLoader);
 
-			Reducer<K, S, T, A> reducer = aggregationContainer.aggregation.aggregationReducer(aggregationClass, resultClass,
-					dimensions, compatibleMeasures, queryClassLoader);
+			Map<String, Measure> extraFields = keysToMap(allMeasures.stream()
+					.filter(s -> !compatibleMeasures.contains(s)), measures::get);
+			Reducer<K, S, T, A> reducer = aggregationReducer(aggregationContainer.aggregation.getStructure(), aggregationClass, resultClass,
+					dimensions, compatibleMeasures, extraFields, queryClassLoader);
 
 			StreamConsumer<S> streamReducerInput = streamReducer.newInput(keyFunction, reducer);
 
@@ -1385,7 +1388,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	}
 
 	@JmxOperation
-	public Map<String, String> getIrrelevantChunksIds(){
+	public Map<String, String> getIrrelevantChunksIds() {
 		return transformMapValues(getIrrelevantChunks(), chunks -> chunks.stream()
 				.map(chunk -> String.valueOf(chunk.getChunkId()))
 				.collect(Collectors.joining(", ")));
