@@ -10,7 +10,7 @@
             <defaultValue>my-rpc-app</defaultValue>
         </requiredProperty>
         <requiredProperty key="version">
-            <defaultValue>4.3-SNAPSHOT</defaultValue>
+            <defaultValue>4.3</defaultValue>
         </requiredProperty>
     </requiredProperties>
 
