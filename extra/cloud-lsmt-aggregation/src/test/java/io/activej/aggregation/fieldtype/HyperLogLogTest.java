@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import static java.lang.Math.abs;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class HyperLogLogTest {
 	@Test
@@ -38,6 +39,18 @@ public class HyperLogLogTest {
 //		doTest(1_000_000_000, 256, 0.04);
 	}
 
+	@Test
+	public void testAddInt() {
+		HyperLogLog hyperLogLog = new HyperLogLog(64);
+		int actual = 1000;
+		for (int i = 0; i < actual; i++) {
+			hyperLogLog.addInt(i);
+		}
+		int estimated = hyperLogLog.estimate();
+		double error = estimated - actual == 0 ? 0 : Math.abs((double) (estimated - actual) / actual);
+		assertTrue(error < 0.1);
+	}
+
 	private static final int TEST_RUNS = 100;
 
 	private void doTest(int actualItems, int buckets, double expectedError) {
@@ -49,7 +62,7 @@ public class HyperLogLogTest {
 
 		for (int i = 0; i < TEST_RUNS; i++) {
 			HyperLogLog hyperLogLog = new HyperLogLog(buckets);
-			long start = actualItems * i;
+			long start = (long) actualItems * i;
 			for (long v = start; v < start + actualItems; v++) {
 				hyperLogLog.addLong(v);
 			}

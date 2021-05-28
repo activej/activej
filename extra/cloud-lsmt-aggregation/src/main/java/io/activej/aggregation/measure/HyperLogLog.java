@@ -80,7 +80,7 @@ public final class HyperLogLog implements Comparable<HyperLogLog> {
 	}
 
 	public void addInt(int value) {
-		addLongHash(HashUtils.murmur3hash(value));
+		addLongHash(HashUtils.murmur3hash((long) value));
 	}
 
 	private static final double ALPHA_16 = 0.673 * 16 * 16;
