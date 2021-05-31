@@ -3,8 +3,10 @@ package io.activej.jmx.stats;
 import org.junit.Test;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 import static io.activej.jmx.stats.JmxHistogram.POWERS_OF_TWO;
@@ -757,7 +759,7 @@ public class ValueStatsTest {
 		int log = (int) floor(log10(stats.getSmoothedMax() - stats.getSmoothedMin()) - 3);
 		int numberOfDigits = log > 0 ? 0 : -log;
 		numberOfDigits = Math.min(numberOfDigits, 6);
-		DecimalFormat format = new DecimalFormat("0");
+		DecimalFormat format = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.US));
 		format.setMaximumFractionDigits(numberOfDigits);
 
 		assertEquals(format.format(stats.getSmoothedMin()), formattedMin);
