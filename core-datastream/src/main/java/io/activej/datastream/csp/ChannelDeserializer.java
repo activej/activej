@@ -148,8 +148,8 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 				} else {
 					int encodedSize = readEncodedSize(array, pos, b);
 					if (encodedSize == 0) return true;
-					messageSize = encodedSize & 0x0FFFFFFF;
 					headerSize = encodedSize >>> 28;
+					messageSize = (encodedSize & 0x0FFFFFFF) + headerSize;
 				}
 
 				if (firstBufRemaining >= messageSize) {
@@ -196,19 +196,19 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 			b = array[pos + 1];
 			if (b >= 0) {
 				dataSize += (b << 7);
-				return dataSize + 2 + (2 << 28);
+				return dataSize + (2 << 28);
 			} else {
 				dataSize += ((b & 0x7f) << 7);
 				b = array[pos + 2];
 				if (b >= 0) {
 					dataSize += (b << 14);
-					return dataSize + 3 + (3 << 28);
+					return dataSize + (3 << 28);
 				} else {
 					dataSize += ((b & 0x7f) << 14);
 					b = array[pos + 3];
 					if (b >= 0) {
 						dataSize += (b << 21);
-						return dataSize + 4 + (4 << 28);
+						return dataSize + (4 << 28);
 					}
 					throw new CorruptedDataException("Invalid header size");
 				}
