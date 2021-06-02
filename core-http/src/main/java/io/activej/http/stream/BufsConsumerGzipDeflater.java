@@ -45,7 +45,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<BufsConsumerGzipDeflater, ByteBuf, ByteBuf> {
 	public static final int DEFAULT_MAX_BUF_SIZE = 16384;
 	// rfc 1952 section 2.3.1
-	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, 0};
+	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, (byte) 0xff};
 	private static final int GZIP_FOOTER_SIZE = 8;
 
 	private final CRC32 crc32 = new CRC32();

@@ -36,7 +36,7 @@ public final class GzipProcessorUtils {
 	private static final boolean CHECK = Checks.isEnabled(GzipProcessorUtils.class);
 
 	// rfc 1952 section 2.3.1
-	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, 0};
+	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, (byte) 0xff};
 	private static final int GZIP_HEADER_SIZE = GZIP_HEADER.length;
 	private static final int GZIP_FOOTER_SIZE = 8;
 

@@ -101,7 +101,7 @@ public final class BufsConsumerGzipInflaterTest {
 		byte feXtra1 = (byte) (fextraReversed >> 8);
 		byte feXtra2 = (byte) fextraReversed;
 
-		byte[] header = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, flag, 0, 0, 0, 0, 0, 0,
+		byte[] header = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, flag, 0, 0, 0, 0, 0, (byte) 0xff,
 				// FEXTRA PART
 				feXtra1, feXtra2, 1, 2, 3, 4, 5,
 				// FNAME PART
