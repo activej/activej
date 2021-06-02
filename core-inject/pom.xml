@@ -18,9 +18,6 @@
     allow to transform graph of dependencies at startup time without reflection.
   </description>
 
-  <dependencies>
-  </dependencies>
-
   <build>
     <plugins>
       <plugin>

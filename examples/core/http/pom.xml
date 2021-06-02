@@ -28,11 +28,6 @@
       <artifactId>activej-specializer</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.github.spullara.mustache.java</groupId>
-      <artifactId>compiler</artifactId>
-      <version>0.9.4</version>
-    </dependency>
   </dependencies>
 
   <build>
