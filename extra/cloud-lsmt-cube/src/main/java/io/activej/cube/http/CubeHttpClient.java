@@ -82,7 +82,7 @@ public final class CubeHttpClient implements ICube {
 		return this;
 	}
 
-	public CubeHttpClient withMeasure(String measureId, Class<?> type) {
+	public CubeHttpClient withMeasure(String measureId, Type type) {
 		measureTypes.put(measureId, type);
 		return this;
 	}
