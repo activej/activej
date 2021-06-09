@@ -369,7 +369,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	@Override
 	public String toString() {
-		return "ClusterActiveFs{address=" + address + '}';
+		return "RemoteActiveFs{address=" + address + '}';
 	}
 
 	//region JMX
