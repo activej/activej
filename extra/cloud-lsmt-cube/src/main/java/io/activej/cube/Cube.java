@@ -84,7 +84,6 @@ import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
 import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
 import static io.activej.codegen.expression.Expressions.set;
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.codegen.util.Primitives.isWrapperType;
 import static io.activej.codegen.util.Primitives.wrap;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
@@ -198,7 +197,6 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		String dimension = attribute.substring(0, pos);
 		String attributeName = attribute.substring(pos + 1);
 		checkArgument(resolver.getAttributeTypes().containsKey(attributeName), "Resolver does not support %s", attribute);
-		checkArgument(!isWrapperType(resolver.getAttributeTypes().get(attributeName)), "Unsupported attribute type for %s", attribute);
 		List<String> dimensions = getAllParents(dimension);
 		checkArgument(dimensions.size() == resolver.getKeyTypes().length, "Parent dimensions: %s, key types: %s", dimensions, asList(resolver.getKeyTypes()));
 		for (int i = 0; i < dimensions.size(); i++) {
@@ -838,7 +836,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 						queryLastError = e;
 
 						if (e instanceof FileNotFoundException) {
-							logger.warn("Query failed because of FileNotFoundException. " + cubeQuery.toString(), e);
+							logger.warn("Query failed because of FileNotFoundException. " + cubeQuery, e);
 						}
 					}
 				});
