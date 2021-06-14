@@ -23,10 +23,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Modifier;
+import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -47,6 +45,8 @@ public final class Context {
 	private final GeneratorAdapter g;
 	private final Type selfType;
 	private final Method method;
+
+	private Set<Method> accessibleMethods;
 
 	public Context(DefiningClassLoader classLoader, ClassBuilder<?> builder,
 			GeneratorAdapter g,
@@ -89,6 +89,24 @@ public final class Context {
 
 	public Map<Method, Expression> getMethods() {
 		return classBuilder.methods;
+	}
+
+	public Set<Method> getAccessibleMethods() {
+		if (accessibleMethods != null) {
+			return accessibleMethods;
+		}
+		accessibleMethods = new HashSet<>(classBuilder.methods.keySet());
+		Class<?> superclass = classBuilder.superclass;
+		while (superclass != null) {
+			for (java.lang.reflect.Method method : superclass.getDeclaredMethods()) {
+				int modifiers = method.getModifiers();
+				if (!Modifier.isStatic(modifiers) && (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers))) {
+					accessibleMethods.add(Method.getMethod(method));
+				}
+			}
+			superclass = superclass.getSuperclass();
+		}
+		return accessibleMethods;
 	}
 
 	public Map<Method, Expression> getStaticMethods() {
@@ -250,7 +268,7 @@ public final class Context {
 		Method foundMethod;
 		if (ownerType.equals(getSelfType())) {
 			foundMethod = findMethod(
-					getMethods().keySet().stream(),
+					getAccessibleMethods().stream(),
 					methodName,
 					arguments);
 			g.invokeVirtual(ownerType, foundMethod);
@@ -362,7 +380,7 @@ public final class Context {
 			argumentTypes[i] = arguments.get(i).load(this);
 		}
 		Method foundMethod = findMethod(
-				Arrays.stream(classBuilder.superclass.getDeclaredMethods()).map(Method::getMethod),
+				getAccessibleMethods().stream(),
 				methodName,
 				Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new));
 		String typeName = getType(classBuilder.superclass).getInternalName();

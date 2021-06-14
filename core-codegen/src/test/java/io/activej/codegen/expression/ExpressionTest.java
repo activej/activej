@@ -1035,7 +1035,7 @@ public class ExpressionTest {
 	}
 
 	public static class Super {
-		public String getString() {
+		protected String getString() {
 			return "hello";
 		}
 
@@ -1046,6 +1046,29 @@ public class ExpressionTest {
 
 	public interface TestConcat {
 		String concat(byte aByte, int anInt, String space, long aLong, char aChar, Object anObject, TestPojo testPojo);
+	}
+
+	@org.junit.Test
+	public void testCallingOfProtectedMethods() {
+		ClassBuilder.clearStaticConstants();
+		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
+		Cashier instance = ClassBuilder.create(definingClassLoader, Cashier.class)
+//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
+				.withMethod("getPrice", mul(Expressions.value(2), Expressions.call(self(), "hiddenPrice")))
+				.buildClassAndCreateNewInstance();
+		assertEquals(200, instance.getPrice());
+		assertStaticConstantsCleared();
+	}
+
+	public static class Cashier {
+
+		protected final int hiddenPrice() {
+			return 100;
+		}
+
+		public int getPrice() {
+			return hiddenPrice() + 50;
+		}
 	}
 
 	@SuppressWarnings("ConstantConditions")
