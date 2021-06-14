@@ -19,19 +19,17 @@ package io.activej.codegen.expression;
 import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 
-final class ExpressionCall implements Expression {
-	private final Expression owner;
+final class ExpressionCallSuper implements Expression {
 	private final String methodName;
 	private final Expression[] arguments;
 
-	ExpressionCall(Expression owner, String methodName, Expression[] arguments) {
-		this.owner = owner;
+	ExpressionCallSuper(String methodName, Expression[] arguments) {
 		this.methodName = methodName;
 		this.arguments = arguments;
 	}
 
 	@Override
 	public Type load(Context ctx) {
-		return ctx.invoke(owner, methodName, arguments);
+		return ctx.invokeSuperMethod(methodName, arguments);
 	}
 }

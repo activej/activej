@@ -18,6 +18,7 @@ package io.activej.codegen;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.VarLocal;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -348,6 +349,25 @@ public final class Context {
 		}
 
 		return VOID_TYPE;
+	}
+
+	public Type invokeSuperMethod(String methodName, Expression[] arguments) {
+		return invokeSuperMethod(methodName, Arrays.asList(arguments));
+	}
+
+	public Type invokeSuperMethod(String methodName, List<Expression> arguments) {
+		g.loadThis();
+		Type[] argumentTypes = new Type[arguments.size()];
+		for (int i = 0; i < arguments.size(); i++) {
+			argumentTypes[i] = arguments.get(i).load(this);
+		}
+		Method foundMethod = findMethod(
+				Arrays.stream(classBuilder.superclass.getDeclaredMethods()).map(Method::getMethod),
+				methodName,
+				Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new));
+		String typeName = getType(classBuilder.superclass).getInternalName();
+		g.visitMethodInsn(Opcodes.INVOKESPECIAL, typeName, methodName, method.getDescriptor(), false);
+		return foundMethod.getReturnType();
 	}
 
 	@SuppressWarnings("StatementWithEmptyBody")

@@ -512,6 +512,10 @@ public class Expressions {
 		return new ExpressionSuperConstructor(asList(fields));
 	}
 
+	public static Expression callSuper(String methodName, Expression... arguments) {
+		return new ExpressionCallSuper(methodName, arguments);
+	}
+
 	/**
 	 * Returns a new {@link ExpressionCall expression call}
 	 * which allows to use static methods from other classes

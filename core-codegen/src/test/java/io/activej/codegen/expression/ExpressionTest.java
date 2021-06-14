@@ -1020,6 +1020,30 @@ public class ExpressionTest {
 		}
 	}
 
+	@org.junit.Test
+	public void testSuperMethods() {
+		ClassBuilder.clearStaticConstants();
+		DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
+		Super instance = ClassBuilder.create(definingClassLoader, Super.class)
+//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
+				.withMethod("getString", concat(value("super returns: "), callSuper("getString")))
+				.withMethod("change", add(callSuper("change", arg(0)), value(100)))
+				.buildClassAndCreateNewInstance();
+		assertEquals("super returns: hello", instance.getString());
+		assertEquals(150, instance.change(40));
+		assertStaticConstantsCleared();
+	}
+
+	public static class Super {
+		public String getString() {
+			return "hello";
+		}
+
+		public int change(int x) {
+			return x + 10;
+		}
+	}
+
 	public interface TestConcat {
 		String concat(byte aByte, int anInt, String space, long aLong, char aChar, Object anObject, TestPojo testPojo);
 	}
