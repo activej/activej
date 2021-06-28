@@ -18,47 +18,40 @@ package io.activej.common.reflection;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public abstract class TypeT<T> {
-	@NotNull
-	private final Type type;
+	private final @NotNull AnnotatedType annotatedType;
 
 	public TypeT() {
-		this.type = getSuperclassTypeParameter(this.getClass());
-	}
-
-	private TypeT(@NotNull Type type) {
-		this.type = type;
+		this.annotatedType = getSuperclassTypeParameter(this.getClass());
 	}
 
 	@NotNull
-	public static <T> TypeT<T> ofType(@NotNull Type type) {
-		return new TypeT<T>(type) {};
-	}
-
-	@NotNull
-	public static <T> TypeT<T> of(@NotNull Class<T> type) {
-		return new TypeT<T>(type) {};
-	}
-
-	@NotNull
-	private static Type getSuperclassTypeParameter(@NotNull Class<?> subclass) {
-		Type superclass = subclass.getGenericSuperclass();
-		if (superclass instanceof ParameterizedType) {
-			return ((ParameterizedType) superclass).getActualTypeArguments()[0];
+	private static AnnotatedType getSuperclassTypeParameter(@NotNull Class<?> subclass) {
+		AnnotatedType superclass = subclass.getAnnotatedSuperclass();
+		if (superclass instanceof AnnotatedParameterizedType) {
+			return ((AnnotatedParameterizedType) superclass).getAnnotatedActualTypeArguments()[0];
 		}
 		throw new IllegalArgumentException("Unsupported type: " + superclass);
 	}
 
 	@NotNull
+	public AnnotatedType getAnnotatedType() {
+		return annotatedType;
+	}
+
+	@NotNull
 	public Type getType() {
-		return type;
+		return annotatedType.getType();
 	}
 
 	@SuppressWarnings("unchecked")
 	public Class<T> getRawType() {
+		Type type = this.annotatedType.getType();
 		if (type instanceof Class) {
 			return (Class<T>) type;
 		} else if (type instanceof ParameterizedType) {
@@ -69,31 +62,8 @@ public abstract class TypeT<T> {
 		}
 	}
 
-	public String getDisplayString() {
-		return type.getTypeName().replaceAll("(?:\\w+\\.)*(\\w+)", "$1");
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (!(o instanceof TypeT)) {
-			return false;
-		}
-
-		TypeT<?> typeT = (TypeT<?>) o;
-
-		return type.equals(typeT.type);
-	}
-
-	@Override
-	public int hashCode() {
-		return type.hashCode();
-	}
-
 	@Override
 	public String toString() {
-		return type.getTypeName();
+		return annotatedType.toString();
 	}
 }
