@@ -4,9 +4,7 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import org.junit.Test;
 
-import java.net.InetSocketAddress;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 
@@ -105,8 +103,8 @@ public class RpcStrategyRandomSamplingTest {
 		}
 
 		@Override
-		public Set<InetSocketAddress> getAddresses() {
-			return new HashSet<>();
+		public DiscoveryService getDiscoveryService() {
+			return DiscoveryService.constant(new HashMap<>());
 		}
 
 		@Override

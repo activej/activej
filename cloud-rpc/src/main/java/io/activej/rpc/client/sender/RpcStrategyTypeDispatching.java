@@ -21,11 +21,10 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
@@ -40,7 +39,7 @@ public final class RpcStrategyTypeDispatching implements RpcStrategy {
 
 	public RpcStrategyTypeDispatching on(@NotNull Class<?> dataType, @NotNull RpcStrategy strategy) {
 		checkState(!dataTypeToStrategy.containsKey(dataType),
-				() -> "Strategy for type " + dataType.toString() + " is already set");
+				() -> "Strategy for type " + dataType + " is already set");
 		dataTypeToStrategy.put(dataType, strategy);
 		return this;
 	}
@@ -52,13 +51,13 @@ public final class RpcStrategyTypeDispatching implements RpcStrategy {
 	}
 
 	@Override
-	public Set<InetSocketAddress> getAddresses() {
-		HashSet<InetSocketAddress> result = new HashSet<>();
-		for (RpcStrategy strategy : dataTypeToStrategy.values()) {
-			result.addAll(strategy.getAddresses());
+	public DiscoveryService getDiscoveryService() {
+		List<DiscoveryService> discoveryServices = new ArrayList<>();
+		for (RpcStrategy value : dataTypeToStrategy.values()) {
+			discoveryServices.add(value.getDiscoveryService());
 		}
-		result.addAll(defaultStrategy.getAddresses());
-		return result;
+		discoveryServices.add(defaultStrategy.getDiscoveryService());
+		return DiscoveryService.combined(discoveryServices);
 	}
 
 	@Nullable

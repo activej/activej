@@ -19,11 +19,8 @@ package io.activej.rpc.client.sender;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetSocketAddress;
-import java.util.Set;
-
 public interface RpcStrategy {
-	Set<InetSocketAddress> getAddresses();
+	DiscoveryService getDiscoveryService();
 
 	@Nullable
 	RpcSender createSender(RpcClientConnectionPool pool);

@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.first;
@@ -87,12 +88,10 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 	}
 
 	@Override
-	public Set<InetSocketAddress> getAddresses() {
-		HashSet<InetSocketAddress> result = new HashSet<>();
-		for (RpcStrategy strategy : shards.values()) {
-			result.addAll(strategy.getAddresses());
-		}
-		return result;
+	public DiscoveryService getDiscoveryService() {
+		return DiscoveryService.combined(shards.values().stream()
+				.map(RpcStrategy::getDiscoveryService)
+				.collect(Collectors.toList()));
 	}
 
 	@Override
@@ -150,6 +149,15 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 			sender.sendRequest(request, timeout, cb);
 		}
 
+	}
+
+	public Map<Object, RpcStrategy> getShards() {
+		return Collections.unmodifiableMap(shards);
+	}
+
+	void setShards(Map<Object, RpcStrategy> shards) {
+		this.shards.clear();
+		this.shards.putAll(shards);
 	}
 
 	// visible for testing

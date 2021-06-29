@@ -51,6 +51,10 @@ public final class RpcStrategies {
 		return RpcStrategyList.ofAddresses(addresses);
 	}
 
+	public static RpcStrategyList servers(DiscoveryService discoveryService) {
+		return RpcStrategyList.ofDiscoveryService(discoveryService);
+	}
+
 	public static RpcStrategyFirstAvailable firstAvailable(RpcStrategy... senders) {
 		return firstAvailable(asList(senders));
 	}
@@ -105,6 +109,10 @@ public final class RpcStrategies {
 
 	public static RpcStrategyRendezvousHashing rendezvousHashing(@NotNull HashFunction<?> hashFunction) {
 		return RpcStrategyRendezvousHashing.create(hashFunction);
+	}
+
+	public static DiscoverableRpcStrategyRendezvousHashing rendezvousHashing(DiscoveryService discoveryService, RpcStrategyRendezvousHashing originalStrategy) {
+		return DiscoverableRpcStrategyRendezvousHashing.create(discoveryService, originalStrategy);
 	}
 
 	public static RpcStrategyTypeDispatching typeDispatching() {

@@ -22,9 +22,7 @@ import io.activej.rpc.hash.ShardingFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Set;
 
 import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
 
@@ -48,8 +46,8 @@ public final class RpcStrategySharding implements RpcStrategy {
 	}
 
 	@Override
-	public Set<InetSocketAddress> getAddresses() {
-		return list.getAddresses();
+	public DiscoveryService getDiscoveryService() {
+		return list.getDiscoveryService();
 	}
 
 	@Nullable

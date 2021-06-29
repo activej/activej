@@ -16,12 +16,11 @@
 
 package io.activej.rpc.client.sender;
 
+import io.activej.common.collection.CollectionUtils;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.Set;
 
 public final class RpcStrategySingleServer implements RpcStrategy {
 
@@ -36,12 +35,16 @@ public final class RpcStrategySingleServer implements RpcStrategy {
 	}
 
 	@Override
-	public Set<InetSocketAddress> getAddresses() {
-		return Collections.singleton(address);
+	public DiscoveryService getDiscoveryService() {
+		return DiscoveryService.constant(CollectionUtils.map(address, address));
 	}
 
 	@Override
 	public RpcSender createSender(RpcClientConnectionPool pool) {
 		return pool.get(address);
+	}
+
+	public InetSocketAddress getAddress() {
+		return address;
 	}
 }
