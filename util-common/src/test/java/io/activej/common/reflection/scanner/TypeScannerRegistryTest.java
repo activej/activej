@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 public class TypeScannerRegistryTest {
 	@Test
 	public void test1() {
-		TypeScannerRegistry<String> registry = TypeScannerRegistry.create(String.class)
+		TypeScannerRegistry<String, Void> registry = TypeScannerRegistry.<String, Void>create()
 				.with(int.class, ctx -> "int")
 				.with(Integer.class, ctx -> "Integer")
 				.with(CharSequence.class, ctx -> "CharSequence")

@@ -20,7 +20,6 @@ import io.activej.common.reflection.TypeT;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,25 +28,23 @@ import java.util.List;
 import static io.activej.common.reflection.scanner.TypeUtils.isAssignable;
 import static java.util.Collections.emptyList;
 
-public final class TypeScannerRegistry<R> {
+public final class TypeScannerRegistry<R, C> {
 
-	public static final class Context<R> {
-		private final Class<R> resultType;
-		private final TypeScannerRegistry<R> self;
+	public static final class Context<R, C> {
+		private final TypeScannerRegistry<R, C> self;
 		private final AnnotatedType[] annotatedTypes;
 		private final List<AnnotatedType[]> history;
-		private final Object value;
+		private final C value;
 
-		private Context(Class<R> resultType, TypeScannerRegistry<R> self, AnnotatedType[] annotatedTypes, List<AnnotatedType[]> history, Object value) {
-			this.resultType = resultType;
+		private Context(TypeScannerRegistry<R, C> self, AnnotatedType[] annotatedTypes, List<AnnotatedType[]> history, C value) {
 			this.self = self;
 			this.annotatedTypes = annotatedTypes;
 			this.history = history;
 			this.value = value;
 		}
 
-		public Context<R> withValue(Object value) {
-			return new Context<>(resultType, self, annotatedTypes, history, value);
+		public Context<R, C> withValue(C value) {
+			return new Context<>(self, annotatedTypes, history, value);
 		}
 
 		public AnnotatedType[] getTypes() {
@@ -78,11 +75,6 @@ public final class TypeScannerRegistry<R> {
 			return history;
 		}
 
-		public R[] scanTypeArguments() {
-			//noinspection unchecked
-			return Arrays.stream(getTypeArguments()).map(this::scanArgument).toArray(n -> (R[]) Array.newInstance(this.resultType, n));
-		}
-
 		public R scanTypeArgument(int n) {
 			return scanArgument(getTypeArgument(n));
 		}
@@ -106,45 +98,43 @@ public final class TypeScannerRegistry<R> {
 		}
 	}
 
-	public interface MappingFn<R> {
-		R apply(Context<R> ctx);
+	public interface MappingFn<R, C> {
+		R apply(Context<R, C> ctx);
 	}
 
-	private final Class<R> resultType;
-	private final List<MappingEntry<R>> mappingFn = new ArrayList<>();
+	private final List<MappingEntry<R, C>> mappingFn = new ArrayList<>();
 
-	private static final class MappingEntry<R> {
+	private static final class MappingEntry<R, C> {
 		final Type type;
-		final MappingFn<R> fn;
+		final MappingFn<R, C> fn;
 
-		private MappingEntry(Type type, MappingFn<R> fn) {
+		private MappingEntry(Type type, MappingFn<R, C> fn) {
 			this.type = type;
 			this.fn = fn;
 		}
 	}
 
-	public TypeScannerRegistry(Class<R> resultType) {
-		this.resultType = resultType;
+	private TypeScannerRegistry() {
 	}
 
-	public static <R> TypeScannerRegistry<R> create(Class<R> resultType) {
-		return new TypeScannerRegistry<>(resultType);
+	public static <R, C> TypeScannerRegistry<R, C> create() {
+		return new TypeScannerRegistry<>();
 	}
 
-	public <T> TypeScannerRegistry<R> with(TypeT<?> typeT, MappingFn<R> fn) {
+	public TypeScannerRegistry<R, C> with(TypeT<?> typeT, MappingFn<R, C> fn) {
 		mappingFn.add(new MappingEntry<>(typeT.getType(), fn));
 		return this;
 	}
 
-	public <T> TypeScannerRegistry<R> with(Type type, MappingFn<R> fn) {
+	public TypeScannerRegistry<R, C> with(Type type, MappingFn<R, C> fn) {
 		mappingFn.add(new MappingEntry<>(type, fn));
 		return this;
 	}
 
 	@NotNull
-	private MappingFn<R> match(Type type) {
-		MappingEntry<R> best = null;
-		for (MappingEntry<R> found : mappingFn) {
+	private MappingFn<R, C> match(Type type) {
+		MappingEntry<R, C> best = null;
+		for (MappingEntry<R, C> found : mappingFn) {
 			if (isAssignable(found.type, type)) {
 				if (best == null || isAssignable(best.type, found.type)) {
 					if (best != null && !best.type.equals(found.type) && isAssignable(found.type, best.type)) {
@@ -164,14 +154,14 @@ public final class TypeScannerRegistry<R> {
 		return scanner(null);
 	}
 
-	public TypeScanner<R> scanner(Object contextValue) {
+	public TypeScanner<R> scanner(C contextValue) {
 		return type -> scan(emptyList(), new AnnotatedType[]{type}, contextValue);
 	}
 
-	private R scan(List<AnnotatedType[]> history, AnnotatedType[] annotatedTypes, Object value) {
+	private R scan(List<AnnotatedType[]> history, AnnotatedType[] annotatedTypes, C value) {
 		AnnotatedType annotatedType = annotatedTypes[annotatedTypes.length - 1];
-		MappingFn<R> fn = match(annotatedType.getType());
-		return fn.apply(new Context<>(resultType, this, annotatedTypes, history, value));
+		MappingFn<R, C> fn = match(annotatedType.getType());
+		return fn.apply(new Context<>(this, annotatedTypes, history, value));
 	}
 
 }
