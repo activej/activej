@@ -29,14 +29,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static io.activej.common.collection.CollectionUtils.keysToMap;
 import static io.activej.common.collection.CollectionUtils.union;
+import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -65,14 +64,15 @@ public final class TestClusterActiveFs {
 
 	private final List<Path> serverStorages = new ArrayList<>();
 
+	private ExecutorService executor;
 	private List<AsyncHttpServer> servers;
 	private Path clientStorage;
 	private FsPartitions partitions;
 	private ClusterActiveFs client;
 
 	@Before
-	public void setup() throws IOException {
-		Executor executor = Executors.newSingleThreadExecutor();
+	public void setup() throws IOException, ExecutionException, InterruptedException {
+		executor = Executors.newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 		clientStorage = Paths.get(tmpFolder.newFolder("client").toURI());
 
@@ -92,21 +92,38 @@ public final class TestClusterActiveFs {
 			serverStorages.add(path);
 			Files.createDirectories(path);
 
-			LocalActiveFs localClient = LocalActiveFs.create(eventloop, executor, path);
 			initTempDir(path);
-			AsyncHttpServer server = AsyncHttpServer.create(eventloop, ActiveFsServlet.create(localClient))
+			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+			serverEventloop.keepAlive(true);
+			LocalActiveFs localClient = LocalActiveFs.create(serverEventloop, executor, path);
+			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(localClient))
 					.withListenPort(port);
-			server.listen();
+			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
+				try {
+					server.listen();
+				} catch (IOException e) {
+					throw new AssertionError(e);
+				}
+			});
 			servers.add(server);
+			new Thread(serverEventloop).start();
+			listenFuture.get();
 		}
 
 		partitions.put("dead_one", HttpActiveFs.create("http://localhost:" + 5555, httpClient));
 		partitions.put("dead_two", HttpActiveFs.create("http://localhost:" + 5556, httpClient));
 		partitions.put("dead_three", HttpActiveFs.create("http://localhost:" + 5557, httpClient));
 
-		this.partitions = FsPartitions.create(eventloop, partitions);
+		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions));
 		client = ClusterActiveFs.create(this.partitions);
 		client.withReplicationCount(REPLICATION_COUNT); // there are those 3 dead nodes added above
+		await(this.partitions.start());
+		await(this.client.start());
+	}
+
+	@After
+	public void tearDown() {
+		waitForServersToStop();
 	}
 
 	@Test
@@ -115,8 +132,7 @@ public final class TestClusterActiveFs {
 		String resultFile = "file.txt";
 
 		await(client.upload(resultFile)
-				.then(ChannelSupplier.of(ByteBuf.wrapForReading(content.getBytes(UTF_8)))::streamTo)
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+				.then(ChannelSupplier.of(ByteBuf.wrapForReading(content.getBytes(UTF_8)))::streamTo));
 
 		int uploaded = 0;
 		for (Path path : serverStorages) {
@@ -139,8 +155,7 @@ public final class TestClusterActiveFs {
 		Files.write(serverStorages.get(numOfServer).resolve(file), content.getBytes(UTF_8));
 
 		await(ChannelSupplier.ofPromise(client.download(file))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(file)))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(file))));
 
 		assertEquals(new String(readAllBytes(clientStorage.resolve(file)), UTF_8), content);
 	}
@@ -150,7 +165,7 @@ public final class TestClusterActiveFs {
 		String content = "test content of the file";
 		ByteBuf data = ByteBuf.wrapForReading(content.getBytes(UTF_8));
 
-		client.withReplicationCount(1);
+		client.withPersistenceOptions(3, 1, 1);
 		partitions
 				.withServerSelector((fileName, serverKeys) -> {
 					String firstServer = fileName.contains("1") ?
@@ -168,8 +183,9 @@ public final class TestClusterActiveFs {
 
 		String[] files = {"file_1.txt", "file_2.txt", "file_3.txt", "other.txt"};
 
-		await(Promises.all(Arrays.stream(files).map(f -> ChannelSupplier.of(data.slice()).streamTo(ChannelConsumer.ofPromise(client.upload(f)))))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		await(Promises.all(Arrays.stream(files).map(f ->
+				ChannelSupplier.of(data.slice())
+						.streamTo(ChannelConsumer.ofPromise(client.upload(f))))));
 
 		assertEquals(new String(readAllBytes(serverStorages.get(1).resolve("file_1.txt")), UTF_8), content);
 		assertEquals(new String(readAllBytes(serverStorages.get(2).resolve("file_2.txt")), UTF_8), content);
@@ -186,8 +202,7 @@ public final class TestClusterActiveFs {
 		await(Promises.sequence(IntStream.range(0, 1_000)
 				.mapToObj(i ->
 						() -> ChannelSupplier.of(data.slice())
-								.streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded_" + i + ".txt")))))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+								.streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded_" + i + ".txt"))))));
 
 		for (int i = 0; i < 1000; i++) {
 			int replicasCount = 0;
@@ -206,8 +221,8 @@ public final class TestClusterActiveFs {
 		int allClientsSize = partitions.getPartitions().size();
 		client.withReplicationCount(allClientsSize);
 
-		Throwable exception = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8))).streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded.txt")))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		Throwable exception = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8)))
+				.streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded.txt"))));
 
 		assertThat(exception, instanceOf(FsException.class));
 		assertThat(exception.getMessage(), containsString("Didn't connect to enough partitions"));
@@ -218,8 +233,7 @@ public final class TestClusterActiveFs {
 		String fileName = "i_dont_exist.txt";
 
 		Throwable exception = awaitException(ChannelSupplier.ofPromise(client.download(fileName))
-				.streamTo(ChannelConsumer.of(AsyncConsumer.of(ByteBuf::recycle)))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+				.streamTo(ChannelConsumer.of(AsyncConsumer.of(ByteBuf::recycle))));
 
 		assertThat(exception, instanceOf(FsException.class));
 		assertThat(exception.getMessage(), containsString(fileName));
@@ -238,9 +252,9 @@ public final class TestClusterActiveFs {
 			Files.write(path.resolve(source), content.getBytes(UTF_8));
 		}
 
-		ByteBuf result = await(client.copy(source, target)
-				.then(() -> client.download(target).then(supplier -> supplier.toCollector(ByteBufs.collector())))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		await(client.copy(source, target));
+		ByteBuf result = await(client.download(target)
+				.then(supplier -> supplier.toCollector(ByteBufs.collector())));
 
 		assertEquals(content, result.asString(UTF_8));
 
@@ -269,8 +283,7 @@ public final class TestClusterActiveFs {
 			Files.write(path.resolve(source), content.getBytes(UTF_8));
 		}
 
-		await(client.copy(source, target)
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		await(client.copy(source, target));
 
 		int copies = 0;
 		for (Path path : paths) {
@@ -320,8 +333,7 @@ public final class TestClusterActiveFs {
 			}
 		}
 
-		await(client.copyAll(sourceToTarget)
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		await(client.copyAll(sourceToTarget));
 
 		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet(), $ -> 0);
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
@@ -360,8 +372,7 @@ public final class TestClusterActiveFs {
 		String nonexistent = "nonexistent.txt";
 		sourceToTarget.put(nonexistent, "new_nonexistent.txt");
 
-		Throwable exception = awaitException(client.copyAll(sourceToTarget)
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		Throwable exception = awaitException(client.copyAll(sourceToTarget));
 		assertTrue(exception.getMessage().startsWith("Could not download file '" + nonexistent + '\''));
 	}
 
@@ -402,8 +413,7 @@ public final class TestClusterActiveFs {
 			}
 		}
 
-		await(client.moveAll(sourceToTarget)
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		await(client.moveAll(sourceToTarget));
 
 		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet(), $ -> 0);
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
@@ -442,8 +452,7 @@ public final class TestClusterActiveFs {
 		String nonexistent = "nonexistent.txt";
 		sourceToTarget.put(nonexistent, "new_nonexistent.txt");
 
-		Throwable exception = awaitException(client.moveAll(sourceToTarget)
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		Throwable exception = awaitException(client.moveAll(sourceToTarget));
 		assertTrue(exception.getMessage().startsWith("Could not download file '" + nonexistent + '\''));
 	}
 
@@ -464,8 +473,7 @@ public final class TestClusterActiveFs {
 			}
 		}
 
-		Map<String, @Nullable FileMetadata> result = await(client.infoAll(names)
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		Map<String, @Nullable FileMetadata> result = await(client.infoAll(names));
 
 		assertEquals(names.size(), result.size());
 		for (String name : names) {
@@ -495,8 +503,7 @@ public final class TestClusterActiveFs {
 				.mapToObj(i -> "nonexistent_" + i + ".txt")
 				.collect(toSet());
 
-		Map<String, @Nullable FileMetadata> result = await(client.infoAll(union(existingNames, nonExistingNames))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		Map<String, @Nullable FileMetadata> result = await(client.infoAll(union(existingNames, nonExistingNames)));
 
 		assertEquals(existingNames.size(), result.size());
 		for (String name : existingNames) {
@@ -543,12 +550,11 @@ public final class TestClusterActiveFs {
 			}
 		}
 
-		List<String> results = await(action.apply(sourceToTarget)
-				.then(() -> Promises.toList(sourceToTarget.values().stream()
-						.map(target -> client.download(target)
-								.then(supplier -> supplier.toCollector(ByteBufs.collector()))
-								.map(byteBuf -> byteBuf.asString(UTF_8)))))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+		await(action.apply(sourceToTarget));
+		List<String> results = await(Promises.toList(sourceToTarget.values().stream()
+				.map(target -> client.download(target)
+						.then(supplier -> supplier.toCollector(ByteBufs.collector()))
+						.map(byteBuf -> byteBuf.asString(UTF_8)))));
 
 		Set<String> expectedContents = sourceToTarget.keySet().stream().map(source -> contentPrefix + source).collect(toSet());
 
@@ -570,6 +576,26 @@ public final class TestClusterActiveFs {
 				}
 			}
 			assertEquals(copies, REPLICATION_COUNT);
+		}
+	}
+
+	private void waitForServersToStop() {
+		try {
+			for (AbstractServer<?> server : servers) {
+				Eventloop serverEventloop = server.getEventloop();
+				if (server.isRunning()) {
+					serverEventloop.submit(server::close).get();
+				}
+				serverEventloop.keepAlive(false);
+				Thread serverEventloopThread = serverEventloop.getEventloopThread();
+				if (serverEventloopThread != null) {
+					serverEventloopThread.join();
+				}
+			}
+			executor.shutdown();
+			executor.awaitTermination(1, TimeUnit.SECONDS);
+		} catch (InterruptedException | ExecutionException e) {
+			throw new AssertionError(e);
 		}
 	}
 

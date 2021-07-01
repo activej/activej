@@ -22,7 +22,6 @@ import io.activej.common.Checks;
 import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
@@ -60,7 +59,6 @@ import static io.activej.common.Checks.*;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public final class ClusterRepartitionController implements WithInitializer<ClusterRepartitionController>, EventloopJmxBeanEx, EventloopService {
@@ -70,12 +68,12 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	private static final Duration DEFAULT_PLAN_RECALCULATION_INTERVAL = Duration.ofMinutes(1);
 
 	private final Object localPartitionId;
-	private final ActiveFs localFs;
 	private final FsPartitions partitions;
 	private final AsyncSupplier<Void> repartition = reuse(this::doRepartition);
 
 	private final List<String> processedFiles = new ArrayList<>();
 
+	private ActiveFs localFs;
 	private String glob = "**";
 	private Predicate<String> negativeGlobPredicate = $ -> true;
 	private int replicationCount = 1;
@@ -96,15 +94,13 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	private final PromiseStats repartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats singleFileRepartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 
-	private ClusterRepartitionController(Object localPartitionId, ActiveFs localFs, FsPartitions partitions) {
+	private ClusterRepartitionController(Object localPartitionId, FsPartitions partitions) {
 		this.localPartitionId = localPartitionId;
-		this.localFs = localFs;
 		this.partitions = partitions;
 	}
 
 	public static ClusterRepartitionController create(Object localPartitionId, FsPartitions partitions) {
-		ActiveFs local = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
-		return new ClusterRepartitionController(localPartitionId, local, partitions);
+		return new ClusterRepartitionController(localPartitionId, partitions);
 	}
 
 	public ClusterRepartitionController withGlob(@NotNull String glob) {
@@ -413,6 +409,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	@NotNull
 	@Override
 	public Promise<Void> start() {
+		this.localFs = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
 		return Promise.complete();
 	}
 
@@ -463,17 +460,6 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	@JmxAttribute(name = "")
 	public FsPartitions getPartitions() {
 		return partitions;
-	}
-
-	@JmxOperation
-	public void setPartitions(String partitionString) throws MalformedDataException {
-		List<String> newPartitions = Arrays.stream(partitionString.split(";"))
-				.map(String::trim)
-				.filter(s -> !s.isEmpty())
-				.collect(toList());
-		checkArgument(newPartitions.contains(localPartitionId.toString()), "Cannot remove local partition");
-
-		this.partitions.setPartitions(newPartitions);
 	}
 
 	@JmxAttribute

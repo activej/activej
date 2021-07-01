@@ -17,11 +17,13 @@
 package io.activej.launchers.fs;
 
 import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
+import io.activej.fs.cluster.DiscoveryService;
 import io.activej.fs.cluster.FsPartitions;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
@@ -36,7 +38,6 @@ import io.activej.service.ServiceGraphModule;
 
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.fs.Initializers.ofClusterActiveFs;
-import static io.activej.launchers.fs.Initializers.ofFsPartitions;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 
@@ -80,9 +81,13 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	@Provides
-	FsPartitions fsPartitions(Eventloop eventloop, Config config) {
-		return FsPartitions.create(eventloop)
-				.withInitializer(ofFsPartitions(config.getChild("activefs.cluster")));
+	DiscoveryService discoveryService(Eventloop eventloop, Config config) throws MalformedDataException {
+		return Initializers.constantDiscoveryService(eventloop, config.getChild("activefs.cluster"));
+	}
+
+	@Provides
+	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService) {
+		return FsPartitions.create(eventloop, discoveryService);
 	}
 	//[END EXAMPLE]
 

@@ -19,17 +19,25 @@ package io.activej.launchers.fs;
 import io.activej.common.api.Initializer;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
+import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
-import io.activej.fs.cluster.FsPartitions;
+import io.activej.fs.cluster.DiscoveryService;
+import io.activej.fs.http.HttpActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.http.AsyncHttpClient;
 import io.activej.trigger.TriggersModuleSettings;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.parseInetSocketAddress;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStats;
@@ -50,17 +58,41 @@ public final class Initializers {
 				.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 	}
 
-	public static Initializer<FsPartitions> ofFsPartitions(Config config) {
-		return fsPartitions -> {
-			List<String> tcpPartitions = config.get(ofList(ofString()), "partitions", fsPartitions.getAllPartitions());
-			try {
-				fsPartitions.setPartitions(tcpPartitions);
-			} catch (MalformedDataException e) {
-				throw new RuntimeException(e);
+	public static DiscoveryService constantDiscoveryService(Eventloop eventloop, Config config) throws MalformedDataException {
+		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
+
+		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", Collections.emptyList());
+		for (String toAdd : partitionStrings) {
+			ActiveFs client;
+			if (toAdd.startsWith("http")) {
+				client = HttpActiveFs.create(toAdd, AsyncHttpClient.create(eventloop));
+			} else {
+				client = RemoteActiveFs.create(eventloop, parseInetSocketAddress(toAdd));
 			}
-			checkState(!fsPartitions.getPartitions().isEmpty(),
-					"Cluster could not operate without partitions, config had none");
-		};
+			partitions.put(toAdd, client);
+		}
+
+		checkState(!partitions.isEmpty(), "Cluster could not operate without partitions, config had none");
+		return DiscoveryService.constant(partitions);
+	}
+
+	public static DiscoveryService constantDiscoveryService(Eventloop eventloop, ActiveFs local, Config config) throws MalformedDataException {
+		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
+		partitions.put(config.get("activefs.repartition.localPartitionId"), local);
+
+		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", Collections.emptyList());
+		for (String toAdd : partitionStrings) {
+			ActiveFs client;
+			if (toAdd.startsWith("http")) {
+				client = HttpActiveFs.create(toAdd, AsyncHttpClient.create(eventloop));
+			} else {
+				client = RemoteActiveFs.create(eventloop, parseInetSocketAddress(toAdd));
+			}
+			partitions.put(toAdd, client);
+		}
+
+		checkState(!partitions.isEmpty(), "Cluster could not operate without partitions, config had none");
+		return DiscoveryService.constant(partitions);
 	}
 
 	public static Initializer<ClusterActiveFs> ofClusterActiveFs(Config config) {

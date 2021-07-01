@@ -97,7 +97,7 @@ public final class ClusterRepartitionControllerStressTest {
 			servers.add(server);
 		}
 
-		this.partitions = FsPartitions.create(eventloop, partitions)
+		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions))
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
 		controller = ClusterRepartitionController.create(localPartitionId, this.partitions)

@@ -191,8 +191,9 @@ public final class TestClusterDeadPartitionCheck {
 			listenFuture.get();
 		}
 
-		this.partitions = FsPartitions.create(eventloop, partitions)
+		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions))
 				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()));
+		await(this.partitions.start());
 		this.fs = ClusterActiveFs.create(this.partitions)
 				.withReplicationCount(CLIENT_SERVER_PAIRS / 2);
 	}

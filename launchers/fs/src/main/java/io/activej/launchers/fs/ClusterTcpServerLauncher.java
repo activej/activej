@@ -17,10 +17,12 @@
 package io.activej.launchers.fs;
 
 import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
+import io.activej.fs.cluster.DiscoveryService;
 import io.activej.fs.cluster.FsPartitions;
 import io.activej.fs.cluster.ServerSelector;
 import io.activej.fs.tcp.ActiveFsServer;
@@ -33,14 +35,10 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import static io.activej.common.Utils.nullToDefault;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
-import static io.activej.launchers.fs.Initializers.ofFsPartitions;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
 
 public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
@@ -74,13 +72,15 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	}
 
 	@Provides
-	FsPartitions fsPartitions(Config config, Eventloop eventloop, @Optional ServerSelector serverSelector, ActiveFs fs) {
-		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
-		partitions.put(config.get("activefs.repartition.localPartitionId"), fs);
+	DiscoveryService discoveryService(Eventloop eventloop, ActiveFs activeFs, Config config) throws MalformedDataException {
+		return Initializers.constantDiscoveryService(eventloop, activeFs, config);
+	}
 
-		return FsPartitions.create(eventloop, partitions)
-				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER))
-				.withInitializer(ofFsPartitions(config.getChild("activefs.cluster")));
+	@Provides
+	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, @Optional ServerSelector serverSelector) {
+
+		return FsPartitions.create(eventloop, discoveryService)
+				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER));
 	}
 	//[END EXAMPLE]
 

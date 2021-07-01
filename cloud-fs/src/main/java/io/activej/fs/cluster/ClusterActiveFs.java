@@ -22,7 +22,6 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -124,8 +123,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	 * Sets the replication count that determines how many copies of the file should persist over the cluster.
 	 */
 	public ClusterActiveFs withReplicationCount(int replicationCount) {
-		checkArgument(1 <= replicationCount && replicationCount <= partitions.getPartitions().size(),
-				"Replication count cannot be less than one or greater than number of partitions");
+		checkArgument(1 <= replicationCount, "Replication count cannot be less than one");
 		this.deadPartitionsThreshold = replicationCount - 1;
 		this.uploadTargetsMin = replicationCount;
 		this.uploadTargetsMax = replicationCount;
@@ -137,14 +135,13 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	 */
 	@SuppressWarnings("UnusedReturnValue")
 	public ClusterActiveFs withPersistenceOptions(int deadPartitionsThreshold, int uploadTargetsMin, int uploadTargetsMax) {
-		checkArgument(0 <= deadPartitionsThreshold && deadPartitionsThreshold < partitions.getPartitions().size(),
-				"Dead partitions threshold cannot be less than zero or greater than number of partitions");
+		checkArgument(0 <= deadPartitionsThreshold,
+				"Dead partitions threshold cannot be less than zero");
 		checkArgument(0 <= uploadTargetsMin,
 				"Minimum number of upload targets should not be less than zero");
-		checkArgument(0 < uploadTargetsMax && uploadTargetsMin <= uploadTargetsMax && uploadTargetsMax <= partitions.getPartitions().size(),
+		checkArgument(0 < uploadTargetsMax && uploadTargetsMin <= uploadTargetsMax,
 				"Maximum number of upload targets should be greater than zero, " +
-						"should not be less than minimum number of upload targets and" +
-						"should not exceed total number of partitions");
+						"should not be less than minimum number of upload targets");
 		this.deadPartitionsThreshold = deadPartitionsThreshold;
 		this.uploadTargetsMin = uploadTargetsMin;
 		this.uploadTargetsMax = uploadTargetsMax;
@@ -271,6 +268,11 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	@NotNull
 	@Override
 	public Promise<Void> start() {
+		checkArgument(deadPartitionsThreshold < partitions.getPartitions().size(),
+				"Dead partitions threshold should be less than number of partitions");
+		checkArgument(uploadTargetsMax <= partitions.getPartitions().size(),
+				"Maximum number of upload targets should not exceed total number of partitions");
+
 		return ping();
 	}
 
@@ -563,14 +565,6 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	@JmxAttribute(name = "")
 	public FsPartitions getPartitions() {
 		return partitions;
-	}
-
-	@JmxOperation
-	public void setPartitions(String partitionString) throws MalformedDataException {
-		this.partitions.setPartitions(Arrays.stream(partitionString.split(";"))
-				.map(String::trim)
-				.filter(s -> !s.isEmpty())
-				.collect(toList()));
 	}
 	// endregion
 }

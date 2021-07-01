@@ -106,16 +106,22 @@ public final class ClusterRepartitionControllerTest {
 		failingServer.listen();
 		servers.add(failingServer);
 
-		FsPartitions fsPartitions = FsPartitions.create(eventloop, partitions)
+		DiscoveryService discoveryService = DiscoveryService.constant(partitions);
+		FsPartitions fsPartitions = FsPartitions.create(eventloop, discoveryService)
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
+
+		Promise<Map<Object, ActiveFs>> discoverPromise = Promise.ofCallback(cb -> discoveryService.discover(null, cb));
+		Map<Object, ActiveFs> discovered = discoverPromise.getResult();
 
 		ClusterRepartitionController controller = ClusterRepartitionController.create(localPartitionId, fsPartitions)
 				.withReplicationCount(partitions.size());    // full replication
 
-		assertTrue(fsPartitions.getAlivePartitions().containsKey("regular"));
-		assertTrue(fsPartitions.getAlivePartitions().containsKey("failing")); // no one has marked it dead yet
+		assertTrue(discovered.containsKey("regular"));
+		assertTrue(discovered.containsKey("failing")); // no one has marked it dead yet
 
-		await(controller.repartition()
+		await(fsPartitions.start()
+				.then(controller::start)
+				.then(controller::repartition)
 				.whenComplete(assertComplete($ -> servers.forEach(AbstractServer::close))));
 
 		assertTrue(fsPartitions.getAlivePartitions().containsKey("regular"));
