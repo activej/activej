@@ -18,6 +18,7 @@ package io.activej.codegen;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.VarLocal;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -33,6 +34,7 @@ import static io.activej.codegen.util.Utils.*;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.objectweb.asm.Type.*;
 
@@ -271,6 +273,10 @@ public final class Context {
 					getAccessibleMethods().stream(),
 					methodName,
 					arguments);
+			if (foundMethod == null) {
+				throw new IllegalArgumentException("Method not found: " + ownerType.getClassName() + '#' + methodName +
+						Arrays.stream(arguments).map(Class::getName).collect(joining(",", "(", ")")));
+			}
 			g.invokeVirtual(ownerType, foundMethod);
 		} else {
 			Class<?> javaOwnerType = toJavaType(ownerType);
@@ -280,6 +286,10 @@ public final class Context {
 							.map(Method::getMethod),
 					methodName,
 					arguments);
+			if (foundMethod == null) {
+				throw new IllegalArgumentException("Method not found: " + ownerType.getClassName() + '#' + methodName +
+						Arrays.stream(arguments).map(Class::getName).collect(joining(",", "(", ")")));
+			}
 			if (javaOwnerType.isInterface()) {
 				g.invokeInterface(ownerType, foundMethod);
 			} else {
@@ -318,6 +328,10 @@ public final class Context {
 					methodName,
 					arguments);
 		}
+		if (foundMethod == null) {
+			throw new IllegalArgumentException("Static method not found: " + ownerType.getClassName() + '.' + methodName +
+					Arrays.stream(arguments).map(Class::getName).collect(joining(",", "(", ")")));
+		}
 		g.invokeStatic(ownerType, foundMethod);
 		return foundMethod.getReturnType();
 	}
@@ -340,10 +354,15 @@ public final class Context {
 	public Type invokeConstructor(Type ownerType, Type... argumentTypes) {
 		if (ownerType.equals(getSelfType()))
 			throw new IllegalArgumentException();
+		Class<?>[] arguments = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
 		Method foundMethod = findMethod(
 				Arrays.stream(toJavaType(ownerType).getConstructors()).map(Method::getMethod),
 				"<init>",
-				Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new));
+				arguments);
+		if (foundMethod == null) {
+			throw new IllegalArgumentException("Constructor not found:" + ownerType.getClassName() +
+					Arrays.stream(arguments).map(Class::getName).collect(joining(",", "(", ")")));
+		}
 		g.invokeConstructor(ownerType, foundMethod);
 		return ownerType;
 	}
@@ -354,10 +373,15 @@ public final class Context {
 		for (int i = 0; i < arguments.size(); i++) {
 			argumentTypes[i] = arguments.get(i).load(this);
 		}
+		Class<?>[] argumentClasses = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
 		Method foundMethod = findMethod(
 				Arrays.stream(classBuilder.superclass.getDeclaredConstructors()).map(Method::getMethod),
 				"<init>",
-				Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new));
+				argumentClasses);
+		if (foundMethod == null) {
+			throw new IllegalArgumentException("Parent constructor not found: " + classBuilder.superclass.getSimpleName() +
+					" with arguments " + Arrays.stream(argumentClasses).map(Class::getName).collect(joining(",", "(", ")")));
+		}
 		g.invokeConstructor(getType(classBuilder.superclass), foundMethod);
 
 		for (String field : classBuilder.fieldExpressions.keySet()) {
@@ -379,16 +403,24 @@ public final class Context {
 		for (int i = 0; i < arguments.size(); i++) {
 			argumentTypes[i] = arguments.get(i).load(this);
 		}
+		Class<?>[] argumentClasses = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
 		Method foundMethod = findMethod(
 				getAccessibleMethods().stream(),
 				methodName,
-				Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new));
+				argumentClasses);
+		if (foundMethod == null) {
+			throw new IllegalArgumentException("Parent method of " + classBuilder.superclass.getSimpleName() +
+					" with name'" + methodName +
+					"' and arguments " + Arrays.stream(argumentClasses).map(Class::getName).collect(joining(",", "(", ")")) +
+					" not found");
+		}
 		String typeName = getType(classBuilder.superclass).getInternalName();
 		g.visitMethodInsn(Opcodes.INVOKESPECIAL, typeName, methodName, method.getDescriptor(), false);
 		return foundMethod.getReturnType();
 	}
 
 	@SuppressWarnings("StatementWithEmptyBody")
+	@Nullable
 	private Method findMethod(Stream<Method> methods, String name, Class<?>[] arguments) {
 		Set<Method> methodSet = methods.collect(toSet());
 
@@ -419,10 +451,6 @@ public final class Context {
 					throw new IllegalArgumentException("Ambiguous method: " + method + " " + Arrays.toString(arguments));
 				}
 			}
-		}
-
-		if (foundMethod == null) {
-			throw new IllegalArgumentException("Method not found: " + name + " " + Arrays.toString(arguments));
 		}
 
 		return foundMethod;
