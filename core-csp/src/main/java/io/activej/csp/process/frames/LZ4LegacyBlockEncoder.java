@@ -20,7 +20,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.Checks;
 import net.jpountz.lz4.LZ4Compressor;
-import net.jpountz.xxhash.StreamingXXHash32;
+
+import java.util.zip.Checksum;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.csp.process.frames.LZ4LegacyFrameFormat.*;
@@ -35,9 +36,9 @@ final class LZ4LegacyBlockEncoder implements BlockEncoder {
 	private static final int MAX_BLOCK_SIZE = 1 << (COMPRESSION_LEVEL_BASE + 0x0F);
 
 	private final LZ4Compressor compressor;
-	private final StreamingXXHash32 checksum;
+	private final Checksum checksum;
 
-	LZ4LegacyBlockEncoder(LZ4Compressor compressor, StreamingXXHash32 checksum) {
+	LZ4LegacyBlockEncoder(LZ4Compressor compressor, Checksum checksum) {
 		this.compressor = compressor;
 		this.checksum = checksum;
 	}
@@ -64,7 +65,7 @@ final class LZ4LegacyBlockEncoder implements BlockEncoder {
 
 		checksum.reset();
 		checksum.update(bytes, off, len);
-		int check = checksum.getValue();
+		int check = (int) checksum.getValue();
 
 		int compressedLength = compressor.compress(bytes, off, len, outputBytes, HEADER_LENGTH);
 

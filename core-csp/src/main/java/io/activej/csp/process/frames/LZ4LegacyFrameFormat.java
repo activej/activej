@@ -18,7 +18,10 @@ package io.activej.csp.process.frames;
 
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.xxhash.StreamingXXHash32;
 import net.jpountz.xxhash.XXHashFactory;
+
+import java.util.zip.Checksum;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -54,6 +57,7 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 
 	private final LZ4Factory lz4Factory;
 	private final XXHashFactory hashFactory;
+	private boolean legacyChecksum;
 
 	private int compressionLevel;
 
@@ -88,6 +92,17 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 		return this;
 	}
 
+	/**
+	 * Whether or not streaming hash will be used as a {@link Checksum}, same as in LZ4 library stream encoder/decoder
+	 * <p>
+	 * Useful for interoperation with {@link net.jpountz.lz4.LZ4BlockOutputStream} and {@link net.jpountz.lz4.LZ4BlockInputStream}
+	 */
+	@Deprecated
+	public LZ4LegacyFrameFormat withLegacyChecksum(boolean legacyChecksum) {
+		this.legacyChecksum = legacyChecksum;
+		return this;
+	}
+
 	@Override
 	public BlockEncoder createEncoder() {
 		LZ4Compressor compressor = compressionLevel == 0 ?
@@ -95,11 +110,39 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 				compressionLevel == -1 ?
 						lz4Factory.highCompressor() :
 						lz4Factory.highCompressor(compressionLevel);
-		return new LZ4LegacyBlockEncoder(compressor, hashFactory.newStreamingHash32(DEFAULT_SEED));
+		StreamingXXHash32 hash = hashFactory.newStreamingHash32(DEFAULT_SEED);
+		Checksum checksum = legacyChecksum ? hash.asChecksum() : toSimpleChecksum(hash);
+		return new LZ4LegacyBlockEncoder(compressor, checksum);
 	}
 
 	@Override
 	public BlockDecoder createDecoder() {
-		return new LZ4LegacyBlockDecoder(lz4Factory.fastDecompressor(), hashFactory.newStreamingHash32(DEFAULT_SEED), ignoreMissingEndOfStreamBlock);
+		StreamingXXHash32 hash = hashFactory.newStreamingHash32(DEFAULT_SEED);
+		Checksum checksum = legacyChecksum ? hash.asChecksum() : toSimpleChecksum(hash);
+		return new LZ4LegacyBlockDecoder(lz4Factory.fastDecompressor(), checksum, ignoreMissingEndOfStreamBlock);
+	}
+
+	private static Checksum toSimpleChecksum(StreamingXXHash32 hash) {
+		return new Checksum() {
+			@Override
+			public void update(int b) {
+				hash.update(new byte[]{(byte) b}, 0, 1);
+			}
+
+			@Override
+			public void update(byte[] b, int off, int len) {
+				hash.update(b, off, len);
+			}
+
+			@Override
+			public long getValue() {
+				return hash.getValue();
+			}
+
+			@Override
+			public void reset() {
+				hash.reset();
+			}
+		};
 	}
 }

@@ -24,17 +24,17 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
 import net.jpountz.lz4.LZ4Exception;
 import net.jpountz.lz4.LZ4FastDecompressor;
-import net.jpountz.xxhash.StreamingXXHash32;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.zip.Checksum;
 
 import static io.activej.csp.process.frames.LZ4LegacyFrameFormat.*;
 
 @Deprecated
 final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	private final LZ4FastDecompressor decompressor;
-	private final StreamingXXHash32 checksum;
+	private final Checksum checksum;
 	private final boolean ignoreMissingEndOfStreamBlock;
 
 	private int originalLen;
@@ -47,7 +47,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 
 	private final IntLeScanner intLEScanner = new IntLeScanner();
 
-	LZ4LegacyBlockDecoder(LZ4FastDecompressor decompressor, StreamingXXHash32 checksum, boolean ignoreMissingEndOfStreamBlock) {
+	LZ4LegacyBlockDecoder(LZ4FastDecompressor decompressor, Checksum checksum, boolean ignoreMissingEndOfStreamBlock) {
 		this.decompressor = decompressor;
 		this.checksum = checksum;
 		this.ignoreMissingEndOfStreamBlock = ignoreMissingEndOfStreamBlock;
