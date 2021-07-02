@@ -147,6 +147,16 @@ public final class SerializerBuilder {
 				throw new IllegalArgumentException("Set must have 1 generic type parameter");
 			return new SerializerDefSet(generics[0].serializer);
 		});
+		builder.setSerializer(HashSet.class, (type, generics, target) -> {
+			if (generics.length != 1)
+				throw new IllegalArgumentException("Set must have 1 generic type parameter");
+			return new SerializerDefCollection(generics[0].serializer, HashSet.class, HashSet.class);
+		});
+		builder.setSerializer(LinkedHashSet.class, (type, generics, target) -> {
+			if (generics.length != 1)
+				throw new IllegalArgumentException("Set must have 1 generic type parameter");
+			return new SerializerDefCollection(generics[0].serializer, LinkedHashSet.class, LinkedHashSet.class);
+		});
 		builder.setSerializer(Queue.class, (type, generics, target) -> {
 			if (generics.length != 1)
 				throw new IllegalArgumentException("Collection must have 1 generic type parameter");

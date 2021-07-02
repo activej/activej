@@ -2253,6 +2253,43 @@ public class BinarySerializerTest {
 		assertEquals(new ArrayList<>(queue), new ArrayList<>(deserialized.queue));
 	}
 
+	@Test
+	public void testSets() {
+		Set<String> regular = new TreeSet<>();
+
+		assertThat(regular, not(instanceOf(HashSet.class)));
+
+		regular.add("a");
+		regular.add("b");
+		regular.add("c");
+
+		HashSet<String> hash = new HashSet<>();
+		hash.add("d");
+		hash.add("e");
+		hash.add("f");
+
+		LinkedHashSet<String> linked = new LinkedHashSet<>();
+		linked.add("g");
+		linked.add("h");
+		linked.add("i");
+
+		SetsHolder setsHolder = new SetsHolder();
+		setsHolder.regular = regular;
+		setsHolder.hash = hash;
+		setsHolder.linked = linked;
+
+		SetsHolder deserialized = doTest(SetsHolder.class, setsHolder);
+
+		assertEquals(regular, deserialized.regular);
+		assertSame(LinkedHashSet.class, deserialized.regular.getClass());
+
+		assertEquals(hash, deserialized.hash);
+		assertSame(HashSet.class, deserialized.hash.getClass());
+
+		assertEquals(linked, deserialized.linked);
+		assertSame(LinkedHashSet.class, deserialized.linked.getClass());
+	}
+
 	public interface LinkedListHolder {
 		LinkedList<String> list();
 	}
@@ -2265,6 +2302,17 @@ public class BinarySerializerTest {
 	public static class QueueHolder {
 		@Serialize(order = 0)
 		public Queue<String> queue;
+	}
+
+	public static class SetsHolder {
+		@Serialize(order = 0)
+		public Set<String> regular;
+
+		@Serialize(order = 1)
+		public HashSet<String> hash;
+
+		@Serialize(order = 2)
+		public LinkedHashSet<String> linked;
 	}
 
 	public static class LinkedListHolderImpl implements LinkedListHolder {
