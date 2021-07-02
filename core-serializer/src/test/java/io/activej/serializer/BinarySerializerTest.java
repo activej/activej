@@ -19,6 +19,9 @@ import static io.activej.serializer.Utils.doTest;
 import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("unused")
@@ -1042,7 +1045,6 @@ public class BinarySerializerTest {
 		assertEquals(0, testData2.f);
 	}
 
-/*
 	public static class TestDataRecursive {
 		@Serialize(order = 0)
 		public String s;
@@ -1071,7 +1073,6 @@ public class BinarySerializerTest {
 		assertEquals(testData1.next.next.s, testData2.next.next.s);
 		assertNull(testData2.next.next.next);
 	}
-*/
 
 	public static class TestDataExtraSubclasses {
 		@Serialize(order = 0)
@@ -2219,8 +2220,51 @@ public class BinarySerializerTest {
 		assertEquals(testData1.list(), testData2.list());
 	}
 
+	@Test
+	public void testCollection() {
+		List<String> list = new ArrayList<>();
+		list.add("one");
+		list.add("two");
+		list.add("three");
+		Collection<String> collection = Collections.unmodifiableCollection(list);
+
+		assertThat(collection, not(instanceOf(List.class)));
+
+		CollectionHolder collectionHolder = new CollectionHolder();
+		collectionHolder.collection = collection;
+
+		CollectionHolder deserialized = doTest(CollectionHolder.class, collectionHolder);
+
+		assertEquals(new ArrayList<>(collection), new ArrayList<>(deserialized.collection));
+	}
+
+	@Test
+	public void testQueue() {
+		Queue<String> queue = new ArrayDeque<>();
+		queue.add("one");
+		queue.add("two");
+		queue.add("three");
+
+		QueueHolder queueHolder = new QueueHolder();
+		queueHolder.queue = queue;
+
+		QueueHolder deserialized = doTest(QueueHolder.class, queueHolder);
+
+		assertEquals(new ArrayList<>(queue), new ArrayList<>(deserialized.queue));
+	}
+
 	public interface LinkedListHolder {
 		LinkedList<String> list();
+	}
+
+	public static class CollectionHolder {
+		@Serialize(order = 0)
+		public Collection<String> collection;
+	}
+
+	public static class QueueHolder {
+		@Serialize(order = 0)
+		public Queue<String> queue;
 	}
 
 	public static class LinkedListHolderImpl implements LinkedListHolder {
