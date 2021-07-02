@@ -2177,7 +2177,9 @@ public class BinarySerializerTest {
 		public static final class ValueDataHolder extends DataHolder {
 			private final ValueData data;
 
-			public ValueDataHolder(ValueData data) {this.data = data;}
+			public ValueDataHolder(ValueData data) {
+				this.data = data;
+			}
 
 			@Override
 			public Data getData() {
@@ -2290,6 +2292,43 @@ public class BinarySerializerTest {
 		assertSame(LinkedHashSet.class, deserialized.linked.getClass());
 	}
 
+	@Test
+	public void testMaps() {
+		Map<Integer, String> regular = new TreeMap<>();
+
+		assertThat(regular, not(instanceOf(HashMap.class)));
+
+		regular.put(100, "a");
+		regular.put(50, "b");
+		regular.put(200, "c");
+
+		HashMap<Integer, String> hash = new HashMap<>();
+		hash.put(120, "d");
+		hash.put(70, "e");
+		hash.put(230, "f");
+
+		LinkedHashMap<Integer, String> linked = new LinkedHashMap<>();
+		linked.put(14,"g");
+		linked.put(200, "h");
+		linked.put(4, "i");
+
+		MapsHolder mapsHolder = new MapsHolder();
+		mapsHolder.regular = regular;
+		mapsHolder.hash = hash;
+		mapsHolder.linked = linked;
+
+		MapsHolder deserialized = doTest(MapsHolder.class, mapsHolder);
+
+		assertEquals(regular, deserialized.regular);
+		assertSame(LinkedHashMap.class, deserialized.regular.getClass());
+
+		assertEquals(hash, deserialized.hash);
+		assertSame(HashMap.class, deserialized.hash.getClass());
+
+		assertEquals(linked, deserialized.linked);
+		assertSame(LinkedHashMap.class, deserialized.linked.getClass());
+	}
+
 	public interface LinkedListHolder {
 		LinkedList<String> list();
 	}
@@ -2313,6 +2352,17 @@ public class BinarySerializerTest {
 
 		@Serialize(order = 2)
 		public LinkedHashSet<String> linked;
+	}
+
+	public static class MapsHolder {
+		@Serialize(order = 0)
+		public Map<Integer, String> regular;
+
+		@Serialize(order = 1)
+		public HashMap<Integer, String> hash;
+
+		@Serialize(order = 2)
+		public LinkedHashMap<Integer, String> linked;
 	}
 
 	public static class LinkedListHolderImpl implements LinkedListHolder {

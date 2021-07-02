@@ -167,6 +167,16 @@ public final class SerializerBuilder {
 				throw new IllegalArgumentException("Map must have 2 generic type parameter");
 			return new SerializerDefMap(generics[0].serializer, generics[1].serializer);
 		});
+		builder.setSerializer(HashMap.class, (type, generics, target) -> {
+			if (generics.length != 2)
+				throw new IllegalArgumentException("Map must have 2 generic type parameter");
+			return new SerializerDefMap(generics[0].serializer, generics[1].serializer, HashMap.class, HashMap.class);
+		});
+		builder.setSerializer(LinkedHashMap.class, (type, generics, target) -> {
+			if (generics.length != 2)
+				throw new IllegalArgumentException("Map must have 2 generic type parameter");
+			return new SerializerDefMap(generics[0].serializer, generics[1].serializer, LinkedHashMap.class, LinkedHashMap.class);
+		});
 		builder.setSerializer(Enum.class, (type, generics, target) -> {
 			List<FoundSerializer> foundSerializers = builder.scanSerializers(type, generics);
 			if (!foundSerializers.isEmpty()) {

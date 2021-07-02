@@ -28,16 +28,20 @@ import static io.activej.codegen.expression.Expressions.*;
 import static org.objectweb.asm.Type.getType;
 
 public final class SerializerDefMap extends AbstractSerializerDefMap {
-	private SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
-		super(keySerializer, valueSerializer, Map.class,
+	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
+		this(keySerializer, valueSerializer, Map.class,
 				keySerializer.getDecodeType().isEnum() ?
 						EnumMap.class :
 						LinkedHashMap.class,
-				Object.class, Object.class, nullable);
+				false);
 	}
 
-	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
-		this(keySerializer, valueSerializer, false);
+	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
+		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, false);
+	}
+
+	private SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
+		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, nullable);
 	}
 
 	@Override
@@ -56,6 +60,6 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 
 	@Override
 	public SerializerDef ensureNullable() {
-		return new SerializerDefMap(keySerializer, valueSerializer, true);
+		return new SerializerDefMap(keySerializer, valueSerializer, encodeType, decodeType, true);
 	}
 }
