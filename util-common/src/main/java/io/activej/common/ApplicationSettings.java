@@ -116,6 +116,10 @@ public final class ApplicationSettings {
 		return get(Locale::forLanguageTag, type, name, defValue);
 	}
 
+	public static <E extends Enum<E>> E getEnum(Class<?> type, String name, Class<E> enumClass, E defValue) {
+		return get(val -> Enum.valueOf(enumClass, val), type, name, defValue);
+	}
+
 	@Nullable
 	private static String getProperty(Class<?> type, String name) {
 		String property;
