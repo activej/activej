@@ -20,7 +20,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.serializer.SerializerDef;
 
 import java.util.EnumMap;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -32,7 +32,7 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 		super(keySerializer, valueSerializer, Map.class,
 				keySerializer.getDecodeType().isEnum() ?
 						EnumMap.class :
-						HashMap.class,
+						LinkedHashMap.class,
 				Object.class, Object.class, nullable);
 	}
 
