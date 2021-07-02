@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 
+import static io.activej.http.HttpHeaders.HOST;
 import static io.activej.http.HttpHeaders.of;
 import static io.activej.http.HttpMethod.*;
 import static java.util.Arrays.asList;
@@ -87,5 +88,25 @@ public final class HttpMessageTest {
 		response.addHeader(header1, "value1");
 		response.addHeader(HEADER1, "VALUE1");
 		assertHttpMessageEquals("HTTP/1.1 200 OK\r\nheader1: value1\r\nHEADER1: VALUE1\r\nContent-Length: 0\r\n\r\n", response);
+	}
+
+	@Test
+	public void testFullUrlOnClient() {
+		String url = "http://example.com/a/b/c/d?param1=test1&param2=test2#fragment";
+
+		assertEquals(url, HttpRequest.get(url).getFullUrl());
+	}
+
+	@Test
+	public void testFullUrlOnServer() throws MalformedHttpException {
+		String host = "example.com";
+		String url = "/a/b/c/d?param1=test1&param2=test2#fragment";
+		String expected = "https://example.com/a/b/c/d?param1=test1&param2=test2#fragment";
+
+		HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, GET, UrlParser.parse(url), null);
+		request.addHeader(HOST, host);
+		request.setProtocol(Protocol.HTTPS);
+
+		assertEquals(expected, request.getFullUrl());
 	}
 }

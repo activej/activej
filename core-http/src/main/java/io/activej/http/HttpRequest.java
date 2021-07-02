@@ -422,13 +422,20 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		writeHeaders(buf);
 	}
 
+	public String getFullUrl() {
+		if (CHECK) checkState(!isRecycled());
+
+		if (url.isRelativePath()) {
+			String host = getHeader(HOST);
+			return getProtocol().lowercase() + "://" + nullToEmpty(host) + url;
+		}
+		return url.toString();
+	}
+
 	@Override
 	public String toString() {
 		if (isRecycled()) return "{Recycled HttpRequest}";
-		if (url.isRelativePath()) {
-			String host = getHeader(HOST);
-			return nullToEmpty(host) + url.getPathAndQuery();
-		}
-		return url.toString();
+
+		return getFullUrl();
 	}
 }
