@@ -23,6 +23,7 @@ import java.lang.annotation.*;
 		ElementType.FIELD,
 		ElementType.METHOD})
 @Repeatable(SerializeNullableEx.class)
+@Deprecated
 public @interface SerializeNullable {
 	int[] path() default {};
 }

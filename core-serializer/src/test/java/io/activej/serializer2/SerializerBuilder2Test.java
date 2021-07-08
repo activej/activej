@@ -1,0 +1,221 @@
+package io.activej.serializer2;
+
+import io.activej.serializer.annotations.*;
+import io.activej.serializer.reflection.TypeT;
+import io.activej.serializer.scanner.TestEnum1;
+import io.activej.test.rules.ClassBuilderConstantsRule;
+import org.junit.Rule;
+import org.junit.Test;
+
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
+import static io.activej.serializer.scanner.TestEnum1.ONE;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
+public class SerializerBuilder2Test {
+	@Rule
+	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+
+	public static <T> T doTest(Class<T> type, T testData1) {
+		return io.activej.serializer.Utils.doTest(testData1, createBuilder().build(type));
+	}
+
+	public static <T> T doTest(TypeT<T> type, T testData1) {
+		return io.activej.serializer.Utils.doTest(testData1, createBuilder().build(type.getAnnotatedType()));
+	}
+
+	private static SerializerBuilder2 createBuilder() {
+		return SerializerBuilder2.create(DEFINING_CLASS_LOADER)
+				.withSubclasses("extraSubclasses1", Integer.class, String.class);
+	}
+
+	public static class TestDataScalars {
+		@Serialize(order = 5)
+		public int i;
+
+		@Serialize(order = 15)
+		@S2Nullable
+		public Integer iBoxed;
+
+		@Serialize(order = 22)
+		public String string;
+	}
+
+	@Test
+	public void testScalars() {
+		TestDataScalars testData1 = new TestDataScalars();
+
+		Random rnd = new Random();
+
+		testData1.i = rnd.nextInt();
+		testData1.iBoxed = Integer.MIN_VALUE;
+		testData1.string = "abc";
+
+		TestDataScalars testData2 = doTest(TestDataScalars.class, testData1);
+
+		assertEquals(testData1.i, testData2.i);
+		assertEquals(testData1.iBoxed, testData2.iBoxed);
+		assertEquals(testData1.string, testData2.string);
+	}
+
+	@Test
+	public void testList() {
+		{
+			List<Integer> testData1 = Arrays.asList(1, 2, 3);
+			List<Integer> testData2 = doTest(new TypeT<List<Integer>>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+
+		{
+			List<Integer> testData1 = Arrays.asList(1, 2, null, 3);
+			List<Integer> testData2 = doTest(new TypeT<List<@S2Nullable Integer>>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+
+		{
+			List<String> testData1 = Arrays.asList("1", "2", null, "3");
+			List<String> testData2 = doTest(new TypeT<List<@S2Nullable String>>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+
+		{
+			List<String> testData1 = null;
+			List<String> testData2 = doTest(new TypeT<@S2Nullable List<@S2Nullable String>>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+	}
+
+	@Test
+	public void testArray() {
+		{
+			int[] testData1 = new int[]{1, 2, 3};
+			int[] testData2 = doTest(new TypeT<int[]>() {}, testData1);
+			assertArrayEquals(testData1, testData2);
+		}
+		{
+			int[] testData1 = new int[]{1, 2, 3};
+			int[] testData2 = doTest(new TypeT<@S2VarLength int[]>() {}, testData1);
+			assertArrayEquals(testData1, testData2);
+		}
+		{
+			Integer[] testData1 = new Integer[]{1, 2, 3};
+			Integer[] testData2 = doTest(new TypeT<Integer[]>() {}, testData1);
+			assertArrayEquals(testData1, testData2);
+		}
+		{
+			Integer[] testData1 = new Integer[]{1, 2, 3};
+			Integer[] testData2 = doTest(new TypeT<@S2VarLength Integer[]>() {}, testData1);
+			assertArrayEquals(testData1, testData2);
+		}
+		{
+			Integer[] testData1 = new Integer[]{1, 2, null, 3};
+			Integer[] testData2 = doTest(new TypeT<@S2Nullable @S2VarLength Integer[]>() {}, testData1);
+			assertArrayEquals(testData1, testData2);
+		}
+	}
+
+	@Test
+	public void testEnum() {
+		{
+			TestEnum1 testData1 = ONE;
+			TestEnum1 testData2 = doTest(TestEnum1.class, testData1);
+			assertEquals(testData1, testData2);
+		}
+		{
+			TestEnum1 testData1 = null;
+			TestEnum1 testData2 = doTest(new TypeT<@S2Nullable TestEnum1>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+	}
+
+	@Test
+	public void testSubclasses() {
+		{
+			Object testData1 = 1;
+			Object testData2 = doTest(new TypeT<@S2Subclasses({String.class, Integer.class}) Object>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+		{
+			Object testData1 = "abc";
+			Object testData2 = doTest(new TypeT<@S2Subclasses({String.class, Integer.class}) Object>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+		{
+			Object testData1 = null;
+			Object testData2 = doTest(new TypeT<@S2Subclasses({String.class, Integer.class}) @S2Nullable Object>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+		{
+			Object testData1 = 1;
+			Object testData2 = doTest(new TypeT<@S2Subclasses(extraSubclassesId = "extraSubclasses1") Object>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+	}
+
+	@Test
+	public void testInetAddress() throws UnknownHostException {
+		{
+			InetAddress testData1 = Inet4Address.getByName("192.168.1.1");
+			Object testData2 = doTest(new TypeT<InetAddress>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+	}
+
+	public static class TestNode {
+		@Serialize(order = 2)
+		@S2Nullable
+		public TestNode left;
+
+		@Serialize(order = 3)
+		@S2Nullable
+		public TestNode right;
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			TestNode node = (TestNode) o;
+			if (left != null ? !left.equals(node.left) : node.left != null) return false;
+			if (right != null ? !right.equals(node.right) : node.right != null) return false;
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = 0;
+			result = 31 * result + (left != null ? left.hashCode() : 0);
+			result = 31 * result + (right != null ? right.hashCode() : 0);
+			return result;
+		}
+	}
+
+	@Test
+	public void testRecursiveTypes() {
+		{
+			TestNode testData1 = new TestNode();
+			TestNode testData2 = doTest(new TypeT<TestNode>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+		{
+			TestNode testData1 = null;
+			TestNode testData2 = doTest(new TypeT<@S2Nullable TestNode>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+		{
+			TestNode testData1 = new TestNode();
+			testData1.left = new TestNode();
+			testData1.left.right = new TestNode();
+			testData1.right = new TestNode();
+			testData1.right.left = new TestNode();
+			TestNode testData2 = doTest(new TypeT<TestNode>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+	}
+}

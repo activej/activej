@@ -16,15 +16,15 @@
 
 package io.activej.serializer.annotations;
 
+import io.activej.serializer.SerializerDef;
+
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD,
-		ElementType.TYPE})
-@Repeatable(SerializeReferenceEx.class)
-@Deprecated
-public @interface SerializeReference {
-	int[] path() default {};
+		ElementType.TYPE_USE})
+public @interface S2Class {
+	Class<? extends SerializerDef> value();
 }

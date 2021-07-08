@@ -115,6 +115,11 @@ public final class RecursiveType {
 	}
 
 	@NotNull
+	public <T> TypeT<T> getTypeT() {
+		return TypeT.ofType(getType());
+	}
+
+	@NotNull
 	public Type getType() {
 		if (typeParams.length == 0) {
 			return getArrayType(clazz, arrayDimension);
@@ -125,13 +130,7 @@ public final class RecursiveType {
 				.collect(toList())
 				.toArray(new Type[]{});
 
-		ParameterizedType parameterized = getParameterized(clazz, types);
-		return getArrayType(parameterized, arrayDimension);
-	}
-
-	@NotNull
-	private static ParameterizedType getParameterized(Class<?> clazz, Type[] types) {
-		return new ParameterizedType() {
+		ParameterizedType parameterized = new ParameterizedType() {
 			@NotNull
 			@Override
 			public Type[] getActualTypeArguments() {
@@ -149,7 +148,14 @@ public final class RecursiveType {
 			public Type getOwnerType() {
 				return null;
 			}
+
+			@NotNull
+			@Override
+			public String toString() {
+				return RecursiveType.this.toString();
+			}
 		};
+		return getArrayType(parameterized, arrayDimension);
 	}
 
 	@SuppressWarnings("RedundantIfStatement")

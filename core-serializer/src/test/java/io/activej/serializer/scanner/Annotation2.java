@@ -1,4 +1,4 @@
-package io.activej.common.reflection.scanner;
+package io.activej.serializer.scanner;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,5 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE, ElementType.TYPE_USE})
-public @interface Annotation1 {
+public @interface Annotation2 {
+	String value() default "";
 }

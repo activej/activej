@@ -32,6 +32,10 @@ public final class SerializerDefInt extends SerializerDefPrimitive implements Se
 		this(true, false);
 	}
 
+	public SerializerDefInt(boolean wrapped) {
+		this(wrapped, false);
+	}
+
 	public SerializerDefInt(boolean wrapped, boolean varLength) {
 		super(int.class, wrapped);
 		this.varLength = varLength;

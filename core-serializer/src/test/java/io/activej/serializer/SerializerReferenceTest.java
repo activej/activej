@@ -1,8 +1,6 @@
 package io.activej.serializer;
 
-import io.activej.serializer.annotations.Serialize;
-import io.activej.serializer.annotations.SerializeNullable;
-import io.activej.serializer.annotations.SerializeReference;
+import io.activej.serializer.annotations.*;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,19 +22,21 @@ public class SerializerReferenceTest {
 	public static class TestDataReferences {
 		@Serialize(order = 0)
 		@SerializeNullable
+		@S2Nullable
 		@SerializeReference
+		@S2Reference
 		public String string;
 
 		@Serialize(order = 1)
 		@SerializeReference(path = {0})
 		@SerializeNullable(path = {0})
-		public List<String> list;
+		public List<@S2Reference @S2Nullable String> list;
 
 		@Serialize(order = 2)
 		@SerializeReference(path = {0})
 		@SerializeReference(path = {1})
 		@SerializeNullable(path = {1})
-		public Map<String, String> map;
+		public Map<@S2Reference String, @S2Reference @S2Nullable String> map;
 	}
 
 	@Test
@@ -74,36 +74,42 @@ public class SerializerReferenceTest {
 
 		@Serialize(order = 2)
 		@SerializeReference
+		@S2Reference
 		public CyclicReferenceA cyclicReferenceA;
 
 		@Serialize(order = 3)
 		@SerializeReference
+		@S2Reference
 		public Node node;
 	}
 
+	@S2Reference
 	public static class SelfReference {
 		@Serialize(order = 0)
 		@SerializeReference
 		@SerializeNullable
+		@S2Nullable
 		public SelfReference selfReference;
 	}
 
 	public static class CyclicReferenceA {
 		@Serialize(order = 0)
 		@SerializeReference
+		@S2Reference
 		public CyclicReferenceB cyclicReferenceB;
 	}
 
 	public static class CyclicReferenceB {
 		@Serialize(order = 0)
 		@SerializeReference
+		@S2Reference
 		public CyclicReferenceA cyclicReferenceA;
 	}
 
 	public static class Node {
 		@Serialize(order = 0)
 		@SerializeReference(path = {0})
-		public List<Node> nodes;
+		public List<@S2Reference Node> nodes;
 	}
 
 	@Test
@@ -135,9 +141,11 @@ public class SerializerReferenceTest {
 	}
 
 	@SerializeReference
+	@S2Reference
 	public static class ContainerCyclicReference {
 		@Serialize(order = 0)
 		@SerializeNullable
+		@S2Nullable
 		public ContainerCyclicReference ref;
 	}
 

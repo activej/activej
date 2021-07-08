@@ -26,15 +26,15 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
 public final class SerializerDefEnum extends AbstractSerializerDef implements SerializerDefWithNullable {
-	private final Class<?> enumType;
+	private final Class<? extends Enum<?>> enumType;
 	private final boolean nullable;
 
-	public SerializerDefEnum(Class<?> enumType, boolean nullable) {
+	public SerializerDefEnum(Class<? extends Enum<?>> enumType, boolean nullable) {
 		this.enumType = enumType;
 		this.nullable = nullable;
 	}
 
-	public SerializerDefEnum(Class<?> enumType) {
+	public SerializerDefEnum(Class<? extends Enum<?>> enumType) {
 		this(enumType, false);
 	}
 

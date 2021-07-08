@@ -14,17 +14,26 @@
  * limitations under the License.
  */
 
-package io.activej.serializer.annotations;
+package io.activej.serializer.reflection.scanner;
 
-import java.lang.annotation.*;
+import io.activej.serializer.reflection.TypeT;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({
-		ElementType.FIELD,
-		ElementType.METHOD,
-		ElementType.TYPE})
-@Repeatable(SerializeReferenceEx.class)
-@Deprecated
-public @interface SerializeReference {
-	int[] path() default {};
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Type;
+
+import static io.activej.serializer.reflection.scanner.TypeUtils.annotatedTypeOf;
+
+/**
+ * This is an interface for something that can create or retrieve a codec for a given type.
+ */
+public interface TypeScanner<R> {
+	R scan(AnnotatedType type);
+
+	default R scan(Type type) {
+		return scan(annotatedTypeOf(type));
+	}
+
+	default R scan(TypeT<?> type) {
+		return scan(type.getAnnotatedType());
+	}
 }

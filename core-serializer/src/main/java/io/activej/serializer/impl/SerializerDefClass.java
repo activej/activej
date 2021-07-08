@@ -228,7 +228,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 
 	@Override
 	public boolean isInline(int version, CompatibilityLevel compatibilityLevel) {
-		return fields.size() <= 1;
+		return false;// fields.size() <= 1;
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package io.activej.common.reflection.scanner;
+package io.activej.serializer.reflection.scanner;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
@@ -14,6 +15,7 @@ public class TypeUtils {
 	public static final Type[] NO_TYPES = new Type[0];
 	public static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	public static final AnnotatedType[] NO_ANNOTATED_TYPES = new AnnotatedType[0];
+	public static final WildcardType WILDCARD_TYPE_ANY = new WildcardTypeImpl(new Type[]{Object.class}, new Type[0]);
 
 	public static Class<?> getRawClass(Type type) {
 		Class<?> typeClazz;
@@ -37,7 +39,8 @@ public class TypeUtils {
 		Type[] typeArguments;
 
 		if (type instanceof Class) {
-			typeArguments = NO_TYPES;
+			typeArguments = new Type[((Class<?>) type).getTypeParameters().length];
+			Arrays.fill(typeArguments, WILDCARD_TYPE_ANY);
 		} else if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
 			typeArguments = parameterizedType.getActualTypeArguments();
@@ -58,9 +61,10 @@ public class TypeUtils {
 		return NO_ANNOTATED_TYPES;
 	}
 
-	public static Map<TypeVariable<?>, Type> getTypeParameters(Type type) {
+	public static Map<TypeVariable<?>, Type> getTypeBindings(Type type) {
 		Class<?> typeClazz = getRawClass(type);
 		Type[] typeArguments = getTypeArguments(type);
+		if (typeArguments.length == 0) return Collections.emptyMap();
 		Map<TypeVariable<?>, Type> map = new LinkedHashMap<>();
 		TypeVariable<?>[] typeVariables = typeClazz.getTypeParameters();
 		for (int i = 0; i < typeVariables.length; i++) {
@@ -69,9 +73,10 @@ public class TypeUtils {
 		return map;
 	}
 
-	public static Map<TypeVariable<?>, AnnotatedType> getTypeParameters(AnnotatedType type) {
+	public static Map<TypeVariable<?>, AnnotatedType> getTypeBindings(AnnotatedType type) {
 		Class<?> typeClazz = getRawClass(type);
 		AnnotatedType[] typeArguments = getTypeArguments(type);
+		if (typeArguments.length == 0) return Collections.emptyMap();
 		Map<TypeVariable<?>, AnnotatedType> map = new LinkedHashMap<>();
 		TypeVariable<?>[] typeVariables = typeClazz.getTypeParameters();
 		for (int i = 0; i < typeVariables.length; i++) {
@@ -96,26 +101,23 @@ public class TypeUtils {
 		return type;
 	}
 
-	@NotNull
 	public static AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings) {
+		return bind(annotatedType, bindings, TypeUtils::overrideAnnotations);
+	}
+
+	@NotNull
+	public static AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
+			BiFunction<Annotation[], Annotation[], Annotation[]> annotationCombinerFn) {
 		Annotation[] annotations = annotatedType.getAnnotations();
 		if (annotatedType instanceof AnnotatedTypeVariable) {
 			AnnotatedType actualType = bindings.apply((TypeVariable<?>) annotatedType.getType());
 			if (actualType == null) throw new IllegalArgumentException("Type not found: " + annotatedType);
 			if (annotations.length == 0) return actualType;
-			if (actualType.getAnnotations().length == 0) return annotatedTypeOf(actualType.getType(), annotations);
-			ArrayList<Annotation> actualAnnotations = new ArrayList<>(annotations.length + actualType.getAnnotations().length);
-			actualAnnotations.addAll(Arrays.asList(annotations));
-			for (Annotation a1 : actualType.getAnnotations()) {
-				if (actualAnnotations.stream().noneMatch(a0 -> a0.getClass() == a1.getClass())) {
-					actualAnnotations.add(a1);
-				}
-			}
-			return annotatedTypeOf(actualType.getType(), actualAnnotations.toArray(new Annotation[0]));
+			return annotatedTypeOf(actualType.getType(), annotationCombinerFn.apply(actualType.getAnnotations(), annotations));
 		}
 		if (annotatedType instanceof AnnotatedParameterizedType) {
 			AnnotatedType[] annotatedTypes = Arrays.stream(((AnnotatedParameterizedType) annotatedType).getAnnotatedActualTypeArguments())
-					.map(actualType -> bind(actualType, bindings))
+					.map(actualType -> bind(actualType, bindings, annotationCombinerFn))
 					.toArray(AnnotatedType[]::new);
 			return new AnnotatedParameterizedTypeImpl(
 					new ParameterizedTypeImpl((Class<?>) ((ParameterizedType) annotatedType.getType()).getRawType(),
@@ -123,6 +125,34 @@ public class TypeUtils {
 					annotations, annotatedTypes);
 		}
 		return annotatedType;
+	}
+
+	public static Annotation[] appendAnnotations(Annotation[] oldAnnotations, Annotation[] annotations) {
+		if (oldAnnotations.length == 0) return annotations;
+		if (annotations.length == 0) return oldAnnotations;
+		Annotation[] result = Arrays.copyOf(oldAnnotations, annotations.length + oldAnnotations.length);
+		System.arraycopy(annotations, 0, result, oldAnnotations.length, annotations.length);
+		return result;
+	}
+
+	public static Annotation[] overrideAnnotations(Annotation[] oldAnnotations, Annotation[] annotations) {
+		if (oldAnnotations.length == 0) return annotations;
+		if (annotations.length == 0) return oldAnnotations;
+		Annotation[] result = Arrays.copyOf(annotations, annotations.length + oldAnnotations.length);
+		int idx = annotations.length;
+		L:
+		//noinspection ForLoopReplaceableByForEach
+		for (int i = 0; i < oldAnnotations.length; i++) {
+			Annotation oldAnnotation = oldAnnotations[i];
+			Class<? extends Annotation> oldAnnotationClass = oldAnnotation.getClass();
+			for (int j = 0; j < annotations.length; j++) {
+				if (result[j].getClass() == oldAnnotationClass) {
+					continue L;
+				}
+			}
+			result[idx++] = oldAnnotation;
+		}
+		return idx == result.length ? result : Arrays.copyOf(result, idx);
 	}
 
 	@NotNull
@@ -154,6 +184,8 @@ public class TypeUtils {
 	}
 
 	public static boolean isAssignable(@NotNull Type to, @NotNull Type from) {
+		// shortcut
+		if (to instanceof Class && from instanceof Class) return ((Class<?>) to).isAssignableFrom((Class<?>) from);
 		return isAssignable(to, from, false);
 	}
 
@@ -193,9 +225,11 @@ public class TypeUtils {
 			}
 			return true;
 		}
+		if (!strict && to instanceof Class) {
+			return ((Class<?>) to).isAssignableFrom(getRawClass(from));
+		}
 		Class<?> toRawClazz = getRawClass(to);
 		Type[] toTypeArguments = getTypeArguments(to);
-		if (!strict && toRawClazz == Object.class) return true;
 		return isAssignable(toRawClazz, toTypeArguments, from, strict);
 	}
 
@@ -212,16 +246,17 @@ public class TypeUtils {
 			}
 			return true;
 		}
-		Map<TypeVariable<?>, Type> typeParameters = getTypeParameters(from);
+		Map<TypeVariable<?>, Type> typeBindings = getTypeBindings(from);
 		for (Type anInterface : fromRawClazz.getGenericInterfaces()) {
-			if (isAssignable(toRawClazz, toTypeArguments, bind(anInterface, typeParameters::get), strict)) {
+			if (isAssignable(toRawClazz, toTypeArguments, bind(anInterface, typeBindings::get), strict)) {
 				return true;
 			}
 		}
-		return isAssignable(toRawClazz, toTypeArguments, bind(fromRawClazz.getGenericSuperclass(), typeParameters::get), strict);
+		Type superclass = fromRawClazz.getGenericSuperclass();
+		return superclass != null && isAssignable(toRawClazz, toTypeArguments, bind(superclass, typeBindings::get), strict);
 	}
 
-	public static final class ParameterizedTypeImpl implements ParameterizedType {
+	private static final class ParameterizedTypeImpl implements ParameterizedType {
 		private final Class<?> rawType;
 		private final Type[] actualTypeArguments;
 
@@ -269,10 +304,47 @@ public class TypeUtils {
 			return rawType.getCanonicalName() +
 					Arrays.stream(actualTypeArguments).map(Objects::toString).collect(joining(", ", "<", ">"));
 		}
-
 	}
 
-	public static class AnnotatedTypeImpl implements AnnotatedType {
+	private static class WildcardTypeImpl implements WildcardType {
+		private final Type[] upperBounds;
+		private final Type[] lowerBounds;
+
+		private WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
+			this.upperBounds = upperBounds;
+			this.lowerBounds = lowerBounds;
+		}
+
+		@Override
+		public Type[] getUpperBounds() {
+			return upperBounds;
+		}
+
+		@Override
+		public Type[] getLowerBounds() {
+			return lowerBounds;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			WildcardTypeImpl type = (WildcardTypeImpl) o;
+			if (!Arrays.equals(upperBounds, type.upperBounds)) return false;
+			if (!Arrays.equals(lowerBounds, type.lowerBounds)) return false;
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = 0;
+			result = 31 * result + Arrays.hashCode(upperBounds);
+			result = 31 * result + Arrays.hashCode(lowerBounds);
+			return result;
+		}
+	}
+
+	private static class AnnotatedTypeImpl implements AnnotatedType {
 		protected final Type type;
 		protected final Annotation[] annotations;
 
@@ -307,6 +379,22 @@ public class TypeUtils {
 		}
 
 		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			AnnotatedTypeImpl type1 = (AnnotatedTypeImpl) o;
+			if (!type.equals(type1.type)) return false;
+			return Arrays.equals(annotations, type1.annotations);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = type.hashCode();
+			result = 31 * result + Arrays.hashCode(annotations);
+			return result;
+		}
+
+		@Override
 		public String toString() {
 			return "" +
 					(annotations.length == 0 ? "" :
@@ -315,7 +403,7 @@ public class TypeUtils {
 		}
 	}
 
-	public static class AnnotatedParameterizedTypeImpl extends AnnotatedTypeImpl implements AnnotatedParameterizedType {
+	private static class AnnotatedParameterizedTypeImpl extends AnnotatedTypeImpl implements AnnotatedParameterizedType {
 		protected final AnnotatedType[] typeArguments;
 
 		public AnnotatedParameterizedTypeImpl(ParameterizedType type, Annotation[] annotations, AnnotatedType[] typeArguments) {
@@ -329,6 +417,19 @@ public class TypeUtils {
 		}
 
 		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			AnnotatedParameterizedTypeImpl type = (AnnotatedParameterizedTypeImpl) o;
+			return Arrays.equals(typeArguments, type.typeArguments);
+		}
+
+		@Override
+		public int hashCode() {
+			return Arrays.hashCode(typeArguments);
+		}
+
+		@Override
 		public String toString() {
 			return "" +
 					(annotations.length == 0 ? "" :
@@ -339,7 +440,7 @@ public class TypeUtils {
 		}
 	}
 
-	public static class AnnotatedWildcardTypeImpl extends AnnotatedTypeImpl implements AnnotatedWildcardType {
+	private static class AnnotatedWildcardTypeImpl extends AnnotatedTypeImpl implements AnnotatedWildcardType {
 		private final AnnotatedType[] upperBounds;
 		private final AnnotatedType[] lowerBounds;
 
@@ -357,6 +458,24 @@ public class TypeUtils {
 		@Override
 		public AnnotatedType[] getAnnotatedLowerBounds() {
 			return lowerBounds;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			AnnotatedWildcardTypeImpl type = (AnnotatedWildcardTypeImpl) o;
+			if (!Arrays.equals(upperBounds, type.upperBounds)) return false;
+			if (!Arrays.equals(lowerBounds, type.lowerBounds)) return false;
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = 0;
+			result = 31 * result + Arrays.hashCode(upperBounds);
+			result = 31 * result + Arrays.hashCode(lowerBounds);
+			return result;
 		}
 
 		@Override

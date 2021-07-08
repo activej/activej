@@ -1,6 +1,8 @@
-package io.activej.common.reflection.scanner;
+package io.activej.serializer.scanner;
 
-import io.activej.common.reflection.TypeT;
+import io.activej.serializer.reflection.TypeT;
+import io.activej.serializer.reflection.scanner.TypeScanner;
+import io.activej.serializer.reflection.scanner.TypeScannerRegistry;
 import org.junit.Test;
 
 import java.lang.reflect.AnnotatedType;
@@ -10,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.activej.common.reflection.scanner.TypeUtils.*;
+import static io.activej.serializer.reflection.scanner.TypeUtils.*;
 import static org.junit.Assert.assertEquals;
 
 public class TypeScannerRegistryTest {
@@ -27,10 +29,10 @@ public class TypeScannerRegistryTest {
 				.with(new TypeT<Optional<CharSequence>>() {}, ctx -> "Optional1<" + ctx.scanTypeArgument(0) + ">")
 				.with(new TypeT<Optional<? extends CharSequence>>() {}, ctx -> "Optional2<" + ctx.scanTypeArgument(0) + ">")
 				.with(Object.class, ctx -> {
-					scan(ctx.getType());
+					scan(ctx.getAnnotatedType());
 					return "*";
 				})
-				.with(Enum.class, ctx -> getRawClass(ctx.getType()).getSimpleName())
+				.with(Enum.class, ctx -> ctx.getRawClass().getSimpleName())
 				.with(new TypeT<Object[]>() {}, ctx -> ctx.scanTypeArgument(0) + "[]")
 				.with(new TypeT<int[]>() {}, ctx -> ctx.scanTypeArgument(0) + "[]");
 
@@ -55,13 +57,13 @@ public class TypeScannerRegistryTest {
 			System.out.println();
 			System.out.println(annotatedType);
 			Field[] fields = typeClazz.getDeclaredFields();
-			Map<TypeVariable<?>, AnnotatedType> typeParameters = getTypeParameters(annotatedType);
+			Map<TypeVariable<?>, AnnotatedType> typeBindings = getTypeBindings(annotatedType);
 			for (Field field : fields) {
-				AnnotatedType fieldActualType = bind(field.getAnnotatedType(), typeParameters::get);
+				AnnotatedType fieldActualType = bind(field.getAnnotatedType(), typeBindings::get);
 				System.out.println(field.getName() + " : " + fieldActualType);
 			}
 
-			annotatedType = bind(typeClazz.getAnnotatedSuperclass(), typeParameters::get);
+			annotatedType = bind(typeClazz.getAnnotatedSuperclass(), typeBindings::get);
 		}
 	}
 

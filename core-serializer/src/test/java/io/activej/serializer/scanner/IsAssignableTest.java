@@ -1,11 +1,11 @@
-package io.activej.common.reflection.scanner;
+package io.activej.serializer.scanner;
 
 import io.activej.common.reflection.TypeT;
 import org.junit.Test;
 
 import java.util.*;
 
-import static io.activej.common.reflection.scanner.TypeUtils.isAssignable;
+import static io.activej.serializer.reflection.scanner.TypeUtils.isAssignable;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -377,6 +377,30 @@ public class IsAssignableTest {
 					new TypeT<TestClass2<String, Integer>>() {}.getType()
 			));
 		}
+	}
 
+	@SuppressWarnings("rawtypes")
+	@Test
+	public void test9() {
+		assertTrue(isAssignable(
+				new TypeT<Collection>() {}.getType(),
+				new TypeT<Queue>() {}.getType()
+		));
+		assertTrue(isAssignable(
+				new TypeT<Collection>() {}.getType(),
+				new TypeT<Queue<String>>() {}.getType()
+		));
+		assertFalse(isAssignable(
+				new TypeT<Collection<String>>() {}.getType(),
+				new TypeT<Queue>() {}.getType()
+		));
+		assertFalse(isAssignable(
+				new TypeT<Collection<? extends String>>() {}.getType(),
+				new TypeT<Queue>() {}.getType()
+		));
+		assertFalse(isAssignable(
+				new TypeT<Collection<? super String>>() {}.getType(),
+				new TypeT<Queue>() {}.getType()
+		));
 	}
 }

@@ -1,4 +1,4 @@
-package io.activej.common.reflection.scanner;
+package io.activej.serializer.scanner;
 
 import java.util.Map;
 

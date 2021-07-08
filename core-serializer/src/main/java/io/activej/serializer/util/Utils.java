@@ -20,18 +20,28 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
 public final class Utils {
 
+	public static boolean hasAnnotation(Class<? extends Annotation> type, Annotation[] annotations) {
+		return getAnnotation(type, annotations) != null;
+	}
+
 	@Nullable
-	public static <A extends Annotation> A findAnnotation(Class<A> type, Annotation[] annotations) {
-		for (Annotation annotation : annotations) {
-			if (annotation.annotationType() == type)
-				return (A) annotation;
+	public static <A extends Annotation> A getAnnotation(Class<A> type, Annotation[] annotations) {
+		for (int i = 0; i < annotations.length; i++) {
+			if (annotations[i].annotationType() == type) {
+				return (A) annotations[i];
+			}
 		}
 		return null;
+	}
+
+	public static <A extends Annotation, T> T getAnnotation(Class<A> type, Annotation[] annotations, Function<@Nullable A, T> fn) {
+		return fn.apply(getAnnotation(type, annotations));
 	}
 
 	public static <T> T eval(Supplier<T> supplier) {

@@ -184,7 +184,7 @@ public final class SerializerBuilder {
 				builder.initTasks.add(() -> builder.scanAnnotations(type, generics, serializer));
 				return serializer;
 			} else {
-				return new SerializerDefEnum(type);
+				return new SerializerDefEnum((Class<? extends Enum<?>>) type);
 			}
 		});
 		builder.setSerializer(boolean.class, new SerializerDefBoolean(false));
@@ -350,13 +350,13 @@ public final class SerializerBuilder {
 	private SerializerDef createSerializerDef(Class<?> type, SerializerForType[] generics, List<SerializerDefBuilder> mods) {
 		List<SerializerDefBuilder> mods2 = new ArrayList<>(mods);
 
-		SerializeSubclasses serializeSubclasses = findAnnotation(SerializeSubclasses.class, type.getAnnotations());
+		SerializeSubclasses serializeSubclasses = getAnnotation(SerializeSubclasses.class, type.getAnnotations());
 		if (serializeSubclasses != null) {
 			AnnotationHandler annotationHandler = annotationsMap.get(SerializeSubclasses.class);
 			mods2.add(0, annotationHandler.createBuilder(context, serializeSubclasses));
 		}
 
-		SerializeReference serializeReference = findAnnotation(SerializeReference.class, type.getAnnotations());
+		SerializeReference serializeReference = getAnnotation(SerializeReference.class, type.getAnnotations());
 		if (serializeReference != null) {
 			AnnotationHandler annotationHandler = annotationsMap.get(SerializeReference.class);
 			mods2.add(0, annotationHandler.createBuilder(context, serializeReference));
@@ -558,13 +558,13 @@ public final class SerializerBuilder {
 		int added = Serialize.DEFAULT_VERSION;
 		int removed = Serialize.DEFAULT_VERSION;
 
-		Serialize serialize = findAnnotation(Serialize.class, annotations);
+		Serialize serialize = getAnnotation(Serialize.class, annotations);
 		if (serialize != null) {
 			added = serialize.added();
 			removed = serialize.removed();
 		}
 
-		SerializeProfiles profiles = findAnnotation(SerializeProfiles.class, annotations);
+		SerializeProfiles profiles = getAnnotation(SerializeProfiles.class, annotations);
 		if (profiles != null) {
 			if (!Arrays.asList(profiles.value()).contains(profile == null ? "" : profile)) {
 				return null;
@@ -766,7 +766,7 @@ public final class SerializerBuilder {
 				List<String> fields = new ArrayList<>(method.getParameterTypes().length);
 				for (int i = 0; i < method.getParameterTypes().length; i++) {
 					Annotation[] parameterAnnotations = method.getParameterAnnotations()[i];
-					Deserialize annotation = findAnnotation(Deserialize.class, parameterAnnotations);
+					Deserialize annotation = getAnnotation(Deserialize.class, parameterAnnotations);
 					if (annotation != null) {
 						String field = annotation.value();
 						fields.add(field);
@@ -793,7 +793,7 @@ public final class SerializerBuilder {
 				List<String> fields = new ArrayList<>(factory.getParameterTypes().length);
 				for (int i = 0; i < factory.getParameterTypes().length; i++) {
 					Annotation[] parameterAnnotations = factory.getParameterAnnotations()[i];
-					Deserialize annotation = findAnnotation(Deserialize.class, parameterAnnotations);
+					Deserialize annotation = getAnnotation(Deserialize.class, parameterAnnotations);
 					if (annotation != null) {
 						String field = annotation.value();
 						fields.add(field);
@@ -815,7 +815,7 @@ public final class SerializerBuilder {
 			List<String> fields = new ArrayList<>(constructor.getParameterTypes().length);
 			for (int i = 0; i < constructor.getParameterTypes().length; i++) {
 				Annotation[] parameterAnnotations = constructor.getParameterAnnotations()[i];
-				Deserialize annotation = findAnnotation(Deserialize.class, parameterAnnotations);
+				Deserialize annotation = getAnnotation(Deserialize.class, parameterAnnotations);
 				if (annotation != null) {
 					String field = annotation.value();
 					fields.add(field);

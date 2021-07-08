@@ -22,9 +22,7 @@ import java.lang.annotation.*;
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD,
-		ElementType.TYPE})
-@Repeatable(SerializeReferenceEx.class)
-@Deprecated
-public @interface SerializeReference {
-	int[] path() default {};
+		ElementType.TYPE_USE})
+public @interface S2FixedSize {
+	int value();
 }

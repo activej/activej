@@ -23,6 +23,7 @@ import java.lang.annotation.*;
 		ElementType.FIELD,
 		ElementType.METHOD})
 @Repeatable(SerializeVarLengthEx.class)
+@Deprecated
 public @interface SerializeVarLength {
 	int[] path() default {};
 }

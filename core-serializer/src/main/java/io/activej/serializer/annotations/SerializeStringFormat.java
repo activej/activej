@@ -25,6 +25,7 @@ import java.lang.annotation.*;
 		ElementType.FIELD,
 		ElementType.METHOD})
 @Repeatable(SerializeStringFormatEx.class)
+@Deprecated
 public @interface SerializeStringFormat {
 	StringFormat value();
 

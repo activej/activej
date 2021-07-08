@@ -31,6 +31,10 @@ public final class SerializerDefLong extends SerializerDefPrimitive implements S
 		this(true, false);
 	}
 
+	public SerializerDefLong(boolean wrapped) {
+		this(wrapped, false);
+	}
+
 	public SerializerDefLong(boolean wrapped, boolean varLength) {
 		super(long.class, wrapped);
 		this.varLength = varLength;

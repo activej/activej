@@ -24,6 +24,7 @@ import java.lang.annotation.*;
 		ElementType.METHOD,
 		ElementType.TYPE})
 @Repeatable(SerializeSubclassesEx.class)
+@Deprecated
 public @interface SerializeSubclasses {
 	int[] path() default {};
 
