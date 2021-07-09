@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-decoder</artifactId>
-  <version>4.4-SNAPSHOT</version>
+  <version>4.4-rc1</version>
 
   <name>Tutorials : Decoder</name>
 
