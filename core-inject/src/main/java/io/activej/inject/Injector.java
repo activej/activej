@@ -323,18 +323,15 @@ public final class Injector implements ResourceLocator {
 		}
 
 		Binding<?> binding = markedBinding.getBinding();
-		BindingCompiler<?> compiler = binding.getCompiler();
-
-		boolean plain = compiler instanceof PlainCompiler;
 
 		Integer index;
-		if (!plain && markedBinding.getType() != TRANSIENT) {
-			slotMapping.put(key, index = nextSlot[0]++);
-		} else {
+		if (binding instanceof BindingToKey || markedBinding.getType() == TRANSIENT) {
 			index = null;
+		} else {
+			slotMapping.put(key, index = nextSlot[0]++);
 		}
 
-		CompiledBinding<?> compiled = postprocessor.apply(compiler.compile(
+		CompiledBinding<?> compiled = postprocessor.apply(binding.compile(
 				new CompiledBindingLocator() {
 					@SuppressWarnings("unchecked")
 					@Override
@@ -354,9 +351,9 @@ public final class Injector implements ResourceLocator {
 					}
 				}, threadsafe, scope, index));
 
-		if (plain) {
-			Key<?> target = ((PlainCompiler<?>) compiler).getKey();
-			Integer targetIndex = slotMapping.get(target);
+		if (binding instanceof BindingToKey) {
+			Key<?> targetKey = ((BindingToKey<?>) binding).getKey();
+			Integer targetIndex = slotMapping.get(targetKey);
 			// should already be there, but may be null if a binding is transient
 			if (targetIndex != null) {
 				slotMapping.put(key, targetIndex);

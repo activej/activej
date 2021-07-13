@@ -19,6 +19,8 @@ package io.activej.inject.module;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
+import io.activej.inject.impl.CompiledBinding;
+import io.activej.inject.impl.CompiledBindingLocator;
 import io.activej.inject.util.LocationInfo;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Types;
@@ -37,7 +39,12 @@ import static java.util.Collections.emptySet;
 
 @SuppressWarnings("UnusedReturnValue")
 final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
-	private static final Binding<?> TO_BE_GENERATED = new Binding<>(emptySet(), (compiledBindings, threadsafe, scope, slot) -> missingOptionalBinding());
+	private static final Binding<?> TO_BE_GENERATED = new Binding<Object>(emptySet()) {
+		@Override
+		public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+			return missingOptionalBinding();
+		}
+	};
 
 	private final Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings = Trie.leaf(new HashMap<>());
 	private final Map<Integer, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();

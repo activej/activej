@@ -70,8 +70,7 @@ public interface Module {
 				getBindings(),
 				combinedMultibinder(getMultibinders()),
 				combinedTransformer(getBindingTransformers()),
-				combinedGenerator(getBindingGenerators())
-		)
+				combinedGenerator(getBindingGenerators()))
 				.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, e -> BindingInfo.from(e.getValue()))));
 	}
 

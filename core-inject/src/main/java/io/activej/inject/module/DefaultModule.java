@@ -22,12 +22,10 @@ import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.binding.*;
-import io.activej.inject.impl.AbstractCompiledBinding;
-import io.activej.inject.impl.BindingInitializer;
-import io.activej.inject.impl.CompiledBinding;
-import io.activej.inject.impl.CompiledBindingInitializer;
+import io.activej.inject.impl.*;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,32 +66,34 @@ public final class DefaultModule implements Module {
 					if (instanceBinding == null) {
 						return null;
 					}
-					return new Binding<>(
-							singleton(Dependency.implicit(instanceKey, true)),
-							(compiledBindings, threadsafe, scope, slot) ->
-									slot != null ?
-											new AbstractCompiledBinding<Object>(scope, slot) {
-												@Override
-												protected Object doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-													CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
-													// ^ this only gets already compiled binding, that's not a binding compilation after injector is compiled
-													return new InstanceProviderImpl(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
-												}
-											} :
-											new CompiledBinding<Object>() {
-												@Override
-												public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+					return new Binding<Object>(singleton(Dependency.implicit(instanceKey, true))) {
+						@Override
+						public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+							return slot != null ?
+									new AbstractCompiledBinding<Object>(scope, slot) {
+										@Override
+										protected Object doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+											CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
+											// ^ this only gets already compiled binding, that's not a binding compilation after injector is compiled
+											return new InstanceProviderImpl(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
+										}
+									} :
+									new CompiledBinding<Object>() {
+										@Override
+										public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 
-													// transient bindings for instance provider are useless and nobody should make ones
-													// however, things like mapInstance create an intermediate transient compiled bindings of their peers
-													// usually they call getInstance just once and then cache the result of their computation (eg. the result of mapping function)
-													//
-													// anyway all of the above means that its ok here to just get the compiled binding and to not care about caching it
+											// transient bindings for instance provider are useless and nobody should make ones
+											// however, things like mapInstance create an intermediate transient compiled bindings of their peers
+											// usually they call getInstance just once and then cache the result of their computation (eg. the result of mapping function)
+											//
+											// anyway all of the above means that its ok here to just get the compiled binding and to not care about caching it
 
-													CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
-													return new InstanceProviderImpl(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
-												}
-											});
+											CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
+											return new InstanceProviderImpl(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
+										}
+									};
+						}
+					};
 				}
 		));
 
@@ -102,26 +102,27 @@ public final class DefaultModule implements Module {
 				(bindings, scope, key) -> {
 					Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 					BindingInitializer<Object> bindingInitializer = generateInjectingInitializer(instanceKey);
-					return new Binding<>(
-							bindingInitializer.getDependencies(),
-							(compiledBindings, threadsafe, synchronizedScope, slot) ->
-									slot != null ?
-											new AbstractCompiledBinding<Object>(synchronizedScope, slot) {
-												@Override
-												protected Object doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-													CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
-													return new InstanceInjectorImpl(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
-												}
-											} :
-											new CompiledBinding<Object>() {
-												@Override
-												public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-													CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
-													// same as with instance providers
-													return new InstanceInjectorImpl(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
-												}
-											}
-					);
+					return new Binding<Object>(bindingInitializer.getDependencies()) {
+						@Override
+						public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int synchronizedScope, @Nullable Integer slot) {
+							return slot != null ?
+									new AbstractCompiledBinding<Object>(synchronizedScope, slot) {
+										@Override
+										protected Object doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+											CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
+											return new InstanceInjectorImpl(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
+										}
+									} :
+									new CompiledBinding<Object>() {
+										@Override
+										public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+											CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
+											// same as with instance providers
+											return new InstanceInjectorImpl(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
+										}
+									};
+						}
+					};
 				}
 		));
 	}

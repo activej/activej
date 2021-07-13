@@ -3,7 +3,9 @@ package io.activej.inject.binding;
 import io.activej.inject.Key;
 import io.activej.inject.impl.AbstractCompiledBinding;
 import io.activej.inject.impl.CompiledBinding;
+import io.activej.inject.impl.CompiledBindingLocator;
 import io.activej.inject.util.Utils;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -51,32 +53,33 @@ public final class Multibinders {
 	@SuppressWarnings("rawtypes")
 	public static <T> Multibinder<T> ofReducer(BiFunction<Key<T>, Stream<T>, T> reducerFunction) {
 		return (key, bindings) ->
-				new Binding<>(bindings.getBindings().stream().map(Binding::getDependencies).flatMap(Collection::stream).collect(Collectors.toSet()),
-						(compiledBindings, threadsafe, scope, slot) -> {
-							final CompiledBinding[] conflictedBindings = bindings.getBindings().stream()
-									.map(Binding::getCompiler)
-									.map(bindingCompiler -> bindingCompiler.compile(compiledBindings, true, scope, null))
-									.toArray(CompiledBinding[]::new);
+				new Binding<T>(bindings.getBindings().stream().map(Binding::getDependencies).flatMap(Collection::stream).collect(Collectors.toSet())) {
+					@Override
+					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+						final CompiledBinding[] conflictedBindings = bindings.getBindings().stream()
+								.map(binding -> binding.compile(compiledBindings, true, scope, null))
+								.toArray(CompiledBinding[]::new);
 
-							//noinspection Convert2Lambda
-							return slot == null || bindings.getType() == TRANSIENT ?
-									new CompiledBinding<T>() {
-										@SuppressWarnings("unchecked")
-										@Override
-										public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-											return reducerFunction.apply(key, Arrays.stream(conflictedBindings)
-													.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
-										}
-									} :
-									new AbstractCompiledBinding<T>(scope, slot) {
-										@SuppressWarnings("unchecked")
-										@Override
-										protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-											return reducerFunction.apply(key, Arrays.stream(conflictedBindings)
-													.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
-										}
-									};
-						});
+						//noinspection Convert2Lambda
+						return slot == null || bindings.getType() == TRANSIENT ?
+								new CompiledBinding<T>() {
+									@SuppressWarnings("unchecked")
+									@Override
+									public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+										return reducerFunction.apply(key, Arrays.stream(conflictedBindings)
+												.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
+									}
+								} :
+								new AbstractCompiledBinding<T>(scope, slot) {
+									@SuppressWarnings("unchecked")
+									@Override
+									protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+										return reducerFunction.apply(key, Arrays.stream(conflictedBindings)
+												.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
+									}
+								};
+					}
+				};
 	}
 
 	/**
