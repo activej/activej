@@ -24,18 +24,19 @@ import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.Trie;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 
 final class SimpleModule implements Module {
 	private final Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings;
-	private final Map<Integer, Set<BindingTransformer<?>>> transformers;
-	private final Map<Class<?>, Set<BindingGenerator<?>>> generators;
+	private final Map<Type, Set<BindingTransformer<?>>> transformers;
+	private final Map<Type, Set<BindingGenerator<?>>> generators;
 	private final Map<Key<?>, Multibinder<?>> multibinders;
 
 	public SimpleModule(Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings,
-			Map<Integer, Set<BindingTransformer<?>>> transformers,
-			Map<Class<?>, Set<BindingGenerator<?>>> generators,
+			Map<Type, Set<BindingTransformer<?>>> transformers,
+			Map<Type, Set<BindingGenerator<?>>> generators,
 			Map<Key<?>, Multibinder<?>> multibinders) {
 		this.bindings = bindings;
 		this.transformers = transformers;
@@ -49,12 +50,12 @@ final class SimpleModule implements Module {
 	}
 
 	@Override
-	public Map<Integer, Set<BindingTransformer<?>>> getBindingTransformers() {
+	public Map<Type, Set<BindingTransformer<?>>> getBindingTransformers() {
 		return transformers;
 	}
 
 	@Override
-	public Map<Class<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
+	public Map<Type, Set<BindingGenerator<?>>> getBindingGenerators() {
 		return generators;
 	}
 

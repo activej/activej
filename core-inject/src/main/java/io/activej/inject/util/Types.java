@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static java.util.Map.Entry;
@@ -157,19 +158,6 @@ public final class Types {
 				.anyMatch(argument -> contains(argument, sub));
 	}
 
-	@Nullable
-	public static Class<?> findClosestAncestor(Class<?> real, Collection<Class<?>> patterns) {
-		return patterns.stream()
-				.filter(pattern -> real == pattern)
-				.findFirst()
-				.orElseGet(() -> {
-					Class<?> superclass = real.getSuperclass();
-					return superclass != null ?
-							findClosestAncestor(superclass, patterns) :
-							null;
-				});
-	}
-
 	// pattern = Map<K, List<V>>
 	// real    = Map<String, List<Integer>>
 	//
@@ -217,7 +205,7 @@ public final class Types {
 		}
 	}
 
-	private static final Map<Type, Map<TypeVariable<?>, Type>> genericMappingCache = new HashMap<>();
+	private static final Map<Type, Map<TypeVariable<?>, Type>> genericMappingCache = new ConcurrentHashMap<>();
 
 	public static Map<TypeVariable<?>, Type> getGenericTypeMapping(Type container) {
 		return getGenericTypeMapping(container, null);

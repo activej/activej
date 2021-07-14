@@ -20,7 +20,7 @@ public final class DatasetIdModule extends AbstractModule {
 	protected void configure() {
 		DatasetIds datasetIds = new DatasetIds();
 		bind(DatasetIds.class).toInstance(datasetIds);
-		transform(0, (bindings, scope, key, binding) -> {
+		transform(Object.class, (bindings, scope, key, binding) -> {
 			if (key.getQualifier() instanceof DatasetId) {
 				String id = ((DatasetId) key.getQualifier()).value();
 				Key<?> previousKey = datasetIds.keys.put(id, key);

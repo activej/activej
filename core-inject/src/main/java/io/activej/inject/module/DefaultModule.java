@@ -27,6 +27,7 @@ import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +50,7 @@ import static java.util.Collections.singleton;
 @SuppressWarnings({"Convert2Lambda", "rawtypes"})
 public final class DefaultModule implements Module {
 	private static final Trie<Scope, Map<Key<?>, BindingSet<?>>> emptyTrie = Trie.leaf(new HashMap<>());
-	private static final Map<Class<?>, Set<BindingGenerator<?>>> generators = new HashMap<>();
+	private static final Map<Type, Set<BindingGenerator<?>>> generators = new HashMap<>();
 
 	static {
 		// generating bindings for classes that have @Inject constructors/factory methods
@@ -137,12 +138,12 @@ public final class DefaultModule implements Module {
 	}
 
 	@Override
-	public Map<Integer, Set<BindingTransformer<?>>> getBindingTransformers() {
+	public Map<Type, Set<BindingTransformer<?>>> getBindingTransformers() {
 		return emptyMap();
 	}
 
 	@Override
-	public Map<Class<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
+	public Map<Type, Set<BindingGenerator<?>>> getBindingGenerators() {
 		return generators;
 	}
 

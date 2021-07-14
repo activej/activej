@@ -403,7 +403,7 @@ public class DIFollowUpTest {
 				.bind(Flour.class).to(() -> new Flour("GoodFlour", 100.0f))
 				.bind(Pastry.class).to(Pastry::new, Sugar.class, Butter.class, Flour.class)
 				.bind(Cookie.class).to(Cookie::new, Pastry.class)
-				.transform(0, (bindings, scope, key, binding) ->
+				.transform(Object.class, (bindings, scope, key, binding) ->
 						binding.onInstance(x -> System.out.println(Instant.now() + " -> " + key)))
 				.build();
 

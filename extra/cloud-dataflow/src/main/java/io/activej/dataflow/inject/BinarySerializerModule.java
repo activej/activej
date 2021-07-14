@@ -44,10 +44,7 @@ public final class BinarySerializerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		transform(0, (bindings, scope, key, binding) -> {
-			if (key.getRawType() != (Class<?>) BinarySerializer.class) {
-				return binding;
-			}
+		transform(BinarySerializer.class, (bindings, scope, key, binding) -> {
 			Class<?> rawType = key.getTypeParameter(0).getRawType();
 			return binding.mapInstance(serializer -> {
 				locator.serializers.putIfAbsent(rawType, (BinarySerializer<?>) serializer);

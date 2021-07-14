@@ -1,13 +1,15 @@
 package io.activej.inject.binding;
 
 import io.activej.inject.Injector;
-import io.activej.inject.util.Types;
+import io.activej.inject.util.TypeUtils;
+import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
-import static java.util.stream.Collectors.toSet;
+import static io.activej.inject.util.Utils.sortPatternsMap;
 
 public final class BindingGenerators {
 	private static final BindingGenerator<Object> REFUSING = (bindings, scope, key) -> null;
@@ -37,31 +39,19 @@ public final class BindingGenerators {
 	 * @throws DIException when more than one generator provides a binding for given key
 	 */
 	@SuppressWarnings("unchecked")
-	public static BindingGenerator<?> combinedGenerator(Map<Class<?>, Set<BindingGenerator<?>>> generators) {
+	public static BindingGenerator<?> combinedGenerator(Map<Type, Set<BindingGenerator<?>>> generators) {
+		LinkedHashMap<Type, Set<BindingGenerator<?>>> sorted = sortPatternsMap(generators);
 		return (bindings, scope, key) -> {
-			Class<Object> rawType = key.getRawType();
-			Class<?> generatorKey = rawType.isInterface() ? rawType : Types.findClosestAncestor(rawType, generators.keySet());
-			if (generatorKey == null) {
-				return null;
+			for (Map.Entry<Type, Set<BindingGenerator<?>>> entry : sorted.entrySet()) {
+				if (TypeUtils.isAssignable(entry.getKey(), key.getType())) {
+					for (BindingGenerator<?> generator : entry.getValue()) {
+						@Nullable Binding<Object> generated = ((BindingGenerator<Object>) generator).generate(bindings, scope, key);
+						if (generated != null) return generated;
+					}
+				}
 			}
-			Set<BindingGenerator<?>> found = generators.get(generatorKey);
-			if (found == null) {
-				return null;
-			}
-
-			Set<Binding<Object>> generatedBindings = found.stream()
-					.map(generator -> ((BindingGenerator<Object>) generator).generate(bindings, scope, key))
-					.filter(Objects::nonNull)
-					.collect(toSet());
-
-			switch (generatedBindings.size()) {
-				case 0:
-					return null;
-				case 1:
-					return generatedBindings.iterator().next();
-				default:
-					throw new DIException("More than one generator provided a binding for key " + key.getDisplayString());
-			}
+			return null;
 		};
 	}
+
 }

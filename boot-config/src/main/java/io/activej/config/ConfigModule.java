@@ -17,6 +17,7 @@
 package io.activej.config;
 
 import io.activej.common.api.WithInitializer;
+import io.activej.common.reflection.TypeT;
 import io.activej.inject.Key;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.module.AbstractModule;
@@ -45,7 +46,6 @@ import static java.util.Collections.singletonList;
  */
 public final class ConfigModule extends AbstractModule implements WithInitializer<ConfigModule> {
 	private static final Logger logger = LoggerFactory.getLogger(ConfigModule.class);
-	public static final Key<Config> KEY_OF_CONFIG = Key.of(Config.class);
 
 	private Path effectiveConfigPath;
 	private Consumer<String> effectiveConfigConsumer;
@@ -127,10 +127,7 @@ public final class ConfigModule extends AbstractModule implements WithInitialize
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void configure() {
-		transform(0, (bindings, scope, key, binding) -> {
-			if (!key.equals(KEY_OF_CONFIG)) {
-				return binding;
-			}
+		transform(Config.class, (bindings, scope, key, binding) -> {
 			Key<CompletionStage<Void>> completionStageKey = new Key<CompletionStage<Void>>(OnStart.class) {};
 			return ((Binding<Config>) (Binding<?>) binding)
 					.addDependencies(completionStageKey)

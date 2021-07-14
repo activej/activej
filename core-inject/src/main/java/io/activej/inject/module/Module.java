@@ -22,6 +22,7 @@ import io.activej.inject.binding.*;
 import io.activej.inject.impl.Preprocessor;
 import io.activej.inject.util.Trie;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -42,9 +43,9 @@ import static java.util.stream.Collectors.toMap;
 public interface Module {
 	Trie<Scope, Map<Key<?>, BindingSet<?>>> getBindings();
 
-	Map<Integer, Set<BindingTransformer<?>>> getBindingTransformers();
+	Map<Type, Set<BindingTransformer<?>>> getBindingTransformers();
 
-	Map<Class<?>, Set<BindingGenerator<?>>> getBindingGenerators();
+	Map<Type, Set<BindingGenerator<?>>> getBindingGenerators();
 
 	Map<Key<?>, Multibinder<?>> getMultibinders();
 
@@ -92,8 +93,8 @@ public interface Module {
 	 * Creates a {@link Module module} out of given binding graph trie, transformers, generators and multibinders
 	 */
 	static Module of(Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings,
-			Map<Integer, Set<BindingTransformer<?>>> transformers,
-			Map<Class<?>, Set<BindingGenerator<?>>> generators,
+			Map<Type, Set<BindingTransformer<?>>> transformers,
+			Map<Type, Set<BindingGenerator<?>>> generators,
 			Map<Key<?>, Multibinder<?>> multibinders) {
 		return new SimpleModule(bindings, transformers, generators, multibinders);
 	}

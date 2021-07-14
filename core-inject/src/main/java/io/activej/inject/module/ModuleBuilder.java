@@ -25,6 +25,7 @@ import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -134,12 +135,12 @@ public interface ModuleBuilder {
 	/**
 	 * Adds a {@link BindingTransformer transformer} with a given priority to this module.
 	 */
-	<E> ModuleBuilder transform(int priority, BindingTransformer<E> bindingTransformer);
+	<E> ModuleBuilder transform(Type pattern, BindingTransformer<E> bindingTransformer);
 
 	/**
 	 * Adds a {@link BindingGenerator generator} for a given class to this module.
 	 */
-	<E> ModuleBuilder generate(Class<?> pattern, BindingGenerator<E> bindingGenerator);
+	<E> ModuleBuilder generate(Type pattern, BindingGenerator<E> bindingGenerator);
 
 	/**
 	 * Adds a {@link Multibinder multibinder} for a given key to this module.

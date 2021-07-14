@@ -24,6 +24,7 @@ import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.Trie;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 import static io.activej.inject.Scope.UNSCOPED;
@@ -45,8 +46,8 @@ public final class Modules {
 		}
 		Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings = Trie.merge(bindingMultimapMerger(), new HashMap<>(), modules.stream().map(Module::getBindings));
 
-		Map<Integer, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
-		Map<Class<?>, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
+		Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
+		Map<Type, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
 		Map<Key<?>, Multibinder<?>> multibinders = new HashMap<>();
 
 		for (Module module : modules) {
@@ -86,10 +87,10 @@ public final class Modules {
 	public static Module override(Module into, Module replacements) {
 		Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings = Trie.merge(Map::putAll, new HashMap<>(), into.getBindings(), replacements.getBindings());
 
-		Map<Integer, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>(into.getBindingTransformers());
+		Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>(into.getBindingTransformers());
 		bindingTransformers.putAll(replacements.getBindingTransformers());
 
-		Map<Class<?>, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>(into.getBindingGenerators());
+		Map<Type, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>(into.getBindingGenerators());
 		bindingGenerators.putAll(replacements.getBindingGenerators());
 
 		Map<Key<?>, Multibinder<?>> multibinders = new HashMap<>(into.getMultibinders());

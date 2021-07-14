@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -47,8 +48,8 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 	};
 
 	private final Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings = Trie.leaf(new HashMap<>());
-	private final Map<Integer, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
-	private final Map<Class<?>, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
+	private final Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
+	private final Map<Type, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
 	private final Map<Key<?>, Multibinder<?>> multibinders = new HashMap<>();
 
 	@Nullable
@@ -197,9 +198,9 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <E> ModuleBuilder transform(int priority, BindingTransformer<E> bindingTransformer) {
+	public <E> ModuleBuilder transform(Type pattern, BindingTransformer<E> bindingTransformer) {
 		completePreviousStep();
-		bindingTransformers.computeIfAbsent(priority, $ -> new HashSet<>())
+		bindingTransformers.computeIfAbsent(pattern, $ -> new HashSet<>())
 				.add((bindings, scope, key, binding) -> {
 					Binding<Object> transformed = (Binding<Object>) bindingTransformer.transform(bindings, scope, (Key<E>) key, (Binding<E>) binding);
 					if (!binding.equals(transformed) && transformed.getLocation() == null) {
@@ -212,7 +213,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <E> ModuleBuilder generate(Class<?> pattern, BindingGenerator<E> bindingGenerator) {
+	public <E> ModuleBuilder generate(Type pattern, BindingGenerator<E> bindingGenerator) {
 		completePreviousStep();
 		bindingGenerators.computeIfAbsent(pattern, $ -> new HashSet<>())
 				.add((bindings, scope, key) -> {
@@ -242,12 +243,12 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 			}
 
 			@Override
-			public final Map<Integer, Set<BindingTransformer<?>>> getBindingTransformers() {
+			public final Map<Type, Set<BindingTransformer<?>>> getBindingTransformers() {
 				return bindingTransformers;
 			}
 
 			@Override
-			public final Map<Class<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
+			public final Map<Type, Set<BindingGenerator<?>>> getBindingGenerators() {
 				return bindingGenerators;
 			}
 

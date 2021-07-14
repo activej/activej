@@ -1,12 +1,17 @@
 package io.activej.inject.binding;
 
 import io.activej.inject.Injector;
+import io.activej.inject.Scope;
+import io.activej.inject.util.TypeUtils;
+import io.activej.inject.util.Utils;
 
-import java.util.List;
+import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.stream.Collectors.toList;
+import static io.activej.inject.util.Utils.sortPatternsMap;
+import static java.util.stream.Collectors.toMap;
 
 public final class BindingTransformers {
 	private static final BindingTransformer<Object> IDENTITY = (bindings, scope, key, binding) -> binding;
@@ -25,34 +30,19 @@ public final class BindingTransformers {
 	 * only zero or one transformer from that set are allowed to return anything but the binding is was given (being an identity transformer).
 	 * <p>
 	 * So if two transformers differ in priority then they can be applied both in order of their priority.
+	 *
+	 * @param transformers
 	 */
 	@SuppressWarnings("unchecked")
-	public static BindingTransformer<?> combinedTransformer(Map<Integer, Set<BindingTransformer<?>>> transformers) {
-
-		List<Set<BindingTransformer<?>>> transformerList = transformers.entrySet().stream()
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.collect(toList());
-
+	public static BindingTransformer<?> combinedTransformer(Map<Type, Set<BindingTransformer<?>>> transformers) {
+		LinkedHashMap<Type, Set<BindingTransformer<?>>> sorted = sortPatternsMap(transformers);
 		return (bindings, scope, key, binding) -> {
 			Binding<Object> result = binding;
-
-			for (Set<BindingTransformer<?>> localTransformers : transformerList) {
-
-				Binding<Object> transformed = null;
-
-				for (BindingTransformer<?> transformer : localTransformers) {
-					Binding<Object> b = ((BindingTransformer<Object>) transformer).transform(bindings, scope, key, result);
-					if (b.equals(binding)) {
-						continue;
+			for (Map.Entry<Type, Set<BindingTransformer<?>>> entry : sorted.entrySet()) {
+				if (TypeUtils.isAssignable(entry.getKey(), key.getType())) {
+					for (BindingTransformer<?> transformer : entry.getValue()) {
+						result = ((BindingTransformer<Object>) transformer).transform(bindings, scope, key, result);
 					}
-					if (transformed != null) {
-						throw new DIException("More than one transformer with the same priority transformed a binding for key " + key.getDisplayString());
-					}
-					transformed = b;
-				}
-				if (transformed != null) {
-					result = transformed;
 				}
 			}
 			return result;

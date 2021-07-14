@@ -1058,15 +1058,11 @@ public final class TestDI {
 	public static class PostConstructModule extends AbstractModule {
 		@Override
 		protected void configure() {
-			transform(99, (bindings, scope, key, binding) -> {
-				if (PostConstruct.class.isAssignableFrom(key.getRawType())) {
-					return binding.mapInstance(obj -> {
+			transform(PostConstruct.class, (bindings, scope, key, binding) ->
+					binding.mapInstance(obj -> {
 						((PostConstruct) obj).init();
 						return obj;
-					});
-				}
-				return binding;
-			});
+					}));
 		}
 	}
 

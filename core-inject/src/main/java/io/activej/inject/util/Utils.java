@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
@@ -297,5 +298,19 @@ public final class Utils {
 
 	public static boolean isMarker(Class<? extends Annotation> annotationType) {
 		return annotationType.getDeclaredMethods().length == 0;
+	}
+
+	public static <T> LinkedHashMap<Type, Set<T>> sortPatternsMap(Map<Type, Set<T>> map) {
+		return map.entrySet().stream()
+				.sorted((entry1, entry2) -> {
+					Type pattern1 = entry1.getKey();
+					Type pattern2 = entry2.getKey();
+					if (pattern1.equals(pattern2)) return 0;
+					if (TypeUtils.isAssignable(pattern1, pattern2)) return 1;
+					if (TypeUtils.isAssignable(pattern2, pattern1)) return -1;
+					return Integer.compare(System.identityHashCode(pattern1), System.identityHashCode(pattern2));
+				})
+				.collect(toMap(Entry::getKey, Entry::getValue,
+						(v1, v2) -> {throw new AssertionError();}, LinkedHashMap::new));
 	}
 }

@@ -26,6 +26,7 @@ import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -39,8 +40,8 @@ import static io.activej.inject.util.Utils.checkState;
 @SuppressWarnings({"SameParameterValue", "UnusedReturnValue", "unused"})
 public abstract class AbstractModule implements Module {
 	private Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings;
-	private Map<Integer, Set<BindingTransformer<?>>> bindingTransformers;
-	private Map<Class<?>, Set<BindingGenerator<?>>> bindingGenerators;
+	private Map<Type, Set<BindingTransformer<?>>> bindingTransformers;
+	private Map<Type, Set<BindingGenerator<?>>> bindingGenerators;
 	private Map<Key<?>, Multibinder<?>> multibinders;
 
 	@Nullable
@@ -131,15 +132,15 @@ public abstract class AbstractModule implements Module {
 	/**
 	 * @see ModuleBuilder#transform
 	 */
-	protected final <T> void transform(int priority, BindingTransformer<T> bindingTransformer) {
+	protected final <T> void transform(Type pattern, BindingTransformer<T> bindingTransformer) {
 		checkState(builder != null, "Cannot add transformers before or after configure() call");
-		builder.transform(priority, bindingTransformer);
+		builder.transform(pattern, bindingTransformer);
 	}
 
 	/**
 	 * @see ModuleBuilder#generate
 	 */
-	protected final <T> void generate(Class<?> pattern, BindingGenerator<T> bindingGenerator) {
+	protected final <T> void generate(Type pattern, BindingGenerator<T> bindingGenerator) {
 		checkState(builder != null, "Cannot add generators before or after configure() call");
 		builder.generate(pattern, bindingGenerator);
 	}
@@ -235,13 +236,13 @@ public abstract class AbstractModule implements Module {
 	}
 
 	@Override
-	public final Map<Integer, Set<BindingTransformer<?>>> getBindingTransformers() {
+	public final Map<Type, Set<BindingTransformer<?>>> getBindingTransformers() {
 		finish();
 		return bindingTransformers;
 	}
 
 	@Override
-	public final Map<Class<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
+	public final Map<Type, Set<BindingGenerator<?>>> getBindingGenerators() {
 		finish();
 		return bindingGenerators;
 	}
