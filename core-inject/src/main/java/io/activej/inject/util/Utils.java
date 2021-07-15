@@ -80,6 +80,8 @@ public final class Utils {
 	}
 
 	public static <T> Set<T> union(Set<T> first, Set<T> second) {
+		if (first.isEmpty()) return second;
+		if (second.isEmpty()) return first;
 		Set<T> result = new HashSet<>((first.size() + second.size()) * 4 / 3 + 1);
 		result.addAll(first);
 		result.addAll(second);

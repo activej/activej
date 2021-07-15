@@ -44,6 +44,14 @@ public final class Qualifiers {
 		return qualifier instanceof UniqueQualifierImpl ? qualifier : new UniqueQualifierImpl(qualifier);
 	}
 
+	public static boolean isNamed(@Nullable Object qualifier) {
+		return qualifier instanceof NamedImpl;
+	}
+
+	public static boolean isUnique(@Nullable Object qualifier) {
+		return qualifier instanceof UniqueQualifierImpl;
+	}
+
 	@SuppressWarnings("ClassExplicitlyAnnotation")
 	private static final class NamedImpl implements Named {
 		private static final int VALUE_HASHCODE = 127 * "value".hashCode();

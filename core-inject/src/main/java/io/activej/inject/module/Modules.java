@@ -18,18 +18,27 @@ package io.activej.inject.module;
 
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
-import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.BindingGenerator;
-import io.activej.inject.binding.BindingTransformer;
-import io.activej.inject.binding.Multibinder;
+import io.activej.inject.binding.*;
+import io.activej.inject.impl.CompiledBinding;
+import io.activej.inject.impl.CompiledBindingLocator;
 import io.activej.inject.util.Trie;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
+import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.Utils.*;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * This class contains a set of utilities for working with {@link Module modules}.
@@ -63,7 +72,7 @@ public final class Modules {
 	 * @see #combine(Collection)
 	 */
 	public static Module combine(Module... modules) {
-		return modules.length == 0 ? Module.empty() : modules.length == 1 ? modules[0] : combine(Arrays.asList(modules));
+		return modules.length == 0 ? Module.empty() : modules.length == 1 ? modules[0] : combine(asList(modules));
 	}
 
 	/**
@@ -77,7 +86,7 @@ public final class Modules {
 	 * @see #combine(Collection)
 	 */
 	public static Module override(Module... modules) {
-		return override(Arrays.asList(modules));
+		return override(asList(modules));
 	}
 
 	/**
@@ -117,6 +126,141 @@ public final class Modules {
 					scopes.put(k, scope);
 				}));
 		return new SimpleModule(Trie.leaf(bindings), from.getBindingTransformers(), from.getBindingGenerators(), from.getMultibinders());
+	}
+
+	public static Trie<Scope, Set<Key<?>>> getImports(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie) {
+		return getImports(trie, emptySet());
+	}
+
+	private static Trie<Scope, Set<Key<?>>> getImports(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie, Set<Key<?>> upperExports) {
+		Set<Key<?>> exports = union(upperExports, trie.get().keySet());
+		Set<Key<?>> imports = trie.get().values().stream()
+				.flatMap(bindings -> bindings.stream()
+						.flatMap(binding -> binding.getDependencies().stream().map(Dependency::getKey)))
+				.collect(toCollection(HashSet::new));
+		imports.removeAll(exports);
+		Map<Scope, Trie<Scope, Set<Key<?>>>> subMap = new HashMap<>();
+		trie.getChildren().forEach((key, subtrie) -> subMap.put(key, getImports(subtrie, exports)));
+		return Trie.of(imports, subMap);
+	}
+
+	public static Module remap(Module module, Map<Key<?>, Key<?>> remapping) {
+		Map<Key<?>, Key<?>> remappingInverted = new HashMap<>(remapping.size());
+		remapping.forEach((key1, key2) -> remappingInverted.put(key2, key1));
+		checkArgument(remappingInverted.size() == remapping.size(), "Duplicate keys");
+		return remap(module, key -> remappingInverted.getOrDefault(key, key));
+	}
+
+	public static Module remap(Module module, Function<Key<?>, Key<?>> remapping) {
+		return remap(module, (path, key) -> remapping.apply(key), (path, key) -> remapping.apply(key));
+	}
+
+	public static Module remap(Module module,
+			BiFunction<Scope[], Key<?>, Key<?>> exportsMapping,
+			BiFunction<Scope[], Key<?>, Key<?>> importsMapping) {
+		return new SimpleModule(
+				remap(exportsMapping, importsMapping, UNSCOPED, module.getBindings(), emptyMap()),
+				module.getBindingTransformers(),
+				module.getBindingGenerators(),
+				module.getMultibinders());
+	}
+
+	public static Module restrict(Module module, Key<?>... exports) {
+		return restrict(module, new HashSet<>(asList(exports)));
+	}
+
+	public static Module restrict(Module module, Set<Key<?>> exports) {
+		return restrict(module, exports::contains);
+	}
+
+	public static Module restrict(Module module, Predicate<Key<?>> exportsPredicate) {
+		return restrict(module, (scopes, key) -> exportsPredicate.test(key));
+	}
+
+	public static Module restrict(Module module, BiPredicate<Scope[], Key<?>> exportsPredicate) {
+		return new SimpleModule(
+				restrict(exportsPredicate, module.getBindings()),
+				module.getBindingTransformers(),
+				module.getBindingGenerators(),
+				module.getMultibinders());
+	}
+
+	private static Trie<Scope, Map<Key<?>, Set<Binding<?>>>> restrict(BiPredicate<Scope[], Key<?>> exportsPredicate,
+			Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie) {
+		Map<List<Scope>, Map<Key<?>, Key<?>>> exportsMappings = new HashMap<>();
+		BiFunction<Scope[], Key<?>, Key<?>> remapping = (path, key) -> {
+			if (exportsPredicate.test(path, key)) {
+				return key;
+			}
+			Map<Key<?>, Key<?>> mapping = exportsMappings.computeIfAbsent(asList(path), $ -> new HashMap<>());
+			Key<?> result = mapping.get(key);
+			if (result == null) {
+				result = Key.ofType(key.getType(), uniqueQualifier(key.getQualifier()));
+				mapping.put(key, result);
+			}
+			return result;
+		};
+		return remap(remapping, (path, key) -> key, UNSCOPED, trie, emptyMap());
+	}
+
+	private static Trie<Scope, Map<Key<?>, Set<Binding<?>>>> remap(BiFunction<Scope[], Key<?>, Key<?>> exportsMapping, BiFunction<Scope[], Key<?>, Key<?>> importsMapping,
+			Scope[] path, Trie<Scope, Map<Key<?>, Set<Binding<?>>>> oldBindingsTrie, Map<Key<?>, Scope[]> upperBindings) {
+		Map<Key<?>, Set<Binding<?>>> oldBindingsMap = oldBindingsTrie.get();
+		Map<Key<?>, Set<Binding<?>>> newBindingsMap = new HashMap<>();
+		Map<Key<?>, Scope[]> bindings = new HashMap<>(upperBindings);
+		oldBindingsMap.keySet().forEach(key -> bindings.put(key, path));
+		for (Map.Entry<Key<?>, Set<Binding<?>>> entry : oldBindingsMap.entrySet()) {
+			Key<?> oldExportKey = entry.getKey();
+			Key<?> newExportKey = exportsMapping.apply(path, oldExportKey);
+			HashSet<Binding<?>> newBindings = new HashSet<>();
+			if (newBindingsMap.put(newExportKey, newBindings) != null) {
+				throw new IllegalArgumentException("Duplicate remapping: " + oldExportKey + " -> " + newExportKey);
+			}
+			boolean changed = false;
+			for (Binding<?> oldBinding : entry.getValue()) {
+				Set<Dependency> oldDependencies = oldBinding.getDependencies();
+				Set<Dependency> newDependencies = new HashSet<>(oldDependencies.size());
+				for (Dependency oldDependency : oldDependencies) {
+					Key<?> oldImportKey = oldDependency.getKey();
+					Scope[] importKeyPath = bindings.get(oldImportKey);
+					Key<?> newImportKey = importKeyPath != null ?
+							exportsMapping.apply(importKeyPath, oldImportKey) :
+							importsMapping.apply(path, oldImportKey);
+					changed |= !oldImportKey.equals(newImportKey);
+					Dependency newDependency = new Dependency(
+							newImportKey,
+							oldDependency.isRequired(),
+							oldDependency.isImplicit());
+					newDependencies.add(newDependency);
+				}
+				Binding<?> newBinding = changed ?
+						new Binding<Object>(newDependencies) {
+							@Override
+							public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+								//noinspection unchecked
+								return (CompiledBinding<Object>) oldBinding.compile(
+										new CompiledBindingLocator() {
+											@Override
+											public @NotNull <Q> CompiledBinding<Q> get(Key<Q> oldImportKey) {
+												Scope[] importKeyPath = bindings.get(oldImportKey);
+												Key<?> newImportKey = importKeyPath != null ?
+														exportsMapping.apply(importKeyPath, oldImportKey) :
+														importsMapping.apply(path, oldImportKey);
+												//noinspection unchecked
+												return compiledBindings.get((Key<Q>) newImportKey);
+											}
+										},
+										threadsafe, scope, slot);
+							}
+						} :
+						oldBinding;
+				newBindings.add(newBinding);
+			}
+		}
+		Map<Scope, Trie<Scope, Map<Key<?>, Set<Binding<?>>>>> newChildren = new HashMap<>();
+		oldBindingsTrie.getChildren().forEach((key, subtrie) -> newChildren.put(key, remap(exportsMapping, importsMapping,
+				next(path, key), subtrie, bindings)));
+		return Trie.of(newBindingsMap, newChildren);
 	}
 
 }

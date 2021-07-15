@@ -704,7 +704,6 @@ public final class TestDI {
 		Injector injector = Injector.of(ModuleBuilder.create()
 				.multibindToMap(String.class, Integer.class)
 				.scan(new Object() {
-
 					@Provides
 					Integer integer() {
 						return 42;
@@ -846,7 +845,6 @@ public final class TestDI {
 				.bind(new Key<Container<Integer>>() {})
 				.bind(new Key<Container<String>>() {})
 				.scan(new Object() {
-
 					@Provides
 					<T extends Number> Container<T> provide(T number) {
 						System.out.println("called number provider");
@@ -880,7 +878,6 @@ public final class TestDI {
 				.bind(String.class).toInstance("hello")
 				.bind(new Key<Container<String>>(named("hello")) {})
 				.scan(new Object() {
-
 					@Provides
 					@Named("hello")
 					<T> Container<T> provide(T number) {
@@ -923,7 +920,6 @@ public final class TestDI {
 				.bind(new Key<Comparator<String>>() {})
 				.bind(new Key<Comparator<Integer>>() {})
 				.scan(new Object() {
-
 					@Provides
 					<T extends Comparable<? super T>> Comparator<T> naturalComparator() {
 						return Comparator.naturalOrder();
@@ -942,7 +938,6 @@ public final class TestDI {
 				.bind(String.class)
 				.bind(String.class)
 				.scan(new Object() {
-
 					@Provides
 					String string() {
 						return "hello";
@@ -1074,7 +1069,7 @@ public final class TestDI {
 		protected void configure() {
 			transform(PostConstruct.class, (bindings, scope, key, binding) ->
 					binding.mapInstance(obj -> {
-						((PostConstruct) obj).init();
+						obj.init();
 						return obj;
 					}));
 		}
@@ -1280,4 +1275,42 @@ public final class TestDI {
 		PostConstruct instance = injector.getInstance(PostConstruct.class);
 		assertEquals(instance, injector.peekInstance(PostConstruct.class));
 	}
+
+	@Test
+	public void restrictAndRemap() {
+		Module module = Modules.restrict(
+				ModuleBuilder.create()
+						.bind(String.class).named("exported").to(i -> "str: " + i, Key.of(Integer.class).named("internal1"))
+						.bind(Integer.class).named("internal1").to(Key.of(Integer.class).named("internal2"))
+						.bind(Integer.class).named("internal2").to(v -> v, Key.of(Integer.class).named("internal3"))
+						.bind(Integer.class).named("internal3").to(Key.of(Integer.class).named("imported"))
+						.build(),
+				Key.of(String.class).named("exported"));
+
+		assertEquals(singleton(Key.of(String.class).named("exported")), module.getExports().get());
+		assertEquals(singleton(Key.of(Integer.class).named("imported")), module.getImports().get());
+
+		{
+			Injector injector = Injector.of(
+					module,
+					ModuleBuilder.create().bind(Integer.class).named("imported").toInstance(42).build());
+
+			String instance = injector.getInstance(Key.of(String.class).named("exported"));
+			assertEquals("str: 42", instance);
+		}
+		{
+			Map<Key<?>, Key<?>> remapping = new HashMap<>();
+			remapping.put(Key.of(Integer.class), Key.of(Integer.class).named("imported"));
+			remapping.put(Key.of(String.class), Key.of(String.class).named("exported"));
+
+			Injector injector = Injector.of(
+					Modules.remap(module, remapping),
+					ModuleBuilder.create().bind(Integer.class).toInstance(42).build());
+
+			String instance = injector.getInstance(Key.of(String.class));
+			assertEquals("str: 42", instance);
+		}
+
+	}
+
 }

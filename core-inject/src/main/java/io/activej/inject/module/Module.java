@@ -18,21 +18,20 @@ package io.activej.inject.module;
 
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
-import io.activej.inject.binding.*;
-import io.activej.inject.impl.Preprocessor;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.BindingGenerator;
+import io.activej.inject.binding.BindingTransformer;
+import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.Trie;
 
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
-import static io.activej.inject.binding.BindingGenerators.combinedGenerator;
-import static io.activej.inject.binding.BindingTransformers.combinedTransformer;
-import static io.activej.inject.binding.Multibinders.combinedMultibinder;
+import static io.activej.inject.Qualifiers.isUnique;
 import static java.util.Collections.emptyMap;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * A module is an object, that provides certain sets of bindings, transformers, generators or multibinders
@@ -42,6 +41,14 @@ import static java.util.stream.Collectors.toMap;
  */
 public interface Module {
 	Trie<Scope, Map<Key<?>, Set<Binding<?>>>> getBindings();
+
+	default Trie<Scope, Set<Key<?>>> getExports() {
+		return getBindings().map(map -> map.keySet().stream().filter(key -> !isUnique(key.getQualifier())).collect(toSet()));
+	}
+
+	default Trie<Scope, Set<Key<?>>> getImports() {
+		return Modules.getImports(getBindings());
+	}
 
 	Map<Type, Set<BindingTransformer<?>>> getBindingTransformers();
 

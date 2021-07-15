@@ -174,6 +174,22 @@ public final class Trie<K, V> {
 
 	@Override
 	public String toString() {
-		return "Trie{payload=" + payload + ", children=" + children + '}';
+		return "{" + payload + ", " + children + '}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Trie<?, ?> trie = (Trie<?, ?>) o;
+		if (payload != null ? !payload.equals(trie.payload) : trie.payload != null) return false;
+		return children.equals(trie.children);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = payload != null ? payload.hashCode() : 0;
+		result = 31 * result + children.hashCode();
+		return result;
 	}
 }

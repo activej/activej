@@ -30,7 +30,7 @@ public final class Dependency {
 	private final boolean required;
 	private final boolean implicit;
 
-	private Dependency(Key<?> key, boolean required, boolean implicit) {
+	public Dependency(Key<?> key, boolean required, boolean implicit) {
 		this.key = key;
 		this.required = required;
 		this.implicit = implicit;
