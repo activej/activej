@@ -29,9 +29,9 @@ import static io.activej.inject.util.Utils.getScopeDisplayString;
  * you ask an {@link Injector} for an instance it does not have a {@link Binding binding} for.
  */
 public final class DIException extends RuntimeException {
-	public static DIException cannotConstruct(Key<?> key, @Nullable BindingInfo info) {
-		return new DIException((info != null ? "Binding refused to" : "No binding to") + " construct an instance for key " +
-				key.getDisplayString() + (info != null && info.getLocation() != null ? ("\n\t at" + info.getLocation()) : ""));
+	public static DIException cannotConstruct(Key<?> key, @Nullable Binding<?> binding) {
+		return new DIException((binding != null ? "Binding refused to" : "No binding to") + " construct an instance for key " +
+				key.getDisplayString() + (binding != null && binding.getLocation() != null ? ("\n\t at" + binding.getLocation()) : ""));
 	}
 
 	public static DIException noCachedBinding(Key<?> key, Scope[] scope) {

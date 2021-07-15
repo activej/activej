@@ -39,7 +39,7 @@ import static io.activej.inject.util.Utils.checkState;
  */
 @SuppressWarnings({"SameParameterValue", "UnusedReturnValue", "unused"})
 public abstract class AbstractModule implements Module {
-	private Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings;
+	private Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings;
 	private Map<Type, Set<BindingTransformer<?>>> bindingTransformers;
 	private Map<Type, Set<BindingGenerator<?>>> bindingGenerators;
 	private Map<Key<?>, Multibinder<?>> multibinders;
@@ -137,12 +137,20 @@ public abstract class AbstractModule implements Module {
 		builder.transform(pattern, bindingTransformer);
 	}
 
+	protected final <T> void transform(Class<T> pattern, BindingTransformer<T> bindingTransformer) {
+		transform((Type) pattern, bindingTransformer);
+	}
+
 	/**
 	 * @see ModuleBuilder#generate
 	 */
 	protected final <T> void generate(Type pattern, BindingGenerator<T> bindingGenerator) {
 		checkState(builder != null, "Cannot add generators before or after configure() call");
 		builder.generate(pattern, bindingGenerator);
+	}
+
+	protected final <T> void generate(Class<T> pattern, BindingGenerator<T> bindingGenerator) {
+		generate((Type) pattern, bindingGenerator);
 	}
 
 	/**
@@ -230,7 +238,7 @@ public abstract class AbstractModule implements Module {
 	}
 
 	@Override
-	public final Trie<Scope, Map<Key<?>, BindingSet<?>>> getBindings() {
+	public final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> getBindings() {
 		finish();
 		return bindings;
 	}

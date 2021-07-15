@@ -17,11 +17,12 @@
 package io.activej.inject;
 
 import io.activej.inject.binding.*;
-import io.activej.inject.impl.*;
+import io.activej.inject.impl.CompiledBinding;
+import io.activej.inject.impl.CompiledBindingLocator;
+import io.activej.inject.impl.Preprocessor;
 import io.activej.inject.module.DefaultModule;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
-import io.activej.inject.util.MarkedBinding;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +41,8 @@ import static io.activej.inject.binding.BindingGenerators.combinedGenerator;
 import static io.activej.inject.binding.BindingGenerators.refusing;
 import static io.activej.inject.binding.BindingTransformers.combinedTransformer;
 import static io.activej.inject.binding.BindingTransformers.identity;
-import static io.activej.inject.binding.BindingType.*;
+import static io.activej.inject.binding.BindingType.EAGER;
+import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static io.activej.inject.binding.Multibinders.combinedMultibinder;
 import static io.activej.inject.binding.Multibinders.errorOnDuplicate;
 import static io.activej.inject.impl.CompiledBinding.missingOptionalBinding;
@@ -65,7 +67,7 @@ import static java.util.stream.Collectors.toMap;
 public final class Injector implements ResourceLocator {
 	private static final class ScopeLocalData {
 		final Scope[] scope;
-		final Map<Key<?>, BindingInfo> bindingInfo;
+		final Map<Key<?>, Binding<?>> bindings;
 		final Map<Key<?>, CompiledBinding<?>> compiledBindings;
 		final Map<Key<?>, Integer> slotMapping;
 		final int slots;
@@ -74,14 +76,14 @@ public final class Injector implements ResourceLocator {
 
 		private ScopeLocalData(
 				Scope[] scope,
-				Map<Key<?>, BindingInfo> bindingInfo,
+				Map<Key<?>, Binding<?>> bindings,
 				Map<Key<?>, CompiledBinding<?>> compiledBindings,
 				Map<Key<?>, Integer> slotMapping,
 				int slots,
 				CompiledBinding<?>[] eagerSingletons
 		) {
 			this.scope = scope;
-			this.bindingInfo = bindingInfo;
+			this.bindings = bindings;
 			this.compiledBindings = compiledBindings;
 			this.slotMapping = slotMapping;
 			this.slots = slots;
@@ -156,7 +158,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	public static Injector of(@NotNull Trie<Scope, Map<Key<?>, Binding<?>>> bindings) {
 		return compile(null, UNSCOPED,
-				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> new BindingSet<>(singleton(entry.getValue()), REGULAR)))),
+				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> singleton(entry.getValue())))),
 				errorOnDuplicate(),
 				identity(),
 				refusing());
@@ -190,12 +192,12 @@ public final class Injector implements ResourceLocator {
 	 */
 	public static Injector compile(@Nullable Injector parent,
 			Scope[] scope,
-			@NotNull Trie<Scope, Map<Key<?>, BindingSet<?>>> bindingsMultimap,
+			@NotNull Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindingsMultimap,
 			@NotNull Multibinder<?> multibinder,
 			@NotNull BindingTransformer<?> transformer,
 			@NotNull BindingGenerator<?> generator) {
 
-		Trie<Scope, Map<Key<?>, MarkedBinding<?>>> bindings = Preprocessor.reduce(bindingsMultimap, multibinder, transformer, generator);
+		Trie<Scope, Map<Key<?>, Binding<?>>> bindings = Preprocessor.reduce(bindingsMultimap, multibinder, transformer, generator);
 
 		Set<Key<?>> known = new HashSet<>();
 		known.add(Key.of(Injector.class)); // injector is hardcoded in and will always be present
@@ -203,8 +205,7 @@ public final class Injector implements ResourceLocator {
 			known.addAll(parent.localCompiledBindings.keySet());
 		}
 
-		Trie<Scope, Map<Key<?>, Binding<?>>> justBindings = bindings.map(m -> m.entrySet().stream().collect(toMap(Entry::getKey, e -> e.getValue().getBinding())));
-		Preprocessor.check(known, justBindings);
+		Preprocessor.check(known, bindings);
 
 		Trie<Scope, ScopeLocalData> scopeDataTree = compileBindingsTrie(
 				parent != null ? parent.scopeCaches.length : 0,
@@ -216,7 +217,7 @@ public final class Injector implements ResourceLocator {
 	}
 
 	protected static Trie<Scope, ScopeLocalData> compileBindingsTrie(int scope, Scope[] path,
-			Trie<Scope, Map<Key<?>, MarkedBinding<?>>> bindings,
+			Trie<Scope, Map<Key<?>, Binding<?>>> bindings,
 			Map<Key<?>, CompiledBinding<?>> compiledBindingsOfParent) {
 
 		ScopeLocalData scopeLocalData = compileBindings(scope, path, bindings.get(), compiledBindingsOfParent);
@@ -234,7 +235,7 @@ public final class Injector implements ResourceLocator {
 
 	@SuppressWarnings("Convert2Lambda")
 	protected static ScopeLocalData compileBindings(int scope, Scope[] path,
-			Map<Key<?>, MarkedBinding<?>> bindings,
+			Map<Key<?>, Binding<?>> bindings,
 			Map<Key<?>, CompiledBinding<?>> compiledBindingsOfParent
 	) {
 		Function<CompiledBinding<?>, CompiledBinding<?>> postprocessor = bytecodePostprocessorFactory.get();
@@ -268,9 +269,9 @@ public final class Injector implements ResourceLocator {
 
 		List<CompiledBinding<?>> eagerSingletons = new ArrayList<>();
 
-		for (Entry<Key<?>, MarkedBinding<?>> entry : bindings.entrySet()) {
+		for (Entry<Key<?>, Binding<?>> entry : bindings.entrySet()) {
 			Key<?> key = entry.getKey();
-			MarkedBinding<?> binding = entry.getValue();
+			Binding<?> binding = entry.getValue();
 			CompiledBinding<?> compiledBinding = compileBinding(
 					postprocessor,
 					scope, path, threadsafe,
@@ -283,25 +284,24 @@ public final class Injector implements ResourceLocator {
 			}
 		}
 
-		bindings.put(Key.of(Injector.class), new MarkedBinding<>(Binding.to(() -> {
-			throw new AssertionError("Injector constructor must never be called since it's instance is always put in the cache manually");
-		}), EAGER));
+		bindings.put(Key.of(Injector.class), Binding.to(
+				() -> {
+					throw new AssertionError("Injector constructor must never be called since it's instance is always put in the cache manually");
+				})
+				.as(EAGER));
 
 		compiledBindingsOfParent.forEach(compiledBindings::putIfAbsent);
 
 		int size = nextSlot[0];
 		nextSlot[0] = -1;
 
-		Map<Key<?>, BindingInfo> bindingInfo = bindings.entrySet().stream()
-				.collect(toMap(Entry::getKey, e -> BindingInfo.from(e.getValue())));
-
-		return new ScopeLocalData(path, bindingInfo, compiledBindings, slotMapping, size, eagerSingletons.toArray(new CompiledBinding[0]));
+		return new ScopeLocalData(path, bindings, compiledBindings, slotMapping, size, eagerSingletons.toArray(new CompiledBinding[0]));
 	}
 
 	private static CompiledBinding<?> compileBinding(
 			Function<CompiledBinding<?>, CompiledBinding<?>> postprocessor,
 			int scope, Scope[] path, boolean threadsafe,
-			Key<?> key, Map<Key<?>, MarkedBinding<?>> bindings,
+			Key<?> key, Map<Key<?>, Binding<?>> bindings,
 			Map<Key<?>, CompiledBinding<?>> compiledBindings, Map<Key<?>, CompiledBinding<?>> compiledBindingsOfParent,
 			Map<Key<?>, Integer> slotMapping, int[] nextSlot
 	) {
@@ -315,17 +315,15 @@ public final class Injector implements ResourceLocator {
 			throw new DIException("Failed to locate a binding for " + key.getDisplayString() + " after scope " + getScopeDisplayString(path) + " was fully compiled");
 		}
 
-		MarkedBinding<?> markedBinding = bindings.get(key);
-		if (markedBinding == null) {
+		Binding<?> binding = bindings.get(key);
+		if (binding == null) {
 			CompiledBinding<?> compiled = compiledBindingsOfParent.getOrDefault(key, missingOptionalBinding());
 			compiledBindings.put(key, compiled);
 			return compiled;
 		}
 
-		Binding<?> binding = markedBinding.getBinding();
-
 		Integer index;
-		if (binding instanceof BindingToKey || markedBinding.getType() == TRANSIENT) {
+		if (binding instanceof BindingToKey || binding.getType() == TRANSIENT) {
 			index = null;
 		} else {
 			slotMapping.put(key, index = nextSlot[0]++);
@@ -383,7 +381,7 @@ public final class Injector implements ResourceLocator {
 		}
 		Object instance = binding.getInstance(scopeCaches, -1);
 		if (instance == null) {
-			throw DIException.cannotConstruct(key, scopeDataTree.get().bindingInfo.get(key));
+			throw DIException.cannotConstruct(key, scopeDataTree.get().bindings.get(key));
 		}
 		return (T) instance;
 	}
@@ -543,20 +541,20 @@ public final class Injector implements ResourceLocator {
 	}
 
 	@Nullable
-	public BindingInfo getBinding(Class<?> type) {
+	public Binding<?> getBinding(Class<?> type) {
 		return getBinding(Key.of(type));
 	}
 
 	@Nullable
-	public BindingInfo getBinding(Key<?> key) {
-		return scopeDataTree.get().bindingInfo.get(key);
+	public Binding<?> getBinding(Key<?> key) {
+		return scopeDataTree.get().bindings.get(key);
 	}
 
 	/**
 	 * This method returns true if a binding was bound for given key.
 	 */
 	public boolean hasBinding(Key<?> key) {
-		return scopeDataTree.get().bindingInfo.containsKey(key);
+		return scopeDataTree.get().bindings.containsKey(key);
 	}
 
 	/**
@@ -587,17 +585,17 @@ public final class Injector implements ResourceLocator {
 	 * <p>
 	 * Note that this method expensive to call repeatedly
 	 */
-	public Map<Key<?>, BindingInfo> getBindings() {
-		return scopeDataTree.get().bindingInfo;
+	public Map<Key<?>, Binding<?>> getBindings() {
+		return scopeDataTree.get().bindings;
 	}
 
 	/**
-	 * This method returns a trie of bindings, similar to {@link Module#getReducedBindingInfo()}
+	 * This method returns a trie of bindings
 	 * <p>
 	 * Note that this method expensive to call repeatedly
 	 */
-	public Trie<Scope, Map<Key<?>, BindingInfo>> getBindingsTrie() {
-		return scopeDataTree.map(graph -> graph.bindingInfo);
+	public Trie<Scope, Map<Key<?>, Binding<?>>> getBindingsTrie() {
+		return scopeDataTree.map(graph -> graph.bindings);
 	}
 
 	@Override

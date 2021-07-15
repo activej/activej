@@ -18,8 +18,8 @@ package io.activej.inject.module;
 
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
+import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.BindingGenerator;
-import io.activej.inject.binding.BindingSet;
 import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.Trie;
@@ -44,7 +44,7 @@ public final class Modules {
 		if (modules.size() == 1) {
 			return modules.iterator().next();
 		}
-		Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings = Trie.merge(bindingMultimapMerger(), new HashMap<>(), modules.stream().map(Module::getBindings));
+		Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings = Trie.merge(bindingMultimapMerger(), new HashMap<>(), modules.stream().map(Module::getBindings));
 
 		Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
 		Map<Type, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
@@ -85,7 +85,7 @@ public final class Modules {
 	 * replaced with bindings, transformers, generators and multibinders from the second module.
 	 */
 	public static Module override(Module into, Module replacements) {
-		Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings = Trie.merge(Map::putAll, new HashMap<>(), into.getBindings(), replacements.getBindings());
+		Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings = Trie.merge(Map::putAll, new HashMap<>(), into.getBindings(), replacements.getBindings());
 
 		Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>(into.getBindingTransformers());
 		bindingTransformers.putAll(replacements.getBindingTransformers());
@@ -105,7 +105,7 @@ public final class Modules {
 	 * This is useful for some tests.
 	 */
 	public static Module ignoreScopes(Module from) {
-		Map<Key<?>, BindingSet<?>> bindings = new HashMap<>();
+		Map<Key<?>, Set<Binding<?>>> bindings = new HashMap<>();
 		Map<Key<?>, Scope[]> scopes = new HashMap<>();
 		from.getBindings().dfs(UNSCOPED, (scope, localBindings) ->
 				localBindings.forEach((k, b) -> {

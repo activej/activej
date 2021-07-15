@@ -41,7 +41,7 @@ import static java.util.stream.Collectors.toMap;
  * @see AbstractModule
  */
 public interface Module {
-	Trie<Scope, Map<Key<?>, BindingSet<?>>> getBindings();
+	Trie<Scope, Map<Key<?>, Set<Binding<?>>>> getBindings();
 
 	Map<Type, Set<BindingTransformer<?>>> getBindingTransformers();
 
@@ -62,20 +62,6 @@ public interface Module {
 	}
 
 	/**
-	 * A shortcut that reduces bindings multimap trie from this module using multibinders, transformers and generators from this module.
-	 * <p>
-	 * Note that this method expensive to call repeatedly
-	 */
-	default Trie<Scope, Map<Key<?>, BindingInfo>> getReducedBindingInfo() {
-		return Preprocessor.reduce(
-				getBindings(),
-				combinedMultibinder(getMultibinders()),
-				combinedTransformer(getBindingTransformers()),
-				combinedGenerator(getBindingGenerators()))
-				.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, e -> BindingInfo.from(e.getValue()))));
-	}
-
-	/**
 	 * Returns an empty {@link Module module}.
 	 */
 	static Module empty() {
@@ -85,14 +71,14 @@ public interface Module {
 	/**
 	 * Creates a {@link Module module} out of given binding graph trie
 	 */
-	static Module of(Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings) {
+	static Module of(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings) {
 		return new SimpleModule(bindings, emptyMap(), emptyMap(), emptyMap());
 	}
 
 	/**
 	 * Creates a {@link Module module} out of given binding graph trie, transformers, generators and multibinders
 	 */
-	static Module of(Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings,
+	static Module of(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
 			Map<Type, Set<BindingTransformer<?>>> transformers,
 			Map<Type, Set<BindingGenerator<?>>> generators,
 			Map<Key<?>, Multibinder<?>> multibinders) {

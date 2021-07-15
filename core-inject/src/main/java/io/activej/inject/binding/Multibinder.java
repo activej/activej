@@ -18,10 +18,12 @@ package io.activej.inject.binding;
 
 import io.activej.inject.Key;
 
+import java.util.Set;
+
 /**
  * This is a function that is used to resolve binding conflicts.
  */
 @FunctionalInterface
 public interface Multibinder<T> {
-	Binding<T> multibind(Key<T> key, BindingSet<?> bindings);
+	Binding<T> multibind(Key<T> key, Set<Binding<?>> bindings);
 }

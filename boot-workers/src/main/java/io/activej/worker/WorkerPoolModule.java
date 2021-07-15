@@ -19,6 +19,7 @@ package io.activej.worker;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.BindingType;
 import io.activej.inject.module.AbstractModule;
 import io.activej.worker.annotation.Worker;
 import io.activej.worker.annotation.WorkerId;
@@ -54,7 +55,7 @@ public final class WorkerPoolModule extends AbstractModule {
 
 		generate(WorkerPool.Instances.class, (bindings, scope, key) -> {
 			Key<Object> requestedKey = key.getTypeParameter(0);
-			return Binding.to(wp -> wp.getInstances(requestedKey), Key.of(WorkerPool.class, key.getQualifier()));
+			return Binding.<WorkerPool, WorkerPool.Instances>to(wp -> wp.getInstances(requestedKey), Key.of(WorkerPool.class, key.getQualifier())).as(BindingType.EAGER);
 		});
 	}
 }

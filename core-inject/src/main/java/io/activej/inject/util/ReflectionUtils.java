@@ -25,10 +25,9 @@ import io.activej.inject.impl.BindingInitializer;
 import io.activej.inject.impl.BindingLocator;
 import io.activej.inject.impl.CompiledBinding;
 import io.activej.inject.impl.CompiledBindingInitializer;
-import io.activej.inject.module.BindingDesc;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
-import io.activej.inject.module.ModuleBuilder0;
+import io.activej.inject.module.ModuleBuilder1;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,6 +40,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static io.activej.inject.Qualifiers.uniqueQualifier;
+import static io.activej.inject.binding.BindingType.*;
 import static io.activej.inject.util.Utils.isMarker;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
@@ -428,30 +428,6 @@ public final class ReflectionUtils {
 				dependencies);
 	}
 
-	public static class ProviderScanResults {
-		private final List<BindingDesc> bindingDescs;
-		private final Map<Class<?>, Set<BindingGenerator<?>>> bindingGenerators;
-		private final Map<Key<?>, Multibinder<?>> multibinders;
-
-		public ProviderScanResults(List<BindingDesc> bindingDescs, Map<Class<?>, Set<BindingGenerator<?>>> bindingGenerators, Map<Key<?>, Multibinder<?>> multibinders) {
-			this.bindingDescs = bindingDescs;
-			this.bindingGenerators = bindingGenerators;
-			this.multibinders = multibinders;
-		}
-
-		public List<BindingDesc> getBindingDescs() {
-			return bindingDescs;
-		}
-
-		public Map<Class<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
-			return bindingGenerators;
-		}
-
-		public Map<Key<?>, Multibinder<?>> getMultibinders() {
-			return multibinders;
-		}
-	}
-
 	public static Module scanClass(@NotNull Class<?> moduleClass, @Nullable Object module) {
 		return scanClassInto(moduleClass, module, ModuleBuilder.create());
 	}
@@ -475,7 +451,7 @@ public final class ReflectionUtils {
 				if (typeVars.length == 0) {
 					Key<Object> key = Key.ofType(returnType, qualifier);
 
-					ModuleBuilder0<Object> binder = builder.bind(key).to(bindingFromMethod(module, method)).in(methodScope);
+					ModuleBuilder1<Object> binder = builder.bind(key).to(bindingFromMethod(module, method)).in(methodScope);
 					if (isEager) {
 						binder.asEager();
 					}
@@ -490,16 +466,7 @@ public final class ReflectionUtils {
 				if (!unused.isEmpty()) {
 					throw new DIException("Generic type variables " + unused + " are not used in return type of templated provider method " + method);
 				}
-				if (isEager) {
-					throw new DIException("@Eager annotation is not applicable for templated methods because they are generators and cannot be eagerly created. " +
-							"You can bind real key eagerly though. Method " + method);
-				}
-				if (isTransient) {
-					throw new DIException("@Transient annotation is not applicable for templated methods because they are generators and cannot be transiently created. " +
-							"You can bind real key transiently though. Method " + method);
-				}
-
-				builder.generate(method.getReturnType(), new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType));
+				builder.generate(method.getReturnType(), new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
 
 			} else if (method.isAnnotationPresent(ProvidesIntoSet.class)) {
 				if (module == null && !Modifier.isStatic(method.getModifiers())) {
@@ -527,7 +494,7 @@ public final class ReflectionUtils {
 					binding.at(LocationInfo.from(module, method));
 				}
 
-				ModuleBuilder0<Set<Object>> setBinder = builder.bind(setKey).to(binding).in(methodScope);
+				ModuleBuilder1<Set<Object>> setBinder = builder.bind(setKey).to(binding).in(methodScope);
 				if (isEager) {
 					setBinder.asEager();
 				}
@@ -559,13 +526,15 @@ public final class ReflectionUtils {
 
 		private final Object module;
 		private final Type returnType;
+		private final BindingType bindingType;
 
-		private TemplatedProviderGenerator(Scope[] methodScope, @Nullable Object qualifier, Method method, Object module, Type returnType) {
+		private TemplatedProviderGenerator(Scope[] methodScope, @Nullable Object qualifier, Method method, Object module, Type returnType, BindingType bindingType) {
 			this.methodScope = methodScope;
 			this.qualifier = qualifier;
 			this.method = method;
 			this.module = module;
 			this.returnType = returnType;
+			this.bindingType = bindingType;
 		}
 
 		@Override
@@ -578,7 +547,7 @@ public final class ReflectionUtils {
 					return null;
 				}
 			}
-			return bindingFromGenericMethod(module, key, method);
+			return bindingFromGenericMethod(module, key, method).as(bindingType);
 		}
 
 		@Override

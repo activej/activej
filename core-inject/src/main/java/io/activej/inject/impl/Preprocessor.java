@@ -19,7 +19,6 @@ package io.activej.inject.impl;
 import io.activej.inject.*;
 import io.activej.inject.binding.*;
 import io.activej.inject.module.UniqueQualifierImpl;
-import io.activej.inject.util.MarkedBinding;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
 import org.jetbrains.annotations.Nullable;
@@ -54,29 +53,29 @@ public final class Preprocessor {
 	 * @see BindingGenerators#combinedGenerator
 	 * @see BindingTransformers#combinedTransformer
 	 */
-	public static Trie<Scope, Map<Key<?>, MarkedBinding<?>>> reduce(
-			Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings,
+	public static Trie<Scope, Map<Key<?>, Binding<?>>> reduce(
+			Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
 			Multibinder<?> multibinder,
 			BindingTransformer<?> transformer,
 			BindingGenerator<?> generator
 	) {
-		Trie<Scope, Map<Key<?>, MarkedBinding<?>>> reduced = Trie.leaf(new HashMap<>());
+		Trie<Scope, Map<Key<?>, Binding<?>>> reduced = Trie.leaf(new HashMap<>());
 		reduce(UNSCOPED, emptyMap(), bindings, reduced, multibinder, transformer, generator);
 		return reduced;
 	}
 
 	private static void reduce(
-			Scope[] scope, Map<Key<?>, MarkedBinding<?>> upper,
-			Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings, Trie<Scope, Map<Key<?>, MarkedBinding<?>>> reduced,
+			Scope[] scope, Map<Key<?>, Binding<?>> upper,
+			Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings, Trie<Scope, Map<Key<?>, Binding<?>>> reduced,
 			Multibinder<?> multibinder,
 			BindingTransformer<?> transformer,
 			BindingGenerator<?> generator) {
 
-		Map<Key<?>, BindingSet<?>> localBindings = bindings.get();
+		Map<Key<?>, Set<Binding<?>>> localBindings = bindings.get();
 
 		localBindings.forEach((key, bindingSet) -> resolve(upper, localBindings, reduced.get(), scope, key, bindingSet, multibinder, transformer, generator));
 
-		Map<Key<?>, MarkedBinding<?>> nextUpper = override(upper, reduced.get());
+		Map<Key<?>, Binding<?>> nextUpper = override(upper, reduced.get());
 
 		bindings.getChildren().forEach((subScope, subLocalBindings) ->
 				reduce(next(scope, subScope), nextUpper, subLocalBindings, reduced.computeIfAbsent(subScope, $ -> new HashMap<>()), multibinder, transformer, generator));
@@ -84,85 +83,74 @@ public final class Preprocessor {
 
 	@SuppressWarnings("unchecked")
 	@Nullable
-	private static MarkedBinding<?> resolve(
-			Map<Key<?>, MarkedBinding<?>> upper, Map<Key<?>, BindingSet<?>> localBindings, Map<Key<?>, MarkedBinding<?>> resolved,
-			Scope[] scope, Key<?> key, @Nullable BindingSet<?> bindingSet,
+	private static Binding<?> resolve(
+			Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings,
+			Scope[] scope, Key<?> key, @Nullable Set<Binding<?>> bindingSet,
 			Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
 
 		// shortest path - if it was already resolved, just return it (also serves as a visited set so graph loops don't cause infinite recursion)
-		MarkedBinding<?> already = resolved.get(key);
-		if (already != null) {
-			return already;
+		Binding<?> resolvedBinding = resolvedBindings.get(key);
+		if (resolvedBinding != null) {
+			return resolvedBinding;
 		}
 
 		BindingLocator recursiveLocator = new BindingLocator() {
 			@Override
 			@Nullable
 			public <T> Binding<T> get(Key<T> key) {
-				MarkedBinding<?> result = resolve(upper, localBindings, resolved, scope, key, localBindings.get(key), multibinder, transformer, generator);
-				return (Binding<T>) (result != null ? result.getBinding() : null);
+				return (Binding<T>) resolve(upper, localBindings, resolvedBindings, scope, key, localBindings.get(key), multibinder, transformer, generator);
 			}
 		};
 
-		Binding<?> reduced;
-		BindingType type;
+		Binding<?> binding;
 
 		// if it was explicitly bound
 		if (bindingSet != null) {
-			switch (bindingSet.getBindings().size()) {
+			switch (bindingSet.size()) {
 				case 0:
 					// try to recursively generate a requested binding
-					reduced = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
+					binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
 					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
-					if (reduced == null) {
+					if (binding == null) {
 						throw new DIException("Refused to generate an explicitly requested binding for key " + key.getDisplayString());
 					}
 					break;
 				case 1:
-					reduced = bindingSet.getBindings().iterator().next();
+					binding = bindingSet.iterator().next();
 					break;
 				default:
 					//noinspection rawtypes
-					reduced = ((Multibinder) multibinder).multibind(key, bindingSet);
+					binding = ((Multibinder) multibinder).multibind(key, bindingSet);
 			}
-
-			// got the type from explicit bind
-			type = bindingSet.getType();
-
 		} else { // or if it was never bound
 			// first check if it was already resolved in upper scope
-			MarkedBinding<?> fromUpper = upper.get(key);
+			Binding<?> fromUpper = upper.get(key);
 			if (fromUpper != null) {
 				return fromUpper;
 			}
 			// try to generate it
-			reduced = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
+			binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
 
 			// if it was not generated then it's simply unsatisfied and later will be checked
-			if (reduced == null) {
+			if (binding == null) {
 				return null;
 			}
-
-			// common by default
-			type = BindingType.REGULAR;
 		}
 
 		// transform it (once!)
 		//noinspection rawtypes
-		Binding<?> transformed = ((BindingTransformer) transformer).transform(recursiveLocator, scope, key, reduced);
-
-		MarkedBinding<?> finalReduced = new MarkedBinding<>(transformed, type);
+		Binding<?> transformed = ((BindingTransformer) transformer).transform(recursiveLocator, scope, key, binding);
 
 		// and store it as resolved (also mark as visited)
-		resolved.put(key, finalReduced);
+		resolvedBindings.put(key, transformed);
 
 		// and then recursively walk over its dependencies (so this is a recursive dfs after all)
 		for (Dependency d : transformed.getDependencies()) {
 			Key<?> dkey = d.getKey();
-			resolve(upper, localBindings, resolved, scope, dkey, localBindings.get(dkey), multibinder, transformer, generator);
+			resolve(upper, localBindings, resolvedBindings, scope, dkey, localBindings.get(dkey), multibinder, transformer, generator);
 		}
 
-		return finalReduced;
+		return transformed;
 	}
 
 	/**

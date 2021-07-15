@@ -14,7 +14,7 @@ import io.activej.worker.annotation.WorkerId;
 public class AdvancedRpcServerModule extends AbstractModule {
 	@Override
 	protected void configure() {
-		bind(new Key<WorkerPool.Instances<RpcServer>>() {}).asEager();
+		bind(new Key<WorkerPool.Instances<RpcServer>>() {});
 	}
 
 	private AdvancedRpcServerModule() {

@@ -122,30 +122,44 @@ public interface ModuleBuilder {
 	 * It binds given binding as a singleton set to a set key made from given key
 	 * and also {@link Multibinders#toSet multibinds} each of such sets together.
 	 */
-	<S, E extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Binding<E> binding);
+	<S, T extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Binding<T> binding);
 
 	/**
 	 * @see #bindIntoSet(Key, Binding)
 	 * @see Binding#to(Key)
 	 */
-	default <S, E extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Key<E> item) {
+	default <S, T extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Key<T> item) {
 		return bindIntoSet(setOf, Binding.to(item));
 	}
 
 	/**
-	 * Adds a {@link BindingTransformer transformer} with a given priority to this module.
+	 * Adds a {@link BindingTransformer transformer} with a given type to this module.
 	 */
-	<E> ModuleBuilder transform(Type pattern, BindingTransformer<E> bindingTransformer);
+	<T> ModuleBuilder transform(Type pattern, BindingTransformer<T> bindingTransformer);
+
+	/**
+	 * Adds a {@link BindingTransformer transformer} with a given class to this module.
+	 */
+	default <T> ModuleBuilder transform(Class<T> pattern, BindingTransformer<T> bindingTransformer) {
+		return transform((Type) pattern, bindingTransformer);
+	}
 
 	/**
 	 * Adds a {@link BindingGenerator generator} for a given class to this module.
 	 */
-	<E> ModuleBuilder generate(Type pattern, BindingGenerator<E> bindingGenerator);
+	<T> ModuleBuilder generate(Type pattern, BindingGenerator<T> bindingGenerator);
+
+	/**
+	 * Adds a {@link BindingGenerator generator} for a given class to this module.
+	 */
+	default <T> ModuleBuilder generate(Class<T> pattern, BindingGenerator<T> bindingGenerator) {
+		return generate((Type) pattern, bindingGenerator);
+	}
 
 	/**
 	 * Adds a {@link Multibinder multibinder} for a given key to this module.
 	 */
-	<E> ModuleBuilder multibind(Key<E> key, Multibinder<E> multibinder);
+	<T> ModuleBuilder multibind(Key<T> key, Multibinder<T> multibinder);
 
 	default <V> ModuleBuilder multibindToSet(Class<V> type) {
 		return multibindToSet(Key.of(type));

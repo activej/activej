@@ -49,7 +49,7 @@ import static java.util.Collections.singleton;
  */
 @SuppressWarnings({"Convert2Lambda", "rawtypes"})
 public final class DefaultModule implements Module {
-	private static final Trie<Scope, Map<Key<?>, BindingSet<?>>> emptyTrie = Trie.leaf(new HashMap<>());
+	private static final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> emptyTrie = Trie.leaf(new HashMap<>());
 	private static final Map<Type, Set<BindingGenerator<?>>> generators = new HashMap<>();
 
 	static {
@@ -133,7 +133,7 @@ public final class DefaultModule implements Module {
 	}
 
 	@Override
-	public Trie<Scope, Map<Key<?>, BindingSet<?>>> getBindings() {
+	public Trie<Scope, Map<Key<?>, Set<Binding<?>>>> getBindings() {
 		return emptyTrie;
 	}
 

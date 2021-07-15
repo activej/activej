@@ -48,16 +48,18 @@ import static java.util.stream.Collectors.toSet;
 @SuppressWarnings({"unused", "WeakerAccess", "ArraysAsListWithZeroOrOneArgument", "Convert2Lambda", "rawtypes"})
 public abstract class Binding<T> {
 	private final Set<Dependency> dependencies;
+	private BindingType type;
 
 	@Nullable
 	private LocationInfo location;
 
 	protected Binding(@NotNull Set<Dependency> dependencies) {
-		this(dependencies, null);
+		this(dependencies, BindingType.REGULAR, null);
 	}
 
-	protected Binding(@NotNull Set<Dependency> dependencies, @Nullable LocationInfo location) {
+	protected Binding(@NotNull Set<Dependency> dependencies, BindingType type, @Nullable LocationInfo location) {
 		this.dependencies = dependencies;
+		this.type = type;
 		this.location = location;
 	}
 
@@ -559,6 +561,11 @@ public abstract class Binding<T> {
 		return this;
 	}
 
+	public Binding<T> as(BindingType type) {
+		this.type = type;
+		return this;
+	}
+
 	public Binding<T> onInstance(@NotNull Consumer<? super T> consumer) {
 		return mapInstance(null, (args, instance) -> {
 			consumer.accept(instance);
@@ -583,7 +590,7 @@ public abstract class Binding<T> {
 						.collect(joining(", ", "Binding has no dependencies ", " required by mapInstance call")));
 			}
 		}
-		return new Binding<R>(this.dependencies, location) {
+		return new Binding<R>(this.dependencies, this.type, this.location) {
 			@Override
 			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				final CompiledBinding<T> originalBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
@@ -656,7 +663,7 @@ public abstract class Binding<T> {
 
 	@SuppressWarnings("unchecked")
 	public <K> Binding<T> mapDependency(@NotNull Key<K> dependency, @NotNull Function<? super K, ? extends K> fn) {
-		return new Binding<T>(dependencies, location) {
+		return new Binding<T>(this.dependencies, this.type, this.location) {
 			@Override
 			public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return Binding.this.compile(new CompiledBindingLocator() {
@@ -693,7 +700,7 @@ public abstract class Binding<T> {
 	public Binding<T> addDependencies(@NotNull Set<Dependency> extraDependencies) {
 		return extraDependencies.isEmpty() ?
 				this :
-				new Binding<T>(union(dependencies, extraDependencies), location) {
+				new Binding<T>(union(this.dependencies, extraDependencies), this.type, this.location) {
 					@Override
 					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 						CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, slot);
@@ -714,7 +721,7 @@ public abstract class Binding<T> {
 	public Binding<T> initializeWith(BindingInitializer<T> bindingInitializer) {
 		return bindingInitializer == BindingInitializer.noop() ?
 				this :
-				new Binding<T>(union(dependencies, bindingInitializer.getDependencies()), location) {
+				new Binding<T>(union(this.dependencies, bindingInitializer.getDependencies()), this.type, this.location) {
 					@Override
 					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 						final CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
@@ -755,6 +762,10 @@ public abstract class Binding<T> {
 
 	public boolean hasDependency(Key<?> dependency) {
 		return dependencies.stream().map(Dependency::getKey).anyMatch(Predicate.isEqual(dependency));
+	}
+
+	public BindingType getType() {
+		return type;
 	}
 
 	@Nullable

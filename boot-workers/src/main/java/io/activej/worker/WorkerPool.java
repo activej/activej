@@ -20,7 +20,7 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.annotation.ShortTypeName;
-import io.activej.inject.binding.BindingInfo;
+import io.activej.inject.binding.Binding;
 import io.activej.inject.util.Trie;
 import io.activej.worker.annotation.WorkerId;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +36,7 @@ public final class WorkerPool {
 	private final int id;
 	private final Scope scope;
 	private final Injector[] scopeInjectors;
-	private final Map<Key<?>, BindingInfo> scopeBindings;
+	private final Map<Key<?>, Binding<?>> scopeBindings;
 
 	@ShortTypeName("WorkerInstances")
 	@SuppressWarnings("unchecked")
@@ -76,7 +76,7 @@ public final class WorkerPool {
 		this.scope = scope;
 		this.scopeInjectors = new Injector[workers];
 
-		Trie<Scope, Map<Key<?>, BindingInfo>> subtrie = injector.getBindingsTrie().get(scope);
+		Trie<Scope, Map<Key<?>, Binding<?>>> subtrie = injector.getBindingsTrie().get(scope);
 		this.scopeBindings = subtrie != null ? subtrie.get() : emptyMap();
 
 		for (int i = 0; i < workers; i++) {
@@ -115,7 +115,7 @@ public final class WorkerPool {
 
 	@Nullable
 	public <T> Instances<T> peekInstances(Key<T> key) {
-		BindingInfo binding = scopeBindings.get(key);
+		Binding<?> binding = scopeBindings.get(key);
 		if (binding == null || binding.getType() == TRANSIENT) {
 			return null;
 		}
@@ -129,7 +129,7 @@ public final class WorkerPool {
 	@NotNull
 	public Map<Key<?>, Instances<?>> peekInstances() {
 		Map<Key<?>, Instances<?>> map = new HashMap<>();
-		for (Map.Entry<Key<?>, BindingInfo> entry : scopeBindings.entrySet()) {
+		for (Map.Entry<Key<?>, Binding<?>> entry : scopeBindings.entrySet()) {
 			if (entry.getValue().getType() == TRANSIENT) {
 				continue;
 			}

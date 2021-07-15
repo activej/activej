@@ -29,21 +29,30 @@ import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingType.EAGER;
 import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static java.util.Collections.singleton;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 
 public final class Utils {
 
-	private static final BiConsumer<Map<Key<?>, BindingSet<?>>, Map<Key<?>, BindingSet<?>>> BINDING_MULTIMAP_MERGER =
-			(into, from) -> from.forEach((k, v) -> into.merge(k, v, (first, second) -> BindingSet.merge(k, first, second)));
+	private static final BiConsumer<Map<Key<?>, Set<Binding<?>>>, Map<Key<?>, Set<Binding<?>>>> BINDING_MULTIMAP_MERGER =
+			(into, from) -> from.forEach((key, v) -> into.merge(key, v, (set1, set2) -> {
+				Set<Binding<?>> set = new HashSet<>(set1.size() + set2.size());
+				set.addAll(set1);
+				set.addAll(set2);
+				BindingType type = set.isEmpty() ? null : set.iterator().next().getType();
+				if (set.stream().anyMatch(b -> b.getType() != type)) {
+					throw new DIException("Two binding sets bound with different types for key " + key.getDisplayString());
+				}
+				return set;
+			}));
 
-	public static BiConsumer<Map<Key<?>, BindingSet<?>>, Map<Key<?>, BindingSet<?>>> bindingMultimapMerger() {
+	public static BiConsumer<Map<Key<?>, Set<Binding<?>>>, Map<Key<?>, Set<Binding<?>>>> bindingMultimapMerger() {
 		return BINDING_MULTIMAP_MERGER;
 	}
 
@@ -89,42 +98,6 @@ public final class Utils {
 		return toMap(keyMapper, t -> singleton(valueMapper.apply(t)), Utils::union);
 	}
 
-	public static <K, V, V1> Map<K, Set<V1>> transformMultimapValues(Map<K, Set<V>> multimap, BiFunction<? super K, ? super V, ? extends V1> fn) {
-		return transformMultimap(multimap, Function.identity(), fn);
-	}
-
-	public static <K, V, K1, V1> Map<K1, Set<V1>> transformMultimap(Map<K, Set<V>> multimap, Function<? super K, ? extends K1> fnKey, BiFunction<? super K, ? super V, ? extends V1> fnValue) {
-		return multimap.entrySet()
-				.stream()
-				.collect(toMap(
-						entry -> fnKey.apply(entry.getKey()),
-						entry -> entry.getValue()
-								.stream()
-								.map(v -> fnValue.apply(entry.getKey(), v))
-								.collect(toSet())));
-	}
-
-	public static Map<Key<?>, BindingSet<?>> transformBindingMultimapValues(Map<Key<?>, BindingSet<?>> multimap, BiFunction<Key<?>, Binding<?>, Binding<?>> fn) {
-		return transformBindingMultimap(multimap, UnaryOperator.identity(), fn);
-	}
-
-	public static Map<Key<?>, BindingSet<?>> transformBindingMultimap(Map<Key<?>, BindingSet<?>> multimap, UnaryOperator<Key<?>> fnKey, BiFunction<Key<?>, Binding<?>, Binding<?>> fnValue) {
-		return multimap.entrySet()
-				.stream()
-				.collect(toMap(
-						entry -> fnKey.apply(entry.getKey()),
-						entry -> {
-							BindingSet<?> bindingSet = entry.getValue();
-							return new BindingSet<>(
-									bindingSet
-											.getBindings()
-											.stream()
-											.map(v -> fnValue.apply(entry.getKey(), v))
-											.collect(toSet()),
-									bindingSet.getType());
-						}));
-	}
-
 	public static <K, V> Map<K, V> squash(Map<K, Set<V>> multimap, BiFunction<K, Set<V>, V> squasher) {
 		return multimap.entrySet().stream()
 				.collect(toMap(Entry::getKey, e -> squasher.apply(e.getKey(), e.getValue())));
@@ -150,7 +123,7 @@ public final class Utils {
 	/**
 	 * A shortcut for printing the result of {@link #makeGraphVizGraph} into the standard output.
 	 */
-	public static void printGraphVizGraph(Trie<Scope, Map<Key<?>, BindingInfo>> trie) {
+	public static void printGraphVizGraph(Trie<Scope, Map<Key<?>, Binding<?>>> trie) {
 		System.out.println(makeGraphVizGraph(trie));
 	}
 
@@ -158,7 +131,7 @@ public final class Utils {
 	 * Makes a GraphViz graph representation of the binding graph.
 	 * Scopes are grouped nicely into subgraph boxes and dependencies are properly drawn from lower to upper scopes.
 	 */
-	public static String makeGraphVizGraph(Trie<Scope, Map<Key<?>, BindingInfo>> trie) {
+	public static String makeGraphVizGraph(Trie<Scope, Map<Key<?>, Binding<?>>> trie) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("digraph {\n	rankdir=BT;\n");
 		Set<ScopedValue<Key<?>>> known = new HashSet<>();
@@ -168,22 +141,22 @@ public final class Utils {
 		return sb.toString();
 	}
 
-	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, BindingInfo>> trie, Set<ScopedValue<Key<?>>> known, String indent, int[] scopeCount, StringBuilder sb) {
+	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedValue<Key<?>>> known, String indent, int[] scopeCount, StringBuilder sb) {
 		if (scope != UNSCOPED) {
 			sb.append('\n').append(indent)
 					.append("subgraph cluster_").append(scopeCount[0]++).append(" {\n")
 					.append(indent).append("\tlabel=\"").append(scope[scope.length - 1].getDisplayString().replace("\"", "\\\"")).append("\"\n");
 		}
 
-		for (Entry<Scope, Trie<Scope, Map<Key<?>, BindingInfo>>> entry : trie.getChildren().entrySet()) {
+		for (Entry<Scope, Trie<Scope, Map<Key<?>, Binding<?>>>> entry : trie.getChildren().entrySet()) {
 			writeNodes(next(scope, entry.getKey()), entry.getValue(), known, indent + '\t', scopeCount, sb);
 		}
 
 		Set<Key<?>> leafs = new HashSet<>();
 
-		for (Entry<Key<?>, BindingInfo> entry : trie.get().entrySet()) {
+		for (Entry<Key<?>, Binding<?>> entry : trie.get().entrySet()) {
 			Key<?> key = entry.getKey();
-			BindingInfo bindingInfo = entry.getValue();
+			Binding<?> bindingInfo = entry.getValue();
 
 			if (bindingInfo.getDependencies().isEmpty()) {
 				leafs.add(key);
@@ -212,10 +185,10 @@ public final class Utils {
 		}
 	}
 
-	private static void writeEdges(Scope[] scope, Trie<Scope, Map<Key<?>, BindingInfo>> trie, Set<ScopedValue<Key<?>>> known, StringBuilder sb) {
+	private static void writeEdges(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedValue<Key<?>>> known, StringBuilder sb) {
 		String scopePath = getScopeId(scope);
 
-		for (Entry<Key<?>, BindingInfo> entry : trie.get().entrySet()) {
+		for (Entry<Key<?>, Binding<?>> entry : trie.get().entrySet()) {
 			String key = "\"" + scopePath + entry.getKey().toString().replace("\"", "\\\"") + "\"";
 			for (Dependency dependency : entry.getValue().getDependencies()) {
 				Key<?> depKey = dependency.getKey();
@@ -251,7 +224,7 @@ public final class Utils {
 				sb.append("];\n");
 			}
 		}
-		for (Entry<Scope, Trie<Scope, Map<Key<?>, BindingInfo>>> entry : trie.getChildren().entrySet()) {
+		for (Entry<Scope, Trie<Scope, Map<Key<?>, Binding<?>>>> entry : trie.getChildren().entrySet()) {
 			writeEdges(next(scope, entry.getKey()), entry.getValue(), known, sb);
 		}
 	}
@@ -276,12 +249,12 @@ public final class Utils {
 		return str.startsWith("@" + typeName) ? "@" + ReflectionUtils.getDisplayName(annotationType) + str.substring(typeName.length() + 1) : str;
 	}
 
-	public static String getDisplayString(@NotNull Object object){
-		if (object instanceof Class && ((Class<?>) object).isAnnotation()){
+	public static String getDisplayString(@NotNull Object object) {
+		if (object instanceof Class && ((Class<?>) object).isAnnotation()) {
 			//noinspection unchecked
 			return getDisplayString((Class<? extends Annotation>) object, null);
 		}
-		if (object instanceof Annotation){
+		if (object instanceof Annotation) {
 			Annotation annotation = (Annotation) object;
 			return getDisplayString(annotation.annotationType(), annotation);
 		}

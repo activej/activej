@@ -19,8 +19,6 @@ package io.activej.inject.module;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
-import io.activej.inject.impl.CompiledBinding;
-import io.activej.inject.impl.CompiledBindingLocator;
 import io.activej.inject.util.LocationInfo;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Types;
@@ -32,22 +30,13 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static io.activej.inject.binding.BindingType.*;
-import static io.activej.inject.impl.CompiledBinding.missingOptionalBinding;
+import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.ReflectionUtils.scanClassHierarchy;
 import static io.activej.inject.util.Utils.*;
-import static java.util.Collections.emptySet;
 
 @SuppressWarnings("UnusedReturnValue")
-final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
-	private static final Binding<?> TO_BE_GENERATED = new Binding<Object>(emptySet()) {
-		@Override
-		public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			return missingOptionalBinding();
-		}
-	};
-
-	private final Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings = Trie.leaf(new HashMap<>());
+final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
+	private final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings = Trie.leaf(new HashMap<>());
 	private final Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
 	private final Map<Type, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
 	private final Map<Key<?>, Multibinder<?>> multibinders = new HashMap<>();
@@ -74,23 +63,19 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 
 	private void completePreviousStep() {
 		if (current != null) {
-			addBindingDesc(current);
+			addBinding(current);
 			current = null;
 		}
 	}
 
-	private void addBindingDesc(BindingDesc desc) {
-		BindingSet<?> bindingSet = bindings
-				.computeIfAbsent(desc.getScope(), $ -> new HashMap<>())
+	private void addBinding(BindingDesc desc) {
+		Set<Binding<?>> bindingSet = bindings
+				.computeIfAbsent(desc.scope, $ -> new HashMap<>())
 				.get()
-				.computeIfAbsent(desc.getKey(), $ -> new BindingSet<>(new HashSet<>(), REGULAR));
+				.computeIfAbsent(desc.key, $ -> new HashSet<>());
 
-		bindingSet.setType(desc.getType());
-
-		Binding<?> binding = desc.getBinding();
-		if (binding != TO_BE_GENERATED) {
-			//noinspection rawtypes,unchecked
-			bindingSet.getBindings().add((Binding) binding);
+		if (desc.binding != null) {
+			bindingSet.add(desc.type == null ? desc.binding : desc.binding.as(desc.type));
 		}
 	}
 
@@ -98,7 +83,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 	@SuppressWarnings("unchecked")
 	public <U> ModuleBuilder0<U> bind(@NotNull Key<U> key) {
 		completePreviousStep();
-		current = new BindingDesc(key, TO_BE_GENERATED);
+		current = new BindingDesc(key, null);
 		return (ModuleBuilder0<U>) this;
 	}
 
@@ -111,26 +96,26 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 	@Override
 	public ModuleBuilder0<T> qualified(@NotNull Object qualifier) {
 		BindingDesc desc = ensureCurrent();
-		Key<?> key = desc.getKey();
+		Key<?> key = desc.key;
 		if (key.getQualifier() != null) {
 			throw new IllegalStateException("Already qualified with " + getDisplayString(qualifier));
 		}
-		desc.setKey(key.qualified(qualifier));
+		desc.key = key.qualified(qualifier);
 		return this;
 	}
 
 	@Override
-	public ModuleBuilder0<T> in(@NotNull Scope[] scope) {
+	public ModuleBuilder1<T> in(@NotNull Scope[] scope) {
 		BindingDesc desc = ensureCurrent();
-		if (desc.getScope().length != 0) {
-			throw new IllegalStateException("Already bound to scope " + getScopeDisplayString(desc.getScope()));
+		if (desc.scope.length != 0) {
+			throw new IllegalStateException("Already bound to scope " + getScopeDisplayString(desc.scope));
 		}
-		desc.setScope(scope);
+		desc.scope = scope;
 		return this;
 	}
 
 	@Override
-	public ModuleBuilder0<T> in(@NotNull Scope scope, @NotNull Scope... scopes) {
+	public ModuleBuilder1<T> in(@NotNull Scope scope, @NotNull Scope... scopes) {
 		Scope[] joined = new Scope[scopes.length + 1];
 		joined[0] = scope;
 		System.arraycopy(scopes, 0, joined, 1, scopes.length);
@@ -139,34 +124,26 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public final ModuleBuilder0<T> in(@NotNull Class<? extends Annotation> annotationClass, @NotNull Class<?>... annotationClasses) {
+	public final ModuleBuilder1<T> in(@NotNull Class<? extends Annotation> annotationClass, @NotNull Class<?>... annotationClasses) {
 		return in(Stream.concat(Stream.of(annotationClass), Arrays.stream((Class<? extends Annotation>[]) annotationClasses)).map(Scope::of).toArray(Scope[]::new));
 	}
 
 	@Override
-	public ModuleBuilder0<T> to(@NotNull Binding<? extends T> binding) {
+	public ModuleBuilder1<T> to(@NotNull Binding<? extends T> binding) {
 		BindingDesc desc = ensureCurrent();
-		checkState(desc.getBinding() == TO_BE_GENERATED, "Already mapped to a binding");
+		checkState(desc.binding == null, "Already mapped to a binding");
 		if (binding.getLocation() == null) {
 			binding.at(LocationInfo.from(this));
 		}
-		desc.setBinding(binding);
+		desc.binding = binding;
 		return this;
 	}
 
 	@Override
-	public ModuleBuilder0<T> asEager() {
+	public ModuleBuilder1<T> as(BindingType type) {
 		BindingDesc current = ensureCurrent();
-		checkState(current.getType() == REGULAR, "Binding was already set to eager or transient");
-		current.setType(EAGER);
-		return this;
-	}
-
-	@Override
-	public ModuleBuilder0<T> asTransient() {
-		BindingDesc current = ensureCurrent();
-		checkState(current.getType() == REGULAR, "Binding was already set to transient or eager");
-		current.setType(TRANSIENT);
+		checkState(current.type == null, "Binding was already set to eager or transient");
+		current.type = type;
 		return this;
 	}
 
@@ -191,7 +168,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 	public <S, E extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Binding<E> binding) {
 		completePreviousStep();
 		Key<Set<S>> set = Key.ofType(Types.parameterized(Set.class, setOf.getType()), setOf.getQualifier());
-		addBindingDesc(new BindingDesc(set, binding.mapInstance(Collections::singleton)));
+		addBinding(new BindingDesc(set, binding.mapInstance(Collections::singleton)));
 		multibinders.put(set, Multibinders.toSet());
 		return this;
 	}
@@ -238,7 +215,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 		completePreviousStep(); // finish the last binding
 		return new Module() {
 			@Override
-			public final Trie<Scope, Map<Key<?>, BindingSet<?>>> getBindings() {
+			public final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> getBindings() {
 				return bindings;
 			}
 
@@ -262,5 +239,18 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder0<T> {
 	@Override
 	public String toString() {
 		return name + "(at " + (location != null ? location : "<unknown module location>") + ')';
+	}
+
+	private static final class BindingDesc {
+		private Key<?> key;
+		private Binding<?> binding;
+		private Scope[] scope;
+		private BindingType type;
+
+		BindingDesc(Key<?> key, Binding<?> binding) {
+			this.key = key;
+			this.binding = binding;
+			this.scope = UNSCOPED;
+		}
 	}
 }

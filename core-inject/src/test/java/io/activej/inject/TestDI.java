@@ -3,8 +3,8 @@ package io.activej.inject;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.*;
 import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.BindingInfo;
 import io.activej.inject.binding.DIException;
+import io.activej.inject.impl.Preprocessor;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
@@ -12,6 +12,7 @@ import io.activej.inject.module.Modules;
 import io.activej.inject.util.Constructors.Constructor0;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,6 +26,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static io.activej.inject.Qualifiers.named;
+import static io.activej.inject.binding.BindingGenerators.combinedGenerator;
+import static io.activej.inject.binding.BindingTransformers.combinedTransformer;
+import static io.activej.inject.binding.BindingType.TRANSIENT;
+import static io.activej.inject.binding.Multibinders.combinedMultibinder;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.inject.module.Modules.override;
 import static io.activej.inject.util.Utils.printGraphVizGraph;
@@ -799,9 +804,9 @@ public final class TestDI {
 				})
 				.build();
 
-		printGraphVizGraph(module.getReducedBindingInfo());
+		printGraphVizGraph(reduceModuleBindings(module));
 
-		Trie<Scope, Map<Key<?>, BindingInfo>> flattened = Modules.ignoreScopes(module).getReducedBindingInfo();
+		Trie<Scope, Map<Key<?>, Binding<?>>> flattened = reduceModuleBindings(Modules.ignoreScopes(module));
 
 		printGraphVizGraph(flattened);
 
@@ -809,6 +814,15 @@ public final class TestDI {
 		assertEquals(Stream.of(Double.class, Float.class, Integer.class, String.class)
 				.map(Key::of)
 				.collect(toSet()), flattened.get().keySet());
+	}
+
+	@NotNull
+	private static Trie<Scope, Map<Key<?>, Binding<?>>> reduceModuleBindings(Module module) {
+		return Preprocessor.reduce(
+				module.getBindings(),
+				combinedMultibinder(module.getMultibinders()),
+				combinedTransformer(module.getBindingTransformers()),
+				combinedGenerator(module.getBindingGenerators()));
 	}
 
 	@Test
@@ -1154,46 +1168,81 @@ public final class TestDI {
 
 	@Test
 	public void transientGenerators() {
-		Key<List<String>> stringListKey = new Key<List<String>>() {};
 		Key<Set<String>> stringSetKey = new Key<Set<String>>() {};
-		AtomicInteger mut = new AtomicInteger();
-
-		Injector injector = Injector.of(ModuleBuilder.create()
-				.bind(stringListKey).asTransient()
-				.bind(stringSetKey)
-				.bind(String.class).asTransient()
-				.generate(String.class, (bindings, scope, key) ->
-						Binding.to(() -> "str_" + mut.incrementAndGet()))
-				.scan(new Object() {
-					@Provides
-					<T> List<T> transientList(T t) {
-						return singletonList(t);
-					}
-
-					@Provides
-					<T> Set<T> notSoTransientSet(T t) {
-						return singleton(t);
-					}
-				})
-				.build());
-
-		assertEquals(5, Stream.generate(() -> injector.getInstance(stringListKey)).limit(5).collect(toSet()).size());
-		assertEquals(1, Stream.generate(() -> injector.getInstance(stringSetKey)).limit(5).collect(toSet()).size());
+		{
+			AtomicInteger mut = new AtomicInteger();
+			Injector injector = Injector.of(ModuleBuilder.create()
+					.bind(stringSetKey)
+					.bind(String.class)
+					.generate(String.class, (bindings, scope, key) ->
+							Binding.to(() -> "str_" + mut.incrementAndGet()))
+					.scan(new Object() {
+						@Provides
+						<T> Set<T> set(T t) {
+							return singleton(t);
+						}
+					})
+					.build());
+			assertEquals(1, Stream.generate(() -> injector.getInstance(String.class)).limit(5).collect(toSet()).size());
+			assertEquals(1, Stream.generate(() -> injector.getInstance(stringSetKey)).limit(5).collect(toSet()).size());
+		}
+		{
+			AtomicInteger mut = new AtomicInteger();
+			Injector injector = Injector.of(ModuleBuilder.create()
+					.bind(stringSetKey)
+					.bind(String.class)
+					.generate(String.class, (bindings, scope, key) ->
+							Binding.to(() -> "str_" + mut.incrementAndGet()).as(TRANSIENT))
+					.scan(new Object() {
+						@Provides
+						@Transient
+						<T> Set<T> set(T t) {
+							return singleton(t);
+						}
+					})
+					.build());
+			assertEquals(5, Stream.generate(() -> injector.getInstance(String.class)).limit(5).collect(toSet()).size());
+			assertEquals(5, Stream.generate(() -> injector.getInstance(stringSetKey)).limit(5).collect(toSet()).size());
+		}
+		{
+			AtomicInteger mut = new AtomicInteger();
+			Injector injector = Injector.of(ModuleBuilder.create()
+					.bind(stringSetKey)
+					.bind(String.class)
+					.generate(String.class, (bindings, scope, key) ->
+							Binding.to(() -> "str_" + mut.incrementAndGet()).as(TRANSIENT))
+					.scan(new Object() {
+						@Provides
+						<T> Set<T> set(T t) {
+							return singleton(t);
+						}
+					})
+					.build());
+			assertEquals(5, Stream.generate(() -> injector.getInstance(String.class)).limit(5).collect(toSet()).size());
+			assertEquals(1, Stream.generate(() -> injector.getInstance(stringSetKey)).limit(5).collect(toSet()).size());
+		}
 	}
 
 	@Test
 	public void transientPlainBind() {
 		AtomicInteger mut = new AtomicInteger();
+		{
+			Injector injector = Injector.of(ModuleBuilder.create()
+					.bind(String.class)
+					.generate(String.class, (bindings, scope, key) ->
+							Binding.to(() -> "str_" + mut.incrementAndGet()))
+					.build());
+			assertEquals(1, Stream.generate(() -> injector.getInstance(String.class)).limit(5).collect(toSet()).size());
+		}
+		{
+			Injector injector = Injector.of(ModuleBuilder.create()
+					.bind(String.class)
+					.generate(String.class, (bindings, scope, key) ->
+							Binding.to(() -> "str_" + mut.incrementAndGet()).as(TRANSIENT))
+					.build());
 
-		Injector injector = Injector.of(ModuleBuilder.create()
-				.bind(String.class).asTransient()
-				.bind(String.class, "nt")
-				.generate(String.class, (bindings, scope, key) ->
-						Binding.to(() -> "str_" + mut.incrementAndGet()))
-				.build());
-
-		assertEquals(5, Stream.generate(() -> injector.getInstance(String.class)).limit(5).collect(toSet()).size());
-		assertEquals(1, Stream.generate(() -> injector.getInstance(Key.of(String.class, "nt"))).limit(5).collect(toSet()).size());
+			assertEquals(5, Stream.generate(() -> injector.getInstance(String.class)).limit(5).collect(toSet()).size());
+		}
 	}
 
 	@Test
@@ -1211,7 +1260,7 @@ public final class TestDI {
 				.bind(setKeyNt).to(constructor)
 				.bind(setKeyNt).toInstance(singleton("other one"))
 
-				.bind(new Key<Set<String>>() {}).asTransient()
+				.bind(new Key<Set<String>>() {})
 
 				.multibindToSet(String.class)
 				.multibindToSet(Key.ofName(String.class, "nt"))

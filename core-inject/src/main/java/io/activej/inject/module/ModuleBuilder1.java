@@ -14,36 +14,32 @@
  * limitations under the License.
  */
 
-package io.activej.inject.util;
+package io.activej.inject.module;
 
-import io.activej.inject.binding.Binding;
+import io.activej.inject.annotation.Eager;
+import io.activej.inject.annotation.Transient;
 import io.activej.inject.binding.BindingType;
 
 import static io.activej.inject.binding.BindingType.EAGER;
 import static io.activej.inject.binding.BindingType.TRANSIENT;
 
-/**
- * A container that groups together a bindings and its type, only for internal use
- */
-public final class MarkedBinding<K> {
-	private final Binding<K> binding;
-	private final BindingType type;
+public interface ModuleBuilder1<T> extends ModuleBuilder0<T> {
 
-	public MarkedBinding(Binding<K> binding, BindingType type) {
-		this.binding = binding;
-		this.type = type;
+	ModuleBuilder1<T> as(BindingType type);
+
+	/**
+	 * Marks this binding as {@link Eager eager}.
+	 * <p>
+	 * Note that bindings cannot be both {@link Eager eager} and {@link Transient transient}.
+	 */
+	default ModuleBuilder1<T> asEager() {
+		return as(EAGER);
 	}
 
-	public Binding<K> getBinding() {
-		return binding;
-	}
-
-	public BindingType getType() {
-		return type;
-	}
-
-	@Override
-	public String toString() {
-		return (type == TRANSIENT ? "*" : type == EAGER ? "!" : "") + binding.toString();
+	/**
+	 * Marks this binding as {@link Transient transient}.
+	 */
+	default ModuleBuilder1<T> asTransient() {
+		return as(TRANSIENT);
 	}
 }

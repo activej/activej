@@ -18,8 +18,8 @@ package io.activej.inject.module;
 
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
+import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.BindingGenerator;
-import io.activej.inject.binding.BindingSet;
 import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.Trie;
@@ -29,12 +29,12 @@ import java.util.Map;
 import java.util.Set;
 
 final class SimpleModule implements Module {
-	private final Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings;
+	private final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings;
 	private final Map<Type, Set<BindingTransformer<?>>> transformers;
 	private final Map<Type, Set<BindingGenerator<?>>> generators;
 	private final Map<Key<?>, Multibinder<?>> multibinders;
 
-	public SimpleModule(Trie<Scope, Map<Key<?>, BindingSet<?>>> bindings,
+	public SimpleModule(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
 			Map<Type, Set<BindingTransformer<?>>> transformers,
 			Map<Type, Set<BindingGenerator<?>>> generators,
 			Map<Key<?>, Multibinder<?>> multibinders) {
@@ -45,7 +45,7 @@ final class SimpleModule implements Module {
 	}
 
 	@Override
-	public Trie<Scope, Map<Key<?>, BindingSet<?>>> getBindings() {
+	public Trie<Scope, Map<Key<?>, Set<Binding<?>>>> getBindings() {
 		return bindings;
 	}
 

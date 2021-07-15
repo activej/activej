@@ -29,7 +29,7 @@ import io.activej.inject.Scope;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
-import io.activej.inject.binding.BindingInfo;
+import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.Dependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.util.ScopedValue;
@@ -379,14 +379,14 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			Object instance = entry.getValue();
 			if (instance == null) continue;
 
-			BindingInfo bindingInfo = injector.getBinding(key);
+			Binding<?> binding = injector.getBinding(key);
 
-			if (bindingInfo == null || bindingInfo.getType() == TRANSIENT) continue;
+			if (binding == null || binding.getType() == TRANSIENT) continue;
 
 			ServiceKey serviceKey = new ServiceKey(key);
 			instances.put(serviceKey, singletonList(instance));
 			instanceDependencies.put(serviceKey,
-					bindingInfo.getDependencies().stream()
+					binding.getDependencies().stream()
 							.filter(dependency -> dependency.isRequired() || injector.hasInstance(dependency.getKey()))
 							.map(dependency -> {
 								Class<?> dependencyRawType = dependency.getKey().getRawType();
@@ -399,11 +399,11 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 								}
 
 								if (rawTypeMatches && !(instance instanceof WorkerPool)) {
-									logger.warn("Unsupported service {} at {} : worker instances is expected", key, bindingInfo.getLocation());
+									logger.warn("Unsupported service {} at {} : worker instances is expected", key, binding.getLocation());
 								}
 
 								if (instanceMatches) {
-									logger.warn("Unsupported service {} at {} : dependency to WorkerPool or WorkerPools is expected", key, bindingInfo.getLocation());
+									logger.warn("Unsupported service {} at {} : dependency to WorkerPool or WorkerPools is expected", key, binding.getLocation());
 								}
 								return new ServiceKey(dependency.getKey());
 							})
@@ -414,7 +414,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	private Map<Key<?>, Set<ScopedValue<Dependency>>> getScopeDependencies(Injector injector, Scope scope) {
-		Trie<Scope, Map<Key<?>, BindingInfo>> scopeBindings = injector.getBindingsTrie().getOrDefault(scope, emptyMap());
+		Trie<Scope, Map<Key<?>, Binding<?>>> scopeBindings = injector.getBindingsTrie().getOrDefault(scope, emptyMap());
 		return scopeBindings.get()
 				.entrySet()
 				.stream()
