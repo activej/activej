@@ -19,7 +19,7 @@ public class ServiceGraphTest {
 	@Test
 	public void testProperClosingForFailingServiceOneComponent() {
 		Injector injector = Injector.of(new FailingModule());
-		injector.getInstance(Key.ofName(BlockingService.class, "TopService1"));
+		injector.getInstance(Key.of(BlockingService.class, "TopService1"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
 
 		try {
@@ -33,8 +33,8 @@ public class ServiceGraphTest {
 	@Test
 	public void testProperClosingForFailingServiceTwoComponents() {
 		Injector injector = Injector.of(new FailingModule());
-		injector.getInstance(Key.ofName(BlockingService.class, "TopService1"));
-		injector.getInstance(Key.ofName(BlockingService.class, "TopService2"));
+		injector.getInstance(Key.of(BlockingService.class, "TopService1"));
+		injector.getInstance(Key.of(BlockingService.class, "TopService2"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
 
 		try {
@@ -48,8 +48,8 @@ public class ServiceGraphTest {
 	@Test
 	public void testEventloopServiceStartStopWithRuntimeException() {
 		Injector injector = Injector.of(new FailingEventloopModule());
-		injector.getInstance(Key.ofName(EventloopService.class, "start"));
-		injector.getInstance(Key.ofName(EventloopService.class, "stop"));
+		injector.getInstance(Key.of(EventloopService.class, "start"));
+		injector.getInstance(Key.of(EventloopService.class, "stop"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
 
 		try {

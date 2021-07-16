@@ -471,11 +471,10 @@ public final class DataflowTest {
 	static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, Path secondaryPath, List<Partition> graphPartitions) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
-				.bind(Executor.class).qualified(SortingExecutor.class).toInstance(sortingExecutor)
+				.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
 				.bind(Executor.class).toInstance(executor)
 				.bind(Eventloop.class).toInstance(Eventloop.getCurrentEventloop())
 				.scan(new Object() {
-
 					@Provides
 					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerModule.BinarySerializerLocator serializers, Injector environment) {
 						return new DataflowServer(eventloop, codec, serializers, environment);

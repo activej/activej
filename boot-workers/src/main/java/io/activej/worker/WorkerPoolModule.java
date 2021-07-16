@@ -48,7 +48,7 @@ public final class WorkerPoolModule extends AbstractModule {
 		bind(WorkerPools.class).to(WorkerPools::new, Injector.class);
 
 		for (Class<? extends Annotation> scope : workerScopes) {
-			bind(int.class).qualified(WorkerId.class).in(scope).to(() -> {
+			bind(int.class, WorkerId.class).in(scope).to(() -> {
 				throw new AssertionError("Worker ID constructor must never be called since it's instance is always put in the cache manually");
 			});
 		}

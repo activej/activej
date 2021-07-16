@@ -107,14 +107,20 @@ public final class ReflectionUtils {
 
 	@Nullable
 	public static Object qualifierOf(AnnotatedElement annotatedElement) {
-		Set<Annotation> names = Arrays.stream(annotatedElement.getDeclaredAnnotations())
-				.filter(annotation -> annotation.annotationType().isAnnotationPresent(QualifierAnnotation.class))
-				.collect(toSet());
+		List<Annotation> names = new ArrayList<>();
+		for (Annotation annotation : annotatedElement.getDeclaredAnnotations()) {
+			if (annotation.annotationType().isAnnotationPresent(QualifierAnnotation.class)) {
+				names.add(annotation);
+			}
+		}
 		switch (names.size()) {
 			case 0:
 				return null;
 			case 1:
 				Annotation annotation = names.iterator().next();
+				if (annotation instanceof Named) {
+					return ((Named) annotation).value();
+				}
 				Class<? extends Annotation> annotationType = annotation.annotationType();
 				if (isMarker(annotationType)) {
 					return annotationType;

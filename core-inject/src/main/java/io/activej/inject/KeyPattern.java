@@ -36,6 +36,11 @@ public abstract class KeyPattern<T> {
 		this.qualifier = null;
 	}
 
+	public KeyPattern(Object qualifier) {
+		this.type = getTypeParameter();
+		this.qualifier = predicateOf(qualifier);
+	}
+
 	public KeyPattern(Predicate<?> qualifier) {
 		this.type = getTypeParameter();
 		this.qualifier = qualifier;
@@ -50,14 +55,19 @@ public abstract class KeyPattern<T> {
 	 * A default subclass to be used by {@link #of Key.of*} and {@link #ofType Key.ofType*} constructors
 	 */
 	private static final class KeyImpl<T> extends KeyPattern<T> {
-		private KeyImpl(Type type, Predicate<?> qualifier) {
-			super(type, qualifier);
+		private KeyImpl(Type type, Predicate<?> qualifierPredicate) {
+			super(type, qualifierPredicate);
 		}
 	}
 
 	@NotNull
 	public static <T> KeyPattern<T> of(@NotNull Class<T> type) {
 		return new KeyImpl<>(type, null);
+	}
+
+	@NotNull
+	public static <T> KeyPattern<T> of(@NotNull Class<T> type, Object qualifier) {
+		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 
 	@NotNull
@@ -71,24 +81,32 @@ public abstract class KeyPattern<T> {
 	}
 
 	@NotNull
+	public static <T> KeyPattern<T> ofType(@NotNull Type type, Object qualifier) {
+		return new KeyImpl<>(type, predicateOf(qualifier));
+	}
+
+	@NotNull
 	public static <T> KeyPattern<T> ofType(@NotNull Type type, Predicate<?> qualifier) {
 		return new KeyImpl<>(type, qualifier);
+	}
+
+	@NotNull
+	private static Predicate<Object> predicateOf(Object qualifier) {
+		return q -> Objects.equals(q, qualifier);
 	}
 
 	/**
 	 * Returns a new key with same type but the qualifier replaced with a given one
 	 */
 	public KeyPattern<T> qualified(Object qualifier) {
-		return new KeyImpl<>(type, q -> Objects.equals(q, qualifier));
+		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 
 	/**
-	 * Returns a new key with same type but the qualifier replaced with @Named annotation with given value
-	 * <p>
-	 * <b>This is not the same as a {@link KeyPattern} with {@link String} qualifier</b>
+	 * Returns a new key with same type but the qualifier replaced with a given one
 	 */
-	public KeyPattern<T> named(String name) {
-		return qualified(name);
+	public KeyPattern<T> qualified(Predicate<?> qualifier) {
+		return new KeyImpl<>(type, qualifier);
 	}
 
 	public @NotNull Type getType() {
@@ -106,7 +124,7 @@ public abstract class KeyPattern<T> {
 	public boolean match(Key<?> key) {
 		//noinspection unchecked
 		return TypeUtils.isAssignable(this.type, key.getType()) &&
-				(this.qualifier == null || (key.getQualifier() != null && ((Predicate<Object>) this.qualifier).test(key.getQualifier())));
+				(this.qualifier == null || ((Predicate<Object>) this.qualifier).test(key.getQualifier()));
 	}
 
 	@NotNull

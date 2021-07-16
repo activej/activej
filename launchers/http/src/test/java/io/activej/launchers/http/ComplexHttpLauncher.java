@@ -150,15 +150,15 @@ public final class ComplexHttpLauncher extends Launcher {
 
 	@Override
 	protected Module getModule() {
-		return Modules.combine(
+        return Modules.combine(
 				ServiceGraphModule.create(),
 				WorkerPoolModule.create(Worker.class, MyWorker.class),
 				JmxModule.create()
 						.withScopes(false),
 				TriggersModule.create()
-						.with(Key.ofName(PrimaryServer.class, "First"), Severity.HIGH, "server1", TriggerResult::ofValue)
-						.with(Key.ofName(PrimaryServer.class, "Second"), Severity.HIGH, "server2", TriggerResult::ofValue)
-						.with(Key.ofName(PrimaryServer.class, "Third"), Severity.HIGH, "server3", TriggerResult::ofValue)
+						.with(Key.of(PrimaryServer.class, "First"), Severity.HIGH, "server1", TriggerResult::ofValue)
+						.with(Key.of(PrimaryServer.class, "Second"), Severity.HIGH, "server2", TriggerResult::ofValue)
+						.with(Key.of(PrimaryServer.class, "Third"), Severity.HIGH, "server3", TriggerResult::ofValue)
 						.with(Key.of(Eventloop.class), Severity.HIGH, "eventloop", TriggerResult::ofValue)
 		);
 	}

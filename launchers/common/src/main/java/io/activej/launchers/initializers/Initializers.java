@@ -39,9 +39,9 @@ import static io.activej.trigger.Severity.*;
 
 public class Initializers {
 	public static final String GLOBAL_EVENTLOOP_NAME = "GlobalEventloopStats";
-	public static final Key<Eventloop> GLOBAL_EVENTLOOP_KEY = Key.ofName(Eventloop.class, GLOBAL_EVENTLOOP_NAME);
+	public static final Key<Eventloop> GLOBAL_EVENTLOOP_KEY = Key.of(Eventloop.class, GLOBAL_EVENTLOOP_NAME);
 
-	public static <T extends AbstractServer<T>> Initializer<T> ofAbstractServer(Config config) {
+    public static <T extends AbstractServer<T>> Initializer<T> ofAbstractServer(Config config) {
 		return server -> server
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "listenAddresses"))
 				.withAcceptOnce(config.get(ofBoolean(), "acceptOnce", false))

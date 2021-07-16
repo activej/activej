@@ -68,8 +68,8 @@ public class TriggersModuleTest {
 				TriggersModule.create()
 						.with(String.class, Severity.HIGH, "test", s -> TriggerResult.create())
 		);
-		injector.getInstance(Key.ofName(WorkerPool.class, "first")).getInstances(String.class);
-		injector.getInstance(Key.ofName(WorkerPool.class, "second")).getInstances(String.class);
+        injector.getInstance(Key.of(WorkerPool.class, "first")).getInstances(String.class);
+        injector.getInstance(Key.of(WorkerPool.class, "second")).getInstances(String.class);
 		for (LauncherService service : injector.getInstance(new Key<Set<LauncherService>>() {})) {
 			service.start().get();
 		}

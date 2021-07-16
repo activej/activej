@@ -10,8 +10,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.logging.Logger;
 
-import static io.activej.inject.Qualifiers.named;
-
 /**
  * - First binding is a simple binding where we even used a shortcut and didn't use a lambda since we already made an instance.
  * - Next, we bind a message sender to its implementation. Note the .annotatedWith DSL call - we specify what key exactly we are binding.
@@ -84,7 +82,7 @@ public final class ReflectionExample {
 			// it knows how to make instances of impls because they have inject annotations
 			// allowing us to know how they can be created
 			// we never automagically create instances of unaware classes
-			bind(MessageSender.class, named("first")).to(ConsoleMessageSenderImpl.class);
+            bind(MessageSender.class, "first").to(ConsoleMessageSenderImpl.class);
 			bind(MessageSender.class, SecondKey.class).to(LoggingMessageSenderImpl.class);
 
 			// same as above, just trigger the automatic factory generation from the marked constructor

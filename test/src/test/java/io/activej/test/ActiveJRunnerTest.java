@@ -2,7 +2,6 @@ package io.activej.test;
 
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
-import io.activej.inject.Qualifiers;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -63,7 +62,7 @@ public class ActiveJRunnerTest {
 		assertEquals(asList(HELLO, HELLO, HELLO), hellos);
 		assertEquals(asList(42, 42, 42), numbers);
 
-		assertEquals(PROVIDES_STRING, injector.getInstance(Key.of(String.class, Qualifiers.named(PROVIDES_STRING))));
+        assertEquals(PROVIDES_STRING, injector.getInstance(Key.of(String.class, PROVIDES_STRING)));
 	}
 
 	@Test

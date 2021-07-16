@@ -345,7 +345,6 @@ public class DataflowServerTest {
 				.bind(new Key<StructuredCodec<TestReducer>>() {}).toInstance(ofObject(TestReducer::new))
 				.bind(new Key<StructuredCodec<StringFunction>>() {}).toInstance(ofObject(StringFunction::new))
 				.scan(new Object() {
-
 					@Provides
 					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) throws IOException {
 						return new DataflowClient(Executors.newSingleThreadExecutor(), temporaryFolder.newFolder().toPath(), codec, serializers);

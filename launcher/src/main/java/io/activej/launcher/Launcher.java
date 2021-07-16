@@ -285,7 +285,7 @@ public abstract class Launcher {
 		Key<CompletionStage<Void>> completionStageKey = new Key<CompletionStage<Void>>() {};
 
 		return ModuleBuilder.create()
-				.bind(String[].class).qualified(Args.class).toInstance(args)
+				.bind(String[].class, Args.class).toInstance(args)
 
 				.bind(Launcher.class).to(launcherClass)
 				.bind(launcherClass).toInstance(this)

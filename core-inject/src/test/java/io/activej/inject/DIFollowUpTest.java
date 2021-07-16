@@ -331,9 +331,9 @@ public class DIFollowUpTest {
 
 		Injector injector = Injector.of(cookbook);
 
-		float normalWeight = injector.getInstance(Key.ofName(Cookie.class, "normal"))
+		float normalWeight = injector.getInstance(Key.of(Cookie.class, "normal"))
 				.getPastry().getSugar().getWeight();
-		float zerosugarWeight = injector.getInstance(Key.ofName(Cookie.class, "zerosugar"))
+		float zerosugarWeight = injector.getInstance(Key.of(Cookie.class, "zerosugar"))
 				.getPastry().getSugar().getWeight();
 
 		assertEquals(10.f, normalWeight);

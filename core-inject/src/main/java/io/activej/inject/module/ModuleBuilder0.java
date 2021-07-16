@@ -17,12 +17,8 @@
 package io.activej.inject.module;
 
 import io.activej.inject.Key;
-import io.activej.inject.Qualifiers;
 import io.activej.inject.Scope;
-import io.activej.inject.annotation.Eager;
-import io.activej.inject.annotation.Transient;
 import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.BindingType;
 import io.activej.inject.binding.Dependency;
 import io.activej.inject.util.Constructors.*;
 import org.jetbrains.annotations.NotNull;
@@ -30,23 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.annotation.Annotation;
 import java.util.function.Supplier;
 
-import static io.activej.inject.binding.BindingType.*;
-
 public interface ModuleBuilder0<T> extends ModuleBuilder {
-	/**
-	 * If bound key does not have a qualifier already then sets it to a given one
-	 */
-	ModuleBuilder0<T> qualified(@NotNull Object qualifier);
-
-	/**
-	 * If bound key does not have a qualifier already then sets it to @Named annotation with given value
-	 * <p>
-	 * <b>This is not the same as qualifying a {@link Key key} with {@link String} qualifier</b>
-	 */
-	default ModuleBuilder0<T> named(@NotNull String name) {
-		return qualified(Qualifiers.named(name));
-	}
-
 	/**
 	 * The binding being built by this builder will be added to the binding graph trie at given scope path
 	 */

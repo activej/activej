@@ -95,17 +95,6 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	}
 
 	@Override
-	public ModuleBuilder0<T> qualified(@NotNull Object qualifier) {
-		BindingDesc desc = ensureCurrent();
-		Key<?> key = desc.key;
-		if (key.getQualifier() != null) {
-			throw new IllegalStateException("Already qualified with " + getDisplayString(qualifier));
-		}
-		desc.key = key.qualified(qualifier);
-		return this;
-	}
-
-	@Override
 	public ModuleBuilder1<T> in(@NotNull Scope[] scope) {
 		BindingDesc desc = ensureCurrent();
 		if (desc.scope.length != 0) {

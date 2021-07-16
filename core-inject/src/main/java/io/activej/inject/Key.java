@@ -22,7 +22,6 @@ import io.activej.inject.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
@@ -63,9 +62,6 @@ public abstract class Key<T> {
 		this.qualifier = qualifier;
 	}
 
-	/**
-	 * A default subclass to be used by {@link #of Key.of*} and {@link #ofType Key.ofType*} constructors
-	 */
 	private static final class KeyImpl<T> extends Key<T> {
 		private KeyImpl(Type type, Object qualifier) {
 			super(type, qualifier);
@@ -83,11 +79,6 @@ public abstract class Key<T> {
 	}
 
 	@NotNull
-	public static <T> Key<T> ofName(@NotNull Class<T> type, @NotNull String name) {
-		return of(type).named(name);
-	}
-
-	@NotNull
 	public static <T> Key<T> ofType(@NotNull Type type) {
 		return new KeyImpl<>(type, null);
 	}
@@ -97,25 +88,11 @@ public abstract class Key<T> {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	@NotNull
-	public static <T> Key<T> ofType(@NotNull Type type, @NotNull Class<? extends Annotation> annotationType) {
-		return new KeyImpl<>(type, annotationType);
-	}
-
 	/**
 	 * Returns a new key with same type but the qualifier replaced with a given one
 	 */
 	public Key<T> qualified(Object qualifier) {
 		return new KeyImpl<>(type, qualifier);
-	}
-
-	/**
-	 * Returns a new key with same type but the qualifier replaced with @Named annotation with given value
-	 * <p>
-	 * <b>This is not the same as a {@link Key} with {@link String} qualifier</b>
-	 */
-	public Key<T> named(String name) {
-		return new KeyImpl<>(type, Qualifiers.named(name));
 	}
 
 	@NotNull
