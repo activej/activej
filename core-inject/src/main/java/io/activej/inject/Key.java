@@ -84,7 +84,7 @@ public abstract class Key<T> {
 
 	@NotNull
 	public static <T> Key<T> ofName(@NotNull Class<T> type, @NotNull String name) {
-		return new KeyImpl<>(type, Qualifiers.named(name));
+		return of(type).named(name);
 	}
 
 	@NotNull

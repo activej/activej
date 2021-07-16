@@ -1,10 +1,9 @@
 package io.activej.inject.binding;
 
 import io.activej.inject.Injector;
-import io.activej.inject.util.TypeUtils;
+import io.activej.inject.KeyPattern;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -35,15 +34,13 @@ public final class BindingGenerators {
 	 * will be called.
 	 * <p>
 	 * Be aware of that when creating generators for some concrete classes: usually they are made for interfaces or for final classes.
-	 *
-	 * @throws DIException when more than one generator provides a binding for given key
 	 */
 	@SuppressWarnings("unchecked")
-	public static BindingGenerator<?> combinedGenerator(Map<Type, Set<BindingGenerator<?>>> generators) {
-		LinkedHashMap<Type, Set<BindingGenerator<?>>> sorted = sortPatternsMap(generators);
+	public static BindingGenerator<?> combinedGenerator(Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators) {
+		LinkedHashMap<KeyPattern<?>, Set<BindingGenerator<?>>> sorted = sortPatternsMap(generators);
 		return (bindings, scope, key) -> {
-			for (Map.Entry<Type, Set<BindingGenerator<?>>> entry : sorted.entrySet()) {
-				if (TypeUtils.isAssignable(entry.getKey(), key.getType())) {
+			for (Map.Entry<KeyPattern<?>, Set<BindingGenerator<?>>> entry : sorted.entrySet()) {
+				if (entry.getKey().match(key)) {
 					for (BindingGenerator<?> generator : entry.getValue()) {
 						@Nullable Binding<Object> generated = ((BindingGenerator<Object>) generator).generate(bindings, scope, key);
 						if (generated != null) return generated;

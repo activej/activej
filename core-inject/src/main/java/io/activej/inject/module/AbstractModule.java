@@ -18,15 +18,18 @@ package io.activej.inject.module;
 
 import io.activej.inject.InstanceInjector;
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
-import io.activej.inject.binding.*;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.BindingGenerator;
+import io.activej.inject.binding.BindingTransformer;
+import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -40,8 +43,8 @@ import static io.activej.inject.util.Utils.checkState;
 @SuppressWarnings({"SameParameterValue", "UnusedReturnValue", "unused"})
 public abstract class AbstractModule implements Module {
 	private Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings;
-	private Map<Type, Set<BindingTransformer<?>>> bindingTransformers;
-	private Map<Type, Set<BindingGenerator<?>>> bindingGenerators;
+	private Map<KeyPattern<?>, Set<BindingGenerator<?>>> bindingGenerators;
+	private Map<KeyPattern<?>, Set<BindingTransformer<?>>> bindingTransformers;
 	private Map<Key<?>, Multibinder<?>> multibinders;
 
 	@Nullable
@@ -130,27 +133,27 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
-	 * @see ModuleBuilder#transform
-	 */
-	protected final <T> void transform(Type pattern, BindingTransformer<T> bindingTransformer) {
-		checkState(builder != null, "Cannot add transformers before or after configure() call");
-		builder.transform(pattern, bindingTransformer);
-	}
-
-	protected final <T> void transform(Class<T> pattern, BindingTransformer<T> bindingTransformer) {
-		transform((Type) pattern, bindingTransformer);
-	}
-
-	/**
 	 * @see ModuleBuilder#generate
 	 */
-	protected final <T> void generate(Type pattern, BindingGenerator<T> bindingGenerator) {
+	protected final <T> void generate(KeyPattern<T> pattern, BindingGenerator<T> bindingGenerator) {
 		checkState(builder != null, "Cannot add generators before or after configure() call");
 		builder.generate(pattern, bindingGenerator);
 	}
 
 	protected final <T> void generate(Class<T> pattern, BindingGenerator<T> bindingGenerator) {
-		generate((Type) pattern, bindingGenerator);
+		generate(KeyPattern.of(pattern), bindingGenerator);
+	}
+
+	/**
+	 * @see ModuleBuilder#transform
+	 */
+	protected final <T> void transform(KeyPattern<T> pattern, BindingTransformer<T> bindingTransformer) {
+		checkState(builder != null, "Cannot add transformers before or after configure() call");
+		builder.transform(pattern, bindingTransformer);
+	}
+
+	protected final <T> void transform(Class<T> pattern, BindingTransformer<T> bindingTransformer) {
+		transform(KeyPattern.of(pattern), bindingTransformer);
 	}
 
 	/**
@@ -244,13 +247,13 @@ public abstract class AbstractModule implements Module {
 	}
 
 	@Override
-	public final Map<Type, Set<BindingTransformer<?>>> getBindingTransformers() {
+	public final Map<KeyPattern<?>, Set<BindingTransformer<?>>> getBindingTransformers() {
 		finish();
 		return bindingTransformers;
 	}
 
 	@Override
-	public final Map<Type, Set<BindingGenerator<?>>> getBindingGenerators() {
+	public final Map<KeyPattern<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
 		finish();
 		return bindingGenerators;
 	}

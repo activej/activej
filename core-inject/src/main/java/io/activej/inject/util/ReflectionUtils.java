@@ -17,6 +17,7 @@
 package io.activej.inject.util;
 
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.*;
@@ -466,7 +467,7 @@ public final class ReflectionUtils {
 				if (!unused.isEmpty()) {
 					throw new DIException("Generic type variables " + unused + " are not used in return type of templated provider method " + method);
 				}
-				builder.generate(method.getReturnType(), new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
+				builder.generate(KeyPattern.of((Class<Object>) method.getReturnType()), new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
 
 			} else if (method.isAnnotationPresent(ProvidesIntoSet.class)) {
 				if (module == null && !Modifier.isStatic(method.getModifiers())) {

@@ -17,6 +17,7 @@
 package io.activej.inject.util;
 
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
 import org.jetbrains.annotations.NotNull;
@@ -275,15 +276,21 @@ public final class Utils {
 		return annotationType.getDeclaredMethods().length == 0;
 	}
 
-	public static <T> LinkedHashMap<Type, Set<T>> sortPatternsMap(Map<Type, Set<T>> map) {
+	public static <T> LinkedHashMap<KeyPattern<?>, Set<T>> sortPatternsMap(Map<KeyPattern<?>, Set<T>> map) {
 		return map.entrySet().stream()
 				.sorted((entry1, entry2) -> {
-					Type pattern1 = entry1.getKey();
-					Type pattern2 = entry2.getKey();
-					if (pattern1.equals(pattern2)) return 0;
-					if (TypeUtils.isAssignable(pattern1, pattern2)) return 1;
-					if (TypeUtils.isAssignable(pattern2, pattern1)) return -1;
-					return Integer.compare(System.identityHashCode(pattern1), System.identityHashCode(pattern2));
+					KeyPattern<?> pattern1 = entry1.getKey();
+					KeyPattern<?> pattern2 = entry2.getKey();
+					Type type1 = pattern1.getType();
+					Type type2 = pattern2.getType();
+					if (type1.equals(type2)) {
+						if (!pattern1.hasQualifier() && pattern2.hasQualifier()) return 1;
+						if (pattern1.hasQualifier() && !pattern2.hasQualifier()) return -1;
+						return Integer.compare(System.identityHashCode(type1), System.identityHashCode(type2));
+					}
+					if (TypeUtils.isAssignable(type1, type2)) return 1;
+					if (TypeUtils.isAssignable(type2, type1)) return -1;
+					return Integer.compare(System.identityHashCode(type1), System.identityHashCode(type2));
 				})
 				.collect(toMap(Entry::getKey, Entry::getValue,
 						(v1, v2) -> {throw new AssertionError();}, LinkedHashMap::new));

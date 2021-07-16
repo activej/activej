@@ -17,6 +17,7 @@
 package io.activej.inject.module;
 
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
 import io.activej.inject.util.LocationInfo;
@@ -37,8 +38,8 @@ import static io.activej.inject.util.Utils.*;
 @SuppressWarnings("UnusedReturnValue")
 final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	private final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings = Trie.leaf(new HashMap<>());
-	private final Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
-	private final Map<Type, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
+	private final Map<KeyPattern<?>, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
+	private final Map<KeyPattern<?>, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
 	private final Map<Key<?>, Multibinder<?>> multibinders = new HashMap<>();
 
 	@Nullable
@@ -157,8 +158,8 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 		completePreviousStep();
 		for (Module module : modules) {
 			bindings.addAll(module.getBindings(), bindingMultimapMerger());
-			combineMultimap(bindingTransformers, module.getBindingTransformers());
 			combineMultimap(bindingGenerators, module.getBindingGenerators());
+			combineMultimap(bindingTransformers, module.getBindingTransformers());
 			mergeMultibinders(multibinders, module.getMultibinders());
 		}
 		return this;
@@ -175,22 +176,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <E> ModuleBuilder transform(Type pattern, BindingTransformer<E> bindingTransformer) {
-		completePreviousStep();
-		bindingTransformers.computeIfAbsent(pattern, $ -> new HashSet<>())
-				.add((bindings, scope, key, binding) -> {
-					Binding<Object> transformed = (Binding<Object>) bindingTransformer.transform(bindings, scope, (Key<E>) key, (Binding<E>) binding);
-					if (!binding.equals(transformed) && transformed.getLocation() == null) {
-						transformed.at(LocationInfo.from(this));
-					}
-					return transformed;
-				});
-		return this;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <E> ModuleBuilder generate(Type pattern, BindingGenerator<E> bindingGenerator) {
+	public <E> ModuleBuilder generate(KeyPattern<E> pattern, BindingGenerator<E> bindingGenerator) {
 		completePreviousStep();
 		bindingGenerators.computeIfAbsent(pattern, $ -> new HashSet<>())
 				.add((bindings, scope, key) -> {
@@ -199,6 +185,21 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 						generated.at(LocationInfo.from(this));
 					}
 					return generated;
+				});
+		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <E> ModuleBuilder transform(KeyPattern<E> pattern, BindingTransformer<E> bindingTransformer) {
+		completePreviousStep();
+		bindingTransformers.computeIfAbsent(pattern, $ -> new HashSet<>())
+				.add((bindings, scope, key, binding) -> {
+					Binding<Object> transformed = (Binding<Object>) bindingTransformer.transform(bindings, scope, (Key<E>) key, (Binding<E>) binding);
+					if (!binding.equals(transformed) && transformed.getLocation() == null) {
+						transformed.at(LocationInfo.from(this));
+					}
+					return transformed;
 				});
 		return this;
 	}
@@ -220,13 +221,13 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 			}
 
 			@Override
-			public final Map<Type, Set<BindingTransformer<?>>> getBindingTransformers() {
-				return bindingTransformers;
+			public final Map<KeyPattern<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
+				return bindingGenerators;
 			}
 
 			@Override
-			public final Map<Type, Set<BindingGenerator<?>>> getBindingGenerators() {
-				return bindingGenerators;
+			public final Map<KeyPattern<?>, Set<BindingTransformer<?>>> getBindingTransformers() {
+				return bindingTransformers;
 			}
 
 			@Override

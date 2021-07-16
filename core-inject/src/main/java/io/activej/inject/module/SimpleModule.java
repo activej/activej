@@ -17,6 +17,7 @@
 package io.activej.inject.module;
 
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.BindingGenerator;
@@ -24,19 +25,18 @@ import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.Trie;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 
 final class SimpleModule implements Module {
 	private final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings;
-	private final Map<Type, Set<BindingTransformer<?>>> transformers;
-	private final Map<Type, Set<BindingGenerator<?>>> generators;
+	private final Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers;
+	private final Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators;
 	private final Map<Key<?>, Multibinder<?>> multibinders;
 
 	public SimpleModule(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
-			Map<Type, Set<BindingTransformer<?>>> transformers,
-			Map<Type, Set<BindingGenerator<?>>> generators,
+			Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers,
+			Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators,
 			Map<Key<?>, Multibinder<?>> multibinders) {
 		this.bindings = bindings;
 		this.transformers = transformers;
@@ -50,12 +50,12 @@ final class SimpleModule implements Module {
 	}
 
 	@Override
-	public Map<Type, Set<BindingTransformer<?>>> getBindingTransformers() {
+	public Map<KeyPattern<?>, Set<BindingTransformer<?>>> getBindingTransformers() {
 		return transformers;
 	}
 
 	@Override
-	public Map<Type, Set<BindingGenerator<?>>> getBindingGenerators() {
+	public Map<KeyPattern<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
 		return generators;
 	}
 

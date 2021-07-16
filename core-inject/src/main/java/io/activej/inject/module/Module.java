@@ -17,6 +17,7 @@
 package io.activej.inject.module;
 
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.BindingGenerator;
@@ -24,7 +25,6 @@ import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.Trie;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -50,9 +50,9 @@ public interface Module {
 		return Modules.getImports(getBindings());
 	}
 
-	Map<Type, Set<BindingTransformer<?>>> getBindingTransformers();
+	Map<KeyPattern<?>, Set<BindingGenerator<?>>> getBindingGenerators();
 
-	Map<Type, Set<BindingGenerator<?>>> getBindingGenerators();
+	Map<KeyPattern<?>, Set<BindingTransformer<?>>> getBindingTransformers();
 
 	Map<Key<?>, Multibinder<?>> getMultibinders();
 
@@ -86,8 +86,8 @@ public interface Module {
 	 * Creates a {@link Module module} out of given binding graph trie, transformers, generators and multibinders
 	 */
 	static Module of(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
-			Map<Type, Set<BindingTransformer<?>>> transformers,
-			Map<Type, Set<BindingGenerator<?>>> generators,
+			Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers,
+			Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators,
 			Map<Key<?>, Multibinder<?>> multibinders) {
 		return new SimpleModule(bindings, transformers, generators, multibinders);
 	}

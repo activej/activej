@@ -1,17 +1,13 @@
 package io.activej.inject.binding;
 
 import io.activej.inject.Injector;
-import io.activej.inject.Scope;
-import io.activej.inject.util.TypeUtils;
-import io.activej.inject.util.Utils;
+import io.activej.inject.KeyPattern;
 
-import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import static io.activej.inject.util.Utils.sortPatternsMap;
-import static java.util.stream.Collectors.toMap;
 
 public final class BindingTransformers {
 	private static final BindingTransformer<Object> IDENTITY = (bindings, scope, key, binding) -> binding;
@@ -30,16 +26,14 @@ public final class BindingTransformers {
 	 * only zero or one transformer from that set are allowed to return anything but the binding is was given (being an identity transformer).
 	 * <p>
 	 * So if two transformers differ in priority then they can be applied both in order of their priority.
-	 *
-	 * @param transformers
 	 */
 	@SuppressWarnings("unchecked")
-	public static BindingTransformer<?> combinedTransformer(Map<Type, Set<BindingTransformer<?>>> transformers) {
-		LinkedHashMap<Type, Set<BindingTransformer<?>>> sorted = sortPatternsMap(transformers);
+	public static BindingTransformer<?> combinedTransformer(Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers) {
+		LinkedHashMap<KeyPattern<?>, Set<BindingTransformer<?>>> sorted = sortPatternsMap(transformers);
 		return (bindings, scope, key, binding) -> {
 			Binding<Object> result = binding;
-			for (Map.Entry<Type, Set<BindingTransformer<?>>> entry : sorted.entrySet()) {
-				if (TypeUtils.isAssignable(entry.getKey(), key.getType())) {
+			for (Map.Entry<KeyPattern<?>, Set<BindingTransformer<?>>> entry : sorted.entrySet()) {
+				if (entry.getKey().match(key)) {
 					for (BindingTransformer<?> transformer : entry.getValue()) {
 						result = ((BindingTransformer<Object>) transformer).transform(bindings, scope, key, result);
 					}

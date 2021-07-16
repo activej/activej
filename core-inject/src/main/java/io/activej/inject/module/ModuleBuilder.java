@@ -19,13 +19,13 @@ package io.activej.inject.module;
 import io.activej.inject.InstanceInjector;
 import io.activej.inject.InstanceProvider;
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.*;
 import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -133,27 +133,27 @@ public interface ModuleBuilder {
 	}
 
 	/**
-	 * Adds a {@link BindingTransformer transformer} with a given type to this module.
-	 */
-	<T> ModuleBuilder transform(Type pattern, BindingTransformer<T> bindingTransformer);
-
-	/**
-	 * Adds a {@link BindingTransformer transformer} with a given class to this module.
-	 */
-	default <T> ModuleBuilder transform(Class<T> pattern, BindingTransformer<T> bindingTransformer) {
-		return transform((Type) pattern, bindingTransformer);
-	}
-
-	/**
 	 * Adds a {@link BindingGenerator generator} for a given class to this module.
 	 */
-	<T> ModuleBuilder generate(Type pattern, BindingGenerator<T> bindingGenerator);
+	<T> ModuleBuilder generate(KeyPattern<T> pattern, BindingGenerator<T> bindingGenerator);
 
 	/**
 	 * Adds a {@link BindingGenerator generator} for a given class to this module.
 	 */
 	default <T> ModuleBuilder generate(Class<T> pattern, BindingGenerator<T> bindingGenerator) {
-		return generate((Type) pattern, bindingGenerator);
+		return generate(KeyPattern.of(pattern), bindingGenerator);
+	}
+
+	/**
+	 * Adds a {@link BindingTransformer transformer} with a given type to this module.
+	 */
+	<T> ModuleBuilder transform(KeyPattern<T> pattern, BindingTransformer<T> bindingTransformer);
+
+	/**
+	 * Adds a {@link BindingTransformer transformer} with a given class to this module.
+	 */
+	default <T> ModuleBuilder transform(Class<T> pattern, BindingTransformer<T> bindingTransformer) {
+		return transform(KeyPattern.of(pattern), bindingTransformer);
 	}
 
 	/**

@@ -17,6 +17,7 @@
 package io.activej.inject.module;
 
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
 import io.activej.inject.impl.CompiledBinding;
@@ -25,7 +26,6 @@ import io.activej.inject.util.Trie;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -55,8 +55,8 @@ public final class Modules {
 		}
 		Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings = Trie.merge(bindingMultimapMerger(), new HashMap<>(), modules.stream().map(Module::getBindings));
 
-		Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
-		Map<Type, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
+		Map<KeyPattern<?>, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
+		Map<KeyPattern<?>, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
 		Map<Key<?>, Multibinder<?>> multibinders = new HashMap<>();
 
 		for (Module module : modules) {
@@ -96,11 +96,11 @@ public final class Modules {
 	public static Module override(Module into, Module replacements) {
 		Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings = Trie.merge(Map::putAll, new HashMap<>(), into.getBindings(), replacements.getBindings());
 
-		Map<Type, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>(into.getBindingTransformers());
-		bindingTransformers.putAll(replacements.getBindingTransformers());
-
-		Map<Type, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>(into.getBindingGenerators());
+		Map<KeyPattern<?>, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>(into.getBindingGenerators());
 		bindingGenerators.putAll(replacements.getBindingGenerators());
+
+		Map<KeyPattern<?>, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>(into.getBindingTransformers());
+		bindingTransformers.putAll(replacements.getBindingTransformers());
 
 		Map<Key<?>, Multibinder<?>> multibinders = new HashMap<>(into.getMultibinders());
 		multibinders.putAll(replacements.getMultibinders());
