@@ -2,8 +2,9 @@ package io.activej.serializer.examples;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerBuilder.Cache;
 import io.activej.serializer.SerializerDef;
-import io.activej.serializer.impl.*;
+import io.activej.serializer.reflection.scanner.TypeScannerRegistry.MappingFunction;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,15 +18,6 @@ public class SerializerBuilderUtils {
 	public static final List<Class<?>> TYPES = asList(
 			byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
 	);
-	private static final Map<Class<?>, SerializerDef> primitiveSerializers = new HashMap<Class<?>, SerializerDef>() {{
-		put(byte.class, new SerializerDefByte(false));
-		put(short.class, new SerializerDefShort(false));
-		put(int.class, new SerializerDefInt(false, true));
-		put(long.class, new SerializerDefLong(false, false));
-		put(float.class, new SerializerDefFloat(false));
-		put(double.class, new SerializerDefDouble(false));
-		put(char.class, new SerializerDefChar(false));
-	}};
 
 	private static final Map<String, String> collectionImplSuffix = new HashMap<String, String>() {{
 		put("Set", "HashSet");
@@ -34,7 +26,7 @@ public class SerializerBuilderUtils {
 
 	// region creators
 	public static SerializerBuilder createWithHppc7Support(String profile, DefiningClassLoader definingClassLoader) {
-		SerializerBuilder builder = SerializerBuilder.create(profile, definingClassLoader);
+		SerializerBuilder builder = SerializerBuilder.create(definingClassLoader).withProfile(profile);
 		return register(builder, definingClassLoader);
 	}
 
@@ -67,7 +59,7 @@ public class SerializerBuilderUtils {
 				} catch (ClassNotFoundException e) {
 					throw new IllegalStateException("There is no collection with given name" + e.getClass().getName(), e);
 				}
-				builder.withSerializer(hppcMapType, serializerDefMapBuilder(hppcMapType, hppcMapImplType, keyType, valueType));
+				builder.with(hppcMapType, serializerDefMapBuilder(hppcMapType, hppcMapImplType, keyType, valueType));
 			}
 		}
 	}
@@ -86,7 +78,7 @@ public class SerializerBuilderUtils {
 				} catch (ClassNotFoundException e) {
 					throw new IllegalStateException("There is no collection with given name", e);
 				}
-				builder.withSerializer(hppcCollectionType, serializerDefCollectionBuilder(hppcCollectionType, hppcCollectionTypeImpl, valueType));
+				builder.with(hppcCollectionType, serializerDefCollectionBuilder(hppcCollectionType, hppcCollectionTypeImpl, valueType));
 			}
 		}
 	}
@@ -95,31 +87,31 @@ public class SerializerBuilderUtils {
 		return toUpperCase(str.charAt(0)) + str.substring(1);
 	}
 
-	private static SerializerDefBuilder serializerDefMapBuilder(Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
+	private static MappingFunction<SerializerDef, Cache> serializerDefMapBuilder(Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
 		String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
 		if (!mapType.getSimpleName().startsWith(prefix))
 			throw new IllegalArgumentException(format("Expected mapType '%s', but was begin '%s'", mapType.getSimpleName(), prefix));
-		return (type, generics, target) -> {
+		return ctx -> {
 			SerializerDef keySerializer;
 			SerializerDef valueSerializer;
-			if (generics.length == 2) {
+			if (ctx.getTypeArgumentsCount() == 2) {
 				if (keyType != Object.class || valueType != Object.class)
 					throw new IllegalArgumentException("keyType and valueType must be Object.class");
-				keySerializer = generics[0].serializer;
-				valueSerializer = generics[1].serializer;
-			} else if (generics.length == 1) {
+				keySerializer = ctx.scanTypeArgument(0);
+				valueSerializer = ctx.scanTypeArgument(1);
+			} else if (ctx.getTypeArgumentsCount() == 1) {
 				if (keyType != Object.class && valueType != Object.class)
 					throw new IllegalArgumentException("keyType or valueType must be Object.class");
 				if (keyType == Object.class) {
-					keySerializer = generics[0].serializer;
-					valueSerializer = primitiveSerializers.get(valueType);
+					keySerializer = ctx.scanTypeArgument(0);
+					valueSerializer = ctx.scan(valueType);
 				} else {
-					keySerializer = primitiveSerializers.get(keyType);
-					valueSerializer = generics[0].serializer;
+					keySerializer = ctx.scan(keyType);
+					valueSerializer = ctx.scanTypeArgument(0);
 				}
 			} else {
-				keySerializer = primitiveSerializers.get(keyType);
-				valueSerializer = primitiveSerializers.get(valueType);
+				keySerializer = ctx.scan(keyType);
+				valueSerializer = ctx.scan(valueType);
 			}
 			if (valueSerializer == null)
 				throw new NullPointerException();
@@ -129,18 +121,18 @@ public class SerializerBuilderUtils {
 		};
 	}
 
-	private static SerializerDefBuilder serializerDefCollectionBuilder(Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
+	private static MappingFunction<SerializerDef, Cache> serializerDefCollectionBuilder(Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
 		String prefix = capitalize(valueType.getSimpleName());
 		if (!collectionType.getSimpleName().startsWith(prefix))
 			throw new IllegalArgumentException(format("Expected setType '%s', but was begin '%s'", collectionType.getSimpleName(), prefix));
-		return (type, generics, target) -> {
+		return ctx -> {
 			SerializerDef valueSerializer;
-			if (generics.length == 1) {
+			if (ctx.hasTypeArguments()) {
 				if (valueType != Object.class)
 					throw new IllegalArgumentException("valueType must be Object.class");
-				valueSerializer = generics[0].serializer;
+				valueSerializer = ctx.scanTypeArgument(0);
 			} else {
-				valueSerializer = primitiveSerializers.get(valueType);
+				valueSerializer = ctx.scan(valueType);
 			}
 			if (valueSerializer == null)
 				throw new NullPointerException();

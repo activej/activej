@@ -1,6 +1,9 @@
-package io.activej.serializer2;
+package io.activej.serializer;
 
-import io.activej.serializer.annotations.*;
+import io.activej.serializer.annotations.SerializeNullable;
+import io.activej.serializer.annotations.SerializeSubclasses;
+import io.activej.serializer.annotations.SerializeVarLength;
+import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.reflection.TypeT;
 import io.activej.serializer.scanner.TestEnum1;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -31,8 +34,8 @@ public class SerializerBuilder2Test {
 		return io.activej.serializer.Utils.doTest(testData1, createBuilder().build(type.getAnnotatedType()));
 	}
 
-	private static SerializerBuilder2 createBuilder() {
-		return SerializerBuilder2.create(DEFINING_CLASS_LOADER)
+	private static SerializerBuilder createBuilder() {
+		return SerializerBuilder.create(DEFINING_CLASS_LOADER)
 				.withSubclasses("extraSubclasses1", Integer.class, String.class);
 	}
 
@@ -41,7 +44,7 @@ public class SerializerBuilder2Test {
 		public int i;
 
 		@Serialize(order = 15)
-		@S2Nullable
+		@SerializeNullable
 		public Integer iBoxed;
 
 		@Serialize(order = 22)
@@ -75,19 +78,19 @@ public class SerializerBuilder2Test {
 
 		{
 			List<Integer> testData1 = Arrays.asList(1, 2, null, 3);
-			List<Integer> testData2 = doTest(new TypeT<List<@S2Nullable Integer>>() {}, testData1);
+			List<Integer> testData2 = doTest(new TypeT<List<@SerializeNullable Integer>>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 
 		{
 			List<String> testData1 = Arrays.asList("1", "2", null, "3");
-			List<String> testData2 = doTest(new TypeT<List<@S2Nullable String>>() {}, testData1);
+			List<String> testData2 = doTest(new TypeT<List<@SerializeNullable String>>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 
 		{
 			List<String> testData1 = null;
-			List<String> testData2 = doTest(new TypeT<@S2Nullable List<@S2Nullable String>>() {}, testData1);
+			List<String> testData2 = doTest(new TypeT<@SerializeNullable List<@SerializeNullable String>>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 	}
@@ -101,7 +104,7 @@ public class SerializerBuilder2Test {
 		}
 		{
 			int[] testData1 = new int[]{1, 2, 3};
-			int[] testData2 = doTest(new TypeT<@S2VarLength int[]>() {}, testData1);
+			int[] testData2 = doTest(new TypeT<@SerializeVarLength int[]>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 		{
@@ -111,12 +114,12 @@ public class SerializerBuilder2Test {
 		}
 		{
 			Integer[] testData1 = new Integer[]{1, 2, 3};
-			Integer[] testData2 = doTest(new TypeT<@S2VarLength Integer[]>() {}, testData1);
+			Integer[] testData2 = doTest(new TypeT<@SerializeVarLength Integer[]>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 		{
 			Integer[] testData1 = new Integer[]{1, 2, null, 3};
-			Integer[] testData2 = doTest(new TypeT<@S2Nullable @S2VarLength Integer[]>() {}, testData1);
+			Integer[] testData2 = doTest(new TypeT<@SerializeNullable @SerializeVarLength Integer[]>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 	}
@@ -130,7 +133,7 @@ public class SerializerBuilder2Test {
 		}
 		{
 			TestEnum1 testData1 = null;
-			TestEnum1 testData2 = doTest(new TypeT<@S2Nullable TestEnum1>() {}, testData1);
+			TestEnum1 testData2 = doTest(new TypeT<@SerializeNullable TestEnum1>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 	}
@@ -139,22 +142,22 @@ public class SerializerBuilder2Test {
 	public void testSubclasses() {
 		{
 			Object testData1 = 1;
-			Object testData2 = doTest(new TypeT<@S2Subclasses({String.class, Integer.class}) Object>() {}, testData1);
+			Object testData2 = doTest(new TypeT<@SerializeSubclasses({String.class, Integer.class}) Object>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 		{
 			Object testData1 = "abc";
-			Object testData2 = doTest(new TypeT<@S2Subclasses({String.class, Integer.class}) Object>() {}, testData1);
+			Object testData2 = doTest(new TypeT<@SerializeSubclasses({String.class, Integer.class}) Object>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 		{
 			Object testData1 = null;
-			Object testData2 = doTest(new TypeT<@S2Subclasses({String.class, Integer.class}) @S2Nullable Object>() {}, testData1);
+			Object testData2 = doTest(new TypeT<@SerializeSubclasses({String.class, Integer.class}) @SerializeNullable Object>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 		{
 			Object testData1 = 1;
-			Object testData2 = doTest(new TypeT<@S2Subclasses(extraSubclassesId = "extraSubclasses1") Object>() {}, testData1);
+			Object testData2 = doTest(new TypeT<@SerializeSubclasses(extraSubclassesId = "extraSubclasses1") Object>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 	}
@@ -170,11 +173,11 @@ public class SerializerBuilder2Test {
 
 	public static class TestNode {
 		@Serialize(order = 2)
-		@S2Nullable
+		@SerializeNullable
 		public TestNode left;
 
 		@Serialize(order = 3)
-		@S2Nullable
+		@SerializeNullable
 		public TestNode right;
 
 		@Override
@@ -205,7 +208,7 @@ public class SerializerBuilder2Test {
 		}
 		{
 			TestNode testData1 = null;
-			TestNode testData2 = doTest(new TypeT<@S2Nullable TestNode>() {}, testData1);
+			TestNode testData2 = doTest(new TypeT<@SerializeNullable TestNode>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 		{

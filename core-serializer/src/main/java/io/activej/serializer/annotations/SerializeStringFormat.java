@@ -16,18 +16,13 @@
 
 package io.activej.serializer.annotations;
 
-import io.activej.serializer.StringFormat;
-
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
 		ElementType.FIELD,
-		ElementType.METHOD})
-@Repeatable(SerializeStringFormatEx.class)
-@Deprecated
+		ElementType.METHOD,
+		ElementType.TYPE_USE})
 public @interface SerializeStringFormat {
-	StringFormat value();
-
-	int[] path() default {};
+	io.activej.serializer.StringFormat value();
 }

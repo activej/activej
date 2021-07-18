@@ -63,7 +63,7 @@ public class MemcacheServerModule extends AbstractModule {
 							return Promise.of(PutResponse.INSTANCE);
 						})
 				.withSerializerBuilder(SerializerBuilder.create()
-						.withSerializer(Slice.class, new SerializerDefSlice()))
+						.with(Slice.class, ctx -> new SerializerDefSlice()))
 				.withMessageTypes(MESSAGE_TYPES)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),

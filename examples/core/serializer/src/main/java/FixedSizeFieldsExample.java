@@ -13,16 +13,12 @@ public final class FixedSizeFieldsExample {
 	//[START REGION_1]
 	public static class Storage {
 		@Serialize(order = 0)
-		@SerializeFixedSize(3)
-		@SerializeNullable(path = {0})
-		public String[] strings;
+		public @SerializeNullable String @SerializeFixedSize(3) [] strings;
 
 		@Serialize(order = 1)
-		@SerializeFixedSize(4)
-		public byte[] bytes;
+		public byte @SerializeFixedSize(4) [] bytes;
 	}
 	//[END REGION_1]
-
 
 	public static void main(String[] args) {
 		//[START REGION_2]

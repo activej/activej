@@ -3,6 +3,7 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.*;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.SerializerBuilder;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -28,7 +29,7 @@ public final class LocalDateSerializerExample {
 		//[START SERIALIZER_CREATE]
 		BinarySerializer<LocalDateHolder> serializer =
 				SerializerBuilder.create()
-						.withSerializer(LocalDate.class, new SerializerDefLocalDate())
+						.with(LocalDate.class, ctx -> new SerializerDefLocalDate())
 						.build(LocalDateHolder.class);
 		//[END SERIALIZER_CREATE]
 

@@ -22,12 +22,9 @@ import java.lang.annotation.*;
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD,
-		ElementType.TYPE})
-@Repeatable(SerializeSubclassesEx.class)
-@Deprecated
+		ElementType.TYPE,
+		ElementType.TYPE_USE})
 public @interface SerializeSubclasses {
-	int[] path() default {};
-
 	Class<?>[] value() default {};
 
 	String extraSubclassesId() default "";

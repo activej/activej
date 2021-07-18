@@ -16,13 +16,15 @@
 
 package io.activej.serializer.annotations;
 
+import io.activej.serializer.SerializerDef;
+
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD,
-		ElementType.TYPE,
 		ElementType.TYPE_USE})
-public @interface S2Reference {
+public @interface SerializeClass {
+	Class<? extends SerializerDef> value();
 }

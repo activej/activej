@@ -10,7 +10,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -54,7 +53,7 @@ public final class RpcMessageSerializeTest {
 	public void testRpcMessage() {
 		TestRpcMessageData messageData1 = new TestRpcMessageData("TestMessageData");
 		RpcMessage message1 = RpcMessage.of(1, messageData1);
-		BinarySerializer<RpcMessage> serializer = SerializerBuilder.create(getSystemClassLoader())
+		BinarySerializer<RpcMessage> serializer = SerializerBuilder.create()
 				.withSubclasses(RpcMessage.MESSAGE_TYPES, TestRpcMessageData.class, TestRpcMessageData2.class)
 				.build(RpcMessage.class);
 

@@ -49,7 +49,7 @@ public class MemcacheClientModule extends AbstractModule {
 						.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses")))
 				.withMessageTypes(MemcacheRpcMessage.MESSAGE_TYPES)
 				.withSerializerBuilder(SerializerBuilder.create()
-						.withSerializer(Slice.class, new SerializerDefSlice()))
+						.with(Slice.class, ctx -> new SerializerDefSlice()))
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))

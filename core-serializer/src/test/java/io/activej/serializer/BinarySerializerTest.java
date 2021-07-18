@@ -2,10 +2,8 @@ package io.activej.serializer;
 
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
-import io.activej.serializer2.SerializerBuilder2;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -57,11 +55,9 @@ public class BinarySerializerTest {
 		@Serialize(order = 8)
 		public double d;
 		@SerializeVarLength
-		@S2VarLength
 		@Serialize(order = 9)
 		public int iVar;
 		@SerializeVarLength
-		@S2VarLength
 		@Serialize(order = 10)
 		public long lVar;
 
@@ -82,11 +78,9 @@ public class BinarySerializerTest {
 		@Serialize(order = 18)
 		public Double dBoxed;
 		@SerializeVarLength
-		@S2VarLength
 		@Serialize(order = 19)
 		public int iBoxedVar;
 		@SerializeVarLength
-		@S2VarLength
 		@Serialize(order = 20)
 		public long lBoxedVar;
 
@@ -344,29 +338,21 @@ public class BinarySerializerTest {
 	public static class TestDataNullables {
 		@Serialize(order = 0)
 		@SerializeNullable
-		@S2Nullable
 		public String nullableString1;
 
 		@Serialize(order = 1)
 		@SerializeNullable
-		@S2Nullable
 		public String nullableString2;
 
 		@Serialize(order = 2)
-		@SerializeNullable(path = 0)
-		public List<@S2Nullable String> listOfNullableStrings;
+		public List<@SerializeNullable String> listOfNullableStrings;
 
 		@Serialize(order = 3)
 		@SerializeNullable
-		@S2Nullable
-		@SerializeNullable(path = 0)
-		@SerializeNullable(path = {0, 0})
-		public String @S2Nullable [] @S2Nullable [] nullableArrayOfNullableArrayOfNullableStrings;
+		public String @SerializeNullable [] @SerializeNullable [] nullableArrayOfNullableArrayOfNullableStrings;
 
 		@Serialize(order = 4)
-		@SerializeNullable(path = 0)
-		@SerializeNullable(path = 1)
-		public Map<@S2Nullable Integer, @S2Nullable String> mapOfNullableInt2NullableString;
+		public Map<@SerializeNullable Integer, @SerializeNullable String> mapOfNullableInt2NullableString;
 	}
 
 	@Test
@@ -557,12 +543,7 @@ public class BinarySerializerTest {
 
 	public static class TestDataGenericParameters {
 		@Serialize(order = 0)
-		@SerializeNullable(path = 0)
-		@SerializeNullable(path = {0, 0})
-		@SerializeNullable(path = {0, 1})
-		@SerializeVarLength(path = {0, 0})
-		@SerializeStringFormat(value = StringFormat.UTF16, path = {0, 1})
-		public List<@S2Nullable TestDataGenericNested<@S2VarLength @S2Nullable Integer, @S2StringFormat(UTF16) @S2Nullable String>> list;
+		public List<@SerializeNullable TestDataGenericNested<@SerializeVarLength @SerializeNullable Integer, @SerializeStringFormat(UTF16) @SerializeNullable String>> list;
 	}
 
 	@Test
@@ -662,9 +643,7 @@ public class BinarySerializerTest {
 	public static class TestDataSuperclassHolder {
 		@Serialize(order = 0)
 		@SerializeSubclasses({TestDataSubclass1.class, TestDataSubclass2.class})
-		@S2Subclasses({TestDataSubclass1.class, TestDataSubclass2.class})
 		@SerializeNullable
-		@S2Nullable
 		public TestDataSuperclass data;
 	}
 
@@ -687,7 +666,6 @@ public class BinarySerializerTest {
 	public static class TestDataSubclass2 extends TestDataSuperclass {
 		@Serialize(order = 0)
 		@SerializeNullable
-		@S2Nullable
 		public String s;
 	}
 
@@ -732,25 +710,17 @@ public class BinarySerializerTest {
 
 	public static class TestDataSerializerFormat {
 		@Serialize(order = 0)
-		@SerializeStringFormat(value = StringFormat.UTF16, path = 0)
-		@SerializeNullable(path = 0)
-		public List<@S2StringFormat(UTF16) @S2Nullable String> stringsUtf16;
+		public List<@SerializeStringFormat(UTF16) @SerializeNullable String> stringsUtf16;
 
 		@Serialize(order = 1)
-		@SerializeStringFormat(value = StringFormat.UTF8, path = 0)
-		@SerializeNullable(path = 0)
-		public List<@S2StringFormat(UTF8) @S2Nullable String> stringsUtf8;
+		public List<@SerializeStringFormat(UTF8) @SerializeNullable String> stringsUtf8;
 
 		@Serialize(order = 2)
-		@SerializeStringFormat(value = StringFormat.UTF8_MB3, path = 0)
-		@SerializeNullable(path = 0)
 		@SuppressWarnings("deprecation")
-		public List<@S2StringFormat(UTF8_MB3) @S2Nullable String> stringsUtf8Custom;
+		public List<@SerializeStringFormat(UTF8_MB3) @SerializeNullable String> stringsUtf8Custom;
 
 		@Serialize(order = 3)
-		@SerializeStringFormat(value = StringFormat.ISO_8859_1, path = 0)
-		@SerializeNullable(path = 0)
-		public List<@S2StringFormat(ISO_8859_1) @S2Nullable String> stringsIso88591;
+		public List<@SerializeStringFormat(ISO_8859_1) @SerializeNullable String> stringsIso88591;
 
 	}
 
@@ -772,13 +742,10 @@ public class BinarySerializerTest {
 
 	public static class TestDataFixedSize {
 		@Serialize(order = 0)
-		@SerializeFixedSize(3)
-		@SerializeNullable(path = 0)
-		public @S2Nullable String @S2FixedSize(3) [] strings;
+		public @SerializeNullable String @SerializeFixedSize(3) [] strings;
 
 		@Serialize(order = 1)
-		@SerializeFixedSize(4)
-		public byte @S2FixedSize(4) [] bytes;
+		public byte @SerializeFixedSize(4) [] bytes;
 	}
 
 	@Test
@@ -808,21 +775,13 @@ public class BinarySerializerTest {
 	@Test
 	public void testVersions() {
 		BinarySerializer<TestDataVersions> serializer0 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(0).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer0x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withEncodeVersion(0).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer1 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(1).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer1x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withEncodeVersion(1).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer11 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withVersions(1, 1, 1).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer11x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withVersions(1, 1, 1).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer2 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(2).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer2x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withEncodeVersion(2).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer22 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withVersions(2, 2, 2).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer22x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withVersions(2, 2, 2).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer5 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(5).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer5x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withEncodeVersion(5).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer10 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withVersions(10, 10, 10).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer10x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withVersions(10, 10, 10).build(TestDataVersions.class);
 		BinarySerializer<TestDataVersions> serializer100 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(100).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer100x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withEncodeVersion(100).build(TestDataVersions.class);
 
 		TestDataVersions testData1 = new TestDataVersions();
 		testData1.a = 10;
@@ -831,80 +790,80 @@ public class BinarySerializerTest {
 
 		TestDataVersions testData2;
 
-		testData2 = doTest(testData1, serializer0, serializer0x, serializer0x);
+		testData2 = doTest(testData1, serializer0, serializer0);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(0, testData2.c);
 
-		testData2 = doTest(testData1, serializer0, serializer0x, serializer1x);
+		testData2 = doTest(testData1, serializer0, serializer1);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(0, testData2.c);
 
-		testData2 = doTest(testData1, serializer0, serializer0x, serializer2x);
+		testData2 = doTest(testData1, serializer0, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(0, testData2.c);
 
-		testData2 = doTest(testData1, serializer1, serializer1x, serializer0x);
+		testData2 = doTest(testData1, serializer1, serializer0);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(0, testData2.c);
 
-		testData2 = doTest(testData1, serializer1, serializer1x, serializer1x);
+		testData2 = doTest(testData1, serializer1, serializer1);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(0, testData2.c);
 
-		testData2 = doTest(testData1, serializer1, serializer1x, serializer2x);
+		testData2 = doTest(testData1, serializer1, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(0, testData2.c);
 
-		testData2 = doTest(testData1, serializer2, serializer2x, serializer0x);
+		testData2 = doTest(testData1, serializer2, serializer0);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
 
-		testData2 = doTest(testData1, serializer2, serializer2x, serializer1x);
+		testData2 = doTest(testData1, serializer2, serializer1);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
 
-		testData2 = doTest(testData1, serializer2, serializer2x, serializer2x);
+		testData2 = doTest(testData1, serializer2, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
 
-		testData2 = doTest(testData1, serializer11, serializer11x, serializer11x);
+		testData2 = doTest(testData1, serializer11, serializer11);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(0, testData2.c);
 
 		try {
-			doTest(testData1, serializer0x, serializer11x);
+			doTest(testData1, serializer0, serializer11);
 			fail();
 		} catch (Exception ignored) {
 		}
 
-		testData2 = doTest(testData1, serializer2, serializer2x, serializer22x);
+		testData2 = doTest(testData1, serializer2, serializer22);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
 
-		testData2 = doTest(testData1, serializer22, serializer22x, serializer2x);
+		testData2 = doTest(testData1, serializer22, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
 
 		testData1.d = 100;
-		testData2 = doTest(testData1, serializer5, serializer5x, serializer2x);
+		testData2 = doTest(testData1, serializer5, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
 		assertEquals(0, testData2.d);
 
-		testData2 = doTest(testData1, serializer100, serializer100x, serializer10x);
+		testData2 = doTest(testData1, serializer100, serializer10);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
@@ -927,11 +886,8 @@ public class BinarySerializerTest {
 	@Test
 	public void testProfiles() {
 		BinarySerializer<TestDataProfiles> serializer0 = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(TestDataProfiles.class);
-		BinarySerializer<TestDataProfiles> serializer0x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).build(TestDataProfiles.class);
 		BinarySerializer<TestDataProfiles> serializer1 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withProfile("profile1").build(TestDataProfiles.class);
-		BinarySerializer<TestDataProfiles> serializer1x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withProfile("profile1").build(TestDataProfiles.class);
 		BinarySerializer<TestDataProfiles> serializer2 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withProfile("profile2").build(TestDataProfiles.class);
-		BinarySerializer<TestDataProfiles> serializer2x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withProfile("profile2").build(TestDataProfiles.class);
 
 		TestDataProfiles testData1 = new TestDataProfiles();
 		testData1.a = 10;
@@ -940,17 +896,17 @@ public class BinarySerializerTest {
 
 		TestDataProfiles testData2;
 
-		testData2 = doTest(testData1, serializer0, serializer0x, serializer0x);
+		testData2 = doTest(testData1, serializer0, serializer0);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(0, testData2.c);
 
-		testData2 = doTest(testData1, serializer1, serializer1x, serializer1x);
+		testData2 = doTest(testData1, serializer1, serializer1);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(testData2.c, testData2.c);
 
-		testData2 = doTest(testData1, serializer2, serializer2x, serializer2x);
+		testData2 = doTest(testData1, serializer2, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
@@ -982,14 +938,10 @@ public class BinarySerializerTest {
 	public void testProfilesVersions() {
 		Class<TestDataProfiles2> type = TestDataProfiles2.class;
 		BinarySerializer<TestDataProfiles2> serializer1 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(1).build(type);
-		BinarySerializer<TestDataProfiles2> serializer1x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withEncodeVersion(1).build(type);
 		BinarySerializer<TestDataProfiles2> serializer2 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(2).build(type);
-		BinarySerializer<TestDataProfiles2> serializer2x = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withEncodeVersion(2).build(type);
 
 		BinarySerializer<TestDataProfiles2> serializer1Profile = SerializerBuilder.create(DEFINING_CLASS_LOADER).withProfile("profile").withEncodeVersion(1).build(type);
-		BinarySerializer<TestDataProfiles2> serializer1xProfile = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withProfile("profile").withEncodeVersion(1).build(type);
 		BinarySerializer<TestDataProfiles2> serializer2Profile = SerializerBuilder.create(DEFINING_CLASS_LOADER).withProfile("profile").withEncodeVersion(2).build(type);
-		BinarySerializer<TestDataProfiles2> serializer2xProfile = SerializerBuilder2.create(DEFINING_CLASS_LOADER).withProfile("profile").withEncodeVersion(2).build(type);
 
 		TestDataProfiles2 testData1 = new TestDataProfiles2();
 		testData1.a = 10;
@@ -1001,7 +953,7 @@ public class BinarySerializerTest {
 
 		TestDataProfiles2 testData2;
 
-		testData2 = doTest(testData1, serializer1, serializer1x, serializer1x);
+		testData2 = doTest(testData1, serializer1, serializer1);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(0, testData2.c);
@@ -1009,7 +961,7 @@ public class BinarySerializerTest {
 		assertEquals(0, testData2.e);
 		assertEquals(0, testData2.f);
 
-		testData2 = doTest(testData1, serializer1, serializer1x, serializer2x);
+		testData2 = doTest(testData1, serializer1, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(0, testData2.c);
@@ -1017,7 +969,7 @@ public class BinarySerializerTest {
 		assertEquals(0, testData2.e);
 		assertEquals(0, testData2.f);
 
-		testData2 = doTest(testData1, serializer2, serializer2x, serializer2x);
+		testData2 = doTest(testData1, serializer2, serializer2);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
@@ -1025,7 +977,7 @@ public class BinarySerializerTest {
 		assertEquals(0, testData2.e);
 		assertEquals(0, testData2.f);
 
-		testData2 = doTest(testData1, serializer2, serializer2x, serializer1x);
+		testData2 = doTest(testData1, serializer2, serializer1);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
@@ -1033,14 +985,14 @@ public class BinarySerializerTest {
 		assertEquals(0, testData2.e);
 		assertEquals(0, testData2.f);
 
-		testData2 = doTest(testData1, serializer1Profile, serializer1xProfile, serializer1xProfile);
+		testData2 = doTest(testData1, serializer1Profile, serializer1Profile);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
 		assertEquals(0, testData2.d);
 		assertEquals(testData1.e, testData2.e);
 		assertEquals(0, testData2.f);
-		testData2 = doTest(testData1, serializer1Profile, serializer1xProfile, serializer2xProfile);
+		testData2 = doTest(testData1, serializer1Profile, serializer2Profile);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(0, testData2.b);
 		assertEquals(testData1.c, testData2.c);
@@ -1048,14 +1000,14 @@ public class BinarySerializerTest {
 		assertEquals(testData1.e, testData2.e);
 		assertEquals(0, testData2.f);
 
-		testData2 = doTest(testData1, serializer2Profile, serializer2xProfile, serializer2xProfile);
+		testData2 = doTest(testData1, serializer2Profile, serializer2Profile);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(0, testData2.c);
 		assertEquals(testData1.d, testData2.d);
 		assertEquals(testData1.e, testData2.e);
 		assertEquals(0, testData2.f);
-		testData2 = doTest(testData1, serializer2Profile, serializer2xProfile, serializer1xProfile);
+		testData2 = doTest(testData1, serializer2Profile, serializer1Profile);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
 		assertEquals(0, testData2.c);
@@ -1070,7 +1022,6 @@ public class BinarySerializerTest {
 
 		@Serialize(order = 1)
 		@SerializeNullable
-		@S2Nullable
 		public TestDataRecursive next;
 
 		public TestDataRecursive() {
@@ -1097,12 +1048,10 @@ public class BinarySerializerTest {
 	public static class TestDataExtraSubclasses {
 		@Serialize(order = 0)
 		@SerializeSubclasses(value = String.class, extraSubclassesId = "extraSubclasses1")
-		@S2Subclasses(value = String.class, extraSubclassesId = "extraSubclasses1")
 		public Object object1;
 
 		@Serialize(order = 1)
 		@SerializeSubclasses(value = String.class, extraSubclassesId = "extraSubclasses2")
-		@S2Subclasses(value = String.class, extraSubclassesId = "extraSubclasses2")
 		public Object object2;
 	}
 
@@ -1116,11 +1065,7 @@ public class BinarySerializerTest {
 				.withSubclasses("extraSubclasses1", Integer.class)
 				.withSubclasses(Object.class, asList(Boolean.class))
 				.build(TestDataExtraSubclasses.class);
-		BinarySerializer<TestDataExtraSubclasses> serializerX = SerializerBuilder2.create(DEFINING_CLASS_LOADER)
-				.withSubclasses("extraSubclasses1", Integer.class)
-				.withSubclasses(Object.class, asList(Boolean.class))
-				.build(TestDataExtraSubclasses.class);
-		TestDataExtraSubclasses testData2 = doTest(testData1, serializer, serializerX, serializerX);
+		TestDataExtraSubclasses testData2 = doTest(testData1, serializer);
 
 		assertEquals(testData1.object1, testData2.object1);
 		assertEquals(testData1.object2, testData2.object2);
@@ -1128,13 +1073,12 @@ public class BinarySerializerTest {
 		testData1.object1 = true;
 		testData1.object2 = true;
 
-		TestDataExtraSubclasses testData3 = doTest(testData1, serializer, serializerX, serializerX);
+		TestDataExtraSubclasses testData3 = doTest(testData1, serializer);
 		assertEquals(testData1.object1, testData3.object1);
 		assertEquals(testData1.object2, testData3.object2);
 	}
 
 	@SerializeSubclasses(value = TestDataExtraSubclasses1.class, extraSubclassesId = "extraSubclasses")
-	@S2Subclasses(value = TestDataExtraSubclasses1.class, extraSubclassesId = "extraSubclasses")
 	public interface TestDataExtraSubclassesInterface {
 	}
 
@@ -1162,24 +1106,19 @@ public class BinarySerializerTest {
 				.withSubclasses("extraSubclasses", TestDataExtraSubclasses2.class)
 				.withSubclasses(TestDataExtraSubclassesInterface.class, asList(TestDataExtraSubclasses3.class))
 				.build(TestDataExtraSubclassesInterface.class);
-		BinarySerializer<TestDataExtraSubclassesInterface> serializerX = SerializerBuilder2.create(DEFINING_CLASS_LOADER)
-				.withSubclasses("extraSubclasses", TestDataExtraSubclasses2.class)
-				.withSubclasses(TestDataExtraSubclassesInterface.class, asList(TestDataExtraSubclasses3.class))
-				.build(TestDataExtraSubclassesInterface.class);
-		TestDataExtraSubclassesInterface testData2 = doTest(testData1, serializer, serializerX, serializerX);
+		TestDataExtraSubclassesInterface testData2 = doTest(testData1, serializer);
 
 		assertEquals(((TestDataExtraSubclasses2) testData1).i, ((TestDataExtraSubclasses2) testData2).i);
 
 		testData1 = new TestDataExtraSubclasses3();
 		((TestDataExtraSubclasses3) testData1).s = "abc";
 
-		TestDataExtraSubclassesInterface testData3 = doTest(testData1, serializer, serializerX, serializerX);
+		TestDataExtraSubclassesInterface testData3 = doTest(testData1, serializer);
 
 		assertEquals(((TestDataExtraSubclasses3) testData1).s, ((TestDataExtraSubclasses3) testData3).s);
 	}
 
 	@SerializeSubclasses
-	@S2Subclasses
 	public static abstract class TestDataAbstract {
 		private final int position;
 
@@ -1188,7 +1127,6 @@ public class BinarySerializerTest {
 		}
 
 		@SerializeVarLength
-		@S2VarLength
 		@Serialize(order = 0, added = 1)
 		public int getPosition() {
 			return position;
@@ -1215,10 +1153,7 @@ public class BinarySerializerTest {
 		BinarySerializer<TestDataContainerOfAbstractData> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 				.withSubclasses(TestDataAbstract.class, asList(TestDataAbstractImpl.class))
 				.build(TestDataContainerOfAbstractData.class);
-		BinarySerializer<TestDataContainerOfAbstractData> serializerX = SerializerBuilder2.create(DEFINING_CLASS_LOADER)
-				.withSubclasses(TestDataAbstract.class, asList(TestDataAbstractImpl.class))
-				.build(TestDataContainerOfAbstractData.class);
-		TestDataContainerOfAbstractData testData2 = doTest(testData1, serializer, serializerX, serializerX);
+		TestDataContainerOfAbstractData testData2 = doTest(testData1, serializer);
 
 		assertEquals(testData1.data.getPosition(), testData2.data.getPosition());
 	}
@@ -1233,7 +1168,6 @@ public class BinarySerializerTest {
 		double getDoubleValue();
 	}
 
-	@SerializeInterface
 	public interface TestInheritAnnotationsInterface3 extends TestInheritAnnotationsInterface1, TestInheritAnnotationsInterface2 {
 		@Serialize(order = 1)
 		String getStringValue();
@@ -1299,101 +1233,6 @@ public class BinarySerializerTest {
 			testData.hash = str.hashCode();
 			return testData;
 		}
-	}
-
-	@DeserializeFactory(TestFactory.class)
-	public static class TestDataDeserializeFactory1 {
-		String str;
-		int hash;
-
-		@Serialize(order = 0)
-		public String getStr() {
-			return str;
-		}
-
-		public int getHash() {
-			return hash;
-		}
-
-	}
-
-	@SerializeSubclasses(TestDataDeserializeFactory2.class)
-	public interface TestDataFactoryInterface {
-		String getStr();
-
-		int getHash();
-	}
-
-	@DeserializeFactory(TestFactory.class)
-	public static class TestDataDeserializeFactory2 implements TestDataFactoryInterface {
-		private final String str;
-		private final int hash;
-		private String test;
-
-		public TestDataDeserializeFactory2(String str) {
-			this.str = str;
-			this.hash = str.hashCode();
-		}
-
-		@Override
-		@Serialize(order = 1)
-		public String getStr() {
-			return str;
-		}
-
-		@Override
-		public int getHash() {
-			return hash;
-		}
-
-		@Serialize(order = 2)
-		@SerializeNullable
-		@S2Nullable
-		public String getTest() {
-			return test;
-		}
-
-		public void setTest(String test) {
-			this.test = test;
-		}
-	}
-
-	public static class TestFactory {
-		public static TestDataDeserializeFactory1 create(@Deserialize("str") String str) {
-			TestDataDeserializeFactory1 testData = new TestDataDeserializeFactory1();
-			testData.str = str;
-			testData.hash = str.hashCode();
-			return testData;
-		}
-
-		public static TestDataDeserializeFactory2 create2(@Deserialize("str") String str) {
-			return new TestDataDeserializeFactory2(str);
-		}
-	}
-
-	@Test
-	@Ignore
-	public void testDeserializeFactory() {
-		TestDataDeserializeFactory0 sourceTestData0 = TestDataDeserializeFactory0.create("abcdef");
-		TestDataDeserializeFactory0 resultTestData0 = doTest(TestDataDeserializeFactory0.class, sourceTestData0);
-		assertEquals(sourceTestData0.getStr(), resultTestData0.getStr());
-		assertEquals(sourceTestData0.getHash(), resultTestData0.getHash());
-
-		TestDataDeserializeFactory1 sourceTestData1 = TestFactory.create("abcdef");
-		TestDataDeserializeFactory1 resultTestData1 = doTest(TestDataDeserializeFactory1.class, sourceTestData1);
-		assertEquals(sourceTestData1.getStr(), resultTestData1.getStr());
-		assertEquals(sourceTestData1.getHash(), resultTestData1.getHash());
-
-		TestDataDeserializeFactory2 sourceTestData2 = TestFactory.create2("asdfg");
-		sourceTestData2.setTest("12341242");
-		TestDataDeserializeFactory2 resultTestData2 = doTest(TestDataDeserializeFactory2.class, sourceTestData2);
-		assertEquals(sourceTestData2.getStr(), resultTestData2.getStr());
-		assertEquals(sourceTestData2.getHash(), resultTestData2.getHash());
-		assertEquals(sourceTestData2.getTest(), resultTestData2.getTest());
-
-		TestDataFactoryInterface resultTestData3 = doTest(TestDataFactoryInterface.class, sourceTestData2);
-		assertEquals(sourceTestData2.getStr(), resultTestData3.getStr());
-		assertEquals(sourceTestData2.getHash(), resultTestData3.getHash());
 	}
 
 	public enum TestEnum {
@@ -1502,7 +1341,6 @@ public class BinarySerializerTest {
 
 		@Serialize(order = 2)
 		@SerializeNullable
-		@S2Nullable
 		public TestEnum127 enum127Nullable;
 
 		@Serialize(order = 3)
@@ -1510,7 +1348,6 @@ public class BinarySerializerTest {
 
 		@Serialize(order = 4)
 		@SerializeNullable
-		@S2Nullable
 		public TestEnum128 enum128Nullable;
 	}
 
@@ -1521,13 +1358,12 @@ public class BinarySerializerTest {
 		assertEquals(testData1, testData2);
 
 		BinarySerializer<EnumPojo> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(EnumPojo.class);
-		BinarySerializer<EnumPojo> serializerX = SerializerBuilder2.create(DEFINING_CLASS_LOADER).build(EnumPojo.class);
 
 		byte[] array = new byte[2000];
 		EnumPojo enumPojoBefore = new EnumPojo();
 
-		assertEquals(4, serializerX.encode(array, 0, enumPojoBefore));
-		EnumPojo enumPojoAfter = doTest(enumPojoBefore, serializer, serializerX, serializerX);
+		assertEquals(4, serializer.encode(array, 0, enumPojoBefore));
+		EnumPojo enumPojoAfter = doTest(enumPojoBefore, serializer);
 
 		assertEquals(enumPojoBefore.enum127NotNullable, enumPojoAfter.enum127NotNullable);
 		assertEquals(enumPojoBefore.enum127Nullable, enumPojoAfter.enum127Nullable);
@@ -1536,8 +1372,8 @@ public class BinarySerializerTest {
 
 		enumPojoBefore.enum127Nullable = TestEnum127.ITEM126;
 		enumPojoBefore.enum128Nullable = TestEnum128.ITEM127;
-		assertEquals(5, serializerX.encode(array, 0, enumPojoBefore));
-		EnumPojo enumPojoAfter2 = doTest(enumPojoBefore, serializer, serializerX, serializerX);
+		assertEquals(5, serializer.encode(array, 0, enumPojoBefore));
+		EnumPojo enumPojoAfter2 = doTest(enumPojoBefore, serializer);
 		assertEquals(enumPojoBefore.enum127NotNullable, enumPojoAfter2.enum127NotNullable);
 		assertEquals(enumPojoBefore.enum127Nullable, enumPojoAfter2.enum127Nullable);
 		assertEquals(enumPojoBefore.enum128NotNullable, enumPojoAfter2.enum128NotNullable);
@@ -1546,8 +1382,7 @@ public class BinarySerializerTest {
 
 	public static class ListEnumHolder2 {
 		@Serialize(order = 0)
-		@SerializeNullable(path = 0)
-		public List<@S2Nullable TestEnum2> list;
+		public List<@SerializeNullable TestEnum2> list;
 	}
 
 	@Test
@@ -1597,7 +1432,6 @@ public class BinarySerializerTest {
 		@Nullable
 		@Serialize(order = 1)
 		@SerializeNullable
-		@S2Nullable
 		public Set<TestEnum> setNullable;
 	}
 
@@ -1753,8 +1587,7 @@ public class BinarySerializerTest {
 		public Inet6Address inet6Address;
 
 		@Serialize(order = 3)
-		@SerializerClass(SerializerDefInet4Address.class)
-		@S2Class(SerializerDefInet4Address.class)
+		@SerializeClass(SerializerDefInet4Address.class)
 		public InetAddress inetAddress2;
 	}
 
@@ -1792,55 +1625,43 @@ public class BinarySerializerTest {
 		}
 
 		@Serialize(order = 1)
-		@SerializerClass(SerializerDefBoolean.class)
-		@S2Class(SerializerDefBoolean.class)
+		@SerializeClass(SerializerDefBoolean.class)
 		public Object zBoxed;
 		@Serialize(order = 2)
-		@SerializerClass(SerializerDefChar.class)
-		@S2Class(SerializerDefChar.class)
+		@SerializeClass(SerializerDefChar.class)
 		public Object cBoxed;
 		@Serialize(order = 3)
-		@SerializerClass(SerializerDefByte.class)
-		@S2Class(SerializerDefByte.class)
+		@SerializeClass(SerializerDefByte.class)
 		public Object bBoxed;
 		@Serialize(order = 4)
-		@SerializerClass(SerializerDefShort.class)
-		@S2Class(SerializerDefShort.class)
+		@SerializeClass(SerializerDefShort.class)
 		public Object sBoxed;
 		@Serialize(order = 5)
-		@SerializerClass(SerializerDefInt.class)
-		@S2Class(SerializerDefInt.class)
+		@SerializeClass(SerializerDefInt.class)
 		public Object iBoxed;
 		@Serialize(order = 6)
-		@SerializerClass(SerializerDefLong.class)
-		@S2Class(SerializerDefLong.class)
+		@SerializeClass(SerializerDefLong.class)
 		public Object lBoxed;
 		@Serialize(order = 7)
-		@SerializerClass(SerializerDefFloat.class)
-		@S2Class(SerializerDefFloat.class)
+		@SerializeClass(SerializerDefFloat.class)
 		public Object fBoxed;
 		@Serialize(order = 8)
-		@SerializerClass(SerializerDefDouble.class)
-		@S2Class(SerializerDefDouble.class)
+		@SerializeClass(SerializerDefDouble.class)
 		public Object dBoxed;
 
 		@Serialize(order = 9)
-		@SerializerClass(SerializerDefString.class)
-		@S2Class(SerializerDefString.class)
+		@SerializeClass(SerializerDefString.class)
 		public Object string;
 		@Serialize(order = 10)
 		@SerializeSubclasses({Inet4Address.class, Inet6Address.class})
-		@S2Subclasses({Inet4Address.class, Inet6Address.class})
 		public Object address;
 
 		@Serialize(order = 11)
 		@SerializeSubclasses({Inet4Address.class, Inet6Address.class})
-		@S2Subclasses({Inet4Address.class, Inet6Address.class})
 		public Object address2;
 
 		@Serialize(order = 12)
-		@SerializerClass(path = 0, value = SerializerDefInt.class)
-		public List<@S2Class(SerializerDefInt.class) Object> list;
+		public List<@SerializeClass(SerializerDefInt.class) Object> list;
 	}
 
 	@Test
@@ -1885,52 +1706,43 @@ public class BinarySerializerTest {
 
 	public static class NullableOpt {
 		@Serialize(order = 0)
-		@SerializeNullable
-		public byte @S2Nullable [] bytes;
+		public byte @SerializeNullable [] bytes;
 
 		@Serialize(order = 1)
-		@SerializeNullable
-		public int @S2Nullable [] ints;
+		public int @SerializeNullable [] ints;
 
 		@Serialize(order = 2)
 		@SerializeNullable
-		@S2Nullable
 		public TestEnum2 testEnum2;
 
 		@Serialize(order = 3)
 		@SerializeNullable
-		@S2Nullable
 		public List<String> list;
 
 		@Serialize(order = 4)
 		@SerializeNullable
-		@S2Nullable
 		public Map<String, String> map;
 
 		@Serialize(order = 5)
 		@SerializeNullable
-		@S2Nullable
 		public Set<String> set;
 
 		@Serialize(order = 6)
 		@SerializeNullable
-		@S2Nullable
 		@SerializeSubclasses({TestEnum2.class, String.class})
-		@S2Subclasses({TestEnum2.class, String.class})
 		public Object subclass;
 	}
 
 	@Test
 	public void testNullableOpt() {
 		BinarySerializer<NullableOpt> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(NullableOpt.class);
-		BinarySerializer<NullableOpt> serializerX = SerializerBuilder2.create(DEFINING_CLASS_LOADER).build(NullableOpt.class);
 
 		byte[] array = new byte[2000];
 		NullableOpt nullableOpt1 = new NullableOpt();
 
 		assertEquals(7, serializer.encode(array, 0, nullableOpt1));
 
-		NullableOpt nullableOpt2 = doTest(nullableOpt1, serializer, serializerX, serializerX);
+		NullableOpt nullableOpt2 = doTest(nullableOpt1, serializer);
 
 		assertEquals(nullableOpt1.bytes, nullableOpt2.bytes);
 		assertEquals(nullableOpt1.ints, nullableOpt2.ints);
@@ -1949,7 +1761,7 @@ public class BinarySerializerTest {
 
 		assertEquals(8, serializer.encode(array, 0, nullableOpt1));
 
-		NullableOpt nullableOpt3 = doTest(nullableOpt1, serializer, serializerX, serializerX);
+		NullableOpt nullableOpt3 = doTest(nullableOpt1, serializer);
 
 		assertArrayEquals(nullableOpt1.bytes, nullableOpt3.bytes);
 		assertArrayEquals(nullableOpt1.ints, nullableOpt3.ints);
@@ -2075,7 +1887,6 @@ public class BinarySerializerTest {
 		@Override
 		@Serialize(order = 1, added = 0)
 		@SerializeNullable
-		@S2Nullable
 		public Integer getValue() {
 			return value;
 		}
@@ -2104,7 +1915,6 @@ public class BinarySerializerTest {
 		@Override
 		@Serialize(order = 1, added = 0)
 		@SerializeNullable
-		@S2Nullable
 		public Integer getValue() {
 			return value;
 		}
@@ -2135,7 +1945,7 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testUnsupportedVersion() {
-		SerializerBuilder2 builder = SerializerBuilder2.create(DEFINING_CLASS_LOADER);
+		SerializerBuilder builder = SerializerBuilder.create(DEFINING_CLASS_LOADER);
 		BinarySerializer<TestDataFromVersion3> serializer = builder.build(TestDataFromVersion3.class);
 
 		TestDataFromVersion3 testDataBefore = new TestDataFromVersion3();
@@ -2157,8 +1967,7 @@ public class BinarySerializerTest {
 		}
 	}
 
-	@SerializeSubclasses(value = {TestNullableInterfaceImpl.class})
-	@S2Subclasses(value = {TestNullableInterfaceImpl.class})
+	@SerializeSubclasses({TestNullableInterfaceImpl.class})
 	public interface TestNullableInterface {
 	}
 
@@ -2168,93 +1977,15 @@ public class BinarySerializerTest {
 	public static class Container {
 		@Serialize(order = 1)
 		@SerializeNullable
-		@S2Nullable
 		public TestNullableInterface obj;
 	}
 
 	@Test
 	public void testNullableSubclass() {
-		BinarySerializer<Container> serializer = SerializerBuilder2.create(DEFINING_CLASS_LOADER).build(Container.class);
+		BinarySerializer<Container> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(Container.class);
 		Container container = new Container();
 		Container container2 = doTest(Container.class, container);
 		assertEquals(container.obj, container2.obj);
-	}
-
-	@DeserializeFactory(DataHolder.DeserializeFactoryTest.class)
-	public static abstract class DataHolder {
-		@SerializeSubclasses({ConstData.class, ValueData.class})
-		@S2Subclasses({ConstData.class, ValueData.class})
-		public static abstract class Data {
-		}
-
-		@Serialize(order = 1)
-		public abstract Data getData();
-
-		public static final class ConstData extends Data {
-			private static final Data INSTANCE = new ConstData();
-
-			public static Data instance() {
-				return INSTANCE;
-			}
-		}
-
-		public static final class ValueData extends Data {
-			@Serialize(order = 1)
-			public final int value;
-
-			public ValueData(@Deserialize("value") int value) {
-				this.value = value;
-			}
-		}
-
-		public static final class ConstDataHolder extends DataHolder {
-			private static final ConstDataHolder INSTANCE = new ConstDataHolder();
-
-			@Override
-			public Data getData() {
-				return ConstData.instance();
-			}
-		}
-
-		public static final class ValueDataHolder extends DataHolder {
-			private final ValueData data;
-
-			public ValueDataHolder(ValueData data) {
-				this.data = data;
-			}
-
-			@Override
-			public Data getData() {
-				return data;
-			}
-		}
-
-		public static final class DeserializeFactoryTest {
-			public static DataHolder create(@Deserialize("data") Data data) {
-				if (data instanceof ConstData) {
-					return ConstDataHolder.INSTANCE;
-				} else if (data instanceof ValueData) {
-					ValueData valueData = (ValueData) data;
-					return new ValueDataHolder(valueData);
-				} else {
-					throw new CorruptedDataException("Unsupported type " + data);
-				}
-			}
-		}
-	}
-
-	@Test
-	@Ignore
-	public void testDeserializeFactoryTest() {
-		DataHolder resultTestData0 = doTest(DataHolder.class, DataHolder.ConstDataHolder.INSTANCE);
-		assertSame(DataHolder.ConstDataHolder.INSTANCE, resultTestData0);
-
-		DataHolder.ValueData value = new DataHolder.ValueData(123);
-		DataHolder.ValueDataHolder testData1 = new DataHolder.ValueDataHolder(value);
-		DataHolder testData2 = doTest(DataHolder.class, testData1);
-		assertTrue(testData2 instanceof DataHolder.ValueDataHolder);
-		assertTrue(testData2.getData() instanceof DataHolder.ValueData);
-		assertEquals(testData1.data.value, ((DataHolder.ValueData) testData2.getData()).value);
 	}
 
 	@Test

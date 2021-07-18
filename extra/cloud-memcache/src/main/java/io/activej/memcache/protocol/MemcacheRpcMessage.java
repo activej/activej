@@ -84,8 +84,8 @@ public class MemcacheRpcMessage {
 			return key;
 		}
 
-		@SerializeNullable
 		@Serialize(order = 2)
+		@SerializeNullable
 		public Slice getData() {
 			return data;
 		}

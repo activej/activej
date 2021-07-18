@@ -16,6 +16,7 @@
 
 package io.activej.rpc.server;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.process.frames.FrameFormat;
@@ -88,7 +89,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 
 	private final Map<Class<?>, RpcRequestHandler<?, ?>> handlers = new LinkedHashMap<>();
 	private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-	private SerializerBuilder serializerBuilder = SerializerBuilder.create(classLoader);
+	private SerializerBuilder serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 	private List<Class<?>> messageTypes;
 
 	private final List<RpcServerConnection> connections = new ArrayList<>();
@@ -128,7 +129,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 
 	public RpcServer withClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
-		this.serializerBuilder = SerializerBuilder.create(classLoader);
+		this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 		return this;
 	}
 

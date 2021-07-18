@@ -18,6 +18,7 @@ package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
 import io.activej.async.service.EventloopService;
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.api.WithInitializer;
@@ -118,7 +119,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private boolean forcedStart;
 
 	private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-	private SerializerBuilder serializerBuilder = SerializerBuilder.create(classLoader);
+	private SerializerBuilder serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 	private BinarySerializer<RpcMessage> serializer;
 
 	private RpcSender requestSender = new NoSenderAvailable();
@@ -149,7 +150,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	public RpcClient withClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
-		this.serializerBuilder = SerializerBuilder.create(classLoader);
+		this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 		return this;
 	}
 

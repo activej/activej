@@ -21,11 +21,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
 		ElementType.FIELD,
-		ElementType.METHOD})
-@Repeatable(SerializeFixedSizeEx.class)
-@Deprecated
+		ElementType.METHOD,
+		ElementType.TYPE_USE})
 public @interface SerializeFixedSize {
-	int[] path() default {};
-
 	int value();
 }

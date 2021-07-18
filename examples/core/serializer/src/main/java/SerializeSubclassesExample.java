@@ -13,8 +13,7 @@ public final class SerializeSubclassesExample {
 	//[START HOLDER]
 	public static class ListHolder {
 		@Serialize(order = 0)
-		@SerializeSubclasses(extraSubclassesId = "list", path = 0)
-		public List<Object> list = new ArrayList<>();
+		public List<@SerializeSubclasses(extraSubclassesId = "list") Object> list = new ArrayList<>();
 	}
 	//[END HOLDER]
 
