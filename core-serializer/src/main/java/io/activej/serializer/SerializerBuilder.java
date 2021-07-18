@@ -25,7 +25,7 @@ import io.activej.serializer.impl.*;
 import io.activej.serializer.reflection.TypeT;
 import io.activej.serializer.reflection.scanner.TypeScannerRegistry;
 import io.activej.serializer.reflection.scanner.TypeScannerRegistry.Context;
-import io.activej.serializer.reflection.scanner.TypeScannerRegistry.MappingFunction;
+import io.activej.serializer.reflection.scanner.TypeScannerRegistry.Mapping;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -60,13 +60,9 @@ import static java.util.stream.Collectors.toList;
 public final class SerializerBuilder {
 	private static final Path DEFAULT_SAVE_DIR = getPathSetting(SerializerBuilder.class, "saveDir", null);
 
-	public static class Cache {
-		final Map<Type, SerializerDef> cache = new HashMap<>();
-	}
-
 	private final DefiningClassLoader classLoader;
 
-	private final TypeScannerRegistry<SerializerDef, Cache> registry = TypeScannerRegistry.create();
+	private final TypeScannerRegistry<SerializerDef> registry = TypeScannerRegistry.create();
 
 	private String profile;
 	private int encodeVersionMax = Integer.MAX_VALUE;
@@ -156,12 +152,12 @@ public final class SerializerBuilder {
 		return builder;
 	}
 
-	public SerializerBuilder with(TypeT<?> typeT, MappingFunction<SerializerDef, Cache> fn) {
+	public SerializerBuilder with(TypeT<?> typeT, Mapping<SerializerDef> fn) {
 		return with(typeT.getType(), fn);
 	}
 
 	@SuppressWarnings("PointlessBooleanExpression")
-	public SerializerBuilder with(Type type, MappingFunction<SerializerDef, Cache> fn) {
+	public SerializerBuilder with(Type type, Mapping<SerializerDef> fn) {
 		registry.with(type, ctx -> {
 			Class<?> rawClass = ctx.getRawClass();
 			SerializerDef serializerDef;
@@ -289,7 +285,7 @@ public final class SerializerBuilder {
 	}
 
 	public <T> BinarySerializer<T> build(AnnotatedType type) {
-		return build(registry.scanner(new Cache()).scan(type));
+		return build(registry.scanner(new HashMap<>()).scan(type));
 	}
 
 	public <T> BinarySerializer<T> build(SerializerDef serializer) {
@@ -499,20 +495,22 @@ public final class SerializerBuilder {
 		};
 	}
 
-	private SerializerDef scan(Context<SerializerDef, Cache> ctx) {
-		SerializerDef serializerDef = ctx.value().cache.get(ctx.getType());
+	@SuppressWarnings("unchecked")
+	private SerializerDef scan(Context<SerializerDef> ctx) {
+		Map<Type, SerializerDef> cache = (Map<Type, SerializerDef>) ctx.value();
+		SerializerDef serializerDef = cache.get(ctx.getType());
 		if (serializerDef != null) return serializerDef;
 		ForwardingSerializerDefImpl forwardingSerializerDef = new ForwardingSerializerDefImpl();
-		ctx.value().cache.put(ctx.getType(), forwardingSerializerDef);
+		cache.put(ctx.getType(), forwardingSerializerDef);
 
 		SerializerDef serializer = doScan(ctx);
 
 		forwardingSerializerDef.serializerDef = serializer;
-		ctx.value().cache.remove(ctx.getType(), forwardingSerializerDef);
+		cache.remove(ctx.getType(), forwardingSerializerDef);
 		return serializer;
 	}
 
-	private SerializerDef doScan(Context<SerializerDef, Cache> ctx) {
+	private SerializerDef doScan(Context<SerializerDef> ctx) {
 		Class<?> rawClass = ctx.getRawClass();
 		if (rawClass.isAnonymousClass())
 			throw new IllegalArgumentException("Class should not be anonymous");
@@ -528,7 +526,7 @@ public final class SerializerBuilder {
 		return serializer;
 	}
 
-	private void scanClass(Context<SerializerDef, Cache> ctx, SerializerDefClass serializer) {
+	private void scanClass(Context<SerializerDef> ctx, SerializerDefClass serializer) {
 		AnnotatedType annotatedClassType = ctx.getAnnotatedType();
 
 		Class<?> rawClassType = getRawClass(annotatedClassType);
@@ -550,7 +548,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanInterface(Context<SerializerDef, Cache> ctx, SerializerDefClass serializer) {
+	private void scanInterface(Context<SerializerDef> ctx, SerializerDefClass serializer) {
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
@@ -582,7 +580,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanFields(Context<SerializerDef, Cache> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
+	private void scanFields(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			List<FoundSerializer> foundSerializers) {
 		for (Field field : getRawClass(ctx.getAnnotatedType()).getDeclaredFields()) {
 			FoundSerializer foundSerializer = tryAddField(ctx, bindings, field);
@@ -592,7 +590,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanGetters(Context<SerializerDef, Cache> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
+	private void scanGetters(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			List<FoundSerializer> foundSerializers) {
 		for (Method method : getRawClass(ctx.getAnnotatedType()).getDeclaredMethods()) {
 			FoundSerializer foundSerializer = tryAddGetter(ctx, bindings, method);
@@ -602,7 +600,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanSetters(Context<SerializerDef, Cache> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
+	private void scanSetters(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			SerializerDefClass serializer) {
 		for (Method method : ctx.getRawClass().getDeclaredMethods()) {
 			if (isStatic(method.getModifiers())) {
@@ -628,7 +626,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanFactories(Context<SerializerDef, Cache> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
+	private void scanFactories(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			SerializerDefClass serializer) {
 		Class<?> factoryClassType = ctx.getRawClass();
 		for (Method factory : factoryClassType.getDeclaredMethods()) {
@@ -655,7 +653,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanConstructors(Context<SerializerDef, Cache> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
+	private void scanConstructors(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			SerializerDefClass serializer) {
 		boolean found = false;
 		for (Constructor<?> constructor : ctx.getRawClass().getDeclaredConstructors()) {
@@ -679,7 +677,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private FoundSerializer tryAddField(Context<SerializerDef, Cache> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
+	private FoundSerializer tryAddField(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			Field field) {
 		SerializerBuilder.FoundSerializer result = findAnnotations(ctx, field, field.getAnnotations());
 		if (result == null) {
@@ -696,7 +694,7 @@ public final class SerializerBuilder {
 	}
 
 	@Nullable
-	private FoundSerializer tryAddGetter(Context<SerializerDef, Cache> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
+	private FoundSerializer tryAddGetter(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			Method getter) {
 		if (getter.isBridge()) {
 			return null;
@@ -716,7 +714,7 @@ public final class SerializerBuilder {
 	}
 
 	@Nullable
-	private FoundSerializer findAnnotations(Context<SerializerDef, Cache> ctx,
+	private FoundSerializer findAnnotations(Context<SerializerDef> ctx,
 			Object methodOrField, Annotation[] annotations) {
 		int added = Serialize.DEFAULT_VERSION;
 		int removed = Serialize.DEFAULT_VERSION;

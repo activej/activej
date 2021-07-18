@@ -2,9 +2,8 @@ package io.activej.serializer.examples;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.SerializerBuilder;
-import io.activej.serializer.SerializerBuilder.Cache;
 import io.activej.serializer.SerializerDef;
-import io.activej.serializer.reflection.scanner.TypeScannerRegistry.MappingFunction;
+import io.activej.serializer.reflection.scanner.TypeScannerRegistry.Mapping;
 
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +58,7 @@ public class SerializerBuilderUtils {
 				} catch (ClassNotFoundException e) {
 					throw new IllegalStateException("There is no collection with given name" + e.getClass().getName(), e);
 				}
-				builder.with(hppcMapType, serializerDefMapBuilder(hppcMapType, hppcMapImplType, keyType, valueType));
+				builder.with(hppcMapType, serializerDefMap(hppcMapType, hppcMapImplType, keyType, valueType));
 			}
 		}
 	}
@@ -78,7 +77,7 @@ public class SerializerBuilderUtils {
 				} catch (ClassNotFoundException e) {
 					throw new IllegalStateException("There is no collection with given name", e);
 				}
-				builder.with(hppcCollectionType, serializerDefCollectionBuilder(hppcCollectionType, hppcCollectionTypeImpl, valueType));
+				builder.with(hppcCollectionType, serializerDefCollection(hppcCollectionType, hppcCollectionTypeImpl, valueType));
 			}
 		}
 	}
@@ -87,7 +86,7 @@ public class SerializerBuilderUtils {
 		return toUpperCase(str.charAt(0)) + str.substring(1);
 	}
 
-	private static MappingFunction<SerializerDef, Cache> serializerDefMapBuilder(Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
+	private static Mapping<SerializerDef> serializerDefMap(Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
 		String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
 		if (!mapType.getSimpleName().startsWith(prefix))
 			throw new IllegalArgumentException(format("Expected mapType '%s', but was begin '%s'", mapType.getSimpleName(), prefix));
@@ -121,7 +120,7 @@ public class SerializerBuilderUtils {
 		};
 	}
 
-	private static MappingFunction<SerializerDef, Cache> serializerDefCollectionBuilder(Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
+	private static Mapping<SerializerDef> serializerDefCollection(Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
 		String prefix = capitalize(valueType.getSimpleName());
 		if (!collectionType.getSimpleName().startsWith(prefix))
 			throw new IllegalArgumentException(format("Expected setType '%s', but was begin '%s'", collectionType.getSimpleName(), prefix));
