@@ -674,8 +674,8 @@ public class BinarySerializerTest {
 		TestDataSuperclassHolder testData1 = new TestDataSuperclassHolder();
 		testData1.data = null;
 		TestDataSuperclassHolder testData2;
-//		testData2 = doTest(TestDataSuperclassHolder.class, testData1);
-//		assertEquals(testData1.data, testData2.data);
+		testData2 = doTest(TestDataSuperclassHolder.class, testData1);
+		assertEquals(testData1.data, testData2.data);
 
 		TestDataSubclass1 subclass1 = new TestDataSubclass1();
 		testData1.data = subclass1;

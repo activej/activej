@@ -52,7 +52,7 @@ public final class WorkerQualifierTest {
 
 		@Provides
 		Element2 primaryServer(@Named("Primary") Element1 primaryEventloop, WorkerPool workerPool) {
-            WorkerPool.Instances<Element4> unusedList = workerPool.getInstances(Key.of(Element4.class, "First"));
+			WorkerPool.Instances<Element4> unusedList = workerPool.getInstances(Key.of(Element4.class, "First"));
 			return new Element2();
 		}
 

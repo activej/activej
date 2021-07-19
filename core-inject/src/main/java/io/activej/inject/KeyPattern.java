@@ -52,7 +52,7 @@ public abstract class KeyPattern<T> {
 	}
 
 	/**
-	 * A default subclass to be used by {@link #of Key.of*} and {@link #ofType Key.ofType*} constructors
+	 * A default subclass to be used by {@link #of KeyPattern.of*} and {@link #ofType KeyPattern.ofType*} constructors
 	 */
 	private static final class KeyImpl<T> extends KeyPattern<T> {
 		private KeyImpl(Type type, Predicate<?> qualifierPredicate) {
@@ -138,6 +138,6 @@ public abstract class KeyPattern<T> {
 
 	@Override
 	public String toString() {
-		return (qualifier != null ? qualifier.toString() + " " : "") + type.getTypeName();
+		return (qualifier != null ? qualifier + " " : "") + type.getTypeName();
 	}
 }

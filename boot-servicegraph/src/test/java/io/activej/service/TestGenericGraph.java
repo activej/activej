@@ -44,8 +44,8 @@ public class TestGenericGraph {
 
 		@Provides
 		Pojo integerPojo(WorkerPool workerPool) {
-            WorkerPool.Instances<Pojo> list = workerPool.getInstances(Key.of(Pojo.class, "worker"));
-            WorkerPool.Instances<Pojo> listOther = workerPool.getInstances(Key.of(Pojo.class, "anotherWorker"));
+			WorkerPool.Instances<Pojo> list = workerPool.getInstances(Key.of(Pojo.class, "worker"));
+			WorkerPool.Instances<Pojo> listOther = workerPool.getInstances(Key.of(Pojo.class, "anotherWorker"));
 			return new Pojo("root");
 		}
 

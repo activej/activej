@@ -289,12 +289,7 @@ public final class SerializerBuilder {
 	}
 
 	public <T> BinarySerializer<T> build(SerializerDef serializer) {
-		//noinspection unchecked
-		return (BinarySerializer<T>) buildImpl(serializer);
-	}
-
-	@SuppressWarnings("rawtypes")
-	private BinarySerializer<?> buildImpl(SerializerDef serializer) {
+		//noinspection rawtypes
 		ClassBuilder<BinarySerializer> classBuilder = ClassBuilder.create(classLoader, BinarySerializer.class).withClassKey(classKey);
 
 		if (saveBytecodePath != null) {
@@ -309,14 +304,14 @@ public final class SerializerBuilder {
 		Set<SerializerDef> visited = newSetFromMap(new IdentityHashMap<>());
 		Visitor visitor = new Visitor() {
 			@Override
-			public void visit(String serializerId, SerializerDef serializer) {
-				if (!visited.add(serializer)) return;
-				encoderInitializers.putAll(serializer.getEncoderInitializer());
-				decoderInitializers.putAll(serializer.getDecoderInitializer());
-				encoderFinalizers.putAll(serializer.getEncoderFinalizer());
-				decoderFinalizers.putAll(serializer.getDecoderFinalizer());
-				collectedVersions.addAll(serializer.getVersions());
-				serializer.accept(this);
+			public void visit(String serializerId, SerializerDef visitedSerializer) {
+				if (!visited.add(visitedSerializer)) return;
+				encoderInitializers.putAll(visitedSerializer.getEncoderInitializer());
+				decoderInitializers.putAll(visitedSerializer.getDecoderInitializer());
+				encoderFinalizers.putAll(visitedSerializer.getEncoderFinalizer());
+				decoderFinalizers.putAll(visitedSerializer.getDecoderFinalizer());
+				collectedVersions.addAll(visitedSerializer.getVersions());
+				visitedSerializer.accept(this);
 			}
 		};
 		visitor.visit(serializer);
@@ -337,7 +332,8 @@ public final class SerializerBuilder {
 		defineDecoders(classBuilder, serializer, decodeVersions,
 				new ArrayList<>(decoderInitializers.values()), new ArrayList<>(decoderFinalizers.values()));
 
-		return classBuilder.buildClassAndCreateNewInstance();
+		//noinspection unchecked
+		return (BinarySerializer<T>) classBuilder.buildClassAndCreateNewInstance();
 	}
 
 	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer encodeVersion,
