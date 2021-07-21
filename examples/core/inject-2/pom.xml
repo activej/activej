@@ -108,6 +108,15 @@
               <mainClass>TransientBindingExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>MultiModuleExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>MultiModuleExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
