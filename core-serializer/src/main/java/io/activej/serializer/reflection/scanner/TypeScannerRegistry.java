@@ -17,6 +17,8 @@
 package io.activej.serializer.reflection.scanner;
 
 import io.activej.serializer.reflection.TypeT;
+import io.activej.serializer.util.AnnotatedTypeUtils;
+import io.activej.serializer.util.TypeUtils;
 import io.activej.serializer.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,8 +32,8 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.activej.serializer.reflection.scanner.TypeUtils.annotatedTypeOf;
-import static io.activej.serializer.reflection.scanner.TypeUtils.isAssignable;
+import static io.activej.serializer.util.AnnotatedTypeUtils.annotatedTypeOf;
+import static io.activej.serializer.util.IsAssignableUtils.isAssignable;
 import static java.util.Collections.emptyList;
 
 public final class TypeScannerRegistry<R> {
@@ -95,11 +97,11 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		public AnnotatedType[] getTypeArguments() {
-			return TypeUtils.getTypeArguments(getAnnotatedType());
+			return AnnotatedTypeUtils.getTypeArguments(getAnnotatedType());
 		}
 
 		public AnnotatedType getTypeArgument(int n) {
-			return TypeUtils.getTypeArguments(getAnnotatedType())[n];
+			return AnnotatedTypeUtils.getTypeArguments(getAnnotatedType())[n];
 		}
 
 		public int getTypeArgumentsCount() {
@@ -149,6 +151,11 @@ public final class TypeScannerRegistry<R> {
 
 		public Object value() {
 			return value;
+		}
+
+		@Override
+		public String toString() {
+			return getType().toString();
 		}
 	}
 
@@ -217,11 +224,14 @@ public final class TypeScannerRegistry<R> {
 	}
 
 	public TypeScanner<R> scanner(Object contextValue) {
-		return type -> scan(new Context<>(
-				mappingFn == null ?
-						this::scan :
-						mappingFn,
-				new AnnotatedType[]{type}, emptyList(), contextValue));
+		return type -> scan(
+				new Context<>(
+						mappingFn == null ?
+								this::scan :
+								mappingFn,
+						new AnnotatedType[]{type},
+						emptyList(),
+						contextValue));
 	}
 
 	public R scan(Context<R> ctx) {

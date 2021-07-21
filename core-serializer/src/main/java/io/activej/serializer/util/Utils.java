@@ -47,28 +47,4 @@ public final class Utils {
 	public static <T> T eval(Supplier<T> supplier) {
 		return supplier.get();
 	}
-
-	public static String extractRanges(List<Integer> versions) {
-		StringBuilder sb = new StringBuilder();
-		int size = versions.size();
-		int first = 0, second = 0;
-		while (first < size) {
-			//noinspection StatementWithEmptyBody
-			while (++second < size && versions.get(second) - versions.get(second - 1) == 1) {
-			}
-			if (second - first > 2) {
-				sb.append(versions.get(first));
-				sb.append('-');
-				sb.append(versions.get(second - 1));
-				if (second != size) sb.append(',');
-				first = second;
-			} else {
-				for (; first < second; first++) {
-					sb.append(versions.get(first));
-					if (first < size - 1) sb.append(',');
-				}
-			}
-		}
-		return sb.toString();
-	}
 }

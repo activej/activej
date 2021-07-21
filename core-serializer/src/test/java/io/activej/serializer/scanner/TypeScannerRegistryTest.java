@@ -3,6 +3,7 @@ package io.activej.serializer.scanner;
 import io.activej.serializer.reflection.TypeT;
 import io.activej.serializer.reflection.scanner.TypeScanner;
 import io.activej.serializer.reflection.scanner.TypeScannerRegistry;
+import io.activej.serializer.util.AnnotatedTypeUtils;
 import org.junit.Test;
 
 import java.lang.reflect.AnnotatedType;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.activej.serializer.reflection.scanner.TypeUtils.*;
+import static io.activej.serializer.util.AnnotatedTypeUtils.*;
 import static org.junit.Assert.assertEquals;
 
 public class TypeScannerRegistryTest {

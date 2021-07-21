@@ -35,6 +35,7 @@ import java.util.stream.Collector;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingType.EAGER;
 import static io.activej.inject.binding.BindingType.TRANSIENT;
+import static io.activej.inject.util.IsAssignableUtils.*;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -288,11 +289,27 @@ public final class Utils {
 						if (pattern1.hasQualifier() && !pattern2.hasQualifier()) return -1;
 						return Integer.compare(System.identityHashCode(type1), System.identityHashCode(type2));
 					}
-					if (TypeUtils.isAssignable(type1, type2)) return 1;
-					if (TypeUtils.isAssignable(type2, type1)) return -1;
+					if (isAssignable(type1, type2)) return 1;
+					if (isAssignable(type2, type1)) return -1;
 					return Integer.compare(System.identityHashCode(type1), System.identityHashCode(type2));
 				})
 				.collect(toMap(Entry::getKey, Entry::getValue,
 						(v1, v2) -> {throw new AssertionError();}, LinkedHashMap::new));
+	}
+
+	@Nullable
+	public static Type match(Type type, Collection<Type> patterns) {
+		Type best = null;
+		for (Type found : patterns) {
+			if (isAssignable(found, type)) {
+				if (best == null || isAssignable(best, found)) {
+					if (best != null && !best.equals(found) && isAssignable(found, best)) {
+						throw new IllegalArgumentException("Conflicting types: " + type + " " + best);
+					}
+					best = found;
+				}
+			}
+		}
+		return best;
 	}
 }

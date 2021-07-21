@@ -36,7 +36,7 @@ public abstract class TypeT<T> {
 		if (superclass instanceof AnnotatedParameterizedType) {
 			return ((AnnotatedParameterizedType) superclass).getAnnotatedActualTypeArguments()[0];
 		}
-		throw new IllegalArgumentException("Unsupported type: " + superclass);
+		throw new AssertionError();
 	}
 
 	@NotNull
@@ -51,7 +51,7 @@ public abstract class TypeT<T> {
 
 	@SuppressWarnings("unchecked")
 	public Class<T> getRawType() {
-		Type type = this.annotatedType.getType();
+		Type type = annotatedType.getType();
 		if (type instanceof Class) {
 			return (Class<T>) type;
 		} else if (type instanceof ParameterizedType) {

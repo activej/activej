@@ -21,7 +21,7 @@ import io.activej.serializer.reflection.TypeT;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Type;
 
-import static io.activej.serializer.reflection.scanner.TypeUtils.annotatedTypeOf;
+import static io.activej.serializer.util.AnnotatedTypeUtils.annotatedTypeOf;
 
 /**
  * This is an interface for something that can create or retrieve a codec for a given type.

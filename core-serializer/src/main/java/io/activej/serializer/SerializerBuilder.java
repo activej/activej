@@ -42,7 +42,7 @@ import static io.activej.codegen.util.Utils.getPathSetting;
 import static io.activej.serializer.SerializerDef.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
-import static io.activej.serializer.reflection.scanner.TypeUtils.*;
+import static io.activej.serializer.util.AnnotatedTypeUtils.*;
 import static io.activej.serializer.util.Utils.*;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
@@ -106,7 +106,7 @@ public final class SerializerBuilder {
 
 		for (Type type : new Type[]{
 				boolean[].class, char[].class, byte[].class, short[].class, int[].class, long[].class, float[].class, double[].class,
-				new TypeT<Object[]>() {}.getType()}) {
+				Object[].class}) {
 			builder.with(type, ctx -> new SerializerDefArray(ctx.scanTypeArgument(0), ctx.getRawClass()));
 		}
 
@@ -398,7 +398,7 @@ public final class SerializerBuilder {
 							throwException(CorruptedDataException.class,
 									concat(
 											value("Unsupported version: "), arg(1),
-											value(", supported versions: " + extractRanges(decodeVersions)))
+											value(", supported versions: " + decodeVersions))
 							));
 				}));
 

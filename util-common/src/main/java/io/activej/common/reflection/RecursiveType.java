@@ -113,12 +113,7 @@ public final class RecursiveType {
 		}
 		return (GenericArrayType) () -> getArrayType(component, arrayDeepness - 1);
 	}
-
-	@NotNull
-	public <T> TypeT<T> getTypeT() {
-		return TypeT.ofType(getType());
-	}
-
+	
 	@NotNull
 	public Type getType() {
 		if (typeParams.length == 0) {

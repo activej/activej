@@ -28,8 +28,8 @@ public class CrdtNodeLauncherTest {
 								TimestampContainer.createCrdtFunction(Integer::max),
 								new CrdtDataSerializer<>(UTF8_SERIALIZER,
 										TimestampContainer.createSerializer(INT_SERIALIZER)),
-								TypeT.of(String.class),
-								new TypeT<TimestampContainer<Integer>>() {});
+								String.class,
+								new TypeT<TimestampContainer<Integer>>() {}.getType());
 					}
 
 					@Provides

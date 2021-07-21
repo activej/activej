@@ -1963,7 +1963,7 @@ public class BinarySerializerTest {
 			serializer.decode(array, 0);
 			fail();
 		} catch (CorruptedDataException e) {
-			assertEquals("Unsupported version: " + unsupportedVersion + ", supported versions: 3-5", e.getMessage());
+			assertEquals("Unsupported version: " + unsupportedVersion + ", supported versions: [3, 4, 5]", e.getMessage());
 		}
 	}
 

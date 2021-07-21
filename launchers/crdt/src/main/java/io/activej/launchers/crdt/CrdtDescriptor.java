@@ -28,15 +28,11 @@ public final class CrdtDescriptor<K extends Comparable<K>, S> {
 	private final Type keyManifest;
 	private final Type stateManifest;
 
-	public CrdtDescriptor(CrdtFunction<S> crdtFunction, CrdtDataSerializer<K, S> serializer, TypeT<K> keyManifest, TypeT<S> stateManifest) {
+	public CrdtDescriptor(CrdtFunction<S> crdtFunction, CrdtDataSerializer<K, S> serializer, Type keyManifest, Type stateManifest) {
 		this.crdtFunction = crdtFunction;
 		this.serializer = serializer;
-		this.keyManifest = keyManifest.getType();
-		this.stateManifest = stateManifest.getType();
-	}
-
-	public CrdtDescriptor(CrdtFunction<S> crdtFunction, CrdtDataSerializer<K, S> serializer, Class<K> keyManifest, Class<S> stateManifest) {
-		this(crdtFunction, serializer, TypeT.of(keyManifest), TypeT.of(stateManifest));
+		this.keyManifest = keyManifest;
+		this.stateManifest = stateManifest;
 	}
 
 	public CrdtFunction<S> getCrdtFunction() {

@@ -17,7 +17,7 @@
 package io.activej.inject;
 
 import io.activej.inject.util.ReflectionUtils;
-import io.activej.inject.util.TypeUtils;
+import io.activej.inject.util.IsAssignableUtils;
 import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,6 +25,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.function.Predicate;
+
+import static io.activej.inject.util.IsAssignableUtils.*;
 
 public abstract class KeyPattern<T> {
 	@NotNull
@@ -123,7 +125,7 @@ public abstract class KeyPattern<T> {
 
 	public boolean match(Key<?> key) {
 		//noinspection unchecked
-		return TypeUtils.isAssignable(this.type, key.getType()) &&
+		return isAssignable(this.type, key.getType()) &&
 				(this.qualifier == null || ((Predicate<Object>) this.qualifier).test(key.getQualifier()));
 	}
 
