@@ -117,6 +117,15 @@
               <mainClass>MultiModuleExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>ClassScanExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>ClassScanExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
