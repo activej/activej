@@ -16,15 +16,19 @@
 
 package io.activej.ot.repository;
 
+import com.dslplatform.json.*;
+import com.dslplatform.json.JsonReader.ReadObject;
+import com.dslplatform.json.JsonWriter.WriteObject;
+import com.dslplatform.json.runtime.Settings;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.json.JsonUtils;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.reflection.TypeT;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.NoCommitException;
+import io.activej.ot.repository.JsonIndentUtils.OnelineOutputStream;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
@@ -36,20 +40,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.sql.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
+import static com.dslplatform.json.PrettifyOutputStream.IndentType.TABS;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.codec.StructuredCodecs.ofList;
-import static io.activej.codec.json.JsonUtils.indent;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.loadResource;
 import static io.activej.common.sql.SqlUtils.execute;
+import static io.activej.ot.repository.JsonIndentUtils.BYTE_STREAM;
+import static io.activej.ot.repository.JsonIndentUtils.indent;
 import static io.activej.promise.Promises.retry;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
@@ -69,7 +76,9 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 	private final IdGenerator<Long> idGenerator;
 
 	private final OTSystem<D> otSystem;
-	private final StructuredCodec<List<D>> diffsCodec;
+
+	private final ReadObject<List<D>> decoder;
+	private final WriteObject<List<D>> encoder;
 
 	private String tableRevision = DEFAULT_REVISION_TABLE;
 	private String tableDiffs = DEFAULT_DIFFS_TABLE;
@@ -90,19 +99,45 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 	private final PromiseStats promiseSaveSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	private OTRepositoryMySql(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
-			OTSystem<D> otSystem, StructuredCodec<List<D>> diffsCodec) {
+			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		this.eventloop = eventloop;
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.idGenerator = idGenerator;
 		this.otSystem = otSystem;
-		this.diffsCodec = diffsCodec;
+		this.decoder = reader -> ((JsonReader<?>) reader).readCollection(decoder);
+		this.encoder = indent((writer, value) -> writer.serialize(value, encoder));
 	}
 
 	public static <D> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
-			OTSystem<D> otSystem, StructuredCodec<D> diffCodec) {
-		StructuredCodec<List<D>> listCodec = indent(ofList(diffCodec), "\t");
-		return new OTRepositoryMySql<>(eventloop, executor, dataSource, idGenerator, otSystem, listCodec);
+			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
+		return new OTRepositoryMySql<>(eventloop, executor, dataSource, idGenerator, otSystem, decoder, encoder);
+	}
+
+	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+			OTSystem<D> otSystem, F format) {
+		return new OTRepositoryMySql<>(eventloop, executor, dataSource, idGenerator, otSystem, format, format);
+	}
+
+	public static <D> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
+		return create(eventloop, executor, dataSource, idGenerator, otSystem, typeT.getType());
+	}
+
+	public static <D> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+			OTSystem<D> otSystem, Class<? extends D> diffClass) {
+		return create(eventloop, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <D> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+			OTSystem<D> otSystem, Type diffType) {
+		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
+		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
+		if (decoder == null || encoder == null) {
+			throw new IllegalArgumentException("Unknown type: " + diffType);
+		}
+		return new OTRepositoryMySql<>(eventloop, executor, dataSource, idGenerator, otSystem, decoder, encoder);
 	}
 
 	public OTRepositoryMySql<D> withCreatedBy(String createdBy) {
@@ -119,10 +154,6 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 
 	public DataSource getDataSource() {
 		return dataSource;
-	}
-
-	public StructuredCodec<List<D>> getDiffsCodec() {
-		return diffsCodec;
 	}
 
 	private String sql(String sql) {
@@ -167,12 +198,39 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 				.map(newId -> OTCommit.of(0, newId, parentDiffs));
 	}
 
+	private static final DslJson<?> DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
+	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(DSL_JSON::newWriter);
+	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(DSL_JSON::newReader);
+
 	private String toJson(List<D> diffs) {
-		return JsonUtils.toJson(diffsCodec, diffs);
+		JsonWriter jsonWriter = WRITERS.get();
+		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+		OnelineOutputStream onelineStream = new OnelineOutputStream(byteStream);
+		PrettifyOutputStream prettyStream = new PrettifyOutputStream(onelineStream, TABS, 1);
+		BYTE_STREAM.set(onelineStream);
+		jsonWriter.reset(prettyStream);
+		encoder.write(jsonWriter, diffs);
+		jsonWriter.flush();
+		return byteStream.toString();
 	}
 
 	private List<D> fromJson(String json) throws MalformedDataException {
-		return JsonUtils.fromJson(diffsCodec, json);
+		byte[] bytes = json.getBytes(UTF_8);
+		List<D> deserialized;
+		try {
+			JsonReader<?> jsonReader = READERS.get().process(bytes, bytes.length);
+			jsonReader.getNextToken();
+			deserialized = decoder.read(jsonReader);
+			if (jsonReader.length() != jsonReader.getCurrentIndex()) {
+				String unexpectedData = jsonReader.toString().substring(jsonReader.getCurrentIndex());
+				throw new MalformedDataException("Unexpected JSON data: " + unexpectedData);
+			}
+			return deserialized;
+		} catch (ParsingException e) {
+			throw new MalformedDataException(e);
+		} catch (IOException e) {
+			throw new AssertionError(e);
+		}
 	}
 
 	@Override

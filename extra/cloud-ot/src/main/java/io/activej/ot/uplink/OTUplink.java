@@ -16,15 +16,15 @@
 
 package io.activej.ot.uplink;
 
-import io.activej.codec.StructuredCodec;
+import com.dslplatform.json.CompiledJson;
+import com.dslplatform.json.JsonAttribute;
 import io.activej.promise.Promise;
 
 import java.util.List;
 
-import static io.activej.codec.StructuredCodecs.*;
-
 public interface OTUplink<K, D, PC> {
 
+	@CompiledJson
 	final class FetchData<K, D> {
 		private final K commitId;
 		private final long level;
@@ -36,6 +36,7 @@ public interface OTUplink<K, D, PC> {
 			this.diffs = diffs;
 		}
 
+		@JsonAttribute(name = "id")
 		public K getCommitId() {
 			return commitId;
 		}
@@ -46,13 +47,6 @@ public interface OTUplink<K, D, PC> {
 
 		public List<D> getDiffs() {
 			return diffs;
-		}
-
-		public static <K, D> StructuredCodec<FetchData<K, D>> codec(StructuredCodec<K> revisionCodec, StructuredCodec<D> diffCodec) {
-			return object(FetchData::new,
-					"id", FetchData::getCommitId, revisionCodec,
-					"level", FetchData::getLevel, LONG_CODEC,
-					"diffs", FetchData::getDiffs, ofList(diffCodec));
 		}
 	}
 

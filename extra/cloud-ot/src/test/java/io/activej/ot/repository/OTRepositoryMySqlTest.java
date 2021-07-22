@@ -2,7 +2,8 @@ package io.activej.ot.repository;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import io.activej.common.exception.MalformedDataException;
+import com.dslplatform.json.DslJson;
+import com.dslplatform.json.JsonWriter;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.IdGeneratorStub;
 import io.activej.ot.OTCommit;
@@ -25,8 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
-import static io.activej.codec.json.JsonUtils.fromJson;
-import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.OTCommit.ofCommit;
@@ -34,6 +33,7 @@ import static io.activej.ot.OTCommit.ofRoot;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
@@ -58,7 +58,7 @@ public class OTRepositoryMySqlTest {
 	public void before() throws IOException, SQLException {
 		idGenerator = new IdGeneratorStub();
 		repository = OTRepositoryMySql.create(Eventloop.getCurrentEventloop(), Executors.newFixedThreadPool(4), dataSource("test.properties"), idGenerator,
-				createTestOp(), OP_CODEC);
+				createTestOp(), TestOp.class);
 		repository.initialize();
 		repository.truncateTables();
 	}
@@ -75,21 +75,33 @@ public class OTRepositoryMySqlTest {
 	}
 
 	@Test
-	public void testJson() throws MalformedDataException {
+	public void testJson() throws IOException {
 		{
 			TestAdd testAdd = new TestAdd(1);
-			String json = toJson(OP_CODEC, testAdd);
-			TestAdd testAdd2 = (TestAdd) fromJson(OP_CODEC, json);
-			assertEquals(testAdd.getDelta(), testAdd2.getDelta());
+			String json = toJson(testAdd);
+			TestOp testAdd2 = fromJson(json);
+			assertEquals(testAdd, testAdd2);
 		}
 
 		{
 			TestSet testSet = new TestSet(0, 4);
-			String json = toJson(OP_CODEC, testSet);
-			TestSet testSet2 = (TestSet) fromJson(OP_CODEC, json);
-			assertEquals(testSet.getPrev(), testSet2.getPrev());
-			assertEquals(testSet.getNext(), testSet2.getNext());
+			String json = toJson(testSet);
+			TestOp testSet2 = fromJson(json);
+			assertEquals(testSet, testSet2);
 		}
+	}
+
+	private static final DslJson<?> DSL_JSON = new DslJson<>();
+
+	private static String toJson(TestOp op) throws IOException {
+		JsonWriter jsonWriter = DSL_JSON.newWriter();
+		DSL_JSON.serialize(jsonWriter, op);
+		return jsonWriter.toString();
+	}
+
+	private static TestOp fromJson(String json) throws IOException {
+		byte[] bytes = json.getBytes(UTF_8);
+		return DSL_JSON.deserialize(TestOp.class, bytes, bytes.length);
 	}
 
 	@Test

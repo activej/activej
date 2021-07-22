@@ -1,17 +1,22 @@
 package io.activej.ot.utils;
 
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.StructuredInput;
-import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.MalformedDataException;
+import com.dslplatform.json.JsonConverter;
+import com.dslplatform.json.JsonReader.ReadObject;
+import com.dslplatform.json.JsonWriter;
+import com.dslplatform.json.ParsingException;
+import com.dslplatform.json.runtime.ExplicitDescription;
 import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static com.dslplatform.json.JsonWriter.*;
+import static com.dslplatform.json.NumberConverter.deserializeInt;
+import static com.dslplatform.json.NumberConverter.serialize;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.difference;
 import static io.activej.common.collection.CollectionUtils.first;
@@ -54,43 +59,70 @@ public class Utils {
 				.withInvertFunction(TestSet.class, op -> asList(set(op.getNext(), op.getPrev())));
 	}
 
-	public static final StructuredCodec<TestOp> OP_CODEC = new StructuredCodec<TestOp>() {
-		@Override
-		public void encode(StructuredOutput out, TestOp testOp) {
-			out.writeObject(() -> {
-				if (testOp instanceof TestAdd) {
-					out.writeKey("add");
-					out.writeInt(((TestAdd) testOp).getDelta());
-				} else {
-					out.writeKey("set");
-					out.writeTuple(() -> {
-						TestSet testSet = (TestSet) testOp;
-						out.writeInt(testSet.getPrev());
-						out.writeInt(testSet.getNext());
-					});
+	static final class JsonConverters {
+		@JsonConverter(target = TestOp.class)
+		public static class TestOpConverter {
+			public static final ReadObject<TestOp> JSON_READER = reader -> {
+				if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
+				reader.getNextToken();
+				String key = reader.readString();
+				if (reader.getNextToken() != SEMI) {
+					throw ParsingException.create("':' expected after object key", true);
 				}
-			});
-		}
 
-		@Override
-		public TestOp decode(StructuredInput in) throws MalformedDataException {
-			return in.readObject($ -> {
-				String key = in.readKey();
+				TestOp result;
 				switch (key) {
 					case "add":
-						return new TestAdd(in.readInt());
+						reader.getNextToken();
+						result = new TestAdd(deserializeInt(reader));
+						break;
 					case "set":
-						return in.readTuple($2 -> {
-							int prev = in.readInt();
-							int next = in.readInt();
-							return new TestSet(prev, next);
-						});
+						reader.startArray();
+						reader.getNextToken();
+						int prev = deserializeInt(reader);
+						if (reader.getNextToken() != COMMA) {
+							throw reader.newParseError("Comma expected");
+						}
+						reader.getNextToken();
+						int next = deserializeInt(reader);
+						reader.endArray();
+						result = new TestSet(prev, next);
+						break;
 					default:
-						throw new MalformedDataException("Invalid TestOp key " + key);
+						throw reader.newParseError("Invalid TestOp key: " + key);
 				}
-			});
+				reader.endObject();
+				return result;
+			};
+			public static final WriteObject<TestOp> JSON_WRITER = new TestOpWriteObject();
+
+			private static class TestOpWriteObject implements WriteObject<TestOp>, ExplicitDescription {
+				@Override
+				public void write(@NotNull JsonWriter writer, TestOp value) {
+					if (value instanceof TestAdd) {
+						writer.writeByte(OBJECT_START);
+						writer.writeString("add");
+						writer.writeByte(SEMI);
+						serialize(((TestAdd) value).getDelta(), writer);
+						writer.writeByte(OBJECT_END);
+					} else if (value instanceof TestSet) {
+						writer.writeByte(OBJECT_START);
+						writer.writeString("set");
+						writer.writeByte(SEMI);
+						writer.writeByte(ARRAY_START);
+						TestSet set = (TestSet) value;
+						serialize(set.getPrev(), writer);
+						writer.writeByte(COMMA);
+						serialize(set.getNext(), writer);
+						writer.writeByte(ARRAY_END);
+						writer.writeByte(OBJECT_END);
+					} else {
+						throw new IllegalArgumentException("Unknown type: " + value);
+					}
+				}
+			}
 		}
-	};
+	}
 
 	public static <K> long calcLevels(K commitId, Map<K, Long> levels, Function<K, Collection<K>> getParents) {
 		if (!levels.containsKey(commitId)) {
