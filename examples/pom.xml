@@ -25,7 +25,6 @@
 
     <module>core/codegen</module>
     <module>core/bytebuf</module>
-    <module>core/codec</module>
     <module>core/csp</module>
     <module>core/boot</module>
     <module>core/serializer</module>

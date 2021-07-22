@@ -1,6 +1,9 @@
+import com.dslplatform.json.CompiledJson;
+
 import java.util.List;
 
 //[START EXAMPLE]
+@CompiledJson
 public final class Record {
 	private String title;
 	private final List<Plan> plans;

@@ -4,12 +4,13 @@ import './index.css';
 
 class TodoList extends React.Component {
     render() {
-        if (!this.props.records[0]) {
+        const keys = Object.keys(this.props.records);
+        if (keys.length == 0) {
             return null;
         }
 
         return (
-            <table key={this.props.records[0][0]}>
+            <table key={keys}>
                 <tbody>
                 <tr>
                     <th>Id</th>
@@ -18,7 +19,7 @@ class TodoList extends React.Component {
                     <th>Delete</th>
                 </tr>
 
-                {this.props.records.map((item, index) =>
+                {Object.entries(this.props.records).map((item, index) =>
                     <tr key={index}>
                         <th>{item[0]}</th>
                         <th>{item[1].title}</th>
@@ -29,7 +30,7 @@ class TodoList extends React.Component {
                                     <li>
                                         {plan.text}
                                         <input type="checkbox"
-                                               defaultChecked={plan.isComplete}
+                                               defaultChecked={plan.complete}
                                                onChange={() =>
                                                    this.props.onToggle(item[0], index)}/>
                                     </li>

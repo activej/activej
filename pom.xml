@@ -47,7 +47,6 @@
     <module>cloud-fs</module>
     <module>launcher</module>
     <module>launchers</module>
-    <module>util-codec</module>
     <module>util-common</module>
     <module>util-state</module>
     <module>test</module>

@@ -8,11 +8,6 @@
 
   <name>Tutorials : React-Integration #2</name>
 
-  <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
@@ -20,9 +15,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-codec</artifactId>
-      <version>${project.version}</version>
+      <groupId>com.dslplatform</groupId>
+      <artifactId>dsl-json-java8</artifactId>
+      <version>1.9.8</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
@@ -47,6 +42,18 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+          <compilerArgs>
+            <arg>-Adsljson.generatedmarker</arg>
+          </compilerArgs>
+          <encoding>UTF-8</encoding>
+        </configuration>
       </plugin>
     </plugins>
   </build>

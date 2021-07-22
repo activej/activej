@@ -1,11 +1,14 @@
+import com.dslplatform.json.CompiledJson;
+
 //[START EXAMPLE]
+@CompiledJson
 public final class Plan {
 	private String text;
-	private boolean isComplete;
+	private boolean complete;
 
-	public Plan(String text, boolean isComplete) {
+	public Plan(String text, boolean complete) {
 		this.text = text;
-		this.isComplete = isComplete;
+		this.complete = complete;
 	}
 
 	public String getText() {
@@ -17,11 +20,11 @@ public final class Plan {
 	}
 
 	public boolean isComplete() {
-		return isComplete;
+		return complete;
 	}
 
 	public void toggle() {
-		isComplete = !isComplete;
+		complete = !complete;
 	}
 }
 //[END EXAMPLE]

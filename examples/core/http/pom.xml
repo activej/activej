@@ -20,11 +20,6 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-codec</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
       <artifactId>activej-specializer</artifactId>
       <version>${project.version}</version>
     </dependency>

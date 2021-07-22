@@ -10,7 +10,7 @@ class TodoApp extends React.Component {
             text: '',
             plan1: '',
             plan2: '',
-            records: []
+            records: {}
         };
     }
 
