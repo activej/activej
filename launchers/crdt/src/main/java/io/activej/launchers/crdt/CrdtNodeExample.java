@@ -16,6 +16,7 @@
 
 package io.activej.launchers.crdt;
 
+import io.activej.common.reflection.TypeT;
 import io.activej.config.Config;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
@@ -31,7 +32,6 @@ import io.activej.launcher.Launcher;
 
 import java.util.concurrent.Executor;
 
-import static io.activej.codec.StructuredCodecs.*;
 import static io.activej.config.converter.ConfigConverters.ofExecutor;
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
@@ -56,10 +56,8 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, TimestampCon
 						TimestampContainer.createCrdtFunction(Integer::max),
 						new CrdtDataSerializer<>(UTF8_SERIALIZER,
 								TimestampContainer.createSerializer(INT_SERIALIZER)),
-						STRING_CODEC,
-						tuple(TimestampContainer::new,
-								TimestampContainer::getTimestamp, LONG_CODEC,
-								TimestampContainer::getState, INT_CODEC));
+						TypeT.of(String.class),
+						new TypeT<TimestampContainer<Integer>>() {});
 			}
 
 			@Provides

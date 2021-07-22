@@ -16,28 +16,22 @@
 
 package io.activej.crdt;
 
-import io.activej.codec.CodecSubtype;
-import io.activej.codec.StructuredCodec;
+import com.dslplatform.json.*;
 
-import static io.activej.codec.StructuredCodecs.*;
+import java.util.Arrays;
+import java.util.Map;
+
+import static com.dslplatform.json.JsonWriter.*;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 public final class CrdtMessaging {
-
-	public static final StructuredCodec<CrdtMessage> MESSAGE_CODEC = CodecSubtype.<CrdtMessage>create()
-			.with(Download.class, object(Download::new,
-					"token", Download::getToken, LONG64_CODEC))
-			.with(CrdtMessages.class, ofEnum(CrdtMessages.class));
-
-	public static final StructuredCodec<CrdtResponse> RESPONSE_CODEC = CodecSubtype.<CrdtResponse>create()
-			.with(CrdtResponses.class, ofEnum(CrdtResponses.class))
-			.with(DownloadStarted.class, object(DownloadStarted::new))
-			.with(ServerError.class, object(ServerError::new,
-					"msg", ServerError::getMsg, STRING_CODEC));
 
 	public interface CrdtMessage {}
 
 	public interface CrdtResponse {}
 
+	@CompiledJson
 	public enum CrdtMessages implements CrdtMessage {
 		UPLOAD,
 		REMOVE,
@@ -61,17 +55,12 @@ public final class CrdtMessaging {
 		}
 	}
 
+	@CompiledJson
 	public enum CrdtResponses implements CrdtResponse {
 		UPLOAD_FINISHED,
 		REMOVE_FINISHED,
-		PONG
-	}
-
-	public static final class DownloadStarted implements CrdtResponse {
-		@Override
-		public String toString() {
-			return "DownloadStarted";
-		}
+		PONG,
+		DOWNLOAD_STARTED
 	}
 
 	public static final class ServerError implements CrdtResponse {
@@ -88,6 +77,62 @@ public final class CrdtMessaging {
 		@Override
 		public String toString() {
 			return "ServerError{msg=" + msg + '}';
+		}
+	}
+
+	@SuppressWarnings("unused")
+	static class JsonConverters {
+		@JsonConverter(target = CrdtMessage.class)
+		public static class CrdtMessageConverter {
+			public static final JsonReader.ReadObject<CrdtMessage> JSON_READER = typedReader(CrdtMessages.class, Download.class);
+			public static final JsonWriter.WriteObject<CrdtMessage> JSON_WRITER = typedWriter();
+		}
+
+		@JsonConverter(target = CrdtResponse.class)
+		public static class CrdtResponseConverter {
+			public static final JsonReader.ReadObject<CrdtResponse> JSON_READER = typedReader(CrdtResponses.class, ServerError.class);
+			public static final JsonWriter.WriteObject<CrdtResponse> JSON_WRITER = typedWriter();
+		}
+
+		@SafeVarargs
+		static <T> JsonReader.ReadObject<T> typedReader(Class<? extends T>... types) {
+			Map<String, Class<? extends T>> typeMap = Arrays.stream(types)
+					.collect(toMap(Class::getSimpleName, identity()));
+
+			return reader -> {
+				if (reader.wasNull()) return null;
+				if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
+				reader.getNextToken();
+
+				String type = reader.readString();
+				reader.semicolon();
+
+				T result;
+
+				Class<? extends T> aClass = typeMap.get(type);
+				if (aClass == null) {
+					throw ParsingException.create("Unknown type: " + type, true);
+				}
+				//noinspection unchecked
+				result = (T) reader.next(aClass);
+				reader.endObject();
+
+				return result;
+			};
+		}
+
+		static <T> JsonWriter.WriteObject<T> typedWriter() {
+			return (writer, value) -> {
+				if (value == null) {
+					writer.writeNull();
+					return;
+				}
+				writer.writeByte(OBJECT_START);
+				writer.writeString(value.getClass().getSimpleName());
+				writer.writeByte(SEMI);
+				writer.serializeObject(value);
+				writer.writeByte(OBJECT_END);
+			};
 		}
 	}
 }

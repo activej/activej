@@ -18,6 +18,7 @@ package io.activej.crdt;
 
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -30,9 +31,24 @@ import io.activej.serializer.BinarySerializer;
 import java.net.InetAddress;
 
 import static io.activej.crdt.CrdtMessaging.*;
-import static io.activej.crdt.util.Utils.nullTerminatedJson;
+import static io.activej.crdt.CrdtMessaging.CrdtResponses.DOWNLOAD_STARTED;
+import static io.activej.crdt.util.Utils.fromJson;
+import static io.activej.crdt.util.Utils.toJson;
+import static io.activej.csp.binary.Utils.nullTerminated;
 
 public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {
+	private static final ByteBufsCodec<CrdtMessage, CrdtResponse> SERIALIZER =
+			nullTerminated()
+					.andThen(
+							value -> {
+								try {
+									return fromJson(CrdtMessage.class, value);
+								} finally {
+									value.recycle();
+								}
+							},
+							crdtResponse -> toJson(CrdtResponse.class, crdtResponse));
+
 	private final CrdtStorage<K, S> storage;
 	private final CrdtDataSerializer<K, S> serializer;
 	private final BinarySerializer<K> keySerializer;
@@ -56,7 +72,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		MessagingWithBinaryStreaming<CrdtMessage, CrdtResponse> messaging =
-				MessagingWithBinaryStreaming.create(socket, nullTerminatedJson(MESSAGE_CODEC, RESPONSE_CODEC));
+				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()
 				.then(msg -> {
 					if (msg == CrdtMessages.UPLOAD) {
@@ -78,7 +94,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 					}
 					if (msg instanceof Download) {
 						return storage.download(((Download) msg).getToken())
-								.whenResult(() -> messaging.send(new DownloadStarted()))
+								.whenResult(() -> messaging.send(DOWNLOAD_STARTED))
 								.then(supplier -> supplier
 										.transformWith(ChannelSerializer.create(serializer))
 										.streamTo(messaging.sendBinaryStream()));

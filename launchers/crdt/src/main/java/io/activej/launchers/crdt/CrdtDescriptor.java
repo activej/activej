@@ -16,21 +16,27 @@
 
 package io.activej.launchers.crdt;
 
-import io.activej.codec.StructuredCodec;
+import io.activej.common.reflection.TypeT;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
+
+import java.lang.reflect.Type;
 
 public final class CrdtDescriptor<K extends Comparable<K>, S> {
 	private final CrdtFunction<S> crdtFunction;
 	private final CrdtDataSerializer<K, S> serializer;
-	private final StructuredCodec<K> keyCodec;
-	private final StructuredCodec<S> stateCodec;
+	private final Type keyManifest;
+	private final Type stateManifest;
 
-	public CrdtDescriptor(CrdtFunction<S> crdtFunction, CrdtDataSerializer<K, S> serializer, StructuredCodec<K> keyCodec, StructuredCodec<S> stateCodec) {
+	public CrdtDescriptor(CrdtFunction<S> crdtFunction, CrdtDataSerializer<K, S> serializer, TypeT<K> keyManifest, TypeT<S> stateManifest) {
 		this.crdtFunction = crdtFunction;
 		this.serializer = serializer;
-		this.keyCodec = keyCodec;
-		this.stateCodec = stateCodec;
+		this.keyManifest = keyManifest.getType();
+		this.stateManifest = stateManifest.getType();
+	}
+
+	public CrdtDescriptor(CrdtFunction<S> crdtFunction, CrdtDataSerializer<K, S> serializer, Class<K> keyManifest, Class<S> stateManifest) {
+		this(crdtFunction, serializer, TypeT.of(keyManifest), TypeT.of(stateManifest));
 	}
 
 	public CrdtFunction<S> getCrdtFunction() {
@@ -41,11 +47,11 @@ public final class CrdtDescriptor<K extends Comparable<K>, S> {
 		return serializer;
 	}
 
-	public StructuredCodec<K> getKeyCodec() {
-		return keyCodec;
+	public Type getKeyManifest() {
+		return keyManifest;
 	}
 
-	public StructuredCodec<S> getStateCodec() {
-		return stateCodec;
+	public Type getStateManifest() {
+		return stateManifest;
 	}
 }

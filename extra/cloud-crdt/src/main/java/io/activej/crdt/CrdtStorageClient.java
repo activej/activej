@@ -21,6 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelConsumer;
+import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -45,11 +46,23 @@ import java.util.function.Function;
 import static io.activej.crdt.CrdtMessaging.*;
 import static io.activej.crdt.CrdtMessaging.CrdtMessages.PING;
 import static io.activej.crdt.CrdtMessaging.CrdtResponses.*;
-import static io.activej.crdt.util.Utils.nullTerminatedJson;
-import static io.activej.crdt.util.Utils.wrapException;
+import static io.activej.crdt.util.Utils.*;
+import static io.activej.csp.binary.Utils.nullTerminated;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService, EventloopJmxBeanEx {
+	private static final ByteBufsCodec<CrdtResponse, CrdtMessage> SERIALIZER =
+			nullTerminated()
+					.andThen(
+							value -> {
+								try {
+									return fromJson(CrdtResponse.class, value);
+								} finally {
+									value.recycle();
+								}
+							},
+							crdtMessage -> toJson(CrdtMessage.class, crdtMessage));
+
 	private final Eventloop eventloop;
 	private final InetSocketAddress address;
 	private final CrdtDataSerializer<K, S> serializer;
@@ -125,14 +138,13 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.then(() -> messaging.receive()
 								.thenEx(wrapException(() -> "Failed to receive response")))
 						.then(response -> {
-							Class<? extends CrdtResponse> responseClass = response.getClass();
-							if (responseClass == DownloadStarted.class) {
+							if (response == DOWNLOAD_STARTED) {
 								return Promise.complete();
 							}
-							if (responseClass == ServerError.class) {
+							if (response.getClass() == ServerError.class) {
 								return Promise.ofException(new CrdtException(((ServerError) response).getMsg()));
 							}
-							return Promise.ofException(new CrdtException("Received message " + response + " instead of " + DownloadStarted.class.getSimpleName()));
+							return Promise.ofException(new CrdtException("Received message " + response + " instead of " + DOWNLOAD_STARTED));
 						})
 						.map($ ->
 								messaging.receiveBinaryStream()
@@ -200,7 +212,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 
 	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtMessage>> connect() {
 		return AsyncTcpSocketNio.connect(address, null, socketSettings)
-				.map(socket -> MessagingWithBinaryStreaming.create(socket, nullTerminatedJson(RESPONSE_CODEC, MESSAGE_CODEC)))
+				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.thenEx(wrapException(() -> "Failed to connect to " + address));
 	}
 
