@@ -23,6 +23,20 @@
       <artifactId>activej-fs</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-rpc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-launchers-crdt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lz4</groupId>
+      <artifactId>lz4-java</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
