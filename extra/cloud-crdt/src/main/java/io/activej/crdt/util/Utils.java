@@ -30,8 +30,17 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
+import static java.util.stream.Collectors.toList;
 
 public final class Utils {
 
@@ -41,6 +50,25 @@ public final class Utils {
 				e instanceof CrdtException ?
 						Promise.ofException(e) :
 						Promise.ofException(new CrdtException(errorMessageSupplier.get(), e));
+	}
+
+	public static Promise<List<Path>> getWalFiles(Executor executor, Path walDir) {
+		return Promise.ofBlockingCallable(executor,
+				() -> {
+					try (Stream<Path> list = Files.list(walDir)) {
+						return list
+								.filter(file -> Files.isRegularFile(file) && file.toString().endsWith(EXT_FINAL))
+								.collect(toList());
+					}
+				});
+	}
+
+	public static Promise<Void> deleteWalFiles(Executor executor, Collection<Path> walFiles) {
+		return Promise.ofBlockingRunnable(executor, () -> {
+			for (Path walFile : walFiles) {
+				Files.deleteIfExists(walFile);
+			}
+		});
 	}
 
 	// region JSON

@@ -36,8 +36,12 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 
 	@SafeVarargs
 	public static <T> GSet<T> of(T... items) {
+		return of(Arrays.asList(items));
+	}
+
+	public static <T> GSet<T> of(Collection<T> collection) {
 		GSet<T> set = new GSet<>();
-		set.addAll(Arrays.asList(items));
+		set.addAll(collection);
 		return set;
 	}
 
@@ -112,6 +116,18 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 	@Override
 	public void clear() {
 		throw new UnsupportedOperationException("GSet is a grow-only set");
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		return set.equals(((GSet<?>) o).set);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(set);
 	}
 
 	@Override
