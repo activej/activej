@@ -1,6 +1,5 @@
 package io.activej.dataflow.stream;
 
-import io.activej.codec.StructuredCodec;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
@@ -14,11 +13,12 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.graph.TaskStatus;
 import io.activej.dataflow.http.DataflowDebugServlet;
 import io.activej.dataflow.inject.BinarySerializerModule;
-import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.SortingExecutor;
+import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
@@ -36,6 +36,7 @@ import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import org.jetbrains.annotations.Nullable;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -50,11 +51,11 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static io.activej.codec.StructuredCodec.ofObject;
 import static io.activej.common.collection.CollectionUtils.concat;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
+import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
@@ -486,8 +487,8 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					DataflowGraph graph(DataflowClient client, @Subtypes StructuredCodec<Node> nodeCodec) {
-						return new DataflowGraph(client, graphPartitions, nodeCodec);
+					DataflowGraph graph(DataflowClient client, JsonCodec<List<Node>> nodesCodec) {
+						return new DataflowGraph(client, graphPartitions, nodesCodec);
 					}
 
 					@Provides
@@ -496,13 +497,14 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					AsyncHttpServer debugServer(Eventloop eventloop, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, Injector env) {
-						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(graphPartitions, executor, codec, env));
+					AsyncHttpServer debugServer(Eventloop eventloop, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, Injector env,
+							JsonCodec<Map<Long, List<@Nullable TaskStatus>>> taskListJsonCodec) {
+						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(graphPartitions, executor, codec, env, taskListJsonCodec));
 					}
 				})
-				.bind(new Key<StructuredCodec<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
-				.bind(new Key<StructuredCodec<TestKeyFunction>>() {}).toInstance(ofObject(TestKeyFunction::new))
-				.bind(new Key<StructuredCodec<TestPredicate>>() {}).toInstance(ofObject(TestPredicate::new));
+				.bind(new Key<JsonCodec<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
+				.bind(new Key<JsonCodec<TestKeyFunction>>() {}).toInstance(ofObject(TestKeyFunction::new))
+				.bind(new Key<JsonCodec<TestPredicate>>() {}).toInstance(ofObject(TestPredicate::new));
 	}
 
 	static InetSocketAddress getFreeListenAddress() {

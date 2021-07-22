@@ -16,8 +16,10 @@
 
 package io.activej.dataflow.command;
 
+import com.dslplatform.json.CompiledJson;
 import io.activej.dataflow.graph.StreamId;
 
+@CompiledJson
 public final class DataflowCommandDownload extends DataflowCommand {
 	private final StreamId streamId;
 

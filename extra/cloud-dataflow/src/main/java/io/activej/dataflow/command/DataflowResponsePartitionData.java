@@ -16,10 +16,12 @@
 
 package io.activej.dataflow.command;
 
+import com.dslplatform.json.CompiledJson;
 import io.activej.dataflow.graph.TaskStatus;
 
 import java.util.List;
 
+@CompiledJson
 public class DataflowResponsePartitionData extends DataflowResponse {
 	private final int running;
 	private final int succeeded;
@@ -66,6 +68,7 @@ public class DataflowResponsePartitionData extends DataflowResponse {
 				'}';
 	}
 
+	@CompiledJson
 	public static final class TaskDesc {
 		private final long id;
 		private final TaskStatus status;

@@ -17,12 +17,12 @@
 package io.activej.dataflow.graph;
 
 import io.activej.async.process.AsyncCloseable;
-import io.activej.codec.StructuredCodec;
 import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowClient.Session;
 import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;
 import io.activej.dataflow.node.NodeUpload;
@@ -33,8 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.codec.StructuredCodecs.ofList;
-import static io.activej.codec.json.JsonUtils.toJson;
+import static io.activej.dataflow.json.JsonUtils.toJson;
 import static java.util.stream.Collectors.*;
 
 /**
@@ -46,12 +45,12 @@ public final class DataflowGraph {
 
 	private final DataflowClient client;
 	private final List<Partition> availablePartitions;
-	private final StructuredCodec<List<Node>> listNodeCodec;
+	private final JsonCodec<List<Node>> listNodeCodec;
 
-	public DataflowGraph(DataflowClient client, List<Partition> availablePartitions, StructuredCodec<Node> nodeCodec) {
+	public DataflowGraph(DataflowClient client, List<Partition> availablePartitions, JsonCodec<List<Node>> listNodeCodec) {
 		this.client = client;
 		this.availablePartitions = availablePartitions;
-		this.listNodeCodec = ofList(nodeCodec);
+		this.listNodeCodec = listNodeCodec;
 	}
 
 	public List<Partition> getAvailablePartitions() {

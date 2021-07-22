@@ -17,9 +17,9 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.launchers.dataflow.DataflowClientLauncher;
 
-import static io.activej.codec.StructuredCodec.ofObject;
 import static io.activej.dataflow.dataset.Datasets.*;
-import static io.activej.dataflow.inject.CodecsModule.codec;
+import static io.activej.dataflow.json.JsonUtils.codec;
+import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static java.util.Comparator.naturalOrder;
 
 /**

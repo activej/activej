@@ -1,5 +1,6 @@
 package io.activej.dataflow.stats;
 
+import com.dslplatform.json.CompiledJson;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -7,14 +8,8 @@ import io.activej.csp.dsl.ChannelTransformer;
 
 import java.util.Objects;
 
+@CompiledJson
 public class BinaryNodeStat extends NodeStat implements ChannelTransformer<ByteBuf, ByteBuf> {
-	public static final BinaryNodeStat ZERO = new BinaryNodeStat() {
-		@Override
-		public void record(long bytes) {
-			throw new UnsupportedOperationException();
-		}
-	};
-
 	public static final StatReducer<BinaryNodeStat> REDUCER =
 			stats -> {
 				long sum = stats.stream()
@@ -28,9 +23,14 @@ public class BinaryNodeStat extends NodeStat implements ChannelTransformer<ByteB
 
 	private long bytes = 0;
 
-    public BinaryNodeStat() {}
+	public BinaryNodeStat() {
+	}
 
-    public void record(long bytes) {
+	public BinaryNodeStat(long bytes) {
+		this.bytes = bytes;
+	}
+
+	public void record(long bytes) {
 		this.bytes += bytes;
 	}
 

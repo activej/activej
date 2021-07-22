@@ -16,8 +16,6 @@
 
 package io.activej.dataflow.http;
 
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.json.JsonUtils;
 import io.activej.common.exception.UncheckedException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
@@ -27,6 +25,7 @@ import io.activej.dataflow.command.*;
 import io.activej.dataflow.command.DataflowResponsePartitionData.TaskDesc;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.TaskStatus;
+import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.StatReducer;
 import io.activej.http.*;
@@ -44,8 +43,8 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
 
-import static io.activej.codec.StructuredCodecs.*;
-import static io.activej.dataflow.inject.CodecsModule.codec;
+import static io.activej.dataflow.json.JsonUtils.codec;
+import static io.activej.dataflow.json.JsonUtils.toJson;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
 import static java.util.stream.Collectors.joining;
@@ -55,14 +54,12 @@ public final class DataflowDebugServlet implements AsyncServlet {
 	private final AsyncServlet servlet;
 	private final ByteBufsCodec<DataflowResponse, DataflowCommand> codec;
 
-	public DataflowDebugServlet(List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, ResourceLocator env) {
+	public DataflowDebugServlet(List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, ResourceLocator env,
+			JsonCodec<Map<Long, List<@Nullable TaskStatus>>> taskListCodec) {
 		this.codec = codec;
 
-		StructuredCodec<ReducedTaskData> reducedTaskDataCodec = env.getInstance(codec(ReducedTaskData.class));
-		StructuredCodec<LocalTaskData> localTaskDataCodec = env.getInstance(codec(LocalTaskData.class));
-
-		StructuredCodec<TaskStatus> taskStatusCodec = env.getInstance(codec(TaskStatus.class));
-		StructuredCodec<Map<Long, List<@Nullable TaskStatus>>> taskListCodec = ofMap(LONG_CODEC, ofList(taskStatusCodec.nullable()));
+		JsonCodec<ReducedTaskData> reducedTaskDataCodec = env.getInstance(codec(ReducedTaskData.class));
+		JsonCodec<LocalTaskData> localTaskDataCodec = env.getInstance(codec(LocalTaskData.class));
 
 		this.servlet = RoutingServlet.create()
 				.map("/*", StaticServlet.ofClassPath(executor, "debug").withIndexHtml())
@@ -83,7 +80,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 												}
 											}
 											return ok200()
-													.withJson(JsonUtils.toJson(taskListCodec, tasks));
+													.withJson(toJson(taskListCodec, tasks));
 										}))
 						.map(GET, "/tasks/:taskID", request ->
 								getTaskId(request).then(id ->
@@ -115,7 +112,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 															}, HashMap::putAll);
 
 													ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).getGraphViz(), reduced);
-													return ok200().withJson(JsonUtils.toJson(reducedTaskDataCodec, taskData));
+													return ok200().withJson(toJson(reducedTaskDataCodec, taskData));
 												})))
 						.map(GET, "/tasks/:taskID/:index", request ->
 								getTaskId(request).then(id -> {
@@ -128,7 +125,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 									}
 									return getTask(partition.getAddress(), id)
 											.map(task -> ok200()
-													.withJson(JsonUtils.toJson(localTaskDataCodec,
+													.withJson(toJson(localTaskDataCodec,
 															new LocalTaskData(task.getStatus(), task.getGraphViz(), task.getNodes(), task.getStartTime(), task.getFinishTime(), task.getErrorString()))));
 								})));
 	}

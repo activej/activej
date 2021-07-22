@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.node;
 
+import com.dslplatform.json.CompiledJson;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamUnion;
@@ -25,6 +26,7 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 
+@CompiledJson
 public final class NodeUnion<T> extends AbstractNode {
 	private final List<StreamId> inputs;
 	private final StreamId output;

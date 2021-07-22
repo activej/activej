@@ -1,6 +1,5 @@
 package io.activej.dataflow.stream;
 
-import io.activej.codec.StructuredCodec;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -8,6 +7,7 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
@@ -34,10 +34,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static io.activej.codec.StructuredCodecs.object;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
+import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertComplete;
@@ -239,13 +239,13 @@ public class PageRankTest {
 
 	private Module createModule(Partition... partitions) throws Exception {
 		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partitions))
-				.bind(new Key<StructuredCodec<PageKeyFunction>>() {}).toInstance(object(PageKeyFunction::new))
-				.bind(new Key<StructuredCodec<RankKeyFunction>>() {}).toInstance(object(RankKeyFunction::new))
-				.bind(new Key<StructuredCodec<RankAccumulatorKeyFunction>>() {}).toInstance(object(RankAccumulatorKeyFunction::new))
-				.bind(new Key<StructuredCodec<LongComparator>>() {}).toInstance(object(LongComparator::new))
-				.bind(new Key<StructuredCodec<PageToRankFunction>>() {}).toInstance(object(PageToRankFunction::new))
-				.bind(new Key<StructuredCodec<RankAccumulatorReducer>>() {}).toInstance(object(RankAccumulatorReducer::new))
-				.bind(new Key<StructuredCodec<PageRankJoiner>>() {}).toInstance(object(PageRankJoiner::new))
+				.bind(new Key<JsonCodec<PageKeyFunction>>() {}).toInstance(ofObject(PageKeyFunction::new))
+				.bind(new Key<JsonCodec<RankKeyFunction>>() {}).toInstance(ofObject(RankKeyFunction::new))
+				.bind(new Key<JsonCodec<RankAccumulatorKeyFunction>>() {}).toInstance(ofObject(RankAccumulatorKeyFunction::new))
+				.bind(new Key<JsonCodec<LongComparator>>() {}).toInstance(ofObject(LongComparator::new))
+				.bind(new Key<JsonCodec<PageToRankFunction>>() {}).toInstance(ofObject(PageToRankFunction::new))
+				.bind(new Key<JsonCodec<RankAccumulatorReducer>>() {}).toInstance(ofObject(RankAccumulatorReducer::new))
+				.bind(new Key<JsonCodec<PageRankJoiner>>() {}).toInstance(ofObject(PageRankJoiner::new))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 	}

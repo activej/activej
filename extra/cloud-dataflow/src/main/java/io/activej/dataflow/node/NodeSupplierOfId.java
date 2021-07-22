@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.node;
 
+import com.dslplatform.json.CompiledJson;
 import io.activej.csp.ChannelSupplier;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
@@ -32,6 +33,7 @@ import static java.util.Collections.singletonList;
  *
  * @param <T> data items type
  */
+@CompiledJson
 public final class NodeSupplierOfId<T> extends AbstractNode {
 	private final String id;
 	private final int partitionIndex;

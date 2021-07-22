@@ -2,7 +2,6 @@ package io.activej.dataflow.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.codec.StructuredCodec;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
@@ -21,9 +20,9 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.helper.PartitionedCollector;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
-import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.DatasetId;
+import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
@@ -68,10 +67,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.codec.StructuredCodec.ofObject;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.dataflow.dataset.Datasets.*;
+import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
@@ -368,7 +367,7 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					StructuredCodec<IsEven> isEvenCodec() {
+					JsonCodec<IsEven> isEvenCodec() {
 						return ofObject(IsEven::new);
 					}
 				}
@@ -395,7 +394,7 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					StructuredCodec<IsEven> isEvenCodec() {
+					JsonCodec<IsEven> isEvenCodec() {
 						return ofObject(IsEven::new);
 					}
 				}
@@ -410,7 +409,7 @@ public final class PartitionedStreamTest {
 				.collect(Collectors.toList());
 	}
 
-	private static ActiveFs createClient(Eventloop eventloop, AsyncHttpServer server){
+	private static ActiveFs createClient(Eventloop eventloop, AsyncHttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
 		return HttpActiveFs.create("http://localhost:" + port, AsyncHttpClient.create(eventloop));
 	}
@@ -449,9 +448,9 @@ public final class PartitionedStreamTest {
 
 	private Map<Partition, List<String>> collectToMap(boolean sorted) {
 		Injector injector = Injector.of(createClientModule());
-		StructuredCodec<Node> nodeCodec = injector.getInstance(new Key<StructuredCodec<Node>>() {}.qualified(Subtypes.class));
+		JsonCodec<List<Node>> nodesCodec = injector.getInstance(new Key<JsonCodec<List<Node>>>() {});
 		DataflowClient client = injector.getInstance(DataflowClient.class);
-		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers), nodeCodec);
+		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers), nodesCodec);
 		Dataset<String> compoundDataset = datasetOfId(sorted ? "sorted data source" : "data source", String.class);
 
 		PartitionedCollector<String> collector = new PartitionedCollector<>(compoundDataset, client);
@@ -463,9 +462,9 @@ public final class PartitionedStreamTest {
 
 	private void filterOddAndPropagateToTarget() {
 		Injector injector = Injector.of(createClientModule());
-		StructuredCodec<Node> nodeCodec = injector.getInstance(new Key<StructuredCodec<Node>>() {}.qualified(Subtypes.class));
+		JsonCodec<List<Node>> nodesCodec = injector.getInstance(new Key<JsonCodec<List<Node>>>() {});
 		DataflowClient client = injector.getInstance(DataflowClient.class);
-		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers), nodeCodec);
+		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers), nodesCodec);
 		Dataset<String> compoundDataset = datasetOfId("data source", String.class);
 		Dataset<String> filteredDataset = filter(compoundDataset, new IsEven());
 		Dataset<String> consumerDataset = consumerOfId(filteredDataset, "data target");

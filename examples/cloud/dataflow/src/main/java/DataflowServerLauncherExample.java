@@ -13,8 +13,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import static io.activej.codec.StructuredCodec.ofObject;
-import static io.activej.dataflow.inject.CodecsModule.codec;
+import static io.activej.dataflow.json.JsonUtils.codec;
+import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static java.util.stream.Collectors.toList;
 
 /**

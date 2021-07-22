@@ -16,7 +16,6 @@
 
 package io.activej.launchers.dataflow;
 
-import io.activej.codec.StructuredCodec;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.csp.binary.ByteBufsCodec;
@@ -26,8 +25,8 @@ import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
-import io.activej.dataflow.inject.CodecsModule.Subtypes;
 import io.activej.dataflow.inject.DataflowModule;
+import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.Node;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
@@ -39,6 +38,7 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.*;
@@ -70,10 +70,10 @@ public abstract class DataflowClientLauncher extends Launcher {
 	}
 
 	@Provides
-	DataflowGraph graph(Config config, DataflowClient client, @Subtypes StructuredCodec<Node> nodeCodec) {
+	DataflowGraph graph(Config config, DataflowClient client, JsonCodec<List<Node>> nodesCodec) {
 		return new DataflowGraph(client,
 				config.get(ofList(ofInetSocketAddress()), "dataflow.partitions").stream().map(Partition::new).collect(toList()),
-				nodeCodec);
+				nodesCodec);
 	}
 
 	@Provides

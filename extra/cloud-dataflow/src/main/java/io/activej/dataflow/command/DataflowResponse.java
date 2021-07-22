@@ -16,5 +16,8 @@
 
 package io.activej.dataflow.command;
 
+import io.activej.dataflow.json.JsonModule.Subtypes;
+
+@Subtypes
 public abstract class DataflowResponse {
 }

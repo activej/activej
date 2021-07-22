@@ -26,7 +26,6 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeUpload;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers;
 
 import java.util.Comparator;
 import java.util.List;
