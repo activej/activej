@@ -24,6 +24,7 @@ import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.tcp.RemoteFsCommands.*;
 import io.activej.fs.tcp.RemoteFsResponses.*;
+import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
@@ -39,6 +40,7 @@ import java.util.function.Function;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.csp.binary.Utils.nullTerminated;
 import static io.activej.fs.util.RemoteFsUtils.*;
 
 /**
@@ -49,7 +51,16 @@ import static io.activej.fs.util.RemoteFsUtils.*;
  */
 public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private static final ByteBufsCodec<FsCommand, FsResponse> SERIALIZER =
-			nullTerminatedJson(RemoteFsCommands.CODEC, RemoteFsResponses.CODEC);
+			nullTerminated()
+					.andThen(
+							value -> {
+								try {
+									return fromJson(FsCommand.class, value);
+								} finally {
+									value.recycle();
+								}
+							},
+							fsResponse -> RemoteFsUtils.toJson(FsResponse.class, fsResponse));
 
 	private final Map<Class<?>, MessagingHandler<FsCommand>> handlers = new HashMap<>();
 	private final ActiveFs fs;

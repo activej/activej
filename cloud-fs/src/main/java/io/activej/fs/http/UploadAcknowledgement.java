@@ -16,22 +16,17 @@
 
 package io.activej.fs.http;
 
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.StructuredCodecs;
+import com.dslplatform.json.CompiledJson;
 import io.activej.fs.exception.FsException;
-import io.activej.fs.exception.FsExceptionCodec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class UploadAcknowledgement {
-	@SuppressWarnings("ConstantConditions")
-	public static final StructuredCodec<UploadAcknowledgement> CODEC = StructuredCodecs.object(UploadAcknowledgement::new,
-			"error", UploadAcknowledgement::getError, FsExceptionCodec.CODEC.nullable());
-
 	@Nullable
 	private final FsException error;
 
-	private UploadAcknowledgement(@Nullable FsException error) {
+	@CompiledJson
+	public UploadAcknowledgement(@Nullable FsException error) {
 		this.error = error;
 	}
 

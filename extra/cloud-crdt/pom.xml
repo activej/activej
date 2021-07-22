@@ -19,6 +19,11 @@
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
+      <artifactId>activej-codec</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
       <artifactId>activej-datastream</artifactId>
       <version>${project.version}</version>
     </dependency>

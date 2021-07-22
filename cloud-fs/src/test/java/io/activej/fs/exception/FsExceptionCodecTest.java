@@ -1,13 +1,14 @@
 package io.activej.fs.exception;
 
+import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
 import java.util.Map;
 
-import static io.activej.codec.json.JsonUtils.fromJson;
-import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.fs.util.RemoteFsUtils.fromJson;
+import static io.activej.fs.util.RemoteFsUtils.toJson;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -39,15 +40,15 @@ public final class FsExceptionCodecTest {
 				"file1", new FsScalarException("Test"),
 				"file2", new FileNotFoundException("Test"),
 				"file3", new IsADirectoryException("Test")
-				)));
+		)));
 	}
 
 	private static void doTest(FsException exception) {
-		String json = toJson(FsExceptionCodec.CODEC, exception);
+		ByteBuf json = toJson(FsException.class, exception);
 		FsException deserializedException = deserialize(json);
 
 		doAssert(exception, deserializedException);
-		if (exception instanceof FsBatchException){
+		if (exception instanceof FsBatchException) {
 			Map<String, FsScalarException> exceptions = ((FsBatchException) exception).getExceptions();
 			Map<String, FsScalarException> deserializedExceptions = ((FsBatchException) deserializedException).getExceptions();
 			for (Map.Entry<String, FsScalarException> entry : exceptions.entrySet()) {
@@ -63,12 +64,12 @@ public final class FsExceptionCodecTest {
 		assertEquals(exception.getMessage(), deserializedException.getMessage());
 	}
 
-	private static FsException deserialize(String json) {
+	private static FsException deserialize(ByteBuf json) {
 		FsException deserializedException;
 		try {
-			deserializedException = fromJson(FsExceptionCodec.CODEC, json);
+			deserializedException = fromJson(FsException.class, json);
 		} catch (MalformedDataException e) {
-			throw new AssertionError();
+			throw new AssertionError(e);
 		}
 		return deserializedException;
 	}

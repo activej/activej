@@ -16,44 +16,23 @@
 
 package io.activej.fs.tcp;
 
-import io.activej.codec.CodecSubtype;
-import io.activej.codec.StructuredCodec;
+import com.dslplatform.json.CompiledJson;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsException;
-import io.activej.fs.exception.FsExceptionCodec;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
 
-import static io.activej.codec.StructuredCodecs.LONG_CODEC;
-import static io.activej.codec.StructuredCodecs.object;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
-import static io.activej.fs.util.Codecs.FILE_META_CODEC_NULLABLE;
-import static io.activej.fs.util.Codecs.FILE_META_MAP_CODEC;
 
 public final class RemoteFsResponses {
-	static final StructuredCodec<FsResponse> CODEC = CodecSubtype.<FsResponse>create()
-			.with(UploadAck.class, object(UploadAck::new))
-			.with(UploadFinished.class, object(UploadFinished::new))
-			.with(AppendAck.class, object(AppendAck::new))
-			.with(AppendFinished.class, object(AppendFinished::new))
-			.with(DownloadSize.class, object(DownloadSize::new, "size", DownloadSize::getSize, LONG_CODEC))
-			.with(MoveFinished.class, object(MoveFinished::new))
-			.with(MoveAllFinished.class, object(MoveAllFinished::new))
-			.with(CopyFinished.class, object(CopyFinished::new))
-			.with(CopyAllFinished.class, object(CopyAllFinished::new))
-			.with(DeleteFinished.class, object(DeleteFinished::new))
-			.with(DeleteAllFinished.class, object(DeleteAllFinished::new))
-			.with(ListFinished.class, object(ListFinished::new, "files", ListFinished::getFiles, FILE_META_MAP_CODEC))
-			.with(InfoFinished.class, object(InfoFinished::new, "metadata", InfoFinished::getMetadata, FILE_META_CODEC_NULLABLE))
-			.with(InfoAllFinished.class, object(InfoAllFinished::new, "metadataMap", InfoAllFinished::getMetadataMap, FILE_META_MAP_CODEC))
-			.with(PingFinished.class, object(PingFinished::new))
-			.with(ServerError.class, object(ServerError::new, "error", ServerError::getError, FsExceptionCodec.CODEC));
 
+	@CompiledJson(discriminator = "Type")
 	public abstract static class FsResponse {
 	}
 
+	@CompiledJson(name = "UploadAck")
 	public static final class UploadAck extends FsResponse {
 		@Override
 		public String toString() {
@@ -61,6 +40,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "UploadFinished")
 	public static final class UploadFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -68,6 +48,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "AppendAck")
 	public static final class AppendAck extends FsResponse {
 		@Override
 		public String toString() {
@@ -75,6 +56,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "AppendFinished")
 	public static final class AppendFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -82,6 +64,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "DownloadSize")
 	public static final class DownloadSize extends FsResponse {
 		private final long size;
 
@@ -99,6 +82,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "CopyFinished")
 	public static final class CopyFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -106,6 +90,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "CopyAllFinished")
 	public static final class CopyAllFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -113,6 +98,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "MoveFinished")
 	public static final class MoveFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -120,6 +106,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "MoveAllFinished")
 	public static final class MoveAllFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -127,6 +114,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "ListFinished")
 	public static final class ListFinished extends FsResponse {
 		private final Map<String, FileMetadata> files;
 
@@ -144,6 +132,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "DeleteFinished")
 	public static final class DeleteFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -151,6 +140,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "DeleteAllFinished")
 	public static final class DeleteAllFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -158,6 +148,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "ServerError")
 	public static final class ServerError extends FsResponse {
 		private final FsException error;
 
@@ -175,6 +166,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "InfoFinished")
 	public static final class InfoFinished extends FsResponse {
 		@Nullable
 		private final FileMetadata metadata;
@@ -194,6 +186,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "InfoAllFinished")
 	public static final class InfoAllFinished extends FsResponse {
 		private final Map<String, FileMetadata> metadataMap;
 
@@ -201,7 +194,6 @@ public final class RemoteFsResponses {
 			this.metadataMap = metadataMap;
 		}
 
-		@Nullable
 		public Map<String, FileMetadata> getMetadataMap() {
 			return metadataMap;
 		}
@@ -212,6 +204,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
+	@CompiledJson(name = "PingFinished")
 	public static final class PingFinished extends FsResponse {
 		@Override
 		public String toString() {

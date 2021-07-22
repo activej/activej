@@ -17,11 +17,23 @@
 package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 
-class Utils {
+public class Utils {
+
+	public static ByteBufsCodec<ByteBuf, ByteBuf> nullTerminated() {
+		return ByteBufsCodec
+				.ofDelimiter(
+						ByteBufsDecoder.ofNullTerminatedBytes(),
+						buf -> {
+							ByteBuf buf1 = ByteBufPool.ensureWriteRemaining(buf, 1);
+							buf1.put((byte) 0);
+							return buf1;
+						});
+	}
 
 	static ByteBufsDecoder<ByteBuf> decodeUntilTerminatorByte(byte terminator, int maxSize) {
 		return bufs -> {

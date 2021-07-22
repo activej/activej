@@ -16,57 +16,23 @@
 
 package io.activej.fs.tcp;
 
-import io.activej.codec.CodecSubtype;
-import io.activej.codec.StructuredCodec;
+import com.dslplatform.json.CompiledJson;
+import com.dslplatform.json.JsonAttribute;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.codec.StructuredCodecs.*;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
-import static io.activej.fs.util.Codecs.SOURCE_TO_TARGET_CODEC;
-import static io.activej.fs.util.Codecs.STRINGS_SET_CODEC;
 
 @SuppressWarnings("WeakerAccess")
 public final class RemoteFsCommands {
 
-	static final StructuredCodec<FsCommand> CODEC = CodecSubtype.<FsCommand>create()
-			.with(Upload.class, object(Upload::new,
-					"name", Upload::getName, STRING_CODEC,
-					"size", Upload::getSize, ofNullable(LONG_CODEC)))
-			.with(Append.class, object(Append::new,
-					"name", Append::getName, STRING_CODEC,
-					"offset", Append::getOffset, LONG_CODEC))
-			.with(Download.class, object(Download::new,
-					"name", Download::getName, STRING_CODEC,
-					"offset", Download::getOffset, LONG_CODEC,
-					"limit", Download::getLimit, LONG_CODEC))
-			.with(Copy.class, object(Copy::new,
-					"name", Copy::getName, STRING_CODEC,
-					"target", Copy::getTarget, STRING_CODEC))
-			.with(CopyAll.class, object(CopyAll::new,
-					"sourceToTarget", CopyAll::getSourceToTarget, SOURCE_TO_TARGET_CODEC))
-			.with(Move.class, object(Move::new,
-					"name", Move::getName, STRING_CODEC,
-					"target", Move::getTarget, STRING_CODEC))
-			.with(MoveAll.class, object(MoveAll::new,
-					"sourceToTarget", MoveAll::getSourceToTarget, SOURCE_TO_TARGET_CODEC))
-			.with(Delete.class, object(Delete::new,
-					"name", Delete::getName, STRING_CODEC))
-			.with(DeleteAll.class, object(DeleteAll::new,
-					"toDelete", DeleteAll::getFilesToDelete, STRINGS_SET_CODEC))
-			.with(List.class, object(List::new,
-					"glob", List::getGlob, STRING_CODEC))
-			.with(Info.class, object(Info::new,
-					"name", Info::getName, STRING_CODEC))
-			.with(InfoAll.class, object(InfoAll::new,
-					"names", InfoAll::getNames, STRINGS_SET_CODEC))
-			.with(Ping.class, object(Ping::new));
-
+	@CompiledJson(discriminator = "Type")
 	public abstract static class FsCommand {
 	}
 
+	@CompiledJson(name = "Upload")
 	public static final class Upload extends FsCommand {
 		private final String name;
 		@Nullable
@@ -91,6 +57,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "Append")
 	public static final class Append extends FsCommand {
 		private final String name;
 		private final long offset;
@@ -114,6 +81,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "Download")
 	public static final class Download extends FsCommand {
 		private final String name;
 		private final long offset;
@@ -143,6 +111,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "Copy")
 	public static final class Copy extends FsCommand {
 		private final String name;
 		private final String target;
@@ -166,6 +135,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "CopyAll")
 	public static final class CopyAll extends FsCommand {
 		private final Map<String, String> sourceToTarget;
 
@@ -183,6 +153,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "Move")
 	public static final class Move extends FsCommand {
 		private final String name;
 		private final String target;
@@ -206,6 +177,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "MoveAll")
 	public static final class MoveAll extends FsCommand {
 		private final Map<String, String> sourceToTarget;
 
@@ -223,6 +195,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "Delete")
 	public static final class Delete extends FsCommand {
 		private final String name;
 
@@ -240,13 +213,15 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "DeleteAll")
 	public static final class DeleteAll extends FsCommand {
 		private final Set<String> toDelete;
 
-		public DeleteAll(Set<String> toDelete) {
-			this.toDelete = toDelete;
+		public DeleteAll(Set<String> filesToDelete) {
+			this.toDelete = filesToDelete;
 		}
 
+		@JsonAttribute(name = "toDelete")
 		public Set<String> getFilesToDelete() {
 			return toDelete;
 		}
@@ -257,6 +232,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "List")
 	public static final class List extends FsCommand {
 		private final String glob;
 
@@ -274,6 +250,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "Info")
 	public static final class Info extends FsCommand {
 		private final String name;
 
@@ -291,6 +268,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "InfoAll")
 	public static final class InfoAll extends FsCommand {
 		private final Set<String> names;
 
@@ -308,6 +286,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
+	@CompiledJson(name = "Ping")
 	public static final class Ping extends FsCommand {
 		@Override
 		public String toString() {

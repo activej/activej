@@ -34,6 +34,7 @@ import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsIOException;
 import io.activej.fs.tcp.RemoteFsCommands.*;
 import io.activej.fs.tcp.RemoteFsResponses.*;
+import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
@@ -54,8 +55,9 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.csp.binary.Utils.nullTerminated;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
-import static io.activej.fs.util.RemoteFsUtils.nullTerminatedJson;
+import static io.activej.fs.util.RemoteFsUtils.fromJson;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.util.Collections.emptyMap;
 
@@ -73,7 +75,16 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectionTimeout", Duration.ZERO);
 
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
-			nullTerminatedJson(RemoteFsResponses.CODEC, RemoteFsCommands.CODEC);
+			nullTerminated()
+					.andThen(
+							value -> {
+								try {
+									return fromJson(FsResponse.class, value);
+								} finally {
+									value.recycle();
+								}
+							},
+							fsCommand -> RemoteFsUtils.toJson(FsCommand.class, fsCommand));
 
 	private final Eventloop eventloop;
 	private final InetSocketAddress address;

@@ -16,6 +16,7 @@
 
 package io.activej.fs;
 
+import com.dslplatform.json.CompiledJson;
 import io.activej.common.exception.InvalidSizeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +44,7 @@ public final class FileMetadata {
 		this.timestamp = timestamp;
 	}
 
+	@CompiledJson
 	public static FileMetadata of(long size, long timestamp) {
 		checkArgument(size >= 0, "size >= 0");
 		return new FileMetadata(size, timestamp);

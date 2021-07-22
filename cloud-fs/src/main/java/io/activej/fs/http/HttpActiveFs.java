@@ -25,7 +25,7 @@ import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.exception.FsExceptionCodec;
+import io.activej.fs.exception.FsException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -35,17 +35,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.codec.json.JsonUtils.fromJson;
-import static io.activej.codec.json.JsonUtils.toJsonBuf;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FsCommand.*;
-import static io.activej.fs.util.Codecs.*;
-import static io.activej.fs.util.RemoteFsUtils.decodeBody;
-import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
+import static io.activej.fs.util.MessageTypes.STRING_META_MAP_TYPE;
+import static io.activej.fs.util.RemoteFsUtils.*;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A client to the remote server with {@link ActiveFsServlet}.
@@ -118,7 +114,7 @@ public final class HttpActiveFs implements ActiveFs {
 								.build()))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(decodeBody(FILE_META_MAP_CODEC));
+				.then(decodeBody(STRING_META_MAP_TYPE));
 	}
 
 	@Override
@@ -131,7 +127,7 @@ public final class HttpActiveFs implements ActiveFs {
 								.build()))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(decodeBody(FILE_META_CODEC_NULLABLE));
+				.then(decodeBody(FileMetadata.class));
 	}
 
 	@Override
@@ -141,10 +137,10 @@ public final class HttpActiveFs implements ActiveFs {
 						url + UrlBuilder.relative()
 								.appendPathPart(INFO_ALL)
 								.build())
-						.withBody(toJsonBuf(STRINGS_SET_CODEC, names)))
+						.withBody(toJson(names)))
 				.then(HttpActiveFs::checkResponse)
 				.then(HttpMessage::loadBody)
-				.then(decodeBody(FILE_META_MAP_CODEC));
+				.then(decodeBody(STRING_META_MAP_TYPE));
 	}
 
 	@Override
@@ -181,7 +177,7 @@ public final class HttpActiveFs implements ActiveFs {
 						url + UrlBuilder.relative()
 								.appendPathPart(MOVE_ALL)
 								.build())
-						.withBody(toJsonBuf(SOURCE_TO_TARGET_CODEC, sourceToTarget)))
+						.withBody(toJson(sourceToTarget)))
 				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
@@ -209,7 +205,7 @@ public final class HttpActiveFs implements ActiveFs {
 						url + UrlBuilder.relative()
 								.appendPathPart(COPY_ALL)
 								.build())
-						.withBody(toJsonBuf(SOURCE_TO_TARGET_CODEC, sourceToTarget)))
+						.withBody(toJson(sourceToTarget)))
 				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
@@ -233,7 +229,7 @@ public final class HttpActiveFs implements ActiveFs {
 						url + UrlBuilder.relative()
 								.appendPathPart(DELETE_ALL)
 								.build())
-						.withBody(toJsonBuf(STRINGS_SET_CODEC, toDelete)))
+						.withBody(toJson(toDelete)))
 				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
@@ -247,7 +243,7 @@ public final class HttpActiveFs implements ActiveFs {
 				return response.loadBody()
 						.then(body -> {
 							try {
-								return Promise.ofException(fromJson(FsExceptionCodec.CODEC, body.getString(UTF_8)));
+								return Promise.ofException(fromJson(FsException.class, body));
 							} catch (MalformedDataException ignored) {
 								return Promise.ofException(HttpError.ofCode(500));
 							}
@@ -280,7 +276,7 @@ public final class HttpActiveFs implements ActiveFs {
 							channelPromise.trySet(consumer
 									.transformWith(transformer)
 									.withAcknowledgement(ack -> ack.both(response.loadBody()
-											.then(decodeBody(UploadAcknowledgement.CODEC))
+											.then(decodeBody(UploadAcknowledgement.class))
 											.then(HttpActiveFs::failOnException)
 											.whenException(e -> {
 												channelPromise.trySetException(e);
