@@ -16,7 +16,7 @@
 
 package io.activej.aggregation.fieldtype;
 
-import io.activej.codec.StructuredCodec;
+import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.serializer.SerializerDef;
@@ -32,14 +32,14 @@ public class FieldType<T> {
 	private final Type dataType;
 	private final SerializerDef serializer;
 	@Nullable
-	private final StructuredCodec<?> internalCodec;
-	private final StructuredCodec<T> codec;
+	private final JsonCodec<?> internalCodec;
+	private final JsonCodec<T> codec;
 
-	protected FieldType(Class<T> dataType, SerializerDef serializer, StructuredCodec<T> codec) {
+	protected FieldType(Class<T> dataType, SerializerDef serializer, JsonCodec<T> codec) {
 		this(dataType, dataType, serializer, codec, codec);
 	}
 
-	protected FieldType(Class<?> internalDataType, Type dataType, SerializerDef serializer, StructuredCodec<T> codec, @Nullable StructuredCodec<?> internalCodec) {
+	protected FieldType(Class<?> internalDataType, Type dataType, SerializerDef serializer, JsonCodec<T> codec, @Nullable JsonCodec<?> internalCodec) {
 		this.internalDataType = internalDataType;
 		this.dataType = dataType;
 		this.serializer = serializer;
@@ -59,17 +59,17 @@ public class FieldType<T> {
 		return serializer;
 	}
 
-	public StructuredCodec<T> getCodec() {
-		return codec;
+	public Expression toValue(Expression internalValue) {
+		return internalValue;
 	}
 
 	@Nullable
-	public StructuredCodec<?> getInternalCodec() {
+	public JsonCodec<?> getInternalCodec() {
 		return internalCodec;
 	}
 
-	public Expression toValue(Expression internalValue) {
-		return internalValue;
+	public JsonCodec<T> getCodec() {
+		return codec;
 	}
 
 	@SuppressWarnings("unchecked")

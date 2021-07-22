@@ -17,13 +17,11 @@
 package io.activej.aggregation.util;
 
 import io.activej.aggregation.Aggregate;
-import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.annotation.Key;
 import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.codec.StructuredCodec;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -40,7 +38,6 @@ import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.activej.codec.StructuredCodecs.ofTupleArray;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.concat;
@@ -322,17 +319,6 @@ public class Utils {
 		}
 		checkArgument(!measureFields.isEmpty(), "Missing @Measure(s) annotations in %s", inputClass);
 		return measureFields;
-	}
-
-	public static StructuredCodec<PrimaryKey> getPrimaryKeyCodec(AggregationStructure aggregation) {
-		StructuredCodec<?>[] keyCodec = new StructuredCodec<?>[aggregation.getKeys().size()];
-		for (int i = 0; i < aggregation.getKeys().size(); i++) {
-			String key = aggregation.getKeys().get(i);
-			FieldType keyType = aggregation.getKeyTypes().get(key);
-			keyCodec[i] = keyType.getInternalCodec();
-		}
-		return ofTupleArray(keyCodec)
-				.transform(PrimaryKey::ofArray, PrimaryKey::getArray);
 	}
 
 	public static <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> wrapException(Function<Throwable, Throwable> wrapFn) {

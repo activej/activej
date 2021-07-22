@@ -16,29 +16,27 @@
 
 package io.activej.aggregation.fieldtype;
 
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.StructuredCodecs;
-import io.activej.codec.StructuredInput;
-import io.activej.codec.StructuredOutput;
+import io.activej.aggregation.measure.HyperLogLog;
+import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.util.Primitives;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.reflection.RecursiveType;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.impl.*;
 
 import java.lang.reflect.Type;
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.Set;
 
-import static io.activej.codec.StructuredCodecs.*;
+import static io.activej.aggregation.fieldtype.JsonCodecs.*;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.StringFormat.UTF8;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.util.Collections.singletonList;
 
+@SuppressWarnings("ConstantConditions")
 public final class FieldTypes {
 
 	public static FieldType<Byte> ofByte() {
@@ -60,7 +58,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<Integer> ofInt() {
-		return new FieldType<>(int.class, new SerializerDefInt(false, true), INT_CODEC);
+		return new FieldType<>(int.class, new SerializerDefInt(false, true), INTEGER_CODEC);
 	}
 
 	public static FieldType<Long> ofLong() {
@@ -83,6 +81,24 @@ public final class FieldTypes {
 		return new FieldType<>(boolean.class, new SerializerDefBoolean(false), BOOLEAN_CODEC);
 	}
 
+	public static FieldType<Integer> ofHyperLogLog() {
+		return new FieldType<>(HyperLogLog.class, int.class, serializerDefHyperLogLog(), INTEGER_CODEC, null);
+	}
+
+	private static SerializerDef serializerDefHyperLogLog() {
+		SerializerDefClass serializer = SerializerDefClass.of(HyperLogLog.class);
+		try {
+			serializer.addGetter(HyperLogLog.class.getMethod("getRegisters"),
+					new SerializerDefArray(new SerializerDefByte(false), byte[].class), -1, -1);
+			serializer.setConstructor(HyperLogLog.class.getConstructor(byte[].class),
+					singletonList("registers"));
+		} catch (NoSuchMethodException ignored) {
+			throw new RuntimeException("Unable to construct SerializerDef for HyperLogLog");
+		}
+		return serializer;
+	}
+
+
 	public static <T> FieldType<Set<T>> ofSet(FieldType<T> fieldType) {
 		SerializerDef itemSerializer = fieldType.getSerializer();
 		if (itemSerializer instanceof SerializerDefPrimitive) {
@@ -93,12 +109,12 @@ public final class FieldTypes {
 				Primitives.wrap((Class<?>) fieldType.getDataType()) :
 				fieldType.getDataType();
 		Type dataType = RecursiveType.of(Set.class, RecursiveType.of(wrappedNestedType)).getType();
-		StructuredCodec<Set<T>> codec = StructuredCodecs.ofSet(fieldType.getCodec());
+		JsonCodec<Set<T>> codec = JsonCodecs.ofSet(fieldType.getCodec());
 		return new FieldType<>(Set.class, dataType, serializer, codec, codec);
 	}
 
 	public static <E extends Enum<E>> FieldType<E> ofEnum(Class<E> enumClass) {
-		return new FieldType<>(enumClass, new SerializerDefEnum(enumClass), StructuredCodecs.ofEnum(enumClass));
+		return new FieldType<>(enumClass, new SerializerDefEnum(enumClass), JsonCodecs.ofEnum(enumClass));
 	}
 
 	public static FieldType<String> ofString() {
@@ -130,7 +146,7 @@ public final class FieldTypes {
 		}
 
 		FieldTypeDate(LocalDate startDate) {
-			super(int.class, LocalDate.class, new SerializerDefInt(false, true), LOCAL_DATE_CODEC, INT_CODEC);
+			super(int.class, LocalDate.class, new SerializerDefInt(false, true), LOCAL_DATE_CODEC, INTEGER_CODEC);
 			this.startDate = startDate;
 		}
 
@@ -150,21 +166,4 @@ public final class FieldTypes {
 		}
 
 	}
-
-	public static final StructuredCodec<LocalDate> LOCAL_DATE_CODEC = new StructuredCodec<LocalDate>() {
-		@Override
-		public void encode(StructuredOutput out, LocalDate value) {
-			out.writeString(value.toString());
-		}
-
-		@Override
-		public LocalDate decode(StructuredInput in) throws MalformedDataException {
-			try {
-				return LocalDate.parse(in.readString());
-			} catch (DateTimeException e) {
-				throw new MalformedDataException(e);
-			}
-		}
-	};
-
 }

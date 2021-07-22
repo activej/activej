@@ -16,61 +16,78 @@
 
 package io.activej.aggregation.ot;
 
+import com.dslplatform.json.JsonReader;
+import com.dslplatform.json.JsonWriter;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.AggregationChunkCodec;
 import io.activej.aggregation.PrimaryKey;
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.StructuredInput;
-import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.MalformedDataException;
+import io.activej.aggregation.PrimaryKeyCodec;
+import io.activej.aggregation.util.JsonCodec;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
-import static io.activej.aggregation.util.Utils.getPrimaryKeyCodec;
-import static io.activej.codec.StructuredCodecs.ofSet;
-import static io.activej.codec.json.JsonUtils.oneline;
+import static com.dslplatform.json.JsonWriter.*;
+import static io.activej.ot.repository.JsonIndentUtils.oneline;
 
-public class AggregationDiffCodec implements StructuredCodec<AggregationDiff> {
+public class AggregationDiffCodec implements JsonCodec<AggregationDiff> {
 	public static final String ADDED = "added";
 	public static final String REMOVED = "removed";
 
-	private final StructuredCodec<Set<AggregationChunk>> aggregationChunksCodec;
+	private final JsonCodec<Set<AggregationChunk>> aggregationChunksCodec;
 
-	private AggregationDiffCodec(AggregationChunkCodec aggregationChunksCodec) {
-		this.aggregationChunksCodec = ofSet(oneline(aggregationChunksCodec));
+	private AggregationDiffCodec(AggregationChunkCodec aggregationChunkCodec) {
+		this.aggregationChunksCodec = JsonCodec.of(
+				reader -> ((JsonReader<?>) reader).readSet(aggregationChunkCodec),
+				(writer, value) -> writer.serialize(value, oneline(aggregationChunkCodec))
+		);
 	}
 
 	public static AggregationDiffCodec create(AggregationStructure structure) {
 		Set<String> allowedMeasures = structure.getMeasureTypes().keySet();
-		StructuredCodec<PrimaryKey> primaryKeyCodec = getPrimaryKeyCodec(structure);
+		JsonCodec<PrimaryKey> primaryKeyCodec = PrimaryKeyCodec.create(structure);
 		return new AggregationDiffCodec(AggregationChunkCodec.create(structure.getChunkIdCodec(), primaryKeyCodec, allowedMeasures));
 	}
 
 	@Override
-	public void encode(StructuredOutput out, AggregationDiff diff) {
-		out.writeObject(() -> {
-			out.writeKey(ADDED);
-			aggregationChunksCodec.encode(out, diff.getAddedChunks());
-			if (!diff.getRemovedChunks().isEmpty()) {
-				out.writeKey(REMOVED);
-				aggregationChunksCodec.encode(out, diff.getRemovedChunks());
-			}
-		});
+	public void write(@NotNull JsonWriter writer, AggregationDiff diff) {
+		assert diff != null;
+		writer.writeByte(OBJECT_START);
+		writer.writeString(ADDED);
+		writer.writeByte(SEMI);
+		aggregationChunksCodec.write(writer, diff.getAddedChunks());
+		if (!diff.getRemovedChunks().isEmpty()) {
+			writer.writeByte(COMMA);
+			writer.writeString(REMOVED);
+			writer.writeByte(SEMI);
+			aggregationChunksCodec.write(writer, diff.getRemovedChunks());
+		}
+		writer.writeByte(OBJECT_END);
 	}
 
 	@Override
-	public AggregationDiff decode(StructuredInput in) throws MalformedDataException {
-		return in.readObject($ -> {
-			in.readKey(ADDED);
-			Set<AggregationChunk> added = aggregationChunksCodec.decode(in);
-			Set<AggregationChunk> removed = Collections.emptySet();
-			if (in.hasNext()) {
-				in.readKey(REMOVED);
-				removed = aggregationChunksCodec.decode(in);
-			}
-			return AggregationDiff.of(added, removed);
-		});
+	public AggregationDiff read(@NotNull JsonReader reader) throws IOException {
+		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
+		reader.getNextToken();
+		String key = reader.readKey();
+		if (!key.equals(ADDED)) throw reader.newParseError("Expected key '" + ADDED + '\'');
+		Set<AggregationChunk> added = aggregationChunksCodec.read(reader);
+		Set<AggregationChunk> removed = Collections.emptySet();
+		assert added != null;
+		byte next = reader.getNextToken();
+		if (next == COMMA) {
+			reader.getNextToken();
+			String removedKey = reader.readKey();
+			if (!removedKey.equals(REMOVED))
+				throw reader.newParseError("Expected key '" + REMOVED + '\'');
+			removed = aggregationChunksCodec.read(reader);
+			assert removed != null;
+			reader.endObject();
+		} else if (next != OBJECT_END) {
+			throw reader.newParseError("Expected '}'");
+		}
+		return AggregationDiff.of(added, removed);
 	}
-
 }

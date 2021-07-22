@@ -16,9 +16,6 @@
 
 package io.activej.cube.http;
 
-import io.activej.aggregation.AggregationPredicate;
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.registry.CodecFactory;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeQuery;
@@ -40,8 +37,6 @@ import java.util.Map;
 
 import static io.activej.aggregation.util.Utils.wrapException;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.codec.json.JsonUtils.fromJson;
-import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -50,22 +45,20 @@ public final class CubeHttpClient implements ICube {
 
 	private final String url;
 	private final IAsyncHttpClient httpClient;
-	private final CodecFactory mapping;
-	private StructuredCodec<QueryResult> queryResultCodec;
-	private StructuredCodec<AggregationPredicate> aggregationPredicateCodec;
+	private QueryResultCodec queryResultCodec;
+	private AggregationPredicateCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
 	private final Map<String, Type> measureTypes = new LinkedHashMap<>();
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private CubeHttpClient(IAsyncHttpClient httpClient, String url, CodecFactory mapping) {
+	private CubeHttpClient(IAsyncHttpClient httpClient, String url) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
-		this.mapping = mapping;
 	}
 
 	public static CubeHttpClient create(AsyncHttpClient httpClient, String cubeServletUrl) {
-		return new CubeHttpClient(httpClient, cubeServletUrl, CUBE_TYPES);
+		return new CubeHttpClient(httpClient, cubeServletUrl);
 	}
 
 	public static CubeHttpClient create(AsyncHttpClient httpClient, URI cubeServletUrl) {
@@ -87,16 +80,16 @@ public final class CubeHttpClient implements ICube {
 		return this;
 	}
 
-	private StructuredCodec<AggregationPredicate> getAggregationPredicateCodec() {
+	private AggregationPredicateCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateCodec.create(mapping, attributeTypes, measureTypes);
+			aggregationPredicateCodec = AggregationPredicateCodec.create(attributeTypes, measureTypes);
 		}
 		return aggregationPredicateCodec;
 	}
 
-	private StructuredCodec<QueryResult> getQueryResultCodec() {
+	private QueryResultCodec getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultCodec.create(classLoader, mapping, attributeTypes, measureTypes);
+			queryResultCodec = QueryResultCodec.create(classLoader, attributeTypes, measureTypes);
 		}
 		return queryResultCodec;
 	}
@@ -119,11 +112,10 @@ public final class CubeHttpClient implements ICube {
 						.thenEx(wrapException(e -> new CubeException("HTTP request failed", e)))
 						.then(body -> {
 							try {
-								String httpResponse = body.getString(UTF_8);
 								if (response.getCode() != 200) {
-									return Promise.ofException(new CubeException("Cube HTTP query failed. Response code: " + response.getCode() + " Body: " + httpResponse));
+									return Promise.ofException(new CubeException("CubeHTTP query failed. Response code: " + response.getCode() + " Body: " + body.getString(UTF_8)));
 								}
-								QueryResult result = fromJson(getQueryResultCodec(), httpResponse);
+								QueryResult result = fromJson(getQueryResultCodec(), body);
 								return Promise.of(result);
 							} catch (MalformedDataException e) {
 								return Promise.ofException(new CubeException("Cube HTTP query failed. Invalid data received", e));

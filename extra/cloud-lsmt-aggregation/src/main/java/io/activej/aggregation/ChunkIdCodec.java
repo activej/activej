@@ -16,21 +16,19 @@
 
 package io.activej.aggregation;
 
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.StructuredInput;
-import io.activej.codec.StructuredOutput;
+import com.dslplatform.json.JsonReader;
+import com.dslplatform.json.JsonWriter;
+import com.dslplatform.json.NumberConverter;
+import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.exception.MalformedDataException;
+import org.jetbrains.annotations.NotNull;
 
-public interface ChunkIdCodec<C> extends StructuredCodec<C> {
+import java.io.IOException;
+
+public interface ChunkIdCodec<C> extends JsonCodec<C> {
 	String toFileName(C chunkId);
 
 	C fromFileName(String chunkFileName) throws MalformedDataException;
-
-	@Override
-	void encode(StructuredOutput out, C value);
-
-	@Override
-	C decode(StructuredInput in) throws MalformedDataException;
 
 	static ChunkIdCodec<Long> ofLong() {
 		return new ChunkIdCodec<Long>() {
@@ -43,19 +41,19 @@ public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 			public Long fromFileName(String chunkFileName) throws MalformedDataException {
 				try {
 					return Long.parseLong(chunkFileName);
-				} catch (NumberFormatException e){
+				} catch (NumberFormatException e) {
 					throw new MalformedDataException(e);
 				}
 			}
 
 			@Override
-			public void encode(StructuredOutput out, Long value) {
-				out.writeLong(value);
+			public Long read(@NotNull JsonReader reader) throws IOException {
+				return NumberConverter.deserializeLong(reader);
 			}
 
 			@Override
-			public Long decode(StructuredInput in) throws MalformedDataException {
-				return in.readLong();
+			public void write(@NotNull JsonWriter writer, Long value) {
+				NumberConverter.serialize(value, writer);
 			}
 		};
 	}
@@ -73,13 +71,13 @@ public interface ChunkIdCodec<C> extends StructuredCodec<C> {
 			}
 
 			@Override
-			public void encode(StructuredOutput out, String value) {
-				out.writeString(value);
+			public String read(@NotNull JsonReader reader) throws IOException {
+				return reader.readString();
 			}
 
 			@Override
-			public String decode(StructuredInput in) throws MalformedDataException {
-				return in.readString();
+			public void write(@NotNull JsonWriter writer, String value) {
+				writer.writeString(value);
 			}
 		};
 	}

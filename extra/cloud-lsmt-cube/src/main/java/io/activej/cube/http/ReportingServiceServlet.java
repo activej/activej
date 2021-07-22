@@ -16,15 +16,12 @@
 
 package io.activej.cube.http;
 
-import io.activej.aggregation.AggregationPredicate;
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.registry.CodecFactory;
+import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.time.Stopwatch;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
-import io.activej.cube.QueryResult;
 import io.activej.cube.exception.QueryException;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.*;
@@ -38,8 +35,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.codec.json.JsonUtils.fromJson;
-import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
@@ -51,24 +46,18 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ReportingServiceServlet.class);
 
 	private final ICube cube;
-	private final CodecFactory mapping;
-	private StructuredCodec<QueryResult> queryResultCodec;
-	private StructuredCodec<AggregationPredicate> aggregationPredicateCodec;
+	private QueryResultCodec queryResultCodec;
+	private AggregationPredicateCodec aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private ReportingServiceServlet(Eventloop eventloop, ICube cube, CodecFactory mapping) {
+	private ReportingServiceServlet(Eventloop eventloop, ICube cube) {
 		super(eventloop);
 		this.cube = cube;
-		this.mapping = mapping;
-	}
-
-	public static ReportingServiceServlet create(Eventloop eventloop, ICube cube, CodecFactory mapping) {
-		return new ReportingServiceServlet(eventloop, cube, mapping);
 	}
 
 	public static ReportingServiceServlet create(Eventloop eventloop, ICube cube) {
-		return new ReportingServiceServlet(eventloop, cube, CUBE_TYPES);
+		return new ReportingServiceServlet(eventloop, cube);
 	}
 
 	public static RoutingServlet createRootServlet(Eventloop eventloop, ICube cube) {
@@ -86,16 +75,16 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 		return this;
 	}
 
-	private StructuredCodec<AggregationPredicate> getAggregationPredicateCodec() {
+	private AggregationPredicateCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateCodec.create(mapping, cube.getAttributeTypes(), cube.getMeasureTypes());
+			aggregationPredicateCodec = AggregationPredicateCodec.create(cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return aggregationPredicateCodec;
 	}
 
-	private StructuredCodec<QueryResult> getQueryResultCodec() {
+	private QueryResultCodec getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultCodec.create(classLoader, mapping, cube.getAttributeTypes(), cube.getMeasureTypes());
+			queryResultCodec = QueryResultCodec.create(classLoader, cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return queryResultCodec;
 	}
@@ -110,8 +99,8 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 			return cube.query(cubeQuery)
 					.map(queryResult -> {
 						Stopwatch resultProcessingStopwatch = Stopwatch.createStarted();
-						String json = toJson(getQueryResultCodec(), queryResult);
-						HttpResponse httpResponse = createResponse(json);
+						ByteBuf jsonBuf = toJsonBuf(getQueryResultCodec(), queryResult);
+						HttpResponse httpResponse = createResponse(jsonBuf);
 						logger.info("Processed request {} ({}) [totalTime={}, jsonConstruction={}]", httpRequest,
 								cubeQuery, totalTimeStopwatch, resultProcessingStopwatch);
 						return httpResponse;
@@ -125,10 +114,10 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 		}
 	}
 
-	private static HttpResponse createResponse(String body) {
+	private static HttpResponse createResponse(ByteBuf body) {
 		HttpResponse response = HttpResponse.ok200();
 		response.addHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.JSON, StandardCharsets.UTF_8)));
-		response.setBody(wrapUtf8(body));
+		response.setBody(body);
 		response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
 		return response;
 	}

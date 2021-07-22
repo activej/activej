@@ -16,47 +16,22 @@
 
 package io.activej.aggregation.measure;
 
-import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.fieldtype.FieldTypes;
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.serializer.SerializerDef;
-import io.activej.serializer.impl.SerializerDefArray;
-import io.activej.serializer.impl.SerializerDefByte;
-import io.activej.serializer.impl.SerializerDefClass;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import static io.activej.codec.StructuredCodecs.INT_CODEC;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.isWrapperType;
-import static java.util.Collections.singletonList;
 import static org.objectweb.asm.Type.*;
 
 public final class MeasureHyperLogLog extends Measure {
 	private final int registers;
 
-	private static final class FieldTypeHyperLogLog extends FieldType<Integer> {
-		public FieldTypeHyperLogLog() {
-			super(HyperLogLog.class, int.class, serializerDef(), INT_CODEC, null);
-		}
-
-		private static SerializerDef serializerDef() {
-			SerializerDefClass serializer = SerializerDefClass.of(HyperLogLog.class);
-			try {
-				serializer.addGetter(HyperLogLog.class.getMethod("getRegisters"),
-						new SerializerDefArray(new SerializerDefByte(false), byte[].class), -1, -1);
-				serializer.setConstructor(HyperLogLog.class.getConstructor(byte[].class),
-						singletonList("registers"));
-			} catch (NoSuchMethodException ignored) {
-				throw new RuntimeException("Unable to construct SerializerDef for HyperLogLog");
-			}
-			return serializer;
-		}
-	}
-
 	MeasureHyperLogLog(int registers) {
-		super(new FieldTypeHyperLogLog());
+		super(FieldTypes.ofHyperLogLog());
 		this.registers = registers;
 	}
 

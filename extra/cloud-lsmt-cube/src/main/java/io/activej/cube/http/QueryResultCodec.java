@@ -16,25 +16,29 @@
 
 package io.activej.cube.http;
 
-import io.activej.codec.*;
-import io.activej.codec.registry.CodecFactory;
+import com.dslplatform.json.JsonReader;
+import com.dslplatform.json.JsonReader.ReadObject;
+import com.dslplatform.json.JsonWriter;
+import com.dslplatform.json.NumberConverter;
+import com.dslplatform.json.StringConverter;
+import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.reflection.RecursiveType;
 import io.activej.cube.QueryResult;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.common.Utils.*;
 import static io.activej.cube.ReportType.*;
+import static io.activej.cube.http.Utils.CUBE_DSL_JSON;
 
-final class QueryResultCodec implements StructuredCodec<QueryResult> {
+final class QueryResultCodec implements JsonCodec<QueryResult> {
 	private static final String MEASURES_FIELD = "measures";
 	private static final String ATTRIBUTES_FIELD = "attributes";
 	private static final String FILTER_ATTRIBUTES_FIELD = "filterAttributes";
@@ -44,18 +48,16 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 	private static final String SORTED_BY_FIELD = "sortedBy";
 	private static final String METADATA_FIELD = "metadata";
 
-	private final Map<String, StructuredCodec<?>> attributeCodecs;
-	private final Map<String, StructuredCodec<?>> measureCodecs;
+	private final Map<String, JsonCodec<Object>> attributeCodecs;
+	private final Map<String, JsonCodec<Object>> measureCodecs;
 
 	private final Map<String, Class<?>> attributeTypes;
 	private final Map<String, Class<?>> measureTypes;
 
-	private static final StructuredCodec<List<String>> STRING_CODEC = StructuredCodecs.STRING_CODEC.ofList();
-
 	private final DefiningClassLoader classLoader;
 
 	public QueryResultCodec(DefiningClassLoader classLoader,
-			Map<String, StructuredCodec<?>> attributeCodecs, Map<String, StructuredCodec<?>> measureCodecs, Map<String, Class<?>> attributeTypes, Map<String, Class<?>> measureTypes) {
+			Map<String, JsonCodec<Object>> attributeCodecs, Map<String, JsonCodec<Object>> measureCodecs, Map<String, Class<?>> attributeTypes, Map<String, Class<?>> measureTypes) {
 		this.classLoader = classLoader;
 		this.attributeCodecs = attributeCodecs;
 		this.measureCodecs = measureCodecs;
@@ -63,206 +65,295 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 		this.measureTypes = measureTypes;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static QueryResultCodec create(DefiningClassLoader classLoader,
-			CodecFactory mapping, Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
-		Map<String, StructuredCodec<?>> attributeCodecs = new LinkedHashMap<>();
-		Map<String, StructuredCodec<?>> measureCodecs = new LinkedHashMap<>();
+			Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
+		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
+		Map<String, JsonCodec<Object>> measureCodecs = new LinkedHashMap<>();
 		Map<String, Class<?>> attributeRawTypes = new LinkedHashMap<>();
 		Map<String, Class<?>> measureRawTypes = new LinkedHashMap<>();
 		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
 			RecursiveType token = RecursiveType.of(entry.getValue());
-			attributeCodecs.put(entry.getKey(), mapping.get(token.getType()).nullable());
+			ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(token.getType());
+			if (readObject == null) throw new IllegalArgumentException("Cannot serialize " + token.getType());
+			WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(token.getType());
+			if (writeObject == null) throw new IllegalArgumentException("Cannot deserialize " + token.getType());
+			attributeCodecs.put(entry.getKey(), JsonCodec.of(readObject, writeObject));
 			attributeRawTypes.put(entry.getKey(), token.getRawType());
 		}
 		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
 			RecursiveType token = RecursiveType.of(entry.getValue());
-			measureCodecs.put(entry.getKey(), mapping.get(token.getType()));
+			ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(token.getType());
+			if (readObject == null) throw new IllegalArgumentException("Cannot serialize " + token.getType());
+			WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(token.getType());
+			if (writeObject == null) throw new IllegalArgumentException("Cannot deserialize " + token.getType());
+			measureCodecs.put(entry.getKey(), JsonCodec.of(readObject, writeObject));
 			measureRawTypes.put(entry.getKey(), token.getRawType());
 		}
 		return new QueryResultCodec(classLoader, attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
 	}
 
+
 	@Override
-	public QueryResult decode(StructuredInput reader) throws MalformedDataException {
-		return reader.readObject($1 -> {
-			RecordScheme recordScheme = null;
-			List<String> attributes = new ArrayList<>();
-			List<String> measures = new ArrayList<>();
-			List<String> sortedBy = null;
-			List<Record> records = null;
-			Record totals = null;
-			int totalCount = 0;
-			Map<String, Object> filterAttributes = null;
+	public QueryResult read(@NotNull JsonReader reader) throws IOException {
+		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
 
-			while (reader.hasNext()) {
-				String field = reader.readKey();
-				switch (field) {
-					case METADATA_FIELD:
-						reader.readObject(() -> {
-							reader.readKey(ATTRIBUTES_FIELD);
-							attributes.addAll(STRING_CODEC.decode(reader));
+		RecordScheme recordScheme = null;
+		List<String> attributes = new ArrayList<>();
+		List<String> measures = new ArrayList<>();
+		List<String> sortedBy = null;
+		List<Record> records = null;
+		Record totals = null;
+		int totalCount = 0;
+		Map<String, Object> filterAttributes = null;
 
-							reader.readKey(MEASURES_FIELD);
-							measures.addAll(STRING_CODEC.decode(reader));
-						});
-						recordScheme = recordScheme(attributes, measures);
-						break;
-					case SORTED_BY_FIELD:
-						sortedBy = STRING_CODEC.decode(reader);
-						break;
-					case RECORDS_FIELD:
-						records = readRecords(reader, recordScheme);
-						break;
-					case COUNT_FIELD:
-						totalCount = reader.readInt();
-						break;
-					case FILTER_ATTRIBUTES_FIELD:
-						filterAttributes = readFilterAttributes(reader);
-						break;
-					case TOTALS_FIELD:
-						totals = readTotals(reader, recordScheme);
-						break;
-					default:
-						throw new MalformedDataException("Unknown field: " + field);
+		while (true) {
+			reader.getNextToken();
+			String field = reader.readKey();
+			switch (field) {
+				case METADATA_FIELD:
+					if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
+					reader.getNextToken();
+					String attrFieldsKey = reader.readKey();
+					if (!attrFieldsKey.equals(ATTRIBUTES_FIELD)) {
+						throw reader.newParseError("Key " + ATTRIBUTES_FIELD + " is expected");
+					}
+					attributes.addAll(readStrings(reader));
+					reader.comma();
+					reader.getNextToken();
+
+					String measuresField = reader.readKey();
+					if (!measuresField.equals(MEASURES_FIELD)) {
+						throw reader.newParseError("Key " + MEASURES_FIELD + " is expected");
+					}
+					measures.addAll(readStrings(reader));
+					reader.endObject();
+					recordScheme = recordScheme(attributes, measures);
+					break;
+				case SORTED_BY_FIELD:
+					sortedBy = readStrings(reader);
+					break;
+				case RECORDS_FIELD:
+					records = readRecords(reader, recordScheme);
+					break;
+				case COUNT_FIELD:
+					totalCount = NumberConverter.deserializeInt(reader);
+					break;
+				case FILTER_ATTRIBUTES_FIELD:
+					filterAttributes = readFilterAttributes(reader);
+					break;
+				case TOTALS_FIELD:
+					totals = readTotals(reader, recordScheme);
+					break;
+				default:
+					throw reader.newParseError("Unknown field: " + field);
+			}
+			byte nextToken = reader.getNextToken();
+			if (nextToken == OBJECT_END) {
+				break;
+			} else if (nextToken != COMMA) {
+				throw reader.newParseError("Unknown symbol");
+			}
+		}
+
+		if (recordScheme == null) {
+			throw reader.newParseError("Missing '" + METADATA_FIELD + "' field");
+		}
+
+		return QueryResult.create(recordScheme, attributes, measures,
+				nullToEmpty(sortedBy),
+				nullToEmpty(records),
+				nullToDefault(totals, recordScheme.record()),
+				totalCount,
+				nullToEmpty(filterAttributes),
+				totals != null ?
+						DATA_WITH_TOTALS :
+						records != null ?
+								DATA :
+								METADATA);
+
+	}
+
+	private List<Record> readRecords(JsonReader<?> reader, RecordScheme recordScheme) throws IOException {
+		JsonCodec<?>[] fieldJsonCodecs = getJsonCodecs(recordScheme);
+		int size = fieldJsonCodecs.length;
+		ReadObject<Record> recordDecoder = in -> {
+			if (reader.last() != ARRAY_START) throw reader.newParseError("Expected '{'");
+			reader.getNextToken();
+			Record record = recordScheme.record();
+			for (int i = 0; i < size; i++) {
+				Object fieldValue = fieldJsonCodecs[i].read(reader);
+				reader.getNextToken();
+				record.set(i, fieldValue);
+				if (i != size - 1) {
+					if (reader.last() != COMMA) throw reader.newParseError("Expected ','");
+					reader.getNextToken();
 				}
 			}
-
-			if (recordScheme == null){
-				throw new MalformedDataException("Missing '" + METADATA_FIELD + "' field");
-			}
-
-			return QueryResult.create(recordScheme, attributes, measures,
-					nullToEmpty(sortedBy),
-					nullToEmpty(records),
-					nullToDefault(totals, recordScheme.record()),
-					totalCount,
-					nullToEmpty(filterAttributes),
-					totals != null ?
-							DATA_WITH_TOTALS :
-							records != null ?
-									DATA :
-									METADATA);
-		});
-	}
-
-	private List<Record> readRecords(StructuredInput reader, RecordScheme recordScheme) throws MalformedDataException {
-		StructuredCodec<?>[] fieldStructuredCodecs = getStructuredCodecs(recordScheme);
-		StructuredDecoder<Record> recordDecoder = in -> {
-			Record record = recordScheme.record();
-			for (int i = 0; i < fieldStructuredCodecs.length; i++) {
-				Object fieldValue = fieldStructuredCodecs[i].decode(in);
-				record.set(i, fieldValue);
-			}
+			reader.checkArrayEnd();
 			return record;
 		};
-		return reader.readTuple($1 -> {
-			List<Record> records = new ArrayList<>();
-			while (reader.hasNext()) {
-				records.add(reader.readTuple(recordDecoder));
-			}
-			return records;
-		});
+		return reader.readCollection(recordDecoder);
 	}
 
-	private Record readTotals(StructuredInput reader, RecordScheme recordScheme) throws MalformedDataException {
-		return reader.readTuple($ -> {
-			Record totals = recordScheme.record();
-			for (int i = 0; i < recordScheme.getFields().size(); i++) {
-				String field = recordScheme.getField(i);
-				StructuredCodec<?> fieldStructuredCodec = measureCodecs.get(field);
-				if (fieldStructuredCodec == null)
-					continue;
-				Object fieldValue = fieldStructuredCodec.decode(reader);
-				totals.set(i, fieldValue);
+	private Record readTotals(JsonReader<?> reader, RecordScheme recordScheme) throws IOException {
+		if (reader.last() != ARRAY_START) throw reader.newParseError("Expected '['");
+
+		boolean first = true;
+		Record totals = recordScheme.record();
+		for (int i = 0; i < recordScheme.getFields().size(); i++) {
+			String field = recordScheme.getField(i);
+			ReadObject<Object> codec = measureCodecs.get(field);
+			if (codec == null)
+				continue;
+			if (!first) {
+				reader.comma();
 			}
-			return totals;
-		});
+			first = false;
+			reader.getNextToken();
+			Object fieldValue = codec.read(reader);
+			totals.set(i, fieldValue);
+		}
+		reader.endArray();
+		return totals;
 	}
 
-	private Map<String, Object> readFilterAttributes(StructuredInput reader) throws MalformedDataException {
-		return reader.readObject($ -> {
-			Map<String, Object> result = new LinkedHashMap<>();
-			while (reader.hasNext()) {
-				String attribute = reader.readKey();
-				Object value = attributeCodecs.get(attribute).decode(reader);
-				result.put(attribute, value);
-			}
-			return result;
-		});
+	private Map<String, Object> readFilterAttributes(JsonReader<?> reader) throws IOException {
+		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
+		if (reader.getNextToken() == OBJECT_END) return Collections.emptyMap();
+		Map<String, Object> result = new LinkedHashMap<>();
+		String key = reader.readKey();
+		Object value = attributeCodecs.get(key).read(reader);
+		result.put(key, value);
+		while (reader.getNextToken() == ',') {
+			reader.getNextToken();
+			key = reader.readKey();
+			reader.getNextToken();
+			value = attributeCodecs.get(key).read(reader);
+			result.put(key, value);
+		}
+		reader.checkObjectEnd();
+		return result;
+	}
+
+	private static List<String> readStrings(JsonReader<?> reader) throws IOException {
+		List<String> strings = reader.readCollection(JsonReader::readString);
+		if (strings == null) {
+			throw reader.newParseError("List cannot be null");
+		}
+		return strings;
 	}
 
 	@Override
-	public void encode(StructuredOutput writer, QueryResult result) {
-		writer.writeObject(() -> {
-			writer.writeKey(METADATA_FIELD);
-			writer.writeObject(() -> {
-				writer.writeKey(ATTRIBUTES_FIELD);
-				STRING_CODEC.encode(writer, result.getAttributes());
+	public void write(@NotNull JsonWriter writer, QueryResult result) {
+		if (result == null) {
+			writer.writeNull();
+			return;
+		}
+		writer.writeByte(OBJECT_START);
 
-				writer.writeKey(MEASURES_FIELD);
-				STRING_CODEC.encode(writer, result.getMeasures());
-			});
+		writer.writeString(METADATA_FIELD);
+		writer.writeByte(SEMI);
 
-			if (result.getReportType() == DATA || result.getReportType() == DATA_WITH_TOTALS) {
-				writer.writeKey(SORTED_BY_FIELD);
-				STRING_CODEC.encode(writer, result.getSortedBy());
+		writer.writeByte(OBJECT_START);
+		writer.writeString(ATTRIBUTES_FIELD);
+		writer.writeByte(SEMI);
+		StringConverter.serialize(result.getAttributes(), writer);
+		writer.writeByte(COMMA);
+
+		writer.writeString(MEASURES_FIELD);
+		writer.writeByte(SEMI);
+		StringConverter.serialize(result.getMeasures(), writer);
+		writer.writeByte(OBJECT_END);
+
+		if (result.getReportType() == DATA || result.getReportType() == DATA_WITH_TOTALS) {
+			writer.writeByte(COMMA);
+			writer.writeString(SORTED_BY_FIELD);
+			writer.writeByte(SEMI);
+			StringConverter.serialize(result.getSortedBy(), writer);
+		}
+
+		if (result.getReportType() == DATA || result.getReportType() == DATA_WITH_TOTALS) {
+			writer.writeByte(COMMA);
+			writer.writeString(RECORDS_FIELD);
+			writer.writeByte(SEMI);
+			writeRecords(writer, result.getRecordScheme(), result.getRecords());
+
+			writer.writeByte(COMMA);
+			writer.writeString(COUNT_FIELD);
+			writer.writeByte(SEMI);
+			NumberConverter.serialize(result.getTotalCount(), writer);
+
+			writer.writeByte(COMMA);
+			writer.writeString(FILTER_ATTRIBUTES_FIELD);
+			writer.writeByte(SEMI);
+			writeFilterAttributes(writer, result.getFilterAttributes());
+		}
+
+		if (result.getReportType() == DATA_WITH_TOTALS) {
+			writer.writeByte(COMMA);
+			writer.writeString(TOTALS_FIELD);
+			writer.writeByte(SEMI);
+			writeTotals(writer, result.getRecordScheme(), result.getTotals());
+		}
+
+		writer.writeByte(OBJECT_END);
+	}
+
+	@SuppressWarnings({"unchecked", "ConstantConditions"})
+	private void writeRecords(JsonWriter writer, RecordScheme recordScheme, List<Record> records) {
+		JsonCodec<Object>[] fieldJsonCodecs = (JsonCodec<Object>[]) getJsonCodecs(recordScheme);
+
+		writer.serialize(records, (out, record) -> {
+			writer.writeByte(ARRAY_START);
+			for (int i = 0; i < fieldJsonCodecs.length; i++) {
+				fieldJsonCodecs[i].write(writer, record.get(i));
+				if (i != fieldJsonCodecs.length - 1) {
+					writer.writeByte(COMMA);
+				}
 			}
-
-			if (result.getReportType() == DATA || result.getReportType() == DATA_WITH_TOTALS) {
-				writer.writeKey(RECORDS_FIELD);
-				writeRecords(writer, result.getRecordScheme(), result.getRecords());
-
-				writer.writeKey(COUNT_FIELD);
-				writer.writeInt(result.getTotalCount());
-
-				writer.writeKey(FILTER_ATTRIBUTES_FIELD);
-				writeFilterAttributes(writer, result.getFilterAttributes());
-			}
-
-			if (result.getReportType() == DATA_WITH_TOTALS) {
-				writer.writeKey(TOTALS_FIELD);
-				writeTotals(writer, result.getRecordScheme(), result.getTotals());
-			}
+			writer.writeByte(ARRAY_END);
 		});
 	}
 
-	@SuppressWarnings("unchecked")
-	private void writeRecords(StructuredOutput writer, RecordScheme recordScheme, List<Record> records) {
-		StructuredCodec<Object>[] fieldStructuredCodecs = (StructuredCodec<Object>[]) getStructuredCodecs(recordScheme);
-		StructuredEncoder<Record> recordEncoder = (out, record) -> {
-			for (int i = 0; i < recordScheme.getFields().size(); i++) {
-				fieldStructuredCodecs[i].encode(writer, record.get(i));
+	private void writeTotals(JsonWriter writer, RecordScheme recordScheme, Record totals) {
+		writer.writeByte(ARRAY_START);
+		int size = recordScheme.getFields().size();
+		boolean first = true;
+		for (int i = 0; i < size; i++) {
+			String field = recordScheme.getField(i);
+			JsonCodec<Object> fieldCodec = measureCodecs.get(field);
+			if (fieldCodec == null)
+				continue;
+			if (!first) {
+				writer.writeByte(COMMA);
 			}
-		};
-		writer.writeTuple(() -> {
-			for (Record record : records) {
-				writer.writeTuple(recordEncoder, record);
-			}
-		});
+			first = false;
+			fieldCodec.write(writer, totals.get(i));
+		}
+		writer.writeByte(ARRAY_END);
 	}
 
-	@SuppressWarnings("unchecked")
-	private void writeTotals(StructuredOutput writer, RecordScheme recordScheme, Record totals) {
-		writer.writeTuple(() -> {
-			for (int i = 0; i < recordScheme.getFields().size(); i++) {
-				String field = recordScheme.getField(i);
-				StructuredCodec<Object> fieldStructuredCodec = (StructuredCodec<Object>) measureCodecs.get(field);
-				if (fieldStructuredCodec == null)
-					continue;
-				fieldStructuredCodec.encode(writer, totals.get(i));
-			}
-		});
-	}
+	private void writeFilterAttributes(JsonWriter writer, Map<String, Object> filterAttributes) {
+		writer.writeByte(OBJECT_START);
+		if (filterAttributes.isEmpty()) {
+			writer.writeByte(OBJECT_END);
+			return;
+		}
 
-	@SuppressWarnings("unchecked")
-	private void writeFilterAttributes(StructuredOutput writer, Map<String, Object> filterAttributes) {
-		writer.writeObject(() -> {
-			for (Map.Entry<String, Object> entry : filterAttributes.entrySet()) {
-				writer.writeKey(entry.getKey());
-				StructuredCodec<Object> codec = (StructuredCodec<Object>) attributeCodecs.get(entry.getKey());
-				codec.encode(writer, entry.getValue());
+		Iterator<Map.Entry<String, Object>> iterator = filterAttributes.entrySet().iterator();
+		while (true) {
+			Map.Entry<String, Object> entry = iterator.next();
+			writer.writeString(entry.getKey());
+			writer.writeByte(SEMI);
+			attributeCodecs.get(entry.getKey()).write(writer, entry.getValue());
+			if (iterator.hasNext()) {
+				writer.writeByte(COMMA);
+			} else {
+				writer.writeByte(OBJECT_END);
+				return;
 			}
-		});
+		}
 	}
 
 	public RecordScheme recordScheme(List<String> attributes, List<String> measures) {
@@ -277,8 +368,8 @@ final class QueryResultCodec implements StructuredCodec<QueryResult> {
 		return recordScheme;
 	}
 
-	private StructuredCodec<?>[] getStructuredCodecs(RecordScheme recordScheme) {
-		StructuredCodec<?>[] fieldStructuredCodecs = new StructuredCodec<?>[recordScheme.getFields().size()];
+	private JsonCodec<?>[] getJsonCodecs(RecordScheme recordScheme) {
+		JsonCodec<?>[] fieldStructuredCodecs = new JsonCodec<?>[recordScheme.getFields().size()];
 		for (int i = 0; i < recordScheme.getFields().size(); i++) {
 			String field = recordScheme.getField(i);
 			fieldStructuredCodecs[i] = firstNonNull(attributeCodecs.get(field), measureCodecs.get(field));

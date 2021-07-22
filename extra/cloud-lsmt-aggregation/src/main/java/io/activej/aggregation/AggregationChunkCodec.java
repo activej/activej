@@ -16,19 +16,19 @@
 
 package io.activej.aggregation;
 
-import io.activej.codec.StructuredCodec;
-import io.activej.codec.StructuredInput;
-import io.activej.codec.StructuredOutput;
-import io.activej.common.exception.MalformedDataException;
+import com.dslplatform.json.*;
+import com.dslplatform.json.JsonReader.ReadObject;
+import io.activej.aggregation.util.JsonCodec;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static io.activej.codec.StructuredCodecs.STRING_CODEC;
+import static com.dslplatform.json.JsonWriter.*;
 
-public class AggregationChunkCodec implements StructuredCodec<AggregationChunk> {
-	private static final StructuredCodec<List<String>> MEASURES_CODEC = STRING_CODEC.ofList();
+public class AggregationChunkCodec implements JsonCodec<AggregationChunk> {
 	public static final String ID = "id";
 	public static final String MIN = "min";
 	public static final String MAX = "max";
@@ -36,57 +36,85 @@ public class AggregationChunkCodec implements StructuredCodec<AggregationChunk> 
 	public static final String MEASURES = "measures";
 
 	private final ChunkIdCodec<Object> chunkIdCodec;
-	private final StructuredCodec<PrimaryKey> primaryKeyCodec;
+	private final JsonCodec<PrimaryKey> primaryKeyFormat;
 	private final Set<String> allowedMeasures;
 
 	@SuppressWarnings("unchecked")
 	private AggregationChunkCodec(ChunkIdCodec<?> chunkIdCodec,
-			StructuredCodec<PrimaryKey> primaryKeyCodec,
+			JsonCodec<PrimaryKey> primaryKeyFormat,
 			Set<String> allowedMeasures) {
 		this.chunkIdCodec = (ChunkIdCodec<Object>) chunkIdCodec;
-		this.primaryKeyCodec = primaryKeyCodec;
+		this.primaryKeyFormat = primaryKeyFormat;
 		this.allowedMeasures = allowedMeasures;
 	}
 
 	public static AggregationChunkCodec create(ChunkIdCodec<?> chunkIdCodec,
-			StructuredCodec<PrimaryKey> primaryKeyCodec,
+			JsonCodec<PrimaryKey> primaryKeyCodec,
 			Set<String> allowedMeasures) {
 		return new AggregationChunkCodec(chunkIdCodec, primaryKeyCodec, allowedMeasures);
 	}
 
+
 	@Override
-	public void encode(StructuredOutput out, AggregationChunk chunk) {
-		out.writeObject(() -> {
-			out.writeKey(ID);
-			chunkIdCodec.encode(out, chunk.getChunkId());
-			out.writeKey(MIN);
-			primaryKeyCodec.encode(out, chunk.getMinPrimaryKey());
-			out.writeKey(MAX);
-			primaryKeyCodec.encode(out, chunk.getMaxPrimaryKey());
-			out.writeKey(COUNT);
-			out.writeInt(chunk.getCount());
-			out.writeKey(MEASURES);
-			MEASURES_CODEC.encode(out, chunk.getMeasures());
-		});
+	public AggregationChunk read(@NotNull JsonReader reader) throws IOException {
+		if (reader.wasNull()) return null;
+
+		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
+
+		Object id = readValue(reader, ID, chunkIdCodec);
+		reader.comma();
+
+		PrimaryKey from = readValue(reader, MIN, primaryKeyFormat);
+		reader.comma();
+
+		PrimaryKey to = readValue(reader, MAX, primaryKeyFormat);
+		reader.comma();
+
+		Integer count = readValue(reader, COUNT, NumberConverter::deserializeInt);
+		reader.comma();
+
+		List<String> measures = readValue(reader, MEASURES, $ -> ((JsonReader<?>) reader).readCollection(JsonReader::readString));
+
+		reader.endObject();
+
+		List<String> invalidMeasures = getInvalidMeasures(measures);
+		if (!invalidMeasures.isEmpty()) throw ParsingException.create("Unknown fields: " + invalidMeasures, true);
+		return AggregationChunk.create(id, measures, from, to, count);
 	}
 
 	@Override
-	public AggregationChunk decode(StructuredInput in) throws MalformedDataException {
-		return in.readObject($ -> {
-			in.readKey(ID);
-			Object id = chunkIdCodec.decode(in);
-			in.readKey(MIN);
-			PrimaryKey from = primaryKeyCodec.decode(in);
-			in.readKey(MAX);
-			PrimaryKey to = primaryKeyCodec.decode(in);
-			in.readKey(COUNT);
-			int count = in.readInt();
-			in.readKey(MEASURES);
-			List<String> measures = MEASURES_CODEC.decode(in);
-			List<String> invalidMeasures = getInvalidMeasures(measures);
-			if (!invalidMeasures.isEmpty()) throw new MalformedDataException("Unknown fields: " + invalidMeasures);
-			return AggregationChunk.create(id, measures, from, to, count);
-		});
+	public void write(@NotNull JsonWriter writer, AggregationChunk chunk) {
+		if (chunk == null) {
+			writer.writeNull();
+			return;
+		}
+		writer.writeByte(OBJECT_START);
+
+		writer.writeString(ID);
+		writer.writeByte(SEMI);
+		chunkIdCodec.write(writer, chunk.getChunkId());
+		writer.writeByte(COMMA);
+
+		writer.writeString(MIN);
+		writer.writeByte(SEMI);
+		primaryKeyFormat.write(writer, chunk.getMinPrimaryKey());
+		writer.writeByte(COMMA);
+
+		writer.writeString(MAX);
+		writer.writeByte(SEMI);
+		primaryKeyFormat.write(writer, chunk.getMaxPrimaryKey());
+		writer.writeByte(COMMA);
+
+		writer.writeString(COUNT);
+		writer.writeByte(SEMI);
+		NumberConverter.serialize(chunk.getCount(), writer);
+		writer.writeByte(COMMA);
+
+		writer.writeString(MEASURES);
+		writer.writeByte(SEMI);
+		StringConverter.serialize(chunk.getMeasures(), writer);
+
+		writer.writeByte(OBJECT_END);
 	}
 
 	private List<String> getInvalidMeasures(List<String> measures) {
@@ -97,6 +125,13 @@ public class AggregationChunkCodec implements StructuredCodec<AggregationChunk> 
 			}
 		}
 		return invalidMeasures;
+	}
+
+	private static <T> T readValue(JsonReader<?> reader, String key, ReadObject<T> readObject) throws IOException {
+		reader.getNextToken();
+		String readKey = reader.readKey();
+		if (!readKey.equals(key)) throw reader.newParseError("Expected key '" + key + '\'');
+		return readObject.read(reader);
 	}
 
 }
