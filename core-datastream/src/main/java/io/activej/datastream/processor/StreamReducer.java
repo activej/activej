@@ -85,33 +85,12 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 	}
 
 	public <I> StreamConsumer<I> newInput(Function<I, K> keyFunction, Reducer<K, I, O, A> reducer) {
-		Input<I> input = new Input<I>() {
-			@Override
-			public K apply(I item) {
-				return keyFunction.apply(item);
-			}
-
-			@Override
-			public A onFirstItem(StreamDataAcceptor<O> stream, K key, I firstValue) {
-				return reducer.onFirstItem(stream, key, firstValue);
-			}
-
-			@Override
-			public A onNextItem(StreamDataAcceptor<O> stream, K key, I nextValue, A accumulator) {
-				return reducer.onNextItem(stream, key, nextValue, accumulator);
-			}
-
-			@Override
-			public void onComplete(StreamDataAcceptor<O> stream, K key, A accumulator) {
-				reducer.onComplete(stream, key, accumulator);
-			}
-		};
-		return addInput(input);
+		return addInput(new SimpleInput(keyFunction, reducer));
 	}
 
 	public <I> Input<I> addInput(Input<I> input) {
 		inputs.add(input);
-		streamsAwaiting++;
+		input.await();
 		streamsOpen++;
 		return input;
 	}
@@ -157,7 +136,7 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 				headItem = item;
 				headKey = this.apply(headItem);
 				priorityQueue.offer(this);
-				if (--streamsAwaiting == 0) {
+				if (advance() == 0) {
 					output.reduce();
 				}
 			} else {
@@ -171,9 +150,9 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 
 		@Override
 		protected void onEndOfStream() {
-			streamsOpen--;
+			closeInput();
 			if (headItem == null) {
-				streamsAwaiting--;
+				advance();
 			}
 			output.reduce();
 			output.getAcknowledgement()
@@ -190,6 +169,52 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 		protected void onCleanup() {
 			deque.clear();
 		}
+
+		protected int await() {
+			return ++streamsAwaiting;
+		}
+
+		protected int advance() {
+			return --streamsAwaiting;
+		}
+
+		protected void closeInput(){
+			streamsOpen--;
+		}
+
+		protected void continueReduce(){
+			output.reduce();
+		}
+	}
+
+	public class SimpleInput<I> extends Input<I> {
+		private final Function<I, K> keyFunction;
+		private final Reducer<K, I, O, A> reducer;
+
+		public SimpleInput(Function<I, K> keyFunction, Reducer<K, I, O, A> reducer) {
+			this.keyFunction = keyFunction;
+			this.reducer = reducer;
+		}
+
+		@Override
+		public K apply(I item) {
+			return keyFunction.apply(item);
+		}
+
+		@Override
+		public A onFirstItem(StreamDataAcceptor<O> stream, K key, I firstValue) {
+			return reducer.onFirstItem(stream, key, firstValue);
+		}
+
+		@Override
+		public A onNextItem(StreamDataAcceptor<O> stream, K key, I nextValue, A accumulator) {
+			return reducer.onNextItem(stream, key, nextValue, accumulator);
+		}
+
+		@Override
+		public void onComplete(StreamDataAcceptor<O> stream, K key, A accumulator) {
+			reducer.onComplete(stream, key, accumulator);
+		}
 	}
 
 	private final class Output extends AbstractStreamSupplier<O> {
@@ -203,6 +228,8 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 				Input<Object> input = (Input<Object>) priorityQueue.poll();
 				if (input == null)
 					break;
+				if (input.isComplete())
+					continue;
 				//noinspection PointlessNullCheck intellij doesn't know
 				if (key != null && input.headKey.equals(key)) {
 					accumulator = input.onNextItem(getBufferedDataAcceptor(), key, input.headItem, accumulator);
@@ -220,7 +247,7 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 					priorityQueue.offer(input);
 				} else {
 					if (!input.isEndOfStream()) {
-						streamsAwaiting++;
+						input.await();
 						break;
 					}
 				}

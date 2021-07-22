@@ -42,7 +42,7 @@ public final class Initializers {
 						.withConsolidationMargin(config.get(ofDuration(), "consolidationMargin", Duration.ofMinutes(30)));
 	}
 
-	public static <K extends Comparable<K>, S> Initializer<CrdtStorageCluster<String, K, S>> ofCrdtCluster(
+	public static <K extends Comparable<K>, S> Initializer<CrdtStorageCluster<K, S>> ofCrdtCluster(
 			Config config, CrdtStorageMap<K, S> localClient, CrdtDescriptor<K, S> descriptor) {
 		return cluster -> {
 			Eventloop eventloop = localClient.getEventloop();
@@ -52,7 +52,7 @@ public final class Initializers {
 
 			for (Map.Entry<String, Config> entry : partitions.entrySet()) {
 				InetSocketAddress address = ConfigConverters.ofInetSocketAddress().get(entry.getValue());
-				cluster.withPartition(entry.getKey(), CrdtStorageClient.create(eventloop, address, descriptor.getSerializer()));
+				cluster.getPartitions().withPartition(entry.getKey(), CrdtStorageClient.create(eventloop, address, descriptor.getSerializer()));
 			}
 			cluster.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 		};

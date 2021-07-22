@@ -20,7 +20,6 @@ import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInput;
 import io.activej.datastream.dsl.HasStreamOutputs;
 import io.activej.eventloop.Eventloop;
-import io.activej.promise.Promises;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +45,7 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 	private StreamDataAcceptor<O>[] dataAcceptors = new StreamDataAcceptor[8];
 
 	private boolean started;
+	private int completed;
 
 	private StreamSplitter(Function<StreamDataAcceptor<O>[], StreamDataAcceptor<I>> acceptorFactory) {
 		this.acceptorFactory = acceptorFactory;
@@ -63,8 +63,12 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 	}
 
 	public StreamSupplier<O> newOutput() {
-		checkState(!started, "Cannot add new inputs after StreamUnion has been started");
-		Output output = new Output(outputs.size());
+		return addOutput(new Output());
+	}
+
+	public StreamSupplier<O> addOutput(Output output) {
+		checkState(!started, "Cannot add new outputs after StreamSplitter has been started");
+		checkState(output.index == outputs.size(), "Invalid index");
 		outputs.add(output);
 		if (outputs.size() > dataAcceptors.length) {
 			dataAcceptors = Arrays.copyOf(dataAcceptors, dataAcceptors.length * 2);
@@ -83,13 +87,12 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 	}
 
 	private void start() {
+		if (outputs.isEmpty()){
+			input.acknowledge();
+			return;
+		}
 		started = true;
 		dataAcceptors = Arrays.copyOf(dataAcceptors, outputs.size());
-		input.getAcknowledgement()
-				.whenException(e -> outputs.forEach(output -> output.closeEx(e)));
-		Promises.all(outputs.stream().map(Output::getAcknowledgement))
-				.whenResult(input::acknowledge)
-				.whenException(input::closeEx);
 		sync();
 	}
 
@@ -105,14 +108,15 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 				output.sendEndOfStream();
 			}
 		}
+
+		@Override
+		protected void onError(Throwable e) {
+			outputs.forEach(output -> output.closeEx(e));
+		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<O> {
-		final int index;
-
-		public Output(int index) {
-			this.index = index;
-		}
+	public class Output extends AbstractStreamSupplier<O> {
+		final int index = outputs.size();
 
 		@Override
 		protected void onResumed() {
@@ -125,11 +129,35 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 			dataAcceptors[index] = getDataAcceptor();
 			sync();
 		}
+
+		@Override
+		protected void onError(Throwable e) {
+			input.closeEx(e);
+		}
+
+		@Override
+		protected void onAcknowledge() {
+			complete();
+		}
+
+		protected final void sync() {
+			StreamSplitter.this.sync();
+		}
+
+		protected final void complete() {
+			if (++completed == dataAcceptors.length) {
+				input.acknowledge();
+			}
+		}
+
+		protected boolean canProceed() {
+			return isReady();
+		}
 	}
 
 	private void sync() {
 		if (!started) return;
-		if (outputs.stream().allMatch(Output::isReady)) {
+		if (outputs.stream().allMatch(Output::canProceed)) {
 			input.resume(acceptorFactory.apply(dataAcceptors));
 		} else {
 			input.suspend();

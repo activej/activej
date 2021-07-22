@@ -122,7 +122,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 													.then(messaging::receive)
 													.then(simpleHandler(UPLOAD_FINISHED)));
 									return StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
-											supplier.transformWith(detailedStats ? uploadStats : uploadStatsDetailed)
+											supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 													.transformWith(ChannelSerializer.create(serializer))
 													.streamTo(consumer))
 											.withAcknowledgement(ack -> ack
@@ -149,11 +149,17 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.map($ ->
 								messaging.receiveBinaryStream()
 										.transformWith(ChannelDeserializer.create(serializer))
-										.transformWith(detailedStats ? downloadStats : downloadStatsDetailed)
+										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 										.withEndOfStream(eos -> eos
 												.then(messaging::sendEndOfStream)
 												.thenEx(wrapException(() -> "Download failed"))
-												.whenResult(messaging::close))));
+												.whenComplete(($2, e) -> {
+													if (e == null) {
+														messaging.close();
+													} else {
+														messaging.closeEx(e);
+													}
+												}))));
 	}
 
 	@Override
@@ -168,7 +174,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 													.then(messaging::receive)
 													.then(simpleHandler(REMOVE_FINISHED)));
 									return StreamConsumer.<K>ofSupplier(supplier ->
-											supplier.transformWith(detailedStats ? removeStats : removeStatsDetailed)
+											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 													.transformWith(ChannelSerializer.create(keySerializer))
 													.streamTo(consumer))
 											.withAcknowledgement(ack -> ack

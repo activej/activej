@@ -1,6 +1,7 @@
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.cluster.CrdtPartitions;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
@@ -50,7 +51,8 @@ public final class CrdtClusterExample {
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
-		CrdtStorageCluster<String, String, LWWSet<String>> cluster = CrdtStorageCluster.create(eventloop, clients)
+		CrdtPartitions<String, LWWSet<String>> partitions = CrdtPartitions.create(eventloop, clients);
+		CrdtStorageCluster<String, LWWSet<String>> cluster = CrdtStorageCluster.create(partitions)
 				.withReplicationCount(5);
 
 		//[END REGION_1]

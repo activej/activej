@@ -1,6 +1,5 @@
 package io.activej.crdt.storage.cluster;
 
-import io.activej.common.ref.RefInt;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.local.CrdtStorageMap;
@@ -13,11 +12,12 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.activej.promise.TestUtils.await;
+import static org.junit.Assert.assertEquals;
 
 public final class RepartitionTest {
 
@@ -36,22 +36,28 @@ public final class RepartitionTest {
 			CrdtStorageMap<String, TimestampContainer<Integer>> client = CrdtStorageMap.create(Eventloop.getCurrentEventloop(), crdtFunction);
 			clients.put("client_" + i, client);
 		}
-		await(StreamSupplier.ofStream(IntStream.range(1, 100).mapToObj(i -> new CrdtData<>("test" + i, TimestampContainer.now(i))))
-				.streamTo(StreamConsumer.ofPromise(clients.get("client_0").upload())));
+		String localPartitionId = "client_0";
+		List<CrdtData<String, TimestampContainer<Integer>>> data = IntStream.range(1, 100)
+				.mapToObj(i -> new CrdtData<>("test" + i, TimestampContainer.now(i)))
+				.collect(Collectors.toList());
+		await(StreamSupplier.ofIterator(data.iterator())
+				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
 
-		CrdtStorageCluster<String, String, TimestampContainer<Integer>> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(), clients, crdtFunction)
-				.withReplicationCount(3);
+		CrdtPartitions<String, TimestampContainer<Integer>> partitions = CrdtPartitions.create(Eventloop.getCurrentEventloop(), clients);
+		int replicationCount = 3;
+		CrdtStorageCluster<String, TimestampContainer<Integer>> cluster = CrdtStorageCluster.create(partitions, crdtFunction)
+				.withReplicationCount(replicationCount);
 
-		await(CrdtRepartitionController.create(cluster, "client_0").repartition());
+		await(CrdtRepartitionController.create(cluster, localPartitionId).repartition());
 
-		clients.forEach((k, v) -> {
-			System.out.println(k + ":");
-			RefInt count = new RefInt(0);
-			v.iterator().forEachRemaining(x -> {
-				count.inc();
-				System.out.println(x);
-			});
-			System.out.println("Was " + count.get() + " elements");
-		});
+		Map<CrdtData<String, TimestampContainer<Integer>>, Integer> result = new HashMap<>();
+
+		clients.values().forEach(v -> v.iterator()
+				.forEachRemaining(x -> result.compute(x, ($, count) -> count == null ? 1 : (count + 1))));
+
+		assertEquals(new HashSet<>(data), result.keySet());
+		for (Integer count : result.values()) {
+			assertEquals(replicationCount, count.intValue());
+		}
 	}
 }

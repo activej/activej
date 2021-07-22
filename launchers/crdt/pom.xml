@@ -33,6 +33,12 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
+      <artifactId>activej-rpc</artifactId>
+      <version>${project.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
       <artifactId>activej-launchers-common</artifactId>
       <version>${project.version}</version>
     </dependency>

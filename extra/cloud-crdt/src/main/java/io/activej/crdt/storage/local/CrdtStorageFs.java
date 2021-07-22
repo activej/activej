@@ -72,7 +72,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private final CrdtFunction<S> function;
 	private final CrdtDataSerializer<K, S> serializer;
 
-	private Function<String, String> namingStrategy = ext -> UUID.randomUUID().toString() + "." + ext;
+	private Function<String, String> namingStrategy = ext -> UUID.randomUUID() + "." + ext;
 	private Duration consolidationMargin = Duration.ofMinutes(30);
 
 	private ActiveFs consolidationFolderFs;
@@ -251,7 +251,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 				.then(list ->
 						Promises.all(list.entrySet().stream()
 								.filter(entry -> entry.getValue().getTimestamp() > barrier)
-								.map(entry -> ChannelSupplier.ofPromise(fs.download(entry.getKey()))
+								.map(entry -> ChannelSupplier.ofPromise(consolidationFolderFs.download(entry.getKey()))
 										.toCollector(ByteBufs.collector())
 										.whenResult(byteBuf -> blacklist.addAll(Arrays.asList(byteBuf.asString(UTF_8).split("\n"))))
 										.toVoid())))
@@ -276,11 +276,10 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 									.transformWith(ChannelSerializer.create(serializer))
 									.streamTo(ChannelConsumer.ofPromise(fs.upload(name))))
 							.then(() -> tombstoneFolderFs.list("*")
-									.map(fileMap -> Promises.sequence(fileMap.keySet().stream()
-											.map(filename -> () -> tombstoneFolderFs.delete(filename))))
+									.map(fileMap -> tombstoneFolderFs.deleteAll(fileMap.keySet()))
 							)
 							.then(() -> consolidationFolderFs.delete(metafile))
-							.then(() -> Promises.all(files.stream().map(fs::delete)));
+							.then(() -> fs.deleteAll(new HashSet<>(files)));
 				})
 				.thenEx(wrapException(() -> "Consolidation failed"))
 				.whenComplete(consolidationStats.recordStats());
