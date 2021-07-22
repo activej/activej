@@ -62,9 +62,7 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 	private final Map<I, CrdtStorage<K, S>> deadClients;
 
 	private final CrdtFunction<S> function;
-	private final RendezvousHashSharder<I, K> shardingFunction;
-
-	private List<I> orderedIds;
+	private final RendezvousHashSharder shardingFunction;
 
 	private int replicationCount = 1;
 	private CrdtFilter<S> filter;
@@ -87,7 +85,7 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 		this.aliveClients = new LinkedHashMap<>(clients); // to keep order for indexed sharding
 		this.deadClients = new HashMap<>();
 		this.function = function;
-		shardingFunction = RendezvousHashSharder.create(orderedIds = new ArrayList<>(aliveClients.keySet()), replicationCount);
+		shardingFunction = RendezvousHashSharder.create(aliveClients.keySet(), replicationCount);
 	}
 
 	public static <I extends Comparable<I>, K extends Comparable<K>, S> CrdtStorageCluster<I, K, S> create(
@@ -135,11 +133,7 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 		return Collections.unmodifiableMap(deadClients);
 	}
 
-	public List<I> getOrderedIds() {
-		return Collections.unmodifiableList(orderedIds);
-	}
-
-	public RendezvousHashSharder<I, K> getShardingFunction() {
+	public RendezvousHashSharder getShardingFunction() {
 		return shardingFunction;
 	}
 	// endregion
@@ -200,7 +194,7 @@ public final class CrdtStorageCluster<I extends Comparable<I>, K extends Compara
 	}
 
 	private void recompute() {
-		shardingFunction.recompute(orderedIds = new ArrayList<>(aliveClients.keySet()), replicationCount);
+		shardingFunction.recompute(aliveClients.keySet());
 	}
 
 	private <T> Promise<List<T>> connect(Function<CrdtStorage<K, S>, Promise<T>> method) {

@@ -59,7 +59,7 @@ public final class CrdtRepartitionController<I extends Comparable<I>, K extends 
 						StreamConsumer<K> remover = all.getValue2().get();
 						StreamSupplier<CrdtData<K, S>> downloader = all.getValue3().get();
 
-						int index = this.cluster.getOrderedIds().indexOf(localPartitionId);
+						int index = this.cluster.getShardingFunction().indexOf(localPartitionId);
 
 						StreamSplitter<CrdtData<K, S>, ?> splitter = StreamSplitter.create(
 								(data, acceptors) -> {
