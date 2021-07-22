@@ -55,8 +55,8 @@ import static io.activej.crdt.util.Utils.wrapException;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes") // JMX
-public final class CrdtStorageCluster<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S>>, EventloopService, EventloopJmxBeanEx {
-	private final CrdtPartitions<K, S> partitions;
+public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comparable<P>> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, EventloopService, EventloopJmxBeanEx {
+	private final CrdtPartitions<K, S, P> partitions;
 
 	private final CrdtFunction<S> function;
 
@@ -85,33 +85,32 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S> implements Crd
 	// endregion
 
 	// region creators
-	private CrdtStorageCluster(CrdtPartitions<K, S> partitions, CrdtFunction<S> function) {
+	private CrdtStorageCluster(CrdtPartitions<K, S, P> partitions, CrdtFunction<S> function) {
 		this.partitions = partitions;
 		this.function = function;
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorageCluster<K, S> create(
-			CrdtPartitions<K, S> partitions, CrdtFunction<S> crdtFunction
+	public static <K extends Comparable<K>, S, P extends Comparable<P>> CrdtStorageCluster<K, S, P> create(
+			CrdtPartitions<K, S, P> partitions, CrdtFunction<S> crdtFunction
 	) {
 		return new CrdtStorageCluster<>(partitions, crdtFunction);
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageCluster<K, S> create(
-			CrdtPartitions<K, S> partitions
+	public static <K extends Comparable<K>, S extends CrdtType<S>, P extends Comparable<P>> CrdtStorageCluster<K, S, P> create(
+			CrdtPartitions<K, S, P> partitions
 	) {
 		return new CrdtStorageCluster<>(partitions, CrdtFunction.ofCrdtType());
 	}
 
-	public CrdtStorageCluster<K, S> withReplicationCount(int replicationCount) {
-		checkArgument(1 <= replicationCount && replicationCount <= partitions.getPartitions().size(),
-				"Replication count cannot be less than one or greater than number of partitions");
+	public CrdtStorageCluster<K, S, P> withReplicationCount(int replicationCount) {
+		checkArgument(1 <= replicationCount, "Replication count cannot be less than one");
 		this.deadPartitionsThreshold = replicationCount - 1;
 		this.replicationCount = replicationCount;
 		this.partitions.setTopShards(replicationCount);
 		return this;
 	}
 
-	public CrdtStorageCluster<K, S> withFilter(CrdtFilter<S> filter) {
+	public CrdtStorageCluster<K, S, P> withFilter(CrdtFilter<S> filter) {
 		this.filter = filter;
 		return this;
 	}
@@ -120,7 +119,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S> implements Crd
 	 * Sets the replication count as well as number of upload targets that determines the number of servers where CRDT data will be uploaded.
 	 */
 	@SuppressWarnings("UnusedReturnValue")
-	public CrdtStorageCluster<K, S> withPersistenceOptions(int deadPartitionsThreshold, int uploadTargets) {
+	public CrdtStorageCluster<K, S, P> withPersistenceOptions(int deadPartitionsThreshold, int uploadTargets) {
 		checkArgument(0 <= deadPartitionsThreshold && deadPartitionsThreshold < partitions.getPartitions().size(),
 				"Dead partitions threshold cannot be less than zero or greater than number of partitions");
 		checkArgument(0 <= uploadTargets,
@@ -140,7 +139,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S> implements Crd
 		return partitions.getEventloop();
 	}
 
-	public CrdtPartitions<K, S> getPartitions() {
+	public CrdtPartitions<K, S, P> getPartitions() {
 		return partitions;
 	}
 
@@ -169,7 +168,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S> implements Crd
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return connect(CrdtStorage::upload)
 				.then(containers -> {
-					RendezvousHashSharder sharder = partitions.getSharder();
+					RendezvousHashSharder<P> sharder = partitions.getSharder();
 					StreamSplitter<CrdtData<K, S>, CrdtData<K, S>> splitter = StreamSplitter.create(
 							(item, acceptors) -> {
 								for (int index : sharder.shard(item.getKey())) {
@@ -214,7 +213,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S> implements Crd
 	public Promise<StreamConsumer<K>> remove() {
 		return connect(CrdtStorage::remove)
 				.map(containers -> {
-					RendezvousHashSharder sharderAll = RendezvousHashSharder.create(containers.stream()
+					RendezvousHashSharder<P> sharderAll = RendezvousHashSharder.create(containers.stream()
 							.map(container -> container.id)
 							.collect(Collectors.toSet()), containers.size());
 					StreamSplitter<K, K> splitter = StreamSplitter.create((item, acceptors) -> {
@@ -254,7 +253,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S> implements Crd
 	}
 
 	private <T extends AsyncCloseable> Promise<List<Try<Container<T>>>> checkStillNotDead(List<Try<Container<T>>> value) {
-		Map<Comparable<?>, CrdtStorage<K, S>> deadPartitions = partitions.getDeadPartitions();
+		Map<P, CrdtStorage<K, S>> deadPartitions = partitions.getDeadPartitions();
 		if (deadPartitions.size() > deadPartitionsThreshold) {
 			CrdtException exception = new CrdtException("There are more dead partitions than allowed(" +
 					deadPartitions.size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting");
@@ -269,7 +268,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S> implements Crd
 
 	private <T> RefInt tolerantSplit(
 			List<Container<StreamConsumer<T>>> containers,
-			RendezvousHashSharder sharder,
+			RendezvousHashSharder<P> sharder,
 			StreamSplitter<T, T> splitter
 	) {
 		RefInt failed = new RefInt(0);
@@ -420,11 +419,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S> implements Crd
 	}
 	// endregion
 
-	private static class Container<T extends AsyncCloseable> {
-		final Comparable<?> id;
+	private final class Container<T extends AsyncCloseable> {
+		final P id;
 		final T value;
 
-		Container(Comparable<?> id, T value) {
+		Container(P id, T value) {
 			this.id = id;
 			this.value = value;
 		}

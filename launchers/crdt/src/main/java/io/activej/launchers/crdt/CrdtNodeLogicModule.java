@@ -18,11 +18,14 @@ package io.activej.launchers.crdt;
 
 import io.activej.common.reflection.RecursiveType;
 import io.activej.config.Config;
+import io.activej.config.converter.ConfigConverters;
 import io.activej.crdt.CrdtServer;
+import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.CrdtPartitions;
 import io.activej.crdt.storage.cluster.CrdtRepartitionController;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
+import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
@@ -39,14 +42,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.List;
+import java.net.InetSocketAddress;
+import java.util.*;
 
-import static io.activej.launchers.crdt.Initializers.ofCrdtCluster;
+import static io.activej.common.Checks.checkState;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.launchers.crdt.Initializers.ofFsCrdtClient;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 
 public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends AbstractModule {
@@ -63,8 +66,11 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 		bind((Key<?>) Key.ofType(supertype, Persistent.class))
 				.to(Key.ofType(RecursiveType.of(CrdtStorageFs.class, typeArgs).getType()));
 
+		List<RecursiveType> clusterStorageTypes = new ArrayList<>(typeArgs);
+		clusterStorageTypes.add(RecursiveType.of(String.class));
+
 		bind((Key<?>) Key.ofType(supertype, Cluster.class))
-				.to(Key.ofType(RecursiveType.of(CrdtStorageCluster.class, typeArgs).getType()));
+				.to(Key.ofType(RecursiveType.of(CrdtStorageCluster.class, clusterStorageTypes).getType()));
 	}
 
 	@Provides
@@ -79,20 +85,40 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	CrdtPartitions<K, S> partitions(Eventloop eventloop, CrdtStorageMap<K, S> localClient, Config config){
-		return CrdtPartitions.create(eventloop, singletonMap(config.get("crdt.cluster.localPartitionId"), localClient));
+	DiscoveryService<K, S, String> discoveryService(CrdtStorageMap<K, S> localClient, CrdtDescriptor<K, S> descriptor, Config config) {
+		config = config.getChild("crdt.cluster");
+
+		Eventloop eventloop = localClient.getEventloop();
+
+		Map<String, CrdtStorage<K, S>> partitions = new HashMap<>();
+		partitions.put(config.get("localPartitionId"), localClient);
+
+		Map<String, Config> partitionsConfigmap = config.getChild("partitions").getChildren();
+		checkState(!partitionsConfigmap.isEmpty(), "Cluster could not operate without partitions, config had none");
+
+		for (Map.Entry<String, Config> entry : partitionsConfigmap.entrySet()) {
+			InetSocketAddress address = ConfigConverters.ofInetSocketAddress().get(entry.getValue());
+			partitions.put(entry.getKey(), CrdtStorageClient.create(eventloop, address, descriptor.getSerializer()));
+		}
+
+		return DiscoveryService.constant(partitions);
 	}
 
 	@Provides
-	CrdtStorageCluster<K, S> clusterCrdtClient(Config config, CrdtPartitions<K, S> partitions, CrdtStorageMap<K, S> localClient, CrdtDescriptor<K, S> descriptor) {
+	CrdtPartitions<K, S, String> partitions(Eventloop eventloop, DiscoveryService<K, S, String> discoveryService) {
+		return CrdtPartitions.create(eventloop, discoveryService);
+	}
+
+	@Provides
+	CrdtStorageCluster<K, S, String> clusterCrdtClient(CrdtPartitions<K, S, String> partitions, CrdtDescriptor<K, S> descriptor, Config config) {
 		return CrdtStorageCluster.create(
 				partitions,
 				descriptor.getCrdtFunction())
-				.withInitializer(ofCrdtCluster(config.getChild("crdt.cluster"), localClient, descriptor));
+				.withReplicationCount(config.get(ofInteger(), "crdt.cluster.replicationCount", 1));
 	}
 
 	@Provides
-	CrdtRepartitionController<K, S> crdtRepartitionController(CrdtStorageCluster<K, S> clusterClient, Config config) {
+	CrdtRepartitionController<K, S, String> crdtRepartitionController(CrdtStorageCluster<K, S, String> clusterClient, Config config) {
 		return CrdtRepartitionController.create(clusterClient, config.get("crdt.cluster.localPartitionId"));
 	}
 
@@ -104,7 +130,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 
 	@Provides
 	@Cluster
-	CrdtServer<K, S> clusterServer(Eventloop eventloop, CrdtStorageCluster<K, S> client, CrdtDescriptor<K, S> descriptor, Config config) {
+	CrdtServer<K, S> clusterServer(Eventloop eventloop, CrdtStorageCluster<K, S, String> client, CrdtDescriptor<K, S> descriptor, Config config) {
 		return CrdtServer.create(eventloop, client, descriptor.getSerializer())
 				.withInitializer(ofAbstractServer(config.getChild("crdt.cluster.server")));
 	}

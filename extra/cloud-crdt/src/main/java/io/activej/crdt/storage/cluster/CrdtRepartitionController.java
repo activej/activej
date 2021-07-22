@@ -43,22 +43,21 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtRepartitionController<K extends Comparable<K>, S> implements EventloopJmxBeanEx {
-	private final Comparable<?> localPartitionId;
+public final class CrdtRepartitionController<K extends Comparable<K>, S, P extends Comparable<P>> implements EventloopJmxBeanEx {
+	private final P localPartitionId;
 	private final CrdtStorage<K, S> localClient;
-	private final CrdtStorageCluster<K, S> cluster;
+	private final CrdtStorageCluster<K, S, P> cluster;
 
 	private final AsyncSupplier<Void> repartition = AsyncSuppliers.reuse(this::doRepartition);
 
-	public CrdtRepartitionController(Comparable<?> localPartitionId, CrdtStorage<K, S> localClient, CrdtStorageCluster<K, S> cluster) {
+	public CrdtRepartitionController(P localPartitionId, CrdtStorage<K, S> localClient, CrdtStorageCluster<K, S, P> cluster) {
 		this.localClient = localClient;
 		this.cluster = cluster;
 		this.localPartitionId = localPartitionId;
 	}
 
-	public static <I extends Comparable<I>, K extends Comparable<K>, S> CrdtRepartitionController<K, S> create(CrdtStorageCluster<K, S> cluster, I localPartitionId) {
-		//noinspection unchecked
-		CrdtStorage<K, S> localStorage = (CrdtStorage<K, S>) cluster.getPartitions().getPartitions().get(localPartitionId);
+	public static <K extends Comparable<K>, S, P extends Comparable<P>> CrdtRepartitionController<K, S, P> create(CrdtStorageCluster<K, S, P> cluster, P localPartitionId) {
+		CrdtStorage<K, S> localStorage = cluster.getPartitions().getPartitions().get(localPartitionId);
 		return new CrdtRepartitionController<>(localPartitionId, localStorage, cluster);
 	}
 
@@ -101,7 +100,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S> impleme
 							.transformWith(detailedStats ? removeStatsDetailed : removeStats);
 					StreamSupplier<CrdtData<K, S>> downloader = all.getValue3().get();
 
-					RendezvousHashSharder sharder = this.cluster.getPartitions().getSharder();
+					RendezvousHashSharder<P> sharder = this.cluster.getPartitions().getSharder();
 					int localPartitionIndex = sharder.indexOf(localPartitionId);
 
 					StreamSplitter<CrdtData<K, S>, ?> splitter = StreamSplitter.create(

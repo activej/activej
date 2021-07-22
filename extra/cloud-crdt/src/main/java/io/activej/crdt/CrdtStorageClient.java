@@ -189,7 +189,9 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.thenEx(wrapException(() -> "Failed to send 'Ping'"))
 						.then(() -> messaging.receive()
 								.thenEx(wrapException(() -> "Failed to receive 'Pong'")))
-						.then(simpleHandler(PONG)));
+						.then(simpleHandler(PONG))
+						.whenResult(messaging::close)
+						.whenException(messaging::closeEx));
 	}
 
 	@NotNull

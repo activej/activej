@@ -32,6 +32,7 @@ import java.net.InetAddress;
 
 import static io.activej.crdt.CrdtMessaging.*;
 import static io.activej.crdt.CrdtMessaging.CrdtResponses.DOWNLOAD_STARTED;
+import static io.activej.crdt.CrdtMessaging.CrdtResponses.PONG;
 import static io.activej.crdt.util.Utils.fromJson;
 import static io.activej.crdt.util.Utils.toJson;
 import static io.activej.csp.binary.Utils.nullTerminated;
@@ -89,6 +90,11 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 								.transformWith(ChannelDeserializer.create(keySerializer))
 								.streamTo(StreamConsumer.ofPromise(storage.remove()))
 								.then(() -> messaging.send(CrdtResponses.REMOVE_FINISHED))
+								.then(messaging::sendEndOfStream)
+								.whenResult(messaging::close);
+					}
+					if (msg == CrdtMessages.PING) {
+						return messaging.send(PONG)
 								.then(messaging::sendEndOfStream)
 								.whenResult(messaging::close);
 					}

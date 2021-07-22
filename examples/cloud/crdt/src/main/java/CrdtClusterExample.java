@@ -3,6 +3,7 @@ import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.CrdtPartitions;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
+import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
@@ -23,7 +24,6 @@ import java.util.concurrent.Executors;
 
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 
-@SuppressWarnings("Convert2MethodRef")
 public final class CrdtClusterExample {
 	private static final CrdtDataSerializer<String, LWWSet<String>> SERIALIZER =
 			new CrdtDataSerializer<>(UTF8_SERIALIZER, new LWWSet.Serializer<>(UTF8_SERIALIZER));
@@ -51,8 +51,9 @@ public final class CrdtClusterExample {
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
-		CrdtPartitions<String, LWWSet<String>> partitions = CrdtPartitions.create(eventloop, clients);
-		CrdtStorageCluster<String, LWWSet<String>> cluster = CrdtStorageCluster.create(partitions)
+		DiscoveryService<String, LWWSet<String>, String> discoveryService = DiscoveryService.constant(clients);
+		CrdtPartitions<String, LWWSet<String>, String> partitions = CrdtPartitions.create(eventloop, discoveryService);
+		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.create(partitions)
 				.withReplicationCount(5);
 
 		//[END REGION_1]
@@ -99,6 +100,7 @@ public final class CrdtClusterExample {
 		// wait for both of uploads to finish
 		Promises.all(uploadTo3, uploadTo6)
 				// and then download items from the cluster, and wait for result
+				.then(partitions::start)
 				.then(() -> cluster.download())
 				// also collecting it to list
 				.then(StreamSupplier::toList)

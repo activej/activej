@@ -46,7 +46,7 @@ public final class TestDyingPartitions {
 
 	private Map<Integer, AbstractServer<?>> servers;
 	private Map<Integer, CrdtStorageMap<String, TimestampContainer<Integer>>> storages;
-	private CrdtStorageCluster<String, TimestampContainer<Integer>> cluster;
+	private CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster;
 
 	@Before
 	public void setUp() throws Exception {
@@ -69,10 +69,11 @@ public final class TestDyingPartitions {
 			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, SERIALIZER));
 		}
 
-		CrdtPartitions<String, TimestampContainer<Integer>> partitions = CrdtPartitions.create(Eventloop.getCurrentEventloop(), clients);
+		DiscoveryService<String, TimestampContainer<Integer>, String> discoveryService = DiscoveryService.constant(clients);
+		CrdtPartitions<String, TimestampContainer<Integer>, String> partitions = CrdtPartitions.create(Eventloop.getCurrentEventloop(), discoveryService);
+		await(partitions.start());
 		cluster = CrdtStorageCluster.create(partitions, CRDT_FUNCTION)
 				.withReplicationCount(REPLICATION_COUNT);
-
 	}
 
 	@Test

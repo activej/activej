@@ -29,38 +29,38 @@ import java.util.Set;
 import static io.activej.common.Checks.checkArgument;
 import static java.util.stream.Collectors.toList;
 
-public final class RendezvousHashSharder {
+public final class RendezvousHashSharder<P extends Comparable<P>> {
 	public static final int NUMBER_OF_BUCKETS = ApplicationSettings.getInt(RendezvousHashSharder.class, "numberOfBuckets", 1024);
 
 	static {
 		checkArgument((NUMBER_OF_BUCKETS & (NUMBER_OF_BUCKETS - 1)) == 0, "Number of buckets must be a power of two");
 	}
 
-	private final List<ObjWithIndex> totalPartitions;
+	private final List<ObjWithIndex<P>> totalPartitions;
 	private final int[][] buckets;
 	private final int topShards;
 
 	private int @Nullable [] predefined;
 
-	private RendezvousHashSharder(List<ObjWithIndex> totalPartitions, int topShards) {
+	private RendezvousHashSharder(List<ObjWithIndex<P>> totalPartitions, int topShards) {
 		this.totalPartitions = totalPartitions;
 		this.topShards = topShards;
 		this.buckets = new int[NUMBER_OF_BUCKETS][topShards];
 	}
 
-	public static RendezvousHashSharder create(Set<? extends Comparable<?>> partitionIds, int topShards) {
+	public static <P extends Comparable<P>> RendezvousHashSharder<P> create(Set<P> partitionIds, int topShards) {
 		RefInt indexRef = new RefInt(0);
-		List<ObjWithIndex> totalPartitions = partitionIds.stream()
+		List<ObjWithIndex<P>> totalPartitions = partitionIds.stream()
 				.sorted()
-				.map(partitionId -> new ObjWithIndex(partitionId, indexRef.value++))
+				.map(partitionId -> new ObjWithIndex<>(partitionId, indexRef.value++))
 				.collect(toList());
 
-		RendezvousHashSharder sharder = new RendezvousHashSharder(totalPartitions, topShards);
+		RendezvousHashSharder<P> sharder = new RendezvousHashSharder<>(totalPartitions, topShards);
 		sharder.recompute();
 		return sharder;
 	}
 
-	public void recompute(Set<? extends Comparable<?>> partitionIds) {
+	public void recompute(Set<P> partitionIds) {
 		if (!totalPartitions.removeIf(el -> !partitionIds.contains(el.object))) {
 			return;
 		}
@@ -74,6 +74,7 @@ public final class RendezvousHashSharder {
 				predefined[i] = totalPartitions.get(i).index;
 			}
 		} else {
+			predefined = null;
 			refillBuckets();
 		}
 	}
@@ -83,7 +84,7 @@ public final class RendezvousHashSharder {
 			int finalN = n;
 
 			buckets[n] = totalPartitions.stream()
-					.sorted(Comparator.<ObjWithIndex>comparingInt(x -> HashUtils.murmur3hash(x.object.hashCode(), finalN)).reversed())
+					.sorted(Comparator.<ObjWithIndex<P>>comparingInt(x -> HashUtils.murmur3hash(x.object.hashCode(), finalN)).reversed())
 					.mapToInt(value -> value.index)
 					.limit(topShards)
 					.toArray();
@@ -96,20 +97,20 @@ public final class RendezvousHashSharder {
 		return buckets[key.hashCode() & (NUMBER_OF_BUCKETS - 1)];
 	}
 
-	public int indexOf(Comparable<?> partition){
-		for (ObjWithIndex objWithIndex : totalPartitions) {
-			if (objWithIndex.object.equals(partition)){
+	public int indexOf(P partition) {
+		for (ObjWithIndex<P> objWithIndex : totalPartitions) {
+			if (objWithIndex.object.equals(partition)) {
 				return objWithIndex.index;
 			}
 		}
 		throw new NoSuchElementException("Cannot find partition: " + partition);
 	}
 
-	private static final class ObjWithIndex {
-		final Comparable<?> object;
+	private static final class ObjWithIndex<P extends Comparable<P>> {
+		final P object;
 		final int index;
 
-		ObjWithIndex(Comparable<?> object, int index) {
+		ObjWithIndex(P object, int index) {
 			this.object = object;
 			this.index = index;
 		}

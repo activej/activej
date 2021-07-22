@@ -43,9 +43,11 @@ public final class RepartitionTest {
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
 
-		CrdtPartitions<String, TimestampContainer<Integer>> partitions = CrdtPartitions.create(Eventloop.getCurrentEventloop(), clients);
+		DiscoveryService<String, TimestampContainer<Integer>, String> discoveryService = DiscoveryService.constant(clients);
+		CrdtPartitions<String, TimestampContainer<Integer>, String> partitions = CrdtPartitions.create(Eventloop.getCurrentEventloop(), discoveryService);
+		await(partitions.start());
 		int replicationCount = 3;
-		CrdtStorageCluster<String, TimestampContainer<Integer>> cluster = CrdtStorageCluster.create(partitions, crdtFunction)
+		CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster = CrdtStorageCluster.create(partitions, crdtFunction)
 				.withReplicationCount(replicationCount);
 
 		await(CrdtRepartitionController.create(cluster, localPartitionId).repartition());

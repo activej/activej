@@ -72,12 +72,14 @@ public final class TestCrdtCluster {
 		for (CrdtData<String, TimestampContainer<Integer>> datum : data) {
 			localStorage.put(datum);
 		}
-		CrdtPartitions<String, TimestampContainer<Integer>> partitions = CrdtPartitions.create(eventloop, clients);
-		CrdtStorageCluster<String, TimestampContainer<Integer>> cluster = CrdtStorageCluster.create(partitions, TimestampContainer.createCrdtFunction(Integer::max))
+		DiscoveryService<String, TimestampContainer<Integer>, String> discoveryService = DiscoveryService.constant(clients);
+		CrdtPartitions<String, TimestampContainer<Integer>, String> partitions = CrdtPartitions.create(eventloop, discoveryService);
+		CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster = CrdtStorageCluster.create(partitions, TimestampContainer.createCrdtFunction(Integer::max))
 				.withReplicationCount(REPLICATION_COUNT);
 
-		await(StreamSupplier.ofIterator(localStorage.iterator())
-				.streamTo(StreamConsumer.ofPromise(cluster.upload()))
+		await(partitions.start()
+				.then(() -> StreamSupplier.ofIterator(localStorage.iterator())
+						.streamTo(StreamConsumer.ofPromise(cluster.upload())))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
 		Map<CrdtData<String, TimestampContainer<Integer>>, Integer> result = new HashMap<>();
@@ -92,7 +94,7 @@ public final class TestCrdtCluster {
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions", "Convert2MethodRef"})
 	public void testDownload() throws IOException {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
@@ -127,11 +129,13 @@ public final class TestCrdtCluster {
 		clients.put("dead_three", CrdtStorageClient.create(eventloop, new InetSocketAddress(5557), serializer));
 
 		CrdtStorageMap<String, TimestampContainer<Set<Integer>>> localStorage = CrdtStorageMap.create(eventloop, union);
-		CrdtPartitions<String, TimestampContainer<Set<Integer>>> partitions = CrdtPartitions.create(eventloop, clients);
-		CrdtStorageCluster<String, TimestampContainer<Set<Integer>>> cluster = CrdtStorageCluster.create(partitions, union)
+		DiscoveryService<String, TimestampContainer<Set<Integer>>, String> discoveryService = DiscoveryService.constant(clients);
+		CrdtPartitions<String, TimestampContainer<Set<Integer>>, String> partitions = CrdtPartitions.create(eventloop, discoveryService);
+		CrdtStorageCluster<String, TimestampContainer<Set<Integer>>, String> cluster = CrdtStorageCluster.create(partitions, union)
 				.withReplicationCount(REPLICATION_COUNT);
 
-		await(cluster.download()
+		await(partitions.start()
+				.then(() -> cluster.download())
 				.then(supplier -> supplier
 						.streamTo(StreamConsumer.of(localStorage::put)))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));

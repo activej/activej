@@ -20,14 +20,10 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
 import io.activej.common.api.WithInitializer;
-import io.activej.common.exception.MalformedDataException;
-import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.RendezvousHashSharder;
 import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -35,60 +31,46 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.*;
-import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Utils.parseInetSocketAddress;
-import static io.activej.common.collection.CollectionUtils.difference;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
-public final class CrdtPartitions<K extends Comparable<K>, S> implements EventloopService, WithInitializer<CrdtPartitions<K, S>> {
+public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparable<P>> implements EventloopService, WithInitializer<CrdtPartitions<K, S, P>> {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtPartitions.class);
 
-	private final SortedMap<Comparable<?>, CrdtStorage<K, S>> alivePartitions = new TreeMap<>();
-	private final Map<Comparable<?>, CrdtStorage<K, S>> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
+	private final DiscoveryService<K, S, P> discoveryService;
 
-	private final SortedMap<Comparable<?>, CrdtStorage<K, S>> deadPartitions = new TreeMap<>();
-	private final Map<Comparable<?>, CrdtStorage<K, S>> deadPartitionsView = Collections.unmodifiableMap(deadPartitions);
+	private final SortedMap<P, CrdtStorage<K, S>> alivePartitions = new TreeMap<>();
+	private final Map<P, CrdtStorage<K, S>> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
+
+	private final SortedMap<P, CrdtStorage<K, S>> deadPartitions = new TreeMap<>();
+	private final Map<P, CrdtStorage<K, S>> deadPartitionsView = Collections.unmodifiableMap(deadPartitions);
 
 	private final AsyncSupplier<Void> checkAllPartitions = AsyncSuppliers.reuse(this::doCheckAllPartitions);
 	private final AsyncSupplier<Void> checkDeadPartitions = AsyncSuppliers.reuse(this::doCheckDeadPartitions);
 
-	private final SortedMap<Comparable<?>, CrdtStorage<K, S>> partitions = new TreeMap<>();
-	private final Map<Comparable<?>, CrdtStorage<K, S>> partitionsView = Collections.unmodifiableMap(partitions);
+	private final SortedMap<P, CrdtStorage<K, S>> partitions = new TreeMap<>();
+	private final Map<P, CrdtStorage<K, S>> partitionsView = Collections.unmodifiableMap(partitions);
 
 	private final Eventloop eventloop;
 
-	private RendezvousHashSharder sharder;
+	private RendezvousHashSharder<P> sharder;
 
-	private CrdtDataSerializer<K, S> serializer;
 	private int topShards = 1;
 
-	private CrdtPartitions(Eventloop eventloop, Map<? extends Comparable<?>, ? extends CrdtStorage<K, S>> partitions) {
+	private CrdtPartitions(Eventloop eventloop, DiscoveryService<K, S, P> discoveryService) {
 		this.eventloop = eventloop;
-		this.partitions.putAll(partitions);
-		this.alivePartitions.putAll(partitions);
-		this.sharder = RendezvousHashSharder.create(this.partitions.keySet(), topShards);
+		this.discoveryService = discoveryService;
 	}
 
-	public static <K extends Comparable<K>, S> CrdtPartitions<K, S> create(Eventloop eventloop) {
-		return new CrdtPartitions<>(eventloop, Collections.emptyMap());
+	public static <K extends Comparable<K>, S, P extends Comparable<P>> CrdtPartitions<K, S, P> create(Eventloop eventloop, DiscoveryService<K, S, P> discoveryService) {
+		return new CrdtPartitions<>(eventloop, discoveryService);
 	}
 
-	public static <K extends Comparable<K>, S> CrdtPartitions<K, S> create(Eventloop eventloop, Map<? extends Comparable<?>, ? extends CrdtStorage<K, S>> partitions) {
-		return new CrdtPartitions<>(eventloop, partitions);
-	}
-
-	public CrdtPartitions<K, S> withPartition(Comparable<?> id, CrdtStorage<K, S> partition) {
-		this.partitions.put(id, partition);
-		alivePartitions.put(id, partition);
-		return this;
-	}
-
-	public CrdtPartitions<K, S> withSerializer(@NotNull CrdtDataSerializer<K, S> serializer) {
-		this.serializer = serializer;
+	public CrdtPartitions<K, S, P> withTopShards(int topShards) {
+		this.topShards = topShards;
 		return this;
 	}
 
@@ -97,28 +79,28 @@ public final class CrdtPartitions<K extends Comparable<K>, S> implements Eventlo
 		sharder = RendezvousHashSharder.create(this.alivePartitions.keySet(), topShards);
 	}
 
-	public RendezvousHashSharder getSharder() {
+	public RendezvousHashSharder<P> getSharder() {
 		return sharder;
 	}
 
 	/**
 	 * Returns an unmodifiable view of all partitions
 	 */
-	public Map<Comparable<?>, CrdtStorage<K, S>> getPartitions() {
+	public Map<P, CrdtStorage<K, S>> getPartitions() {
 		return partitionsView;
 	}
 
 	/**
 	 * Returns an unmodifiable view of alive partitions
 	 */
-	public Map<Comparable<?>, CrdtStorage<K, S>> getAlivePartitions() {
+	public Map<P, CrdtStorage<K, S>> getAlivePartitions() {
 		return alivePartitionsView;
 	}
 
 	/**
 	 * Returns an unmodifiable view of dead partitions
 	 */
-	public Map<Comparable<?>, CrdtStorage<K, S>> getDeadPartitions() {
+	public Map<P, CrdtStorage<K, S>> getDeadPartitions() {
 		return deadPartitionsView;
 	}
 
@@ -129,7 +111,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S> implements Eventlo
 	 * @return alive {@link CrdtStorage}
 	 */
 	@Nullable
-	public CrdtStorage<K, S> get(Comparable<?> partitionId) {
+	public CrdtStorage<K, S> get(P partitionId) {
 		return alivePartitions.get(partitionId);
 	}
 
@@ -165,7 +147,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S> implements Eventlo
 	 * @return <code>true</code> if partition was alive and <code>false</code> otherwise
 	 */
 	@SuppressWarnings("UnusedReturnValue")
-	public boolean markDead(Comparable<?> partitionId, @Nullable Throwable e) {
+	public boolean markDead(P partitionId, @Nullable Throwable e) {
 		CrdtStorage<K, S> partition = alivePartitions.remove(partitionId);
 		if (partition != null) {
 			logger.warn("marking {} as dead ", partitionId, e);
@@ -176,7 +158,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S> implements Eventlo
 		return false;
 	}
 
-	public void markAlive(Comparable<?> partitionId) {
+	public void markAlive(P partitionId) {
 		CrdtStorage<K, S> partition = deadPartitions.remove(partitionId);
 		if (partition != null) {
 			logger.info("Partition {} is alive again!", partitionId);
@@ -185,12 +167,30 @@ public final class CrdtPartitions<K extends Comparable<K>, S> implements Eventlo
 		}
 	}
 
-	public int[] shard(Object key) {
-		return sharder.shard(key);
-	}
-
 	private void recompute() {
 		sharder = RendezvousHashSharder.create(alivePartitions.keySet(), topShards);
+	}
+
+	private void rediscover() {
+		discoveryService.discover(partitions, (result, e) -> {
+			if (e == null) {
+				updatePartitions(result);
+				recompute();
+				checkAllPartitions()
+						.whenResult(this::rediscover);
+			} else {
+				logger.warn("Could not discover partitions", e);
+				eventloop.delayBackground(Duration.ofSeconds(1), this::rediscover);
+			}
+		});
+	}
+
+	private void updatePartitions(Map<P, ? extends CrdtStorage<K, S>> newPartitions) {
+		partitions.clear();
+		partitions.putAll(newPartitions);
+
+		alivePartitions.clear();
+		deadPartitions.clear();
 	}
 
 	@NotNull
@@ -202,7 +202,20 @@ public final class CrdtPartitions<K extends Comparable<K>, S> implements Eventlo
 	@NotNull
 	@Override
 	public Promise<?> start() {
-		return checkAllPartitions();
+		return Promise.ofCallback(cb ->
+				discoveryService.discover(null, (result, e) -> {
+					if (e == null) {
+						this.partitions.putAll(result);
+						this.alivePartitions.putAll(result);
+						recompute();
+
+						checkAllPartitions()
+								.whenComplete(cb)
+								.whenResult(this::rediscover);
+					} else {
+						cb.setException(e);
+					}
+				}));
 	}
 
 	@NotNull
@@ -220,7 +233,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S> implements Eventlo
 		return Promises.all(
 				partitions.entrySet().stream()
 						.map(entry -> {
-							Comparable<?> id = entry.getKey();
+							P id = entry.getKey();
 							return entry.getValue()
 									.ping()
 									.mapEx(($, e) -> {
@@ -253,31 +266,6 @@ public final class CrdtPartitions<K extends Comparable<K>, S> implements Eventlo
 		return partitions.keySet().stream()
 				.map(Object::toString)
 				.collect(toList());
-	}
-
-	@JmxOperation
-	public void setPartitions(List<String> partitions) throws MalformedDataException {
-		Map<String, Comparable<?>> previousPartitions = this.partitions.keySet().stream()
-				.collect(toMap(Object::toString, Function.identity()));
-		Set<String> previousPartitionsKeyset = previousPartitions.keySet();
-		logger.info("Setting new partitions. Previous partitions: {}, new partitions: {}", previousPartitionsKeyset, partitions);
-		Set<String> partitionsSet = new HashSet<>(partitions);
-		for (String toRemove : difference(previousPartitionsKeyset, partitionsSet)) {
-			Comparable<?> key = previousPartitions.get(toRemove);
-			this.partitions.remove(key);
-			this.alivePartitions.remove(key);
-			this.deadPartitions.remove(key);
-		}
-
-		Set<String> toAdd = difference(partitionsSet, previousPartitionsKeyset);
-		if (!toAdd.isEmpty() && serializer == null) {
-			throw new IllegalStateException("No serializer set, cannot add partitions");
-		}
-		for (String address : toAdd) {
-			CrdtStorageClient<K, S> client = CrdtStorageClient.create(eventloop, parseInetSocketAddress(address), serializer);
-			this.partitions.put(address, client);
-			this.alivePartitions.put(address, client);
-		}
 	}
 	// endregion
 }
