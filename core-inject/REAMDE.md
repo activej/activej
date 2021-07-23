@@ -1,1 +1,1 @@
-This module forms ActiveJ Inject framework. To learn more, please visit [ActiveJ Inject website](https://inject.activej.io).
+This module forms ActiveJ Inject framework. To learn more, please visit [ActiveJ Inject website](https://activej.io/inject).

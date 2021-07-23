@@ -1,1 +1,1 @@
-This module is a part of ActiveJ platform. To learn more, please visit [ActiveJ website](https://activej.io/service-graph).
+This module is a part of ActiveJ platform. To learn more, please visit [ActiveJ website](https://activej.io/boot/servicegraph).

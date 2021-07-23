@@ -1,1 +1,1 @@
-This module forms ActiveJ Specializer framework. To learn more, please visit [ActiveJ Specializer website](https://specializer.activej.io).
+This module forms ActiveJ Specializer framework. To learn more, please visit [ActiveJ Specializer website](https://activej.io/specializer).

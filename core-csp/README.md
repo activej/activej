@@ -1,1 +1,1 @@
-This module is a part of ActiveJ platform. To learn more, please visit [ActiveJ website](https://activej.io/csp).
+This module is a part of ActiveJ platform. To learn more, please visit [ActiveJ website](https://activej.io/async-io/csp).
