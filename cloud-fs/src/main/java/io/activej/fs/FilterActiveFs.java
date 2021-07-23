@@ -17,7 +17,6 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.CollectorsEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -31,12 +30,12 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
 import static java.lang.Boolean.TRUE;
-import static java.util.stream.Collectors.partitioningBy;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 /**
  * A file system that can be configured to forbid certain paths and filenames.
@@ -116,7 +115,7 @@ final class FilterActiveFs implements ActiveFs {
 		return parent.list(glob)
 				.map(map -> map.entrySet().stream()
 						.filter(entry -> predicate.test(entry.getKey()))
-						.collect(CollectorsEx.toMap()));
+						.collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 	}
 
 	@Override

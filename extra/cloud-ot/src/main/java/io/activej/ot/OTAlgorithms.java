@@ -40,7 +40,6 @@ import java.util.function.Predicate;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.CollectorsEx.throwingMerger;
 import static io.activej.common.Utils.nullToEmpty;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.ot.reducers.GraphReducer.Result.*;
@@ -233,7 +232,9 @@ public final class OTAlgorithms {
 												.collect(toMap(
 														head -> head,
 														head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head)),
-														throwingMerger(),
+														(u, v) -> {
+															throw new IllegalStateException("Duplicate key " + u);
+														},
 														LinkedHashMap::new)))));
 	}
 

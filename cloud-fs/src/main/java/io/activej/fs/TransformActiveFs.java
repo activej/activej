@@ -17,7 +17,6 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.CollectorsEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -33,6 +32,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
@@ -218,6 +218,6 @@ final class TransformActiveFs implements ActiveFs {
 						.map(mappedName -> new SimpleEntry<>(mappedName, entry.getValue())))
 				.filter(entry -> entry.isPresent() && postPredicate.test(entry.get().getKey()))
 				.map(Optional::get)
-				.collect(CollectorsEx.toMap());
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 }

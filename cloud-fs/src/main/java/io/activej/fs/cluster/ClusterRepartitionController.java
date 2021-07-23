@@ -19,7 +19,6 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.common.Checks;
-import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
@@ -223,10 +222,10 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 					allFiles = map.size();
 
-					Map<String, FileMetadata> filteredMap = map.entrySet().stream()
+                    Map<String, FileMetadata> filteredMap = map.entrySet().stream()
 							.filter(entry -> negativeGlobPredicate.test(entry.getKey()))
 							.filter(entry -> !processedFiles.contains(entry.getKey()))
-							.collect(CollectorsEx.toMap());
+							.collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 					Map<Object, Set<String>> groupedById = new HashMap<>();
 					for (String name : filteredMap.keySet()) {

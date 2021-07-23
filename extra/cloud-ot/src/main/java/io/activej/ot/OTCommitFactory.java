@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import static io.activej.common.CollectorsEx.throwingMerger;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toMap;
 
@@ -59,7 +58,7 @@ public interface OTCommitFactory<K, D> {
 						.collect(toMap(
 								parent -> parent,
 								parent -> new DiffsWithLevel<>(level.apply(parent), diffs.apply(parent)),
-								throwingMerger(),
+								(u, v) -> { throw new IllegalStateException("Duplicate key " + u); },
 								LinkedHashMap::new)));
 	}
 

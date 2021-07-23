@@ -17,7 +17,6 @@
 package io.activej.fs;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.CollectorsEx;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.service.BlockingService;
@@ -276,7 +275,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		Path subdirectory = resolve(subdir);
 		String subglob = glob.substring(subdir.length());
 
-		return findMatching(tempDir, subglob, subdirectory).stream()
+        return findMatching(tempDir, subglob, subdirectory).stream()
 				.collect(Collector.of(
 						(Supplier<Map<String, FileMetadata>>) HashMap::new,
 						(map, path) -> {
@@ -286,7 +285,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 								map.put(filename, metadata);
 							}
 						},
-						CollectorsEx.throwingMerger())
+                        (u, v) -> { throw new IllegalStateException("Duplicate key " + u); })
 				);
 	}
 

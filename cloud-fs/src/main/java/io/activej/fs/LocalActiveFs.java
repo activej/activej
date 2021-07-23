@@ -19,7 +19,6 @@ package io.activej.fs;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.CollectorsEx;
 import io.activej.common.MemSize;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.MalformedDataException;
@@ -33,7 +32,6 @@ import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
-import io.activej.fs.LocalFileUtils.*;
 import io.activej.fs.exception.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -319,7 +317,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 											map.put(filename, metadata);
 										}
 									},
-									CollectorsEx.throwingMerger())
+									(u, v) -> { throw new IllegalStateException("Duplicate key " + u); })
 							);
 				})
 				.thenEx(translateScalarErrors())
