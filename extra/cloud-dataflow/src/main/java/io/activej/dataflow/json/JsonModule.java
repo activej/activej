@@ -18,7 +18,6 @@ package io.activej.dataflow.json;
 
 import com.dslplatform.json.*;
 import com.dslplatform.json.JsonReader.ReadObject;
-import io.activej.common.CollectorsEx;
 import io.activej.dataflow.command.*;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskStatus;
@@ -59,6 +58,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.dslplatform.json.JsonWriter.*;
 import static com.dslplatform.json.NumberConverter.*;
@@ -1055,7 +1055,7 @@ public final class JsonModule extends AbstractModule {
 							return new AbstractMap.SimpleEntry(key, value);
 						}))
 						.stream()
-						.collect(CollectorsEx.toMap()),
+						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
 				(writer, value) ->
 						writer.serialize(value.entrySet(), ($, entry) -> {
 							writer.writeByte(ARRAY_START);

@@ -16,7 +16,6 @@
 
 package io.activej.jmx.stats;
 
-import io.activej.common.jmx.MBeanFormat;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import org.jetbrains.annotations.Nullable;
 

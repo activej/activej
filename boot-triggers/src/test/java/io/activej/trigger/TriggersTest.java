@@ -2,8 +2,8 @@ package io.activej.trigger;
 
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
-import io.activej.common.time.CurrentTimeProvider;
 import io.activej.eventloop.Eventloop;
+import io.activej.test.time.TestCurrentTimeProvider;
 import io.activej.trigger.Triggers.TriggerWithResult;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class TriggersTest {
 	@Test
 	public void testDuplicateTriggersResume() {
 		triggers = Triggers.create();
-		triggers.now = CurrentTimeProvider.ofTimeSequence(System.currentTimeMillis(), Triggers.CACHE_TIMEOUT.toMillis());
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(System.currentTimeMillis(), Triggers.CACHE_TIMEOUT.toMillis());
 		RefBoolean condition = new RefBoolean(true);
 		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create);
 		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create);
@@ -78,17 +78,17 @@ public class TriggersTest {
 		triggers.suppressTriggerByName("nameOne");
 		assertEquals(0, triggers.getResults().size());
 		condition.set(false);
-		triggers.now = CurrentTimeProvider.ofTimeSequence(triggers.now.currentTimeMillis() + 10, 10);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(triggers.now.currentTimeMillis() + 10, 10);
 		triggers.getResults();
 		condition.set(true);
-		triggers.now = CurrentTimeProvider.ofTimeSequence(triggers.now.currentTimeMillis() + 1000, 10);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(triggers.now.currentTimeMillis() + 1000, 10);
 		assertEquals(1, triggers.getResults().size());
 	}
 
 	@Test
 	public void testResumeTrigger() {
 		triggers = Triggers.create();
-		triggers.now = CurrentTimeProvider.ofTimeSequence(System.currentTimeMillis(), Triggers.CACHE_TIMEOUT.toMillis());
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(System.currentTimeMillis(), Triggers.CACHE_TIMEOUT.toMillis());
 		RefBoolean condition = new RefBoolean(true);
 		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", () -> {
 			if (!condition.get()) {
@@ -101,10 +101,10 @@ public class TriggersTest {
 		triggers.suppressTriggerByName("nameOne");
 		assertEquals(0, triggers.getResults().size());
 		condition.set(false);
-		triggers.now = CurrentTimeProvider.ofTimeSequence(triggers.now.currentTimeMillis() + 10, 10);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(triggers.now.currentTimeMillis() + 10, 10);
 		triggers.getResults();
 		condition.set(true);
-		triggers.now = CurrentTimeProvider.ofTimeSequence(triggers.now.currentTimeMillis() + 1000, 10);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(triggers.now.currentTimeMillis() + 1000, 10);
 		assertEquals(1, triggers.getResults().size());
 	}
 
@@ -183,7 +183,7 @@ public class TriggersTest {
 	@Test
 	public void testWithoutTimestamp() {
 		triggers = Triggers.create();
-		triggers.now = CurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
 
 		triggers.addTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", TriggerResult::create);
 
@@ -200,7 +200,7 @@ public class TriggersTest {
 	@Test
 	public void testOfTimestamp() {
 		triggers = Triggers.create();
-		triggers.now = CurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
 
 		triggers.addTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofTimestamp(increaseTimestampAndGet()));
 
@@ -217,7 +217,7 @@ public class TriggersTest {
 	@Test
 	public void testOfInstant() {
 		triggers = Triggers.create();
-		triggers.now = CurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
 
 		triggers.addTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofInstant(Instant.ofEpochMilli(increaseTimestampAndGet())));
 
@@ -235,7 +235,7 @@ public class TriggersTest {
 	public void testOfValueWithPredicate() {
 		triggers = Triggers.create();
 		int increment = 100;
-		triggers.now = CurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + increment);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + increment);
 		triggers.addTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofValue(increaseTimestampAndGet(), time -> time > 1000));
 
 		long currentTimestamp = timestamp;
@@ -253,7 +253,7 @@ public class TriggersTest {
 
 	@Test
 	public void testConcurrentAccess() throws InterruptedException {
-		triggers.now = CurrentTimeProvider.ofTimeSequence(100, Triggers.CACHE_TIMEOUT.toMillis() * 2);
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(100, Triggers.CACHE_TIMEOUT.toMillis() * 2);
 		int nThreads = 10;
 		List<Thread> threads = new ArrayList<>(nThreads);
 		Ref<Throwable> throwableRef = new Ref<>();

@@ -16,7 +16,6 @@
 
 package io.activej.trigger;
 
-import io.activej.common.jmx.MBeanFormat;
 import io.activej.jmx.stats.ExceptionStats;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +24,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.jmx.MBeanFormat.formatExceptionMultiline;
+import static io.activej.jmx.stats.MBeanFormat.formatExceptionMultiline;
 
 public final class TriggerResult {
 	private static final TriggerResult NONE = new TriggerResult(0, null, null);
@@ -213,7 +212,7 @@ public final class TriggerResult {
 
 	@Override
 	public String toString() {
-		return "@" + MBeanFormat.formatTimestamp(timestamp) +
+		return "@" + Instant.ofEpochMilli(timestamp) +
 				(count != 1 ? " #" + count : "") +
 				(value != null ? " : " + value : "") +
 				(throwable != null ? "\n" + formatExceptionMultiline(throwable) : "");

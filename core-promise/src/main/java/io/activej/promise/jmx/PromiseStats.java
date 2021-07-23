@@ -18,7 +18,6 @@ package io.activej.promise.jmx;
 
 import io.activej.async.callback.Callback;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.jmx.MBeanFormat;
 import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.ExceptionStats;
@@ -146,8 +145,8 @@ public class PromiseStats {
 	public String toString() {
 		return "PromiseStats{" +
 				"activePromises=" + activePromises +
-				", lastStartTimestamp=" + MBeanFormat.formatTimestamp(lastStartTimestamp) +
-				", lastCompleteTimestamp=" + MBeanFormat.formatTimestamp(lastCompleteTimestamp) +
+				", lastStartTimestamp=" + Instant.ofEpochMilli(lastStartTimestamp) +
+				", lastCompleteTimestamp=" + Instant.ofEpochMilli(lastCompleteTimestamp) +
 				", duration=" + duration +
 				", exceptions=" + exceptions +
 				'}';

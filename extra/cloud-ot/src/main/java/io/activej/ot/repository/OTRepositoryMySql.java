@@ -54,7 +54,6 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.loadResource;
-import static io.activej.common.sql.SqlUtils.execute;
 import static io.activej.ot.repository.JsonIndentUtils.BYTE_STREAM;
 import static io.activej.ot.repository.JsonIndentUtils.indent;
 import static io.activej.promise.Promises.retry;
@@ -175,6 +174,14 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 		execute(dataSource, sql(new String(loadResource("sql/ot_revisions.sql"), UTF_8)));
 		if (tableBackup != null) {
 			execute(dataSource, sql(new String(loadResource("sql/ot_revisions_backup.sql"), UTF_8)));
+		}
+	}
+
+	private static void execute(DataSource dataSource, String sql) throws SQLException {
+		try (Connection connection = dataSource.getConnection()) {
+			try (Statement statement = connection.createStatement()) {
+				statement.execute(sql);
+			}
 		}
 	}
 

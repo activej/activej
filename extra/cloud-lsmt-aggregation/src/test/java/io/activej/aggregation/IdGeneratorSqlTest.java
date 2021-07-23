@@ -33,7 +33,7 @@ public class IdGeneratorSqlTest {
 	@Before
 	public void before() throws IOException, SQLException {
 		dataSource = dataSource("test.properties");
-		executeScript(dataSource, getClass());
+		executeScript(dataSource, getClass().getPackage().getName() + "/" + getClass().getSimpleName() + ".sql");
 		sequence = SqlAtomicSequence.ofLastInsertID("sequence", "next");
 	}
 

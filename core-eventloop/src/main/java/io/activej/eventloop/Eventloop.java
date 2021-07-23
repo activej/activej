@@ -25,7 +25,6 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.reflection.ReflectionUtils;
 import io.activej.common.time.CurrentTimeProvider;
-import io.activej.common.time.CurrentTimeProviderSystem;
 import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.error.FatalErrorHandler;
 import io.activej.eventloop.error.FatalErrorHandlers;
@@ -194,7 +193,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	}
 
 	public static Eventloop create() {
-		return create(CurrentTimeProviderSystem.instance());
+		return create(CurrentTimeProvider.ofSystem());
 	}
 
 	public static Eventloop create(@NotNull CurrentTimeProvider currentTimeProvider) {

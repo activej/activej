@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.jmx;
+package io.activej.jmx.stats;
 
 import io.activej.common.StringFormatUtils;
 import org.jetbrains.annotations.Nullable;
@@ -33,26 +33,18 @@ import static java.util.stream.Collectors.toList;
 public final class MBeanFormat {
 
 	public static String formatExceptionMultiline(@Nullable Throwable e) {
-		if (e == null)
-			return "";
+		if (e == null) return "";
 		StringWriter stringWriter = new StringWriter();
 		e.printStackTrace(new PrintWriter(stringWriter));
 		return stringWriter.toString();
 	}
 
-	public static String[] formatException(Throwable e) {
-		return e == null ? new String[0] : formatExceptionMultiline(e).split("\n");
-	}
-
-	public static String formatInstant(@Nullable Instant instant) {
-		if (instant == null) return "";
+	public static String formatTimestamp(long timestamp) {
+		if (timestamp == 0L) return "";
+		Instant instant = Instant.ofEpochMilli(timestamp);
 		Duration ago = Duration.between(instant, Instant.ofEpochMilli(currentTimeMillis())).withNanos(0);
 		return StringFormatUtils.formatInstant(instant) +
 				" (" + StringFormatUtils.formatDuration(ago) + " ago)";
-	}
-
-	public static String formatTimestamp(long timestamp) {
-		return formatInstant(timestamp != 0L ? Instant.ofEpochMilli(timestamp) : null);
 	}
 
 	public static String formatListAsMultilineString(@Nullable List<?> list) {

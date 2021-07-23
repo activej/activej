@@ -16,12 +16,13 @@
 
 package io.activej.jmx;
 
-import io.activej.common.jmx.MBeanFormat;
 import io.activej.jmx.api.JmxRefreshable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.management.openmbean.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -89,7 +90,9 @@ final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 		}
 		String type = e.getClass().getName();
 		String msg = e.getMessage();
-		List<String> stackTrace = asList(MBeanFormat.formatException(e));
+		StringWriter stringWriter = new StringWriter();
+		e.printStackTrace(new PrintWriter(stringWriter));
+		List<String> stackTrace = asList(stringWriter.toString().split("\n"));
 		Map<String, Object> nameToValue = new HashMap<>();
 		nameToValue.put(THROWABLE_TYPE_KEY, type);
 		nameToValue.put(THROWABLE_MESSAGE_KEY, msg);

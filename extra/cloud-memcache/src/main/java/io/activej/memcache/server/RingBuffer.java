@@ -28,7 +28,7 @@ import java.util.Arrays;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.StringFormatUtils.formatDuration;
-import static io.activej.common.jmx.MBeanFormat.formatTimestamp;
+import static io.activej.jmx.stats.MBeanFormat.formatTimestamp;
 import static java.lang.System.currentTimeMillis;
 
 /**

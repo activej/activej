@@ -57,7 +57,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.jmx.MBeanFormat.formatListAsMultilineString;
+import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
