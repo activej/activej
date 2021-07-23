@@ -18,7 +18,6 @@ package io.activej.bytebuf;
 
 import io.activej.common.Checks;
 import io.activej.common.Utils;
-import io.activej.common.api.Sliceable;
 import io.activej.common.recycle.Recyclable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +44,7 @@ import static java.lang.Math.min;
  */
 
 @SuppressWarnings({"WeakerAccess", "DefaultAnnotationParam", "unused"})
-public class ByteBuf implements Recyclable, Sliceable<ByteBuf> {
+public class ByteBuf implements Recyclable {
 	private static final boolean CHECK = Checks.isEnabled(ByteBuf.class);
 
 	static final boolean CHECK_RECYCLE = ByteBufPool.REGISTRY || CHECK;
@@ -211,7 +210,6 @@ public class ByteBuf implements Recyclable, Sliceable<ByteBuf> {
 	 */
 	@NotNull
 	@Contract("-> new")
-	@Override
 	public ByteBuf slice() {
 		return slice(head, readRemaining());
 	}

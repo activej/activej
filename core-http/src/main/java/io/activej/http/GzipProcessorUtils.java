@@ -19,7 +19,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.Checks;
-import io.activej.common.collection.ConcurrentStack;
 
 import java.util.function.Supplier;
 import java.util.zip.CRC32;
@@ -50,8 +49,8 @@ public final class GzipProcessorUtils {
 	// https://stackoverflow.com/a/23578269
 	private static final double DEFLATE_MAX_BYTES_OVERHEAD_PER_16K_BLOCK = 5;
 
-	private static final ConcurrentStack<Inflater> decompressors = new ConcurrentStack<>();
-	private static final ConcurrentStack<Deflater> compressors = new ConcurrentStack<>();
+	private static final ThreadLocal<Inflater> decompressors = new ThreadLocal<>().withInitial(() -> new Inflater(true));
+	private static final ThreadLocal<Deflater> compressors = new ThreadLocal<>().withInitial(Deflater::new);
 
 	public static ByteBuf fromGzip(ByteBuf src, int maxMessageSize) throws MalformedHttpException {
 		if (CHECK) checkArgument(src.readRemaining() > 0);
@@ -66,12 +65,10 @@ public final class GzipProcessorUtils {
 		try {
 			readDecompressedData(decompressor, src, dst, maxMessageSize);
 		} catch (DataFormatException ignored) {
-			moveDecompressorToPool(decompressor);
 			src.recycle();
 			dst.recycle();
 			throw new MalformedHttpException("Data format exception");
 		}
-		moveDecompressorToPool(decompressor);
 		check(expectedSize == dst.readRemaining(), src, dst, () ->
 				new MalformedHttpException("Decompressed data size is not equal to input size from GZIP trailer"));
 		check(src.readRemaining() == GZIP_FOOTER_SIZE, src, dst, () -> new MalformedHttpException("Compressed data was not read fully"));
@@ -95,7 +92,6 @@ public final class GzipProcessorUtils {
 		dst.writeInt(Integer.reverseBytes(crc));
 		dst.writeInt(Integer.reverseBytes(dataSize));
 
-		moveCompressorToPool(compressor);
 		src.recycle();
 		return dst;
 	}
@@ -193,29 +189,15 @@ public final class GzipProcessorUtils {
 	}
 
 	private static Inflater ensureDecompressor() {
-		Inflater decompressor = decompressors.pop();
-		if (decompressor == null) {
-			decompressor = new Inflater(true);
-		}
-		return decompressor;
-	}
-
-	private static void moveDecompressorToPool(Inflater decompressor) {
-		decompressor.reset();
-		decompressors.push(decompressor);
+		Inflater inflater = decompressors.get();
+		inflater.reset();
+		return inflater;
 	}
 
 	private static Deflater ensureCompressor() {
-		Deflater compressor = compressors.pop();
-		if (compressor == null) {
-			compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
-		}
-		return compressor;
-	}
-
-	private static void moveCompressorToPool(Deflater compressor) {
+		Deflater compressor = compressors.get();
 		compressor.reset();
-		compressors.push(compressor);
+		return compressor;
 	}
 
 	private static void check(boolean condition, ByteBuf buf1, ByteBuf buf2, Supplier<MalformedHttpException> exceptionSupplier) throws MalformedHttpException {

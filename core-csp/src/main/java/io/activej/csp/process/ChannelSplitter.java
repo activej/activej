@@ -28,15 +28,17 @@ import io.activej.promise.Promises;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.api.Sliceable.trySlice;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {
-	private ChannelSupplier<T> input;
 	private final List<ChannelConsumer<T>> outputs = new ArrayList<>();
+
+	private ChannelSupplier<T> input;
+	private Function<T, T> splitFn = Function.identity();
 
 	private ChannelSplitter() {
 	}
@@ -47,6 +49,18 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 
 	public static <T> ChannelSplitter<T> create(ChannelSupplier<T> input) {
 		return new ChannelSplitter<T>().withInput(input);
+	}
+
+	/**
+	 * Allows to set a function that will be used for splitting a value.
+	 * A split function is applied to incoming value each time it is being sent to an output.
+	 *
+	 * @param splitFn split function
+	 * @return this {@link ChannelSplitter}
+	 */
+	public ChannelSplitter<T> withSplitFunction(Function<T, T> splitFn) {
+		this.splitFn = splitFn;
+		return this;
 	}
 
 	public boolean hasOutputs() {
@@ -94,7 +108,7 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 				.whenComplete((item, e) -> {
 					if (e == null) {
 						if (item != null) {
-							Promises.all(outputs.stream().map(output -> output.accept(trySlice(item))))
+							Promises.all(outputs.stream().map(output -> output.accept(splitFn.apply(item))))
 									.whenComplete(($, e2) -> {
 										if (e2 == null) {
 											doProcess();
