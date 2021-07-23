@@ -19,7 +19,6 @@ package io.activej.csp.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufs.ByteScanner;
-import io.activej.common.api.DecoderFunction;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.Utils.IntScanner;

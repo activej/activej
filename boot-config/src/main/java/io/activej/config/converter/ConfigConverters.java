@@ -19,7 +19,6 @@ package io.activej.config.converter;
 import io.activej.async.service.EventloopTaskScheduler.Schedule;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
-import io.activej.common.concurrent.SimpleThreadFactory;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.eventloop.error.FatalErrorHandler;
@@ -628,24 +627,6 @@ public final class ConfigConverters {
 						.withThrottlingDecrease(config.get(ofDouble(), "throttlingDecrease", defaultValue.getThrottlingDecrease()))
 						.withInitialKeysPerSecond(config.get(ofDouble(), "initialKeysPerSecond", INITIAL_KEYS_PER_SECOND))
 						.withInitialThrottling(config.get(ofDouble(), "initialThrottling", INITIAL_THROTTLING));
-			}
-		};
-	}
-
-	public static ConfigConverter<SimpleThreadFactory> ofThreadFactory() {
-		return new ComplexConfigConverter<SimpleThreadFactory>(SimpleThreadFactory.create()) {
-			@Override
-			protected SimpleThreadFactory provide(Config config, SimpleThreadFactory defaultValue) {
-				SimpleThreadFactory result = SimpleThreadFactory.create();
-				@Nullable ThreadGroup threadGroup = defaultValue.getThreadGroup();
-				String threadGroupName = config.get(ofString(), "threadGroup", threadGroup == null ? null : threadGroup.getName());
-				if (threadGroupName != null) {
-					result.withThreadGroup(new ThreadGroup(threadGroupName));
-				}
-				return result
-						.withName(config.get(ofString(), "name", defaultValue.getName()))
-						.withPriority(config.get(ofInteger(), "priority", defaultValue.getPriority()))
-						.withDaemon(config.get(ofBoolean(), "daemon", defaultValue.isDaemon()));
 			}
 		};
 	}

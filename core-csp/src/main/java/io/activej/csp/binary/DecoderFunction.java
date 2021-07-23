@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.api;
+package io.activej.csp.binary;
 
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;

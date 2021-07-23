@@ -17,7 +17,6 @@
 package io.activej.bytebuf;
 
 import io.activej.common.Checks;
-import io.activej.common.concurrent.ThreadLocalCharArray;
 import io.activej.common.exception.MalformedDataException;
 
 import static io.activej.common.Checks.checkArgument;

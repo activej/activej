@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.activej.common.concurrent;
+package io.activej.bytebuf;
 
-public final class ThreadLocalCharArray {
+final class ThreadLocalCharArray {
 	private ThreadLocalCharArray() {
 	}
 
