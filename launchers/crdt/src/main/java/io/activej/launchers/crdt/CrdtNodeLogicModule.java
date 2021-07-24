@@ -16,7 +16,7 @@
 
 package io.activej.launchers.crdt;
 
-import io.activej.common.reflection.RecursiveType;
+import io.activej.types.RecursiveType;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.crdt.CrdtServer;
@@ -59,17 +59,17 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 		Type[] typeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
 
 		List<RecursiveType> typeArgs = Arrays.stream(typeArguments).map(RecursiveType::of).collect(toList());
-		@NotNull Type supertype = RecursiveType.of(CrdtStorage.class, typeArgs).getType();
+        @NotNull Type supertype = RecursiveType.of(CrdtStorage.class, typeArgs).getType();
 
-		bind((Key<?>) Key.ofType(supertype, InMemory.class))
+        bind((Key<?>) Key.ofType(supertype, InMemory.class))
 				.to(Key.ofType(RecursiveType.of(CrdtStorageMap.class, typeArgs).getType()));
-		bind((Key<?>) Key.ofType(supertype, Persistent.class))
+        bind((Key<?>) Key.ofType(supertype, Persistent.class))
 				.to(Key.ofType(RecursiveType.of(CrdtStorageFs.class, typeArgs).getType()));
 
 		List<RecursiveType> clusterStorageTypes = new ArrayList<>(typeArgs);
 		clusterStorageTypes.add(RecursiveType.of(String.class));
 
-		bind((Key<?>) Key.ofType(supertype, Cluster.class))
+        bind((Key<?>) Key.ofType(supertype, Cluster.class))
 				.to(Key.ofType(RecursiveType.of(CrdtStorageCluster.class, clusterStorageTypes).getType()));
 	}
 

@@ -1,6 +1,7 @@
-package io.activej.types.scanner;
+package io.activej.types;
 
-import io.activej.types.TypeT;
+import io.activej.types.scanner.TestClass1;
+import io.activej.types.scanner.TestClass2;
 import org.junit.Test;
 
 import java.util.*;

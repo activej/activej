@@ -32,7 +32,6 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static java.util.stream.Collectors.joining;
 
 public class LogUtils {
-	private static final int LIST_LIMIT = 100;
 
 	public enum Level {
 		OFF(null) {

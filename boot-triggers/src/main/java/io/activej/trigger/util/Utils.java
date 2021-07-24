@@ -16,7 +16,7 @@
 
 package io.activej.trigger.util;
 
-import io.activej.common.reflection.RecursiveType;
+import io.activej.types.RecursiveType;
 import io.activej.inject.Key;
 
 import java.lang.annotation.Annotation;
@@ -30,7 +30,7 @@ public final class Utils {
 			return prettyPrintAnnotation((Annotation) qualifier);
 		}
 		if (qualifier instanceof Class && ((Class<?>) qualifier).isAnnotation()) {
-			return "@" + RecursiveType.of((Class<?>) qualifier).getSimpleName();
+			return "@" + ((Class<?>) qualifier).getSimpleName();
 		}
 		return qualifier.toString();
 	}

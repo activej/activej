@@ -21,7 +21,7 @@ import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.util.Primitives;
-import io.activej.common.reflection.RecursiveType;
+import io.activej.types.RecursiveType;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.impl.*;

@@ -1,11 +1,11 @@
-package io.activej.aggregation.fieldtype;
+package io.activej.types;
 
-import io.activej.common.reflection.RecursiveType;
+import io.activej.types.RecursiveType;
 import org.junit.Test;
 
 import java.util.List;
 
-import static io.activej.common.reflection.RecursiveType.of;
+import static io.activej.types.RecursiveType.of;
 import static org.junit.Assert.assertEquals;
 
 public class RecursiveTypeTest {
@@ -17,8 +17,8 @@ public class RecursiveTypeTest {
 
 	@Test
 	public void testListString() throws NoSuchFieldException {
-		assertEquals(ListStringPojo.class.getField("list").getGenericType(),
-				of(List.class, of(String.class)).getType());
+        assertEquals(ListStringPojo.class.getField("list").getGenericType(),
+				RecursiveType.of(List.class, of(String.class)).getType());
 	}
 
 	private static class ListStringPojo {

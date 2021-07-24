@@ -4,7 +4,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 import static java.util.Collections.emptyMap;
@@ -15,17 +18,19 @@ public class TypeUtils {
 	public static final WildcardType WILDCARD_TYPE_ANY = new WildcardTypeImpl(new Type[]{Object.class}, new Type[0]);
 
 	public static Class<?> getRawClass(Type type) {
-		Class<?> typeClazz;
-
 		if (type instanceof Class) {
-			typeClazz = (Class<?>) type;
+			return (Class<?>) type;
 		} else if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
-			typeClazz = (Class<?>) parameterizedType.getRawType();
-		} else {
-			throw new IllegalArgumentException("Unsupported type: " + type);
+			return (Class<?>) parameterizedType.getRawType();
+		} else if (type instanceof WildcardType) {
+			WildcardType wildcardType = (WildcardType) type;
+			Type[] upperBounds = wildcardType.getUpperBounds();
+			if (upperBounds.length == 1 && wildcardType.getLowerBounds().length == 0) {
+				return getRawClass(upperBounds[0]);
+			}
 		}
-		return typeClazz;
+		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
 
 	public static Type[] getActualTypeArguments(Type type) {

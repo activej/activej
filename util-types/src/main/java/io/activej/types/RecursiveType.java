@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package io.activej.common.reflection;
+package io.activej.types;
 
-import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -28,8 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.activej.common.Checks.checkArgument;
-import static java.util.stream.Collectors.toList;
+import static io.activej.types.TypeUtils.getRawClass;
 
 public final class RecursiveType {
 	private static final RecursiveType[] NO_TYPE_PARAMS = new RecursiveType[0];
@@ -37,29 +34,27 @@ public final class RecursiveType {
 	@NotNull
 	private final Class<?> clazz;
 	@NotNull
-	private final RecursiveType[] typeParams;
+	private final RecursiveType[] typeArguments;
 
-	private final int arrayDimension;
-
-	private RecursiveType(@NotNull Class<?> clazz, @NotNull RecursiveType[] typeParams, int arrayDimension) {
+	private RecursiveType(@NotNull Class<?> clazz, @NotNull RecursiveType[] typeArguments) {
 		this.clazz = clazz;
-		this.typeParams = typeParams;
-		this.arrayDimension = arrayDimension;
+		this.typeArguments = typeArguments;
 	}
 
 	@NotNull
 	public static RecursiveType of(@NotNull Class<?> clazz) {
-		return new RecursiveType(clazz, NO_TYPE_PARAMS, clazz.isArray() ? 1 : 0);
-	}
-
-	@NotNull
-	public static RecursiveType of(@NotNull Class<?> clazz, @NotNull RecursiveType... typeParams) {
-		return new RecursiveType(clazz, typeParams, clazz.isArray() ? 1 : 0);
+		return of(clazz, NO_TYPE_PARAMS);
 	}
 
 	@NotNull
 	public static RecursiveType of(@NotNull Class<?> clazz, @NotNull List<RecursiveType> typeParams) {
-		return new RecursiveType(clazz, typeParams.toArray(new RecursiveType[0]), clazz.isArray() ? 1 : 0);
+		return of(clazz, typeParams.toArray(new RecursiveType[0]));
+	}
+
+	@NotNull
+	public static RecursiveType of(@NotNull Class<?> clazz, @NotNull RecursiveType... typeParams) {
+		if (clazz.isArray()) throw new IllegalArgumentException("Unsupported type: " + clazz);
+		return new RecursiveType(clazz, typeParams);
 	}
 
 	@NotNull
@@ -78,12 +73,7 @@ public final class RecursiveType {
 							.map(RecursiveType::of)
 							.toArray(RecursiveType[]::new));
 		} else if (type instanceof WildcardType) {
-			Type[] upperBounds = ((WildcardType) type).getUpperBounds();
-			checkArgument(upperBounds.length == 1, type);
-			return of(upperBounds[0]);
-		} else if (type instanceof GenericArrayType) {
-			RecursiveType component = of(((GenericArrayType) type).getGenericComponentType());
-			return new RecursiveType(component.clazz, component.typeParams, component.arrayDimension + 1);
+			return of(getRawClass(type));
 		} else {
 			throw new IllegalArgumentException(type.getTypeName());
 		}
@@ -94,64 +84,35 @@ public final class RecursiveType {
 		return clazz;
 	}
 
-	@NotNull
-	public RecursiveType[] getTypeParams() {
-		return typeParams;
-	}
-
-	public boolean isArray() {
-		return arrayDimension != 0;
-	}
-
-	public int getArrayDimension() {
-		return arrayDimension;
-	}
-
-	@NotNull
-	private Type getArrayType(@NotNull Type component, int arrayDeepness) {
-		if (arrayDeepness == 0) {
-			return component;
-		}
-		return (GenericArrayType) () -> getArrayType(component, arrayDeepness - 1);
+	public RecursiveType[] getTypeArguments() {
+		return typeArguments;
 	}
 
 	@NotNull
 	public Type getType() {
-		if (typeParams.length == 0) {
-			return getArrayType(clazz, arrayDimension);
-		}
+		return typeArguments.length == 0 ? clazz : new ParameterizedType() {
+			final Type[] actualTypeArguments = Arrays.stream(typeArguments).map(RecursiveType::getType).toArray(Type[]::new);
 
-		Type[] types = Arrays.stream(typeParams)
-				.map(RecursiveType::getType)
-				.collect(toList())
-				.toArray(new Type[]{});
-
-		ParameterizedType parameterized = new ParameterizedType() {
-			@NotNull
 			@Override
 			public Type[] getActualTypeArguments() {
-				return types;
+				return actualTypeArguments;
 			}
 
-			@NotNull
 			@Override
 			public Type getRawType() {
 				return clazz;
 			}
 
-			@Nullable
 			@Override
 			public Type getOwnerType() {
 				return null;
 			}
 
-			@NotNull
 			@Override
 			public String toString() {
 				return RecursiveType.this.toString();
 			}
 		};
-		return getArrayType(parameterized, arrayDimension);
 	}
 
 	@SuppressWarnings("RedundantIfStatement")
@@ -161,31 +122,31 @@ public final class RecursiveType {
 		if (o == null || getClass() != o.getClass()) return false;
 		RecursiveType that = (RecursiveType) o;
 		if (!clazz.equals(that.clazz)) return false;
-		if (!Arrays.equals(typeParams, that.typeParams)) return false;
+		if (!Arrays.equals(typeArguments, that.typeArguments)) return false;
 		return true;
 	}
 
 	@Override
 	public int hashCode() {
 		int result = clazz.hashCode();
-		result = 31 * result + Arrays.hashCode(typeParams);
+		result = 31 * result + Arrays.hashCode(typeArguments);
 		return result;
 	}
 
 	@NotNull
 	public String getSimpleName() {
-		return clazz.getSimpleName() + (typeParams.length == 0 ? "" :
-				Arrays.stream(typeParams)
+		return clazz.getSimpleName() + (typeArguments.length == 0 ? "" :
+				Arrays.stream(typeArguments)
 						.map(RecursiveType::getSimpleName)
-						.collect(Collectors.joining(",", "<", ">"))) + new String(new char[arrayDimension]).replace("\0", "[]");
+						.collect(Collectors.joining(",", "<", ">")));
 	}
 
 	@NotNull
 	public String getName() {
-		return clazz.getName() + (typeParams.length == 0 ? "" :
-				Arrays.stream(typeParams)
+		return clazz.getName() + (typeArguments.length == 0 ? "" :
+				Arrays.stream(typeArguments)
 						.map(RecursiveType::getName)
-						.collect(Collectors.joining(",", "<", ">"))) + new String(new char[arrayDimension]).replace("\0", "[]");
+						.collect(Collectors.joining(",", "<", ">")));
 	}
 
 	@Nullable
