@@ -1,4 +1,4 @@
-package io.activej.inject.util;
+package io.activej.types;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -7,7 +7,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
 
-import static io.activej.inject.util.TypeUtils.*;
+import static io.activej.types.TypeUtils.*;
 
 public class IsAssignableUtils {
 

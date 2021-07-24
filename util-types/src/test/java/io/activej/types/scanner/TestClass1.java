@@ -1,4 +1,4 @@
-package io.activej.serializer.scanner;
+package io.activej.types.scanner;
 
 import java.util.List;
 

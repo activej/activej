@@ -35,7 +35,7 @@ import java.util.stream.Collector;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingType.EAGER;
 import static io.activej.inject.binding.BindingType.TRANSIENT;
-import static io.activej.inject.util.IsAssignableUtils.*;
+import static io.activej.types.IsAssignableUtils.isAssignable;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;

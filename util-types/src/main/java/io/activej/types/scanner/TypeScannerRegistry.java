@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.serializer.reflection.scanner;
+package io.activej.types.scanner;
 
-import io.activej.serializer.reflection.TypeT;
-import io.activej.serializer.util.AnnotatedTypeUtils;
-import io.activej.serializer.util.TypeUtils;
-import io.activej.serializer.util.Utils;
+import io.activej.types.AnnotatedTypeUtils;
+import io.activej.types.AnnotationUtils;
+import io.activej.types.TypeT;
+import io.activej.types.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.activej.serializer.util.AnnotatedTypeUtils.annotatedTypeOf;
-import static io.activej.serializer.util.IsAssignableUtils.isAssignable;
+import static io.activej.types.AnnotatedTypeUtils.annotatedTypeOf;
+import static io.activej.types.IsAssignableUtils.isAssignable;
 import static java.util.Collections.emptyList;
 
 public final class TypeScannerRegistry<R> {
@@ -85,15 +85,15 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		public boolean hasAnnotation(Class<? extends Annotation> clazz) {
-			return Utils.hasAnnotation(clazz, this.getAnnotations());
+			return AnnotationUtils.hasAnnotation(clazz, this.getAnnotations());
 		}
 
 		public <A extends Annotation> A getAnnotation(Class<A> clazz) {
-			return Utils.getAnnotation(clazz, this.getAnnotations());
+			return AnnotationUtils.getAnnotation(clazz, this.getAnnotations());
 		}
 
 		public <A extends Annotation, T> T getAnnotation(Class<A> clazz, Function<@Nullable A, T> fn) {
-			return Utils.getAnnotation(clazz, this.getAnnotations(), fn);
+			return fn.apply(AnnotationUtils.getAnnotation(clazz, this.getAnnotations()));
 		}
 
 		public AnnotatedType[] getTypeArguments() {

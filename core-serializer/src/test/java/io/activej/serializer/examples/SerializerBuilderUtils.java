@@ -3,7 +3,7 @@ package io.activej.serializer.examples;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.SerializerDef;
-import io.activej.serializer.reflection.scanner.TypeScannerRegistry.Mapping;
+import io.activej.types.scanner.TypeScannerRegistry.Mapping;
 
 import java.util.HashMap;
 import java.util.List;

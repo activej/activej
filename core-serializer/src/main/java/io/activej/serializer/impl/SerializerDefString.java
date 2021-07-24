@@ -26,7 +26,7 @@ import io.activej.serializer.util.BinaryOutputUtils;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.StringFormat.UTF8;
-import static io.activej.serializer.util.Utils.eval;
+import static io.activej.serializer.util.Utils.of;
 
 public final class SerializerDefString extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final StringFormat format;
@@ -61,7 +61,7 @@ public final class SerializerDefString extends AbstractSerializerDef implements 
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return set(pos, eval(() -> {
+		return set(pos, of(() -> {
 			Expression string = cast(value, String.class);
 			switch (format) {
 				case ISO_8859_1:

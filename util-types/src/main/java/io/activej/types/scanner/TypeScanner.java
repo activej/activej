@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.serializer.reflection.scanner;
+package io.activej.types.scanner;
 
-import io.activej.serializer.reflection.TypeT;
+import io.activej.types.TypeT;
 
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Type;
 
-import static io.activej.serializer.util.AnnotatedTypeUtils.annotatedTypeOf;
+import static io.activej.types.AnnotatedTypeUtils.annotatedTypeOf;
 
 /**
  * This is an interface for something that can create or retrieve a codec for a given type.

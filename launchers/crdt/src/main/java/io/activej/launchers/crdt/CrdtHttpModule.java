@@ -17,7 +17,7 @@
 package io.activej.launchers.crdt;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.reflection.TypeT;
+import io.activej.types.TypeT;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.storage.local.CrdtStorageMap;

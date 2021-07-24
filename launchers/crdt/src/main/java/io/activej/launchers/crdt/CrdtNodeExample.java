@@ -16,7 +16,7 @@
 
 package io.activej.launchers.crdt;
 
-import io.activej.common.reflection.TypeT;
+import io.activej.types.TypeT;
 import io.activej.config.Config;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;

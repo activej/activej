@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.reflection;
+package io.activej.types;
 
 import org.jetbrains.annotations.NotNull;
 

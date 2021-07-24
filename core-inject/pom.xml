@@ -18,6 +18,14 @@
     allow to transform graph of dependencies at startup time without reflection.
   </description>
 
+  <dependencies>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-types</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>

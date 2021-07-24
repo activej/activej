@@ -17,7 +17,6 @@
 package io.activej.inject;
 
 import io.activej.inject.util.ReflectionUtils;
-import io.activej.inject.util.IsAssignableUtils;
 import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,7 +25,7 @@ import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import static io.activej.inject.util.IsAssignableUtils.*;
+import static io.activej.types.IsAssignableUtils.isAssignable;
 
 public abstract class KeyPattern<T> {
 	@NotNull

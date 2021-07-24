@@ -1,7 +1,7 @@
 package io.activej.common;
 
 import io.activej.common.reflection.RecursiveType;
-import io.activej.common.reflection.TypeT;
+import io.activej.types.TypeT;
 import org.junit.Test;
 
 import java.util.List;

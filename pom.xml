@@ -48,6 +48,7 @@
     <module>launcher</module>
     <module>launchers</module>
     <module>util-common</module>
+    <module>util-types</module>
     <module>util-state</module>
     <module>test</module>
 

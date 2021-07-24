@@ -16,7 +16,6 @@
 
 package io.activej.launchers.crdt;
 
-import io.activej.common.reflection.TypeT;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
 

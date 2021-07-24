@@ -18,11 +18,11 @@ package io.activej.serializer.impl;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import io.activej.serializer.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -33,7 +33,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.util.Utils.eval;
+import static io.activej.serializer.util.Utils.of;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Collections.singletonList;
@@ -96,11 +96,11 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		this.decodeType = decodeType;
 	}
 
-	public static SerializerDefClass of(@NotNull Class<?> type) {
+	public static SerializerDefClass create(@NotNull Class<?> type) {
 		return new SerializerDefClass(type, type);
 	}
 
-	public static SerializerDefClass of(@NotNull Class<?> encodeType, @NotNull Class<?> decodeType) {
+	public static SerializerDefClass create(@NotNull Class<?> encodeType, @NotNull Class<?> decodeType) {
 		if (!encodeType.isAssignableFrom(decodeType))
 			throw new IllegalArgumentException(format("Class should be assignable from %s", decodeType));
 		return new SerializerDefClass(encodeType, decodeType);
@@ -291,7 +291,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 			return deserializeClassSimple(staticDecoders, in, version, compatibilityLevel, instanceInitializer);
 		}
 
-		return let(eval(() -> {
+		return let(of(() -> {
 					List<Expression> fieldDeserializers = new ArrayList<>();
 					for (FieldDef fieldDef : fields.values()) {
 						if (!fieldDef.hasVersion(version)) continue;
@@ -320,7 +320,9 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 									boolean found = false;
 									for (String fieldName : fieldNames) {
 										FieldDef fieldDef = fields.get(fieldName);
-										if (fieldDef == null) throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, method));
+										if (fieldDef == null) {
+											throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, method));
+										}
 										if (fieldDef.hasVersion(version)) {
 											found = true;
 											break;

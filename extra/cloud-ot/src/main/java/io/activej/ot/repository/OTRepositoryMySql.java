@@ -22,7 +22,7 @@ import com.dslplatform.json.JsonWriter.WriteObject;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.reflection.TypeT;
+import io.activej.types.TypeT;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;

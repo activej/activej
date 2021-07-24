@@ -142,7 +142,7 @@ public class Utils {
 	private static <T> BinarySerializer<T> createBinarySerializer(Class<T> recordClass,
 			Map<String, FieldType> keys, Map<String, FieldType> fields,
 			DefiningClassLoader classLoader) {
-		SerializerDefClass serializer = SerializerDefClass.of(recordClass);
+		SerializerDefClass serializer = SerializerDefClass.create(recordClass);
 		addFields(recordClass, new ArrayList<>(keys.entrySet()), serializer);
 		addFields(recordClass, new ArrayList<>(fields.entrySet()), serializer);
 

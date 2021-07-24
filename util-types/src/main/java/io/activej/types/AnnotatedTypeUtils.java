@@ -1,4 +1,4 @@
-package io.activej.serializer.util;
+package io.activej.types;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -280,9 +280,7 @@ public class AnnotatedTypeUtils {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 			if (!super.equals(o)) return false;
-
 			AnnotatedArrayTypeImpl type = (AnnotatedArrayTypeImpl) o;
-
 			return componentType.equals(type.componentType);
 		}
 

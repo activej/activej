@@ -86,7 +86,7 @@ public final class FieldTypes {
 	}
 
 	private static SerializerDef serializerDefHyperLogLog() {
-		SerializerDefClass serializer = SerializerDefClass.of(HyperLogLog.class);
+		SerializerDefClass serializer = SerializerDefClass.create(HyperLogLog.class);
 		try {
 			serializer.addGetter(HyperLogLog.class.getMethod("getRegisters"),
 					new SerializerDefArray(new SerializerDefByte(false), byte[].class), -1, -1);

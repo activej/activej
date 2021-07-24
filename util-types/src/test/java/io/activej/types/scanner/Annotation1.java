@@ -1,4 +1,4 @@
-package io.activej.serializer.scanner;
+package io.activej.types.scanner;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

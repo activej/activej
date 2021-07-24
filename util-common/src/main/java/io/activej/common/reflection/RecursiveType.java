@@ -16,6 +16,7 @@
 
 package io.activej.common.reflection;
 
+import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -113,7 +114,7 @@ public final class RecursiveType {
 		}
 		return (GenericArrayType) () -> getArrayType(component, arrayDeepness - 1);
 	}
-	
+
 	@NotNull
 	public Type getType() {
 		if (typeParams.length == 0) {

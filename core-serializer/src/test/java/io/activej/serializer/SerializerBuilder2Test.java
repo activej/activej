@@ -1,12 +1,11 @@
 package io.activej.serializer;
 
+import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.annotations.SerializeSubclasses;
 import io.activej.serializer.annotations.SerializeVarLength;
-import io.activej.serializer.annotations.Serialize;
-import io.activej.serializer.reflection.TypeT;
-import io.activej.serializer.scanner.TestEnum1;
 import io.activej.test.rules.ClassBuilderConstantsRule;
+import io.activej.types.TypeT;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -18,7 +17,6 @@ import java.util.List;
 import java.util.Random;
 
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
-import static io.activej.serializer.scanner.TestEnum1.ONE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -124,10 +122,14 @@ public class SerializerBuilder2Test {
 		}
 	}
 
+	public enum TestEnum1 {
+		ONE, TWO
+	}
+
 	@Test
 	public void testEnum() {
 		{
-			TestEnum1 testData1 = ONE;
+			TestEnum1 testData1 = TestEnum1.ONE;
 			TestEnum1 testData2 = doTest(TestEnum1.class, testData1);
 			assertEquals(testData1, testData2);
 		}

@@ -31,7 +31,7 @@ import java.util.Map;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
-import static io.activej.serializer.util.Utils.eval;
+import static io.activej.serializer.util.Utils.of;
 import static org.objectweb.asm.Type.getType;
 
 public final class SerializerDefSubclass extends AbstractSerializerDef implements SerializerDefWithNullable {
@@ -109,7 +109,7 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 		return let(startIndex != 0 ? sub(readByte(in), value(startIndex)) : cast(readByte(in), int.class),
 				idx -> cast(
 						switchByIndex(idx,
-								eval(() -> {
+								of(() -> {
 									List<Expression> versions = new ArrayList<>();
 									for (SerializerDef subclassSerializer : subclassSerializers.values()) {
 										versions.add(cast(subclassSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), dataType));

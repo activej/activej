@@ -1,4 +1,4 @@
-package io.activej.serializer.util;
+package io.activej.types;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

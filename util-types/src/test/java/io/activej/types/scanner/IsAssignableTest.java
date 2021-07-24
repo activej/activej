@@ -1,11 +1,11 @@
-package io.activej.serializer.scanner;
+package io.activej.types.scanner;
 
-import io.activej.common.reflection.TypeT;
+import io.activej.types.TypeT;
 import org.junit.Test;
 
 import java.util.*;
 
-import static io.activej.serializer.util.IsAssignableUtils.isAssignable;
+import static io.activej.types.IsAssignableUtils.isAssignable;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

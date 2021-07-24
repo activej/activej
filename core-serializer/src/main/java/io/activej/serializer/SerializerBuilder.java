@@ -20,12 +20,12 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.types.TypeT;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
-import io.activej.serializer.reflection.TypeT;
-import io.activej.serializer.reflection.scanner.TypeScannerRegistry;
-import io.activej.serializer.reflection.scanner.TypeScannerRegistry.Context;
-import io.activej.serializer.reflection.scanner.TypeScannerRegistry.Mapping;
+import io.activej.types.scanner.TypeScannerRegistry;
+import io.activej.types.scanner.TypeScannerRegistry.Context;
+import io.activej.types.scanner.TypeScannerRegistry.Mapping;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -42,8 +42,10 @@ import static io.activej.codegen.util.Utils.getPathSetting;
 import static io.activej.serializer.SerializerDef.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
-import static io.activej.serializer.util.AnnotatedTypeUtils.*;
-import static io.activej.serializer.util.Utils.*;
+import static io.activej.serializer.util.Utils.of;
+import static io.activej.types.AnnotatedTypeUtils.*;
+import static io.activej.types.AnnotationUtils.getAnnotation;
+import static io.activej.types.AnnotationUtils.hasAnnotation;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
@@ -386,7 +388,7 @@ public final class SerializerBuilder {
 		classBuilder.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),
 				asList(BinaryInput.class, byte.class),
-				eval(() -> {
+				of(() -> {
 					List<Expression> listKey = new ArrayList<>();
 					List<Expression> listValue = new ArrayList<>();
 					for (int i = decodeVersions.size() - 2; i >= 0; i--) {
@@ -513,7 +515,7 @@ public final class SerializerBuilder {
 		if (rawClass.isLocalClass())
 			throw new IllegalArgumentException("Class should not be local");
 
-		SerializerDefClass serializer = SerializerDefClass.of(rawClass);
+		SerializerDefClass serializer = SerializerDefClass.create(rawClass);
 		if (!rawClass.isInterface()) {
 			scanClass(ctx, serializer);
 		} else {
