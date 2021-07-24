@@ -38,7 +38,7 @@ import static io.activej.bytebuf.ByteBufStrings.SP;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.nonNullOrEmpty;
+import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
 import static io.activej.http.HttpClientConnection.CONNECTION_UPGRADE_HEADER;
 import static io.activej.http.HttpClientConnection.UPGRADE_WEBSOCKET_HEADER;
@@ -428,7 +428,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 		if (url.isRelativePath()) {
 			String host = getHeader(HOST);
-			return getProtocol().lowercase() + "://" + Utils.nonNullOrEmpty(host) + url;
+			return getProtocol().lowercase() + "://" + nonNullElseEmpty(host) + url;
 		}
 		return url.toString();
 	}

@@ -40,7 +40,7 @@ import java.util.function.Predicate;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.nonNullOrEmpty;
+import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.common.Utils.*;
 import static io.activej.ot.reducers.GraphReducer.Result.*;
 import static io.activej.promise.Promises.toList;
@@ -421,11 +421,11 @@ public final class OTAlgorithms {
 			}
 
 			graph.addNode(node, commit.getLevel(), parents);
-			for (Map.Entry<K, List<? extends D>> entry : new HashMap<>(nonNullOrEmpty(graph.getChildren(node))).entrySet()) {
+			for (Map.Entry<K, List<? extends D>> entry : nonNullElseEmpty(graph.getChildren(node)).entrySet()) {
 				K child = entry.getKey();
 				List<? extends D> childDiffs = entry.getValue();
-				Map<K, List<? extends D>> grandChildren = nonNullOrEmpty(graph.getChildren(child));
-				Map<K, List<? extends D>> coParents = nonNullOrEmpty(graph.getParents(child));
+				Map<K, List<? extends D>> grandChildren = nonNullElseEmpty(graph.getChildren(child));
+				Map<K, List<? extends D>> coParents = nonNullElseEmpty(graph.getParents(child));
 				if (grandChildren.size() != 1 || coParents.size() != 1) continue;
 				K grandChild = first(grandChildren.keySet());
 				List<? extends D> grandChildDiffs = first(grandChildren.values());

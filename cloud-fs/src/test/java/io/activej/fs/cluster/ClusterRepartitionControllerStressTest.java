@@ -159,7 +159,7 @@ public final class ClusterRepartitionControllerStressTest {
 					System.out.printf("Done repartitioning in %.2f ms%n", ms);
 					Promises.toList(partitions.getAlivePartitions().values().stream().map(fsClient -> fsClient.list("**").toTry()))
 							.map(lss -> lss.stream().mapToLong(ls -> {
-								Map<String, FileMetadata> mss = ls.getOrNull();
+                                Map<String, FileMetadata> mss = ls.get();
 								return mss == null ? 0 : mss.values().stream().mapToLong(FileMetadata::getSize).sum();
 							}).sum())
 							.whenComplete(assertComplete(bytes -> {

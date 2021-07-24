@@ -39,7 +39,7 @@ public interface Decoder<T> {
 
 	@Nullable
 	default T decodeOrNull(@NotNull HttpRequest request) {
-		return decode(request).getLeftOrNull();
+		return decode(request).getLeft();
 	}
 
 	default T decodeOrThrow(@NotNull HttpRequest request) throws DecodeException {

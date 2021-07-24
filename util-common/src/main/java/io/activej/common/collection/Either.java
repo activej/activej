@@ -23,8 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.*;
 
-import static io.activej.common.Checks.checkState;
-
 public final class Either<L, R> {
 	static {
 		Recyclers.register(Either.class, either -> {
@@ -66,46 +64,34 @@ public final class Either<L, R> {
 	}
 
 	@Contract(pure = true)
+	@Nullable
 	public L getLeft() {
-		checkState(isLeft());
 		return left;
 	}
 
 	@Contract(pure = true)
+	@Nullable
 	public R getRight() {
-		checkState(isRight());
 		return right;
 	}
 
 	@Contract(pure = true)
-	@Nullable
-	public L getLeftOrNull() {
-		return left;
-	}
-
-	@Contract(pure = true)
-	@Nullable
-	public R getRightOrNull() {
-		return right;
-	}
-
-	@Contract(pure = true)
-	public L getLeftOr(@Nullable L defaultValue) {
+	public L getLeftElse(@Nullable L defaultValue) {
 		return isLeft() ? left : defaultValue;
 	}
 
 	@Contract(pure = true)
-	public R getRightOr(@Nullable R defaultValue) {
+	public R getRightElse(@Nullable R defaultValue) {
 		return isRight() ? right : defaultValue;
 	}
 
 	@Contract(pure = true)
-	public L getLeftOrSupply(@NotNull Supplier<? extends L> defaultValueSupplier) {
+	public L getLeftElseGet(@NotNull Supplier<? extends L> defaultValueSupplier) {
 		return isLeft() ? left : defaultValueSupplier.get();
 	}
 
 	@Contract(pure = true)
-	public R getRightOrSupply(@NotNull Supplier<? extends R> defaultValueSupplier) {
+	public R getRightElseGet(@NotNull Supplier<? extends R> defaultValueSupplier) {
 		return isRight() ? right : defaultValueSupplier.get();
 	}
 
@@ -195,5 +181,29 @@ public final class Either<L, R> {
 		return isRight() ?
 				fn.apply(right) :
 				(Either<L, T>) this;
+	}
+
+	@SuppressWarnings("RedundantIfStatement")
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Either<?, ?> either = (Either<?, ?>) o;
+		if (left != null ? !left.equals(either.left) : either.left != null) return false;
+		if (right != null ? !right.equals(either.right) : either.right != null) return false;
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = 0;
+		result = 31 * result + (left != null ? left.hashCode() : 0);
+		result = 31 * result + (right != null ? right.hashCode() : 0);
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "{" + (isLeft() ? "left=" + left : "left=" + left) + "}";
 	}
 }

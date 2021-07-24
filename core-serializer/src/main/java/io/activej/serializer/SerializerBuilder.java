@@ -42,7 +42,7 @@ import static io.activej.codegen.util.Utils.getPathSetting;
 import static io.activej.serializer.SerializerDef.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
-import static io.activej.serializer.util.Utils.of;
+import static io.activej.serializer.util.Utils.get;
 import static io.activej.types.AnnotatedTypeUtils.*;
 import static io.activej.types.AnnotationUtils.getAnnotation;
 import static io.activej.types.AnnotationUtils.hasAnnotation;
@@ -388,7 +388,7 @@ public final class SerializerBuilder {
 		classBuilder.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),
 				asList(BinaryInput.class, byte.class),
-				of(() -> {
+				get(() -> {
 					List<Expression> listKey = new ArrayList<>();
 					List<Expression> listValue = new ArrayList<>();
 					for (int i = decodeVersions.size() - 2; i >= 0; i--) {

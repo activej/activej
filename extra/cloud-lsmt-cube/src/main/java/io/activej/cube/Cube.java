@@ -87,7 +87,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Primitives.wrap;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.of;
+import static io.activej.common.Utils.get;
 import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.createResultClass;
 import static java.lang.Math.min;
@@ -1046,7 +1046,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 			return ClassBuilder.create(queryClassLoader, Comparator.class)
 					.withClassKey(resultClass, query.getOrderings())
-					.withMethod("compare", of(() -> {
+					.withMethod("compare", get(() -> {
 						ExpressionComparator comparator = ExpressionComparator.create();
 
 						for (Ordering ordering : query.getOrderings()) {

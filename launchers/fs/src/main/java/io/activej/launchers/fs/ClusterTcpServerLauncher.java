@@ -37,6 +37,7 @@ import io.activej.inject.module.Module;
 import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
 
 import static io.activej.common.Utils.first;
+import static io.activej.common.Utils.nonNullElse;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
@@ -80,7 +81,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, @Optional ServerSelector serverSelector) {
 
         return FsPartitions.create(eventloop, discoveryService)
-				.withServerSelector(Utils.nonNullOr(serverSelector, RENDEZVOUS_HASH_SHARDER));
+				.withServerSelector(nonNullElse(serverSelector, RENDEZVOUS_HASH_SHARDER));
 	}
 	//[END EXAMPLE]
 

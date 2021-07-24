@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.nonNullElse;
 import static io.activej.common.Utils.nonNullOrException;
 import static java.util.Collections.*;
 
@@ -501,7 +502,7 @@ public interface Config {
 			@Nullable
 			@Override
 			public String getValue(@Nullable String defaultValue) {
-                return Utils.nonNullOr(value, defaultValue);
+                return nonNullElse(value, defaultValue);
             }
 
 			@Override

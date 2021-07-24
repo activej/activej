@@ -49,32 +49,32 @@ public class Utils {
 		}
 	};
 
-	public static <T> T of(Supplier<T> supplier) {
+	public static <T> T get(Supplier<T> supplier) {
 		return supplier.get();
 	}
 
-	public static <T> T nonNullOr(@Nullable T value1, T defaultValue) {
+	public static <T> T nonNullElse(@Nullable T value1, T defaultValue) {
 		return value1 != null ? value1 : defaultValue;
 	}
 
-	public static <T> T nonNullOrSupply(@Nullable T value, Supplier<? extends T> defaultValue) {
+	public static <T> T nonNullElseGet(@Nullable T value, Supplier<? extends T> defaultValue) {
 		return value != null ? value : defaultValue.get();
 	}
 
-	public static String nonNullOrEmpty(@Nullable String value) {
-		return nonNullOr(value, "");
+	public static String nonNullElseEmpty(@Nullable String value) {
+		return nonNullElse(value, "");
 	}
 
-	public static <T> Set<T> nonNullOrEmpty(@Nullable Set<T> set) {
-		return nonNullOr(set, emptySet());
+	public static <T> Set<T> nonNullElseEmpty(@Nullable Set<T> set) {
+		return nonNullElse(set, emptySet());
 	}
 
-	public static <T> List<T> nonNullOrEmpty(@Nullable List<T> list) {
-		return nonNullOr(list, emptyList());
+	public static <T> List<T> nonNullElseEmpty(@Nullable List<T> list) {
+		return nonNullElse(list, emptyList());
 	}
 
-	public static <K, V> Map<K, V> nonNullOrEmpty(@Nullable Map<K, V> map) {
-		return nonNullOr(map, emptyMap());
+	public static <K, V> Map<K, V> nonNullElseEmpty(@Nullable Map<K, V> map) {
+		return nonNullElse(map, emptyMap());
 	}
 
 	@NotNull

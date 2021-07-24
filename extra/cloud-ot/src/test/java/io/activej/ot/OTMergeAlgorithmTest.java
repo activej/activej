@@ -13,8 +13,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.listOf;
-import static io.activej.common.Utils.setOf;
+import static io.activej.common.Utils.*;
 import static io.activej.ot.OTAlgorithms.loadForMerge;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.ot.utils.Utils.createTestOp;
@@ -37,7 +36,7 @@ public class OTMergeAlgorithmTest {
 		Map<String, Long> levels = new HashMap<>();
 		for (String commitId : graph.getTips()) {
 			Utils.calcLevels(commitId, levels,
-					parentId -> io.activej.common.Utils.nonNullOr(graph.getParents(parentId), Collections.<String, List<TestOp>>emptyMap()).keySet());
+					parentId -> nonNullElse(graph.getParents(parentId), Collections.<String, List<TestOp>>emptyMap()).keySet());
 		}
 		levels.forEach(graph::setLevel);
 

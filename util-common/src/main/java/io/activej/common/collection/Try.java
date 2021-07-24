@@ -141,45 +141,24 @@ public final class Try<T> {
 	}
 
 	@Contract(pure = true)
+	@Nullable
 	public T get() {
-		checkState(isSuccess());
 		return result;
 	}
 
 	@Contract(pure = true)
-	public T getOrThrow() throws Exception {
-		if (throwable == null) {
-			return result;
-		}
-		throw throwable instanceof Exception ? (Exception) throwable : new RuntimeException(throwable);
-	}
-
-	@Contract(pure = true)
-	public T getOr(@Nullable T defaultValue) {
+	public T getElse(@Nullable T defaultValue) {
 		return throwable == null ? result : defaultValue;
 	}
 
 	@Contract(pure = true)
-	public T getOrSupply(@NotNull Supplier<? extends T> defaultValueSupplier) {
+	public T getElseGet(@NotNull Supplier<? extends T> defaultValueSupplier) {
 		return throwable == null ? result : defaultValueSupplier.get();
 	}
 
 	@Contract(pure = true)
 	@Nullable
-	public T getOrNull() {
-		return result;
-	}
-
-	@Contract(pure = true)
-	@NotNull
 	public Throwable getException() {
-		checkState(isException());
-		return throwable;
-	}
-
-	@Contract(pure = true)
-	@Nullable
-	public Throwable getExceptionOrNull() {
 		return throwable;
 	}
 

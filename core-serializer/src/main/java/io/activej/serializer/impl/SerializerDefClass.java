@@ -22,7 +22,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import io.activej.serializer.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -33,7 +32,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.util.Utils.of;
+import static io.activej.serializer.util.Utils.get;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Collections.singletonList;
@@ -291,7 +290,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 			return deserializeClassSimple(staticDecoders, in, version, compatibilityLevel, instanceInitializer);
 		}
 
-		return let(of(() -> {
+		return let(get(() -> {
 					List<Expression> fieldDeserializers = new ArrayList<>();
 					for (FieldDef fieldDef : fields.values()) {
 						if (!fieldDef.hasVersion(version)) continue;

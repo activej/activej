@@ -13,8 +13,7 @@ import io.activej.promise.Promise;
 
 import java.util.Map;
 
-import static io.activej.common.Utils.listOf;
-import static io.activej.common.Utils.mapOf;
+import static io.activej.common.Utils.*;
 import static io.activej.http.AsyncServletDecorator.loadBody;
 import static io.activej.http.HttpHeaders.REFERER;
 import static io.activej.http.HttpMethod.GET;
@@ -72,7 +71,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 							question.vote(option);
 
-                            return HttpResponse.redirect302(Utils.nonNullOr(request.getHeader(REFERER), "/"));
+                            return HttpResponse.redirect302(nonNullElse(request.getHeader(REFERER), "/"));
 						}))
 				.map(POST, "/add", loadBody()
 						.serve(request -> {

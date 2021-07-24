@@ -41,7 +41,7 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.nonNullOrEmpty;
+import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.common.Utils.concat;
 import static io.activej.promise.Promises.sequence;
 import static java.util.Collections.singletonList;
@@ -311,7 +311,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	public void reset() {
 		checkState(!isSyncing());
 		apply(otSystem.invert(
-				concat(Utils.nonNullOrEmpty(pendingProtoCommitDiffs), workingDiffs)));
+				concat(nonNullElseEmpty(pendingProtoCommitDiffs), workingDiffs)));
 		workingDiffs.clear();
 		pendingProtoCommit = null;
 		pendingProtoCommitDiffs = null;

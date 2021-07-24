@@ -27,8 +27,8 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
-import static io.activej.common.Utils.nonNullOr;
-import static io.activej.common.Utils.nonNullOrEmpty;
+import static io.activej.common.Utils.nonNullElse;
+import static io.activej.common.Utils.nonNullElseEmpty;
 import static java.util.Collections.*;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.*;
@@ -43,8 +43,8 @@ public class OTLoadedGraph<K, D> {
 
 	public OTLoadedGraph(OTSystem<D> otSystem, @Nullable Function<K, String> idToString, @Nullable Function<D, String> diffToString) {
 		this.otSystem = otSystem;
-		this.idToString = nonNullOr(idToString, this.idToString);
-		this.diffToString = nonNullOr(diffToString, this.diffToString);
+		this.idToString = nonNullElse(idToString, this.idToString);
+		this.diffToString = nonNullElse(diffToString, this.diffToString);
 	}
 
 	private static final class MergeNode {
@@ -159,7 +159,7 @@ public class OTLoadedGraph<K, D> {
 			List<D> node2child = result.remove(node);
 			if (!visited.add(node)) continue;
 			assert node2child != null;
-			Map<K, List<? extends D>> nodeParents = nonNullOrEmpty(getParents(node));
+			Map<K, List<? extends D>> nodeParents = nonNullElseEmpty(getParents(node));
 			for (Map.Entry<K, List<? extends D>> entry : nodeParents.entrySet()) {
 				K nodeParent = entry.getKey();
 				if (!visited.contains(nodeParent) && !result.containsKey(nodeParent)) {
@@ -198,7 +198,7 @@ public class OTLoadedGraph<K, D> {
 		while (!queue.isEmpty()) {
 			K node = queue.remove(queue.size() - 1);
 			if (!visited.add(node)) continue;
-			for (K parent : nonNullOrEmpty(getParents(node)).keySet()) {
+			for (K parent : nonNullElseEmpty(getParents(node)).keySet()) {
 				result.remove(parent);
 				if (!visited.contains(parent)) {
 					queue.add(parent);
@@ -228,7 +228,7 @@ public class OTLoadedGraph<K, D> {
 					break;
 				}
 			}
-			Map<K, List<? extends D>> parentsMap = nonNullOrEmpty(getParents(node));
+			Map<K, List<? extends D>> parentsMap = nonNullElseEmpty(getParents(node));
 			for (Map.Entry<K, List<? extends D>> entry : parentsMap.entrySet()) {
 				K parent = entry.getKey();
 				if (visited.contains(parent) || paths.containsKey(parent)) continue;
