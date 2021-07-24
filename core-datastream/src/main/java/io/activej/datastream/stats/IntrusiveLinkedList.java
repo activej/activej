@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.collection;
+package io.activej.datastream.stats;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 
-public final class IntrusiveLinkedList<T> implements Iterable<T> {
+final class IntrusiveLinkedList<T> implements Iterable<T> {
 
 	@Override
 	public Iterator<T> iterator() {

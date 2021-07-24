@@ -17,8 +17,7 @@
 package io.activej.datastream.stats;
 
 import io.activej.common.Utils;
-import io.activej.common.collection.IntrusiveLinkedList;
-import io.activej.common.collection.IntrusiveLinkedList.Node;
+import io.activej.datastream.stats.IntrusiveLinkedList.Node;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -39,7 +38,6 @@ import static java.lang.System.currentTimeMillis;
 
 public final class StreamRegistry<V> implements Iterable<V> {
 	private final IntrusiveLinkedList<Entry<V>> list = new IntrusiveLinkedList<>();
-	private int limit = 10;
 
 	private static class Entry<T> {
 		private final long timestamp;
@@ -58,11 +56,6 @@ public final class StreamRegistry<V> implements Iterable<V> {
 
 	public static <V> StreamRegistry<V> create() {
 		return new StreamRegistry<>();
-	}
-
-	public StreamRegistry<V> withLimit(int limit) {
-		this.limit = limit;
-		return this;
 	}
 
 	public final class RegisterTransformer<T> implements
