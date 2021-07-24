@@ -298,7 +298,7 @@ public class Utils {
 		Measures annotation = inputClass.getAnnotation(Measures.class);
 		if (annotation != null) {
 			for (String measure : annotation.value()) {
-				measureFields.put(measure, null);
+				measureFields.put(measure, "");
 			}
 		}
 		for (Field field : inputClass.getFields()) {

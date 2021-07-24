@@ -49,9 +49,6 @@ public final class GzipProcessorUtils {
 	// https://stackoverflow.com/a/23578269
 	private static final double DEFLATE_MAX_BYTES_OVERHEAD_PER_16K_BLOCK = 5;
 
-	private static final ThreadLocal<Inflater> decompressors = new ThreadLocal<>().withInitial(() -> new Inflater(true));
-	private static final ThreadLocal<Deflater> compressors = new ThreadLocal<>().withInitial(Deflater::new);
-
 	public static ByteBuf fromGzip(ByteBuf src, int maxMessageSize) throws MalformedHttpException {
 		if (CHECK) checkArgument(src.readRemaining() > 0);
 
@@ -189,15 +186,11 @@ public final class GzipProcessorUtils {
 	}
 
 	private static Inflater ensureDecompressor() {
-		Inflater inflater = decompressors.get();
-		inflater.reset();
-		return inflater;
+		return new Inflater(true);
 	}
 
 	private static Deflater ensureCompressor() {
-		Deflater compressor = compressors.get();
-		compressor.reset();
-		return compressor;
+		return new Deflater(Deflater.DEFAULT_COMPRESSION, true);
 	}
 
 	private static void check(boolean condition, ByteBuf buf1, ByteBuf buf2, Supplier<MalformedHttpException> exceptionSupplier) throws MalformedHttpException {

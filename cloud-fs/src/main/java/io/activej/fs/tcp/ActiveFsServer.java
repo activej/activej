@@ -53,11 +53,11 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private static final ByteBufsCodec<FsCommand, FsResponse> SERIALIZER =
 			nullTerminated()
 					.andThen(
-							value -> {
+							buf -> {
 								try {
-									return fromJson(FsCommand.class, value);
+									return fromJson(FsCommand.class, buf);
 								} finally {
-									value.recycle();
+									buf.recycle();
 								}
 							},
 							fsResponse -> RemoteFsUtils.toJson(FsResponse.class, fsResponse));
