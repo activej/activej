@@ -1,6 +1,6 @@
 package banner;
 
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.crdt.primitives.GSet;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
@@ -63,7 +63,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 								.map(userId -> {
 									int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
 									return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
-											.whenResult(() -> controlMap.merge(userId, singleton(bannerId), CollectionUtils::union));
+											.whenResult(() -> controlMap.merge(userId, singleton(bannerId), Utils::union));
 								}))
 								.map($ -> i + 1),
 						i -> i == BANNER_SIZE / 2

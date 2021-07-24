@@ -49,7 +49,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.transformIterator;
+import static io.activej.common.Utils.transformIterator;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.promise.Promises.first;

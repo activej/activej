@@ -3,6 +3,7 @@ package io.activej.cube.ot;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
+import io.activej.common.Utils;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
 import io.activej.etl.LogOTState;
@@ -20,7 +21,7 @@ import org.junit.Test;
 import java.util.*;
 
 import static io.activej.aggregation.PrimaryKey.ofArray;
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.cube.TestUtils.STUB_CUBE_STATE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -99,11 +100,11 @@ public class CubeOTTest {
 		LogFile toLogfile = new LogFile("myLog", 100);
 		LogPosition toPosition = LogPosition.create(toLogfile, 500);
 
-		LogDiff<CubeDiff> logDiff = LogDiff.of(map("test", new LogPositionDiff(fromPosition, toPosition)), CubeDiff.empty());
+		LogDiff<CubeDiff> logDiff = LogDiff.of(mapOf("test", new LogPositionDiff(fromPosition, toPosition)), CubeDiff.empty());
 
 		state.apply(logDiff);
 		Map<String, LogPosition> positions = state.getPositions();
-		assertEquals(map("test", toPosition), positions);
+		assertEquals(mapOf("test", toPosition), positions);
 
 		List<LogDiff<CubeDiff>> inverted = logSystem.invert(singletonList(logDiff));
 		for (LogDiff<CubeDiff> invertedDiff : inverted) {

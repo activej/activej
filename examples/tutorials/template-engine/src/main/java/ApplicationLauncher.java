@@ -2,6 +2,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
+import io.activej.common.Utils;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
@@ -12,9 +13,8 @@ import io.activej.promise.Promise;
 
 import java.util.Map;
 
-import static io.activej.common.Utils.nullToDefault;
-import static io.activej.common.collection.CollectionUtils.list;
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.listOf;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.http.AsyncServletDecorator.loadBody;
 import static io.activej.http.HttpHeaders.REFERER;
 import static io.activej.http.HttpMethod.GET;
@@ -45,13 +45,13 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 		return RoutingServlet.create()
 				.map(GET, "/", request -> HttpResponse.ok200()
-						.withBody(applyTemplate(listPolls, map("polls", pollDao.findAll().entrySet()))))
+						.withBody(applyTemplate(listPolls, mapOf("polls", pollDao.findAll().entrySet()))))
 				//[END REGION_2]
 				//[START REGION_3]
 				.map(GET, "/poll/:id", request -> {
 					int id = Integer.parseInt(request.getPathParameter("id"));
 					return HttpResponse.ok200()
-							.withBody(applyTemplate(singlePollView, map("id", id, "poll", pollDao.find(id))));
+							.withBody(applyTemplate(singlePollView, mapOf("id", id, "poll", pollDao.find(id))));
 				})
 				//[END REGION_3]
 				//[START REGION_4]
@@ -72,7 +72,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 							question.vote(option);
 
-							return HttpResponse.redirect302(nullToDefault(request.getHeader(REFERER), "/"));
+                            return HttpResponse.redirect302(Utils.nonNullOr(request.getHeader(REFERER), "/"));
 						}))
 				.map(POST, "/add", loadBody()
 						.serve(request -> {
@@ -83,7 +83,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							String option1 = params.get("option1");
 							String option2 = params.get("option2");
 
-							int id = pollDao.add(new PollDao.Poll(title, message, list(option1, option2)));
+							int id = pollDao.add(new PollDao.Poll(title, message, listOf(option1, option2)));
 							return HttpResponse.redirect302("poll/" + id);
 						}))
 				.map(POST, "/delete", loadBody()

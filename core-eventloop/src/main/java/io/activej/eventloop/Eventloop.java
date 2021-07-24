@@ -61,7 +61,7 @@ import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.nullToSupplier;
+import static io.activej.common.Utils.nonNullOrSupply;
 import static io.activej.eventloop.util.Utils.tryToOptimizeSelector;
 import static java.util.Collections.emptyIterator;
 
@@ -287,7 +287,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private void openSelector() {
 		if (selector == null) {
 			try {
-				selector = nullToSupplier(selectorProvider, SelectorProvider::provider).openSelector();
+				selector = nonNullOrSupply(selectorProvider, SelectorProvider::provider).openSelector();
 			} catch (Exception e) {
 				logger.error("Could not open selector", e);
 				throw new RuntimeException(e);

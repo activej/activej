@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static io.activej.common.collection.CollectionUtils.concat;
+import static io.activej.common.Utils.concat;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 

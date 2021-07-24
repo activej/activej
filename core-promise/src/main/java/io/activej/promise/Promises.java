@@ -40,8 +40,8 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.nullify;
-import static io.activej.common.collection.CollectionUtils.iteratorOf;
-import static io.activej.common.collection.CollectionUtils.transformIterator;
+import static io.activej.common.Utils.iteratorOf;
+import static io.activej.common.Utils.transformIterator;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.util.Arrays.asList;

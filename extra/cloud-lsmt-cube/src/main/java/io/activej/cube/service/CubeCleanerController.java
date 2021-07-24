@@ -19,7 +19,7 @@ package io.activej.cube.service;
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.async.callback.Callback;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
@@ -49,7 +49,7 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.collection.CollectionUtils.union;
+import static io.activej.common.Utils.union;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.*;
 import static java.util.Collections.singleton;
@@ -158,7 +158,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 						}))
 				.thenEx(wrapException(e -> e instanceof GraphExhaustedException ?
 						e :
-						new CubeException("Failed to cleanup frozen cut: " + CollectionUtils.toString(frozenCut), e)))
+						new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e)))
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
 	}
 
@@ -221,7 +221,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 										new HashSet<>(),
 										(Set<C> accumulatedChunks, List<? extends D> diffs) ->
 												union(accumulatedChunks, chunksInDiffs(cubeDiffScheme, diffs)),
-										CollectionUtils::union))
+										Utils::union))
 								.whenComplete(promiseCleanupCollectRequiredChunks.recordStats()))
 				.map(accumulators -> accumulators.values().stream().flatMap(Collection::stream).collect(toSet()))
 				.whenComplete(transform(Set::size,
@@ -236,7 +236,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 						.whenComplete(promiseCleanupChunks.recordStats()))
 				.whenComplete(logger.isTraceEnabled() ?
 						toLogger(logger, TRACE, thisMethod(), checkpointNode, chunksCleanupTimestamp, requiredChunks) :
-						toLogger(logger, thisMethod(), checkpointNode, chunksCleanupTimestamp, CollectionUtils.toString(requiredChunks)));
+						toLogger(logger, thisMethod(), checkpointNode, chunksCleanupTimestamp, Utils.toString(requiredChunks)));
 	}
 
 	@JmxAttribute

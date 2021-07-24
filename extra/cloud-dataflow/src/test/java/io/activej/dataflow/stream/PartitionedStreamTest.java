@@ -67,8 +67,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.collection.CollectionUtils.first;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.first;
+import static io.activej.common.Utils.setOf;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
@@ -438,7 +438,7 @@ public final class PartitionedStreamTest {
 
 	private static void assertItemPrefixes(List<String> items, String... prefixes) {
 		Map<String, List<String>> collected = items.stream().collect(groupingBy(item -> item.split(":")[0]));
-		assertEquals(set(prefixes), collected.keySet());
+		assertEquals(setOf(prefixes), collected.keySet());
 		int size = first(collected.values()).size();
 		assertTrue(size > 0);
 		for (List<String> value : collected.values()) {

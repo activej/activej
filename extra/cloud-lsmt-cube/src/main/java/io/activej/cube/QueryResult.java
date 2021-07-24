@@ -16,15 +16,13 @@
 
 package io.activej.cube;
 
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static io.activej.common.collection.CollectionUtils.toString;
 
 public final class QueryResult {
 	private final RecordScheme recordScheme;
@@ -120,7 +118,7 @@ public final class QueryResult {
 		return "QueryResult{" +
 				"attributes=" + attributes +
 				", measures=" + measures +
-				", records=" + CollectionUtils.toString(records) +
+				", records=" + Utils.toString(records) +
 				", totals=" + totals +
 				", count=" + totalCount +
 				", sortedBy=" + sortedBy +

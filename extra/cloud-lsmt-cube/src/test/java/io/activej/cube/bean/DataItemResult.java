@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static io.activej.common.Utils.keysToMap;
 
 public class DataItemResult {
 	public int key1;

@@ -47,8 +47,8 @@ import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.common.Utils.nullToDefault;
-import static io.activej.common.collection.CollectionUtils.first;
+import static io.activej.common.Utils.first;
+import static io.activej.common.Utils.nonNullOr;
 import static io.activej.common.reflection.ReflectionUtils.*;
 import static io.activej.jmx.Utils.findAdapterClass;
 import static io.activej.jmx.stats.StatsUtils.isJmxStats;
@@ -883,8 +883,8 @@ public final class DynamicMBeanFactory {
 		@Override
 		public Object invoke(String actionName, Object[] params, String[] signature) throws MBeanException {
 
-			Object[] args = nullToDefault(params, new Object[0]);
-			String[] argTypes = nullToDefault(signature, new String[0]);
+			Object[] args = nonNullOr(params, new Object[0]);
+			String[] argTypes = nonNullOr(signature, new String[0]);
 			OperationKey opkey = new OperationKey(actionName, argTypes);
 			Either<Method, AttributeNode> methodOrNode = opKeyToMethodOrNode.get(opkey);
 			if (methodOrNode == null) {

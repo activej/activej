@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.sql.*;
 import java.time.Duration;
@@ -53,7 +54,6 @@ import static com.dslplatform.json.PrettifyOutputStream.IndentType.TABS;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.common.Utils.loadResource;
 import static io.activej.ot.repository.JsonIndentUtils.BYTE_STREAM;
 import static io.activej.ot.repository.JsonIndentUtils.indent;
 import static io.activej.promise.Promises.retry;
@@ -174,6 +174,18 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 		execute(dataSource, sql(new String(loadResource("sql/ot_revisions.sql"), UTF_8)));
 		if (tableBackup != null) {
 			execute(dataSource, sql(new String(loadResource("sql/ot_revisions_backup.sql"), UTF_8)));
+		}
+	}
+
+	private static byte[] loadResource(String name) throws IOException {
+		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name)) {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			byte[] buffer = new byte[4096];
+			int size;
+			while ((size = stream.read(buffer)) != -1) {
+				baos.write(buffer, 0, size);
+			}
+			return baos.toByteArray();
 		}
 	}
 

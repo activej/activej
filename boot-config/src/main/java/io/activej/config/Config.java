@@ -16,6 +16,7 @@
 
 package io.activej.config;
 
+import io.activej.common.Utils;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.ConfigConverters;
 import org.jetbrains.annotations.NotNull;
@@ -37,8 +38,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.nullToDefault;
-import static io.activej.common.Utils.nullToException;
+import static io.activej.common.Utils.nonNullOrException;
 import static java.util.Collections.*;
 
 /**
@@ -501,12 +501,12 @@ public interface Config {
 			@Nullable
 			@Override
 			public String getValue(@Nullable String defaultValue) {
-				return nullToDefault(value, defaultValue);
-			}
+                return Utils.nonNullOr(value, defaultValue);
+            }
 
 			@Override
 			public String getValue() throws NoSuchElementException {
-				return nullToException(value, () -> new NoSuchElementException("No value at config node"));
+				return nonNullOrException(value, () -> new NoSuchElementException("No value at config node"));
 			}
 
 			@Override

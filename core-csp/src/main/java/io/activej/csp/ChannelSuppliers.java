@@ -20,7 +20,6 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.common.collection.CollectionUtils;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclers;
@@ -45,7 +44,7 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.nullify;
-import static io.activej.common.collection.CollectionUtils.iteratorOf;
+import static io.activej.common.Utils.iteratorOf;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;

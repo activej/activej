@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
@@ -140,8 +140,8 @@ public final class TestCrdtCluster {
 						.streamTo(StreamConsumer.of(localStorage::put)))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
-		assertEquals(set(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1).getState());
-		assertEquals(set(0, 1, 2, 3, 4), localStorage.get(key2).getState());
-		assertEquals(set(123), localStorage.get(key3).getState());
+		assertEquals(setOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1).getState());
+		assertEquals(setOf(0, 1, 2, 3, 4), localStorage.get(key2).getState());
+		assertEquals(setOf(123), localStorage.get(key3).getState());
 	}
 }

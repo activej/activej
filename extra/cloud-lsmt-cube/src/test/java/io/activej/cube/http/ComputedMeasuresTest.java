@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static io.activej.common.Utils.keysToMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 

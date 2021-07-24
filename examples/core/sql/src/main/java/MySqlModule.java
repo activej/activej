@@ -4,6 +4,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 
 import javax.sql.DataSource;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -51,9 +52,22 @@ public class MySqlModule extends AbstractModule {
 	private void initialize(MysqlDataSource dataSource) throws SQLException, IOException {
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
-				statement.execute(new String(Utils.loadResource(INIT_SCRIPT), UTF_8));
+				statement.execute(new String(loadResource(INIT_SCRIPT), UTF_8));
 				statement.execute("TRUNCATE TABLE user");
 			}
 		}
 	}
+
+	private static byte[] loadResource(String name) throws IOException {
+		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name)) {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			byte[] buffer = new byte[4096];
+			int size;
+			while ((size = stream.read(buffer)) != -1) {
+				baos.write(buffer, 0, size);
+			}
+			return baos.toByteArray();
+		}
+	}
+
 }

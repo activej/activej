@@ -35,7 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.isBijection;
+import static io.activej.common.Utils.isBijection;
 import static java.util.stream.Collectors.*;
 
 /**

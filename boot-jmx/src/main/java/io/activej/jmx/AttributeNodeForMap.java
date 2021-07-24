@@ -24,7 +24,7 @@ import javax.management.openmbean.*;
 import java.util.*;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.first;
+import static io.activej.common.Utils.first;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.*;
 

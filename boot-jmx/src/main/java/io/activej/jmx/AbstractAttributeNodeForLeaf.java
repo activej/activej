@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.first;
+import static io.activej.common.Utils.first;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 

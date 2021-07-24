@@ -95,7 +95,7 @@ public final class ApplicationSettings {
 	public static InetSocketAddress getInetSocketAddress(Class<?> type, String name, InetSocketAddress defValue) {
 		return get(address -> {
 			try {
-				return Utils.parseInetSocketAddress(address);
+				return StringFormatUtils.parseInetSocketAddress(address);
 			} catch (MalformedDataException e) {
 				throw new RuntimeException("Malformed inet socket address: " + address, e);
 			}

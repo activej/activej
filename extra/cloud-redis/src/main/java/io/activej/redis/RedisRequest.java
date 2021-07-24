@@ -17,13 +17,13 @@
 package io.activej.redis;
 
 import io.activej.common.Checks;
-import io.activej.common.collection.CollectionUtils;
 
 import java.util.Collections;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.*;
 import static io.activej.redis.RESPv2.ARRAY_MARKER;
 import static io.activej.redis.RESPv2.BYTES_MARKER;
 
@@ -75,7 +75,7 @@ public abstract class RedisRequest {
 		return new RedisRequest() {
 			@Override
 			public int write(byte[] array, int offset) throws ArrayIndexOutOfBoundsException {
-				return writeRequest(CollectionUtils.list(cmd, arg1), array, offset);
+				return writeRequest(listOf(cmd, arg1), array, offset);
 			}
 		};
 	}

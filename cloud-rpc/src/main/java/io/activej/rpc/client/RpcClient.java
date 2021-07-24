@@ -61,7 +61,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 
 import static io.activej.async.callback.Callback.toAnotherEventloop;
-import static io.activej.common.Utils.nullToSupplier;
+import static io.activej.common.Utils.nonNullOrSupply;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
@@ -362,7 +362,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 						connection.startMonitoring();
 					}
 					connections.put(address, connection);
-					requestSender = nullToSupplier(strategy.createSender(pool), NoSenderAvailable::new);
+					requestSender = nonNullOrSupply(strategy.createSender(pool), NoSenderAvailable::new);
 
 					// jmx
 					connectsStatsPerAddress.get(address).recordSuccessfulConnect();
@@ -380,7 +380,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	void removeConnection(InetSocketAddress address) {
 		if (connections.remove(address) == null) return;
-		requestSender = nullToSupplier(strategy.createSender(pool), NoSenderAvailable::new);
+		requestSender = nonNullOrSupply(strategy.createSender(pool), NoSenderAvailable::new);
 		logger.info("Connection closed: {}", address);
 		processClosedConnection(address);
 	}
@@ -462,7 +462,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 			}
 		}
 		if (changed) {
-			requestSender = nullToSupplier(strategy.createSender(pool), NoSenderAvailable::new);
+			requestSender = nonNullOrSupply(strategy.createSender(pool), NoSenderAvailable::new);
 		}
 		for (InetSocketAddress address : this.addresses) {
 			if (!previousAddresses.contains(address)) {

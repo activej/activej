@@ -18,7 +18,7 @@ package io.activej.cube.service;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
@@ -44,7 +44,7 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.collection.CollectionUtils.first;
+import static io.activej.common.Utils.first;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.checkout;
 
@@ -119,7 +119,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanEx {
 				.whenComplete(promiseBackupChunks.recordStats())
 				.whenComplete(logger.isTraceEnabled() ?
 						toLogger(logger, TRACE, thisMethod(), chunkIds) :
-						toLogger(logger, thisMethod(), CollectionUtils.toString(chunkIds)));
+						toLogger(logger, thisMethod(), Utils.toString(chunkIds)));
 	}
 
 	private Promise<Void> backupDb(OTCommit<K, D> commit, List<D> snapshot) {

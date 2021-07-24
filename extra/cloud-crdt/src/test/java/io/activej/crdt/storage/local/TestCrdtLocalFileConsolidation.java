@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.*;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -60,18 +60,18 @@ public final class TestCrdtLocalFileConsolidation {
 		CrdtStorageFs<String, TimestampContainer<Set<Integer>>> client = CrdtStorageFs.create(Eventloop.getCurrentEventloop(), fsClient, serializer, crdtFunction);
 
 		await(StreamSupplier.ofStream(Stream.of(
-				new CrdtData<>("1_test_1", TimestampContainer.now(set(1, 2, 3))),
-				new CrdtData<>("1_test_2", TimestampContainer.now(set(2, 3, 7))),
-				new CrdtData<>("1_test_3", TimestampContainer.now(set(78, 2, 3))),
-				new CrdtData<>("12_test_1", TimestampContainer.now(set(123, 124, 125))),
-				new CrdtData<>("12_test_2", TimestampContainer.now(set(12)))).sorted())
+				new CrdtData<>("1_test_1", TimestampContainer.now(setOf(1, 2, 3))),
+				new CrdtData<>("1_test_2", TimestampContainer.now(setOf(2, 3, 7))),
+				new CrdtData<>("1_test_3", TimestampContainer.now(setOf(78, 2, 3))),
+				new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 124, 125))),
+				new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12)))).sorted())
 				.streamTo(StreamConsumer.ofPromise(client.upload())));
 		await(StreamSupplier.ofStream(Stream.of(
-				new CrdtData<>("2_test_1", TimestampContainer.now(set(1, 2, 3))),
-				new CrdtData<>("2_test_2", TimestampContainer.now(set(2, 3, 4))),
-				new CrdtData<>("2_test_3", TimestampContainer.now(set(0, 1, 2))),
-				new CrdtData<>("12_test_1", TimestampContainer.now(set(123, 542, 125, 2))),
-				new CrdtData<>("12_test_2", TimestampContainer.now(set(12, 13)))).sorted())
+				new CrdtData<>("2_test_1", TimestampContainer.now(setOf(1, 2, 3))),
+				new CrdtData<>("2_test_2", TimestampContainer.now(setOf(2, 3, 4))),
+				new CrdtData<>("2_test_3", TimestampContainer.now(setOf(0, 1, 2))),
+				new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 542, 125, 2))),
+				new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12, 13)))).sorted())
 				.streamTo(StreamConsumer.ofPromise(client.upload())));
 
 		System.out.println(await(fsClient.list("**")));

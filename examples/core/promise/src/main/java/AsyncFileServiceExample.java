@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.delete;
 import static java.nio.file.StandardOpenOption.*;
@@ -37,7 +37,7 @@ public final class AsyncFileServiceExample {
 	@NotNull
 	private static Promise<Void> writeToFile() {
 		try {
-			FileChannel channel = FileChannel.open(PATH, set(WRITE, APPEND));
+			FileChannel channel = FileChannel.open(PATH, setOf(WRITE, APPEND));
 
 			byte[] message1 = "Hello\n".getBytes();
 			byte[] message2 = "This is test file\n".getBytes();
@@ -57,7 +57,7 @@ public final class AsyncFileServiceExample {
 		byte[] array = new byte[1024];
 		FileChannel channel;
 		try {
-			channel = FileChannel.open(PATH, set(READ));
+			channel = FileChannel.open(PATH, setOf(READ));
 		} catch (IOException e) {
 			return Promise.ofException(e);
 		}

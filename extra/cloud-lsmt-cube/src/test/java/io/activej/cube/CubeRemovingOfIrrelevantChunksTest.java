@@ -48,7 +48,7 @@ import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static io.activej.common.Utils.keysToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.TestUtils.runProcessLogs;

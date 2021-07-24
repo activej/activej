@@ -20,7 +20,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
@@ -59,7 +59,7 @@ import java.util.stream.Collector;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.*;
+import static io.activej.common.Utils.*;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.LocalFileUtils.*;
 import static io.activej.fs.util.RemoteFsUtils.batchEx;
@@ -95,8 +95,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private final Path storage;
 	private final Executor executor;
 
-	private final Set<OpenOption> appendOptions = CollectionUtils.set(WRITE);
-	private final Set<OpenOption> appendNewOptions = CollectionUtils.set(WRITE, CREATE);
+	private final Set<OpenOption> appendOptions = setOf(WRITE);
+	private final Set<OpenOption> appendNewOptions = setOf(WRITE, CREATE);
 
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
 	private boolean hardlinkOnCopy = false;

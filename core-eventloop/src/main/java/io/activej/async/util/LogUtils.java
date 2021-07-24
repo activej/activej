@@ -17,7 +17,7 @@
 package io.activej.async.util;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -169,7 +169,7 @@ public class LogUtils {
 			return "null";
 		}
 		if (object instanceof Collection) {
-			return CollectionUtils.toString((Collection<?>) object);
+			return Utils.toString((Collection<?>) object);
 		}
 		return object.toString();
 	}

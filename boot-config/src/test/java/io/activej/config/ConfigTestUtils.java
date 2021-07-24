@@ -6,7 +6,7 @@ import org.junit.Assert;
 
 import java.util.NoSuchElementException;
 
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static io.activej.config.Config.EMPTY;
 import static org.junit.Assert.*;
 
@@ -84,9 +84,9 @@ public class ConfigTestUtils {
 	}
 
 	private static void testGetChildren(Config config) {
-		assertEquals(set("a", "b"), config.getChildren().keySet());
-		assertEquals(set("a", "b"), config.getChild("a").getChildren().keySet());
-		assertEquals(set("a", "b"), config.getChild("a.a").getChildren().keySet());
+		assertEquals(setOf("a", "b"), config.getChildren().keySet());
+		assertEquals(setOf("a", "b"), config.getChild("a").getChildren().keySet());
+		assertEquals(setOf("a", "b"), config.getChild("a.a").getChildren().keySet());
 
 		assertTrue(config.getChild("a.a.a").getChildren().isEmpty());
 	}

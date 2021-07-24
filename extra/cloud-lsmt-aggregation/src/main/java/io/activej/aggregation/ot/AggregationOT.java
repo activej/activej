@@ -21,7 +21,7 @@ import io.activej.ot.TransformResult.ConflictResolution;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
 
-import static io.activej.common.collection.CollectionUtils.hasIntersection;
+import static io.activej.common.Utils.hasIntersection;
 import static java.util.Collections.singletonList;
 
 public class AggregationOT {

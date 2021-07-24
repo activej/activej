@@ -16,7 +16,7 @@
 
 package io.activej.datastream.stats;
 
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.common.collection.IntrusiveLinkedList;
 import io.activej.common.collection.IntrusiveLinkedList.Node;
 import io.activej.csp.ChannelConsumer;
@@ -142,7 +142,7 @@ public final class StreamRegistry<V> implements Iterable<V> {
 	public String getString() {
 		List<Entry<V>> entries = new ArrayList<>();
 		list.forEach(entries::add);
-		return CollectionUtils.toString(entries);
+		return Utils.toString(entries);
 	}
 
 }

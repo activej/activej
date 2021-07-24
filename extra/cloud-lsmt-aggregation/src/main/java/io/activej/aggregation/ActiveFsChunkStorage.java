@@ -21,9 +21,9 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
-import io.activej.common.collection.CollectionUtils;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.Utils;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -66,8 +66,7 @@ import static io.activej.aggregation.util.Utils.wrapException;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.difference;
-import static io.activej.common.collection.CollectionUtils.toString;
+import static io.activej.common.Utils.difference;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -208,7 +207,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	@Override
 	public Promise<Void> finish(Set<C> chunkIds) {
 		return fs.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
-				.thenEx(wrapException(e -> new AggregationException("Failed to finalize chunks: " + CollectionUtils.toString(chunkIds), e)))
+				.thenEx(wrapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e)))
 				.whenResult(() -> finishChunks = chunkIds.size())
 				.whenComplete(promiseFinishChunks.recordStats());
 	}
@@ -225,7 +224,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 				.then(() -> ChannelSupplier.<ByteBuf>of().streamTo(
 						fs.upload(toBackupPath(backupId, null), 0)))
 				.thenEx(wrapException(e ->
-						new AggregationException("Backup '" + backupId + "' of chunks " + CollectionUtils.toString(chunkIds) + " failed", e
+						new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e
 						)
 				))
 				.whenComplete(promiseBackup.recordStats())
@@ -302,9 +301,9 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 				.then(actualChunks -> actualChunks.containsAll(requiredChunks) ?
 						Promise.of((Void) null) :
 						Promise.ofException(new AggregationException("Missed chunks from storage: " +
-								CollectionUtils.toString(difference(requiredChunks, actualChunks)))))
+								Utils.toString(difference(requiredChunks, actualChunks)))))
 				.whenComplete(promiseCleanupCheckRequiredChunks.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), CollectionUtils.toString(requiredChunks)));
+				.whenComplete(toLogger(logger, thisMethod(), Utils.toString(requiredChunks)));
 	}
 
 	private String toPath(C chunkId) {

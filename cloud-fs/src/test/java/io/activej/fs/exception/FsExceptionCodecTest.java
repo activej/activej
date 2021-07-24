@@ -1,12 +1,13 @@
 package io.activej.fs.exception;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Utils;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
 import java.util.Map;
 
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.fs.util.RemoteFsUtils.fromJson;
 import static io.activej.fs.util.RemoteFsUtils.toJson;
 import static org.junit.Assert.assertEquals;
@@ -36,7 +37,7 @@ public final class FsExceptionCodecTest {
 
 	@Test
 	public void testBatchException() {
-		doTest(new FsBatchException(map(
+		doTest(new FsBatchException(mapOf(
 				"file1", new FsScalarException("Test"),
 				"file2", new FileNotFoundException("Test"),
 				"file3", new IsADirectoryException("Test")

@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import java.util.NoSuchElementException;
 
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static io.activej.config.ConfigTestUtils.testBaseConfig;
 import static io.activej.config.converter.ConfigConverters.ofByte;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
@@ -42,8 +42,8 @@ public class TreeConfigTest {
 		assertTrue(config.hasChild("key2.key3"));
 		Config child = config.getChild("key2.key3");
 		assertNotNull(child);
-		assertEquals(set("key4"), child.getChildren().keySet());
-		assertEquals(set("key1", "key2", "key5"), config.getChildren().keySet());
+		assertEquals(setOf("key4"), child.getChildren().keySet());
+		assertEquals(setOf("key1", "key2", "key5"), config.getChildren().keySet());
 
 		assertEquals(
 				config.getChild("key2.key3.key4"),

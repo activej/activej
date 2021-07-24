@@ -17,7 +17,7 @@
 package io.activej.fs;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.service.BlockingService;
 import io.activej.common.time.CurrentTimeProvider;
@@ -44,8 +44,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.isBijection;
-import static io.activej.common.collection.CollectionUtils.noMergeFunction;
+import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.isBijection;
+import static io.activej.common.Utils.noMergeFunction;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.emptyMap;
@@ -70,8 +71,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	private final Path storage;
 
-	private final Set<OpenOption> appendOptions = CollectionUtils.set(WRITE);
-	private final Set<OpenOption> appendNewOptions = CollectionUtils.set(WRITE, CREATE);
+	private final Set<OpenOption> appendOptions = setOf(WRITE);
+	private final Set<OpenOption> appendNewOptions = setOf(WRITE, CREATE);
 
 	private boolean hardlinkOnCopy = false;
 	private Path tempDir;

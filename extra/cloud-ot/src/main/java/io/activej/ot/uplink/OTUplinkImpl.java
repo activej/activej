@@ -35,7 +35,7 @@ import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.collection.CollectionUtils.*;
+import static io.activej.common.Utils.*;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
 import static io.activej.promise.Promises.isResultOrError;

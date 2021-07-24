@@ -30,10 +30,9 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.isBijection;
+import static io.activej.common.Utils.isBijection;
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.*;
 

@@ -26,7 +26,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.collection.CollectionUtils.first;
+import static io.activej.common.Utils.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 
@@ -594,12 +594,12 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return singletonMap(key, value);
+			return mapOf(key, value);
 		}
 
 		@Override
@@ -661,7 +661,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override
@@ -729,7 +729,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override
@@ -793,7 +793,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override
@@ -856,7 +856,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override
@@ -919,7 +919,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override
@@ -1040,7 +1040,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override
@@ -1107,7 +1107,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override
@@ -1181,7 +1181,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return singleton(key);
+			return setOf(key);
 		}
 
 		@Override

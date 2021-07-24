@@ -16,174 +16,73 @@
 
 package io.activej.common;
 
-import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.nio.file.Path;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import static io.activej.common.Checks.checkNotNull;
+import static java.lang.Math.max;
+import static java.util.Arrays.asList;
 import static java.util.Collections.*;
+import static java.util.stream.Collectors.*;
 
 public class Utils {
+	public static final int TO_STRING_LIMIT = ApplicationSettings.getInt(Utils.class, "toStringLimit", 10);
+
+	private static final BinaryOperator<?> NO_MERGE_FUNCTION = (v, v2) -> {
+		throw new AssertionError();
+	};
+
+	private static final Iterator<Object> EMPTY_ITERATOR = new Iterator<Object>() {
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
+
+		@Override
+		public Object next() {
+			throw new NoSuchElementException();
+		}
+	};
 
 	public static <T> T of(Supplier<T> supplier) {
 		return supplier.get();
 	}
 
-	public static <T> T firstNonNull(@Nullable T a, T b) {
-		return a != null ? a : b;
+	public static <T> T nonNullOr(@Nullable T value1, T defaultValue) {
+		return value1 != null ? value1 : defaultValue;
 	}
 
-	public static <T> T firstNonNull(@Nullable T a, @Nullable T b, T c) {
-		return a != null ? a : (b != null ? b : c);
-	}
-
-	@SafeVarargs
-	public static <T> T firstNonNull(T... values) {
-		for (T value : values) {
-			if (value != null) {
-				return value;
-			}
-		}
-		return null;
-	}
-
-	public static String nullToEmpty(@Nullable String value) {
-		return value != null ? value : "";
-	}
-
-	public static <T> Set<T> nullToEmpty(@Nullable Set<T> set) {
-		return nullToDefault(set, emptySet());
-	}
-
-	public static <T> List<T> nullToEmpty(@Nullable List<T> list) {
-		return nullToDefault(list, emptyList());
-	}
-
-	public static <K, V> Map<K, V> nullToEmpty(@Nullable Map<K, V> map) {
-		return nullToDefault(map, emptyMap());
-	}
-
-	public static <T> Collection<T> nullToEmpty(@Nullable Collection<T> collection) {
-		return collection != null ? collection : emptyList();
-	}
-
-	public static <T> Iterable<T> nullToEmpty(@Nullable Iterable<T> iterable) {
-		return nullToDefault(iterable, emptyList());
-	}
-
-	public static <T> Iterator<T> nullToEmpty(@Nullable Iterator<T> iterator) {
-		return nullToDefault(iterator, emptyIterator());
-	}
-
-	public static <T> T nullToDefault(@Nullable T value, T defaultValue) {
-		return value != null ? value : defaultValue;
-	}
-
-	public static <T> T nullToSupplier(@Nullable T value, Supplier<? extends T> defaultValue) {
+	public static <T> T nonNullOrSupply(@Nullable T value, Supplier<? extends T> defaultValue) {
 		return value != null ? value : defaultValue.get();
 	}
 
+	public static String nonNullOrEmpty(@Nullable String value) {
+		return nonNullOr(value, "");
+	}
+
+	public static <T> Set<T> nonNullOrEmpty(@Nullable Set<T> set) {
+		return nonNullOr(set, emptySet());
+	}
+
+	public static <T> List<T> nonNullOrEmpty(@Nullable List<T> list) {
+		return nonNullOr(list, emptyList());
+	}
+
+	public static <K, V> Map<K, V> nonNullOrEmpty(@Nullable Map<K, V> map) {
+		return nonNullOr(map, emptyMap());
+	}
+
 	@NotNull
-	public static <T, E extends Throwable> T nullToException(@Nullable T reference, Supplier<E> exceptionSupplier) throws E {
-		if (reference != null) {
-			return reference;
+	public static <T, E extends Throwable> T nonNullOrException(@Nullable T value, Supplier<@NotNull E> exceptionSupplier) throws E {
+		if (value != null) {
+			return value;
 		}
 		throw exceptionSupplier.get();
-	}
-
-	public static int deepHashCode(@Nullable Object value) {
-		if (value == null) return 0;
-		if (!value.getClass().isArray()) return value.hashCode();
-		if (value instanceof Object[]) return Arrays.deepHashCode((Object[]) value);
-		if (value instanceof byte[]) return Arrays.hashCode((byte[]) value);
-		if (value instanceof short[]) return Arrays.hashCode((short[]) value);
-		if (value instanceof int[]) return Arrays.hashCode((int[]) value);
-		if (value instanceof long[]) return Arrays.hashCode((long[]) value);
-		if (value instanceof float[]) return Arrays.hashCode((float[]) value);
-		if (value instanceof double[]) return Arrays.hashCode((double[]) value);
-		if (value instanceof boolean[]) return Arrays.hashCode((boolean[]) value);
-		if (value instanceof char[]) return Arrays.hashCode((char[]) value);
-		throw new AssertionError();
-	}
-
-	public static boolean arraysEquals(
-			byte[] array1, int pos1, int len1,
-			byte[] array2, int pos2, int len2) {
-		if (len1 != len2) return false;
-		for (int i = 0; i < len1; i++) {
-			if (array1[pos1 + i] != array2[pos2 + i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private static byte[] loadResource(@NotNull InputStream stream) throws IOException {
-		// reading file as resource
-		try {
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			byte[] buffer = new byte[4096];
-			int size;
-			while ((size = stream.read(buffer)) != -1) {
-				out.write(buffer, 0, size);
-			}
-			return out.toByteArray();
-		} finally {
-			stream.close();
-		}
-	}
-
-	public static byte[] loadResource(Path path) throws IOException {
-		return loadResource(path.toString());
-	}
-
-	public static byte[] loadResource(String name) throws IOException {
-		return loadResource(checkNotNull(Thread.currentThread().getContextClassLoader().getResourceAsStream(name)));
-	}
-
-	public static InetSocketAddress parseInetSocketAddress(String addressAndPort) throws MalformedDataException {
-		int portPos = addressAndPort.lastIndexOf(':');
-		if (portPos == -1) {
-			try {
-				return new InetSocketAddress(Integer.parseInt(addressAndPort));
-			} catch (NumberFormatException nfe) {
-				throw new MalformedDataException(nfe);
-			}
-		}
-		String addressStr = addressAndPort.substring(0, portPos);
-		String portStr = addressAndPort.substring(portPos + 1);
-		int port;
-		try {
-			port = Integer.parseInt(portStr);
-		} catch (NumberFormatException nfe) {
-			throw new MalformedDataException(nfe);
-		}
-
-		if (port <= 0 || port >= 65536) {
-			throw new MalformedDataException("Invalid address. Port is not in range (0, 65536) " + addressStr);
-		}
-		if ("*".equals(addressStr)) {
-			return new InetSocketAddress(port);
-		}
-		try {
-			InetAddress address = InetAddress.getByName(addressStr);
-			return new InetSocketAddress(address, port);
-		} catch (UnknownHostException e) {
-			throw new MalformedDataException(e);
-		}
 	}
 
 	@Nullable
@@ -213,4 +112,323 @@ public class Utils {
 		return null;
 	}
 
+	public static boolean arraysEquals(
+			byte[] array1, int pos1, int len1,
+			byte[] array2, int pos2, int len2) {
+		if (len1 != len2) return false;
+		for (int i = 0; i < len1; i++) {
+			if (array1[pos1 + i] != array2[pos2 + i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <D> List<D> concat(List<? extends D> list1, List<? extends D> list2) {
+		if (list1.isEmpty()) return (List<D>) list2;
+		if (list2.isEmpty()) return (List<D>) list1;
+		Object[] objects = new Object[list1.size() + list2.size()];
+		System.arraycopy(list1.toArray(), 0, objects, 0, list1.size());
+		System.arraycopy(list2.toArray(), 0, objects, list1.size(), list2.size());
+		return (List<D>) asList(objects);
+	}
+
+	public static <T> Set<T> setOf(T item) {
+		return singleton(item);
+	}
+
+	@SafeVarargs
+	public static <T> Set<T> setOf(T... items) {
+		return new LinkedHashSet<>(asList(items));
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> Set<T> difference(Set<? extends T> a, Set<? extends T> b) {
+		if (b.isEmpty()) return (Set<T>) a;
+		return a.stream().filter(t -> !b.contains(t)).collect(toSet());
+	}
+
+	public static <T> Set<T> intersection(Set<? extends T> a, Set<? extends T> b) {
+		return a.size() < b.size() ?
+				a.stream().filter(b::contains).collect(toSet()) :
+				b.stream().filter(a::contains).collect(toSet());
+	}
+
+	public static <T> boolean hasIntersection(Set<? extends T> a, Set<? extends T> b) {
+		return a.size() < b.size() ?
+				a.stream().anyMatch(b::contains) :
+				b.stream().anyMatch(a::contains);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> Set<T> union(Set<? extends T> a, Set<? extends T> b) {
+		if (a.isEmpty()) return (Set<T>) b;
+		if (b.isEmpty()) return (Set<T>) a;
+		return Stream.concat(a.stream(), b.stream()).collect(toCollection(() -> new HashSet<>(max(a.size(), b.size()))));
+	}
+
+	public static <T> T first(List<? extends T> list) {
+		return list.get(0);
+	}
+
+	public static <T> T first(Iterable<? extends T> iterable) {
+		return iterable.iterator().next();
+	}
+
+	public static <T> T last(List<? extends T> list) {
+		return list.get(list.size() - 1);
+	}
+
+	public static <T> T last(Iterable<? extends T> iterable) {
+		Iterator<? extends T> iterator = iterable.iterator();
+		while (true) {
+			T value = iterator.next();
+			if (!iterator.hasNext()) return value;
+		}
+	}
+
+	public static <T> List<T> listOf() {
+		return emptyList();
+	}
+
+	public static <T> List<T> listOf(T value) {
+		return singletonList(value);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> List<T> listOf(T... items) {
+		return asList(items);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> Iterator<T> iteratorOf() {
+		return (Iterator<T>) EMPTY_ITERATOR;
+	}
+
+	public static <T> Iterator<T> iteratorOf(T item) {
+		return new Iterator<T>() {
+			boolean hasNext = true;
+
+			@Override
+			public boolean hasNext() {
+				return hasNext;
+			}
+
+			@Override
+			public T next() {
+				if (!hasNext()) throw new NoSuchElementException();
+				hasNext = false;
+				return item;
+			}
+		};
+	}
+
+	public static <T> Iterator<T> iteratorOf(T item1, T item2) {
+		return new Iterator<T>() {
+			int i = 0;
+
+			@Override
+			public boolean hasNext() {
+				return i < 2;
+			}
+
+			@Override
+			public T next() {
+				if (!hasNext()) throw new NoSuchElementException();
+				return i++ == 0 ? item1 : item2;
+			}
+		};
+	}
+
+	@SafeVarargs
+	public static <T> Iterator<T> iteratorOf(T... items) {
+		return new Iterator<T>() {
+			int i = 0;
+
+			@Override
+			public boolean hasNext() {
+				return i < items.length;
+			}
+
+			@Override
+			public T next() {
+				if (!hasNext()) throw new NoSuchElementException();
+				return items[i++];
+			}
+		};
+	}
+
+	public static <T, R> Iterator<R> transformIterator(Iterator<? extends T> iterator, Function<? super T, ? extends R> fn) {
+		return new Iterator<R>() {
+			@Override
+			public boolean hasNext() {
+				return iterator.hasNext();
+			}
+
+			@Override
+			public R next() {
+				return fn.apply(iterator.next());
+			}
+		};
+	}
+
+	public static <T> Iterator<T> concat(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2) {
+		return concatImpl(iteratorOf(iterator1, iterator2));
+	}
+
+	public static <T> Iterator<T> append(Iterator<? extends T> iterator, T value) {
+		return concatImpl(iteratorOf(iterator, iteratorOf(value)));
+	}
+
+	public static <T> Iterator<T> prepend(T value, Iterator<? extends T> iterator) {
+		return concatImpl(iteratorOf(iteratorOf(value), iterator));
+	}
+
+	private static <T> Iterator<T> concatImpl(Iterator<? extends Iterator<? extends T>> iterators) {
+		return new Iterator<T>() {
+			@Nullable Iterator<? extends T> it = iterators.hasNext() ? iterators.next() : null;
+
+			@Override
+			public boolean hasNext() {
+				return it != null;
+			}
+
+			@Override
+			public T next() {
+				if (it == null) throw new NoSuchElementException();
+				T next = it.next();
+				if (!it.hasNext()) {
+					it = iterators.hasNext() ? iterators.next() : null;
+				}
+				return next;
+			}
+		};
+	}
+
+	public static <K, V> Map<K, V> mapOf() {
+		return new LinkedHashMap<>();
+	}
+
+	public static <K, V> Map<K, V> mapOf(K key1, V value1) {
+		Map<K, V> map = new LinkedHashMap<>();
+		map.put(key1, value1);
+		return map;
+	}
+
+	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2) {
+		Map<K, V> map = new LinkedHashMap<>();
+		map.put(key1, value1);
+		map.put(key2, value2);
+		return map;
+	}
+
+	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3) {
+		Map<K, V> map = new LinkedHashMap<>();
+		map.put(key1, value1);
+		map.put(key2, value2);
+		map.put(key3, value3);
+		return map;
+	}
+
+	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4) {
+		Map<K, V> map = new LinkedHashMap<>();
+		map.put(key1, value1);
+		map.put(key2, value2);
+		map.put(key3, value3);
+		map.put(key4, value4);
+		return map;
+	}
+
+	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5) {
+		Map<K, V> map = new LinkedHashMap<>();
+		map.put(key1, value1);
+		map.put(key2, value2);
+		map.put(key3, value3);
+		map.put(key4, value4);
+		map.put(key5, value5);
+		return map;
+	}
+
+	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5, K key6, V value6) {
+		Map<K, V> map = new LinkedHashMap<>();
+		map.put(key1, value1);
+		map.put(key2, value2);
+		map.put(key3, value3);
+		map.put(key4, value4);
+		map.put(key5, value5);
+		map.put(key6, value6);
+		return map;
+	}
+
+	public static boolean isBijection(Map<?, ?> map) {
+		return new HashSet<>(map.values()).size() == map.size();
+	}
+
+	public static <T> Stream<T> iterate(@NotNull Supplier<? extends T> supplier, @NotNull Predicate<? super T> hasNext) {
+		return iterate(supplier.get(), hasNext, $ -> supplier.get());
+	}
+
+	public static <T> Stream<T> iterate(T seed, @NotNull Predicate<? super T> hasNext, @NotNull UnaryOperator<T> f) {
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+				new Iterator<T>() {
+					T item = seed;
+
+					@Override
+					public boolean hasNext() {
+						return hasNext.test(item);
+					}
+
+					@Override
+					public T next() {
+						T next = item;
+						item = f.apply(item);
+						return next;
+					}
+				},
+				Spliterator.ORDERED | Spliterator.IMMUTABLE), false);
+	}
+
+	public static <T> BinaryOperator<T> noMergeFunction() {
+		//noinspection unchecked
+		return (BinaryOperator<T>) NO_MERGE_FUNCTION;
+	}
+
+	public static <K, V> Map<K, V> keysToMap(Stream<? extends K> stream, Function<? super K, ? extends V> fn) {
+		return stream.collect(toMap(Function.identity(), fn, noMergeFunction(), LinkedHashMap::new));
+	}
+
+	public static <K, V> Map<K, V> entriesToMap(Stream<? extends Map.Entry<? extends K, ? extends V>> stream) {
+		return entriesToMap(stream, Function.identity());
+	}
+
+	public static <K, V, R> Map<K, R> entriesToMap(Stream<? extends Map.Entry<? extends K, ? extends V>> stream, Function<? super V, ? extends R> fn) {
+		return stream.collect(toMap(Map.Entry::getKey, entry -> fn.apply(entry.getValue()), noMergeFunction(), LinkedHashMap::new));
+	}
+
+	public static <K, V, R> Map<K, R> transformMap(Map<? extends K, ? extends V> map, Function<? super V, ? extends R> function) {
+		return entriesToMap(map.entrySet().stream(), function);
+	}
+
+	public static <T> String toString(Collection<? extends T> collection) {
+		return toString(collection, TO_STRING_LIMIT);
+	}
+
+	public static <K, V> String toString(Map<? extends K, ? extends V> map) {
+		return toString(map, TO_STRING_LIMIT);
+	}
+
+	public static <T> String toString(Collection<? extends T> collection, int limit) {
+		return collection.stream()
+				.limit(limit)
+				.map(Object::toString)
+				.collect(joining(",", "[", collection.size() <= limit ? "]" : ", ..and " + (collection.size() - limit) + " more]"));
+	}
+
+	public static <K, V> String toString(Map<? extends K, ? extends V> map, int limit) {
+		return map.entrySet().stream()
+				.limit(limit)
+				.map(element -> element.getKey() + "=" + element.getValue())
+				.collect(joining(",", "{", map.size() <= limit ? "}" : ", ..and " + (map.size() - limit) + " more}"));
+	}
 }

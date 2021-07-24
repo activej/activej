@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static io.activej.common.Utils.keysToMap;
 import static java.util.Collections.singleton;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;

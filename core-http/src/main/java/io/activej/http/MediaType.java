@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.http.CaseInsensitiveTokenMap.Token;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;

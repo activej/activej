@@ -59,7 +59,7 @@ import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.arg;
 import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.*;
+import static io.activej.common.Utils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static java.lang.Math.min;
 import static java.util.Collections.emptyMap;

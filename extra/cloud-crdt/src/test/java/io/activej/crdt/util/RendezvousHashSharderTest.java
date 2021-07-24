@@ -7,8 +7,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.activej.common.collection.CollectionUtils.keysToMap;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.setOf;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -18,7 +18,7 @@ public class RendezvousHashSharderTest {
 	@Test
 	public void testSharder() {
 		RefInt index = new RefInt(0);
-		Map<String, Integer> partitionsWithIndexes = keysToMap(set("one", "two", "three", "four", "five")
+		Map<String, Integer> partitionsWithIndexes = keysToMap(setOf("one", "two", "three", "four", "five")
 				.stream()
 				.sorted(), s -> index.value++);
 		Set<String> partitions = new HashSet<>(partitionsWithIndexes.keySet());

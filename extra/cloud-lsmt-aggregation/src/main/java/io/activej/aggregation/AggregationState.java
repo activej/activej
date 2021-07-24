@@ -20,7 +20,7 @@ import io.activej.aggregation.AggregationPredicates.RangeScan;
 import io.activej.aggregation.RangeTree.Segment;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.ot.OTState;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -31,8 +31,7 @@ import java.util.stream.Collectors;
 
 import static io.activej.aggregation.AggregationPredicates.toRangeScan;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.intersection;
-import static io.activej.common.collection.CollectionUtils.toString;
+import static io.activej.common.Utils.intersection;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableMap;
 
@@ -63,8 +62,8 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	public void apply(AggregationDiff commit) {
 		checkArgument(intersection(commit.getAddedChunks(), commit.getRemovedChunks()), Set::isEmpty,
 				v -> "Non-empty intersection between added and removed chunks: " + v +
-						"\n Added chunks " + CollectionUtils.toString(commit.getAddedChunks()) +
-						"\n Removed chunks intersection: " + CollectionUtils.toString(commit.getRemovedChunks()));
+						"\n Added chunks " + Utils.toString(commit.getAddedChunks()) +
+						"\n Removed chunks intersection: " + Utils.toString(commit.getRemovedChunks()));
 
 		for (AggregationChunk chunk : commit.getAddedChunks()) {
 			addToIndex(chunk);
@@ -80,7 +79,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 				() -> "" +
 						"Trying to add existing chunk: " + chunk +
 						"\n this: " + this +
-						"\n chunks: " + CollectionUtils.toString(chunks.keySet()));
+						"\n chunks: " + Utils.toString(chunks.keySet()));
 
 		for (int size = 0; size <= aggregation.getKeys().size(); size++) {
 			RangeTree<PrimaryKey, AggregationChunk> index = prefixRanges[size];
@@ -96,7 +95,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 				() -> "" +
 						"Trying to remove unknown chunk: " + chunk +
 						"\n this: " + this +
-						"\n chunks: " + CollectionUtils.toString(chunks.keySet()));
+						"\n chunks: " + Utils.toString(chunks.keySet()));
 
 		for (int size = 0; size <= aggregation.getKeys().size(); size++) {
 			RangeTree<PrimaryKey, AggregationChunk> index = prefixRanges[size];

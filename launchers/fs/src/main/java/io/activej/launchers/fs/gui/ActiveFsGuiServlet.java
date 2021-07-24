@@ -20,6 +20,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
+import io.activej.common.Utils;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
@@ -33,7 +34,7 @@ import io.activej.promise.Promise;
 
 import java.util.*;
 
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.fs.http.FsCommand.DOWNLOAD;
 import static io.activej.fs.http.FsCommand.UPLOAD;
 import static io.activej.http.ContentTypes.HTML_UTF_8;
@@ -90,7 +91,7 @@ public final class ActiveFsGuiServlet {
 								}
 								return Promise.of(HttpResponse.ok200()
 										.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
-										.withBody(applyTemplate(mustache, map(
+										.withBody(applyTemplate(mustache, mapOf(
 												"title", title,
 												"dirContents", filesToDirView(new HashMap<>(files), dir),
 												"breadcrumbs", dirToBreadcrumbs(dir)))));

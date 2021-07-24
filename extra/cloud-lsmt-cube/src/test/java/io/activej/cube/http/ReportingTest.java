@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
-import static io.activej.common.collection.CollectionUtils.*;
+import static io.activej.common.Utils.*;
 import static io.activej.cube.ComputedMeasures.*;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
@@ -419,8 +419,8 @@ public final class ReportingTest {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(set("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(set("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(5, (long) records.get(0).get("clicks"));
 		assertEquals(65, (long) records.get(0).get("impressions"));
@@ -434,7 +434,7 @@ public final class ReportingTest {
 		assertEquals(38, (long) totals.get("clicks"));
 		assertEquals(500, (long) totals.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(set("date"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(setOf("date"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -450,8 +450,8 @@ public final class ReportingTest {
 
 		List<Record> records1 = queryResult1.getRecords();
 		assertEquals(2, records1.size());
-		assertEquals(set("date"), new HashSet<>(queryResult1.getAttributes()));
-		assertEquals(set("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult1.getMeasures()));
+		assertEquals(setOf("date"), new HashSet<>(queryResult1.getAttributes()));
+		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult1.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records1.get(0).get("date"));
 		assertEquals(5, (long) records1.get(0).get("clicks"));
 		assertEquals(65, (long) records1.get(0).get("impressions"));
@@ -465,7 +465,7 @@ public final class ReportingTest {
 		assertEquals(38, (long) totals1.get("clicks"));
 		assertEquals(500, (long) totals1.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals1.get("ctr"), DELTA);
-		assertEquals(set("date"), new HashSet<>(queryResult1.getSortedBy()));
+		assertEquals(setOf("date"), new HashSet<>(queryResult1.getSortedBy()));
 
 		startHttpServer();
 		QueryResult queryResult2 = await(cubeHttpClient.query(query));
@@ -502,8 +502,8 @@ public final class ReportingTest {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(set("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(set("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(5, (long) records.get(0).get("clicks"));
 		assertEquals(65, (long) records.get(0).get("impressions"));
@@ -517,7 +517,7 @@ public final class ReportingTest {
 		assertEquals(38, (long) totals.get("clicks"));
 		assertEquals(500, (long) totals.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(set("date"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(setOf("date"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -536,8 +536,8 @@ public final class ReportingTest {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(set("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(set("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(2, (long) records.get(0).get("clicks"));
 		assertEquals(15, (long) records.get(0).get("impressions"));
@@ -551,7 +551,7 @@ public final class ReportingTest {
 		assertEquals(35, (long) totals.get("impressions"));
 		assertEquals(5, (long) totals.get("clicks"));
 		assertEquals(5.0 / 35.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(set("ctr"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(setOf("ctr"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -597,8 +597,8 @@ public final class ReportingTest {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
-		assertEquals(set("date", "advertiser", "advertiser.name"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(set("impressions"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(setOf("date", "advertiser", "advertiser.name"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(setOf("impressions"), new HashSet<>(queryResult.getMeasures()));
 
 		assertEquals(LocalDate.parse("2000-01-02"), records.get(0).get("date"));
 		assertEquals(2, (int) records.get(0).get("advertiser"));
@@ -618,7 +618,7 @@ public final class ReportingTest {
 		Record totals = queryResult.getTotals();
 		// totals evaluated before applying having predicate
 		assertEquals(245, (long) totals.get("impressions"));
-		assertEquals(set("date", "advertiser.name"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(setOf("date", "advertiser.name"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -702,7 +702,7 @@ public final class ReportingTest {
 		QueryResult queryResult = await(cubeHttpClient.query(query));
 
 		List<Record> records = queryResult.getRecords();
-		assertEquals(set("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
+		assertEquals(setOf("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
 				new HashSet<>(queryResult.getMeasures()));
 		assertEquals(3, records.size());
 

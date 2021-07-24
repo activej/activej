@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -37,7 +37,7 @@ public final class Utils {
 	}
 
 	public static void assertBatchException(@NotNull Throwable e, String name, Class<? extends FsScalarException> exceptionClass) {
-		assertBatchException(e, map(name, exceptionClass));
+		assertBatchException(e, mapOf(name, exceptionClass));
 	}
 
 	public static void assertBatchException(@NotNull Throwable e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {

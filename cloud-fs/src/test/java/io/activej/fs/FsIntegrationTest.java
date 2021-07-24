@@ -35,7 +35,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -282,7 +282,7 @@ public final class FsIntegrationTest {
 
 	@Test
 	public void testFileList() throws Exception {
-		Set<String> expected = set(
+		Set<String> expected = setOf(
 				"this/is/not/empty/directory/file1.txt",
 				"file1.txt",
 				"first file.txt"

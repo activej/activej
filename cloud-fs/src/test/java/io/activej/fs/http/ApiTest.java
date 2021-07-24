@@ -2,6 +2,7 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
+import io.activej.common.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
@@ -20,8 +21,7 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.IntStream;
 
-import static io.activej.common.collection.CollectionUtils.map;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -71,7 +71,7 @@ public final class ApiTest {
 
 	@Test
 	public void infoAll() {
-		Set<String> names = set("file1.txt", "file2.txt", "file3.txt", "file4.txt");
+		Set<String> names = setOf("file1.txt", "file2.txt", "file3.txt", "file4.txt");
 		doTest(client.infoAll(names), names);
 	}
 
@@ -82,7 +82,7 @@ public final class ApiTest {
 
 	@Test
 	public void deleteAll() {
-		Set<String> toDelete = set("file1.txt", "file2.txt", "file3.txt");
+		Set<String> toDelete = setOf("file1.txt", "file2.txt", "file3.txt");
 		doTest(client.deleteAll(toDelete), toDelete);
 	}
 
@@ -93,7 +93,7 @@ public final class ApiTest {
 
 	@Test
 	public void moveAll() {
-		Map<String, String> sourceToTarget = map(
+		Map<String, String> sourceToTarget = Utils.mapOf(
 				"file1.txt", "newFile1.txt",
 				"file2.txt", "newFile2.txt",
 				"file3.txt", "newFile3.txt",
@@ -109,7 +109,7 @@ public final class ApiTest {
 
 	@Test
 	public void copyAll() {
-		Map<String, String> sourceToTarget = map(
+		Map<String, String> sourceToTarget = Utils.mapOf(
 				"file1.txt", "newFile1.txt",
 				"file2.txt", "newFile2.txt",
 				"file3.txt", "newFile3.txt",
@@ -239,7 +239,7 @@ public final class ApiTest {
 
 			@Override
 			public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
-				return resultOf(map(
+				return resultOf(Utils.mapOf(
 						"test1", FileMetadata.of(100, 10),
 						"test2", FileMetadata.of(200, 20),
 						"test3", FileMetadata.of(300, 30)

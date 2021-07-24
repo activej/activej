@@ -17,8 +17,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static io.activej.common.collection.CollectionUtils.last;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.last;
+import static io.activej.common.Utils.setOf;
 import static io.activej.fs.LocalBlockingFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -237,7 +237,7 @@ public final class TestLocalBlockingFs {
 
 	@Test
 	public void testListFiles() throws IOException {
-		Set<String> expected = set(
+		Set<String> expected = setOf(
 				"1/a.txt",
 				"1/b.txt",
 				"2/3/a.txt",
@@ -252,7 +252,7 @@ public final class TestLocalBlockingFs {
 
 	@Test
 	public void testGlobListFiles() throws IOException {
-		Set<String> expected = set(
+		Set<String> expected = setOf(
 				"2/3/a.txt",
 				"2/b/d.txt",
 				"2/b/e.txt"

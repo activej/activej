@@ -40,8 +40,8 @@ import java.util.function.Predicate;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.nullToEmpty;
-import static io.activej.common.collection.CollectionUtils.*;
+import static io.activej.common.Utils.nonNullOrEmpty;
+import static io.activej.common.Utils.*;
 import static io.activej.ot.reducers.GraphReducer.Result.*;
 import static io.activej.promise.Promises.toList;
 import static java.util.Collections.*;
@@ -265,7 +265,7 @@ public final class OTAlgorithms {
 	}
 
 	public static <K, D> Promise<List<D>> diff(OTRepository<K, D> repository, OTSystem<D> system, K node1, K node2) {
-		Set<K> startCut = set(node1, node2);
+		Set<K> startCut = setOf(node1, node2);
 		return reduce(repository, system, startCut, new FindAnyCommonParentReducer<>(DiffsReducer.toList()))
 				.map(entry -> {
 					List<D> diffs1 = entry.getValue().get(node1);
@@ -396,8 +396,8 @@ public final class OTAlgorithms {
 		public void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
 			for (OTCommit<K, D> headCommit : queue) {
 				K head = headCommit.getId();
-				head2roots.put(head, set(head));
-				root2heads.put(head, set(head));
+				head2roots.put(head, setOf(head));
+				root2heads.put(head, setOf(head));
 			}
 		}
 
@@ -421,11 +421,11 @@ public final class OTAlgorithms {
 			}
 
 			graph.addNode(node, commit.getLevel(), parents);
-			for (Map.Entry<K, List<? extends D>> entry : new HashMap<>(nullToEmpty(graph.getChildren(node))).entrySet()) {
+			for (Map.Entry<K, List<? extends D>> entry : new HashMap<>(nonNullOrEmpty(graph.getChildren(node))).entrySet()) {
 				K child = entry.getKey();
 				List<? extends D> childDiffs = entry.getValue();
-				Map<K, List<? extends D>> grandChildren = nullToEmpty(graph.getChildren(child));
-				Map<K, List<? extends D>> coParents = nullToEmpty(graph.getParents(child));
+				Map<K, List<? extends D>> grandChildren = nonNullOrEmpty(graph.getChildren(child));
+				Map<K, List<? extends D>> coParents = nonNullOrEmpty(graph.getParents(child));
 				if (grandChildren.size() != 1 || coParents.size() != 1) continue;
 				K grandChild = first(grandChildren.keySet());
 				List<? extends D> grandChildDiffs = first(grandChildren.values());

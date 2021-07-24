@@ -22,6 +22,7 @@ import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Utils;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
@@ -51,7 +52,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.mapOf;
 
 public final class RemoteFsUtils {
 	private static final Pattern ANY_GLOB_METACHARS = Pattern.compile("[*?{}\\[\\]\\\\]");
@@ -149,7 +150,7 @@ public final class RemoteFsUtils {
 	}
 
 	public static FsBatchException batchEx(String name, FsScalarException exception) {
-		return new FsBatchException(map(name, exception));
+		return new FsBatchException(mapOf(name, exception));
 	}
 
 	public static Promise<Void> reduceErrors(List<Try<Void>> tries, Iterator<String> sources) {

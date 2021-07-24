@@ -986,7 +986,7 @@ public final class TestDI {
 		Module module4 = new GenericModule<String, Integer>() {};
 		Module module5 = new OtherModule();
 
-		System.out.println(module2.toString());
+		System.out.println(module2);
 
 		assertTrue(module.toString().startsWith("AbstractModule(at io.activej.inject.TestDI.abstractModuleToString(TestDI.java:"));
 		assertTrue(module2.toString().startsWith("MyModule(at io.activej.inject.TestDI.abstractModuleToString(TestDI.java:"));

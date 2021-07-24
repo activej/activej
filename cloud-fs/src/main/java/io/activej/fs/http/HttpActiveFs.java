@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.isBijection;
+import static io.activej.common.Utils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.MessageTypes.STRING_META_MAP_TYPE;

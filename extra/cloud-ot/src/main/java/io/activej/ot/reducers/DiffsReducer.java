@@ -16,7 +16,7 @@
 
 package io.activej.ot.reducers;
 
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import io.activej.ot.system.OTSystem;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
+
+import static io.activej.common.Utils.*;
 
 public interface DiffsReducer<A, D> {
 	A initialValue();
@@ -62,12 +64,12 @@ public interface DiffsReducer<A, D> {
 
 	static <D> DiffsReducer<List<D>, D> toList() {
 		return of(new ArrayList<>(), (accumulatedDiffs, diffs) ->
-				CollectionUtils.concat(diffs, accumulatedDiffs));
+				concat(diffs, accumulatedDiffs));
 	}
 
 	static <D> DiffsReducer<List<D>, D> toSquashedList(OTSystem<D> system) {
 		return of(new ArrayList<>(), (accumulatedDiffs, diffs) ->
-				system.squash(CollectionUtils.concat(diffs, accumulatedDiffs)));
+				system.squash(concat(diffs, accumulatedDiffs)));
 	}
 
 }

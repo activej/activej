@@ -48,7 +48,7 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.collection.CollectionUtils.transformMap;
+import static io.activej.common.Utils.transformMap;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 

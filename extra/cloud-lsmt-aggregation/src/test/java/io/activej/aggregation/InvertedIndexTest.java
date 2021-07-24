@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofString;
 import static io.activej.aggregation.measure.Measures.union;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
@@ -134,11 +134,11 @@ public class InvertedIndexTest {
 				.toList());
 
 		List<InvertedIndexQueryResult> expectedResult = asList(
-				new InvertedIndexQueryResult("brown", set(2, 3, 10)),
-				new InvertedIndexQueryResult("dog", set(1)),
-				new InvertedIndexQueryResult("fox", set(1, 3, 4)),
-				new InvertedIndexQueryResult("lazy", set(4)),
-				new InvertedIndexQueryResult("quick", set(1)));
+				new InvertedIndexQueryResult("brown", setOf(2, 3, 10)),
+				new InvertedIndexQueryResult("dog", setOf(1)),
+				new InvertedIndexQueryResult("fox", setOf(1, 3, 4)),
+				new InvertedIndexQueryResult("lazy", setOf(4)),
+				new InvertedIndexQueryResult("quick", setOf(1)));
 
 		assertEquals(expectedResult, list);
 	}

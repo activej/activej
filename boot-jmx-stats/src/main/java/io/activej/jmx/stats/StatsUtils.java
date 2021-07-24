@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import static io.activej.common.collection.CollectionUtils.first;
+import static io.activej.common.Utils.first;
 import static io.activej.common.reflection.ReflectionUtils.isSimpleType;
 import static java.lang.System.identityHashCode;
 import static java.util.Arrays.asList;

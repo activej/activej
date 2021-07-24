@@ -33,8 +33,8 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static io.activej.common.collection.CollectionUtils.keysToMap;
-import static io.activej.common.collection.CollectionUtils.union;
+import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.union;
 import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;

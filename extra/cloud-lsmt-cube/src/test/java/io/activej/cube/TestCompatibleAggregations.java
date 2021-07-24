@@ -19,7 +19,7 @@ import java.util.Set;
 import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
-import static io.activej.common.collection.CollectionUtils.entriesToMap;
+import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;

@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -94,7 +94,7 @@ public final class ActiveFsAdaptersTest {
 		ActiveFs second = ActiveFsAdapters.subdirectory(local, "second");
 		ActiveFs third = ActiveFsAdapters.subdirectory(local, "third");
 
-		ActiveFs mounted = ActiveFsAdapters.mount(root, map(
+		ActiveFs mounted = ActiveFsAdapters.mount(root, mapOf(
 				"hello", first,
 				"test/inner", second,
 				"last", third));

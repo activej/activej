@@ -19,6 +19,7 @@ package io.activej.ot;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.EventloopService;
+import io.activej.common.Utils;
 import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.exception.TransformException;
@@ -40,8 +41,8 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.nullToEmpty;
-import static io.activej.common.collection.CollectionUtils.concat;
+import static io.activej.common.Utils.nonNullOrEmpty;
+import static io.activej.common.Utils.concat;
 import static io.activej.promise.Promises.sequence;
 import static java.util.Collections.singletonList;
 
@@ -310,7 +311,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	public void reset() {
 		checkState(!isSyncing());
 		apply(otSystem.invert(
-				concat(nullToEmpty(pendingProtoCommitDiffs), workingDiffs)));
+				concat(Utils.nonNullOrEmpty(pendingProtoCommitDiffs), workingDiffs)));
 		workingDiffs.clear();
 		pendingProtoCommit = null;
 		pendingProtoCommitDiffs = null;

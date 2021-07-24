@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.common.collection.CollectionUtils.toString;
+import static io.activej.common.Utils.toString;
 
 @SuppressWarnings("WeakerAccess")
 public final class RemoteFsCommands {

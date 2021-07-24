@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static io.activej.common.Utils.keysToMap;
 import static java.util.Collections.singletonMap;
 
 public interface OTCommitFactory<K, D> {

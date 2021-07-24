@@ -40,8 +40,8 @@ import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.concat;
-import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static io.activej.common.Utils.concat;
+import static io.activej.common.Utils.keysToMap;
 import static io.activej.common.reflection.ReflectionUtils.extractFieldNameFromGetter;
 
 @SuppressWarnings({"rawtypes", "unchecked"})

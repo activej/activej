@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.setOf;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
@@ -54,7 +54,7 @@ public final class ActiveFsServletAndClientTest {
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
-	private static final Set<String> initialFiles = set(
+	private static final Set<String> initialFiles = setOf(
 			"file",
 			"file2",
 			"directory/subdir/file3.txt",

@@ -161,11 +161,11 @@ final class QueryResultCodec implements JsonCodec<QueryResult> {
 		}
 
 		return QueryResult.create(recordScheme, attributes, measures,
-				nullToEmpty(sortedBy),
-				nullToEmpty(records),
-				nullToDefault(totals, recordScheme.record()),
+				nonNullOrEmpty(sortedBy),
+				nonNullOrEmpty(records),
+				nonNullOr(totals, recordScheme.record()),
 				totalCount,
-				nullToEmpty(filterAttributes),
+				nonNullOrEmpty(filterAttributes),
 				totals != null ?
 						DATA_WITH_TOTALS :
 						records != null ?
@@ -372,7 +372,7 @@ final class QueryResultCodec implements JsonCodec<QueryResult> {
 		JsonCodec<?>[] fieldStructuredCodecs = new JsonCodec<?>[recordScheme.getFields().size()];
 		for (int i = 0; i < recordScheme.getFields().size(); i++) {
 			String field = recordScheme.getField(i);
-			fieldStructuredCodecs[i] = firstNonNull(attributeCodecs.get(field), measureCodecs.get(field));
+			fieldStructuredCodecs[i] = nonNullOr(attributeCodecs.get(field), measureCodecs.get(field));
 		}
 		return fieldStructuredCodecs;
 	}

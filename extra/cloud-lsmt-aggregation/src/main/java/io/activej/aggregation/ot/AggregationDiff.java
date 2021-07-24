@@ -23,7 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static io.activej.common.collection.CollectionUtils.union;
+import static io.activej.common.Utils.union;
 import static java.util.Collections.emptySet;
 
 public final class AggregationDiff {

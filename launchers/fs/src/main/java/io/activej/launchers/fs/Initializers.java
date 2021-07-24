@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.parseInetSocketAddress;
+import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStats;

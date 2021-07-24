@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.collection.CollectionUtils.isBijection;
+import static io.activej.common.Utils.isBijection;
 import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
 import static java.util.stream.Collectors.toSet;
 

@@ -36,8 +36,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.collection.CollectionUtils.last;
-import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.common.Utils.last;
+import static io.activej.common.Utils.setOf;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.createEmptyDirectories;
 import static io.activej.fs.Utils.initTempDir;
@@ -272,7 +272,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testListFiles() {
-		Set<String> expected = set(
+		Set<String> expected = setOf(
 				"1/a.txt",
 				"1/b.txt",
 				"2/3/a.txt",
@@ -287,7 +287,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testGlobListFiles() {
-		Set<String> expected = set(
+		Set<String> expected = setOf(
 				"2/3/a.txt",
 				"2/b/d.txt",
 				"2/b/e.txt"

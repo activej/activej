@@ -2,6 +2,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
+import io.activej.common.Utils;
 import io.activej.common.collection.Either;
 import io.activej.http.AsyncServlet;
 import io.activej.http.AsyncServletDecorator;
@@ -15,7 +16,7 @@ import io.activej.launchers.http.HttpServerLauncher;
 
 import java.util.Map;
 
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.http.HttpMethod.POST;
 import static io.activej.http.decoder.Decoders.ofPost;
 
@@ -60,7 +61,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 		return RoutingServlet.create()
 				.map("/", request ->
 						HttpResponse.ok200()
-								.withBody(applyTemplate(contactListView, map("contacts", contactDAO.list()))))
+								.withBody(applyTemplate(contactListView, mapOf("contacts", contactDAO.list()))))
 				.map(POST, "/add", AsyncServletDecorator.loadBody()
 						.serve(request -> {
 							//[START REGION_3]
@@ -69,7 +70,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 							if (decodedUser.isLeft()) {
 								contactDAO.add(decodedUser.getLeft());
 							}
-							Map<String, Object> scopes = map("contacts", contactDAO.list());
+							Map<String, Object> scopes = mapOf("contacts", contactDAO.list());
 							if (decodedUser.isRight()) {
 								scopes.put("errors", decodedUser.getRight().toMap(SEPARATOR));
 							}

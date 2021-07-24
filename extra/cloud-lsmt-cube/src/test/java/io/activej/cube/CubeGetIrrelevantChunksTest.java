@@ -3,6 +3,7 @@ package io.activej.cube;
 import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.Utils;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
@@ -43,7 +44,7 @@ import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.common.collection.CollectionUtils.map;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.promise.TestUtils.await;
@@ -215,7 +216,7 @@ public final class CubeGetIrrelevantChunksTest {
 
 	private long addChunk(String aggregationId, PrimaryKey minKey, PrimaryKey maxKey) {
 		long chunkId = ++this.chunkId;
-		stateManager.add(LogDiff.forCurrentPosition(CubeDiff.of(map(
+		stateManager.add(LogDiff.forCurrentPosition(CubeDiff.of(mapOf(
 				aggregationId,
 				AggregationDiff.of(Collections.singleton(AggregationChunk.create(
 						chunkId,

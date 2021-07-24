@@ -1,6 +1,6 @@
 package io.activej.common.recycle;
 
-import io.activej.common.collection.CollectionUtils;
+import io.activej.common.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.activej.common.Utils.first;
 import static java.util.Collections.singletonMap;
 
 @SuppressWarnings("unchecked")
@@ -74,7 +75,7 @@ public class Recyclers {
 		}
 		Map<Class<?>, Recycler<?>> recyclers = doLookup(type);
 		if (recyclers.isEmpty()) return NO_RECYCLER;
-		else if (recyclers.size() == 1) return CollectionUtils.first(recyclers.values());
+		else if (recyclers.size() == 1) return first(recyclers.values());
 		else throw new IllegalArgumentException("Conflicting recyclers for " + type + " : " + recyclers.keySet());
 	}
 

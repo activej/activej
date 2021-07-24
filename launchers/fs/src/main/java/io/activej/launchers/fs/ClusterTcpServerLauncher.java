@@ -17,6 +17,7 @@
 package io.activej.launchers.fs;
 
 import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.common.Utils;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
@@ -35,8 +36,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
 
-import static io.activej.common.Utils.nullToDefault;
-import static io.activej.common.collection.CollectionUtils.first;
+import static io.activej.common.Utils.first;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
@@ -79,8 +79,8 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Provides
 	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, @Optional ServerSelector serverSelector) {
 
-		return FsPartitions.create(eventloop, discoveryService)
-				.withServerSelector(nullToDefault(serverSelector, RENDEZVOUS_HASH_SHARDER));
+        return FsPartitions.create(eventloop, discoveryService)
+				.withServerSelector(Utils.nonNullOr(serverSelector, RENDEZVOUS_HASH_SHARDER));
 	}
 	//[END EXAMPLE]
 

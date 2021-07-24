@@ -17,7 +17,6 @@
 package io.activej.service;
 
 import io.activej.common.initializer.WithInitializer;
-import io.activej.common.collection.CollectionUtils;
 import io.activej.common.service.Service;
 import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.ConcurrentJmxBean;
@@ -36,8 +35,8 @@ import java.util.concurrent.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.StringFormatUtils.formatDuration;
-import static io.activej.common.collection.CollectionUtils.concat;
-import static io.activej.common.collection.CollectionUtils.difference;
+import static io.activej.common.Utils.concat;
+import static io.activej.common.Utils.difference;
 import static io.activej.inject.util.ReflectionUtils.getDisplayName;
 import static io.activej.inject.util.Utils.getDisplayString;
 import static io.activej.inject.util.Utils.union;
@@ -477,7 +476,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		}
 
 		SlowestChain concat(Key key, long time) {
-			return new SlowestChain(CollectionUtils.concat(path, singletonList(key)), sum + time);
+			return new SlowestChain(io.activej.common.Utils.concat(path, singletonList(key)), sum + time);
 		}
 
 		static SlowestChain of(Key key, long keyValue) {

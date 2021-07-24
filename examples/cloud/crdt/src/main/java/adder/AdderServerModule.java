@@ -1,7 +1,7 @@
 package adder;
 
+import io.activej.common.Utils;
 import io.activej.common.initializer.Initializer;
-import io.activej.common.collection.CollectionUtils;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
@@ -18,6 +18,7 @@ import io.activej.service.ServiceGraphModuleSettings;
 import java.util.Map;
 
 import static adder.AdderCommands.*;
+import static io.activej.common.Utils.mapOf;
 
 public class AdderServerModule extends AbstractModule {
 
@@ -45,7 +46,7 @@ public class AdderServerModule extends AbstractModule {
 			WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
 			IdSequentialExecutor<Long> seqExecutor
 	) {
-		return CollectionUtils.map(
+		return mapOf(
 				PutRequest.class, (RpcRequestHandler<PutRequest, PutResponse>) request -> {
 					long userId = request.getUserId();
 					return seqExecutor.execute(userId, () -> map.get(userId)

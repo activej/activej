@@ -1,7 +1,6 @@
 package banner;
 
 import io.activej.common.initializer.Initializer;
-import io.activej.common.collection.CollectionUtils;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.hash.JavaCrdtMap;
@@ -21,6 +20,7 @@ import io.activej.service.ServiceGraphModuleSettings;
 import java.util.Map;
 
 import static banner.BannerCommands.*;
+import static io.activej.common.Utils.mapOf;
 
 public class BannerServerModule extends AbstractModule {
 
@@ -30,7 +30,7 @@ public class BannerServerModule extends AbstractModule {
 			CrdtMap<Long, GSet<Integer>> map,
 			WriteAheadLog<Long, GSet<Integer>> writeAheadLog
 	) {
-		return CollectionUtils.map(
+		return mapOf(
 				PutRequest.class, (RpcRequestHandler<PutRequest, PutResponse>) request -> {
 					long userId = request.getUserId();
 					GSet<Integer> bannerIds = GSet.of(request.getBannerIds());
