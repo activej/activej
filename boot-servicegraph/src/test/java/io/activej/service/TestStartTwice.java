@@ -1,6 +1,5 @@
 package io.activej.service;
 
-import io.activej.common.service.Service;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;

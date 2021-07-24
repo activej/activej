@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.service;
+package io.activej.service;
 
 import java.util.concurrent.CompletableFuture;
 

@@ -1,5 +1,5 @@
 import io.activej.async.service.EventloopService;
-import io.activej.common.service.Service;
+import io.activej.service.Service;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;

@@ -19,7 +19,7 @@ package io.activej.service.adapter;
 import io.activej.async.callback.Callback;
 import io.activej.async.service.EventloopService;
 import io.activej.common.service.BlockingService;
-import io.activej.common.service.Service;
+import io.activej.service.Service;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.BlockingSocketServer;
 import io.activej.net.EventloopServer;
