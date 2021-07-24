@@ -126,7 +126,7 @@ public class Utils {
 				.withInitializer(cb ->
 						fields.forEach((key, value) ->
 								cb.withField(key, value.getInternalDataType())))
-				.withMethod("toString", toStringImpl(concat(keys.keySet(), fields.keySet())))
+				.withMethod("toString", toStringImpl(concat(keysList, fieldsList)))
 				.build();
 	}
 

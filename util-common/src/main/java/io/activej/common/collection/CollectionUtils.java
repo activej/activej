@@ -26,19 +26,22 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static java.lang.Math.max;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 public class CollectionUtils {
 
-	public static <D> List<D> concat(Collection<? extends D> list1, Collection<? extends D> list2) {
-		List<D> result = new ArrayList<>(list1.size() + list2.size());
-		result.addAll(list1);
-		result.addAll(list2);
-		return result;
+	@SuppressWarnings("unchecked")
+	public static <D> List<D> concat(List<? extends D> list1, List<? extends D> list2) {
+		if (list1.isEmpty()) return (List<D>) list2;
+		if (list2.isEmpty()) return (List<D>) list1;
+		Object[] objects = new Object[list1.size() + list2.size()];
+		System.arraycopy(list1.toArray(), 0, objects, 0, list1.size());
+		System.arraycopy(list2.toArray(), 0, objects, list1.size(), list2.size());
+		return (List<D>) asList(objects);
 	}
 
 	@SafeVarargs
@@ -63,7 +66,7 @@ public class CollectionUtils {
 	}
 
 	public static <T> Set<T> union(Set<? extends T> a, Set<? extends T> b) {
-		return Stream.concat(a.stream(), b.stream()).collect(toSet());
+		return Stream.concat(a.stream(), b.stream()).collect(toCollection(() -> new HashSet<>(max(a.size(), b.size()))));
 	}
 
 	public static <T> Set<T> union(List<Set<? extends T>> sets) {
@@ -120,7 +123,7 @@ public class CollectionUtils {
 	public static <T> String toLimitedString(Collection<T> collection, int limit) {
 		return collection.stream()
 				.limit(limit)
-				.map(element -> element == collection ? "(this Collection)" : element.toString())
+				.map(element -> element == collection ? "(self)" : element.toString())
 				.collect(joining(",", "[", collection.size() <= limit ? "]" : ", ..and " + (collection.size() - limit) + " more]"));
 	}
 
@@ -130,8 +133,8 @@ public class CollectionUtils {
 				.map(element -> {
 					K key = element.getKey();
 					V value = element.getValue();
-					String keyString = key == map ? "(this Map)" : key.toString();
-					String valueString = value == map ? "(this Map)" : value.toString();
+					String keyString = key == map ? "(self)" : key.toString();
+					String valueString = value == map ? "(self)" : value.toString();
 					return keyString + '=' + valueString;
 				})
 				.collect(joining(",", "{", map.size() <= limit ? "}" : ", ..and " + (map.size() - limit) + " more}"));

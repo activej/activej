@@ -18,7 +18,7 @@ package io.activej.async.service;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.eventloop.schedule.ScheduledRunnable;

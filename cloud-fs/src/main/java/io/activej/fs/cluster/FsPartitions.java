@@ -19,7 +19,7 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsException;

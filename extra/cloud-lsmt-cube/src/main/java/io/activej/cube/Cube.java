@@ -29,7 +29,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;

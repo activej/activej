@@ -19,7 +19,7 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.common.Checks;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.ref.RefInt;

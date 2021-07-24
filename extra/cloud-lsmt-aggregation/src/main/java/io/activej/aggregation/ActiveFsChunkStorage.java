@@ -21,7 +21,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;

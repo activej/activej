@@ -18,7 +18,7 @@ package io.activej.launchers.initializers;
 
 import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.common.MemSize;
-import io.activej.common.api.Initializer;
+import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;

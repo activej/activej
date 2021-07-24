@@ -16,8 +16,8 @@
 
 package io.activej.trigger;
 
-import io.activej.common.api.Initializer;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.Initializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Optional;

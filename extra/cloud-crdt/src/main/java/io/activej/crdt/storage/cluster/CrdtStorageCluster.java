@@ -18,7 +18,7 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
 import io.activej.crdt.CrdtData;

@@ -17,7 +17,7 @@
 package io.activej.net;
 
 import io.activej.common.Checks;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;

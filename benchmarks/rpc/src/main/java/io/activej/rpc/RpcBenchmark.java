@@ -2,7 +2,7 @@ package io.activej.rpc;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.MemSize;
-import io.activej.common.api.Initializer;
+import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;

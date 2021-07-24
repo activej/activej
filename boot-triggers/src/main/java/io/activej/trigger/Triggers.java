@@ -16,7 +16,7 @@
 
 package io.activej.trigger;
 
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;

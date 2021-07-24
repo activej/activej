@@ -24,7 +24,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.Utils;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerWithResult;

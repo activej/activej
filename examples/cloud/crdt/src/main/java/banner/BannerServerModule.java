@@ -1,6 +1,6 @@
 package banner;
 
-import io.activej.common.api.Initializer;
+import io.activej.common.initializer.Initializer;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;

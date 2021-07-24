@@ -16,7 +16,7 @@
 
 package io.activej.service;
 
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.collection.CollectionUtils;
 import io.activej.common.service.Service;
 import io.activej.common.time.Stopwatch;

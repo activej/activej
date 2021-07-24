@@ -19,7 +19,7 @@ package io.activej.eventloop;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.Checks;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.inspector.BaseInspector;

@@ -20,7 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;

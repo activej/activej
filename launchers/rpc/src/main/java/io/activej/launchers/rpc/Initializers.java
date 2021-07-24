@@ -16,7 +16,7 @@
 
 package io.activej.launchers.rpc;
 
-import io.activej.common.api.Initializer;
+import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;

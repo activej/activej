@@ -19,7 +19,7 @@ package io.activej.crdt.storage.local;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;

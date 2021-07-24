@@ -19,7 +19,7 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.RendezvousHashSharder;
 import io.activej.eventloop.Eventloop;

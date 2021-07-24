@@ -16,8 +16,7 @@
 
 package io.activej.config;
 
-import io.activej.common.api.WithInitializer;
-import io.activej.common.reflection.TypeT;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Key;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.module.AbstractModule;

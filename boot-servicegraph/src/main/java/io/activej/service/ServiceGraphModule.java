@@ -17,8 +17,8 @@
 package io.activej.service;
 
 import io.activej.async.service.EventloopService;
-import io.activej.common.api.Initializer;
-import io.activej.common.api.WithInitializer;
+import io.activej.common.initializer.Initializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.service.BlockingService;
 import io.activej.common.service.Service;
 import io.activej.eventloop.Eventloop;

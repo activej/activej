@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.api;
+package io.activej.common.initializer;
 
 import java.util.function.Consumer;
 
