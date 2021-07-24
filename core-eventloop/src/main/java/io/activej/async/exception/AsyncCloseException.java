@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception;
+package io.activej.async.exception;
 
-import java.util.List;
+public class AsyncCloseException extends AsyncException {
+	public AsyncCloseException() {
+		super();
+	}
 
-public final class Exceptions {
+	public AsyncCloseException(String message) {
+		super(message);
+	}
 
-	public static Exception concat(String message, List<? extends Throwable> errors) {
-		Exception res = new Exception(message);
-		errors.forEach(res::addSuppressed);
-		return res;
+	public AsyncCloseException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

@@ -32,7 +32,8 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.collection.CollectionUtils.emptyIterator;
+import static io.activej.common.collection.CollectionUtils.iteratorOf;
+import static io.activej.common.collection.CollectionUtils.noMergeFunction;
 import static java.lang.System.arraycopy;
 
 /**
@@ -73,9 +74,7 @@ public final class ByteBufs implements Recyclable {
 	private static final Collector<ByteBuf, ByteBufs, ByteBuf> COLLECTOR = Collector.of(
 			ByteBufs::new,
 			ByteBufs::add,
-			(bufs1, bufs2) -> {
-				throw new UnsupportedOperationException("Parallel collection of byte bufs is not supported");
-			},
+			noMergeFunction(),
 			ByteBufs::takeRemaining);
 
 	/**
@@ -101,9 +100,7 @@ public final class ByteBufs implements Recyclable {
 					}
 					bufs.add(buf);
 				},
-				(bufs1, bufs2) -> {
-					throw new UnsupportedOperationException("Parallel collection of byte bufs is not supported");
-				},
+				noMergeFunction(),
 				ByteBufs::takeRemaining);
 	}
 
@@ -708,7 +705,7 @@ public final class ByteBufs implements Recyclable {
 
 	@NotNull
 	public Iterator<ByteBuf> asIterator() {
-		if (!hasRemaining()) return emptyIterator();
+		if (!hasRemaining()) return iteratorOf();
 		ByteBufIterator iterator = new ByteBufIterator(this);
 		first = last = 0;
 		bufs = null;

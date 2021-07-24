@@ -39,10 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -210,7 +207,7 @@ public class CubeRemovingOfIrrelevantChunksTest {
 	}
 
 	private static Map<String, Integer> getChunksByAggregation(Cube cube) {
-		return keysToMap(cube.getAggregationIds(), id -> cube.getAggregation(id).getChunks());
+		return keysToMap(cube.getAggregationIds().stream(), id -> cube.getAggregation(id).getChunks());
 	}
 
 	private Cube createBasicCube() {

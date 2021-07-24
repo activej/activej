@@ -317,7 +317,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 											map.put(filename, metadata);
 										}
 									},
-									(u, v) -> { throw new IllegalStateException("Duplicate key " + u); })
+									noMergeFunction())
 							);
 				})
 				.thenEx(translateScalarErrors())
@@ -339,7 +339,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return execute(() -> forEachPair(sourceToTarget, this::doCopy))
-				.whenComplete(toLogger(logger, TRACE, "copyAll", toLimitedString(sourceToTarget, 50), this))
+				.whenComplete(toLogger(logger, TRACE, "copyAll", sourceToTarget, this))
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
@@ -357,7 +357,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return execute(() -> forEachPair(sourceToTarget, this::doMove))
-				.whenComplete(toLogger(logger, TRACE, "moveAll", toLimitedString(sourceToTarget, 50), this))
+				.whenComplete(toLogger(logger, TRACE, "moveAll", sourceToTarget, this))
 				.whenComplete(moveAllPromise.recordStats());
 	}
 

@@ -18,8 +18,8 @@ package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.Checks;
-import io.activej.common.exception.AsyncTimeoutException;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncTimeoutException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.time.Stopwatch;
 import io.activej.datastream.StreamDataAcceptor;
@@ -325,7 +325,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 			for (Integer cookie : new HashSet<>(activeRequests.keySet())) {
 				Callback<?> cb = activeRequests.remove(cookie);
 				if (cb != null) {
-					cb.accept(null, new CloseException("Connection closed"));
+					cb.accept(null, new AsyncCloseException("Connection closed"));
 				}
 			}
 		}

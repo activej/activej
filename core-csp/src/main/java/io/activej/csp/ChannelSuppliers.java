@@ -45,6 +45,7 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.nullify;
+import static io.activej.common.collection.CollectionUtils.iteratorOf;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
@@ -261,7 +262,7 @@ public final class ChannelSuppliers {
 	 */
 	public static <T, V> ChannelSupplier<V> remap(ChannelSupplier<T> supplier, Function<? super T, ? extends Iterator<? extends V>> fn) {
 		return new AbstractChannelSupplier<V>(supplier) {
-			Iterator<? extends V> iterator = CollectionUtils.emptyIterator();
+			Iterator<? extends V> iterator = iteratorOf();
 			boolean endOfStream;
 
 			@Override

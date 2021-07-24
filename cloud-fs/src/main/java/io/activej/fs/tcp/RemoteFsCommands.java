@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.common.collection.CollectionUtils.toString;
 
 @SuppressWarnings("WeakerAccess")
 public final class RemoteFsCommands {
@@ -149,7 +149,7 @@ public final class RemoteFsCommands {
 
 		@Override
 		public String toString() {
-			return "CopyAll{sourceToTarget=" + toLimitedString(sourceToTarget, 50) + '}';
+			return "CopyAll{sourceToTarget=" + sourceToTarget + '}';
 		}
 	}
 
@@ -191,7 +191,7 @@ public final class RemoteFsCommands {
 
 		@Override
 		public String toString() {
-			return "MoveAll{sourceToTarget=" + toLimitedString(sourceToTarget, 50) + '}';
+			return "MoveAll{sourceToTarget=" + sourceToTarget + '}';
 		}
 	}
 
@@ -228,7 +228,7 @@ public final class RemoteFsCommands {
 
 		@Override
 		public String toString() {
-			return "DeleteAll{toDelete=" + toLimitedString(toDelete, 100) + '}';
+			return "DeleteAll{toDelete=" + toDelete + '}';
 		}
 	}
 
@@ -282,7 +282,7 @@ public final class RemoteFsCommands {
 
 		@Override
 		public String toString() {
-			return "InfoAll{names='" + toLimitedString(names, 100) + "'}";
+			return "InfoAll{names='" + names + "'}";
 		}
 	}
 

@@ -11,12 +11,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.collection.CollectionUtils.keysToMap;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 public class ComputedMeasuresTest {
@@ -58,7 +58,7 @@ public class ComputedMeasuresTest {
 		resultPlaceholder.computeMeasures();
 
 		assertEquals(0.2, resultPlaceholder.getResult());
-		assertEquals(Stream.of("a", "b", "c").collect(Collectors.toSet()), d.getMeasureDependencies());
+		assertEquals(Stream.of("a", "b", "c").collect(toSet()), d.getMeasureDependencies());
 	}
 
 	@Test

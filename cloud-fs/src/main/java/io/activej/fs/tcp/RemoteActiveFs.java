@@ -54,7 +54,7 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
-import static io.activej.common.collection.CollectionUtils.toLimitedString;
+import static io.activej.common.collection.CollectionUtils.toString;
 import static io.activej.csp.binary.Utils.nullTerminated;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.fromJson;
@@ -259,7 +259,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new CopyAll(sourceToTarget), CopyAllFinished.class, $ -> (Void) null)
-				.whenComplete(toLogger(logger, "copyAll", toLimitedString(sourceToTarget, 50), this))
+				.whenComplete(toLogger(logger, "copyAll", sourceToTarget, this))
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
@@ -276,7 +276,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new MoveAll(sourceToTarget), MoveAllFinished.class, $ -> (Void) null)
-				.whenComplete(toLogger(logger, "moveAll", toLimitedString(sourceToTarget, 50), this))
+				.whenComplete(toLogger(logger, "moveAll", sourceToTarget, this))
 				.whenComplete(moveAllPromise.recordStats());
 	}
 
@@ -292,7 +292,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		if (toDelete.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new DeleteAll(toDelete), DeleteAllFinished.class, $ -> (Void) null)
-				.whenComplete(toLogger(logger, "deleteAll", toLimitedString(toDelete, 100), this))
+				.whenComplete(toLogger(logger, "deleteAll", toDelete, this))
 				.whenComplete(deleteAllPromise.recordStats());
 	}
 
@@ -315,7 +315,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		return simpleCommand(new InfoAll(names), InfoAllFinished.class, InfoAllFinished::getMetadataMap)
-				.whenComplete(toLogger(logger, "infoAll", toLimitedString(names, 100), this))
+				.whenComplete(toLogger(logger, "infoAll", names, this))
 				.whenComplete(infoAllPromise.recordStats());
 	}
 

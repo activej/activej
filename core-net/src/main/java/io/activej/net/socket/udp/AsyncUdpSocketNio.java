@@ -20,7 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.recycle.Recyclers;
@@ -195,7 +195,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	public Promise<UdpPacket> receive() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (!isOpen()) {
-			return Promise.ofException(new CloseException());
+			return Promise.ofException(new AsyncCloseException());
 		}
 		UdpPacket polled = readBuffer.poll();
 		if (polled != null) {
@@ -248,7 +248,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	public Promise<Void> send(UdpPacket packet) {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (!isOpen()) {
-			return Promise.ofException(new CloseException());
+			return Promise.ofException(new AsyncCloseException());
 		}
 		return Promise.ofCallback(cb -> {
 			writeQueue.add(new Tuple2<>(packet, cb));

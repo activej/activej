@@ -48,8 +48,7 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.collection.CollectionUtils.toLimitedString;
-import static io.activej.common.collection.CollectionUtils.transformMapValues;
+import static io.activej.common.collection.CollectionUtils.transformMap;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
@@ -164,8 +163,8 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 						logger.info("Found no irrelevant chunks");
 						return Promise.complete();
 					}
-					logger.info("Removing irrelevant chunks: " + toLimitedString(irrelevantChunks.keySet(), 100));
-					Map<String, AggregationDiff> diffMap = transformMapValues(irrelevantChunks,
+					logger.info("Removing irrelevant chunks: " + irrelevantChunks.keySet());
+					Map<String, AggregationDiff> diffMap = transformMap(irrelevantChunks,
 							chunksToRemove -> AggregationDiff.of(emptySet(), chunksToRemove));
 					CubeDiff cubeDiff = CubeDiff.of(diffMap);
 					cubeDiffJmx(cubeDiff);

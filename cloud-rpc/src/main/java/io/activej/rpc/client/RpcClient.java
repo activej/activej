@@ -22,7 +22,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;

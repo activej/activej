@@ -16,7 +16,7 @@
 
 package io.activej.async.process;
 
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,7 +40,7 @@ public interface AsyncCloseable {
 	 * Cancels the process.
 	 */
 	default void close() {
-		closeEx(new CloseException());
+		closeEx(new AsyncCloseException());
 	}
 
 	/**

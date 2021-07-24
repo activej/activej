@@ -169,7 +169,7 @@ public class LogUtils {
 			return "null";
 		}
 		if (object instanceof Collection) {
-			return CollectionUtils.toLimitedString((Collection<?>) object, LIST_LIMIT);
+			return CollectionUtils.toString((Collection<?>) object);
 		}
 		return object.toString();
 	}

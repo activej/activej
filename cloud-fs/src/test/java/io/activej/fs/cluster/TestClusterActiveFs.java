@@ -335,7 +335,7 @@ public final class TestClusterActiveFs {
 
 		await(client.copyAll(sourceToTarget));
 
-		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet(), $ -> 0);
+		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet().stream(), $ -> 0);
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			for (Path path : paths) {
@@ -415,7 +415,7 @@ public final class TestClusterActiveFs {
 
 		await(client.moveAll(sourceToTarget));
 
-		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet(), $ -> 0);
+		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet().stream(), $ -> 0);
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			for (Path path : paths) {

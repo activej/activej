@@ -1,6 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
@@ -43,9 +43,9 @@ public class StreamSupplierOfPromiseTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 		Throwable exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertThat(exception, instanceOf(CloseException.class));
-		assertClosedWithError(CloseException.class, supplier, consumer);
-		assertClosedWithError(CloseException.class, delayedSupplier);
+		assertThat(exception, instanceOf(AsyncCloseException.class));
+		assertClosedWithError(AsyncCloseException.class, supplier, consumer);
+		assertClosedWithError(AsyncCloseException.class, delayedSupplier);
 		assertEquals(0, consumer.getList().size());
 	}
 
@@ -57,9 +57,9 @@ public class StreamSupplierOfPromiseTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 		Throwable exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertThat(exception, instanceOf(CloseException.class));
-		assertClosedWithError(CloseException.class, supplier, consumer);
-		assertClosedWithError(CloseException.class, delayedSupplier);
+		assertThat(exception, instanceOf(AsyncCloseException.class));
+		assertClosedWithError(AsyncCloseException.class, supplier, consumer);
+		assertClosedWithError(AsyncCloseException.class, delayedSupplier);
 		assertEquals(0, consumer.getList().size());
 	}
 

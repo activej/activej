@@ -20,8 +20,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
-import io.activej.common.exception.AsyncTimeoutException;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncTimeoutException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
@@ -350,7 +350,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	@Override
 	public Promise<ByteBuf> read() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
-		if (isClosed()) return Promise.ofException(new CloseException());
+		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 		read = null;
 		if (readBuf != null || readEndOfStream) {
 			ByteBuf readBuf = this.readBuf;
@@ -452,7 +452,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 		if (isClosed()) {
 			if (buf != null) buf.recycle();
-			return Promise.ofException(new CloseException());
+			return Promise.ofException(new AsyncCloseException());
 		}
 		writeEndOfStream |= buf == null;
 

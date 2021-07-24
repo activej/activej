@@ -18,8 +18,8 @@ package io.activej.dns;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
-import io.activej.common.exception.AsyncTimeoutException;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncTimeoutException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -133,8 +133,8 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		}
 		socket.close();
 		socket = null;
-		CloseException closeException = new CloseException();
-		transactions.values().forEach(s -> s.setException(closeException));
+		AsyncCloseException asyncCloseException = new AsyncCloseException();
+		transactions.values().forEach(s -> s.setException(asyncCloseException));
 	}
 
 	private Promise<AsyncUdpSocket> getSocket() {

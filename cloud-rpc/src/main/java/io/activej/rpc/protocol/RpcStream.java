@@ -17,7 +17,7 @@
 package io.activej.rpc.protocol;
 
 import io.activej.common.MemSize;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
@@ -134,7 +134,7 @@ public final class RpcStream {
 	}
 
 	public void close() {
-		closeEx(new CloseException("RPC Channel Closed"));
+		closeEx(new AsyncCloseException("RPC Channel Closed"));
 	}
 
 	public void closeEx(@NotNull Throwable e) {

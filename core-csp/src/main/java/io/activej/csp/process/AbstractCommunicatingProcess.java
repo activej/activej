@@ -18,7 +18,7 @@ package io.activej.csp.process;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncProcess;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
@@ -132,7 +132,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	protected abstract void doClose(Throwable e);
 
 	/**
-	 * Closes this process with {@link CloseException}
+	 * Closes this process with {@link AsyncCloseException}
 	 */
 	@Override
 	public final void close() {

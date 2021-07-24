@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.activej.common.collection.CollectionUtils.difference;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
@@ -227,7 +228,7 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 				.values()
 				.stream()
 				.flatMap(list -> list.stream()
-						.filter(trigger -> trigger.getTrigger().getSeverity() == list.get(list.size() - 1).getTrigger().getSeverity()))
+						.filter(trigger -> trigger.getTrigger().getSeverity() == last(list).getTrigger().getSeverity()))
 				.collect(Collectors.toList());
 	}
 
@@ -242,7 +243,7 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 				.values()
 				.stream()
 				.flatMap(list -> list.stream()
-						.filter(trigger -> trigger.getTrigger().getSeverity() == list.get(list.size() - 1).getTrigger().getSeverity()))
+						.filter(trigger -> trigger.getTrigger().getSeverity() == last(list).getTrigger().getSeverity()))
 				.collect(Collectors.toList());
 	}
 

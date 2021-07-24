@@ -24,8 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
-import static io.activej.common.collection.CollectionUtils.toLimitedString;
-
 public final class RemoteFsResponses {
 
 	@CompiledJson(discriminator = "Type")
@@ -200,7 +198,7 @@ public final class RemoteFsResponses {
 
 		@Override
 		public String toString() {
-			return "InfoAllFinished{metadataMap=" + toLimitedString(metadataMap, 50) + '}';
+			return "InfoAllFinished{metadataMap=" + metadataMap + '}';
 		}
 	}
 

@@ -29,6 +29,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Variable;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.process.frames.FrameFormat;
@@ -1387,7 +1388,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 	@JmxOperation
 	public Map<String, String> getIrrelevantChunksIds() {
-		return transformMapValues(getIrrelevantChunks(), chunks -> chunks.stream()
+		return transformMap(getIrrelevantChunks(), chunks -> chunks.stream()
 				.map(chunk -> String.valueOf(chunk.getChunkId()))
 				.collect(Collectors.joining(", ")));
 	}

@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import java.util.*;
 
-import static io.activej.common.collection.CollectionUtils.getLast;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.utils.Utils.add;
@@ -80,7 +80,7 @@ public class OTAlgorithmsTest {
 		await(REPOSITORY.saveSnapshot(0, asList(add(10))));
 
 		Set<Integer> heads = await(REPOSITORY.getHeads());
-		List<TestOp> changes = await(checkout(REPOSITORY, TEST_OP, getLast(heads)));
+		List<TestOp> changes = await(checkout(REPOSITORY, TEST_OP, last(heads)));
 		changes.forEach(opState::apply);
 
 		assertEquals(15, opState.getValue());

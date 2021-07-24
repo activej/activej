@@ -18,8 +18,8 @@ package io.activej.promise;
 
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.AsyncBuffer;
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.exception.AsyncTimeoutException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.*;
 import io.activej.eventloop.Eventloop;
@@ -40,7 +40,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.nullify;
-import static io.activej.common.collection.CollectionUtils.asIterator;
+import static io.activej.common.collection.CollectionUtils.iteratorOf;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -433,7 +433,7 @@ public final class Promises {
 			if (promise.isComplete()) {
 				T result = promise.getResult();
 				if (predicate.test(result, promise.getException())) {
-					if (ownership){
+					if (ownership) {
 						promises.forEachRemaining(Recyclers::recycle);
 					} else {
 						Recyclers.recycle(promises);
@@ -1208,7 +1208,7 @@ public final class Promises {
 	 */
 	@SafeVarargs
 	public static <T> Iterator<Promise<T>> asPromises(@NotNull AsyncSupplier<? extends T>... tasks) {
-		return asPromises(asIterator(tasks));
+		return asPromises(iteratorOf(tasks));
 	}
 
 	/**

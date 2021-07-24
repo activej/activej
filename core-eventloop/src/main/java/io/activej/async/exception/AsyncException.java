@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-package io.activej.common.exception;
+package io.activej.async.exception;
 
 import io.activej.common.ApplicationSettings;
 
-public class CloseException extends Exception {
-	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(CloseException.class, "withStackTrace", false);
+public class AsyncException extends Exception {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(AsyncException.class, "withStackTrace", false);
 
-	public CloseException() {
+	public AsyncException() {
 		super();
 	}
 
-	public CloseException(String message) {
+	public AsyncException(String message) {
 		super(message);
 	}
 
-	public CloseException(String message, Throwable cause) {
+	public AsyncException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
 	@Override
-	public final Throwable fillInStackTrace() {
+	public Throwable fillInStackTrace() {
 		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 }

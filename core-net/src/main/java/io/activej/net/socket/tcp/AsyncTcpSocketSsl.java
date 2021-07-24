@@ -19,7 +19,7 @@ package io.activej.net.socket.tcp;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.eventloop.net.CloseWithoutNotifyException;
 import io.activej.promise.Promise;
@@ -115,7 +115,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 			shouldReturnEndOfStream = false;
 			return Promise.of(null);
 		}
-		if (isClosed()) return Promise.ofException(new CloseException());
+		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 		if (engine2app.canRead()) {
 			ByteBuf readBuf = engine2app;
 			engine2app = ByteBuf.empty();
@@ -134,7 +134,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 			if (buf != null) {
 				buf.recycle();
 			}
-			return Promise.ofException(new CloseException());
+			return Promise.ofException(new AsyncCloseException());
 		}
 		if (buf == null) {
 			throw new UnsupportedOperationException("SSL cannot work in half-duplex mode");

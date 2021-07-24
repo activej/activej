@@ -1,6 +1,5 @@
 package io.activej.fs;
 
-import io.activej.common.collection.CollectionUtils;
 import io.activej.fs.exception.GlobException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -18,6 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.fs.LocalBlockingFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.*;
@@ -106,7 +106,7 @@ public final class TestLocalBlockingFs {
 	@Test
 	public void testAppendToEmptyDirectory() throws IOException {
 		byte[] data = "data".getBytes();
-		Path empty = CollectionUtils.getLast(createEmptyDirectories(storagePath));
+		Path empty = last(createEmptyDirectories(storagePath));
 		assertTrue(Files.isDirectory(empty));
 		try (Stream<Path> list = Files.list(empty)) {
 			assertEquals(0, list.count());

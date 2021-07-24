@@ -16,7 +16,7 @@
 
 package io.activej.dataflow.graph;
 
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.dataflow.node.Node;
@@ -142,7 +142,7 @@ public final class Task {
 					}
 					status = e == null ?
 							TaskStatus.COMPLETED :
-							e instanceof CloseException ?
+							e instanceof AsyncCloseException ?
 									TaskStatus.CANCELED :
 									TaskStatus.FAILED;
 					executionPromise.accept($, e);

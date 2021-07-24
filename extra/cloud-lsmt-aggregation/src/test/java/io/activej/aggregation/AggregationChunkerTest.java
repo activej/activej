@@ -27,6 +27,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.aggregation.util.Utils.createRecordClass;
 import static io.activej.aggregation.util.Utils.singlePartition;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertComplete;
@@ -189,7 +190,7 @@ public final class AggregationChunkerTest {
 		for (int i = 0; i < listConsumers.size() - 1; i++) {
 			assertEndOfStream(listConsumers.get(i));
 		}
-		assertClosedWithError(listConsumers.get(listConsumers.size() - 1));
+		assertClosedWithError(last(listConsumers));
 	}
 
 	@Test

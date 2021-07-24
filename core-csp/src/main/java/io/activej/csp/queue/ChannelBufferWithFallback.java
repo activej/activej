@@ -16,7 +16,7 @@
 
 package io.activej.csp.queue;
 
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -108,7 +108,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 					if (e == null) {
 						return Promise.complete();
 					}
-					if (!(e instanceof CloseException)) {
+					if (!(e instanceof AsyncCloseException)) {
 						return Promise.ofException(e);
 					}
 					// buffer was already closed for whatever reason,
@@ -125,7 +125,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 		return buffer.take()
 				.thenEx((item, e) -> {
 					if (e != null) {
-						if (!(e instanceof CloseException)) {
+						if (!(e instanceof AsyncCloseException)) {
 							return Promise.ofException(e);
 						}
 					} else if (item != null) {

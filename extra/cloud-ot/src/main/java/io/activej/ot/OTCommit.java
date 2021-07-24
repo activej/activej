@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.collection.CollectionUtils.*;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toMap;
@@ -48,11 +49,7 @@ public final class OTCommit<K, D> {
 		this.epoch = epoch;
 		this.id = id;
 		this.parentsWithLevels = parents;
-        this.parents = parentsWithLevels.entrySet()
-				.stream()
-				.collect(toMap(Map.Entry::getKey, entry -> entry.getValue().getDiffs(), (u, v) -> {
-                    throw new IllegalStateException("Duplicate key " + u);
-                }, LinkedHashMap::new));
+        this.parents = entriesToMap(parentsWithLevels.entrySet().stream(), DiffsWithLevel::getDiffs);
 		this.level = parents.values().stream().mapToLong(DiffsWithLevel::getLevel).max().orElse(0L) + 1L;
 	}
 
@@ -65,12 +62,7 @@ public final class OTCommit<K, D> {
 	}
 
 	public static <K, D> OTCommit<K, D> of(int epoch, K id, Set<K> parents, Function<K, List<D>> diffs, Function<K, Long> levels) {
-        return of(epoch, id, parents.stream()
-				.collect(toMap(
-						parent -> parent,
-						parent -> new DiffsWithLevel<>(levels.apply(parent), diffs.apply(parent)),
-                        (u, v) -> { throw new IllegalStateException("Duplicate key " + u); },
-						LinkedHashMap::new)));
+        return of(epoch, id, keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(levels.apply(parent), diffs.apply(parent))));
 	}
 
 	public static <K, D> OTCommit<K, D> ofCommit(int epoch, @NotNull K id, @NotNull K parent, @NotNull DiffsWithLevel<D> diffs) {

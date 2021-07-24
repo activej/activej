@@ -1,6 +1,6 @@
 package io.activej.rpc;
 
-import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;

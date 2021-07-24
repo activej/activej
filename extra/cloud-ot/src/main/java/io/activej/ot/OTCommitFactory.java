@@ -18,14 +18,13 @@ package io.activej.ot;
 
 import io.activej.promise.Promise;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import static io.activej.common.collection.CollectionUtils.keysToMap;
 import static java.util.Collections.singletonMap;
-import static java.util.stream.Collectors.toMap;
 
 public interface OTCommitFactory<K, D> {
 	final class DiffsWithLevel<D> {
@@ -53,13 +52,7 @@ public interface OTCommitFactory<K, D> {
 	}
 
 	default Promise<OTCommit<K, D>> createCommit(Set<K> parents, Function<K, List<D>> diffs, Function<K, Long> level) {
-		return createCommit(
-				parents.stream()
-						.collect(toMap(
-								parent -> parent,
-								parent -> new DiffsWithLevel<>(level.apply(parent), diffs.apply(parent)),
-								(u, v) -> { throw new IllegalStateException("Duplicate key " + u); },
-								LinkedHashMap::new)));
+		return createCommit(keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(level.apply(parent), diffs.apply(parent))));
 	}
 
 	default Promise<OTCommit<K, D>> createCommit(K parent, List<D> diffs, long level) {

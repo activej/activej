@@ -21,7 +21,7 @@ import io.activej.async.file.ExecutorAsyncFileService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -154,12 +154,12 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	protected void onClosed(@NotNull Throwable e) {
 		try {
 			if (!channel.isOpen()) {
-				throw new CloseException("File has been closed");
+				throw new AsyncCloseException("File has been closed");
 			}
 
 			channel.close();
 			logger.trace("{}: closed file", this);
-		} catch (IOException | CloseException e1) {
+		} catch (IOException | AsyncCloseException e1) {
 			logger.error("{}: failed to close file", this, e1);
 		}
 	}

@@ -16,7 +16,7 @@
 
 package io.activej.http;
 
-import io.activej.common.exception.AsyncTimeoutException;
+import io.activej.async.exception.AsyncTimeoutException;
 import org.jetbrains.annotations.Nullable;
 
 final class ConnectionsLinkedList {

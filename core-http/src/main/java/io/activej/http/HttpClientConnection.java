@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -419,7 +419,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		if (promise != null) {
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
-			promise.setException(new CloseException("Connection closed"));
+			promise.setException(new AsyncCloseException("Connection closed"));
 		}
 		if (pool == client.poolKeepAlive) {
 			AddressLinkedList addresses = client.addresses.get(remoteAddress);

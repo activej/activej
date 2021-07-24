@@ -228,14 +228,7 @@ public final class OTAlgorithms {
 									}
 								})
 								.then(mergeResult -> repository.createCommit(
-										heads.stream()
-												.collect(toMap(
-														head -> head,
-														head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head)),
-														(u, v) -> {
-															throw new IllegalStateException("Duplicate key " + u);
-														},
-														LinkedHashMap::new)))));
+										keysToMap(heads.stream(), head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head))))));
 	}
 
 	public static <K, D> Promise<Set<K>> findCut(OTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes,

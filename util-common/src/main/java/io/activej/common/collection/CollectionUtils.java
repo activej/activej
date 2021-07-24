@@ -16,23 +16,38 @@
 
 package io.activej.common.collection;
 
+import io.activej.common.ApplicationSettings;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
+import java.util.function.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.*;
 
 public class CollectionUtils {
+	public static final int TO_STRING_LIMIT = ApplicationSettings.getInt(CollectionUtils.class, "toStringLimit", 10);
+
+	private static final BinaryOperator<?> NO_MERGE_FUNCTION = (v, v2) -> {
+		throw new AssertionError();
+	};
+
+	private static final Iterator<Object> EMPTY_ITERATOR = new Iterator<Object>() {
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
+
+		@Override
+		public Object next() {
+			throw new NoSuchElementException();
+		}
+	};
 
 	@SuppressWarnings("unchecked")
 	public static <D> List<D> concat(List<? extends D> list1, List<? extends D> list2) {
@@ -49,7 +64,9 @@ public class CollectionUtils {
 		return new LinkedHashSet<>(asList(items));
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> Set<T> difference(Set<? extends T> a, Set<? extends T> b) {
+		if (b.isEmpty()) return (Set<T>) a;
 		return a.stream().filter(t -> !b.contains(t)).collect(toSet());
 	}
 
@@ -65,21 +82,27 @@ public class CollectionUtils {
 				b.stream().anyMatch(a::contains);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> Set<T> union(Set<? extends T> a, Set<? extends T> b) {
+		if (a.isEmpty()) return (Set<T>) b;
+		if (b.isEmpty()) return (Set<T>) a;
 		return Stream.concat(a.stream(), b.stream()).collect(toCollection(() -> new HashSet<>(max(a.size(), b.size()))));
 	}
 
-	public static <T> Set<T> union(List<Set<? extends T>> sets) {
-		return sets.stream().flatMap(Collection::stream).collect(toSet());
-	}
-
-	@SafeVarargs
-	public static <T> Set<T> union(Set<? extends T>... sets) {
-		return union(asList(sets));
-	}
-
-	public static <T> T first(Iterable<T> iterable) {
+	public static <T> T first(Iterable<? extends T> iterable) {
 		return iterable.iterator().next();
+	}
+
+	public static <T> T last(List<? extends T> list) {
+		return list.get(list.size() - 1);
+	}
+
+	public static <T> T last(Iterable<? extends T> iterable) {
+		Iterator<? extends T> iterator = iterable.iterator();
+		while (true) {
+			T value = iterator.next();
+			if (!iterator.hasNext()) return value;
+		}
 	}
 
 	public static <T> List<T> list() {
@@ -91,73 +114,12 @@ public class CollectionUtils {
 		return asList(items);
 	}
 
-	public static <T> Stream<T> iterate(Supplier<T> supplier, Predicate<T> hasNext) {
-		return iterate(supplier.get(), hasNext, $ -> supplier.get());
-	}
-
-	public static <T> Stream<T> iterate(T seed, Predicate<T> hasNext, UnaryOperator<T> f) {
-		requireNonNull(f);
-		return iterate(
-				new Iterator<T>() {
-					T item = seed;
-
-					@Override
-					public boolean hasNext() {
-						return hasNext.test(item);
-					}
-
-					@Override
-					public T next() {
-						T next = item;
-						item = f.apply(item);
-						return next;
-					}
-				});
-	}
-
-	public static <T> Stream<T> iterate(Iterator<T> iterator) {
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator,
-				Spliterator.ORDERED | Spliterator.IMMUTABLE), false);
-	}
-
-	public static <T> String toLimitedString(Collection<T> collection, int limit) {
-		return collection.stream()
-				.limit(limit)
-				.map(element -> element == collection ? "(self)" : element.toString())
-				.collect(joining(",", "[", collection.size() <= limit ? "]" : ", ..and " + (collection.size() - limit) + " more]"));
-	}
-
-	public static <K, V> String toLimitedString(Map<K, V> map, int limit) {
-		return map.entrySet().stream()
-				.limit(limit)
-				.map(element -> {
-					K key = element.getKey();
-					V value = element.getValue();
-					String keyString = key == map ? "(self)" : key.toString();
-					String valueString = value == map ? "(self)" : value.toString();
-					return keyString + '=' + valueString;
-				})
-				.collect(joining(",", "{", map.size() <= limit ? "}" : ", ..and " + (map.size() - limit) + " more}"));
-	}
-
-	private static final Iterator<Object> EMPTY_ITERATOR = new Iterator<Object>() {
-		@Override
-		public boolean hasNext() {
-			return false;
-		}
-
-		@Override
-		public Object next() {
-			throw new NoSuchElementException();
-		}
-	};
-
 	@SuppressWarnings("unchecked")
-	public static <T> Iterator<T> emptyIterator() {
+	public static <T> Iterator<T> iteratorOf() {
 		return (Iterator<T>) EMPTY_ITERATOR;
 	}
 
-	public static <T> Iterator<T> asIterator(T item) {
+	public static <T> Iterator<T> iteratorOf(T item) {
 		return new Iterator<T>() {
 			boolean hasNext = true;
 
@@ -175,7 +137,7 @@ public class CollectionUtils {
 		};
 	}
 
-	public static <T> Iterator<T> asIterator(T item1, T item2) {
+	public static <T> Iterator<T> iteratorOf(T item1, T item2) {
 		return new Iterator<T>() {
 			int i = 0;
 
@@ -193,7 +155,7 @@ public class CollectionUtils {
 	}
 
 	@SafeVarargs
-	public static <T> Iterator<T> asIterator(T... items) {
+	public static <T> Iterator<T> iteratorOf(T... items) {
 		return new Iterator<T>() {
 			int i = 0;
 
@@ -211,7 +173,7 @@ public class CollectionUtils {
 	}
 
 	@SafeVarargs
-	public static <T> Iterator<T> asIterator(T head, T... tail) {
+	public static <T> Iterator<T> iteratorOf(T head, T... tail) {
 		return new Iterator<T>() {
 			int i = 0;
 
@@ -228,7 +190,7 @@ public class CollectionUtils {
 		};
 	}
 
-	public static <T, R> Iterator<R> transformIterator(Iterator<T> iterator, Function<T, R> fn) {
+	public static <T, R> Iterator<R> transformIterator(Iterator<? extends T> iterator, Function<? super T, ? extends R> fn) {
 		return new Iterator<R>() {
 			@Override
 			public boolean hasNext() {
@@ -243,18 +205,18 @@ public class CollectionUtils {
 	}
 
 	public static <T> Iterator<T> concat(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2) {
-		return concatIterators(asIterator(iterator1, iterator2));
+		return concatImpl(iteratorOf(iterator1, iterator2));
 	}
 
-	public static <T> Iterator<T> append(Iterator<T> iterator, T value) {
-		return concatIterators(asIterator(iterator, asIterator(value)));
+	public static <T> Iterator<T> append(Iterator<? extends T> iterator, T value) {
+		return concatImpl(iteratorOf(iterator, iteratorOf(value)));
 	}
 
-	public static <T> Iterator<T> prepend(T value, Iterator<T> iterator) {
-		return concatIterators(asIterator(asIterator(value), iterator));
+	public static <T> Iterator<T> prepend(T value, Iterator<? extends T> iterator) {
+		return concatImpl(iteratorOf(iteratorOf(value), iterator));
 	}
 
-	public static <T> Iterator<T> concatIterators(Iterator<? extends Iterator<? extends T>> iterators) {
+	private static <T> Iterator<T> concatImpl(Iterator<? extends Iterator<? extends T>> iterators) {
 		return new Iterator<T>() {
 			@Nullable Iterator<? extends T> it = iterators.hasNext() ? iterators.next() : null;
 
@@ -273,28 +235,6 @@ public class CollectionUtils {
 				return next;
 			}
 		};
-	}
-
-	public static <K, V> Map<K, V> keysToMap(Set<K> keys, Function<K, V> fn) {
-		return keysToMap(keys.stream(), fn);
-	}
-
-	public static <K, V> Map<K, V> keysToMap(Stream<K> stream, Function<K, V> fn) {
-		LinkedHashMap<K, V> result = new LinkedHashMap<>();
-		stream.forEach(key -> result.put(key, fn.apply(key)));
-		return result;
-	}
-
-	public static <K, V> Map<K, V> entriesToMap(Stream<Map.Entry<K, V>> stream) {
-		LinkedHashMap<K, V> result = new LinkedHashMap<>();
-		stream.forEach(entry -> result.put(entry.getKey(), entry.getValue()));
-		return result;
-	}
-
-	public static <K, V, T> Map<K, V> transformMapValues(Map<K, T> map, Function<T, V> function) {
-		LinkedHashMap<K, V> result = new LinkedHashMap<>(map.size());
-		map.forEach((key, value) -> result.put(key, function.apply(value)));
-		return result;
 	}
 
 	public static <K, V> Map<K, V> map() {
@@ -352,26 +292,75 @@ public class CollectionUtils {
 		return map;
 	}
 
-	public static <T> T getLast(Iterable<T> iterable) {
-		Iterator<T> iterator = iterable.iterator();
-		while (iterator.hasNext()) {
-			T next = iterator.next();
-			if (!iterator.hasNext()) {
-				return next;
-			}
-		}
-		throw new IllegalArgumentException("Empty iterable");
-	}
-
-	public static <T> T getFirst(Iterable<T> iterable) {
-		Iterator<T> iterator = iterable.iterator();
-		if (iterator.hasNext()) {
-			return iterator.next();
-		}
-		throw new IllegalArgumentException("Empty iterable");
-	}
-
 	public static boolean isBijection(Map<?, ?> map) {
 		return new HashSet<>(map.values()).size() == map.size();
 	}
+
+	public static <T> Stream<T> iterate(@NotNull Supplier<? extends T> supplier, @NotNull Predicate<? super T> hasNext) {
+		return iterate(supplier.get(), hasNext, $ -> supplier.get());
+	}
+
+	public static <T> Stream<T> iterate(T seed, @NotNull Predicate<? super T> hasNext, @NotNull UnaryOperator<T> f) {
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+				new Iterator<T>() {
+					T item = seed;
+
+					@Override
+					public boolean hasNext() {
+						return hasNext.test(item);
+					}
+
+					@Override
+					public T next() {
+						T next = item;
+						item = f.apply(item);
+						return next;
+					}
+				},
+				Spliterator.ORDERED | Spliterator.IMMUTABLE), false);
+	}
+
+	public static <T> BinaryOperator<T> noMergeFunction() {
+		//noinspection unchecked
+		return (BinaryOperator<T>) NO_MERGE_FUNCTION;
+	}
+
+	public static <K, V> Map<K, V> keysToMap(Stream<? extends K> stream, Function<? super K, ? extends V> fn) {
+		return stream.collect(toMap(Function.identity(), fn, noMergeFunction(), LinkedHashMap::new));
+	}
+
+	public static <K, V> Map<K, V> entriesToMap(Stream<? extends Map.Entry<? extends K, ? extends V>> stream) {
+		return entriesToMap(stream, Function.identity());
+	}
+
+	public static <K, V, R> Map<K, R> entriesToMap(Stream<? extends Map.Entry<? extends K, ? extends V>> stream, Function<? super V, ? extends R> fn) {
+		return stream.collect(toMap(Map.Entry::getKey, entry -> fn.apply(entry.getValue()), noMergeFunction(), LinkedHashMap::new));
+	}
+
+	public static <K, V, R> Map<K, R> transformMap(Map<? extends K, ? extends V> map, Function<? super V, ? extends R> function) {
+		return entriesToMap(map.entrySet().stream(), function);
+	}
+
+	public static <T> String toString(Collection<? extends T> collection) {
+		return toString(collection, TO_STRING_LIMIT);
+	}
+
+	public static <K, V> String toString(Map<? extends K, ? extends V> map) {
+		return toString(map, TO_STRING_LIMIT);
+	}
+
+	public static <T> String toString(Collection<? extends T> collection, int limit) {
+		return collection.stream()
+				.limit(limit)
+				.map(Object::toString)
+				.collect(joining(",", "[", collection.size() <= limit ? "]" : ", ..and " + (collection.size() - limit) + " more]"));
+	}
+
+	public static <K, V> String toString(Map<? extends K, ? extends V> map, int limit) {
+		return map.entrySet().stream()
+				.limit(limit)
+				.map(element -> element.getKey() + "=" + element.getValue())
+				.collect(joining(",", "{", map.size() <= limit ? "}" : ", ..and " + (map.size() - limit) + " more}"));
+	}
+
 }

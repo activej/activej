@@ -22,7 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
@@ -94,7 +94,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	 * @return promise of parsed response
 	 */
 	public <T> Promise<T> cmd(RedisRequest request, RedisResponse<T> response) {
-		if (isClosed()) return Promise.ofException(new CloseException());
+		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 
 		int positionBegin, positionEnd;
 		while (true) {

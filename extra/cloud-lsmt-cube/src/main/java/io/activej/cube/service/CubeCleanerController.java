@@ -49,7 +49,6 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.common.collection.CollectionUtils.union;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.*;
@@ -159,7 +158,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 						}))
 				.thenEx(wrapException(e -> e instanceof GraphExhaustedException ?
 						e :
-						new CubeException("Failed to cleanup frozen cut: " + toLimitedString(frozenCut, 10), e)))
+						new CubeException("Failed to cleanup frozen cut: " + CollectionUtils.toString(frozenCut), e)))
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
 	}
 
@@ -237,7 +236,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 						.whenComplete(promiseCleanupChunks.recordStats()))
 				.whenComplete(logger.isTraceEnabled() ?
 						toLogger(logger, TRACE, thisMethod(), checkpointNode, chunksCleanupTimestamp, requiredChunks) :
-						toLogger(logger, thisMethod(), checkpointNode, chunksCleanupTimestamp, toLimitedString(requiredChunks, 6)));
+						toLogger(logger, thisMethod(), checkpointNode, chunksCleanupTimestamp, CollectionUtils.toString(requiredChunks)));
 	}
 
 	@JmxAttribute

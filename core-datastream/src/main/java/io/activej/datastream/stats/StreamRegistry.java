@@ -142,7 +142,7 @@ public final class StreamRegistry<V> implements Iterable<V> {
 	public String getString() {
 		List<Entry<V>> entries = new ArrayList<>();
 		list.forEach(entries::add);
-		return CollectionUtils.toLimitedString(entries, limit);
+		return CollectionUtils.toString(entries);
 	}
 
 }

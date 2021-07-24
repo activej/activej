@@ -2,7 +2,7 @@ package io.activej.csp.net;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
@@ -199,7 +199,7 @@ public final class AsyncTcpSocketSslTest {
 				socket.write(wrapAscii("He"))
 						.whenComplete(socket::close)
 						.then(() -> socket.write(wrapAscii("ello")))
-						.whenComplete(($, e) -> assertThat(e, instanceOf(CloseException.class))));
+						.whenComplete(($, e) -> assertThat(e, instanceOf(AsyncCloseException.class))));
 
 		Throwable e = awaitException(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
@@ -236,7 +236,7 @@ public final class AsyncTcpSocketSslTest {
 				})
 				.map(tcpSocket -> AsyncTcpSocketSsl.wrapClientSocket(tcpSocket, sslContext, executor))
 				.then(socket -> socket.write(ByteBufStrings.wrapUtf8("hello"))));
-		assertThat(exception, instanceOf(CloseException.class));
+		assertThat(exception, instanceOf(AsyncCloseException.class));
 	}
 
 	void startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {

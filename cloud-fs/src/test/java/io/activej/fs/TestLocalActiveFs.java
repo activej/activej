@@ -3,7 +3,6 @@ package io.activej.fs;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
-import io.activej.common.collection.CollectionUtils;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
@@ -37,6 +36,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
+import static io.activej.common.collection.CollectionUtils.last;
 import static io.activej.common.collection.CollectionUtils.set;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.createEmptyDirectories;
@@ -137,7 +137,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testAppendToEmptyDirectory() throws IOException {
-		Path empty = CollectionUtils.getLast(createEmptyDirectories(storagePath));
+		Path empty = last(createEmptyDirectories(storagePath));
 		assertTrue(Files.isDirectory(empty));
 		try (Stream<Path> list = Files.list(empty)) {
 			assertEquals(0, list.count());

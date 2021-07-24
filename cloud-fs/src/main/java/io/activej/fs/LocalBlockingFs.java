@@ -45,6 +45,7 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.isBijection;
+import static io.activej.common.collection.CollectionUtils.noMergeFunction;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.emptyMap;
@@ -285,7 +286,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 								map.put(filename, metadata);
 							}
 						},
-                        (u, v) -> { throw new IllegalStateException("Duplicate key " + u); })
+						noMergeFunction())
 				);
 	}
 

@@ -1,6 +1,6 @@
 package io.activej.rpc;
 
-import io.activej.common.exception.CloseException;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -83,7 +83,7 @@ public final class TestRpcClientShutdown {
 				.whenComplete(rpcServer::close)
 		);
 
-		assertThat(exception, instanceOf(CloseException.class));
+		assertThat(exception, instanceOf(AsyncCloseException.class));
 	}
 
 	public static final class Request {
