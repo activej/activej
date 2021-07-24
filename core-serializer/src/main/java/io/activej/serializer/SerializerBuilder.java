@@ -65,6 +65,7 @@ public final class SerializerBuilder {
 	private final TypeScannerRegistry<SerializerDef> registry = TypeScannerRegistry.create();
 
 	private String profile;
+	private String className;
 	private int encodeVersionMax = Integer.MAX_VALUE;
 	private int decodeVersionMin = 0;
 	private int decodeVersionMax = Integer.MAX_VALUE;
@@ -280,6 +281,11 @@ public final class SerializerBuilder {
 		extraSubclassesMap.put(type, (List) subclasses);
 	}
 
+	public SerializerBuilder setClassName(String className) {
+		this.className = className;
+		return this;
+	}
+
 	public <T> BinarySerializer<T> build(Type type) {
 		return build(annotatedTypeOf(type));
 	}
@@ -295,6 +301,8 @@ public final class SerializerBuilder {
 		if (saveBytecodePath != null) {
 			classBuilder.withBytecodeSaveDir(saveBytecodePath);
 		}
+		if(className != null)
+			classBuilder.withClassName(className);
 
 		Set<Integer> collectedVersions = new HashSet<>();
 		Map<Object, Expression> encoderInitializers = new HashMap<>();
