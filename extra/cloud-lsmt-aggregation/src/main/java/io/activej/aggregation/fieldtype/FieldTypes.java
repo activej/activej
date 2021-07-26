@@ -21,10 +21,10 @@ import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.util.Primitives;
-import io.activej.types.RecursiveType;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.impl.*;
+import io.activej.types.RecursiveType;
 
 import java.lang.reflect.Type;
 import java.time.LocalDate;
@@ -36,7 +36,6 @@ import static io.activej.serializer.StringFormat.UTF8;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Collections.singletonList;
 
-@SuppressWarnings("ConstantConditions")
 public final class FieldTypes {
 
 	public static FieldType<Byte> ofByte() {

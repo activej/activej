@@ -40,13 +40,11 @@ import java.util.function.Predicate;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.common.Utils.*;
 import static io.activej.ot.reducers.GraphReducer.Result.*;
 import static io.activej.promise.Promises.toList;
 import static java.util.Collections.*;
 import static java.util.Comparator.comparingLong;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 public final class OTAlgorithms {

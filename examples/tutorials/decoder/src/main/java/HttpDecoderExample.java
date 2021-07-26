@@ -2,7 +2,6 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
-import io.activej.common.Utils;
 import io.activej.common.collection.Either;
 import io.activej.http.AsyncServlet;
 import io.activej.http.AsyncServletDecorator;

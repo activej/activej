@@ -22,7 +22,6 @@ import com.dslplatform.json.JsonWriter.WriteObject;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.types.TypeT;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -34,6 +33,7 @@ import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -179,6 +179,7 @@ public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJ
 
 	private static byte[] loadResource(String name) throws IOException {
 		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name)) {
+			assert stream != null;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			byte[] buffer = new byte[4096];
 			int size;

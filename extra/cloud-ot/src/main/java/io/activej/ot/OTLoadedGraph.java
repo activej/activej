@@ -27,8 +27,6 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
-import static io.activej.common.Utils.nonNullElse;
-import static io.activej.common.Utils.nonNullElseEmpty;
 import static java.util.Collections.*;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.*;

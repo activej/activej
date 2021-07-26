@@ -1,5 +1,4 @@
 import com.mysql.cj.jdbc.MysqlDataSource;
-import io.activej.common.Utils;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 

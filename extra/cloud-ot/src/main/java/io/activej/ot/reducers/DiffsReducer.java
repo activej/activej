@@ -16,7 +16,6 @@
 
 package io.activej.ot.reducers;
 
-import io.activej.common.Utils;
 import io.activej.ot.system.OTSystem;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +24,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.concat;
 
 public interface DiffsReducer<A, D> {
 	A initialValue();

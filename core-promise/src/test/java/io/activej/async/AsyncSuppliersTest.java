@@ -204,7 +204,6 @@ public class AsyncSuppliersTest {
 
 	@Test
 	public void subscribeIfNotAsync() {
-		//noinspection unchecked
 		AsyncSupplier<Void> supplier = coalesce(Promise::complete);
 
 		Ref<Promise<Void>> nextPromiseRef = new Ref<>();

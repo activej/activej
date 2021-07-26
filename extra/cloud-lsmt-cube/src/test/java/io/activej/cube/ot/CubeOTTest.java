@@ -3,7 +3,6 @@ package io.activej.cube.ot;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.common.Utils;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
 import io.activej.etl.LogOTState;

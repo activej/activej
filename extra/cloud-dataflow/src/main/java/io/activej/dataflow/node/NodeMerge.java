@@ -19,7 +19,6 @@ package io.activej.dataflow.node;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers;
 
 import java.util.ArrayList;
 import java.util.Collection;

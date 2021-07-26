@@ -1,6 +1,5 @@
 package io.activej.common.recycle;
 
-import io.activej.common.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

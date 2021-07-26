@@ -1,6 +1,5 @@
 package adder;
 
-import io.activej.common.Utils;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;

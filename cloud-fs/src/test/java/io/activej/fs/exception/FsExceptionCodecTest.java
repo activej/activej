@@ -1,7 +1,6 @@
 package io.activej.fs.exception;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Utils;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 

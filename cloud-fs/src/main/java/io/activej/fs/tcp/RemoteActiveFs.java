@@ -54,7 +54,6 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
-import static io.activej.common.Utils.toString;
 import static io.activej.csp.binary.Utils.nullTerminated;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.fromJson;

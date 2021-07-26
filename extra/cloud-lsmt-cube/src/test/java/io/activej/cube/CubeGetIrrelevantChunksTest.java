@@ -3,7 +3,6 @@ package io.activej.cube;
 import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.Utils;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;

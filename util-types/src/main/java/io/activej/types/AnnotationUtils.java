@@ -19,9 +19,6 @@ package io.activej.types;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 @SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
 public final class AnnotationUtils {

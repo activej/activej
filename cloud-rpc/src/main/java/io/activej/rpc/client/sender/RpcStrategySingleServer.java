@@ -16,7 +16,6 @@
 
 package io.activej.rpc.client.sender;
 
-import io.activej.common.Utils;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 

@@ -20,7 +20,6 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
-import io.activej.common.Utils;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;

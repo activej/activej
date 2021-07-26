@@ -3,7 +3,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.*;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
-import io.activej.serializer.SerializerBuilder;
 
 import java.time.LocalDate;
 import java.util.Arrays;
