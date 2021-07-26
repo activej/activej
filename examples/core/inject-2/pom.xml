@@ -126,6 +126,15 @@
               <mainClass>ClassScanExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>BindingTransformationExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>BindingTransformationExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
