@@ -16,7 +16,6 @@
 
 package io.activej.config;
 
-import io.activej.common.Utils;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.ConfigConverters;
 import org.jetbrains.annotations.NotNull;
@@ -502,8 +501,8 @@ public interface Config {
 			@Nullable
 			@Override
 			public String getValue(@Nullable String defaultValue) {
-                return nonNullElse(value, defaultValue);
-            }
+				return nonNullElse(value, defaultValue);
+			}
 
 			@Override
 			public String getValue() throws NoSuchElementException {

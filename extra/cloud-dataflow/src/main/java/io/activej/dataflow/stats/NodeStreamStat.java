@@ -10,7 +10,7 @@ public class NodeStreamStat<T> extends NodeStat implements StreamSupplierTransfo
 	private final StreamStats<T> streamStats;
 
 	public NodeStreamStat(StreamStats<T> streamStats) {
-        this.streamStats = streamStats;
+		this.streamStats = streamStats;
 	}
 
 	@Override

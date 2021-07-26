@@ -19,9 +19,9 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.common.Checks;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -222,7 +222,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 					allFiles = map.size();
 
-                    Map<String, FileMetadata> filteredMap = map.entrySet().stream()
+					Map<String, FileMetadata> filteredMap = map.entrySet().stream()
 							.filter(entry -> negativeGlobPredicate.test(entry.getKey()))
 							.filter(entry -> !processedFiles.contains(entry.getKey()))
 							.collect(toMap(Map.Entry::getKey, Map.Entry::getValue));

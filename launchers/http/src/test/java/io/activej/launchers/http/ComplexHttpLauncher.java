@@ -150,7 +150,7 @@ public final class ComplexHttpLauncher extends Launcher {
 
 	@Override
 	protected Module getModule() {
-        return Modules.combine(
+		return Modules.combine(
 				ServiceGraphModule.create(),
 				WorkerPoolModule.create(Worker.class, MyWorker.class),
 				JmxModule.create()

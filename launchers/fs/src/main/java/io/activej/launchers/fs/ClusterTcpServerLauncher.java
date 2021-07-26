@@ -17,7 +17,6 @@
 package io.activej.launchers.fs;
 
 import io.activej.async.service.EventloopTaskScheduler;
-import io.activej.common.Utils;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
@@ -80,7 +79,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Provides
 	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, @Optional ServerSelector serverSelector) {
 
-        return FsPartitions.create(eventloop, discoveryService)
+		return FsPartitions.create(eventloop, discoveryService)
 				.withServerSelector(nonNullElse(serverSelector, RENDEZVOUS_HASH_SHARDER));
 	}
 	//[END EXAMPLE]

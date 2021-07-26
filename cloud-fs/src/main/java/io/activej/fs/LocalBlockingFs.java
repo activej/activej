@@ -17,7 +17,6 @@
 package io.activej.fs;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Utils;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.service.BlockingService;
 import io.activej.common.time.CurrentTimeProvider;
@@ -45,8 +44,6 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
-import static io.activej.common.Utils.isBijection;
-import static io.activej.common.Utils.noMergeFunction;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.emptyMap;
@@ -277,7 +274,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		Path subdirectory = resolve(subdir);
 		String subglob = glob.substring(subdir.length());
 
-        return findMatching(tempDir, subglob, subdirectory).stream()
+		return findMatching(tempDir, subglob, subdirectory).stream()
 				.collect(Collector.of(
 						(Supplier<Map<String, FileMetadata>>) HashMap::new,
 						(map, path) -> {

@@ -82,7 +82,7 @@ public final class ReflectionExample {
 			// it knows how to make instances of impls because they have inject annotations
 			// allowing us to know how they can be created
 			// we never automagically create instances of unaware classes
-            bind(MessageSender.class, "first").to(ConsoleMessageSenderImpl.class);
+			bind(MessageSender.class, "first").to(ConsoleMessageSenderImpl.class);
 			bind(MessageSender.class, SecondKey.class).to(LoggingMessageSenderImpl.class);
 
 			// same as above, just trigger the automatic factory generation from the marked constructor

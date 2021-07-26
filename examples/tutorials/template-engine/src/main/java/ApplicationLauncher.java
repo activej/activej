@@ -2,7 +2,6 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
-import io.activej.common.Utils;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
@@ -71,7 +70,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 							question.vote(option);
 
-                            return HttpResponse.redirect302(nonNullElse(request.getHeader(REFERER), "/"));
+							return HttpResponse.redirect302(nonNullElse(request.getHeader(REFERER), "/"));
 						}))
 				.map(POST, "/add", loadBody()
 						.serve(request -> {

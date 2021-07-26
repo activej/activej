@@ -1,6 +1,5 @@
 package io.activej.types;
 
-import io.activej.types.RecursiveType;
 import org.junit.Test;
 
 import java.util.List;
@@ -17,7 +16,7 @@ public class RecursiveTypeTest {
 
 	@Test
 	public void testListString() throws NoSuchFieldException {
-        assertEquals(ListStringPojo.class.getField("list").getGenericType(),
+		assertEquals(ListStringPojo.class.getField("list").getGenericType(),
 				RecursiveType.of(List.class, of(String.class)).getType());
 	}
 

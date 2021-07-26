@@ -62,7 +62,7 @@ public class ActiveJRunnerTest {
 		assertEquals(asList(HELLO, HELLO, HELLO), hellos);
 		assertEquals(asList(42, 42, 42), numbers);
 
-        assertEquals(PROVIDES_STRING, injector.getInstance(Key.of(String.class, PROVIDES_STRING)));
+		assertEquals(PROVIDES_STRING, injector.getInstance(Key.of(String.class, PROVIDES_STRING)));
 	}
 
 	@Test
