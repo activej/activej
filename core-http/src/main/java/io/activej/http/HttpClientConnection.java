@@ -175,7 +175,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		 */
 		if (statusCode < 200 || statusCode == 204 || statusCode == 304) {
 			// Reset Content-Length for the case keep-alive connection
-			contentLength = 0;
+			contentLength = 0L;
 		}
 	}
 
