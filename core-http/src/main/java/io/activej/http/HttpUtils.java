@@ -49,6 +49,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public final class HttpUtils {
 	private static final int URI_DEFAULT_CAPACITY = 1 << 5;
+	private static final int LIMIT_INT = Integer.MAX_VALUE / 10;
+	private static final int REMAINDER_INT = Integer.MAX_VALUE - LIMIT_INT * 10;
+	private static final long LIMIT_LONG = Long.MAX_VALUE / 10;
+	private static final long REMAINDER_LONG = Long.MAX_VALUE - LIMIT_LONG * 10;
 
 	static final byte EQUALS = '=';
 	static final byte SEMICOLON = ';';
@@ -261,6 +265,14 @@ public final class HttpUtils {
 		return decodePositiveInt(array, pos, len);
 	}
 
+	public static long trimAndDecodePositiveLong(byte[] array, int pos, int len) throws MalformedHttpException {
+		int left = trimLeft(array, pos, len);
+		pos += left;
+		len -= left;
+		len -= trimRight(array, pos, len);
+		return decodePositiveLong(array, pos, len);
+	}
+
 	private static int trimLeft(byte[] array, int pos, int len) {
 		for (int i = 0; i < len; i++) {
 			if (array[pos + i] != SP && array[pos + i] != HT) {
@@ -443,10 +455,29 @@ public final class HttpUtils {
 			if (b < 0 || b >= 10) {
 				throw new MalformedHttpException("Not a decimal value: " + new String(array, pos, len, ISO_8859_1));
 			}
-			result = b + result * 10;
-			if (result < 0) {
-				throw new MalformedHttpException("Bigger than max int value: " + new String(array, pos, len, ISO_8859_1));
+			if (result >= LIMIT_INT) {
+				if (result != LIMIT_INT || b > REMAINDER_INT) {
+					throw new MalformedHttpException("Bigger than max int value: " + new String(array, pos, len, ISO_8859_1));
+				}
 			}
+			result = b + result * 10;
+		}
+		return result;
+	}
+
+	static long decodePositiveLong(byte[] array, int pos, int len) throws MalformedHttpException {
+		long result = 0;
+		for (int i = pos; i < pos + len; i++) {
+			byte b = (byte) (array[i] - '0');
+			if (b < 0 || b >= 10) {
+				throw new MalformedHttpException("Not a decimal value: " + new String(array, pos, len, ISO_8859_1));
+			}
+			if (result >= LIMIT_LONG) {
+				if (result != LIMIT_LONG || b > REMAINDER_LONG) {
+					throw new MalformedHttpException("Bigger than max long value: " + new String(array, pos, len, ISO_8859_1));
+				}
+			}
+			result = b + result * 10;
 		}
 		return result;
 	}

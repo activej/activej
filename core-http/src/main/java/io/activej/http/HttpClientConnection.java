@@ -16,9 +16,9 @@
 
 package io.activej.http;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -175,7 +175,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		 */
 		if (statusCode < 200 || statusCode == 204 || statusCode == 304) {
 			// Reset Content-Length for the case keep-alive connection
-			contentLength = 0;
+			contentLength = 0L;
 		}
 	}
 

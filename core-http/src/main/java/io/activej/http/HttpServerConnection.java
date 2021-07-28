@@ -133,7 +133,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@Override
 	protected void readMessage() throws MalformedHttpException {
 		do {
-			contentLength = 0; // RFC 7230, section 3.3.3: if no Content-Length header is set, server can assume that a length of a message is 0
+			contentLength = 0L; // RFC 7230, section 3.3.3: if no Content-Length header is set, server can assume that a length of a message is 0
 			flags = READING_MESSAGES;
 			readStartLine();
 			if (isClosed()) return;
@@ -211,7 +211,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		request.maxBodySize = maxBodySize;
 
 		if (method == GET || method == DELETE) {
-			contentLength = 0;
+			contentLength = 0L;
 		}
 	}
 

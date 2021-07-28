@@ -39,14 +39,14 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 	private BinaryChannelSupplier input;
 	private ChannelConsumer<ByteBuf> output;
 
-	private int remaining;
+	private long remaining;
 
 	// region creators
-	private BufsConsumerDelimiter(int remaining) {
+	private BufsConsumerDelimiter(long remaining) {
 		this.remaining = remaining;
 	}
 
-	public static BufsConsumerDelimiter create(int remaining) {
+	public static BufsConsumerDelimiter create(long remaining) {
 		checkState(remaining >= 0, "Cannot create delimiter with number of remaining bytes that is less than 0");
 		return new BufsConsumerDelimiter(remaining);
 	}
@@ -88,7 +88,7 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 			return;
 		}
 		ByteBufs outputBufs = new ByteBufs();
-		remaining -= bufs.drainTo(outputBufs, remaining);
+		remaining = remaining - bufs.drainTo(outputBufs, remaining > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) remaining);
 		output.acceptAll(outputBufs.asIterator())
 				.whenResult(() -> {
 					if (remaining != 0) {

@@ -4,6 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
+import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.eventloop.Eventloop;
@@ -26,6 +27,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
@@ -173,6 +176,44 @@ public final class AbstractHttpConnectionTest {
 
 		// gzipped + chunked
 		doTestHugeStreams(client, socketSettings, size, HttpMessage::setBodyGzipCompression);
+	}
+
+	@Test
+	@Ignore("Takes a long time")
+	public void testContentLengthPastMaxInt() throws IOException {
+		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
+
+		Checksum inChecksum = new CRC32();
+		Checksum outChecksum = new CRC32();
+
+		long size = 3_000_000_000L;
+
+		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
+				request ->  HttpResponse.ok200()
+								.withHeader(CONTENT_LENGTH, String.valueOf(size))
+								.withBodyStream(request.getBodyStream()))
+				.withListenPort(port);
+		server.listen();
+
+		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
+				.withHeader(CONTENT_LENGTH, String.valueOf(size))
+				.withBodyStream(ChannelSupplier.ofStream(Stream.generate(() -> {
+					int length = 1_000_000;
+					byte[] temp = new byte[length];
+					RANDOM.nextBytes(temp);
+					outChecksum.update(temp, 0, length);
+					return ByteBuf.wrapForReading(temp);
+				}).limit(3_000)));
+
+		await(client.request(request)
+				.then(response -> response.getBodyStream()
+						.streamTo(ChannelConsumer.ofConsumer(buf -> {
+							byte[] bytes = buf.asArray();
+							inChecksum.update(bytes, 0, bytes.length);
+						})))
+				.whenComplete(server::close));
+
+		assertEquals(inChecksum.getValue(), outChecksum.getValue());
 	}
 
 	@Test

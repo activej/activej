@@ -41,7 +41,7 @@ import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.translateToHttpException;
-import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
+import static io.activej.http.HttpUtils.trimAndDecodePositiveLong;
 import static java.lang.Math.max;
 
 @SuppressWarnings({"WeakerAccess", "PointlessBitwiseExpression"})
@@ -52,7 +52,7 @@ public abstract class AbstractHttpConnection {
 
 	protected static final HttpHeaderValue CONNECTION_KEEP_ALIVE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("keep-alive"));
 	protected static final HttpHeaderValue CONNECTION_CLOSE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("close"));
-	protected static final int UNSET_CONTENT_LENGTH = -1;
+	protected static final long UNSET_CONTENT_LENGTH = -1L;
 
 	protected static final byte[] CONNECTION_KEEP_ALIVE = encodeAscii("keep-alive");
 	protected static final byte[] TRANSFER_ENCODING_CHUNKED = encodeAscii("chunked");
@@ -90,7 +90,7 @@ public abstract class AbstractHttpConnection {
 
 	protected int numberOfRequests;
 
-	protected int contentLength;
+	protected long contentLength;
 
 	@Nullable
 	protected Throwable closeException;
@@ -372,7 +372,7 @@ public abstract class AbstractHttpConnection {
 
 		int len = limit - pos;
 		if (header == CONTENT_LENGTH) {
-			contentLength = trimAndDecodePositiveInt(array, pos, len);
+			contentLength = trimAndDecodePositiveLong(array, pos, len);
 		} else if (header == CONNECTION) {
 			flags = (byte) ((flags & ~KEEP_ALIVE) |
 					(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
@@ -406,8 +406,8 @@ public abstract class AbstractHttpConnection {
 					body = readBuf;
 					readBuf = null;
 				} else {
-					body = readBuf.slice(contentLength);
-					readBuf.moveHead(contentLength);
+					body = readBuf.slice((int) contentLength);
+					readBuf.moveHead((int) contentLength);
 				}
 				onHeadersReceived(body, null);
 				if (isClosed()) return;
