@@ -113,27 +113,71 @@ public class AnnotatedTypeUtils {
 
 	@NotNull
 	public static AnnotatedType annotatedTypeOf(Type type, Annotation[] annotations) {
+		return annotatedTypeOf(type, ($, ints) -> ints.length == 0 ? annotations : NO_ANNOTATIONS);
+	}
+
+	@NotNull
+	private static AnnotatedType annotatedTypeOf(Type type, BiFunction<Type, int[], Annotation[]> annotationsFn) {
+		return annotatedTypeOf(type, new int[]{}, annotationsFn);
+	}
+
+	@NotNull
+	private static AnnotatedType annotatedTypeOf(Type type, int[] path, BiFunction<Type, int[], Annotation[]> annotationsFn) {
+		Annotation[] annotations = annotationsFn.apply(type, path);
 		if (type instanceof Class) {
 			return new AnnotatedTypeImpl(type, annotations);
 		}
 		if (type instanceof TypeVariable) {
-			return new AnnotatedTypeVariableImpl(type, annotations,
-					Arrays.stream(((TypeVariable<?>) type).getBounds()).map(AnnotatedTypeUtils::annotatedTypeOf).toArray(AnnotatedType[]::new));
+			int idx = 0;
+			int[] newPath = newPath(path);
+			Type[] bounds = ((TypeVariable<?>) type).getBounds();
+			AnnotatedType[] annotatedBounds = new AnnotatedType[bounds.length];
+			for (Type bound : bounds) {
+				annotatedBounds[idx++] = annotatedTypeOf(bound, newPath(newPath, idx), annotationsFn);
+			}
+			return new AnnotatedTypeVariableImpl(type, annotations, annotatedBounds);
 		}
 		if (type instanceof ParameterizedType) {
-			return new AnnotatedParameterizedTypeImpl(type, annotations,
-					Arrays.stream(((ParameterizedType) type).getActualTypeArguments()).map(AnnotatedTypeUtils::annotatedTypeOf).toArray(AnnotatedType[]::new));
+			int idx = 0;
+			int[] newPath = newPath(path);
+			Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
+			AnnotatedType[] annotatedTypeArguments = new AnnotatedType[typeArguments.length];
+			for (Type typeArgument : typeArguments) {
+				annotatedTypeArguments[idx++] = annotatedTypeOf(typeArgument, newPath(newPath, idx), annotationsFn);
+			}
+			return new AnnotatedParameterizedTypeImpl(type, annotations, annotatedTypeArguments);
 		}
 		if (type instanceof GenericArrayType) {
-			return new AnnotatedArrayTypeImpl(type, annotations,
-					annotatedTypeOf(type, annotations));
+			int[] newPath = newPath(path);
+			Type componentType = ((GenericArrayType) type).getGenericComponentType();
+			AnnotatedType annotatedComponentType = annotatedTypeOf(componentType, newPath, annotationsFn);
+			return new AnnotatedArrayTypeImpl(type, annotations, annotatedComponentType);
 		}
 		if (type instanceof WildcardType) {
-			return new AnnotatedWildcardTypeImpl(type, annotations,
-					Arrays.stream(((WildcardType) type).getUpperBounds()).map(AnnotatedTypeUtils::annotatedTypeOf).toArray(AnnotatedType[]::new),
-					Arrays.stream(((WildcardType) type).getLowerBounds()).map(AnnotatedTypeUtils::annotatedTypeOf).toArray(AnnotatedType[]::new));
+			int idx = 0;
+			int[] newPath = newPath(path);
+			Type[] upperBounds = ((WildcardType) type).getUpperBounds();
+			AnnotatedType[] annotatedUpperBounds = new AnnotatedType[upperBounds.length];
+			for (Type upperBound : upperBounds) {
+				annotatedUpperBounds[idx++] = annotatedTypeOf(upperBound, newPath(newPath, idx), annotationsFn);
+			}
+			Type[] lowerBounds = ((WildcardType) type).getLowerBounds();
+			AnnotatedType[] annotatedLowerBounds = new AnnotatedType[lowerBounds.length];
+			for (Type lowerBound : lowerBounds) {
+				annotatedLowerBounds[idx++] = annotatedTypeOf(lowerBound, newPath(newPath, idx), annotationsFn);
+			}
+			return new AnnotatedWildcardTypeImpl(type, annotations, annotatedUpperBounds, annotatedLowerBounds);
 		}
 		throw new IllegalArgumentException("Type is not supported: " + type);
+	}
+
+	private static int[] newPath(int[] path) {
+		return Arrays.copyOf(path, path.length + 1);
+	}
+
+	private static int[] newPath(int[] path, int idx) {
+		path[path.length - 1] = idx;
+		return path;
 	}
 
 	static class AnnotatedTypeImpl implements AnnotatedType {
