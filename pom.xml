@@ -130,17 +130,17 @@
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
-        <version>7.2</version>
+        <version>9.2</version>
       </dependency>
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm-commons</artifactId>
-        <version>7.2</version>
+        <version>9.2</version>
       </dependency>
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm-tree</artifactId>
-        <version>7.2</version>
+        <version>9.2</version>
       </dependency>
       <dependency>
         <groupId>mysql</groupId>

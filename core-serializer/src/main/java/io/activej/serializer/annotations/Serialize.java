@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
 public @interface Serialize {
 	int DEFAULT_VERSION = -1;
 
-	int order();
+	int order() default Integer.MIN_VALUE;
 
 	int added() default DEFAULT_VERSION;
 

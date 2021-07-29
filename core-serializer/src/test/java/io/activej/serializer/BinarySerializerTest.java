@@ -38,60 +38,60 @@ public class BinarySerializerTest {
 			}
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public boolean z;
-		@Serialize(order = 2)
+		@Serialize
 		public char c;
-		@Serialize(order = 3)
+		@Serialize
 		public byte b;
-		@Serialize(order = 4)
+		@Serialize
 		public short s;
-		@Serialize(order = 5)
+		@Serialize
 		public int i;
-		@Serialize(order = 6)
+		@Serialize
 		public long l;
-		@Serialize(order = 7)
+		@Serialize
 		public float f;
-		@Serialize(order = 8)
+		@Serialize
 		public double d;
 		@SerializeVarLength
-		@Serialize(order = 9)
+		@Serialize
 		public int iVar;
 		@SerializeVarLength
-		@Serialize(order = 10)
+		@Serialize
 		public long lVar;
 
-		@Serialize(order = 11)
+		@Serialize
 		public Boolean zBoxed;
-		@Serialize(order = 12)
+		@Serialize
 		public Character cBoxed;
-		@Serialize(order = 13)
+		@Serialize
 		public Byte bBoxed;
-		@Serialize(order = 14)
+		@Serialize
 		public Short sBoxed;
-		@Serialize(order = 15)
+		@Serialize
 		public Integer iBoxed;
-		@Serialize(order = 16)
+		@Serialize
 		public Long lBoxed;
-		@Serialize(order = 17)
+		@Serialize
 		public Float fBoxed;
-		@Serialize(order = 18)
+		@Serialize
 		public Double dBoxed;
 		@SerializeVarLength
-		@Serialize(order = 19)
+		@Serialize
 		public int iBoxedVar;
 		@SerializeVarLength
-		@Serialize(order = 20)
+		@Serialize
 		public long lBoxedVar;
 
-		@Serialize(order = 21)
+		@Serialize
 		public byte[] bytes;
 
-		@Serialize(order = 22)
+		@Serialize
 		public String string;
-		@Serialize(order = 23)
+		@Serialize
 		public TestEnum testEnum;
-		@Serialize(order = 24)
+		@Serialize
 		public InetAddress address;
 	}
 
@@ -164,10 +164,10 @@ public class BinarySerializerTest {
 			this.finalString = finalString;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public final int finalInt;
 
-		@Serialize(order = 1)
+		@Serialize
 		public final String finalString;
 
 		private int i;
@@ -176,7 +176,7 @@ public class BinarySerializerTest {
 		private int getterInt;
 		private String getterString;
 
-		@Serialize(order = 2)
+		@Serialize
 		public int getI() {
 			return i;
 		}
@@ -185,7 +185,7 @@ public class BinarySerializerTest {
 			this.i = i;
 		}
 
-		@Serialize(order = 3)
+		@Serialize
 		public int getIBoxed() {
 			return iBoxed;
 		}
@@ -194,12 +194,12 @@ public class BinarySerializerTest {
 			this.iBoxed = iBoxed;
 		}
 
-		@Serialize(order = 4)
+		@Serialize
 		public int getGetterInt() {
 			return getterInt;
 		}
 
-		@Serialize(order = 5)
+		@Serialize
 		public String getGetterString() {
 			return getterString;
 		}
@@ -235,12 +235,12 @@ public class BinarySerializerTest {
 			this.a = a;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public int getA() {
 			return a;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public int getB() {
 			return b;
 		}
@@ -251,21 +251,21 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataComplex {
-		@Serialize(order = 0)
+		@Serialize
 		public TestDataNested nested;
-		@Serialize(order = 1)
+		@Serialize
 		public TestDataNested[] nestedArray;
-		@Serialize(order = 2)
+		@Serialize
 		public TestDataNested[][] nestedArrayArray;
-		@Serialize(order = 3)
+		@Serialize
 		public List<TestDataNested> nestedList;
-		@Serialize(order = 4)
+		@Serialize
 		public List<List<TestDataNested>> nestedListList;
 
-		@Serialize(order = 5)
+		@Serialize
 		public int[] ints;
 
-		@Serialize(order = 6)
+		@Serialize
 		public int[][] intsArray;
 	}
 
@@ -336,22 +336,22 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataNullables {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeNullable
 		public String nullableString1;
 
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeNullable
 		public String nullableString2;
 
-		@Serialize(order = 2)
+		@Serialize
 		public List<@SerializeNullable String> listOfNullableStrings;
 
-		@Serialize(order = 3)
+		@Serialize
 		@SerializeNullable
 		public String @SerializeNullable [] @SerializeNullable [] nullableArrayOfNullableArrayOfNullableStrings;
 
-		@Serialize(order = 4)
+		@Serialize
 		public Map<@SerializeNullable Integer, @SerializeNullable String> mapOfNullableInt2NullableString;
 	}
 
@@ -390,10 +390,10 @@ public class BinarySerializerTest {
 	}
 
 	public interface TestDataInterface {
-		@Serialize(order = 0)
+		@Serialize
 		int getI();
 
-		@Serialize(order = 1)
+		@Serialize
 		Integer getIBoxed();
 	}
 
@@ -424,7 +424,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class ListOfStringHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public List<String> list;
 	}
 
@@ -437,7 +437,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class MapIntegerStringHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public Map<Integer, String> map;
 	}
 
@@ -452,10 +452,10 @@ public class BinarySerializerTest {
 	}
 
 	public interface TestDataGenericNestedInterface<K, V> {
-		@Serialize(order = 0)
+		@Serialize
 		K getKey();
 
-		@Serialize(order = 1)
+		@Serialize
 		V getValue();
 	}
 
@@ -472,7 +472,7 @@ public class BinarySerializerTest {
 			this.value = value;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		@Override
 		public K getKey() {
 			return key;
@@ -482,7 +482,7 @@ public class BinarySerializerTest {
 			this.key = key;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		@Override
 		public V getValue() {
 			return value;
@@ -494,14 +494,14 @@ public class BinarySerializerTest {
 	}
 
 	public interface TestDataGenericInterface<K, V> {
-		@Serialize(order = 0)
+		@Serialize
 		List<TestDataGenericNested<K, V>> getList();
 	}
 
 	public static class TestDataGeneric<K, V> implements TestDataGenericInterface<K, V> {
 		private List<TestDataGenericNested<K, V>> list;
 
-		@Serialize(order = 0)
+		@Serialize
 		@Override
 		public List<TestDataGenericNested<K, V>> getList() {
 			return list;
@@ -522,7 +522,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class GenericHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public TestDataGeneric<Integer, String> data;
 	}
 
@@ -542,7 +542,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataGenericParameters {
-		@Serialize(order = 0)
+		@Serialize
 		public List<@SerializeNullable TestDataGenericNested<@SerializeVarLength @SerializeNullable Integer, @SerializeStringFormat(UTF16) @SerializeNullable String>> list;
 	}
 
@@ -561,7 +561,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataGenericInterfaceHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public TestDataGenericInterface<Integer, String> data;
 	}
 
@@ -582,7 +582,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class GenericNestedHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public TestDataGenericNested<String, Integer> data;
 	}
 
@@ -596,7 +596,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class GenericNestedInterfaceHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public TestDataGenericNestedInterface<String, Integer> data;
 	}
 
@@ -610,20 +610,20 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataGenericSuperclass<A, B> {
-		@Serialize(order = 0)
+		@Serialize
 		public A a;
 
-		@Serialize(order = 1)
+		@Serialize
 		public B b;
 	}
 
 	public static class TestDataGenericSubclass<X, Y> extends TestDataGenericSuperclass<Integer, X> {
-		@Serialize(order = 0)
+		@Serialize
 		public Y c;
 	}
 
 	public static class GenericSubclassHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public TestDataGenericSubclass<String, Boolean> data;
 	}
 
@@ -641,7 +641,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataSuperclassHolder {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeSubclasses({TestDataSubclass1.class, TestDataSubclass2.class})
 		@SerializeNullable
 		public TestDataSuperclass data;
@@ -652,19 +652,19 @@ public class BinarySerializerTest {
 			initByCons = 123;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public int a;
 
 		public int initByCons;
 	}
 
 	public static class TestDataSubclass1 extends TestDataSuperclass {
-		@Serialize(order = 0)
+		@Serialize
 		public boolean b;
 	}
 
 	public static class TestDataSubclass2 extends TestDataSuperclass {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeNullable
 		public String s;
 	}
@@ -709,17 +709,17 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataSerializerFormat {
-		@Serialize(order = 0)
+		@Serialize
 		public List<@SerializeStringFormat(UTF16) @SerializeNullable String> stringsUtf16;
 
-		@Serialize(order = 1)
+		@Serialize
 		public List<@SerializeStringFormat(UTF8) @SerializeNullable String> stringsUtf8;
 
-		@Serialize(order = 2)
+		@Serialize
 		@SuppressWarnings("deprecation")
 		public List<@SerializeStringFormat(UTF8_MB3) @SerializeNullable String> stringsUtf8Custom;
 
-		@Serialize(order = 3)
+		@Serialize
 		public List<@SerializeStringFormat(ISO_8859_1) @SerializeNullable String> stringsIso88591;
 
 	}
@@ -741,10 +741,10 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataFixedSize {
-		@Serialize(order = 0)
+		@Serialize
 		public @SerializeNullable String @SerializeFixedSize(3) [] strings;
 
-		@Serialize(order = 1)
+		@Serialize
 		public byte @SerializeFixedSize(4) [] bytes;
 	}
 
@@ -759,16 +759,16 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataVersions {
-		@Serialize(order = 0, added = 0)
+		@Serialize(added = 0)
 		public int a;
 
-		@Serialize(order = 1, added = 1, removed = 2)
+		@Serialize(added = 1, removed = 2)
 		public int b;
 
-		@Serialize(order = 2, added = 2)
+		@Serialize(added = 2)
 		public int c;
 
-		@Serialize(order = 3, added = 10)
+		@Serialize(added = 10)
 		public int d;
 	}
 
@@ -871,14 +871,14 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataProfiles {
-		@Serialize(order = 0)
+		@Serialize
 		public int a;
 
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeProfiles("profile1")
 		public int b;
 
-		@Serialize(order = 2)
+		@Serialize
 		@SerializeProfiles({"profile1", "profile2"})
 		public int c;
 	}
@@ -913,21 +913,21 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataProfiles2 {
-		@Serialize(order = 0, added = 1)
+		@Serialize(added = 1)
 		public int a;
 
-		@Serialize(order = 1, added = 1)
+		@Serialize(added = 1)
 		@SerializeProfiles(value = "profile", added = 2)
 		public int b;
 
 		@SerializeProfiles(value = {"profile", SerializeProfiles.COMMON_PROFILE}, added = 1, removed = 2)
-		@Serialize(order = 2, added = 2)
+		@Serialize(added = 2)
 		public int c;
 
-		@Serialize(order = 3, added = 2)
+		@Serialize(added = 2)
 		public int d;
 
-		@Serialize(order = 4, added = 1)
+		@Serialize(added = 1)
 		@SerializeProfiles("profile")
 		public int e;
 
@@ -1017,10 +1017,10 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataRecursive {
-		@Serialize(order = 0)
+		@Serialize
 		public String s;
 
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeNullable
 		public TestDataRecursive next;
 
@@ -1046,11 +1046,11 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataExtraSubclasses {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeSubclasses(value = String.class, extraSubclassesId = "extraSubclasses1")
 		public Object object1;
 
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeSubclasses(value = String.class, extraSubclassesId = "extraSubclasses2")
 		public Object object2;
 	}
@@ -1083,17 +1083,17 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataExtraSubclasses1 implements TestDataExtraSubclassesInterface {
-		@Serialize(order = 0)
+		@Serialize
 		public boolean z;
 	}
 
 	public static class TestDataExtraSubclasses2 implements TestDataExtraSubclassesInterface {
-		@Serialize(order = 1)
+		@Serialize
 		public int i;
 	}
 
 	public static class TestDataExtraSubclasses3 implements TestDataExtraSubclassesInterface {
-		@Serialize(order = 1)
+		@Serialize
 		public String s;
 	}
 
@@ -1127,7 +1127,7 @@ public class BinarySerializerTest {
 		}
 
 		@SerializeVarLength
-		@Serialize(order = 0, added = 1)
+		@Serialize(added = 1)
 		public int getPosition() {
 			return position;
 		}
@@ -1140,7 +1140,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataContainerOfAbstractData {
-		@Serialize(order = 0)
+		@Serialize
 		public TestDataAbstract data;
 	}
 
@@ -1159,17 +1159,17 @@ public class BinarySerializerTest {
 	}
 
 	public interface TestInheritAnnotationsInterface1 {
-		@Serialize(order = 1)
+		@Serialize
 		int getIntValue();
 	}
 
 	public interface TestInheritAnnotationsInterface2 {
-		@Serialize(order = 1)
+		@Serialize
 		double getDoubleValue();
 	}
 
 	public interface TestInheritAnnotationsInterface3 extends TestInheritAnnotationsInterface1, TestInheritAnnotationsInterface2 {
-		@Serialize(order = 1)
+		@Serialize
 		String getStringValue();
 	}
 
@@ -1218,7 +1218,7 @@ public class BinarySerializerTest {
 		String str;
 		int hash;
 
-		@Serialize(order = 0)
+		@Serialize
 		public String getStr() {
 			return str;
 		}
@@ -1244,7 +1244,7 @@ public class BinarySerializerTest {
 			this.value = value;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public int getValue() {
 			return value;
 		}
@@ -1271,7 +1271,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class ListEnumHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public List<TestEnum> list;
 	}
 
@@ -1284,7 +1284,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class MapEnumHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public Map<TestEnum, String> map;
 	}
 
@@ -1336,17 +1336,17 @@ public class BinarySerializerTest {
 	}
 
 	public static class EnumPojo {
-		@Serialize(order = 1)
+		@Serialize
 		public TestEnum127 enum127NotNullable = TestEnum127.ITEM126;
 
-		@Serialize(order = 2)
+		@Serialize
 		@SerializeNullable
 		public TestEnum127 enum127Nullable;
 
-		@Serialize(order = 3)
+		@Serialize
 		public TestEnum128 enum128NotNullable = TestEnum128.ITEM127;
 
-		@Serialize(order = 4)
+		@Serialize
 		@SerializeNullable
 		public TestEnum128 enum128Nullable;
 	}
@@ -1381,7 +1381,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class ListEnumHolder2 {
-		@Serialize(order = 0)
+		@Serialize
 		public List<@SerializeNullable TestEnum2> list;
 	}
 
@@ -1394,7 +1394,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class MapEnumHolder2 {
-		@Serialize(order = 0)
+		@Serialize
 		public Map<TestEnum2, TestEnum2> map;
 	}
 
@@ -1410,7 +1410,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class SetIntegerHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public Set<Integer> set;
 	}
 
@@ -1426,11 +1426,11 @@ public class BinarySerializerTest {
 	}
 
 	public static class EnumSetHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public Set<TestEnum> set;
 
 		@Nullable
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeNullable
 		public Set<TestEnum> setNullable;
 	}
@@ -1463,7 +1463,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class Generic<T> {
-		@Serialize(order = 0)
+		@Serialize
 		public T item;
 	}
 
@@ -1474,10 +1474,10 @@ public class BinarySerializerTest {
 	}
 
 	public static class GenericComplex {
-		@Serialize(order = 0)
+		@Serialize
 		public GenericHolder1 holder1;
 
-		@Serialize(order = 1)
+		@Serialize
 		public GenericHolder2 holder2;
 	}
 
@@ -1499,7 +1499,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestObj {
-		@Serialize(order = 0)
+		@Serialize
 		public String string;
 
 		@Override
@@ -1521,7 +1521,7 @@ public class BinarySerializerTest {
 			return result;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public Integer integer;
 
 		public TestObj(@Deserialize("string") String string, @Deserialize("integer") Integer integer) {
@@ -1531,7 +1531,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class ListOfObjectHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public List<TestObj> list;
 	}
 
@@ -1544,9 +1544,9 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestConstructorWithBoolean {
-		@Serialize(order = 0, added = 1)
+		@Serialize(added = 1)
 		public final String url;
-		@Serialize(order = 1, added = 2)
+		@Serialize(added = 2)
 		public final boolean resolve;
 
 		public TestConstructorWithBoolean(@Deserialize("url") String url, @Deserialize("resolve") boolean resolve) {
@@ -1577,16 +1577,16 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestInetAddress {
-		@Serialize(order = 0)
+		@Serialize
 		public InetAddress inetAddress;
 
-		@Serialize(order = 1)
+		@Serialize
 		public Inet4Address inet4Address;
 
-		@Serialize(order = 2)
+		@Serialize
 		public Inet6Address inet6Address;
 
-		@Serialize(order = 3)
+		@Serialize
 		@SerializeClass(SerializerDefInet4Address.class)
 		public InetAddress inetAddress2;
 	}
@@ -1624,43 +1624,43 @@ public class BinarySerializerTest {
 			}
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeClass(SerializerDefBoolean.class)
 		public Object zBoxed;
-		@Serialize(order = 2)
+		@Serialize
 		@SerializeClass(SerializerDefChar.class)
 		public Object cBoxed;
-		@Serialize(order = 3)
+		@Serialize
 		@SerializeClass(SerializerDefByte.class)
 		public Object bBoxed;
-		@Serialize(order = 4)
+		@Serialize
 		@SerializeClass(SerializerDefShort.class)
 		public Object sBoxed;
-		@Serialize(order = 5)
+		@Serialize
 		@SerializeClass(SerializerDefInt.class)
 		public Object iBoxed;
-		@Serialize(order = 6)
+		@Serialize
 		@SerializeClass(SerializerDefLong.class)
 		public Object lBoxed;
-		@Serialize(order = 7)
+		@Serialize
 		@SerializeClass(SerializerDefFloat.class)
 		public Object fBoxed;
-		@Serialize(order = 8)
+		@Serialize
 		@SerializeClass(SerializerDefDouble.class)
 		public Object dBoxed;
 
-		@Serialize(order = 9)
+		@Serialize
 		@SerializeClass(SerializerDefString.class)
 		public Object string;
-		@Serialize(order = 10)
+		@Serialize
 		@SerializeSubclasses({Inet4Address.class, Inet6Address.class})
 		public Object address;
 
-		@Serialize(order = 11)
+		@Serialize
 		@SerializeSubclasses({Inet4Address.class, Inet6Address.class})
 		public Object address2;
 
-		@Serialize(order = 12)
+		@Serialize
 		public List<@SerializeClass(SerializerDefInt.class) Object> list;
 	}
 
@@ -1705,29 +1705,29 @@ public class BinarySerializerTest {
 	}
 
 	public static class NullableOpt {
-		@Serialize(order = 0)
+		@Serialize
 		public byte @SerializeNullable [] bytes;
 
-		@Serialize(order = 1)
+		@Serialize
 		public int @SerializeNullable [] ints;
 
-		@Serialize(order = 2)
+		@Serialize
 		@SerializeNullable
 		public TestEnum2 testEnum2;
 
-		@Serialize(order = 3)
+		@Serialize
 		@SerializeNullable
 		public List<String> list;
 
-		@Serialize(order = 4)
+		@Serialize
 		@SerializeNullable
 		public Map<String, String> map;
 
-		@Serialize(order = 5)
+		@Serialize
 		@SerializeNullable
 		public Set<String> set;
 
-		@Serialize(order = 6)
+		@Serialize
 		@SerializeNullable
 		@SerializeSubclasses({TestEnum2.class, String.class})
 		public Object subclass;
@@ -1784,12 +1784,12 @@ public class BinarySerializerTest {
 			return new TestGetterVersion(str, strings);
 		}
 
-		@Serialize(order = 0, added = 1)
+		@Serialize(added = 1)
 		public String getStr() {
 			return str;
 		}
 
-		@Serialize(order = 1, added = 2)
+		@Serialize(added = 2)
 		public List<String> getStrings() {
 			return strings;
 		}
@@ -1825,7 +1825,7 @@ public class BinarySerializerTest {
 			this.str = str;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public String getStr() {
 			return str;
 		}
@@ -1858,7 +1858,7 @@ public class BinarySerializerTest {
 			this.stringWrappers = stringWrappers;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public StringWrapper[] getStringWrappers() {
 			return stringWrappers;
 		}
@@ -1885,7 +1885,7 @@ public class BinarySerializerTest {
 		private Integer value;
 
 		@Override
-		@Serialize(order = 1, added = 0)
+		@Serialize(added = 0)
 		@SerializeNullable
 		public Integer getValue() {
 			return value;
@@ -1913,7 +1913,7 @@ public class BinarySerializerTest {
 		private Integer value;
 
 		@Override
-		@Serialize(order = 1, added = 0)
+		@Serialize(added = 0)
 		@SerializeNullable
 		public Integer getValue() {
 			return value;
@@ -1933,13 +1933,13 @@ public class BinarySerializerTest {
 	}
 
 	public static class TestDataFromVersion3 {
-		@Serialize(order = 0, added = 3)
+		@Serialize(added = 3)
 		public int a;
 
-		@Serialize(order = 1, added = 4, removed = 5)
+		@Serialize(added = 4, removed = 5)
 		public int b;
 
-		@Serialize(order = 2, added = 5)
+		@Serialize(added = 5)
 		public int c;
 	}
 
@@ -1975,7 +1975,7 @@ public class BinarySerializerTest {
 	}
 
 	public static class Container {
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeNullable
 		public TestNullableInterface obj;
 	}
@@ -2108,39 +2108,39 @@ public class BinarySerializerTest {
 	}
 
 	public static class CollectionHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public Collection<String> collection;
 	}
 
 	public static class QueueHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public Queue<String> queue;
 	}
 
 	public static class SetsHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public Set<String> regular;
 
-		@Serialize(order = 1)
+		@Serialize
 		public HashSet<String> hash;
 
-		@Serialize(order = 2)
+		@Serialize
 		public LinkedHashSet<String> linked;
 	}
 
 	public static class MapsHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public Map<Integer, String> regular;
 
-		@Serialize(order = 1)
+		@Serialize
 		public HashMap<Integer, String> hash;
 
-		@Serialize(order = 2)
+		@Serialize
 		public LinkedHashMap<Integer, String> linked;
 	}
 
 	public static class LinkedListHolderImpl implements LinkedListHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public final LinkedList<String> list;
 
 		public LinkedListHolderImpl(@Deserialize("list") List<String> list) {

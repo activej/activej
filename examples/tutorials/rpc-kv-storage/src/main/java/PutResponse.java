@@ -10,7 +10,7 @@ public class PutResponse {
 		this.previousValue = previousValue;
 	}
 
-	@Serialize(order = 0)
+	@Serialize
 	@SerializeNullable
 	public String getPreviousValue() {
 		return previousValue;

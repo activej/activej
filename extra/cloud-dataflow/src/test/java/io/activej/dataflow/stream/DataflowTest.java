@@ -422,7 +422,7 @@ public final class DataflowTest {
 	}
 
 	public static final class TestItem {
-		@Serialize(order = 0)
+		@Serialize
 		public final long value;
 
 		public TestItem(@Deserialize("value") long value) {

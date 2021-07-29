@@ -5,9 +5,9 @@ import io.activej.serializer.annotations.Serialize;
 
 public final class StringCount {
 
-	@Serialize(order = 0)
+	@Serialize
 	public final String string;
-	@Serialize(order = 1)
+	@Serialize
 	public int count;
 
 	public StringCount(@Deserialize("string") String string, @Deserialize("count") int count) {

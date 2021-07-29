@@ -36,12 +36,12 @@ public final class RpcMessage {
 		return new RpcMessage(cookie, data);
 	}
 
-	@Serialize(order = 1)
+	@Serialize
 	public int getCookie() {
 		return cookie;
 	}
 
-	@Serialize(order = 2)
+	@Serialize
 	@SerializeSubclasses(
 			startIndex = -1, value = {RpcControlMessage.class, RpcRemoteException.class},
 			extraSubclassesId = MESSAGE_TYPES

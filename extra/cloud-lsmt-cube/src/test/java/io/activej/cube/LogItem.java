@@ -20,40 +20,40 @@ import java.util.Random;
 public class LogItem {
 	/* Dimensions */
 	@Key
-	@Serialize(order = 0)
+	@Serialize
 	public int date = randomInt(16570, 16580);
 
 	@Key
-	@Serialize(order = 1)
+	@Serialize
 	public int advertiser = randomInt(0, 10);
 
 	@Key
-	@Serialize(order = 2)
+	@Serialize
 	public int campaign = randomInt(0, 10);
 
 	@Key
-	@Serialize(order = 3)
+	@Serialize
 	public int banner = randomInt(0, 10);
 
 	@Measures
-	@Serialize(order = 4)
+	@Serialize
 	public long impressions;
 
 	@Measures
-	@Serialize(order = 5)
+	@Serialize
 	public long clicks;
 
 	@Measures
-	@Serialize(order = 6)
+	@Serialize
 	public long conversions;
 
 	@Measures
-	@Serialize(order = 7)
+	@Serialize
 	public double revenue;
 
 	@Measures
 	@Nullable
-	@Serialize(order = 8)
+	@Serialize
 	@SerializeNullable
 	public String testString;
 

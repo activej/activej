@@ -10,7 +10,7 @@ public class GetResponse {
 		this.value = value;
 	}
 
-	@Serialize(order = 0)
+	@Serialize
 	@SerializeNullable
 	public String getValue() {
 		return value;

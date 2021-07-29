@@ -10,7 +10,7 @@ public class GetRequest {
 		this.key = key;
 	}
 
-	@Serialize(order = 0)
+	@Serialize
 	public String getKey() {
 		return key;
 	}

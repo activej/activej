@@ -306,7 +306,7 @@ public final class DiscoveryServiceTest {
 	}
 
 	public static final class SimpleRequest {
-		@Serialize(order = 0)
+		@Serialize
 		public final String data;
 
 		public SimpleRequest(@Deserialize("data") String data) {

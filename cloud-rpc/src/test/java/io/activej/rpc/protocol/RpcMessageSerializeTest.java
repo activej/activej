@@ -22,7 +22,7 @@ public final class RpcMessageSerializeTest {
 			this.s = s;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public String getS() {
 			return s;
 		}
@@ -36,7 +36,7 @@ public final class RpcMessageSerializeTest {
 			this.i = i;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public int getI() {
 			return i;
 		}

@@ -40,110 +40,110 @@ public class SerializerBenchmark {
 			}
 		}
 
-		@Serialize(order = 10)
+		@Serialize
 		public boolean z;
-		@Serialize(order = 11)
+		@Serialize
 		public boolean z1;
-		@Serialize(order = 12)
+		@Serialize
 		public boolean z2;
 
-		@Serialize(order = 20)
+		@Serialize
 		public byte b;
-		@Serialize(order = 21)
+		@Serialize
 		public byte b1;
-		@Serialize(order = 22)
+		@Serialize
 		public byte b2;
 
-		@Serialize(order = 30)
+		@Serialize
 		public short s;
-		@Serialize(order = 31)
+		@Serialize
 		public short s1;
-		@Serialize(order = 32)
+		@Serialize
 		public short s2;
 
-		@Serialize(order = 40)
+		@Serialize
 		public char c;
-		@Serialize(order = 41)
+		@Serialize
 		public char c1;
-		@Serialize(order = 42)
+		@Serialize
 		public char c2;
 
-		@Serialize(order = 50)
+		@Serialize
 		public int i;
-		@Serialize(order = 51)
+		@Serialize
 		public int i1;
-		@Serialize(order = 52)
+		@Serialize
 		public int i2;
 
-		@Serialize(order = 60)
+		@Serialize
 		@SerializeVarLength
 		public int vi = 0;
-		@Serialize(order = 61)
+		@Serialize
 		@SerializeVarLength
 		public int vi1 = 0;
-		@Serialize(order = 62)
+		@Serialize
 		@SerializeVarLength
 		public int vi2 = 0;
 
-		@Serialize(order = 70)
+		@Serialize
 		public long l;
-		@Serialize(order = 71)
+		@Serialize
 		public long l1;
-		@Serialize(order = 72)
+		@Serialize
 		public long l2;
 
-		@Serialize(order = 80)
+		@Serialize
 		@SerializeVarLength
 		public long vl = 0;
-		@Serialize(order = 81)
+		@Serialize
 		@SerializeVarLength
 		public long vl1 = 0;
-		@Serialize(order = 82)
+		@Serialize
 		@SerializeVarLength
 		public long vl2 = 0;
 
-		@Serialize(order = 90)
+		@Serialize
 		public float f;
-		@Serialize(order = 91)
+		@Serialize
 		public float f1;
-		@Serialize(order = 92)
+		@Serialize
 		public float f2;
 
-		@Serialize(order = 100)
+		@Serialize
 		public double d;
-		@Serialize(order = 101)
+		@Serialize
 		public double d1;
-		@Serialize(order = 102)
+		@Serialize
 		public double d2;
 
-		@Serialize(order = 110)
+		@Serialize
 		@SerializeStringFormat(UTF8)
 		public String string = "Hello, World!";
-		@Serialize(order = 111)
+		@Serialize
 		@SerializeStringFormat(ISO_8859_1)
 		public String string1 = "Hello, World!";
-		@Serialize(order = 112)
+		@Serialize
 		@SerializeStringFormat(UTF16)
 		public String string2 = "Hello, World!";
-		@Serialize(order = 113)
+		@Serialize
 		@SerializeStringFormat(UTF8_MB3)
 		public String string3 = "Hello, World!";
 
-		@Serialize(order = 120)
+		@Serialize
 		public TestEnum en = TestEnum.ONE;
-		@Serialize(order = 121)
+		@Serialize
 		public TestEnum en1 = TestEnum.TWO;
-		@Serialize(order = 122)
+		@Serialize
 		public TestEnum en2 = TestEnum.THREE;
 
-		@Serialize(order = 200)
+		@Serialize
 		public List<TestDataElement> elements = new ArrayList<>();
 	}
 
 	public static class TestDataElement {
-		@Serialize(order = 1)
+		@Serialize
 		public boolean i;
-		@Serialize(order = 2)
+		@Serialize
 		public Map<Integer, TestDataSubElement> subelements = new HashMap<>();
 	}
 
@@ -152,12 +152,12 @@ public class SerializerBenchmark {
 	}
 
 	public static class TestDataSubElementA extends TestDataSubElement {
-		@Serialize(order = 1)
+		@Serialize
 		public int x;
 	}
 
 	public static class TestDataSubElementB extends TestDataSubElement {
-		@Serialize(order = 1)
+		@Serialize
 		public long y;
 	}
 

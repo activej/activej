@@ -27,8 +27,13 @@ import io.activej.types.scanner.TypeScannerRegistry;
 import io.activej.types.scanner.TypeScannerRegistry.Context;
 import io.activej.types.scanner.TypeScannerRegistry.Mapping;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.AnnotationNode;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.lang.reflect.*;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -53,7 +58,11 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Comparator.naturalOrder;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static org.objectweb.asm.ClassReader.*;
+import static org.objectweb.asm.Type.getType;
 
 /**
  * Scans fields of classes for serialization.
@@ -74,6 +83,8 @@ public final class SerializerBuilder {
 	private Path saveBytecodePath = DEFAULT_SAVE_DIR;
 	private CompatibilityLevel compatibilityLevel = CompatibilityLevel.LEVEL_3;
 	private Object[] classKey = null;
+	private int autoOrderStart = 1;
+	private int autoOrderStride = 1;
 	private boolean annotationsCompatibilityMode;
 
 	private final Map<Object, List<Class<?>>> extraSubclassesMap = new HashMap<>();
@@ -266,6 +277,12 @@ public final class SerializerBuilder {
 		this.encodeVersionMax = encodeVersionMax;
 		this.decodeVersionMin = decodeVersionMin;
 		this.decodeVersionMax = decodeVersionMax;
+		return this;
+	}
+
+	public SerializerBuilder withAutoOrdering(int autoOrderStart, int autoOrderStride) {
+		this.autoOrderStart = autoOrderStart;
+		this.autoOrderStride = autoOrderStride;
 		return this;
 	}
 
@@ -555,7 +572,7 @@ public final class SerializerBuilder {
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
 		scanFields(ctx, bindings, foundSerializers);
 		scanGetters(ctx, bindings, foundSerializers);
-		addMethodsAndGettersToClass(serializer, foundSerializers);
+		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
 		scanSetters(ctx, bindings, serializer);
 		scanFactories(ctx, bindings, serializer);
 		scanConstructors(ctx, bindings, serializer);
@@ -569,21 +586,66 @@ public final class SerializerBuilder {
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
 		scanGetters(ctx, bindings, foundSerializers);
-		addMethodsAndGettersToClass(serializer, foundSerializers);
+		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
 
 		for (AnnotatedType superInterface : ctx.getRawClass().getAnnotatedInterfaces()) {
 			scanInterface(ctx.push(bind(superInterface, bindings)), serializer);
 		}
 	}
 
-	private void addMethodsAndGettersToClass(SerializerDefClass serializer, List<FoundSerializer> foundSerializers) {
+	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, SerializerDefClass serializer, List<FoundSerializer> foundSerializers) {
+		if (foundSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
+			Map<String, List<FoundSerializer>> foundFields = foundSerializers.stream().collect(groupingBy(FoundSerializer::getName, toList()));
+			String pathToClass = ctx.getRawClass().getName().replace('.', '/') + ".class";
+			try (InputStream classInputStream = ctx.getRawClass().getClassLoader().getResourceAsStream(pathToClass)) {
+				ClassReader cr = new ClassReader(requireNonNull(classInputStream));
+				cr.accept(new ClassVisitor(Opcodes.ASM8) {
+					int index = 0;
+
+					@Override
+					public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+						List<FoundSerializer> list = foundFields.get(name);
+						if (list == null) return null;
+						for (FoundSerializer foundSerializer : list) {
+							if (!(foundSerializer.methodOrField instanceof Field)) continue;
+							foundSerializer.index = index++;
+							break;
+						}
+						return null;
+					}
+
+					@Override
+					public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+						List<FoundSerializer> list = foundFields.get(name);
+						if (list == null) return null;
+						for (FoundSerializer foundSerializer : list) {
+							if (!(foundSerializer.methodOrField instanceof Method)) continue;
+							if (!descriptor.equals(getType((Method) foundSerializer.methodOrField).getDescriptor()))
+								continue;
+							foundSerializer.index = index++;
+							break;
+						}
+						return null;
+					}
+				}, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
+			} catch (IOException e) {
+				throw new IllegalArgumentException(e);
+			}
+			for (FoundSerializer foundSerializer : foundSerializers) {
+				if (foundSerializer.order == Integer.MIN_VALUE) {
+					foundSerializer.order = autoOrderStart + foundSerializer.index * autoOrderStride;
+				}
+			}
+		}
+
 		Set<Integer> orders = new HashSet<>();
 		for (FoundSerializer foundSerializer : foundSerializers) {
-			if (foundSerializer.order < 0)
-				throw new IllegalArgumentException(format("Invalid order %s for %s in %s", foundSerializer.order, foundSerializer, serializer));
 			if (!orders.add(foundSerializer.order))
 				throw new IllegalArgumentException(format("Duplicate order %s for %s in %s", foundSerializer.order, foundSerializer, serializer));
 		}
+
+		Map<TypePath, AnnotationNode> nodes = new LinkedHashMap<>();
+
 		Collections.sort(foundSerializers);
 		for (FoundSerializer foundSerializer : foundSerializers) {
 			if (foundSerializer.methodOrField instanceof Method) {
@@ -598,7 +660,7 @@ public final class SerializerBuilder {
 
 	private void scanFields(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			List<FoundSerializer> foundSerializers) {
-		for (Field field : getRawClass(ctx.getAnnotatedType()).getDeclaredFields()) {
+		for (Field field : ctx.getRawClass().getDeclaredFields()) {
 			FoundSerializer foundSerializer = tryAddField(ctx, bindings, field);
 			if (foundSerializer != null) {
 				foundSerializers.add(foundSerializer);
@@ -608,7 +670,7 @@ public final class SerializerBuilder {
 
 	private void scanGetters(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			List<FoundSerializer> foundSerializers) {
-		for (Method method : getRawClass(ctx.getAnnotatedType()).getDeclaredMethods()) {
+		for (Method method : ctx.getRawClass().getDeclaredMethods()) {
 			FoundSerializer foundSerializer = tryAddGetter(ctx, bindings, method);
 			if (foundSerializer != null) {
 				foundSerializers.add(foundSerializer);
@@ -809,7 +871,6 @@ public final class SerializerBuilder {
 		}
 
 		return serialize != null ? new FoundSerializer(methodOrField, serialize.order(), added, removed) : null;
-
 	}
 
 	private int getProfileVersion(String[] profiles, int[] versions) {
@@ -829,7 +890,8 @@ public final class SerializerBuilder {
 
 	private static final class FoundSerializer implements Comparable<FoundSerializer> {
 		final Object methodOrField;
-		final int order;
+		int order;
+		int index;
 		final int added;
 		final int removed;
 		//		final TypedModsMap mods;

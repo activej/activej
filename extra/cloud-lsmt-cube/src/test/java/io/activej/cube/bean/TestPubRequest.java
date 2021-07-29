@@ -12,7 +12,7 @@ public class TestPubRequest {
 	private final static Random rand = new Random();
 
 	public static class TestAdvRequest {
-		@Serialize(order = 0)
+		@Serialize
 		public int adv;
 
 		public TestAdvRequest() {
@@ -28,12 +28,12 @@ public class TestPubRequest {
 		}
 	}
 
-	@Serialize(order = 0)
+	@Serialize
 	public long timestamp;
-	@Serialize(order = 1)
+	@Serialize
 	public int pub;
 
-	@Serialize(order = 2)
+	@Serialize
 	public List<TestAdvRequest> advRequests = new ArrayList<>();
 
 	public TestPubRequest() {

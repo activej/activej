@@ -168,51 +168,51 @@ public final class ReportingTest {
 		static final int EXCLUDE_BANNER = 0;
 
 		@Key
-		@Serialize(order = 0)
+		@Serialize
 		public int date;
 
 		@Key
-		@Serialize(order = 1)
+		@Serialize
 		public int advertiser;
 
 		@Key
-		@Serialize(order = 2)
+		@Serialize
 		public int campaign;
 
 		@Key
-		@Serialize(order = 3)
+		@Serialize
 		public int banner;
 
 		@Key
-		@Serialize(order = 10)
+		@Serialize
 		public int affiliate;
 
 		@Key
-		@Serialize(order = 11)
+		@Serialize
 		public String site;
 
 		@Measures
-		@Serialize(order = 4)
+		@Serialize
 		public long impressions;
 
 		@Measures
-		@Serialize(order = 5)
+		@Serialize
 		public long clicks;
 
 		@Measures
-		@Serialize(order = 6)
+		@Serialize
 		public long conversions;
 
 		@Measures({"minRevenue", "maxRevenue", "revenue"})
-		@Serialize(order = 7)
+		@Serialize
 		public double revenue;
 
 		@Measures("uniqueUserIdsCount")
-		@Serialize(order = 8)
+		@Serialize
 		public int userId;
 
 		@Measures
-		@Serialize(order = 9)
+		@Serialize
 		public int errors;
 
 		@SuppressWarnings("unused")

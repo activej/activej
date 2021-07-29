@@ -81,9 +81,9 @@ public class PageRankTest {
 	}
 
 	public static class Page {
-		@Serialize(order = 0)
+		@Serialize
 		public final long pageId;
-		@Serialize(order = 1)
+		@Serialize
 		public final long[] links;
 
 		public Page(@Deserialize("pageId") long pageId, @Deserialize("links") long[] links) {
@@ -112,9 +112,9 @@ public class PageRankTest {
 	}
 
 	public static class Rank {
-		@Serialize(order = 0)
+		@Serialize
 		public final long pageId;
-		@Serialize(order = 1)
+		@Serialize
 		public final double value;
 
 		public Rank(@Deserialize("pageId") long pageId, @Deserialize("value") double value) {
@@ -144,9 +144,9 @@ public class PageRankTest {
 	}
 
 	public static class RankAccumulator {
-		@Serialize(order = 0)
+		@Serialize
 		public long pageId;
-		@Serialize(order = 1)
+		@Serialize
 		public double accumulatedRank;
 
 		@SuppressWarnings("unused")

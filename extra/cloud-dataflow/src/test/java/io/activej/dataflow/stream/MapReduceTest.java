@@ -73,9 +73,9 @@ public class MapReduceTest {
 	}
 
 	public static class StringCount {
-		@Serialize(order = 0)
+		@Serialize
 		public final String s;
-		@Serialize(order = 1)
+		@Serialize
 		public int count;
 
 		public StringCount(@Deserialize("s") String s, @Deserialize("count") int count) {

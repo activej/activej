@@ -38,14 +38,14 @@ public class SerializerBuilder2Test {
 	}
 
 	public static class TestDataScalars {
-		@Serialize(order = 5)
+		@Serialize
 		public int i;
 
-		@Serialize(order = 15)
+		@Serialize
 		@SerializeNullable
 		public Integer iBoxed;
 
-		@Serialize(order = 22)
+		@Serialize
 		public String string;
 	}
 
@@ -174,11 +174,11 @@ public class SerializerBuilder2Test {
 	}
 
 	public static class TestNode {
-		@Serialize(order = 2)
+		@Serialize
 		@SerializeNullable
 		public TestNode left;
 
-		@Serialize(order = 3)
+		@Serialize
 		@SerializeNullable
 		public TestNode right;
 

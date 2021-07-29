@@ -51,21 +51,21 @@ public final class RpcRemoteException extends RpcException implements RpcMandato
 	}
 
 	@Nullable
-	@Serialize(order = 1)
-	@SerializeNullable
-	public String getCauseMessage() {
-		return causeMessage;
-	}
-
-	@Nullable
-	@Serialize(order = 0)
+	@Serialize
 	@SerializeNullable
 	public String getCauseClassName() {
 		return causeClassName;
 	}
 
+	@Nullable
+	@Serialize
+	@SerializeNullable
+	public String getCauseMessage() {
+		return causeMessage;
+	}
+
 	@Override
-	@Serialize(order = 2)
+	@Serialize
 	@SerializeNullable
 	public String getMessage() {
 		return super.getMessage();

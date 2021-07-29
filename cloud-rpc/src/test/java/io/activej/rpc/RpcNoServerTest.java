@@ -48,7 +48,7 @@ public final class RpcNoServerTest {
 	}
 
 	protected static class HelloRequest {
-		@Serialize(order = 0)
+		@Serialize
 		public final String name;
 
 		public HelloRequest(@Deserialize("name") String name) {
@@ -57,7 +57,7 @@ public final class RpcNoServerTest {
 	}
 
 	protected static class HelloResponse {
-		@Serialize(order = 0)
+		@Serialize
 		public final String message;
 
 		public HelloResponse(@Deserialize("message") String message) {

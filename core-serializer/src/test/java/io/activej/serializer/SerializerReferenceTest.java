@@ -20,15 +20,15 @@ public class SerializerReferenceTest {
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	public static class TestDataReferences {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeNullable
 		@SerializeReference
 		public String string;
 
-		@Serialize(order = 1)
+		@Serialize
 		public List<@SerializeReference @SerializeNullable String> list;
 
-		@Serialize(order = 2)
+		@Serialize
 		public Map<@SerializeReference String, @SerializeReference @SerializeNullable String> map;
 	}
 
@@ -57,42 +57,42 @@ public class SerializerReferenceTest {
 	}
 
 	public static class Container {
-		@Serialize(order = 0)
+		@Serialize
 		public SelfReference self1;
 
-		@Serialize(order = 1)
+		@Serialize
 		public SelfReference self2;
 
-		@Serialize(order = 2)
+		@Serialize
 		@SerializeReference
 		public CyclicReferenceA cyclicReferenceA;
 
-		@Serialize(order = 3)
+		@Serialize
 		@SerializeReference
 		public Node node;
 	}
 
 	@SerializeReference
 	public static class SelfReference {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeNullable
 		public SelfReference selfReference;
 	}
 
 	public static class CyclicReferenceA {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeReference
 		public CyclicReferenceB cyclicReferenceB;
 	}
 
 	public static class CyclicReferenceB {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeReference
 		public CyclicReferenceA cyclicReferenceA;
 	}
 
 	public static class Node {
-		@Serialize(order = 0)
+		@Serialize
 		public List<@SerializeReference Node> nodes;
 	}
 
@@ -126,7 +126,7 @@ public class SerializerReferenceTest {
 
 	@SerializeReference
 	public static class ContainerCyclicReference {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeNullable
 		public ContainerCyclicReference ref;
 	}

@@ -17,12 +17,12 @@ public class BannerCommands {
 			this.bannerIds = bannerIds;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public long getUserId() {
 			return userId;
 		}
 
-		@Serialize(order = 2)
+		@Serialize
 		public Set<Integer> getBannerIds() {
 			return bannerIds;
 		}
@@ -39,7 +39,7 @@ public class BannerCommands {
 			this.userId = userId;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public long getUserId() {
 			return userId;
 		}
@@ -53,7 +53,7 @@ public class BannerCommands {
 			this.bannerIds = bannerIds;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeNullable
 		@Nullable
 		public Set<Integer> getBannerIds() {
@@ -70,12 +70,12 @@ public class BannerCommands {
 			this.bannerId = bannerId;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public long getUserId() {
 			return userId;
 		}
 
-		@Serialize(order = 2)
+		@Serialize
 		public int getBannerId() {
 			return bannerId;
 		}

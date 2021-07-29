@@ -116,7 +116,7 @@ public class CodeGenSerializerDefByteBufferTest {
 			this.buffer = null;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public ByteBuffer getBuffer() {
 			return buffer;
 		}
@@ -168,7 +168,7 @@ public class CodeGenSerializerDefByteBufferTest {
 
 
 	public static class TestByteBuffer {
-		@Serialize(order = 0)
+		@Serialize
 		@SerializeNullable
 		public ByteBuffer buffer;
 	}

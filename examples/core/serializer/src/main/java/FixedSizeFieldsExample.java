@@ -12,10 +12,10 @@ import java.util.Arrays;
 public final class FixedSizeFieldsExample {
 	//[START REGION_1]
 	public static class Storage {
-		@Serialize(order = 0)
+		@Serialize
 		public @SerializeNullable String @SerializeFixedSize(3) [] strings;
 
-		@Serialize(order = 1)
+		@Serialize
 		public byte @SerializeFixedSize(4) [] bytes;
 	}
 	//[END REGION_1]

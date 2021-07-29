@@ -12,12 +12,12 @@ public class PutRequest {
 		this.value = value;
 	}
 
-	@Serialize(order = 0)
+	@Serialize
 	public String getKey() {
 		return key;
 	}
 
-	@Serialize(order = 1)
+	@Serialize
 	public String getValue() {
 		return value;
 	}

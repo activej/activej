@@ -34,7 +34,7 @@ public final class GenericsAndInterfacesExample {
 
 	//[START REGION_2]
 	public interface Person<K, V> {
-		@Serialize(order = 0)
+		@Serialize
 		List<Skill<K, V>> getSkills();
 	}
 	//[END REGION_2]
@@ -43,7 +43,7 @@ public final class GenericsAndInterfacesExample {
 	public static class Developer implements Person<Integer, String> {
 		private List<Skill<Integer, String>> list;
 
-		@Serialize(order = 0)
+		@Serialize
 		@Override
 		public List<Skill<Integer, String>> getSkills() {
 			return list;
@@ -66,12 +66,12 @@ public final class GenericsAndInterfacesExample {
 			this.value = value;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public K getKey() {
 			return key;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public V getValue() {
 			return value;
 		}

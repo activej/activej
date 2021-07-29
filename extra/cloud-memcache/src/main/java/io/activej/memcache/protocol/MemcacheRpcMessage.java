@@ -50,7 +50,7 @@ public class MemcacheRpcMessage {
 			this.key = key;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public byte[] getKey() {
 			return key;
 		}
@@ -63,7 +63,7 @@ public class MemcacheRpcMessage {
 			this.data = data;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeNullable
 		public Slice getData() {
 			return data;
@@ -79,12 +79,12 @@ public class MemcacheRpcMessage {
 			this.data = data;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public byte[] getKey() {
 			return key;
 		}
 
-		@Serialize(order = 2)
+		@Serialize
 		@SerializeNullable
 		public Slice getData() {
 			return data;

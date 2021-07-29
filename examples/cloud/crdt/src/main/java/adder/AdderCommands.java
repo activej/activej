@@ -24,12 +24,12 @@ public class AdderCommands {
 			this.delta = delta;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public long getUserId() {
 			return userId;
 		}
 
-		@Serialize(order = 2)
+		@Serialize
 		public float getDelta() {
 			return delta;
 		}
@@ -46,7 +46,7 @@ public class AdderCommands {
 			this.userId = userId;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		public long getUserId() {
 			return userId;
 		}
@@ -59,7 +59,7 @@ public class AdderCommands {
 			this.sum = sum;
 		}
 
-		@Serialize(order = 1)
+		@Serialize
 		@SerializeNullable
 		@Nullable
 		public Float getSum() {

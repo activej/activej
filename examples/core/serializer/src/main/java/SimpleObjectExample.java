@@ -39,15 +39,15 @@ public final class SimpleObjectExample {
 			this.name = name;
 		}
 
-		@Serialize(order = 0)
+		@Serialize
 		public final int age;
 
-		@Serialize(order = 1)
+		@Serialize
 		public final String name;
 
 		private String surname;
 
-		@Serialize(order = 2)
+		@Serialize
 		public String getSurname() {
 			return surname;
 		}

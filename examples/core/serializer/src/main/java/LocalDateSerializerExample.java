@@ -49,7 +49,7 @@ public final class LocalDateSerializerExample {
 
 	//[START HOLDER]
 	public static class LocalDateHolder {
-		@Serialize(order = 0)
+		@Serialize
 		public final LocalDate date;
 
 		public LocalDateHolder(@Deserialize("date") LocalDate date) {

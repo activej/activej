@@ -259,9 +259,9 @@ public class DataflowServerTest {
 	public static class StringCount {
 		static final Comparator<StringCount> COMPARATOR = Comparator.<StringCount, String>comparing(item -> item.s).thenComparingInt(item -> item.count);
 
-		@Serialize(order = 0)
+		@Serialize
 		public final String s;
-		@Serialize(order = 1)
+		@Serialize
 		public int count;
 
 		public StringCount(@Deserialize("s") String s, @Deserialize("count") int count) {
