@@ -99,7 +99,7 @@ public class AnnotatedTypeUtils {
 				upperBounds2[i] = annotatedUpperBounds2[i].getType();
 			}
 			return new AnnotatedWildcardTypeImpl(
-					new TypeUtils.WildcardTypeImpl(lowerBounds2, upperBounds2),
+					new TypeUtils.WildcardTypeImpl(upperBounds2, lowerBounds2),
 					annotations,
 					annotatedUpperBounds2, annotatedLowerBounds2);
 		}
@@ -125,6 +125,12 @@ public class AnnotatedTypeUtils {
 	private static AnnotatedType annotatedTypeOf(Type type, int[] path, BiFunction<Type, int[], Annotation[]> annotationsFn) {
 		Annotation[] annotations = annotationsFn.apply(type, path);
 		if (type instanceof Class) {
+			if (((Class<?>) type).isArray()) {
+				int[] newPath = newPath(path);
+				Type componentType = ((Class<?>) type).getComponentType();
+				AnnotatedType annotatedComponentType = annotatedTypeOf(componentType, newPath, annotationsFn);
+				return new AnnotatedArrayTypeImpl(type, annotations, annotatedComponentType);
+			}
 			return new AnnotatedTypeImpl(type, annotations);
 		}
 		if (type instanceof TypeVariable) {
