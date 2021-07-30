@@ -36,7 +36,7 @@ public final class SerializeSubclassesExample {
 		holder.list.addAll(list);
 
 		BinarySerializer<ListHolder> serializer = SerializerBuilder.create()
-				.withSubclasses("list", subClasses)
+				.withSubclasses("list", asList(subClasses))
 				.build(ListHolder.class);
 
 		byte[] buffer = new byte[1024];

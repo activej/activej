@@ -1064,7 +1064,7 @@ public class BinarySerializerTest {
 		testData1.object2 = "object2";
 
 		BinarySerializer<TestDataExtraSubclasses> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.withSubclasses("extraSubclasses1", Integer.class)
+				.withSubclasses("extraSubclasses1", asList(Integer.class))
 				.withSubclasses(Object.class, asList(Boolean.class))
 				.build(TestDataExtraSubclasses.class);
 		TestDataExtraSubclasses testData2 = doTest(testData1, serializer);
@@ -1105,7 +1105,7 @@ public class BinarySerializerTest {
 		((TestDataExtraSubclasses2) testData1).i = 10;
 
 		BinarySerializer<TestDataExtraSubclassesInterface> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.withSubclasses("extraSubclasses", TestDataExtraSubclasses2.class)
+				.withSubclasses("extraSubclasses", asList(TestDataExtraSubclasses2.class))
 				.withSubclasses(TestDataExtraSubclassesInterface.class, asList(TestDataExtraSubclasses3.class))
 				.build(TestDataExtraSubclassesInterface.class);
 		TestDataExtraSubclassesInterface testData2 = doTest(testData1, serializer);

@@ -83,8 +83,8 @@ public final class SerializerBuilder {
 	private Path saveBytecodePath = DEFAULT_SAVE_DIR;
 	private CompatibilityLevel compatibilityLevel = CompatibilityLevel.LEVEL_3;
 	private Object[] classKey = null;
-	private int autoOrderStart = 1;
-	private int autoOrderStride = 1;
+	private int autoOrderingStart = 1;
+	private int autoOrderingStride = 1;
 	private boolean annotationsCompatibilityMode;
 
 	private final Map<Object, List<Class<?>>> extraSubclassesMap = new HashMap<>();
@@ -194,7 +194,7 @@ public final class SerializerBuilder {
 					(annotationSubclass = ctx.getAnnotation(SerializeSubclasses.class)) != null ||
 					(annotationSubclass = getAnnotation(SerializeSubclasses.class, rawClass.getAnnotations())) != null) {
 				LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
-				LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(Arrays.asList(annotationSubclass.value()));
+				LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(asList(annotationSubclass.value()));
 				subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, emptyList()));
 				subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationSubclass.extraSubclassesId(), emptyList()));
 				for (Class<?> subclass : subclassesSet) {
@@ -226,15 +226,6 @@ public final class SerializerBuilder {
 
 			return serializerDef;
 		});
-		return this;
-	}
-
-	public SerializerBuilder withSubclasses(String extraSubclassesId, Class<?>... subclasses) {
-		return withSubclasses(extraSubclassesId, Arrays.asList(subclasses));
-	}
-
-	public SerializerBuilder withSubclasses(String subclassesId, List<Class<?>> subclasses) {
-		extraSubclassesMap.put(subclassesId, subclasses);
 		return this;
 	}
 
@@ -280,9 +271,9 @@ public final class SerializerBuilder {
 		return this;
 	}
 
-	public SerializerBuilder withAutoOrdering(int autoOrderStart, int autoOrderStride) {
-		this.autoOrderStart = autoOrderStart;
-		this.autoOrderStride = autoOrderStride;
+	public SerializerBuilder withAutoOrdering(int autoOrderingStart, int autoOrderingStride) {
+		this.autoOrderingStart = autoOrderingStart;
+		this.autoOrderingStride = autoOrderingStride;
 		return this;
 	}
 
@@ -292,8 +283,12 @@ public final class SerializerBuilder {
 	}
 
 	public SerializerBuilder withClassKey(Object... classKeyParameters) {
-		this.classKey = classKeyParameters;
+		setClassKey(classKeyParameters);
 		return this;
+	}
+
+	public void setClassKey(Object[] classKeyParameters) {
+		this.classKey = classKeyParameters;
 	}
 
 	public SerializerBuilder withClassName(String className) {
@@ -301,8 +296,18 @@ public final class SerializerBuilder {
 		return this;
 	}
 
-	public void setSubclasses(String subclassesId, List<Class<?>> subclasses) {
-		extraSubclassesMap.put(subclassesId, subclasses);
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public <T> SerializerBuilder withSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
+		setSubclasses(subclassesId, subclasses);
+		return this;
+	}
+
+	public <T> void setSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
+		//noinspection unchecked,rawtypes
+		extraSubclassesMap.put(subclassesId, (List) subclasses);
 	}
 
 	public <T> SerializerBuilder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
@@ -313,11 +318,6 @@ public final class SerializerBuilder {
 	public <T> void setSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
 		extraSubclassesMap.put(type, (List) subclasses);
-	}
-
-	public SerializerBuilder setClassName(String className) {
-		this.className = className;
-		return this;
 	}
 
 	public <T> BinarySerializer<T> build(Type type) {
@@ -639,7 +639,7 @@ public final class SerializerBuilder {
 			}
 			for (FoundSerializer foundSerializer : foundSerializers) {
 				if (foundSerializer.order == Integer.MIN_VALUE) {
-					foundSerializer.order = autoOrderStart + foundSerializer.index * autoOrderStride;
+					foundSerializer.order = autoOrderingStart + foundSerializer.index * autoOrderingStride;
 				}
 			}
 		}
@@ -867,7 +867,7 @@ public final class SerializerBuilder {
 
 		SerializeProfiles profiles = getAnnotation(SerializeProfiles.class, annotations);
 		if (profiles != null) {
-			if (!Arrays.asList(profiles.value()).contains(profile == null ? "" : profile)) {
+			if (!asList(profiles.value()).contains(profile == null ? "" : profile)) {
 				return null;
 			}
 			int addedProfile = getProfileVersion(profiles.value(), profiles.added());
