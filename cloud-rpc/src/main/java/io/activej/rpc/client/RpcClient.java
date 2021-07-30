@@ -19,6 +19,7 @@ package io.activej.rpc.client;
 import io.activej.async.callback.Callback;
 import io.activej.async.service.EventloopService;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
@@ -88,9 +89,9 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private static final boolean CHECK = Checks.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
-	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
-	public static final Duration DEFAULT_RECONNECT_INTERVAL = Duration.ofSeconds(1);
-	public static final MemSize DEFAULT_PACKET_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
+	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient.class, "connectTimeout", Duration.ZERO);
+	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(RpcClient.class, "reconnectInterval", Duration.ZERO);
+	public static final MemSize DEFAULT_PACKET_SIZE = ApplicationSettings.getMemSize(RpcClient.class, "packetSize", ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE);
 
 	private static final RpcException START_EXCEPTION = new RpcException("Could not establish initial connection");
 	private static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");

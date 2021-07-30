@@ -18,6 +18,7 @@ package io.activej.crdt;
 
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelConsumer;
@@ -52,7 +53,8 @@ import static io.activej.csp.binary.Utils.nullTerminated;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService, EventloopJmxBeanEx {
-	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ZERO;
+	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
+	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 
 	private static final ByteBufsCodec<CrdtResponse, CrdtMessage> SERIALIZER =
 			nullTerminated()
@@ -72,7 +74,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	private final BinarySerializer<K> keySerializer;
 
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
-	private SocketSettings socketSettings = SocketSettings.createDefault();
+	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	// region JMX
 	private boolean detailedStats;

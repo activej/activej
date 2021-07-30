@@ -71,7 +71,7 @@ import static java.util.Collections.emptyMap;
 public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
-	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectionTimeout", Duration.ZERO);
+	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);
 
 	private static final ByteBufsCodec<FsResponse, FsCommand> SERIALIZER =
 			nullTerminated()
