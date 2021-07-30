@@ -814,6 +814,8 @@ public final class SerializerBuilder {
 					repeated = ((SerializeStringFormatEx) annotation).value();
 				} else if (annotation instanceof SerializeSubclassesEx) {
 					repeated = ((SerializeSubclassesEx) annotation).value();
+				} else if (annotation instanceof SerializeVarLengthEx) {
+					repeated = ((SerializeVarLengthEx) annotation).value();
 				} else {
 					repeated = new Annotation[]{annotation};
 				}
@@ -830,6 +832,8 @@ public final class SerializerBuilder {
 						p = ((SerializeStringFormat) a).path();
 					} else if (a instanceof SerializeSubclasses) {
 						p = ((SerializeSubclasses) a).path();
+					} else if (a instanceof SerializeVarLength) {
+						p = ((SerializeVarLength) a).path();
 					} else {
 						p = null;
 					}
