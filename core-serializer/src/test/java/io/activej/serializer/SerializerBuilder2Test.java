@@ -16,9 +16,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import static io.activej.serializer.Utils.AT_LEAST_JAVA_9;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 public class SerializerBuilder2Test {
 	@Rule
@@ -74,6 +76,7 @@ public class SerializerBuilder2Test {
 			assertEquals(testData1, testData2);
 		}
 
+		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
 		{
 			List<Integer> testData1 = Arrays.asList(1, 2, null, 3);
 			List<Integer> testData2 = doTest(new TypeT<List<@SerializeNullable Integer>>() {}, testData1);
@@ -115,6 +118,8 @@ public class SerializerBuilder2Test {
 			Integer[] testData2 = doTest(new TypeT<@SerializeVarLength Integer[]>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
+
+		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
 		{
 			Integer[] testData1 = new Integer[]{1, 2, null, 3};
 			Integer[] testData2 = doTest(new TypeT<@SerializeNullable @SerializeVarLength Integer[]>() {}, testData1);
@@ -133,6 +138,8 @@ public class SerializerBuilder2Test {
 			TestEnum1 testData2 = doTest(TestEnum1.class, testData1);
 			assertEquals(testData1, testData2);
 		}
+
+		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
 		{
 			TestEnum1 testData1 = null;
 			TestEnum1 testData2 = doTest(new TypeT<@SerializeNullable TestEnum1>() {}, testData1);
@@ -142,6 +149,8 @@ public class SerializerBuilder2Test {
 
 	@Test
 	public void testSubclasses() {
+		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
+
 		{
 			Object testData1 = 1;
 			Object testData2 = doTest(new TypeT<@SerializeSubclasses({String.class, Integer.class}) Object>() {}, testData1);
@@ -209,17 +218,19 @@ public class SerializerBuilder2Test {
 			assertEquals(testData1, testData2);
 		}
 		{
-			TestNode testData1 = null;
-			TestNode testData2 = doTest(new TypeT<@SerializeNullable TestNode>() {}, testData1);
-			assertEquals(testData1, testData2);
-		}
-		{
 			TestNode testData1 = new TestNode();
 			testData1.left = new TestNode();
 			testData1.left.right = new TestNode();
 			testData1.right = new TestNode();
 			testData1.right.left = new TestNode();
 			TestNode testData2 = doTest(new TypeT<TestNode>() {}, testData1);
+			assertEquals(testData1, testData2);
+		}
+
+		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
+		{
+			TestNode testData1 = null;
+			TestNode testData2 = doTest(new TypeT<@SerializeNullable TestNode>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 	}

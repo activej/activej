@@ -15,14 +15,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.serializer.StringFormat.*;
-import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
-import static io.activej.serializer.Utils.doTest;
+import static io.activej.serializer.Utils.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 @SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
 public class BinarySerializerTest {
@@ -548,6 +548,8 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testGenericParameters() {
+		assumeTrue("Prior to Java 12, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_12);
+
 		TestDataGenericParameters testData1 = new TestDataGenericParameters();
 		testData1.list = asList(
 				null,
