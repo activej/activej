@@ -41,6 +41,7 @@ import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.function.Function;
 
 import static io.activej.crdt.CrdtMessaging.*;
@@ -51,6 +52,8 @@ import static io.activej.csp.binary.Utils.nullTerminated;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService, EventloopJmxBeanEx {
+	public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ZERO;
+
 	private static final ByteBufsCodec<CrdtResponse, CrdtMessage> SERIALIZER =
 			nullTerminated()
 					.andThen(
@@ -68,6 +71,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	private final CrdtDataSerializer<K, S> serializer;
 	private final BinarySerializer<K> keySerializer;
 
+	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
 	private SocketSettings socketSettings = SocketSettings.createDefault();
 
 	// region JMX
@@ -96,6 +100,11 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 
 	public static <K extends Comparable<K>, S> CrdtStorageClient<K, S> create(Eventloop eventloop, InetSocketAddress address, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
 		return new CrdtStorageClient<>(eventloop, address, new CrdtDataSerializer<>(keySerializer, stateSerializer));
+	}
+
+	public CrdtStorageClient<K, S> withConnectTimeout(Duration connectTimeout) {
+		this.connectTimeoutMillis = connectTimeout.toMillis();
+		return this;
 	}
 
 	public CrdtStorageClient<K, S> withSocketSettings(SocketSettings socketSettings) {
@@ -219,7 +228,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	}
 
 	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtMessage>> connect() {
-		return AsyncTcpSocketNio.connect(address, null, socketSettings)
+		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.thenEx(wrapException(() -> "Failed to connect to " + address));
 	}
