@@ -296,6 +296,11 @@ public final class SerializerBuilder {
 		return this;
 	}
 
+	public SerializerBuilder withClassName(String className) {
+		setClassName(className);
+		return this;
+	}
+
 	public void setSubclasses(String subclassesId, List<Class<?>> subclasses) {
 		extraSubclassesMap.put(subclassesId, subclasses);
 	}
@@ -330,8 +335,9 @@ public final class SerializerBuilder {
 		if (saveBytecodePath != null) {
 			classBuilder.withBytecodeSaveDir(saveBytecodePath);
 		}
-		if (className != null)
+		if (className != null) {
 			classBuilder.withClassName(className);
+		}
 
 		Set<Integer> collectedVersions = new HashSet<>();
 		Map<Object, Expression> encoderInitializers = new HashMap<>();
