@@ -117,7 +117,7 @@ public class AnnotatedTypeUtils {
 	}
 
 	@NotNull
-	private static AnnotatedType annotatedTypeOf(Type type, BiFunction<Type, int[], Annotation[]> annotationsFn) {
+	public static AnnotatedType annotatedTypeOf(Type type, BiFunction<Type, int[], Annotation[]> annotationsFn) {
 		return annotatedTypeOf(type, new int[]{}, annotationsFn);
 	}
 
@@ -133,7 +133,8 @@ public class AnnotatedTypeUtils {
 			Type[] bounds = ((TypeVariable<?>) type).getBounds();
 			AnnotatedType[] annotatedBounds = new AnnotatedType[bounds.length];
 			for (Type bound : bounds) {
-				annotatedBounds[idx++] = annotatedTypeOf(bound, newPath(newPath, idx), annotationsFn);
+				annotatedBounds[idx] = annotatedTypeOf(bound, newPath(newPath, idx), annotationsFn);
+				idx++;
 			}
 			return new AnnotatedTypeVariableImpl(type, annotations, annotatedBounds);
 		}
@@ -143,7 +144,8 @@ public class AnnotatedTypeUtils {
 			Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
 			AnnotatedType[] annotatedTypeArguments = new AnnotatedType[typeArguments.length];
 			for (Type typeArgument : typeArguments) {
-				annotatedTypeArguments[idx++] = annotatedTypeOf(typeArgument, newPath(newPath, idx), annotationsFn);
+				annotatedTypeArguments[idx] = annotatedTypeOf(typeArgument, newPath(newPath, idx), annotationsFn);
+				idx++;
 			}
 			return new AnnotatedParameterizedTypeImpl(type, annotations, annotatedTypeArguments);
 		}
@@ -159,12 +161,14 @@ public class AnnotatedTypeUtils {
 			Type[] upperBounds = ((WildcardType) type).getUpperBounds();
 			AnnotatedType[] annotatedUpperBounds = new AnnotatedType[upperBounds.length];
 			for (Type upperBound : upperBounds) {
-				annotatedUpperBounds[idx++] = annotatedTypeOf(upperBound, newPath(newPath, idx), annotationsFn);
+				annotatedUpperBounds[idx] = annotatedTypeOf(upperBound, newPath(newPath, idx), annotationsFn);
+				idx++;
 			}
 			Type[] lowerBounds = ((WildcardType) type).getLowerBounds();
 			AnnotatedType[] annotatedLowerBounds = new AnnotatedType[lowerBounds.length];
 			for (Type lowerBound : lowerBounds) {
-				annotatedLowerBounds[idx++] = annotatedTypeOf(lowerBound, newPath(newPath, idx), annotationsFn);
+				annotatedLowerBounds[idx] = annotatedTypeOf(lowerBound, newPath(newPath, idx), annotationsFn);
+				idx++;
 			}
 			return new AnnotatedWildcardTypeImpl(type, annotations, annotatedUpperBounds, annotatedLowerBounds);
 		}

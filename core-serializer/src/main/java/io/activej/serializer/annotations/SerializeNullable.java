@@ -16,15 +16,14 @@
 
 package io.activej.serializer.annotations;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD,
 		ElementType.TYPE_USE})
+@Repeatable(SerializeNullableEx.class)
 public @interface SerializeNullable {
+	int[] path() default {};
 }

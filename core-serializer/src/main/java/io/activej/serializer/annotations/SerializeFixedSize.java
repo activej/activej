@@ -23,6 +23,9 @@ import java.lang.annotation.*;
 		ElementType.FIELD,
 		ElementType.METHOD,
 		ElementType.TYPE_USE})
+@Repeatable(SerializeFixedSizeEx.class)
 public @interface SerializeFixedSize {
 	int value();
+
+	int[] path() default {};
 }

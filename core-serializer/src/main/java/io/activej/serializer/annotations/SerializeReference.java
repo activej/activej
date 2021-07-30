@@ -24,5 +24,7 @@ import java.lang.annotation.*;
 		ElementType.METHOD,
 		ElementType.TYPE,
 		ElementType.TYPE_USE})
+@Repeatable(SerializeReferenceEx.class)
 public @interface SerializeReference {
+	int[] path() default {};
 }

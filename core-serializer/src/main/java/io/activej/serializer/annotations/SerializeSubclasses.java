@@ -24,10 +24,13 @@ import java.lang.annotation.*;
 		ElementType.METHOD,
 		ElementType.TYPE,
 		ElementType.TYPE_USE})
+@Repeatable(SerializeSubclassesEx.class)
 public @interface SerializeSubclasses {
 	Class<?>[] value() default {};
 
 	String extraSubclassesId() default "";
 
 	int startIndex() default 0;
+
+	int[] path() default {};
 }
