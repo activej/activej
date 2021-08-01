@@ -54,15 +54,15 @@ public class IsAssignableUtils {
 			return true;
 		}
 		if (!strict && to instanceof Class) {
-			return ((Class<?>) to).isAssignableFrom(getRawClass(from));
+			return ((Class<?>) to).isAssignableFrom(getRawType(from));
 		}
-		Class<?> toRawClazz = getRawClass(to);
+		Class<?> toRawClazz = getRawType(to);
 		Type[] toTypeArguments = getActualTypeArguments(to);
 		return isAssignable(toRawClazz, toTypeArguments, from, strict);
 	}
 
 	private static boolean isAssignable(Class<?> toRawClazz, Type[] toTypeArguments, Type from, boolean strict) {
-		Class<?> fromRawClazz = getRawClass(from);
+		Class<?> fromRawClazz = getRawType(from);
 		if (strict && !toRawClazz.equals(fromRawClazz)) return false;
 		if (!strict && !toRawClazz.isAssignableFrom(fromRawClazz)) return false;
 		if (toRawClazz.isArray()) return true;

@@ -31,7 +31,6 @@ import io.activej.dataflow.stats.StatReducer;
 import io.activej.http.*;
 import io.activej.inject.Key;
 import io.activej.inject.ResourceLocator;
-import io.activej.inject.util.Types;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
@@ -47,6 +46,7 @@ import static io.activej.dataflow.json.JsonUtils.codec;
 import static io.activej.dataflow.json.JsonUtils.toJson;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
+import static io.activej.types.TypeUtils.parameterizedType;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -136,7 +136,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		if (!firstNonNull.isPresent()) {
 			return null; // reduce all-null or empty lists to null
 		}
-		StatReducer<NodeStat> reducer = env.getInstanceOrNull(Key.ofType(Types.parameterized(StatReducer.class, firstNonNull.get().getClass())));
+		StatReducer<NodeStat> reducer = env.getInstanceOrNull(Key.ofType(parameterizedType(StatReducer.class, firstNonNull.get().getClass())));
 		if (reducer == null) {
 			return null; // if no reducer is provided then return null, idk some stat type might not be reducible
 		}

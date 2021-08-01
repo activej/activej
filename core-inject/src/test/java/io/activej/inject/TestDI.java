@@ -618,12 +618,19 @@ public final class TestDI {
 				return "str: " + object.toString();
 			}
 		}
+
 		abstract class Module2<C> extends Module1<C> {
 			@Override
 			protected void configure() {
 				bind(TestDI.class).toInstance(TestDI.this);
 				bind(new Key<AndAContainerToo<C>>() {});
 			}
+/*
+			@Provides
+			<T extends Number> List<T> generator(T instance, List<C> object) {
+				return object.isEmpty() ? emptyList() : singletonList(instance);
+			}
+*/
 
 			@Provides
 			@Named("second")
@@ -639,6 +646,8 @@ public final class TestDI {
 				bind(Integer.class).toInstance(42);
 				bind(Integer.class, "namedGeneric").toInstance(-42);
 				bind(new Key<List<Integer>>() {}).toInstance(asList(1, 2, 3));
+//				bind(new Key<List<Long>>() {});
+//				bind(Long.class).toInstance(-42L);
 			}
 		});
 
@@ -647,6 +656,7 @@ public final class TestDI {
 		assertEquals("str: 42", injector.getInstance(String.class));
 		assertEquals("str: [1, 2, 3]", injector.getInstance(Key.of(String.class, "second")));
 		assertEquals(-42, injector.getInstance(new Key<AndAContainerToo<Integer>>() {}).object.intValue());
+//		assertEquals(null, injector.getInstance(new Key<List<Long>>() {}));
 	}
 
 	@Test

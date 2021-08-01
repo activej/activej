@@ -44,7 +44,6 @@ import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.Dependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
-import io.activej.inject.util.Types;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -63,6 +62,7 @@ import java.util.stream.Collectors;
 import static com.dslplatform.json.JsonWriter.*;
 import static com.dslplatform.json.NumberConverter.*;
 import static io.activej.dataflow.json.JsonUtils.*;
+import static io.activej.types.TypeUtils.parameterizedType;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -104,7 +104,7 @@ public final class JsonModule extends AbstractModule {
 		bind(codec(TestNodeStat.class));
 		bind(codec(BinaryNodeStat.class));
 
-		bind(Key.ofType(Types.parameterized(JsonCodec.class, NATURAL_ORDER_CLASS)))
+		bind(Key.ofType(parameterizedType(JsonCodec.class, NATURAL_ORDER_CLASS)))
 				.toInstance(ofObject(() -> NATURAL_ORDER));
 
 		generate(JsonCodec.class, (bindings, scope, key) -> {
@@ -165,7 +165,7 @@ public final class JsonModule extends AbstractModule {
 
 						JsonCodecSubtype<Object> combined = JsonCodecSubtype.create();
 						for (Class<?> subtype : subtypes) {
-							JsonCodec<?> codec = injector.getInstance(Key.ofType(Types.parameterized(JsonCodec.class, subtype)));
+							JsonCodec<?> codec = injector.getInstance(Key.ofType(parameterizedType(JsonCodec.class, subtype)));
 							String name = names.getName(subtype);
 							if (name != null) {
 								combined.setSubtypeCodec(subtype, name, codec);

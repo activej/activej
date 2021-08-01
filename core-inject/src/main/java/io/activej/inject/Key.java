@@ -19,14 +19,13 @@ package io.activej.inject;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Types;
 import io.activej.inject.util.Utils;
+import io.activej.types.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
-
-import static io.activej.inject.util.Types.ensureEquality;
 
 /**
  * The key defines an identity of a binding. In any DI, a key is usually a type of the object along
@@ -38,7 +37,7 @@ import static io.activej.inject.util.Types.ensureEquality;
  * For example, to create a key of type Map&lt;String, List&lt;Integer&gt;&gt;, you can just use
  * this syntax: <code>new Key&lt;Map&lt;String, List&lt;Integer&gt;&gt;&gt;(){}</code>.
  * <p>
- * If your types are not known at compile time, you can use {@link Types#parameterized} to make a
+ * If your types are not known at compile time, you can use {@link TypeUtils#parameterizedType} to make a
  * parameterized type and give it to a {@link #ofType Key.ofType} constructor.
  */
 public abstract class Key<T> {
@@ -48,17 +47,17 @@ public abstract class Key<T> {
 	private final Object qualifier;
 
 	public Key() {
-		this.type = ensureEquality(getTypeParameter());
+		this.type = getTypeParameter();
 		this.qualifier = null;
 	}
 
 	public Key(@Nullable Object qualifier) {
-		this.type = ensureEquality(getTypeParameter());
+		this.type = getTypeParameter();
 		this.qualifier = qualifier;
 	}
 
 	Key(@NotNull Type type, @Nullable Object qualifier) {
-		this.type = ensureEquality(type);
+		this.type = type;
 		this.qualifier = qualifier;
 	}
 
@@ -100,7 +99,7 @@ public abstract class Key<T> {
 		// this cannot possibly fail so not even a check here
 		Type typeArgument = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		Object outerInstance = ReflectionUtils.getOuterClassInstance(this);
-		// the outer instance is null in static context
+//		// the outer instance is null in static context
 		return outerInstance != null ? Types.resolveTypeVariables(typeArgument, outerInstance.getClass(), outerInstance) : typeArgument;
 	}
 
@@ -110,13 +109,13 @@ public abstract class Key<T> {
 	}
 
 	/**
-	 * A shortcut for <code>{@link Types#getRawType}(key.getType())</code>.
+	 * A shortcut for <code>{@link TypeUtils# getRawClass(Type)}(key.getType())</code>.
 	 * Also casts the result to a properly parameterized class.
 	 */
 	@SuppressWarnings("unchecked")
 	@NotNull
 	public Class<T> getRawType() {
-		return (Class<T>) Types.getRawType(type);
+		return (Class<T>) TypeUtils.getRawType(type);
 	}
 
 	/**

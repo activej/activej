@@ -14,8 +14,8 @@ public class AnnotatedTypeUtils {
 	public static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	public static final AnnotatedType[] NO_ANNOTATED_TYPES = new AnnotatedType[0];
 
-	public static Class<?> getRawClass(AnnotatedType type) {
-		return TypeUtils.getRawClass(type.getType());
+	public static Class<?> getRawType(AnnotatedType type) {
+		return TypeUtils.getRawType(type.getType());
 	}
 
 	public static AnnotatedType[] getTypeArguments(AnnotatedType annotatedType) {
@@ -30,7 +30,7 @@ public class AnnotatedTypeUtils {
 	}
 
 	public static Map<TypeVariable<?>, AnnotatedType> getTypeBindings(AnnotatedType type) {
-		Class<?> typeClazz = getRawClass(type);
+		Class<?> typeClazz = getRawType(type);
 		AnnotatedType[] typeArguments = getTypeArguments(type);
 		if (typeArguments.length == 0) return Collections.emptyMap();
 		Map<TypeVariable<?>, AnnotatedType> map = new LinkedHashMap<>();
@@ -68,7 +68,8 @@ public class AnnotatedTypeUtils {
 			}
 			return new AnnotatedParameterizedTypeImpl(
 					new TypeUtils.ParameterizedTypeImpl(
-							(Class<?>) ((ParameterizedType) annotatedType.getType()).getRawType(),
+							((ParameterizedType) annotatedType.getType()).getOwnerType(),
+							((ParameterizedType) annotatedType.getType()).getRawType(),
 							typeArguments2),
 					annotations,
 					annotatedTypeArguments2);
@@ -204,10 +205,6 @@ public class AnnotatedTypeUtils {
 			return type;
 		}
 
-		public AnnotatedType getAnnotatedOwnerType() {
-			return null;
-		}
-
 		@SuppressWarnings({"unchecked"})
 		@Override
 		public <T extends Annotation> T getAnnotation(@NotNull Class<T> annotationClass) {
@@ -222,22 +219,6 @@ public class AnnotatedTypeUtils {
 		@Override
 		public Annotation[] getDeclaredAnnotations() {
 			return annotations;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			AnnotatedTypeImpl type1 = (AnnotatedTypeImpl) o;
-			if (!type.equals(type1.type)) return false;
-			return Arrays.equals(annotations, type1.annotations);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = type.hashCode();
-			result = 31 * result + Arrays.hashCode(annotations);
-			return result;
 		}
 
 		@Override
@@ -261,22 +242,6 @@ public class AnnotatedTypeUtils {
 		public AnnotatedType[] getAnnotatedBounds() {
 			return bounds;
 		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			if (!super.equals(o)) return false;
-			AnnotatedTypeVariableImpl variable = (AnnotatedTypeVariableImpl) o;
-			return Arrays.equals(bounds, variable.bounds);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = super.hashCode();
-			result = 31 * result + Arrays.hashCode(bounds);
-			return result;
-		}
 	}
 
 	static class AnnotatedParameterizedTypeImpl extends AnnotatedTypeImpl implements AnnotatedParameterizedType {
@@ -293,24 +258,11 @@ public class AnnotatedTypeUtils {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			AnnotatedParameterizedTypeImpl type = (AnnotatedParameterizedTypeImpl) o;
-			return Arrays.equals(typeArguments, type.typeArguments);
-		}
-
-		@Override
-		public int hashCode() {
-			return Arrays.hashCode(typeArguments);
-		}
-
-		@Override
 		public String toString() {
 			return "" +
 					(annotations.length == 0 ? "" :
 							Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
-					TypeUtils.getRawClass(type).getCanonicalName() +
+					TypeUtils.getRawType(type).getCanonicalName() +
 					(typeArguments.length == 0 ? "" :
 							Arrays.stream(typeArguments).map(Objects::toString).collect(joining(", ", "<", ">")));
 		}
@@ -327,22 +279,6 @@ public class AnnotatedTypeUtils {
 		@Override
 		public AnnotatedType getAnnotatedGenericComponentType() {
 			return componentType;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			if (!super.equals(o)) return false;
-			AnnotatedArrayTypeImpl type = (AnnotatedArrayTypeImpl) o;
-			return componentType.equals(type.componentType);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = super.hashCode();
-			result = 31 * result + componentType.hashCode();
-			return result;
 		}
 	}
 
@@ -364,24 +300,6 @@ public class AnnotatedTypeUtils {
 		@Override
 		public AnnotatedType[] getAnnotatedLowerBounds() {
 			return lowerBounds;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			AnnotatedWildcardTypeImpl type = (AnnotatedWildcardTypeImpl) o;
-			if (!Arrays.equals(upperBounds, type.upperBounds)) return false;
-			if (!Arrays.equals(lowerBounds, type.lowerBounds)) return false;
-			return true;
-		}
-
-		@Override
-		public int hashCode() {
-			int result = 0;
-			result = 31 * result + Arrays.hashCode(upperBounds);
-			result = 31 * result + Arrays.hashCode(lowerBounds);
-			return result;
 		}
 
 		@Override

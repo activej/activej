@@ -1,10 +1,10 @@
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.AbstractModule;
-import io.activej.inject.util.Types;
 
 import java.util.List;
 
+import static io.activej.types.TypeUtils.parameterizedType;
 import static java.util.Arrays.asList;
 
 /**
@@ -24,10 +24,10 @@ public final class TypeTokenExample {
 			}
 		});
 
-		Key<List<String>> key = Key.ofType(Types.parameterized(List.class, String.class));
+		Key<List<String>> key = Key.ofType(parameterizedType(List.class, String.class));
 		System.out.println(injector.getInstance(key));
 
-		Key<?> complex = Key.ofType(Types.parameterized(List.class, Types.parameterized(List.class, String.class)));
+		Key<?> complex = Key.ofType(parameterizedType(List.class, parameterizedType(List.class, String.class)));
 		Key<List<List<String>>> subclassedButTypesafe = new Key<List<List<String>>>() {};
 		System.out.println("complex == subclassedButTypesafe = " + (complex.equals(subclassedButTypesafe)));
 	}

@@ -24,7 +24,6 @@ import io.activej.inject.module.DefaultModule;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.inject.util.Trie;
-import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,6 +47,7 @@ import static io.activej.inject.binding.Multibinders.errorOnDuplicate;
 import static io.activej.inject.impl.CompiledBinding.missingOptionalBinding;
 import static io.activej.inject.util.Utils.getScopeDisplayString;
 import static io.activej.inject.util.Utils.next;
+import static io.activej.types.TypeUtils.parameterizedType;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
@@ -437,7 +437,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	@NotNull
 	public <T> InstanceProvider<T> getInstanceProvider(@NotNull Key<T> key) {
-		return getInstance(Key.ofType(Types.parameterized(InstanceProvider.class, key.getType()), key.getQualifier()));
+		return getInstance(Key.ofType(parameterizedType(InstanceProvider.class, key.getType()), key.getQualifier()));
 	}
 
 	/**
@@ -453,7 +453,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	@NotNull
 	public <T> InstanceInjector<T> getInstanceInjector(@NotNull Key<T> key) {
-		return getInstance(Key.ofType(Types.parameterized(InstanceInjector.class, key.getType()), key.getQualifier()));
+		return getInstance(Key.ofType(parameterizedType(InstanceInjector.class, key.getType()), key.getQualifier()));
 	}
 
 	/**

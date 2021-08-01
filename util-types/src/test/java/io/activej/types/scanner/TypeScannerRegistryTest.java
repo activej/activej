@@ -30,7 +30,7 @@ public class TypeScannerRegistryTest {
 					scan(ctx.getAnnotatedType());
 					return "*";
 				})
-				.with(Enum.class, ctx -> ctx.getRawClass().getSimpleName())
+				.with(Enum.class, ctx -> ctx.getRawType().getSimpleName())
 				.with(new TypeT<Object[]>() {}, ctx -> ctx.scanTypeArgument(0) + "[]")
 				.with(new TypeT<int[]>() {}, ctx -> ctx.scanTypeArgument(0) + "[]");
 
@@ -50,7 +50,7 @@ public class TypeScannerRegistryTest {
 
 	public static void scan(AnnotatedType annotatedType) {
 		while (annotatedType.getType() != Object.class) {
-			Class<?> typeClazz = getRawClass(annotatedType);
+			Class<?> typeClazz = getRawType(annotatedType);
 
 			System.out.println();
 			System.out.println(annotatedType);

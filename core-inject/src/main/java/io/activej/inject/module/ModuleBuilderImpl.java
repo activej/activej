@@ -22,7 +22,6 @@ import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
 import io.activej.inject.util.LocationInfo;
 import io.activej.inject.util.Trie;
-import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,6 +32,7 @@ import java.util.stream.Stream;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.ReflectionUtils.scanClassHierarchy;
 import static io.activej.inject.util.Utils.*;
+import static io.activej.types.TypeUtils.parameterizedType;
 
 @SuppressWarnings("UnusedReturnValue")
 final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
@@ -156,7 +156,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	@Override
 	public <S, E extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Binding<E> binding) {
 		completePreviousStep();
-		Key<Set<S>> set = Key.ofType(Types.parameterized(Set.class, setOf.getType()), setOf.getQualifier());
+		Key<Set<S>> set = Key.ofType(parameterizedType(Set.class, setOf.getType()), setOf.getQualifier());
 		addBinding(new BindingDesc(set, binding.mapInstance(Collections::singleton)));
 		multibinders.put(set, Multibinders.toSet());
 		return this;

@@ -25,7 +25,6 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
 import io.activej.inject.util.ReflectionUtils;
-import io.activej.inject.util.Types;
 import io.activej.test.rules.LambdaStatement;
 import org.junit.After;
 import org.junit.Before;
@@ -42,6 +41,7 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 
 import static io.activej.common.Utils.union;
+import static io.activej.types.TypeUtils.parameterizedType;
 import static java.util.stream.Collectors.toSet;
 
 public class ActiveJRunner extends BlockJUnit4ClassRunner {
@@ -131,7 +131,7 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 
 		Key<Object> self = Key.ofType(getTestClass().getJavaClass());
 
-		Key<InstanceInjector<Object>> instanceInjectorKey = Key.ofType(Types.parameterized(InstanceInjector.class, getTestClass().getJavaClass()));
+		Key<InstanceInjector<Object>> instanceInjectorKey = Key.ofType(parameterizedType(InstanceInjector.class, getTestClass().getJavaClass()));
 
 		currentInjector = Injector.of(currentModule, ModuleBuilder.create()
 				// scan the test class for @Provide's

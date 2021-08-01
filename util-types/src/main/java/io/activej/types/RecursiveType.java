@@ -26,8 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.activej.types.TypeUtils.getRawClass;
-
 public final class RecursiveType {
 	private static final RecursiveType[] NO_TYPE_PARAMS = new RecursiveType[0];
 
@@ -73,7 +71,7 @@ public final class RecursiveType {
 							.map(RecursiveType::of)
 							.toArray(RecursiveType[]::new));
 		} else if (type instanceof WildcardType) {
-			return of(getRawClass(type));
+			return of(TypeUtils.getRawType(type));
 		} else {
 			throw new IllegalArgumentException(type.getTypeName());
 		}

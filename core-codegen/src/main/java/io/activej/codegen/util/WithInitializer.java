@@ -22,7 +22,13 @@ import java.util.function.Consumer;
 public interface WithInitializer<T extends WithInitializer<T>> {
 
 	default T withInitializer(Consumer<? super T> initializer) {
-		initializer.accept((T) this);
+		return withInitializer(true, initializer);
+	}
+
+	default T withInitializer(boolean condition, Consumer<? super T> initializer) {
+		if (condition) {
+			initializer.accept((T) this);
+		}
 		return (T) this;
 	}
 

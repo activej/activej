@@ -21,7 +21,6 @@ import io.activej.inject.InstanceInjector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
-import io.activej.inject.util.Types;
 import io.activej.jmx.api.ConcurrentJmxBeanAdapter;
 import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -39,6 +38,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static io.activej.inject.util.Utils.makeGraphVizGraph;
+import static io.activej.types.TypeUtils.parameterizedType;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toSet;
@@ -290,7 +290,7 @@ public abstract class Launcher {
 				.bind(Launcher.class).to(launcherClass)
 				.bind(launcherClass).toInstance(this)
 
-				.bindIntoSet(INSTANCE_INJECTORS_KEY.getTypeParameter(0), Key.ofType(Types.parameterized(InstanceInjector.class, launcherClass)))
+				.bindIntoSet(INSTANCE_INJECTORS_KEY.getTypeParameter(0), Key.ofType(parameterizedType(InstanceInjector.class, launcherClass)))
 
 				.bind(completionStageKey.qualified(OnStart.class)).toInstance(onStartFuture)
 				.bind(completionStageKey.qualified(OnRun.class)).toInstance(onRunFuture)

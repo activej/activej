@@ -72,8 +72,8 @@ public final class TypeScannerRegistry<R> {
 			return getAnnotatedType().getType();
 		}
 
-		public Class<?> getRawClass() {
-			return TypeUtils.getRawClass(getType());
+		public Class<?> getRawType() {
+			return TypeUtils.getRawType(getType());
 		}
 
 		public AnnotatedType getAnnotatedType() {

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static io.activej.types.IsAssignableUtils.isAssignable;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 
@@ -17,7 +18,7 @@ public class TypeUtils {
 	public static final Type[] NO_TYPES = new Type[0];
 	public static final WildcardType WILDCARD_TYPE_ANY = new WildcardTypeImpl(new Type[]{Object.class}, new Type[0]);
 
-	public static Class<?> getRawClass(Type type) {
+	public static Class<?> getRawType(Type type) {
 		if (type instanceof Class) {
 			return (Class<?>) type;
 		} else if (type instanceof ParameterizedType) {
@@ -26,11 +27,24 @@ public class TypeUtils {
 		} else if (type instanceof WildcardType) {
 			WildcardType wildcardType = (WildcardType) type;
 			Type[] upperBounds = wildcardType.getUpperBounds();
-			if (upperBounds.length == 1 && wildcardType.getLowerBounds().length == 0) {
-				return getRawClass(upperBounds[0]);
-			}
+			return getRawType(getUppermostType(upperBounds));
 		}
 		throw new IllegalArgumentException("Unsupported type: " + type);
+	}
+
+	public static Type getUppermostType(Type[] types) {
+		Type result = types[0];
+		for (int i = 1; i < types.length; i++) {
+			Type type = types[i];
+			if (isAssignable(type, result)) {
+				result = type;
+				continue;
+			} else if (isAssignable(result, type)) {
+				continue;
+			}
+			throw new IllegalArgumentException("Unrelated types: " + result + " , " + type);
+		}
+		return result;
 	}
 
 	public static Type[] getActualTypeArguments(Type type) {
@@ -52,7 +66,7 @@ public class TypeUtils {
 	}
 
 	public static Map<TypeVariable<?>, Type> getTypeBindings(Type type) {
-		Class<?> typeClazz = getRawClass(type);
+		Class<?> typeClazz = getRawType(type);
 		Type[] typeArguments = getActualTypeArguments(type);
 		if (typeArguments.length == 0) return emptyMap();
 		Map<TypeVariable<?>, Type> map = new LinkedHashMap<>();
@@ -64,23 +78,25 @@ public class TypeUtils {
 	}
 
 	@NotNull
-	public static Type bind(Type type, Function<TypeVariable<?>, Type> bindings) {
+	public static Type bind(Type type, Function<TypeVariable<?>, @Nullable Type> bindings) {
 		if (type instanceof Class) return type;
 		if (type instanceof TypeVariable) {
 			TypeVariable<?> typeVariable = (TypeVariable<?>) type;
 			Type actualType = bindings.apply(typeVariable);
-			if (actualType == null) throw new IllegalArgumentException("Type not found: " + type);
+			if (actualType == null) {
+				throw new IllegalArgumentException("Type variable not found: " + typeVariable +
+						" ( " + typeVariable.getGenericDeclaration() + " ) ");
+			}
 			return actualType;
 		}
 		if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
-			Class<?> clazz = getRawClass(type);
 			Type[] typeArguments = parameterizedType.getActualTypeArguments();
 			Type[] typeArguments2 = new Type[typeArguments.length];
 			for (int i = 0; i < typeArguments.length; i++) {
 				typeArguments2[i] = bind(typeArguments[i], bindings);
 			}
-			return new ParameterizedTypeImpl(clazz, typeArguments2);
+			return new ParameterizedTypeImpl(parameterizedType.getOwnerType(), parameterizedType.getRawType(), typeArguments2);
 		}
 		if (type instanceof GenericArrayType) {
 			GenericArrayType genericArrayType = (GenericArrayType) type;
@@ -104,11 +120,22 @@ public class TypeUtils {
 		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
 
+	public static ParameterizedType parameterizedType(@Nullable Type ownerType, Type rawType, Type... parameters) {
+		return new ParameterizedTypeImpl(ownerType, rawType, parameters);
+	}
+
+	public static ParameterizedType parameterizedType(Class<?> rawType, Type... parameters) {
+		return new ParameterizedTypeImpl(null, rawType, parameters);
+	}
+
 	static final class ParameterizedTypeImpl implements ParameterizedType {
-		private final Class<?> rawType;
+		@Nullable
+		private final Type ownerType;
+		private final Type rawType;
 		private final Type[] actualTypeArguments;
 
-		ParameterizedTypeImpl(Class<?> rawType, Type[] actualTypeArguments) {
+		ParameterizedTypeImpl(@Nullable Type ownerType, Type rawType, Type[] actualTypeArguments) {
+			this.ownerType = ownerType;
 			this.rawType = rawType;
 			this.actualTypeArguments = actualTypeArguments;
 		}
@@ -128,33 +155,45 @@ public class TypeUtils {
 		@Nullable
 		@Override
 		public Type getOwnerType() {
-			return null;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			ParameterizedTypeImpl that = (ParameterizedTypeImpl) o;
-			if (!rawType.equals(that.rawType)) return false;
-			return Arrays.equals(actualTypeArguments, that.actualTypeArguments);
+			return ownerType;
 		}
 
 		@Override
 		public int hashCode() {
-			int result = rawType.hashCode();
-			result = 31 * result + Arrays.hashCode(actualTypeArguments);
-			return result;
+			return Objects.hashCode(ownerType) ^ Arrays.hashCode(actualTypeArguments) ^ rawType.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (!(other instanceof ParameterizedType)) return false;
+			ParameterizedType that = (ParameterizedType) other;
+			return this.getRawType().equals(that.getRawType()) && Objects.equals(this.getOwnerType(), that.getOwnerType()) && Arrays.equals(this.getActualTypeArguments(), that.getActualTypeArguments());
 		}
 
 		@Override
 		public String toString() {
-			return rawType.getCanonicalName() +
-					Arrays.stream(actualTypeArguments).map(Objects::toString).collect(joining(", ", "<", ">"));
+			return rawType.getTypeName() +
+					Arrays.stream(actualTypeArguments).map(TypeUtils::toString).collect(joining(", ", "<", ">"));
 		}
 	}
 
-	static class WildcardTypeImpl implements WildcardType {
+	public static WildcardType wildcardType(Type[] upperBounds, Type[] lowerBounds) {
+		return new WildcardTypeImpl(upperBounds, lowerBounds);
+	}
+
+	public static WildcardType wildcardTypeAny() {
+		return WILDCARD_TYPE_ANY;
+	}
+
+	public static WildcardType wildcardTypeExtends(Type upperBound) {
+		return new WildcardTypeImpl(new Type[]{upperBound}, NO_TYPES);
+	}
+
+	public static WildcardType wildcardTypeSuper(Type lowerBound) {
+		return new WildcardTypeImpl(NO_TYPES, new Type[]{lowerBound});
+	}
+
+	public static class WildcardTypeImpl implements WildcardType {
 		private final Type[] upperBounds;
 		private final Type[] lowerBounds;
 
@@ -174,47 +213,64 @@ public class TypeUtils {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			WildcardTypeImpl type = (WildcardTypeImpl) o;
-			if (!Arrays.equals(upperBounds, type.upperBounds)) return false;
-			if (!Arrays.equals(lowerBounds, type.lowerBounds)) return false;
-			return true;
+		public int hashCode() {
+			return Arrays.hashCode(upperBounds) ^ Arrays.hashCode(lowerBounds);
 		}
 
 		@Override
-		public int hashCode() {
-			int result = 0;
-			result = 31 * result + Arrays.hashCode(upperBounds);
-			result = 31 * result + Arrays.hashCode(lowerBounds);
-			return result;
+		public boolean equals(Object other) {
+			if (!(other instanceof WildcardType)) return false;
+			WildcardType that = (WildcardType) other;
+			return Arrays.equals(this.getUpperBounds(), that.getUpperBounds()) && Arrays.equals(this.getLowerBounds(), that.getLowerBounds());
+		}
+
+		@Override
+		public String toString() {
+			return "?" +
+					(upperBounds.length == 0 ? "" :
+							" extends " + Arrays.stream(upperBounds).map(TypeUtils::toString).collect(joining(" & "))) +
+					(lowerBounds.length == 0 ? "" :
+							" super " + Arrays.stream(lowerBounds).map(TypeUtils::toString).collect(joining(" & ")));
+
 		}
 	}
 
-	static final class GenericArrayTypeImpl implements GenericArrayType {
-		private final Type genericComponentType;
+	public static GenericArrayType genericArrayType(Type componentType) {
+		return new GenericArrayTypeImpl(componentType);
+	}
 
-		GenericArrayTypeImpl(Type genericComponentType) {
-			this.genericComponentType = genericComponentType;
+	public static final class GenericArrayTypeImpl implements GenericArrayType {
+		private final Type componentType;
+
+		GenericArrayTypeImpl(Type componentType) {
+			this.componentType = componentType;
 		}
 
 		@Override
 		public Type getGenericComponentType() {
-			return genericComponentType;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			GenericArrayTypeImpl type = (GenericArrayTypeImpl) o;
-			return genericComponentType.equals(type.genericComponentType);
+			return componentType;
 		}
 
 		@Override
 		public int hashCode() {
-			return genericComponentType.hashCode();
+			return componentType.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (!(other instanceof GenericArrayType)) return false;
+			GenericArrayType that = (GenericArrayType) other;
+			return this.getGenericComponentType().equals(that.getGenericComponentType());
+		}
+
+		@Override
+		public String toString() {
+			return TypeUtils.toString(componentType) + "[]";
 		}
 	}
+
+	private static String toString(Type type) {
+		return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
+	}
+
 }

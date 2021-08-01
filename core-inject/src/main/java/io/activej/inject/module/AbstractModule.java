@@ -26,7 +26,6 @@ import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
-import io.activej.inject.util.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +34,7 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static io.activej.inject.util.Utils.checkState;
+import static io.activej.types.TypeUtils.parameterizedType;
 
 /**
  * This class is an abstract module wrapper around {@link ModuleBuilder}.
@@ -121,7 +121,7 @@ public abstract class AbstractModule implements Module {
 
 	protected final <T> void bindInstanceInjector(@NotNull Key<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
-		builder.bindInstanceInjector(Key.ofType(Types.parameterized(InstanceInjector.class, key.getType()), key.getQualifier()));
+		builder.bindInstanceInjector(Key.ofType(parameterizedType(InstanceInjector.class, key.getType()), key.getQualifier()));
 	}
 
 	/**

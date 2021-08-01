@@ -16,47 +16,28 @@
 
 package io.activej.inject.util;
 
-import io.activej.inject.binding.DIException;
-import org.jetbrains.annotations.Contract;
+import io.activej.types.TypeUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import static io.activej.types.TypeUtils.bind;
 import static java.util.Map.Entry;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 
 /**
  * This class contains reflection utilities to work with Java types.
- * Its main use is for method {@link #parameterized Types.parameterized}.
+ * Its main use is for method {@link TypeUtils#parameterizedType Types.parameterized}.
  * However, just like with {@link ReflectionUtils}, other type utility
  * methods are pretty clean too, so they are left public.
  */
 public final class Types {
-
-	public static Class<?> getRawTypeOrNull(Type type) {
-		if (type instanceof Class) {
-			return (Class<?>) type;
-		}
-		if (type instanceof ParameterizedType) {
-			return getRawType(((ParameterizedType) type).getRawType());
-		}
-		if (type instanceof GenericArrayType) {
-			return getRawType(((GenericArrayType) type).getGenericComponentType());
-		}
-		return null;
-	}
-
-	public static Class<?> getRawType(Type type) {
-		Class<?> rawType = getRawTypeOrNull(type);
-		if (rawType == null) {
-			throw new IllegalArgumentException("Cannot get raw type from " + type);
-		}
-		return rawType;
-	}
 
 	public static boolean isInheritedFrom(Type type, Type from) {
 		return isInheritedFrom(type, from, new HashMap<>());
@@ -69,10 +50,10 @@ public final class Types {
 		if (matches(type, from, dejaVu) || matches(from, type, dejaVu)) {
 			return true;
 		}
-		Class<?> rawType = getRawTypeOrNull(type);
-		if (rawType == null) {
+		if (!(type instanceof Class || type instanceof ParameterizedType || type instanceof GenericArrayType)) {
 			return false;
 		}
+		Class<?> rawType = TypeUtils.getRawType(type);
 
 		Type superclass = rawType.getGenericSuperclass();
 		if (superclass != null && isInheritedFrom(superclass, from, dejaVu)) {
@@ -212,30 +193,27 @@ public final class Types {
 	}
 
 	public static Map<TypeVariable<?>, Type> getGenericTypeMapping(Type container, @Nullable Object containerInstance) {
-		return genericMappingCache.computeIfAbsent(containerInstance != null ? containerInstance.getClass() : container, t -> {
-			Map<TypeVariable<?>, @Nullable Type> mapping = new HashMap<>();
-			getGenericTypeMappingImpl(t, mapping);
-			Object outerInstance = ReflectionUtils.getOuterClassInstance(containerInstance);
-			while (outerInstance != null) {
-				getGenericTypeMappingImpl(outerInstance.getClass(), mapping);
-				outerInstance = ReflectionUtils.getOuterClassInstance(outerInstance);
-			}
-			return mapping.entrySet().stream()
-					.filter(e -> e.getValue() != null)
-					.collect(toMap(Entry::getKey, Entry::getValue));
-		});
+		return genericMappingCache.computeIfAbsent(
+				containerInstance != null ? containerInstance.getClass() : container,
+				type -> {
+					Map<TypeVariable<?>, @Nullable Type> mapping = new HashMap<>();
+					getGenericTypeMappingImpl(type, mapping);
+					return mapping.entrySet().stream()
+							.filter(e -> e.getValue() != null)
+							.collect(toMap(Entry::getKey, Entry::getValue));
+				});
 	}
 
-	private static void getGenericTypeMappingImpl(Type t, Map<TypeVariable<?>, @Nullable Type> mapping) {
-		Class<?> cls = getRawType(t);
+	private static void getGenericTypeMappingImpl(Type type, Map<TypeVariable<?>, @Nullable Type> mapping) {
+		Class<?> cls = TypeUtils.getRawType(type);
 
-		if (t instanceof ParameterizedType) {
-			Type[] typeArgs = ((ParameterizedType) t).getActualTypeArguments();
-			if (typeArgs.length != 0) {
-				TypeVariable<? extends Class<?>>[] typeVars = cls.getTypeParameters();
-				for (int i = 0; i < typeArgs.length; i++) {
-					Type typeArg = typeArgs[i];
-					mapping.put(typeVars[i], typeArg instanceof TypeVariable ? mapping.get(typeArg) : typeArg);
+		if (type instanceof ParameterizedType) {
+			Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
+			if (typeArguments.length != 0) {
+				TypeVariable<? extends Class<?>>[] typeVariables = cls.getTypeParameters();
+				for (int i = 0; i < typeArguments.length; i++) {
+					Type typeArgument = typeArguments[i];
+					mapping.put(typeVariables[i], typeArgument instanceof TypeVariable ? mapping.get(typeArgument) : typeArgument);
 				}
 			}
 		}
@@ -244,184 +222,8 @@ public final class Types {
 				.forEach(supertype -> getGenericTypeMappingImpl(supertype, mapping));
 	}
 
-	public static Type resolveTypeVariables(Type type, Type container) {
-		return resolveTypeVariables(type, container, null);
-	}
-
 	public static Type resolveTypeVariables(Type type, Type container, @Nullable Object containerInstance) {
-		return resolveTypeVariables(type, getGenericTypeMapping(container, containerInstance));
+		return bind(type, getGenericTypeMapping(container, containerInstance)::get);
 	}
 
-	@Contract("null, _ -> null")
-	public static Type resolveTypeVariables(Type type, Map<TypeVariable<?>, Type> mapping) {
-		Set<TypeVariable<?>> unresolved = new HashSet<>();
-		Type result = resolveTypeVariablesImpl(type, mapping, unresolved);
-		if (!unresolved.isEmpty()) {
-			throw new DIException(unresolved.stream()
-					.map(typevar -> typevar + " from " + typevar.getGenericDeclaration())
-					.collect(joining(", ", "Actual types for generics [", "] were not found in class hierarchy")));
-		}
-		return result;
-	}
-
-	private static Type resolveTypeVariablesImpl(Type type, Map<TypeVariable<?>, Type> mapping, Set<TypeVariable<?>> unresolved) {
-		if (type == null) {
-			return null;
-		}
-		if (type instanceof TypeVariable) {
-			Type resolved = mapping.get(type);
-			if (resolved != null) {
-				return ensureEquality(resolved);
-			}
-			TypeVariable<?> typevar = (TypeVariable<?>) type;
-			if (typevar.getGenericDeclaration() instanceof Class) {
-				unresolved.add(typevar);
-			}
-			return type;
-		}
-		if (type instanceof ParameterizedType) {
-			ParameterizedType parameterized = (ParameterizedType) type;
-			Type owner = ensureEquality(parameterized.getOwnerType());
-			Type raw = ensureEquality(parameterized.getRawType());
-			Type[] parameters = Arrays.stream(parameterized.getActualTypeArguments()).map(parameter -> resolveTypeVariables(parameter, mapping)).toArray(Type[]::new);
-			return new ParameterizedTypeImpl(owner, raw, parameters);
-		}
-		if (type instanceof GenericArrayType) {
-			Type componentType = ensureEquality(((GenericArrayType) type).getGenericComponentType());
-			return new GenericArrayTypeImpl(resolveTypeVariables(componentType, mapping));
-		}
-		return type;
-	}
-
-	public static Type ensureEquality(Type type) {
-		if (type instanceof ParameterizedTypeImpl) {
-			return type;
-		}
-		if (type instanceof ParameterizedType) {
-			ParameterizedType parameterized = (ParameterizedType) type;
-			Type owner = ensureEquality(parameterized.getOwnerType());
-			Type raw = ensureEquality(parameterized.getRawType());
-			Type[] actualTypeArguments = parameterized.getActualTypeArguments();
-			Type[] parameters = new Type[actualTypeArguments.length];
-			for (int i = 0; i < actualTypeArguments.length; i++) {
-				parameters[i] = ensureEquality(actualTypeArguments[i]);
-			}
-			return new ParameterizedTypeImpl(owner, raw, parameters);
-		}
-		if (type instanceof GenericArrayType) {
-			return new GenericArrayTypeImpl(((GenericArrayType) type).getGenericComponentType());
-		}
-		return type;
-	}
-
-	public static Type parameterized(Class<?> rawType, Type... parameters) {
-		return new ParameterizedTypeImpl(null, rawType, Arrays.stream(parameters).map(Types::ensureEquality).toArray(Type[]::new));
-	}
-
-	public static Type arrayOf(Type componentType) {
-		return new GenericArrayTypeImpl(componentType);
-	}
-
-	private static class ParameterizedTypeImpl implements ParameterizedType {
-		@Nullable
-		private final Type ownerType;
-		private final Type rawType;
-		private final Type[] parameters;
-
-		public ParameterizedTypeImpl(@Nullable Type ownerType, Type rawType, Type[] parameters) {
-			this.ownerType = ownerType;
-			this.rawType = rawType;
-			this.parameters = parameters;
-		}
-
-		@Override
-		public Type[] getActualTypeArguments() {
-			return parameters;
-		}
-
-		@Override
-		public Type getRawType() {
-			return rawType;
-		}
-
-		@Nullable
-		@Override
-		public Type getOwnerType() {
-			return ownerType;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) {
-				return true;
-			}
-			if (o == null || getClass() != o.getClass()) {
-				return false;
-			}
-
-			ParameterizedTypeImpl that = (ParameterizedTypeImpl) o;
-
-			return Objects.equals(ownerType, that.ownerType) && rawType.equals(that.rawType) && Arrays.equals(parameters, that.parameters);
-		}
-
-		@Override
-		public int hashCode() {
-			return (ownerType != null ? 961 * ownerType.hashCode() : 0) + 31 * rawType.hashCode() + Arrays.hashCode(parameters);
-		}
-
-		private String toString(Type type) {
-			return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
-		}
-
-		@Override
-		public String toString() {
-			if (parameters.length == 0) {
-				return toString(rawType);
-			}
-			StringBuilder sb = new StringBuilder(toString(rawType))
-					.append('<')
-					.append(toString(parameters[0]));
-			for (int i = 1; i < parameters.length; i++) {
-				sb.append(", ").append(toString(parameters[i]));
-			}
-			return sb.append('>').toString();
-		}
-	}
-
-	private static class GenericArrayTypeImpl implements GenericArrayType {
-		private final Type componentType;
-
-		public GenericArrayTypeImpl(Type componentType) {
-			this.componentType = componentType;
-		}
-
-		@Override
-		public Type getGenericComponentType() {
-			return componentType;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) {
-				return true;
-			}
-			if (o == null || getClass() != o.getClass()) {
-				return false;
-			}
-
-			GenericArrayTypeImpl that = (GenericArrayTypeImpl) o;
-
-			return componentType.equals(that.componentType);
-		}
-
-		@Override
-		public int hashCode() {
-			return componentType.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return (componentType instanceof Class ? ((Class<?>) componentType).getName() : componentType.toString()) + "[]";
-		}
-	}
 }

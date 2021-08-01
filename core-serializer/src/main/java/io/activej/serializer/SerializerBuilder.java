@@ -122,7 +122,7 @@ public final class SerializerBuilder {
 		for (Type type : new Type[]{
 				boolean[].class, char[].class, byte[].class, short[].class, int[].class, long[].class, float[].class, double[].class,
 				Object[].class}) {
-			builder.with(type, ctx -> new SerializerDefArray(ctx.scanTypeArgument(0), ctx.getRawClass()));
+			builder.with(type, ctx -> new SerializerDefArray(ctx.scanTypeArgument(0), ctx.getRawType()));
 		}
 
 		LinkedHashMap<Class<?>, SerializerDef> addressMap = new LinkedHashMap<>();
@@ -135,18 +135,18 @@ public final class SerializerBuilder {
 
 		builder
 				.with(Enum.class, ctx -> {
-					for (Method method : ctx.getRawClass().getDeclaredMethods()) {
+					for (Method method : ctx.getRawType().getDeclaredMethods()) {
 						if (hasAnnotation(Serialize.class, method.getAnnotations())) {
 							return builder.scan(ctx);
 						}
 					}
-					for (Field field : ctx.getRawClass().getDeclaredFields()) {
+					for (Field field : ctx.getRawType().getDeclaredFields()) {
 						if (hasAnnotation(Serialize.class, field.getAnnotations())) {
 							return builder.scan(ctx);
 						}
 					}
 					//noinspection unchecked
-					return new SerializerDefEnum((Class<? extends Enum<?>>) ctx.getRawClass());
+					return new SerializerDefEnum((Class<? extends Enum<?>>) ctx.getRawType());
 				})
 
 				.with(String.class, ctx -> new SerializerDefString(
@@ -174,7 +174,7 @@ public final class SerializerBuilder {
 	@SuppressWarnings("PointlessBooleanExpression")
 	public SerializerBuilder with(Type type, Mapping<SerializerDef> fn) {
 		registry.with(type, ctx -> {
-			Class<?> rawClass = ctx.getRawClass();
+			Class<?> rawClass = ctx.getRawType();
 			SerializerDef serializerDef;
 			SerializeClass annotationClass;
 			SerializeSubclasses annotationSubclass;
@@ -550,7 +550,7 @@ public final class SerializerBuilder {
 	}
 
 	private SerializerDef doScan(Context<SerializerDef> ctx) {
-		Class<?> rawClass = ctx.getRawClass();
+		Class<?> rawClass = ctx.getRawType();
 		if (rawClass.isAnonymousClass())
 			throw new IllegalArgumentException("Class should not be anonymous");
 		if (rawClass.isLocalClass())
@@ -568,7 +568,7 @@ public final class SerializerBuilder {
 	private void scanClass(Context<SerializerDef> ctx, SerializerDefClass serializer) {
 		AnnotatedType annotatedClassType = ctx.getAnnotatedType();
 
-		Class<?> rawClassType = getRawClass(annotatedClassType);
+		Class<?> rawClassType = getRawType(annotatedClassType);
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(annotatedClassType)::get;
 
 		if (rawClassType.getSuperclass() != Object.class) {
@@ -582,7 +582,7 @@ public final class SerializerBuilder {
 		scanSetters(ctx, bindings, serializer);
 		scanFactories(ctx, bindings, serializer);
 		scanConstructors(ctx, bindings, serializer);
-		if (!Modifier.isAbstract(ctx.getRawClass().getModifiers())) {
+		if (!Modifier.isAbstract(ctx.getRawType().getModifiers())) {
 			serializer.addMatchingSetters();
 		}
 	}
@@ -594,7 +594,7 @@ public final class SerializerBuilder {
 		scanGetters(ctx, bindings, foundSerializers);
 		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
 
-		for (AnnotatedType superInterface : ctx.getRawClass().getAnnotatedInterfaces()) {
+		for (AnnotatedType superInterface : ctx.getRawType().getAnnotatedInterfaces()) {
 			scanInterface(ctx.push(bind(superInterface, bindings)), serializer);
 		}
 	}
@@ -602,8 +602,8 @@ public final class SerializerBuilder {
 	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, SerializerDefClass serializer, List<FoundSerializer> foundSerializers) {
 		if (foundSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
 			Map<String, List<FoundSerializer>> foundFields = foundSerializers.stream().collect(groupingBy(FoundSerializer::getName, toList()));
-			String pathToClass = ctx.getRawClass().getName().replace('.', '/') + ".class";
-			try (InputStream classInputStream = ctx.getRawClass().getClassLoader().getResourceAsStream(pathToClass)) {
+			String pathToClass = ctx.getRawType().getName().replace('.', '/') + ".class";
+			try (InputStream classInputStream = ctx.getRawType().getClassLoader().getResourceAsStream(pathToClass)) {
 				ClassReader cr = new ClassReader(requireNonNull(classInputStream));
 				cr.accept(new ClassVisitor(Opcodes.ASM8) {
 					int index = 0;
@@ -666,7 +666,7 @@ public final class SerializerBuilder {
 
 	private void scanFields(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			List<FoundSerializer> foundSerializers) {
-		for (Field field : ctx.getRawClass().getDeclaredFields()) {
+		for (Field field : ctx.getRawType().getDeclaredFields()) {
 			FoundSerializer foundSerializer = tryAddField(ctx, bindings, field);
 			if (foundSerializer != null) {
 				foundSerializers.add(foundSerializer);
@@ -676,7 +676,7 @@ public final class SerializerBuilder {
 
 	private void scanGetters(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			List<FoundSerializer> foundSerializers) {
-		for (Method method : ctx.getRawClass().getDeclaredMethods()) {
+		for (Method method : ctx.getRawType().getDeclaredMethods()) {
 			FoundSerializer foundSerializer = tryAddGetter(ctx, bindings, method);
 			if (foundSerializer != null) {
 				foundSerializers.add(foundSerializer);
@@ -686,7 +686,7 @@ public final class SerializerBuilder {
 
 	private void scanSetters(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			SerializerDefClass serializer) {
-		for (Method method : ctx.getRawClass().getDeclaredMethods()) {
+		for (Method method : ctx.getRawType().getDeclaredMethods()) {
 			if (isStatic(method.getModifiers())) {
 				continue;
 			}
@@ -712,9 +712,9 @@ public final class SerializerBuilder {
 
 	private void scanFactories(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			SerializerDefClass serializer) {
-		Class<?> factoryClassType = ctx.getRawClass();
+		Class<?> factoryClassType = ctx.getRawType();
 		for (Method factory : factoryClassType.getDeclaredMethods()) {
-			if (ctx.getRawClass() != factory.getReturnType()) {
+			if (ctx.getRawType() != factory.getReturnType()) {
 				continue;
 			}
 			if (factory.getParameterTypes().length != 0) {
@@ -740,7 +740,7 @@ public final class SerializerBuilder {
 	private void scanConstructors(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			SerializerDefClass serializer) {
 		boolean found = false;
-		for (Constructor<?> constructor : ctx.getRawClass().getDeclaredConstructors()) {
+		for (Constructor<?> constructor : ctx.getRawType().getDeclaredConstructors()) {
 			List<String> fields = new ArrayList<>(constructor.getParameterTypes().length);
 			for (int i = 0; i < constructor.getParameterTypes().length; i++) {
 				Deserialize annotation = getAnnotation(Deserialize.class, constructor.getParameterAnnotations()[i]);

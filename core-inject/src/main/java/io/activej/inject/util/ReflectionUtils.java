@@ -29,6 +29,7 @@ import io.activej.inject.impl.CompiledBindingInitializer;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.ModuleBuilder1;
+import io.activej.types.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,7 +43,9 @@ import java.util.stream.Stream;
 
 import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.binding.BindingType.*;
+import static io.activej.inject.util.Types.getGenericTypeMapping;
 import static io.activej.inject.util.Utils.isMarker;
+import static io.activej.types.TypeUtils.parameterizedType;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -60,7 +63,7 @@ public final class ReflectionUtils {
 	private static final Pattern RAW_PART = Pattern.compile("^" + IDENT);
 
 	public static String getDisplayName(Type type) {
-		Class<?> raw = Types.getRawType(type);
+		Class<?> raw = TypeUtils.getRawType(type);
 		String typeName;
 		if (raw.isAnonymousClass()) {
 			Type superclass = raw.getGenericSuperclass();
@@ -91,18 +94,16 @@ public final class ReflectionUtils {
 		if (enclosingClass == null) {
 			return null;
 		}
-		return Arrays.stream(cls.getDeclaredFields())
-				.filter(f -> f.isSynthetic() && f.getName().startsWith("this$") && f.getType() == enclosingClass)
-				.findAny()
-				.map(f -> {
-					f.setAccessible(true);
-					try {
-						return f.get(innerClassInstance);
-					} catch (IllegalAccessException e) {
-						return null;
-					}
-				})
-				.orElse(null);
+		for (Field field : cls.getDeclaredFields()) {
+			if (!field.isSynthetic() || !field.getName().startsWith("this$") || field.getType() != enclosingClass) continue;
+			field.setAccessible(true);
+			try {
+				return field.get(innerClassInstance);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return null;
 	}
 
 	@Nullable
@@ -382,35 +383,6 @@ public final class ReflectionUtils {
 		return module != null ? binding.at(LocationInfo.from(module, method)) : binding;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> Binding<T> bindingFromGenericMethod(@Nullable Object module, Key<?> requestedKey, Method method) {
-		method.setAccessible(true);
-
-		Type genericReturnType = method.getGenericReturnType();
-		Map<TypeVariable<?>, Type> mapping = Types.extractMatchingGenerics(genericReturnType, requestedKey.getType());
-
-		Dependency[] dependencies = Arrays.stream(method.getParameters())
-				.map(parameter -> {
-					Type type = Types.resolveTypeVariables(parameter.getParameterizedType(), mapping);
-					Object qualifier = qualifierOf(parameter);
-					return Dependency.toKey(Key.ofType(type, qualifier), !parameter.isAnnotationPresent(Optional.class));
-				})
-				.toArray(Dependency[]::new);
-
-		Binding<T> binding = Binding.to(
-				args -> {
-					try {
-						return (T) method.invoke(module, args);
-					} catch (IllegalAccessException e) {
-						throw new DIException("Not allowed to call generic method " + method + " to provide requested key " + requestedKey, e);
-					} catch (InvocationTargetException e) {
-						throw new DIException("Failed to call generic method " + method + " to provide requested key " + requestedKey, e.getCause());
-					}
-				},
-				dependencies);
-		return module != null ? binding.at(LocationInfo.from(module, method)) : binding;
-	}
-
 	public static <T> Binding<T> bindingFromConstructor(Key<T> key, Constructor<T> constructor) {
 		return bindingFromConstructor(key, null, constructor);
 	}
@@ -452,28 +424,32 @@ public final class ReflectionUtils {
 				boolean isEager = method.isAnnotationPresent(Eager.class);
 				boolean isTransient = method.isAnnotationPresent(Transient.class);
 
-				Type returnType = Types.resolveTypeVariables(method.getGenericReturnType(), module != null ? module.getClass() : moduleClass, module);
-				TypeVariable<Method>[] typeVars = method.getTypeParameters();
+				TypeVariable<Method>[] methodTypeParameters = method.getTypeParameters();
+				Map<TypeVariable<?>, Type> mapping = new HashMap<>();
+				for (TypeVariable<Method> methodTypeParameter : methodTypeParameters) {
+					mapping.put(methodTypeParameter, methodTypeParameter);
+				}
+				mapping.putAll(getGenericTypeMapping(module != null ? module.getClass() : moduleClass, module));
 
-				if (typeVars.length == 0) {
+				Type returnType = TypeUtils.bind(method.getGenericReturnType(), mapping::get);
+
+				if (methodTypeParameters.length == 0) {
 					Key<Object> key = Key.ofType(returnType, qualifier);
 
 					ModuleBuilder1<Object> binder = builder.bind(key).to(bindingFromMethod(module, method)).in(methodScope);
-					if (isEager) {
-						binder.asEager();
+					if (isEager) binder.asEager();
+					if (isTransient) binder.asTransient();
+				} else {
+					Set<TypeVariable<?>> unused = Arrays.stream(methodTypeParameters)
+							.filter(typeVar -> !Types.contains(returnType, typeVar))
+							.collect(toSet());
+					if (!unused.isEmpty()) {
+						throw new DIException("Generic type variables " + unused + " are not used in return type of templated provider method " + method);
 					}
-					if (isTransient) {
-						binder.asTransient();
-					}
-					continue;
+					builder.generate(
+							KeyPattern.of((Class<Object>) method.getReturnType()),
+							new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
 				}
-				Set<TypeVariable<?>> unused = Arrays.stream(typeVars)
-						.filter(typeVar -> !Types.contains(returnType, typeVar))
-						.collect(toSet());
-				if (!unused.isEmpty()) {
-					throw new DIException("Generic type variables " + unused + " are not used in return type of templated provider method " + method);
-				}
-				builder.generate(KeyPattern.of((Class<Object>) method.getReturnType()), new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
 
 			} else if (method.isAnnotationPresent(ProvidesIntoSet.class)) {
 				if (module == null && !Modifier.isStatic(method.getModifiers())) {
@@ -493,7 +469,7 @@ public final class ReflectionUtils {
 
 				builder.bind(key).to(bindingFromMethod(module, method)).in(methodScope);
 
-				Key<Set<Object>> setKey = Key.ofType(Types.parameterized(Set.class, type), qualifierOf(method));
+				Key<Set<Object>> setKey = Key.ofType(parameterizedType(Set.class, type), qualifierOf(method));
 
 				Binding<Set<Object>> binding = Binding.to(Collections::singleton, key);
 
@@ -554,24 +530,32 @@ public final class ReflectionUtils {
 					return null;
 				}
 			}
-			return bindingFromGenericMethod(module, key, method).as(bindingType);
-		}
+			method.setAccessible(true);
 
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+			Type genericReturnType = method.getGenericReturnType();
+			Map<TypeVariable<?>, Type> mapping = Types.extractMatchingGenerics(genericReturnType, key.getType());
 
-			TemplatedProviderGenerator generator = (TemplatedProviderGenerator) o;
+			Dependency[] dependencies = Arrays.stream(method.getParameters())
+					.map(parameter -> {
+						Type type = TypeUtils.bind(parameter.getParameterizedType(), mapping::get);
+						Object q = qualifierOf(parameter);
+						return Dependency.toKey(Key.ofType(type, q), !parameter.isAnnotationPresent(Optional.class));
+					})
+					.toArray(Dependency[]::new);
 
-			if (!Arrays.equals(methodScope, generator.methodScope)) return false;
-			if (!Objects.equals(qualifier, generator.qualifier)) return false;
-			return method.equals(generator.method);
-		}
+			Binding<Object> binding = Binding.to(
+					args -> {
+						try {
+							return method.invoke(module, args);
+						} catch (IllegalAccessException e) {
+							throw new DIException("Not allowed to call generic method " + method + " to provide requested key " + key, e);
+						} catch (InvocationTargetException e) {
+							throw new DIException("Failed to call generic method " + method + " to provide requested key " + key, e.getCause());
+						}
+					},
+					dependencies);
 
-		@Override
-		public int hashCode() {
-			return 961 * Arrays.hashCode(methodScope) + 31 * (qualifier != null ? qualifier.hashCode() : 0) + method.hashCode();
+			return (module != null ? binding.at(LocationInfo.from(module, method)) : binding).as(bindingType);
 		}
 	}
 }
