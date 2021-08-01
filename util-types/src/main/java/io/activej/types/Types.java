@@ -5,9 +5,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static io.activej.types.IsAssignableUtils.isAssignable;
@@ -17,6 +18,7 @@ import static java.util.stream.Collectors.joining;
 public class Types {
 	public static final Type[] NO_TYPES = new Type[0];
 	public static final WildcardType WILDCARD_TYPE_ANY = new WildcardTypeImpl(new Type[]{Object.class}, new Type[0]);
+	private static final Map<Type, Map<TypeVariable<?>, Type>> typeBindingsCache = new ConcurrentHashMap<>();
 
 	public static Class<?> getRawType(Type type) {
 		if (type instanceof Class) {
@@ -48,33 +50,65 @@ public class Types {
 	}
 
 	public static Type[] getActualTypeArguments(Type type) {
-		Type[] typeArguments;
-
 		if (type instanceof Class) {
-			Class<?> clazz = (Class<?>) type;
-			TypeVariable<? extends Class<?>>[] typeParameters = clazz.getTypeParameters();
-			if (typeParameters.length == 0) return NO_TYPES;
-			typeArguments = new Type[typeParameters.length];
-			Arrays.fill(typeArguments, WILDCARD_TYPE_ANY);
-		} else if (type instanceof ParameterizedType) {
-			ParameterizedType parameterizedType = (ParameterizedType) type;
-			typeArguments = parameterizedType.getActualTypeArguments();
-		} else {
-			throw new IllegalArgumentException("Unsupported type: " + type);
+			return NO_TYPES;
 		}
-		return typeArguments;
+		if (type instanceof ParameterizedType) {
+			ParameterizedType parameterizedType = (ParameterizedType) type;
+			return parameterizedType.getActualTypeArguments();
+		}
+		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
 
 	public static Map<TypeVariable<?>, Type> getTypeBindings(Type type) {
-		Class<?> typeClazz = getRawType(type);
 		Type[] typeArguments = getActualTypeArguments(type);
 		if (typeArguments.length == 0) return emptyMap();
-		Map<TypeVariable<?>, Type> map = new LinkedHashMap<>();
-		TypeVariable<?>[] typeVariables = typeClazz.getTypeParameters();
+		TypeVariable<?>[] typeVariables = getRawType(type).getTypeParameters();
+		Map<TypeVariable<?>, Type> map = new HashMap<>();
 		for (int i = 0; i < typeVariables.length; i++) {
 			map.put(typeVariables[i], typeArguments[i]);
 		}
 		return map;
+	}
+
+	public static Map<TypeVariable<?>, Type> getAllTypeBindings(Type type) {
+		return typeBindingsCache.computeIfAbsent(type,
+				t -> {
+					Map<TypeVariable<?>, Type> mapping = new HashMap<>();
+					getAllTypeBindingsImpl(t, mapping);
+					return mapping;
+				});
+	}
+
+	private static void getAllTypeBindingsImpl(Type type, Map<TypeVariable<?>, Type> mapping) {
+		Class<?> cls = getRawType(type);
+
+		if (type instanceof ParameterizedType) {
+			Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
+			if (typeArguments.length != 0) {
+				TypeVariable<? extends Class<?>>[] typeVariables = cls.getTypeParameters();
+				for (int i = 0; i < typeArguments.length; i++) {
+					Type typeArgument = typeArguments[i];
+					mapping.put(typeVariables[i], typeArgument instanceof TypeVariable ?
+							Objects.requireNonNull(mapping.get(typeArgument)) :
+							typeArgument);
+				}
+			}
+		}
+
+		Type superclass = cls.getGenericSuperclass();
+		if (superclass != null) {
+			getAllTypeBindingsImpl(superclass, mapping);
+		}
+
+		for (Type anInterface : cls.getGenericInterfaces()) {
+			getAllTypeBindingsImpl(anInterface, mapping);
+		}
+	}
+
+	@NotNull
+	public static Type bind(Type type, Map<TypeVariable<?>, Type> bindings) {
+		return bind(type, bindings::get);
 	}
 
 	@NotNull
@@ -120,7 +154,7 @@ public class Types {
 		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
 
-	public static ParameterizedType parameterizedType(@Nullable Type ownerType, Type rawType, Type... parameters) {
+	public static ParameterizedType parameterizedType(@Nullable Type ownerType, Type rawType, Type[] parameters) {
 		return new ParameterizedTypeImpl(ownerType, rawType, parameters);
 	}
 
@@ -193,7 +227,7 @@ public class Types {
 		return new WildcardTypeImpl(NO_TYPES, new Type[]{lowerBound});
 	}
 
-	public static class WildcardTypeImpl implements WildcardType {
+	static class WildcardTypeImpl implements WildcardType {
 		private final Type[] upperBounds;
 		private final Type[] lowerBounds;
 
@@ -239,7 +273,7 @@ public class Types {
 		return new GenericArrayTypeImpl(componentType);
 	}
 
-	public static final class GenericArrayTypeImpl implements GenericArrayType {
+	static final class GenericArrayTypeImpl implements GenericArrayType {
 		private final Type componentType;
 
 		GenericArrayTypeImpl(Type componentType) {

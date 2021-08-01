@@ -17,7 +17,6 @@
 package io.activej.inject.util;
 
 import io.activej.types.Types;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
 import java.util.Arrays;
@@ -25,11 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
-
-import static io.activej.types.Types.bind;
-import static java.util.Map.Entry;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * This class contains reflection utilities to work with Java types.
@@ -184,46 +178,6 @@ public final class TypeUtils {
 		for (int i = 0; i < patternTypeArgs.length; i++) {
 			extractMatchingGenerics(patternTypeArgs[i], realTypeArgs[i], result);
 		}
-	}
-
-	private static final Map<Type, Map<TypeVariable<?>, Type>> genericMappingCache = new ConcurrentHashMap<>();
-
-	public static Map<TypeVariable<?>, Type> getGenericTypeMapping(Type container) {
-		return getGenericTypeMapping(container, null);
-	}
-
-	public static Map<TypeVariable<?>, Type> getGenericTypeMapping(Type container, @Nullable Object containerInstance) {
-		return genericMappingCache.computeIfAbsent(
-				containerInstance != null ? containerInstance.getClass() : container,
-				type -> {
-					Map<TypeVariable<?>, @Nullable Type> mapping = new HashMap<>();
-					getGenericTypeMappingImpl(type, mapping);
-					return mapping.entrySet().stream()
-							.filter(e -> e.getValue() != null)
-							.collect(toMap(Entry::getKey, Entry::getValue));
-				});
-	}
-
-	private static void getGenericTypeMappingImpl(Type type, Map<TypeVariable<?>, @Nullable Type> mapping) {
-		Class<?> cls = Types.getRawType(type);
-
-		if (type instanceof ParameterizedType) {
-			Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
-			if (typeArguments.length != 0) {
-				TypeVariable<? extends Class<?>>[] typeVariables = cls.getTypeParameters();
-				for (int i = 0; i < typeArguments.length; i++) {
-					Type typeArgument = typeArguments[i];
-					mapping.put(typeVariables[i], typeArgument instanceof TypeVariable ? mapping.get(typeArgument) : typeArgument);
-				}
-			}
-		}
-
-		Stream.concat(Stream.of(cls.getGenericSuperclass()).filter(Objects::nonNull), Arrays.stream(cls.getGenericInterfaces()))
-				.forEach(supertype -> getGenericTypeMappingImpl(supertype, mapping));
-	}
-
-	public static Type resolveTypeVariables(Type type, Type container, @Nullable Object containerInstance) {
-		return bind(type, getGenericTypeMapping(container, containerInstance)::get);
 	}
 
 }

@@ -74,14 +74,15 @@ public class IsAssignableUtils {
 			}
 			return true;
 		}
+		assert !strict;
 		Map<TypeVariable<?>, Type> typeBindings = getTypeBindings(from);
 		for (Type anInterface : fromRawClazz.getGenericInterfaces()) {
-			if (isAssignable(toRawClazz, toTypeArguments, bind(anInterface, typeBindings::get), strict)) {
+			if (isAssignable(toRawClazz, toTypeArguments, bind(anInterface, key -> typeBindings.getOrDefault(key, Types.wildcardTypeAny())), false)) {
 				return true;
 			}
 		}
 		Type superclass = fromRawClazz.getGenericSuperclass();
-		return superclass != null && isAssignable(toRawClazz, toTypeArguments, bind(superclass, typeBindings::get), strict);
+		return superclass != null && isAssignable(toRawClazz, toTypeArguments, bind(superclass, typeBindings), false);
 	}
 
 }
