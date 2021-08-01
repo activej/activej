@@ -22,6 +22,7 @@ import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.*;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +31,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 
 /**
  * This interface is used to restrict the DSL.

@@ -29,7 +29,7 @@ import io.activej.inject.impl.CompiledBindingInitializer;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.ModuleBuilder1;
-import io.activej.types.TypeUtils;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,9 +43,9 @@ import java.util.stream.Stream;
 
 import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.binding.BindingType.*;
-import static io.activej.inject.util.Types.getGenericTypeMapping;
+import static io.activej.inject.util.TypeUtils.getGenericTypeMapping;
 import static io.activej.inject.util.Utils.isMarker;
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -63,7 +63,7 @@ public final class ReflectionUtils {
 	private static final Pattern RAW_PART = Pattern.compile("^" + IDENT);
 
 	public static String getDisplayName(Type type) {
-		Class<?> raw = TypeUtils.getRawType(type);
+		Class<?> raw = Types.getRawType(type);
 		String typeName;
 		if (raw.isAnonymousClass()) {
 			Type superclass = raw.getGenericSuperclass();
@@ -137,7 +137,7 @@ public final class ReflectionUtils {
 	}
 
 	public static <T> Key<T> keyOf(@Nullable Type container, @Nullable Object containerInstance, Type type, AnnotatedElement annotatedElement) {
-		Type resolved = container != null ? Types.resolveTypeVariables(type, container, containerInstance) : type;
+		Type resolved = container != null ? TypeUtils.resolveTypeVariables(type, container, containerInstance) : type;
 		return Key.ofType(resolved, qualifierOf(annotatedElement));
 	}
 
@@ -431,7 +431,7 @@ public final class ReflectionUtils {
 				}
 				mapping.putAll(getGenericTypeMapping(module != null ? module.getClass() : moduleClass, module));
 
-				Type returnType = TypeUtils.bind(method.getGenericReturnType(), mapping::get);
+				Type returnType = Types.bind(method.getGenericReturnType(), mapping::get);
 
 				if (methodTypeParameters.length == 0) {
 					Key<Object> key = Key.ofType(returnType, qualifier);
@@ -441,7 +441,7 @@ public final class ReflectionUtils {
 					if (isTransient) binder.asTransient();
 				} else {
 					Set<TypeVariable<?>> unused = Arrays.stream(methodTypeParameters)
-							.filter(typeVar -> !Types.contains(returnType, typeVar))
+							.filter(typeVar -> !TypeUtils.contains(returnType, typeVar))
 							.collect(toSet());
 					if (!unused.isEmpty()) {
 						throw new DIException("Generic type variables " + unused + " are not used in return type of templated provider method " + method);
@@ -459,7 +459,7 @@ public final class ReflectionUtils {
 					throw new DIException("@ProvidesIntoSet does not support templated methods, method " + method);
 				}
 
-				Type type = Types.resolveTypeVariables(method.getGenericReturnType(), module != null ? module.getClass() : moduleClass, module);
+				Type type = TypeUtils.resolveTypeVariables(method.getGenericReturnType(), module != null ? module.getClass() : moduleClass, module);
 				Scope[] methodScope = getScope(method);
 
 				boolean isEager = method.isAnnotationPresent(Eager.class);
@@ -522,7 +522,7 @@ public final class ReflectionUtils {
 
 		@Override
 		public @Nullable Binding<Object> generate(BindingLocator bindings, Scope[] scope, Key<Object> key) {
-			if (scope.length < methodScope.length || (qualifier != null && !qualifier.equals(key.getQualifier())) || !Types.matches(key.getType(), returnType)) {
+			if (scope.length < methodScope.length || (qualifier != null && !qualifier.equals(key.getQualifier())) || !TypeUtils.matches(key.getType(), returnType)) {
 				return null;
 			}
 			for (int i = 0; i < methodScope.length; i++) {
@@ -533,11 +533,11 @@ public final class ReflectionUtils {
 			method.setAccessible(true);
 
 			Type genericReturnType = method.getGenericReturnType();
-			Map<TypeVariable<?>, Type> mapping = Types.extractMatchingGenerics(genericReturnType, key.getType());
+			Map<TypeVariable<?>, Type> mapping = TypeUtils.extractMatchingGenerics(genericReturnType, key.getType());
 
 			Dependency[] dependencies = Arrays.stream(method.getParameters())
 					.map(parameter -> {
-						Type type = TypeUtils.bind(parameter.getParameterizedType(), mapping::get);
+						Type type = Types.bind(parameter.getParameterizedType(), mapping::get);
 						Object q = qualifierOf(parameter);
 						return Dependency.toKey(Key.ofType(type, q), !parameter.isAnnotationPresent(Optional.class));
 					})

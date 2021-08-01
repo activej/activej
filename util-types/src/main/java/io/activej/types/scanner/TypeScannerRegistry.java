@@ -16,10 +16,10 @@
 
 package io.activej.types.scanner;
 
-import io.activej.types.AnnotatedTypeUtils;
+import io.activej.types.AnnotatedTypes;
 import io.activej.types.AnnotationUtils;
 import io.activej.types.TypeT;
-import io.activej.types.TypeUtils;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.activej.types.AnnotatedTypeUtils.annotatedTypeOf;
+import static io.activej.types.AnnotatedTypes.annotatedTypeOf;
 import static io.activej.types.IsAssignableUtils.isAssignable;
 import static java.util.Collections.emptyList;
 
@@ -73,7 +73,7 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		public Class<?> getRawType() {
-			return TypeUtils.getRawType(getType());
+			return Types.getRawType(getType());
 		}
 
 		public AnnotatedType getAnnotatedType() {
@@ -97,11 +97,11 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		public AnnotatedType[] getTypeArguments() {
-			return AnnotatedTypeUtils.getTypeArguments(getAnnotatedType());
+			return AnnotatedTypes.getTypeArguments(getAnnotatedType());
 		}
 
 		public AnnotatedType getTypeArgument(int n) {
-			return AnnotatedTypeUtils.getTypeArguments(getAnnotatedType())[n];
+			return AnnotatedTypes.getTypeArguments(getAnnotatedType())[n];
 		}
 
 		public int getTypeArgumentsCount() {

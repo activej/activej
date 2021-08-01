@@ -10,12 +10,12 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
 
-public class AnnotatedTypeUtils {
+public class AnnotatedTypes {
 	public static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	public static final AnnotatedType[] NO_ANNOTATED_TYPES = new AnnotatedType[0];
 
 	public static Class<?> getRawType(AnnotatedType type) {
-		return TypeUtils.getRawType(type.getType());
+		return Types.getRawType(type.getType());
 	}
 
 	public static AnnotatedType[] getTypeArguments(AnnotatedType annotatedType) {
@@ -67,7 +67,7 @@ public class AnnotatedTypeUtils {
 				typeArguments2[i] = annotatedTypeArguments2[i].getType();
 			}
 			return new AnnotatedParameterizedTypeImpl(
-					new TypeUtils.ParameterizedTypeImpl(
+					new Types.ParameterizedTypeImpl(
 							((ParameterizedType) annotatedType.getType()).getOwnerType(),
 							((ParameterizedType) annotatedType.getType()).getRawType(),
 							typeArguments2),
@@ -79,7 +79,7 @@ public class AnnotatedTypeUtils {
 			AnnotatedType annotatedGenericComponentType = annotatedArrayType.getAnnotatedGenericComponentType();
 			AnnotatedType annotatedGenericComponentType2 = bind(annotatedGenericComponentType, bindings);
 			return new AnnotatedArrayTypeImpl(
-					new TypeUtils.GenericArrayTypeImpl(annotatedGenericComponentType2.getType()),
+					new Types.GenericArrayTypeImpl(annotatedGenericComponentType2.getType()),
 					annotations,
 					annotatedGenericComponentType2);
 		}
@@ -100,7 +100,7 @@ public class AnnotatedTypeUtils {
 				upperBounds2[i] = annotatedUpperBounds2[i].getType();
 			}
 			return new AnnotatedWildcardTypeImpl(
-					new TypeUtils.WildcardTypeImpl(upperBounds2, lowerBounds2),
+					new Types.WildcardTypeImpl(upperBounds2, lowerBounds2),
 					annotations,
 					annotatedUpperBounds2, annotatedLowerBounds2);
 		}
@@ -262,7 +262,7 @@ public class AnnotatedTypeUtils {
 			return "" +
 					(annotations.length == 0 ? "" :
 							Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
-					TypeUtils.getRawType(type).getCanonicalName() +
+					Types.getRawType(type).getCanonicalName() +
 					(typeArguments.length == 0 ? "" :
 							Arrays.stream(typeArguments).map(Objects::toString).collect(joining(", ", "<", ">")));
 		}

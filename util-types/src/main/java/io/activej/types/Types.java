@@ -14,7 +14,7 @@ import static io.activej.types.IsAssignableUtils.isAssignable;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 
-public class TypeUtils {
+public class Types {
 	public static final Type[] NO_TYPES = new Type[0];
 	public static final WildcardType WILDCARD_TYPE_ANY = new WildcardTypeImpl(new Type[]{Object.class}, new Type[0]);
 
@@ -173,7 +173,7 @@ public class TypeUtils {
 		@Override
 		public String toString() {
 			return rawType.getTypeName() +
-					Arrays.stream(actualTypeArguments).map(TypeUtils::toString).collect(joining(", ", "<", ">"));
+					Arrays.stream(actualTypeArguments).map(Types::toString).collect(joining(", ", "<", ">"));
 		}
 	}
 
@@ -228,9 +228,9 @@ public class TypeUtils {
 		public String toString() {
 			return "?" +
 					(upperBounds.length == 0 ? "" :
-							" extends " + Arrays.stream(upperBounds).map(TypeUtils::toString).collect(joining(" & "))) +
+							" extends " + Arrays.stream(upperBounds).map(Types::toString).collect(joining(" & "))) +
 					(lowerBounds.length == 0 ? "" :
-							" super " + Arrays.stream(lowerBounds).map(TypeUtils::toString).collect(joining(" & ")));
+							" super " + Arrays.stream(lowerBounds).map(Types::toString).collect(joining(" & ")));
 
 		}
 	}
@@ -265,7 +265,7 @@ public class TypeUtils {
 
 		@Override
 		public String toString() {
-			return TypeUtils.toString(componentType) + "[]";
+			return Types.toString(componentType) + "[]";
 		}
 	}
 

@@ -35,6 +35,7 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +47,7 @@ import static io.activej.dataflow.json.JsonUtils.codec;
 import static io.activej.dataflow.json.JsonUtils.toJson;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 

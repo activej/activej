@@ -16,7 +16,7 @@
 
 package io.activej.inject.util;
 
-import io.activej.types.TypeUtils;
+import io.activej.types.Types;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
@@ -27,17 +27,17 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import static io.activej.types.TypeUtils.bind;
+import static io.activej.types.Types.bind;
 import static java.util.Map.Entry;
 import static java.util.stream.Collectors.toMap;
 
 /**
  * This class contains reflection utilities to work with Java types.
- * Its main use is for method {@link TypeUtils#parameterizedType Types.parameterized}.
+ * Its main use is for method {@link io.activej.types.Types#parameterizedType Types.parameterized}.
  * However, just like with {@link ReflectionUtils}, other type utility
  * methods are pretty clean too, so they are left public.
  */
-public final class Types {
+public final class TypeUtils {
 
 	public static boolean isInheritedFrom(Type type, Type from) {
 		return isInheritedFrom(type, from, new HashMap<>());
@@ -53,7 +53,7 @@ public final class Types {
 		if (!(type instanceof Class || type instanceof ParameterizedType || type instanceof GenericArrayType)) {
 			return false;
 		}
-		Class<?> rawType = TypeUtils.getRawType(type);
+		Class<?> rawType = Types.getRawType(type);
 
 		Type superclass = rawType.getGenericSuperclass();
 		if (superclass != null && isInheritedFrom(superclass, from, dejaVu)) {
@@ -205,7 +205,7 @@ public final class Types {
 	}
 
 	private static void getGenericTypeMappingImpl(Type type, Map<TypeVariable<?>, @Nullable Type> mapping) {
-		Class<?> cls = TypeUtils.getRawType(type);
+		Class<?> cls = Types.getRawType(type);
 
 		if (type instanceof ParameterizedType) {
 			Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();

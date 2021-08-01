@@ -1,10 +1,11 @@
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.AbstractModule;
+import io.activej.types.Types;
 
 import java.util.List;
 
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 import static java.util.Arrays.asList;
 
 /**

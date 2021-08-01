@@ -26,6 +26,7 @@ import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.test.rules.LambdaStatement;
+import io.activej.types.Types;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.Description;
@@ -41,7 +42,7 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 
 import static io.activej.common.Utils.union;
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 import static java.util.stream.Collectors.toSet;
 
 public class ActiveJRunner extends BlockJUnit4ClassRunner {

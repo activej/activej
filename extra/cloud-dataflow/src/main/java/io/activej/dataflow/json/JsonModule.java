@@ -44,6 +44,7 @@ import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.Dependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
+import io.activej.types.Types;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -62,7 +63,7 @@ import java.util.stream.Collectors;
 import static com.dslplatform.json.JsonWriter.*;
 import static com.dslplatform.json.NumberConverter.*;
 import static io.activej.dataflow.json.JsonUtils.*;
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 

@@ -17,7 +17,7 @@
 package io.activej.inject;
 
 import io.activej.inject.util.ReflectionUtils;
-import io.activej.inject.util.Types;
+import io.activej.inject.util.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.ParameterizedType;
@@ -134,7 +134,7 @@ public abstract class KeyPattern<T> {
 		Type typeArgument = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		Object outerInstance = ReflectionUtils.getOuterClassInstance(this);
 		// the outer instance is null in static context
-		return outerInstance != null ? Types.resolveTypeVariables(typeArgument, outerInstance.getClass(), outerInstance) : typeArgument;
+		return outerInstance != null ? TypeUtils.resolveTypeVariables(typeArgument, outerInstance.getClass(), outerInstance) : typeArgument;
 	}
 
 	@Override

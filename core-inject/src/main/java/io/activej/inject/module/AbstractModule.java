@@ -26,6 +26,7 @@ import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +35,7 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static io.activej.inject.util.Utils.checkState;
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 
 /**
  * This class is an abstract module wrapper around {@link ModuleBuilder}.

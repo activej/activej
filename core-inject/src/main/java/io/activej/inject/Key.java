@@ -17,9 +17,9 @@
 package io.activej.inject;
 
 import io.activej.inject.util.ReflectionUtils;
-import io.activej.inject.util.Types;
+import io.activej.inject.util.TypeUtils;
 import io.activej.inject.util.Utils;
-import io.activej.types.TypeUtils;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,7 +37,7 @@ import java.util.Objects;
  * For example, to create a key of type Map&lt;String, List&lt;Integer&gt;&gt;, you can just use
  * this syntax: <code>new Key&lt;Map&lt;String, List&lt;Integer&gt;&gt;&gt;(){}</code>.
  * <p>
- * If your types are not known at compile time, you can use {@link TypeUtils#parameterizedType} to make a
+ * If your types are not known at compile time, you can use {@link io.activej.types.Types#parameterizedType} to make a
  * parameterized type and give it to a {@link #ofType Key.ofType} constructor.
  */
 public abstract class Key<T> {
@@ -100,7 +100,7 @@ public abstract class Key<T> {
 		Type typeArgument = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		Object outerInstance = ReflectionUtils.getOuterClassInstance(this);
 //		// the outer instance is null in static context
-		return outerInstance != null ? Types.resolveTypeVariables(typeArgument, outerInstance.getClass(), outerInstance) : typeArgument;
+		return outerInstance != null ? TypeUtils.resolveTypeVariables(typeArgument, outerInstance.getClass(), outerInstance) : typeArgument;
 	}
 
 	@NotNull
@@ -109,13 +109,13 @@ public abstract class Key<T> {
 	}
 
 	/**
-	 * A shortcut for <code>{@link TypeUtils# getRawClass(Type)}(key.getType())</code>.
+	 * A shortcut for <code>{@link Types# getRawClass(Type)}(key.getType())</code>.
 	 * Also casts the result to a properly parameterized class.
 	 */
 	@SuppressWarnings("unchecked")
 	@NotNull
 	public Class<T> getRawType() {
-		return (Class<T>) TypeUtils.getRawType(type);
+		return (Class<T>) Types.getRawType(type);
 	}
 
 	/**

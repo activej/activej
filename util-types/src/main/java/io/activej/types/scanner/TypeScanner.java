@@ -21,7 +21,7 @@ import io.activej.types.TypeT;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Type;
 
-import static io.activej.types.AnnotatedTypeUtils.annotatedTypeOf;
+import static io.activej.types.AnnotatedTypes.annotatedTypeOf;
 
 /**
  * This is an interface for something that can create or retrieve a codec for a given type.

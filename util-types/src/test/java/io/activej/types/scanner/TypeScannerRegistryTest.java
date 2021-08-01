@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.activej.types.AnnotatedTypeUtils.*;
+import static io.activej.types.AnnotatedTypes.*;
 import static org.junit.Assert.assertEquals;
 
 public class TypeScannerRegistryTest {

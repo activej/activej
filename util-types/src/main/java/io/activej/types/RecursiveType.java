@@ -71,7 +71,7 @@ public final class RecursiveType {
 							.map(RecursiveType::of)
 							.toArray(RecursiveType[]::new));
 		} else if (type instanceof WildcardType) {
-			return of(TypeUtils.getRawType(type));
+			return of(Types.getRawType(type));
 		} else {
 			throw new IllegalArgumentException(type.getTypeName());
 		}

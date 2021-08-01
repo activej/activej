@@ -48,7 +48,7 @@ import static io.activej.serializer.SerializerDef.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.get;
-import static io.activej.types.AnnotatedTypeUtils.*;
+import static io.activej.types.AnnotatedTypes.*;
 import static io.activej.types.AnnotationUtils.getAnnotation;
 import static io.activej.types.AnnotationUtils.hasAnnotation;
 import static java.lang.String.format;

@@ -28,6 +28,7 @@ import io.activej.launcher.annotation.Args;
 import io.activej.launcher.annotation.OnComplete;
 import io.activej.launcher.annotation.OnRun;
 import io.activej.launcher.annotation.OnStart;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static io.activej.inject.util.Utils.makeGraphVizGraph;
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toSet;

@@ -7,7 +7,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
 
-import static io.activej.types.TypeUtils.*;
+import static io.activej.types.Types.*;
 
 public class IsAssignableUtils {
 

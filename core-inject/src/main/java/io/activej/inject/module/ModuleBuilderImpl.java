@@ -22,6 +22,7 @@ import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
 import io.activej.inject.util.LocationInfo;
 import io.activej.inject.util.Trie;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +33,7 @@ import java.util.stream.Stream;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.ReflectionUtils.scanClassHierarchy;
 import static io.activej.inject.util.Utils.*;
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 
 @SuppressWarnings("UnusedReturnValue")
 final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {

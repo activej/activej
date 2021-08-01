@@ -25,6 +25,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.inject.Key;
 import io.activej.inject.util.Constructors;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ import static com.dslplatform.json.JsonWriter.OBJECT_END;
 import static com.dslplatform.json.JsonWriter.OBJECT_START;
 import static com.dslplatform.json.NumberConverter.LONG_READER;
 import static com.dslplatform.json.NumberConverter.LONG_WRITER;
-import static io.activej.types.TypeUtils.parameterizedType;
+import static io.activej.types.Types.parameterizedType;
 
 public final class JsonUtils {
 	static final DslJson<?> DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
