@@ -71,6 +71,24 @@
               <mainClass>SerializeSubclassesExample</mainClass>
             </configuration>
           </execution>
+          <execution>
+            <id>SerializePathExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>SerializePathExample</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>SerializeNoPathExample</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>SerializeNoPathExample</mainClass>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
