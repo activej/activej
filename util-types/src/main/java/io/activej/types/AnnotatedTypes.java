@@ -205,6 +205,10 @@ public class AnnotatedTypes {
 			return type;
 		}
 
+		public AnnotatedType getAnnotatedOwnerType() {
+			return null;
+		}
+
 		@SuppressWarnings({"unchecked"})
 		@Override
 		public <T extends Annotation> T getAnnotation(@NotNull Class<T> annotationClass) {
