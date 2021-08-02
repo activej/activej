@@ -24,7 +24,7 @@ import io.activej.codegen.util.Primitives;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.impl.*;
-import io.activej.types.RecursiveType;
+import io.activej.types.Types;
 
 import java.lang.reflect.Type;
 import java.time.LocalDate;
@@ -107,7 +107,7 @@ public final class FieldTypes {
 		Type wrappedNestedType = fieldType.getDataType() instanceof Class ?
 				Primitives.wrap((Class<?>) fieldType.getDataType()) :
 				fieldType.getDataType();
-		Type dataType = RecursiveType.of(Set.class, RecursiveType.of(wrappedNestedType)).getType();
+		Type dataType = Types.parameterizedType(Set.class, wrappedNestedType);
 		JsonCodec<Set<T>> codec = JsonCodecs.ofSet(fieldType.getCodec());
 		return new FieldType<>(Set.class, dataType, serializer, codec, codec);
 	}

@@ -33,7 +33,7 @@ import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.QualifierAnnotation;
 import io.activej.inject.module.AbstractModule;
-import io.activej.types.RecursiveType;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.ElementType;
@@ -43,14 +43,15 @@ import java.lang.annotation.Target;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.launchers.crdt.Initializers.ofFsCrdtClient;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
-import static java.util.stream.Collectors.toList;
 
 public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends AbstractModule {
 	@Override
@@ -58,19 +59,18 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 		Type genericSuperclass = getClass().getGenericSuperclass();
 		Type[] typeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
 
-		List<RecursiveType> typeArgs = Arrays.stream(typeArguments).map(RecursiveType::of).collect(toList());
-		@NotNull Type supertype = RecursiveType.of(CrdtStorage.class, typeArgs).getType();
+		@NotNull Type supertype = Types.parameterizedType(CrdtStorage.class, typeArguments);
 
 		bind((Key<?>) Key.ofType(supertype, InMemory.class))
-				.to(Key.ofType(RecursiveType.of(CrdtStorageMap.class, typeArgs).getType()));
+				.to(Key.ofType(Types.parameterizedType(CrdtStorageMap.class, typeArguments)));
 		bind((Key<?>) Key.ofType(supertype, Persistent.class))
-				.to(Key.ofType(RecursiveType.of(CrdtStorageFs.class, typeArgs).getType()));
+				.to(Key.ofType(Types.parameterizedType(CrdtStorageFs.class, typeArguments)));
 
-		List<RecursiveType> clusterStorageTypes = new ArrayList<>(typeArgs);
-		clusterStorageTypes.add(RecursiveType.of(String.class));
+		Type[] clusterStorageTypes = Arrays.copyOf(typeArguments, 3);
+		clusterStorageTypes[2] = String.class;
 
 		bind((Key<?>) Key.ofType(supertype, Cluster.class))
-				.to(Key.ofType(RecursiveType.of(CrdtStorageCluster.class, clusterStorageTypes).getType()));
+				.to(Key.ofType(Types.parameterizedType(CrdtStorageCluster.class, clusterStorageTypes)));
 	}
 
 	@Provides
@@ -112,8 +112,8 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	CrdtStorageCluster<K, S, String> clusterCrdtClient(CrdtPartitions<K, S, String> partitions, CrdtDescriptor<K, S> descriptor, Config config) {
 		return CrdtStorageCluster.create(
-				partitions,
-				descriptor.getCrdtFunction())
+						partitions,
+						descriptor.getCrdtFunction())
 				.withReplicationCount(config.get(ofInteger(), "crdt.cluster.replicationCount", 1));
 	}
 

@@ -307,4 +307,26 @@ public class Types {
 		return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
 	}
 
+	public static String getSimpleName(Type type) {
+		if (type instanceof Class) {
+			return ((Class<?>) type).getSimpleName();
+		} else if (type instanceof ParameterizedType) {
+			return Arrays.stream(((ParameterizedType) type).getActualTypeArguments())
+					.map(Types::getSimpleName)
+					.collect(joining(",", "<", ">"));
+		} else if (type instanceof WildcardType) {
+			WildcardType wildcardType = (WildcardType) type;
+			Type[] upperBounds = wildcardType.getUpperBounds();
+			Type[] lowerBounds = wildcardType.getLowerBounds();
+			return "?" +
+					(upperBounds.length == 0 ? "" :
+							" extends " + Arrays.stream(upperBounds).map(Types::getSimpleName).collect(joining(" & "))) +
+					(lowerBounds.length == 0 ? "" :
+							" super " + Arrays.stream(lowerBounds).map(Types::getSimpleName).collect(joining(" & ")));
+		} else if (type instanceof GenericArrayType) {
+			return Types.getSimpleName(((GenericArrayType) type).getGenericComponentType()) + "[]";
+		}
+
+		return type.getTypeName();
+	}
 }

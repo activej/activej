@@ -16,8 +16,8 @@
 
 package io.activej.trigger.util;
 
-import io.activej.types.RecursiveType;
 import io.activej.inject.Key;
+import io.activej.types.Types;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -65,7 +65,7 @@ public final class Utils {
 		Type type = key.getType();
 		return (key.getQualifier() != null ?
 				prettyPrintQualifier(key.getQualifier()) + " " :
-				"") + RecursiveType.of(type).getSimpleName();
+				"") + Types.getSimpleName(type);
 	}
 
 }

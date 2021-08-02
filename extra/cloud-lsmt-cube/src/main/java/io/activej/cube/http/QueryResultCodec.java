@@ -23,10 +23,10 @@ import com.dslplatform.json.NumberConverter;
 import com.dslplatform.json.StringConverter;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.types.RecursiveType;
 import io.activej.cube.QueryResult;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -34,7 +34,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static com.dslplatform.json.JsonWriter.*;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.nonNullElse;
+import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.cube.ReportType.*;
 import static io.activej.cube.http.Utils.CUBE_DSL_JSON;
 
@@ -73,22 +74,22 @@ final class QueryResultCodec implements JsonCodec<QueryResult> {
 		Map<String, Class<?>> attributeRawTypes = new LinkedHashMap<>();
 		Map<String, Class<?>> measureRawTypes = new LinkedHashMap<>();
 		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
-			RecursiveType token = RecursiveType.of(entry.getValue());
-			ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(token.getType());
-			if (readObject == null) throw new IllegalArgumentException("Cannot serialize " + token);
-			WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(token.getType());
-			if (writeObject == null) throw new IllegalArgumentException("Cannot deserialize " + token);
+			Type type = entry.getValue();
+			ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(type);
+			if (readObject == null) throw new IllegalArgumentException("Cannot serialize " + type);
+			WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(type);
+			if (writeObject == null) throw new IllegalArgumentException("Cannot deserialize " + type);
 			attributeCodecs.put(entry.getKey(), JsonCodec.of(readObject, writeObject));
-			attributeRawTypes.put(entry.getKey(), token.getRawType());
+			attributeRawTypes.put(entry.getKey(), Types.getRawType(type));
 		}
 		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
-			RecursiveType token = RecursiveType.of(entry.getValue());
-			ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(token.getType());
-			if (readObject == null) throw new IllegalArgumentException("Cannot serialize " + token);
-			WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(token.getType());
-			if (writeObject == null) throw new IllegalArgumentException("Cannot deserialize " + token);
+			Type type = entry.getValue();
+			ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(type);
+			if (readObject == null) throw new IllegalArgumentException("Cannot serialize " + type);
+			WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(type);
+			if (writeObject == null) throw new IllegalArgumentException("Cannot deserialize " + type);
 			measureCodecs.put(entry.getKey(), JsonCodec.of(readObject, writeObject));
-			measureRawTypes.put(entry.getKey(), token.getRawType());
+			measureRawTypes.put(entry.getKey(), Types.getRawType(type));
 		}
 		return new QueryResultCodec(classLoader, attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
 	}

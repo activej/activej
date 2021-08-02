@@ -1,12 +1,17 @@
 package io.activej.launchers.crdt;
 
-import io.activej.types.TypeT;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
+import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
+import io.activej.launchers.crdt.CrdtNodeLogicModule.Cluster;
+import io.activej.launchers.crdt.CrdtNodeLogicModule.InMemory;
+import io.activej.launchers.crdt.CrdtNodeLogicModule.Persistent;
+import io.activej.types.TypeT;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -19,6 +24,19 @@ public class CrdtNodeLauncherTest {
 	@Test
 	public void testInjector() {
 		new CrdtNodeLauncher<String, TimestampContainer<Integer>>() {
+
+			@Inject
+			@InMemory
+			CrdtStorage<String, TimestampContainer<Integer>> inMemory;
+
+			@Inject
+			@Persistent
+			CrdtStorage<String, TimestampContainer<Integer>> persistent;
+
+			@Inject
+			@Cluster
+			CrdtStorage<String, TimestampContainer<Integer>> cluster;
+
 			@Override
 			protected CrdtNodeLogicModule<String, TimestampContainer<Integer>> getBusinessLogicModule() {
 				return new CrdtNodeLogicModule<String, TimestampContainer<Integer>>() {
