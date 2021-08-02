@@ -57,6 +57,9 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncDirectories", false);
 	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncAppends", false);
 
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = setOf(WRITE);
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = setOf(WRITE, CREATE);
+
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
 			Function.identity() :
@@ -68,8 +71,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	private final Path storage;
 
-	private final Set<OpenOption> appendOptions = setOf(WRITE);
-	private final Set<OpenOption> appendNewOptions = setOf(WRITE, CREATE);
+	private final Set<OpenOption> appendOptions = new HashSet<>(DEFAULT_APPEND_OPTIONS);
+	private final Set<OpenOption> appendNewOptions = new HashSet<>(DEFAULT_APPEND_NEW_OPTIONS);
 
 	private boolean hardlinkOnCopy = false;
 	private Path tempDir;
@@ -133,7 +136,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	/**
-	 * If set to {@code true}, each write to {@link #append)} consumer will be synchronously written to the storage device.
+	 * If set to {@code true}, each write to {@link #append} consumer will be synchronously written to the storage device.
 	 * <p>
 	 * <b>Note: significantly slows down appends</b>
 	 */

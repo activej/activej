@@ -81,6 +81,9 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(LocalActiveFs.class, "fsyncDirectories", false);
 	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(LocalActiveFs.class, "fsyncAppends", false);
 
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = setOf(WRITE);
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = setOf(WRITE, CREATE);
+
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
 			Function.identity() :
@@ -94,8 +97,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private final Path storage;
 	private final Executor executor;
 
-	private final Set<OpenOption> appendOptions = setOf(WRITE);
-	private final Set<OpenOption> appendNewOptions = setOf(WRITE, CREATE);
+	private final Set<OpenOption> appendOptions = new HashSet<>(DEFAULT_APPEND_OPTIONS);
+	private final Set<OpenOption> appendNewOptions = new HashSet<>(DEFAULT_APPEND_NEW_OPTIONS);
 
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
 	private boolean hardlinkOnCopy = false;
@@ -190,7 +193,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	/**
-	 * If set to {@code true}, each write to {@link #append)} consumer will be synchronously written to the storage device.
+	 * If set to {@code true}, each write to {@link #append} consumer will be synchronously written to the storage device.
 	 * <p>
 	 * <b>Note: significantly slows down appends</b>
 	 */
