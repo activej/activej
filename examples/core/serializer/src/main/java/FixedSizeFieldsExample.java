@@ -1,3 +1,4 @@
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Serialize;
@@ -24,10 +25,11 @@ public final class FixedSizeFieldsExample {
 		//[START REGION_2]
 		Storage storage = new Storage();
 		storage.strings = new String[]{"abc", null, "123", "superfluous"};
-		storage.bytes = new byte[]{1, 2, 3, 4};
+		storage.bytes = new byte[]{1, 2, 3, 4, 5, 6};
 
 		byte[] buffer = new byte[200];
-		BinarySerializer<Storage> serializer = SerializerBuilder.create()
+		DefiningClassLoader definingClassLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
+		BinarySerializer<Storage> serializer = SerializerBuilder.create(definingClassLoader)
 				.build(Storage.class);
 		//[END REGION_2]
 

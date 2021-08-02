@@ -1,3 +1,4 @@
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Deserialize;
@@ -15,7 +16,8 @@ public final class GenericsAndInterfacesExample {
 				new Skill<>(2, "ActiveJ")));
 
 		byte[] buffer = new byte[200];
-		BinarySerializer<Developer> serializer = SerializerBuilder.create()
+		DefiningClassLoader definingClassLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
+		BinarySerializer<Developer> serializer = SerializerBuilder.create(definingClassLoader)
 				.build(Developer.class);
 		//[END REGION_4]
 
@@ -61,7 +63,7 @@ public final class GenericsAndInterfacesExample {
 		private final V value;
 
 		public Skill(@Deserialize("key") K key,
-					 @Deserialize("value") V value) {
+				@Deserialize("value") V value) {
 			this.key = key;
 			this.value = value;
 		}

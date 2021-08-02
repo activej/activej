@@ -1,3 +1,4 @@
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.*;
@@ -25,9 +26,10 @@ import static io.activej.serializer.impl.SerializerExpressions.writeVarInt;
  */
 public final class LocalDateSerializerExample {
 	public static void main(String[] args) {
+		DefiningClassLoader definingClassLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
 		//[START SERIALIZER_CREATE]
 		BinarySerializer<LocalDateHolder> serializer =
-				SerializerBuilder.create()
+				SerializerBuilder.create(definingClassLoader)
 						.with(LocalDate.class, ctx -> new SerializerDefLocalDate())
 						.build(LocalDateHolder.class);
 		//[END SERIALIZER_CREATE]
@@ -73,11 +75,11 @@ public final class LocalDateSerializerExample {
 
 		@Override
 		public Expression encoder(final StaticEncoders staticEncoders,
-								  final Expression buf,
-								  final Variable pos,
-								  final Expression localDate,
-								  final int version,
-								  final CompatibilityLevel compatibilityLevel) {
+				final Expression buf,
+				final Variable pos,
+				final Expression localDate,
+				final int version,
+				final CompatibilityLevel compatibilityLevel) {
 			return sequence(
 					writeVarInt(buf, pos, call(localDate, "getYear")),
 					writeVarInt(buf, pos, call(localDate, "getMonthValue")),
@@ -87,9 +89,9 @@ public final class LocalDateSerializerExample {
 
 		@Override
 		public Expression decoder(final StaticDecoders staticDecoders,
-								  final Expression input,
-								  final int version,
-								  final CompatibilityLevel compatibilityLevel) {
+				final Expression input,
+				final int version,
+				final CompatibilityLevel compatibilityLevel) {
 			return staticCall(LocalDate.class, "of",
 					readVarInt(input),
 					readVarInt(input),

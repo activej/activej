@@ -3,19 +3,17 @@ package adder;
 import io.activej.common.Checks;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
-import io.activej.serializer.annotations.SerializeNullable;
-import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkArgument;
 
 public class AdderCommands {
 	public static final boolean CHECK = Checks.isEnabled(AdderCommands.class);
 
-	public static final class PutRequest {
+	public static final class AddRequest {
 		private final long userId;
 		private final float delta;
 
-		public PutRequest(
+		public AddRequest(
 				@Deserialize("userId") long userId,
 				@Deserialize("delta") float delta) {
 			if (CHECK) checkArgument(delta > 0);
@@ -35,7 +33,7 @@ public class AdderCommands {
 		}
 	}
 
-	public enum PutResponse {
+	public enum AddResponse {
 		INSTANCE
 	}
 
@@ -53,16 +51,14 @@ public class AdderCommands {
 	}
 
 	public static final class GetResponse {
-		private final Float sum;
+		private final float sum;
 
-		public GetResponse(@Nullable @Deserialize("sum") Float sum) {
+		public GetResponse(@Deserialize("sum") float sum) {
 			this.sum = sum;
 		}
 
 		@Serialize
-		@SerializeNullable
-		@Nullable
-		public Float getSum() {
+		public float getSum() {
 			return sum;
 		}
 	}

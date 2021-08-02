@@ -33,7 +33,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	private StaticLoader staticLoader(Executor executor) {
+	StaticLoader staticLoader(Executor executor) {
 		return StaticLoader.ofClassPath(executor, "site/");
 	}
 
