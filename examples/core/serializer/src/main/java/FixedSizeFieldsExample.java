@@ -24,7 +24,7 @@ public final class FixedSizeFieldsExample {
 		//[START REGION_2]
 		Storage storage = new Storage();
 		storage.strings = new String[]{"abc", null, "123", "superfluous"};
-		storage.bytes = new byte[]{1, 2, 3, 4};
+		storage.bytes = new byte[]{1, 2, 3, 4, 5, 6};
 
 		byte[] buffer = new byte[200];
 		BinarySerializer<Storage> serializer = SerializerBuilder.create()

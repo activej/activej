@@ -47,7 +47,7 @@ public class AdderServerModule extends AbstractModule {
 			IdSequentialExecutor<Long> seqExecutor
 	) {
 		return mapOf(
-				PutRequest.class, (RpcRequestHandler<PutRequest, PutResponse>) request -> {
+				AddRequest.class, (RpcRequestHandler<AddRequest, AddResponse>) request -> {
 					long userId = request.getUserId();
 					return seqExecutor.execute(userId, () -> map.get(userId)
 							.then(state -> {
@@ -58,12 +58,12 @@ public class AdderServerModule extends AbstractModule {
 
 								return writeAheadLog.put(userId, DetailedSumsCrdtState.of(serverId, newSum))
 										.then(() -> map.put(userId, SimpleSumsCrdtState.of(newSum)))
-										.map($ -> PutResponse.INSTANCE);
+										.map($ -> AddResponse.INSTANCE);
 							}));
 				},
 				GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request ->
 						map.get(request.getUserId())
-								.map(state -> state == null ? null : state.value())
+								.map(state -> state == null ? 0 : state.value())
 								.map(GetResponse::new)
 		);
 	}

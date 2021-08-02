@@ -61,7 +61,7 @@ public final class GenericsAndInterfacesExample {
 		private final V value;
 
 		public Skill(@Deserialize("key") K key,
-					 @Deserialize("value") V value) {
+				@Deserialize("value") V value) {
 			this.key = key;
 			this.value = value;
 		}

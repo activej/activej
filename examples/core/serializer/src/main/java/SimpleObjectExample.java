@@ -34,7 +34,7 @@ public final class SimpleObjectExample {
 	//[START REGION_1]
 	public static class Person {
 		public Person(@Deserialize("age") int age,
-					  @Deserialize("name") String name) {
+				@Deserialize("name") String name) {
 			this.age = age;
 			this.name = name;
 		}

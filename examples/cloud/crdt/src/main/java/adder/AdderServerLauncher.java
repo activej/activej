@@ -1,9 +1,9 @@
 package adder;
 
+import adder.AdderCommands.AddRequest;
+import adder.AdderCommands.AddResponse;
 import adder.AdderCommands.GetRequest;
 import adder.AdderCommands.GetResponse;
-import adder.AdderCommands.PutRequest;
-import adder.AdderCommands.PutResponse;
 import io.activej.config.ConfigModule;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
@@ -19,7 +19,7 @@ import static java.util.Collections.unmodifiableList;
 public final class AdderServerLauncher extends Launcher {
 	public static final List<Class<?>> MESSAGE_TYPES = unmodifiableList(asList(
 			GetRequest.class, GetResponse.class,
-			PutRequest.class, PutResponse.class
+			AddRequest.class, AddResponse.class
 	));
 
 	@Override

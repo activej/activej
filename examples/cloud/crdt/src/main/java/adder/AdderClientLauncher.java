@@ -1,6 +1,6 @@
 package adder;
 
-import adder.AdderCommands.PutRequest;
+import adder.AdderCommands.AddRequest;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
@@ -44,8 +44,8 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 
 		int shardsCount = addresses.size();
 		return item -> {
-			if (item instanceof PutRequest) {
-				return (int) (((PutRequest) item).getUserId() % shardsCount);
+			if (item instanceof AddRequest) {
+				return (int) (((AddRequest) item).getUserId() % shardsCount);
 			}
 			assert item instanceof GetRequest;
 			return (int) (((GetRequest) item).getUserId() % shardsCount);
@@ -54,8 +54,10 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 
 	@Override
 	protected void run() throws Exception {
-		System.out.println("\nUsage: \n" +
-				"\t>put <long id> <float amount>\n\t>get <long id>\n\n");
+		System.out.println("Available commands:");
+		System.out.println("->\tadd <long id> <float delta>");
+		System.out.println("->\tget <long id>\n");
+
 		Scanner scanIn = new Scanner(System.in);
 		while (true) {
 			System.out.print("> ");
@@ -66,16 +68,16 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 			}
 			String[] parts = line.split("\\s+");
 			try {
-				if (parts[0].equalsIgnoreCase("put")) {
-					if (parts.length != 3){
+				if (parts[0].equalsIgnoreCase("add")) {
+					if (parts.length != 3) {
 						throw new MalformedDataException("3 parts expected");
 					}
 					long id = Long.parseLong(parts[1]);
 					float value = Float.parseFloat(parts[2]);
-					eventloop.submit(() -> client.sendRequest(new PutRequest(id, value))).get();
+					eventloop.submit(() -> client.sendRequest(new AddRequest(id, value))).get();
 					System.out.println("---> OK");
 				} else if (parts[0].equalsIgnoreCase("get")) {
-					if (parts.length != 2){
+					if (parts.length != 2) {
 						throw new MalformedDataException("2 parts expected");
 					}
 					long id = Long.parseLong(parts[1]);
