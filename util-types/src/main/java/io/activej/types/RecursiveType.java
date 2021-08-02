@@ -88,29 +88,14 @@ public final class RecursiveType {
 
 	@NotNull
 	public Type getType() {
-		return typeArguments.length == 0 ? clazz : new ParameterizedType() {
-			final Type[] actualTypeArguments = Arrays.stream(typeArguments).map(RecursiveType::getType).toArray(Type[]::new);
-
-			@Override
-			public Type[] getActualTypeArguments() {
-				return actualTypeArguments;
-			}
-
-			@Override
-			public Type getRawType() {
-				return clazz;
-			}
-
-			@Override
-			public Type getOwnerType() {
-				return null;
-			}
-
-			@Override
-			public String toString() {
-				return RecursiveType.this.toString();
-			}
-		};
+		return typeArguments.length == 0 ?
+				clazz :
+				Types.parameterizedType(
+						clazz,
+						Arrays.stream(typeArguments)
+								.map(RecursiveType::getType)
+								.toArray(Type[]::new)
+				);
 	}
 
 	@SuppressWarnings("RedundantIfStatement")
