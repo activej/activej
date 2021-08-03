@@ -87,7 +87,7 @@ public final class SerializerBuilder {
 	private int autoOrderingStride = 1;
 	private boolean annotationsCompatibilityMode;
 
-	private final Map<Object, List<Class<?>>> extraSubclassesMap = new HashMap<>();
+	private final Map<Object, Collection<Class<?>>> extraSubclassesMap = new HashMap<>();
 
 	public SerializerBuilder(DefiningClassLoader classLoader) {
 		this.classLoader = classLoader;
@@ -300,24 +300,24 @@ public final class SerializerBuilder {
 		this.className = className;
 	}
 
-	public <T> SerializerBuilder withSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
+	public <T> SerializerBuilder withSubclasses(String subclassesId, Collection<Class<? extends T>> subclasses) {
 		setSubclasses(subclassesId, subclasses);
 		return this;
 	}
 
-	public <T> void setSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
+	public <T> void setSubclasses(String subclassesId, Collection<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
-		extraSubclassesMap.put(subclassesId, (List) subclasses);
+		extraSubclassesMap.put(subclassesId, (Collection) subclasses);
 	}
 
-	public <T> SerializerBuilder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
+	public <T> SerializerBuilder withSubclasses(Class<T> type, Collection<Class<? extends T>> subclasses) {
 		setSubclasses(type, subclasses);
 		return this;
 	}
 
-	public <T> void setSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
+	public <T> void setSubclasses(Class<T> type, Collection<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
-		extraSubclassesMap.put(type, (List) subclasses);
+		extraSubclassesMap.put(type, (Collection) subclasses);
 	}
 
 	public <T> BinarySerializer<T> build(Type type) {
