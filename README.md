@@ -3,17 +3,18 @@
 
 ## Introduction
 
-[ActiveJ](https://activej.io) is a fully-featured alternative Java platform built from the ground up as a replacement of
-Spring, Spark, Quarkus, Micronauts, and other solutions. It is minimalistic, boilerplate-free, and incomparably faster,
-which is proven by benchmarks. ActiveJ has very few third-party dependencies, yet features a rich stack of technologies
-with an efficient async programming model and a powerful DI library [ActiveJ Inject](https://activej.io/inject)
+[ActiveJ](https://activej.io) is a full-featured modern Java platform, created from the ground up as an alternative to
+Spring/Micronauts/Netty/Jetty. It is designed to be self-sufficient (no third-party dependencies), simple, lean and to
+provide ultimate performance. ActiveJ consists of a range of libraries, from dependency injection and high-performance
+async I/O (inspired by Node.js), to application servers and big data solutions. You can use ActiveJ to build scalable
+web applications, distributed systems and use it for high-load data processing.
 
 ## ActiveJ components
 
 ActiveJ consists of several modules that can be logically grouped into following categories :
 
-* **Async.io** - High-performance asynchronous IO with efficient event loop, NIO, promises,
-  streaming and CSP. Alternative to Netty, RxJava, Akka and others. ([Promise](https://activej.io/async-io/promise),
+* **Async.io** - High-performance asynchronous IO with efficient event loop, NIO, promises, streaming and CSP.
+  Alternative to Netty, RxJava, Akka and others. ([Promise](https://activej.io/async-io/promise),
   [Eventloop](https://activej.io/async-io/eventloop), [Net](https://activej.io/async-io/net),
   [CSP](https://activej.io/async-io/csp), [Datastream](https://activej.io/async-io/datastream))
 * **HTTP** - High-performance HTTP server and client with WebSocket support. Can be used as a simple web server or as an
@@ -22,28 +23,28 @@ ActiveJ consists of several modules that can be logically grouped into following
 * **ActiveJ Inject** - Lightweight powerful dependency injection library. Optimized for fast application start-up and
   ultimate runtime performance. Supports annotation-based component wiring as well as reflection-free
   wiring. ([ActiveJ Inject](https://activej.io/inject))
-* **Boot** - Production-ready tools for launching and monitoring ActiveJ application.
-  Concurrently starts and stops services based on their dependencies. Various service monitoring
-  utilities with the support of JMX and Zabbix. ([Launcher](https://activej.io/boot/launcher), 
-  [Service Graph](https://activej.io/boot/servicegraph), [JMX](https://github.com/activej/activej/tree/master/boot-jmx), 
+* **Boot** - Production-ready tools for launching and monitoring ActiveJ application. Concurrently starts and stops
+  services based on their dependencies. Various service monitoring utilities with the support of JMX and
+  Zabbix. ([Launcher](https://activej.io/boot/launcher),
+  [Service Graph](https://activej.io/boot/servicegraph), [JMX](https://github.com/activej/activej/tree/master/boot-jmx),
   [Triggers](https://github.com/activej/activej/tree/master/boot-triggers))
 * **Bytecode manipulation**
     * **ActiveJ Codegen** - Dynamic class and method bytecode generator on top of [ObjectWeb ASM](https://asm.ow2.io/)
-      library. Abstracts the complexity of direct bytecode manipulation and allows to create custom classes on the
-      fly using Lisp-like AST expressions. ([ActiveJ Codegen](https://activej.io/codegen))
+      library. Abstracts the complexity of direct bytecode manipulation and allows to create custom classes on the fly
+      using Lisp-like AST expressions. ([ActiveJ Codegen](https://activej.io/codegen))
     * **ActiveJ Serializer** - Extremely fast and space-efficient serializers created with bytecode engineering.
       Introduces schema-less approach for the best performance. ([ActiveJ Serializer](https://activej.io/serializer))
-    * **ActiveJ Specializer** - Innovative technology for enhancing class runtime performance by automatically 
-      transforming class instances into specialized static classes, and class
-      instance fields into baked-in static fields. Enables a wide variety of JVM optimizations for
-      static classes, not possible otherwise: dead code elimination, aggressively inlining
-      methods, and static constants. ([ActiveJ Specializer](https://activej.io/specializer))
+    * **ActiveJ Specializer** - Innovative technology for enhancing class runtime performance by automatically
+      transforming class instances into specialized static classes, and class instance fields into baked-in static
+      fields. Enables a wide variety of JVM optimizations for static classes, not possible otherwise: dead code
+      elimination, aggressively inlining methods, and static
+      constants. ([ActiveJ Specializer](https://activej.io/specializer))
 * **Cloud components**
-    * **ActiveJ FS** - Asynchronous abstraction over file system for building efficient, scalable local or remote 
-      file storages, supporting data redundancy, rebalancing, and resharding.
+    * **ActiveJ FS** - Asynchronous abstraction over file system for building efficient, scalable local or remote file
+      storages, supporting data redundancy, rebalancing, and resharding.
       ([ActiveJ FS](https://activej.io/fs))
-    * **ActiveJ RPC** - Ultra high-performance binary client-server protocol. Allows to build distributed, 
-      sharded and fault-tolerant microservices applications. ([ActiveJ RPC](https://activej.io/rpc))
+    * **ActiveJ RPC** - Ultra high-performance binary client-server protocol. Allows to build distributed, sharded and
+      fault-tolerant microservices applications. ([ActiveJ RPC](https://activej.io/rpc))
     * Various extra services:
       [ActiveJ CRDT](https://github.com/activej/activej/tree/master/extra/cloud-crdt),
       [Redis client](https://github.com/activej/activej/tree/master/extra/cloud-redis),
@@ -67,15 +68,15 @@ to see the "Hello World" message.
 
 ```java
 public final class HttpHelloWorldExample extends HttpServerLauncher {
-    @Provides
-    AsyncServlet servlet() {
-        return request -> HttpResponse.ok200().withPlainText("Hello, World!");
-    }
+	@Provides
+	AsyncServlet servlet() {
+		return request -> HttpResponse.ok200().withPlainText("Hello, World!");
+	}
 
-    public static void main(String[] args) throws Exception {
-        Launcher launcher = new HttpHelloWorldExample();
-        launcher.launch(args);
-    }
+	public static void main(String[] args) throws Exception {
+		Launcher launcher = new HttpHelloWorldExample();
+		launcher.launch(args);
+	}
 }
 ```
 
