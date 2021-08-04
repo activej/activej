@@ -62,6 +62,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 
 		@Override
 		public Function<Aggregation, Promise<AggregationDiff>> get() {
+			//noinspection AssignmentUsedAsCondition
 			return (hotSegment = !hotSegment) ?
 					Aggregation::consolidateHotSegment :
 					Aggregation::consolidateMinKey;

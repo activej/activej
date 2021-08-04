@@ -91,7 +91,9 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private Path temporarySortDir;
 
 	private final AggregationStructure structure;
+
 	private AggregationState state;
+	private ChunkLocker<Object> chunkLocker;
 
 	// settings
 	private int chunkSize = DEFAULT_CHUNK_SIZE;
@@ -177,6 +179,11 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 	public Aggregation withStats(AggregationStats stats) {
 		this.stats = stats;
+		return this;
+	}
+
+	public Aggregation withChunkLocker(ChunkLocker<Object> chunkLocker) {
+		this.chunkLocker = chunkLocker;
 		return this;
 	}
 
@@ -508,7 +515,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private <T> StreamSupplier<T> chunkReaderWithFilter(AggregationPredicate where, AggregationChunk chunk,
 			Class<T> chunkRecordClass, DefiningClassLoader queryClassLoader) {
 		return StreamSupplier.ofPromise(
-				aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader))
+						aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader))
 				.transformWith(where != AggregationPredicates.alwaysTrue() ?
 						StreamFilter.create(
 								createPredicate(chunkRecordClass, where, queryClassLoader)) :
@@ -538,19 +545,28 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	private Promise<AggregationDiff> doConsolidate(boolean hotSegment) {
-		List<AggregationChunk> chunks = hotSegment ?
-				state.findChunksForConsolidationHotSegment(maxChunksToConsolidate) :
-				state.findChunksForConsolidationMinKey(maxChunksToConsolidate, chunkSize);
+		return chunkLocker.getLockedChunks()
+				.then(lockedChunkIds -> {
+					List<AggregationChunk> chunks = hotSegment ?
+							state.findChunksForConsolidationHotSegment(maxChunksToConsolidate, lockedChunkIds) :
+							state.findChunksForConsolidationMinKey(maxChunksToConsolidate, chunkSize, lockedChunkIds);
+					if (chunks.isEmpty()) {
+						logger.info("Nothing to consolidate in aggregation '{}", this);
+						return Promise.of(AggregationDiff.empty());
+					}
 
-		if (chunks.isEmpty()) {
-			logger.info("Nothing to consolidate in aggregation '{}", this);
-			return Promise.of(AggregationDiff.empty());
-		}
+					logger.info("Starting consolidation of aggregation '{}'", this);
+					consolidationStarted = eventloop.currentTimeMillis();
 
-		logger.info("Starting consolidation of aggregation '{}'", this);
-		consolidationStarted = eventloop.currentTimeMillis();
+					Set<Object> consolidatingChunkIds = chunks.stream()
+							.map(AggregationChunk::getChunkId)
+							.collect(toSet());
 
-		return doConsolidation(chunks)
+					return chunkLocker.lockChunks(consolidatingChunkIds)
+							.then($ -> doConsolidation(chunks))
+							.whenComplete(() -> chunkLocker.releaseChunks(consolidatingChunkIds))
+							.map(removedChunks -> AggregationDiff.of(new LinkedHashSet<>(removedChunks), new LinkedHashSet<>(chunks)));
+				})
 				.whenComplete(($, e) -> {
 					if (e == null) {
 						consolidationLastTimeMillis = eventloop.currentTimeMillis() - consolidationStarted;
@@ -559,8 +575,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 						consolidationStarted = 0;
 						consolidationLastError = e;
 					}
-				})
-				.map(removedChunks -> AggregationDiff.of(new LinkedHashSet<>(removedChunks), new LinkedHashSet<>(chunks)));
+				});
 	}
 
 	private Path createSortDir() throws AggregationException {
