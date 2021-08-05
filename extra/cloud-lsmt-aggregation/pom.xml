@@ -43,17 +43,16 @@
       <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-test</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <optional>true</optional>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -95,6 +94,7 @@
             <configuration>
               <excludes>
                 <exclude>**/IdGeneratorSqlTest.java</exclude>
+                <exclude>**/ChunkLockerMySqlTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>
