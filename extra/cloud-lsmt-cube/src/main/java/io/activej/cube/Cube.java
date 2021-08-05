@@ -107,7 +107,6 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
 	public static final FrameFormat DEFAULT_SORT_FRAME_FORMAT = LZ4FrameFormat.create();
-	public static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
 
 	private final Eventloop eventloop;
 	private final Executor executor;
@@ -115,7 +114,6 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	private final AggregationChunkStorage aggregationChunkStorage;
 
 	private FrameFormat sortFrameFormat = DEFAULT_SORT_FRAME_FORMAT;
-	private Function<String, ChunkLocker<Object>> chunkLockerFactory = $ -> NOOP_CHUNK_LOCKER;
 	private Path temporarySortDir;
 
 	private final Map<String, FieldType> fieldTypes = new LinkedHashMap<>();
@@ -257,11 +255,6 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		return this;
 	}
 
-	public Cube withChunkLockerFactory(Function<String, ChunkLocker<Object>> chunkLockerFactory) {
-		this.chunkLockerFactory = chunkLockerFactory;
-		return this;
-	}
-
 	public static final class AggregationConfig implements WithInitializer<AggregationConfig> {
 		private final String id;
 		private final List<String> dimensions = new ArrayList<>();
@@ -392,8 +385,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				.withSorterItemsInMemory(config.sorterItemsInMemory != 0 ? config.sorterItemsInMemory : aggregationsSorterItemsInMemory)
 				.withMaxChunksToConsolidate(config.maxChunksToConsolidate != 0 ? config.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate)
 				.withIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions)
-				.withStats(aggregationStats)
-				.withChunkLocker(chunkLockerFactory.apply(config.id));
+				.withStats(aggregationStats);
 
 		aggregations.put(config.id, new AggregationContainer(aggregation, config.measures, config.predicate));
 		logger.info("Added aggregation {} for id '{}'", aggregation, config.id);

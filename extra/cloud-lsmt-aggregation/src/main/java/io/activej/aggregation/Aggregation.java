@@ -93,7 +93,6 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private final AggregationStructure structure;
 
 	private AggregationState state;
-	private ChunkLocker<Object> chunkLocker;
 
 	// settings
 	private int chunkSize = DEFAULT_CHUNK_SIZE;
@@ -179,11 +178,6 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 	public Aggregation withStats(AggregationStats stats) {
 		this.stats = stats;
-		return this;
-	}
-
-	public Aggregation withChunkLocker(ChunkLocker<Object> chunkLocker) {
-		this.chunkLocker = chunkLocker;
 		return this;
 	}
 
@@ -537,14 +531,22 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey() {
-		return doConsolidate(false);
+		return consolidateMinKey(ChunkLockerNoOp.create());
+	}
+
+	public Promise<AggregationDiff> consolidateMinKey(ChunkLocker<Object> chunkLocker) {
+		return doConsolidate(chunkLocker, false);
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment() {
-		return doConsolidate(true);
+		return consolidateHotSegment(ChunkLockerNoOp.create());
 	}
 
-	private Promise<AggregationDiff> doConsolidate(boolean hotSegment) {
+	public Promise<AggregationDiff> consolidateHotSegment(ChunkLocker<Object> chunkLocker) {
+		return doConsolidate(chunkLocker, true);
+	}
+
+	private Promise<AggregationDiff> doConsolidate(ChunkLocker<Object> chunkLocker, boolean hotSegment) {
 		return chunkLocker.getLockedChunks()
 				.then(lockedChunkIds -> {
 					List<AggregationChunk> chunks = hotSegment ?
