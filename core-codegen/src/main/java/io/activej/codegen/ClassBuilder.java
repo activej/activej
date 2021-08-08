@@ -430,7 +430,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 		if (bytecodeSaveDir != null) {
 			String classFileName = customClassName != null ? actualClassName : actualClassName.substring(PACKAGE_PREFIX.length());
-			try (FileOutputStream fos = new FileOutputStream(bytecodeSaveDir.resolve(classFileName + ".class").toFile())) {
+			try (FileOutputStream fos = new FileOutputStream(bytecodeSaveDir.resolve(classFileName).toFile())) {
 				fos.write(cw.toByteArray());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
