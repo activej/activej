@@ -18,7 +18,6 @@ package io.activej.aggregation;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +29,7 @@ import java.sql.*;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -40,7 +40,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	private static final Logger logger = LoggerFactory.getLogger(ChunkLockerMySql.class);
 
 	public static final String DEFAULT_LOCK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "lockTable", "chunk_lock");
-	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(ChunkLockerMySql.class, "lockTtl", Duration.ofHours(1));
+	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(ChunkLockerMySql.class, "lockTtl", Duration.ofMinutes(5));
 	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(ChunkLockerMySql.class, "lockedBy", null);
 
 	private final Executor executor;
@@ -48,8 +48,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	private final ChunkIdCodec<C> idCodec;
 	private final String aggregationId;
 
-	@Nullable
-	private String lockedBy = DEFAULT_LOCKED_BY;
+	private String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
 
 	private String tableLock = DEFAULT_LOCK_TABLE;
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
@@ -135,20 +134,41 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"INSERT INTO {lock} (`aggregation_id`, `chunk_id`, `locked_by`) " +
-								"VALUES " + String.join(",", nCopies(chunkIds.size(), "(?,?,?)"))
-						))) {
-							int index = 1;
-							for (C chunkId : chunkIds) {
-								ps.setString(index++, aggregationId);
-								ps.setString(index++, idCodec.toFileName(chunkId));
-								ps.setString(index++, lockedBy);
+						try {
+							doLockChunks(connection, chunkIds);
+						} catch (SQLIntegrityConstraintViolationException e) {
+							int deletedStaleCount;
+							try (PreparedStatement ps = connection.prepareStatement(sql("" +
+									"DELETE FROM {lock} " +
+									"WHERE `locked_at` <= NOW() - INTERVAL ? SECOND"
+							))) {
+								ps.setLong(1, lockTtlSeconds);
+								deletedStaleCount = ps.executeUpdate();
+							} catch (SQLException de) {
+								e.addSuppressed(de);
+								throw e;
 							}
-							ps.executeUpdate();
+
+							if (deletedStaleCount == 0) throw e;
+							doLockChunks(connection, chunkIds);
 						}
 					}
 				});
+	}
+
+	private void doLockChunks(Connection connection, Set<C> chunkIds) throws SQLException {
+		try (PreparedStatement ps = connection.prepareStatement(sql("" +
+				"INSERT INTO {lock} (`aggregation_id`, `chunk_id`, `locked_by`) " +
+				"VALUES " + String.join(",", nCopies(chunkIds.size(), "(?,?,?)"))
+		))) {
+			int index = 1;
+			for (C chunkId : chunkIds) {
+				ps.setString(index++, aggregationId);
+				ps.setString(index++, idCodec.toFileName(chunkId));
+				ps.setString(index++, lockedBy);
+			}
+			ps.executeUpdate();
+		}
 	}
 
 	@Override
@@ -158,22 +178,18 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 					try (Connection connection = dataSource.getConnection()) {
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
 								"DELETE FROM {lock} " +
-								"WHERE `aggregation_id`=? AND `chunk_id` IN " +
+								"WHERE `aggregation_id`=? AND `locked_by`=? AND `chunk_id` IN " +
 								nCopies(chunkIds.size(), "?").stream()
 										.collect(joining(",", "(", ")")))
 						)) {
 							ps.setString(1, aggregationId);
-							int index = 2;
+							ps.setString(2, lockedBy);
+							int index = 3;
 							for (C chunkId : chunkIds) {
 								ps.setString(index++, idCodec.toFileName(chunkId));
 							}
 
-							int released = ps.executeUpdate();
-
-							int releasedByOther = chunkIds.size() - released;
-							if (releasedByOther != 0) {
-								logger.warn("{} chunks were released by someone else", releasedByOther);
-							}
+							ps.executeUpdate();
 						}
 					}
 				});

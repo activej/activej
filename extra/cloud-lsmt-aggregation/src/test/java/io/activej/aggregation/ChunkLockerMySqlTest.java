@@ -22,7 +22,6 @@ import static io.activej.inject.util.Utils.union;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
-import static java.util.Collections.singleton;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -109,19 +108,27 @@ public class ChunkLockerMySqlTest {
 	}
 
 	@Test
-	public void releaseAlreadyReleasedShouldNotThrowError() {
+	public void releaseChunksLockedByOtherShouldNotRelease() {
 		Set<Long> lockedByA = set(1L, 2L, 3L);
+		Set<Long> lockedByB = set(4L, 5L, 6L);
+		Set<Long> locked = union(lockedByA, lockedByB);
 		await(lockerA.lockChunks(lockedByA));
-
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
 
-		await(lockerB.releaseChunks(singleton(1L)));
+		await(lockerB.lockChunks(lockedByB));
+		assertEquals(locked, await(lockerA.getLockedChunks()));
 
-		assertEquals(set(2L, 3L), await(lockerA.getLockedChunks()));
+		await(lockerB.releaseChunks(lockedByA));
+		assertEquals(locked, await(lockerA.getLockedChunks()));
+
+		await(lockerA.releaseChunks(lockedByB));
+		assertEquals(locked, await(lockerA.getLockedChunks()));
 
 		await(lockerA.releaseChunks(lockedByA));
+		await(lockerB.releaseChunks(lockedByB));
 
 		assertTrue(await(lockerB.getLockedChunks()).isEmpty());
+		assertTrue(await(lockerA.getLockedChunks()).isEmpty());
 	}
 
 	@Test
@@ -134,6 +141,24 @@ public class ChunkLockerMySqlTest {
 		expireLockedChunk(2L);
 
 		assertEquals(set(1L, 3L), await(lockerA.getLockedChunks()));
+	}
+
+	@Test
+	public void lockShouldOverrideExpiredChunks() {
+		Set<Long> lockedByA = set(1L, 2L, 3L);
+		await(lockerA.lockChunks(lockedByA));
+
+		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
+
+		Set<Long> locked2 = set(1L, 4L);
+		Throwable exception = awaitException(lockerA.lockChunks(locked2));
+		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
+
+		expireLockedChunk(1L);
+
+		await(lockerA.lockChunks(locked2));
+
+		assertEquals(union(lockedByA, locked2), await(lockerA.getLockedChunks()));
 	}
 
 	private void expireLockedChunk(long chunkId) {

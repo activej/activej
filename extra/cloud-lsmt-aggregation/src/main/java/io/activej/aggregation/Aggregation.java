@@ -566,8 +566,9 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 					return chunkLocker.lockChunks(consolidatingChunkIds)
 							.then($ -> doConsolidation(chunks))
-							.whenComplete(() -> chunkLocker.releaseChunks(consolidatingChunkIds))
-							.map(removedChunks -> AggregationDiff.of(new LinkedHashSet<>(removedChunks), new LinkedHashSet<>(chunks)));
+							.map(removedChunks -> AggregationDiff.of(new LinkedHashSet<>(removedChunks), new LinkedHashSet<>(chunks)))
+							.thenEx((removedChunks, e) -> chunkLocker.releaseChunks(consolidatingChunkIds)
+									.thenEx(($, e2) -> Promise.of(removedChunks, e)));
 				})
 				.whenComplete(($, e) -> {
 					if (e == null) {

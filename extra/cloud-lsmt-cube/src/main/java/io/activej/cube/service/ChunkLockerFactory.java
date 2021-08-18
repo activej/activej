@@ -20,6 +20,8 @@ import io.activej.aggregation.ChunkLocker;
 import io.activej.aggregation.ChunkLockerNoOp;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,18 +38,21 @@ class ChunkLockerFactory<C> {
 
 	private final Map<String, DelayedReleaseChunkLocker> lockers = new HashMap<>();
 
+	@Nullable
 	private final Function<String, ChunkLocker<C>> factory;
 
 	ChunkLockerFactory() {
-		//noinspection unchecked
-		this.factory = $ -> (ChunkLocker<C>) NOOP_CHUNK_LOCKER;
+		this.factory = null;
 	}
 
-	ChunkLockerFactory(Function<String, ChunkLocker<C>> factory) {
+	ChunkLockerFactory(@NotNull Function<String, ChunkLocker<C>> factory) {
 		this.factory = factory;
 	}
 
 	public ChunkLocker<Object> ensureLocker(String aggregationId) {
+		if (factory == null) {
+			return NOOP_CHUNK_LOCKER;
+		}
 		//noinspection unchecked
 		return lockers.computeIfAbsent(aggregationId,
 				$ -> new DelayedReleaseChunkLocker((ChunkLocker<Object>) factory.apply(aggregationId)));
