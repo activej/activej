@@ -164,8 +164,6 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 								positions.put(partition, logPositionDiff);
 							}
 						}
-						connection.commit();
-
 						return new FetchData<>(revision, revision, toLogDiffs(cubeDiff, positions));
 					}
 				});
@@ -184,12 +182,10 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 							throw new IllegalArgumentException("Passed revision is higher than uplink revision");
 						}
 
-						FetchData<Long, LogDiff<CubeDiff>> result = new FetchData<>(revision, revision, toLogDiffs(
-								fetchChunkDiffs(connection, currentCommitId, null),
-								fetchPositionDiffs(connection, currentCommitId, null)
+						return new FetchData<>(revision, revision, toLogDiffs(
+								fetchChunkDiffs(connection, currentCommitId, revision),
+								fetchPositionDiffs(connection, currentCommitId, revision)
 						));
-						connection.commit();
-						return result;
 					}
 				});
 	}
@@ -208,18 +204,15 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(false);
 
-						long newRevision;
+						long revision = getMaxRevision(connection);
+						if (revision < protoCommit.parentRevision) {
+							throw new IllegalArgumentException("Uplink revision is less than parent revision");
+						}
 						while (true) {
-							long revision = getMaxRevision(connection);
-							if (revision < protoCommit.parentRevision) {
-								throw new IllegalArgumentException("Uplink revision is less than parent revision");
-							}
-
-							newRevision = revision + 1;
 							try (PreparedStatement ps = connection.prepareStatement(sql("" +
 									"INSERT INTO {revision} (`revision`, `created_by`) VALUES (?,?)"
 							))) {
-								ps.setLong(1, newRevision);
+								ps.setLong(1, ++revision);
 								ps.setString(2, createdBy);
 								ps.executeUpdate();
 								break;
@@ -238,55 +231,51 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 						removed.removeAll(added);
 
 						if (!added.isEmpty()) {
-							addChunks(connection, newRevision, added);
+							addChunks(connection, revision, added);
 						}
 
 						if (!removed.isEmpty()) {
-							removeChunks(connection, newRevision, removed);
+							removeChunks(connection, revision, removed);
 						}
 
 						Map<String, LogPosition> positions = collectPositions(diffsList);
 						if (!positions.isEmpty()) {
-							updatePositions(connection, newRevision, positions);
+							updatePositions(connection, revision, positions);
 						}
 
-						if (newRevision == protoCommit.parentRevision + 1) {
-							connection.commit();
-
-							return new FetchData<>(newRevision, newRevision, emptyList());
-						}
-
-						FetchData<Long, LogDiff<CubeDiff>> result = new FetchData<>(newRevision, newRevision, toLogDiffs(
-								fetchChunkDiffs(connection, protoCommit.parentRevision, newRevision - 1),
-								fetchPositionDiffs(connection, protoCommit.parentRevision, newRevision - 1)
-						));
 						connection.commit();
-						return result;
+
+						if (revision == protoCommit.parentRevision + 1) {
+							return new FetchData<>(revision, revision, emptyList());
+						}
+
+						return new FetchData<>(revision, revision, toLogDiffs(
+								fetchChunkDiffs(connection, protoCommit.parentRevision, revision - 1),
+								fetchPositionDiffs(connection, protoCommit.parentRevision, revision - 1)
+						));
 					}
 				});
 	}
 
-	private CubeDiff fetchChunkDiffs(Connection connection, long from, @Nullable Long to) throws SQLException, MalformedDataException {
+	private CubeDiff fetchChunkDiffs(Connection connection, long from, long to) throws SQLException, MalformedDataException {
 		CubeDiff cubeDiff;
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"SELECT `id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, ISNULL(`removed_revision`) " +
+				"SELECT `id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`," +
+				" ISNULL(`removed_revision`) OR `removed_revision`>? " +
 				"FROM {chunk} " +
-				"WHERE" +
-				" (`added_revision`<=? AND `removed_revision`>?" + (to == null ? "" : " AND `removed_revision`<=?") + ")" +
-				" OR" +
-				" (`added_revision`>? AND `removed_revision` IS NULL " + (to == null ? "" : " AND `added_revision`<=?") + ")"
+				"WHERE " +
+				"(`removed_revision` BETWEEN ? AND ? AND `added_revision`<?)" +
+				" OR " +
+				"(`added_revision` BETWEEN ? AND ? AND (`removed_revision` IS NULL OR `removed_revision`>?))"
 		))) {
-			if (to == null) {
-				for (int i = 1; i <= 3; i++) {
-					ps.setLong(i, from);
-				}
-			} else {
-				ps.setLong(1, from);
-				ps.setLong(2, from);
-				ps.setLong(3, to);
-				ps.setLong(4, from);
-				ps.setLong(5, to);
-			}
+			from++;
+			ps.setLong(1, to);
+			ps.setLong(2, from);
+			ps.setLong(3, to);
+			ps.setLong(4, from);
+			ps.setLong(5, from);
+			ps.setLong(6, to);
+			ps.setLong(7, to);
 			ResultSet resultSet = ps.executeQuery();
 
 			Map<String, Tuple2<Set<AggregationChunk>, Set<AggregationChunk>>> aggregationDiffs = new HashMap<>();
@@ -321,7 +310,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		return cubeDiff;
 	}
 
-	private Map<String, LogPositionDiff> fetchPositionDiffs(Connection connection, long from, @Nullable Long to) throws SQLException {
+	private Map<String, LogPositionDiff> fetchPositionDiffs(Connection connection, long from, long to) throws SQLException {
 		Map<String, LogPositionDiff> positions = new HashMap<>();
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
 				"SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position`, g.`to` " +
@@ -329,14 +318,14 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 				" INNER JOIN" +
 				" (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, IF(`revision_id`>?, TRUE, FALSE) as `to`" +
 				" FROM {position}" +
-				(to == null ? "" : " WHERE `revision_id`<=?") +
+				" WHERE `revision_id`<=?" +
 				" GROUP BY `partition_id`, `to`) g" +
 				" ON p.`partition_id` = g.`partition_id`" +
 				" AND p.`revision_id` = g.`max_revision`" +
 				"ORDER BY p.`partition_id`, `to`"
 		))) {
 			ps.setLong(1, from);
-			if (to != null) ps.setLong(2, to);
+			ps.setLong(2, to);
 
 			ResultSet resultSet = ps.executeQuery();
 			LogPosition[] fromTo = new LogPosition[2];
