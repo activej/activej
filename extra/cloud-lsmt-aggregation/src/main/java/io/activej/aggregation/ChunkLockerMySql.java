@@ -18,6 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.promise.Promise;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	private final ChunkIdCodec<C> idCodec;
 	private final String aggregationId;
 
+	@NotNull
 	private String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
 
 	private String tableLock = DEFAULT_LOCK_TABLE;
@@ -79,7 +81,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return this;
 	}
 
-	public ChunkLockerMySql<C> withLockedBy(String lockedBy) {
+	public ChunkLockerMySql<C> withLockedBy(@NotNull String lockedBy) {
 		this.lockedBy = lockedBy;
 		return this;
 	}

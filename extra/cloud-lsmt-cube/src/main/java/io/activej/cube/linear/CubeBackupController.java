@@ -56,7 +56,7 @@ public final class CubeBackupController {
 	private String tablePositionBackup = BACKUP_POSITION_TABLE;
 	private String tableChunkBackup = BACKUP_CHUNK_TABLE;
 
-	private String backupBy = null;
+	private String backupBy = "null";
 
 	private CubeBackupController(DataSource dataSource, ChunksBackupService chunksBackupService) {
 		this.dataSource = dataSource;
@@ -87,7 +87,7 @@ public final class CubeBackupController {
 	}
 
 	public CubeBackupController withBackupBy(String backupBy) {
-		this.backupBy = backupBy;
+		this.backupBy = backupBy == null ? "null" : ('\'' + backupBy + '\'');
 		return this;
 	}
 
@@ -122,16 +122,17 @@ public final class CubeBackupController {
 		}
 	}
 
-	private void backupChunks(Set<Long> chunkIds, long revisionId) throws CubeException {
-		logger.trace("Backing up chunks {} on revision {}", chunkIds, revisionId);
+	private long getMaxRevisionId(Connection connection) throws CubeException {
+		try (Statement statement = connection.createStatement()) {
+			ResultSet resultSet = statement.executeQuery(sql("SELECT MAX(`revision`) FROM {revision}"));
 
-		try {
-			chunksBackupService.backup(revisionId, chunkIds);
-		} catch (IOException e) {
-			throw new CubeException("Failed to backup chunks", e);
+			if (!resultSet.next()) {
+				throw new CubeException("Cube is not initialized");
+			}
+			return resultSet.getLong(1);
+		} catch (SQLException e) {
+			throw new CubeException("Failed to retrieve maximum revision ID", e);
 		}
-
-		logger.trace("Chunks {} are backed up on revision {}", chunkIds, revisionId);
 	}
 
 	private void backupDb(Connection connection, long revisionId) throws CubeException {
@@ -147,19 +148,6 @@ public final class CubeBackupController {
 
 		logger.trace("Database is backed up on revision {} " +
 				"Waiting for chunks to back up prior to commit", revisionId);
-	}
-
-	private long getMaxRevisionId(Connection connection) throws CubeException {
-		try (Statement statement = connection.createStatement()) {
-			ResultSet resultSet = statement.executeQuery(sql("SELECT MAX(`revision`) FROM {revision}"));
-
-			if (!resultSet.next()) {
-				throw new CubeException("Cube is not initialized");
-			}
-			return resultSet.getLong(1);
-		} catch (SQLException e) {
-			throw new CubeException("Failed to retrieve maximum revision ID", e);
-		}
 	}
 
 	private Set<Long> getChunksToBackup(Connection connection, long revisionId) throws CubeException {
@@ -181,6 +169,18 @@ public final class CubeBackupController {
 		}
 	}
 
+	private void backupChunks(Set<Long> chunkIds, long revisionId) throws CubeException {
+		logger.trace("Backing up chunks {} on revision {}", chunkIds, revisionId);
+
+		try {
+			chunksBackupService.backup(revisionId, chunkIds);
+		} catch (IOException e) {
+			throw new CubeException("Failed to backup chunks", e);
+		}
+
+		logger.trace("Chunks {} are backed up on revision {}", chunkIds, revisionId);
+	}
+
 	private String sql(String sql) {
 		return sql
 				.replace("{revision}", tableRevision)
@@ -189,7 +189,7 @@ public final class CubeBackupController {
 				.replace("{backup}", tableBackup)
 				.replace("{backup_position}", tablePositionBackup)
 				.replace("{backup_chunk}", tableChunkBackup)
-				.replace("{backup_by}", backupBy == null ? "null" : ('\'' + backupBy + '\''));
+				.replace("{backup_by}", backupBy);
 	}
 
 	public void initialize() throws IOException, SQLException {

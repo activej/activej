@@ -38,7 +38,7 @@ public final class CubeCleanerController {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration CHUNKS_CLEANUP_DELAY = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupDelay", Duration.ofMinutes(1));
-	public static final Duration CLEANUP_OLDER_THEN = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupOlderThan", Duration.ofMinutes(10));
+	public static final Duration CLEANUP_OLDER_THAN = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupOlderThan", Duration.ofMinutes(10));
 	public static final int MINIMAL_REVISIONS = ApplicationSettings.getInt(CubeCleanerController.class, "minimalRevisions", 0);
 
 	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "revisionTable", "revision");
@@ -51,7 +51,7 @@ public final class CubeCleanerController {
 	private final ChunksCleanerService chunksCleanerService;
 
 	private Duration chunksCleanupDelay = CHUNKS_CLEANUP_DELAY;
-	private Duration cleanupOlderThan = CLEANUP_OLDER_THEN;
+	private Duration cleanupOlderThan = CLEANUP_OLDER_THAN;
 	private int minimalNumberOfRevisions = MINIMAL_REVISIONS;
 
 	private String tableRevision = REVISION_TABLE;

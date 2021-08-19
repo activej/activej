@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `backup`
+CREATE TABLE IF NOT EXISTS {backup}
 (
     `revision`   BIGINT       NOT NULL,
     `created_at` TIMESTAMP    NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `backup`
     PRIMARY KEY (`revision`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `backup_chunk`
+CREATE TABLE IF NOT EXISTS {backup_chunk}
 (
     `backup_id`        BIGINT       NOT NULL,
     `id`               BIGINT       NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `backup_chunk`
 ) ENGINE = InnoDB
    DEFAULT CHARSET = utf8;
 
-CREATE TABLE IF NOT EXISTS `backup_position`
+CREATE TABLE IF NOT EXISTS {backup_position}
 (
     `backup_id`    BIGINT       NOT NULL,
     `revision_id`  BIGINT       NOT NULL,

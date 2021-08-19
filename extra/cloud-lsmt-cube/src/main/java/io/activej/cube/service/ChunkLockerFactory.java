@@ -25,10 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 class ChunkLockerFactory<C> {
@@ -91,11 +88,13 @@ class ChunkLockerFactory<C> {
 
 		@Override
 		public Promise<Void> releaseChunks(Set<Object> chunkIds) {
-			chunksToBeReleased = chunkIds;
+			chunksToBeReleased = new HashSet<>(chunkIds);
 			return Promise.complete();
 		}
 
 		private Promise<Void> doRelease() {
+			Set<Object> chunksToBeReleased = this.chunksToBeReleased;
+			this.chunksToBeReleased = Collections.emptySet();
 			return peer.releaseChunks(chunksToBeReleased);
 		}
 
