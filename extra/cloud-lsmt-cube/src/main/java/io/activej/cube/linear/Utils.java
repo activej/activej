@@ -19,6 +19,7 @@ import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
+import io.activej.cube.linear.CubeCleanerController.ChunksCleanerService;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
@@ -27,9 +28,11 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -67,6 +70,22 @@ final class Utils {
 		return (revisionId, chunkIds) ->
 				execute(storage, () -> storage.backup(String.valueOf(revisionId), chunkIds),
 						"Failed to backup chunks on storage ");
+	}
+
+	static ChunksCleanerService cleanerServiceOfStorage(ActiveFsChunkStorage<Long> storage) {
+		return new ChunksCleanerService() {
+			@Override
+			public void checkRequiredChunks(Set<Long> chunkIds) throws IOException {
+				execute(storage, () -> storage.checkRequiredChunks(chunkIds),
+						"Required chunks check failed");
+			}
+
+			@Override
+			public void cleanup(Set<Long> chunkIds, Instant safePoint) throws IOException {
+				execute(storage, () -> storage.cleanup(chunkIds, safePoint),
+						"Failed to cleanup chunks");
+			}
+		};
 	}
 
 	private static void execute(ActiveFsChunkStorage<Long> storage, AsyncSupplier<Void> supplier, String errorMessage) throws IOException {
