@@ -15,7 +15,10 @@ package io.activej.cube.linear;
  * limitations under the License.
  */
 
+import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunk;
+import io.activej.async.function.AsyncSupplier;
+import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +30,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 final class Utils {
@@ -57,6 +61,22 @@ final class Utils {
 
 	static String measuresToString(List<String> measures) {
 		return String.join(" ", measures);
+	}
+
+	static ChunksBackupService backupServiceOfStorage(ActiveFsChunkStorage<Long> storage) {
+		return (revisionId, chunkIds) ->
+				execute(storage, () -> storage.backup(String.valueOf(revisionId), chunkIds),
+						"Failed to backup chunks on storage ");
+	}
+
+	private static void execute(ActiveFsChunkStorage<Long> storage, AsyncSupplier<Void> supplier, String errorMessage) throws IOException {
+		try {
+			storage.getEventloop().submit(supplier::get).get();
+		} catch (InterruptedException e) {
+			throw new IOException("Eventloop thread was interrupted", e);
+		} catch (ExecutionException e) {
+			throw new IOException(errorMessage, e);
+		}
 	}
 
 	static class ChunkWithAggregationId {
