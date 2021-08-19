@@ -101,6 +101,9 @@
                 <exclude>**/CubeGetIrrelevantChunksTest.java</exclude>
                 <exclude>**/CubeRemovingOfIrrelevantChunksTest.java</exclude>
                 <exclude>**/CubeLogProcessorControllerTest.java</exclude>
+                <exclude>**/CubeUplinkMigrationServiceTest.java</exclude>
+                <exclude>**/CubeUplinkMySqlTest.java</exclude>
+                <exclude>**/CubeBackupControllerTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>
