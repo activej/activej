@@ -3,83 +3,52 @@ package io.activej.cube;
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffCodec;
-import io.activej.cube.ot.CubeOT;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.etl.*;
-import io.activej.eventloop.Eventloop;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
-import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.repository.OTRepositoryMySql;
-import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplinkImpl;
+import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.SerializerBuilder;
-import io.activej.test.rules.ByteBufRule;
-import io.activej.test.rules.ClassBuilderConstantsRule;
-import io.activej.test.rules.EventloopRule;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import javax.sql.DataSource;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
-import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-public final class LogToCubeTest {
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@ClassRule
-	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-	@Rule
-	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+public final class LogToCubeTest extends CubeTestBase {
 
 	@Test
 	public void testStubStorage() throws Exception {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		Executor executor = Executors.newCachedThreadPool();
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
-
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalActiveFs fs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(EVENTLOOP, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		Cube cube = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))
@@ -87,28 +56,23 @@ public final class LogToCubeTest {
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 
-		DataSource dataSource = dataSource("test.properties");
-		OTSystem<LogDiff<CubeDiff>> otSystem = LogOT.createLogOT(CubeOT.createCubeOT());
-		OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-				otSystem, LogDiffCodec.create(CubeDiffCodec.create(cube)));
-		initializeRepository(repository);
+		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		List<TestAdvResult> expected = asList(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
-		OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
+		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
+		LocalActiveFs localFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, logsDir);
 		await(localFs.start());
-		Multilog<TestPubRequest> multilog = MultilogImpl.create(eventloop, localFs,
+		Multilog<TestPubRequest> multilog = MultilogImpl.create(EVENTLOOP, localFs,
 				frameFormat,
-				SerializerBuilder.create(classLoader).build(TestPubRequest.class),
+				SerializerBuilder.create(CLASS_LOADER).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
-		LogOTProcessor<TestPubRequest, CubeDiff> logOTProcessor = LogOTProcessor.create(eventloop,
+		LogOTProcessor<TestPubRequest, CubeDiff> logOTProcessor = LogOTProcessor.create(EVENTLOOP,
 				multilog,
-				new TestAggregatorSplitter(cube), // TestAggregatorSplitter.create(eventloop, cube),
+				new TestAggregatorSplitter(cube), // TestAggregatorSplitter.create(EVENTLOOP, cube),
 				"testlog",
 				asList("partitionA"),
 				cubeDiffLogOTState);
@@ -124,10 +88,10 @@ public final class LogToCubeTest {
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
 		List<TestAdvResult> list = await(cube.queryRawStream(
-				asList("adv"),
-				asList("advRequests"),
-				alwaysTrue(),
-				TestAdvResult.class, classLoader)
+						asList("adv"),
+						asList("advRequests"),
+						alwaysTrue(),
+						TestAdvResult.class, CLASS_LOADER)
 				.toList());
 
 		assertEquals(expected, list);

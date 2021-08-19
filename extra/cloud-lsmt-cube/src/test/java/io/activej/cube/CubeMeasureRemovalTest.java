@@ -6,53 +6,39 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffCodec;
-import io.activej.cube.ot.CubeOT;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.etl.*;
-import io.activej.eventloop.Eventloop;
+import io.activej.etl.LogDataConsumer;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
-import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.repository.OTRepositoryMySql;
-import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplinkImpl;
+import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
-import io.activej.test.rules.ByteBufRule;
-import io.activej.test.rules.ClassBuilderConstantsRule;
-import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
-import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -60,25 +46,9 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-public class CubeMeasureRemovalTest {
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@ClassRule
-	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-	@Rule
-	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
-
+public class CubeMeasureRemovalTest extends CubeTestBase {
 	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
-	private Eventloop eventloop;
-	private Executor executor;
-	private DefiningClassLoader classLoader;
-	private DataSource dataSource;
 	private AggregationChunkStorage<Long> aggregationChunkStorage;
 	private Multilog<LogItem> multilog;
 	private Path aggregationsDir;
@@ -89,17 +59,13 @@ public class CubeMeasureRemovalTest {
 		aggregationsDir = temporaryFolder.newFolder().toPath();
 		logsDir = temporaryFolder.newFolder().toPath();
 
-		eventloop = Eventloop.getCurrentEventloop();
-		executor = Executors.newCachedThreadPool();
-		classLoader = DefiningClassLoader.create();
-		dataSource = dataSource("test.properties");
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalActiveFs fs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
-		BinarySerializer<LogItem> serializer = SerializerBuilder.create(classLoader).build(LogItem.class);
-		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
+		aggregationChunkStorage = ActiveFsChunkStorage.create(EVENTLOOP, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
+		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER).build(LogItem.class);
+		LocalActiveFs localFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, logsDir);
 		await(localFs.start());
-		multilog = MultilogImpl.create(eventloop,
+		multilog = MultilogImpl.create(EVENTLOOP,
 				localFs,
 				LZ4FrameFormat.create(),
 				serializer,
@@ -108,10 +74,10 @@ public class CubeMeasureRemovalTest {
 
 	@Test
 	public void test() throws Exception {
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalActiveFs fs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(EVENTLOOP, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
+		Cube cube = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -132,25 +98,20 @@ public class CubeMeasureRemovalTest {
 				.withRelation("campaign", "advertiser")
 				.withRelation("banner", "campaign");
 
-		DataSource dataSource = dataSource("test.properties");
-		OTSystem<LogDiff<CubeDiff>> otSystem = LogOT.createLogOT(CubeOT.createCubeOT());
-		OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-				otSystem, LogDiffCodec.create(CubeDiffCodec.create(cube)));
-		initializeRepository(repository);
+		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, logsDir);
+		LocalActiveFs localFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, logsDir);
 		await(localFs.start());
-		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
+		Multilog<LogItem> multilog = MultilogImpl.create(EVENTLOOP,
 				localFs,
 				LZ4FrameFormat.create(),
-				SerializerBuilder.create(classLoader).build(LogItem.class),
+				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
-		OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
+		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(eventloop, multilog,
+		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(EVENTLOOP, multilog,
 				cube.logStreamConsumer(LogItem.class), "testlog", asList("partitionA"), cubeDiffLogOTState);
 
 		// checkout first (root) revision
@@ -169,7 +130,7 @@ public class CubeMeasureRemovalTest {
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 
 		// Initialize cube with new structure (removed measure)
-		cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		cube = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -191,9 +152,9 @@ public class CubeMeasureRemovalTest {
 				.withRelation("banner", "campaign");
 
 		LogOTState<CubeDiff> cubeDiffLogOTState1 = LogOTState.create(cube);
-		logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState1);
+		logCubeStateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState1);
 
-		logOTProcessor = LogOTProcessor.create(eventloop, multilog, cube.logStreamConsumer(LogItem.class),
+		logOTProcessor = LogOTProcessor.create(EVENTLOOP, multilog, cube.logStreamConsumer(LogItem.class),
 				"testlog", asList("partitionA"), cubeDiffLogOTState1);
 
 		await(logCubeStateManager.checkout());
@@ -223,7 +184,7 @@ public class CubeMeasureRemovalTest {
 				.collect(groupingBy(o -> o.date, reducing(0L, o -> o.clicks, Long::sum)));
 
 		StreamConsumerToList<LogItem> queryResultConsumer2 = StreamConsumerToList.create();
-		await(cube.queryRawStream(asList("date"), asList("clicks"), alwaysTrue(), LogItem.class, classLoader).streamTo(
+		await(cube.queryRawStream(asList("date"), asList("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
 				queryResultConsumer2));
 
 		// Check query results
@@ -251,7 +212,7 @@ public class CubeMeasureRemovalTest {
 
 		// Query
 		StreamConsumerToList<LogItem> queryResultConsumer3 = StreamConsumerToList.create();
-		await(cube.queryRawStream(asList("date"), asList("clicks"), alwaysTrue(), LogItem.class, DefiningClassLoader.create(classLoader))
+		await(cube.queryRawStream(asList("date"), asList("clicks"), alwaysTrue(), LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
 				.streamTo(queryResultConsumer3));
 		List<LogItem> queryResult3 = queryResultConsumer3.getList();
 
@@ -264,9 +225,9 @@ public class CubeMeasureRemovalTest {
 	}
 
 	@Test
-	public void testNewUnknownMeasureInAggregationDiffOnDeserialization() throws Throwable {
+	public void testNewUnknownMeasureInAggregationDiffOnDeserialization() {
 		{
-			Cube cube1 = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+			Cube cube1 = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 					.withDimension("date", ofLocalDate())
 					.withMeasure("impressions", sum(ofLong()))
 					.withMeasure("clicks", sum(ofLong()))
@@ -275,18 +236,13 @@ public class CubeMeasureRemovalTest {
 							.withDimensions("date")
 							.withMeasures("impressions", "clicks", "conversions"));
 
-			LogDiffCodec<CubeDiff> diffCodec1 = LogDiffCodec.create(CubeDiffCodec.create(cube1));
-			OTSystem<LogDiff<CubeDiff>> otSystem = LogOT.createLogOT(CubeOT.createCubeOT());
-			OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-					otSystem, diffCodec1);
-			initializeRepository(repository);
+			OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
 
 			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube1);
-			OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
-			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
+			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
 
 			LogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
-			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(eventloop,
+			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(EVENTLOOP,
 					multilog, logStreamConsumer1, "testlog", asList("partitionA"), cubeDiffLogOTState);
 
 			await(logCubeStateManager1.checkout());
@@ -298,28 +254,28 @@ public class CubeMeasureRemovalTest {
 		}
 
 		// Initialize cube with new structure (remove "clicks" from cube configuration)
-		Cube cube2 = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		Cube cube2 = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withMeasure("impressions", sum(ofLong()))
 				.withAggregation(id("date")
 						.withDimensions("date")
 						.withMeasures("impressions"));
 
-		LogDiffCodec<CubeDiff> diffCodec2 = LogDiffCodec.create(CubeDiffCodec.create(cube2));
-		OTSystem<LogDiff<CubeDiff>> otSystem = LogOT.createLogOT(CubeOT.createCubeOT());
-		OTRepositoryMySql<LogDiff<CubeDiff>> otSourceSql2 = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-				otSystem, diffCodec2);
-		otSourceSql2.initialize();
+		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
 
-		Throwable exception = awaitException(otSourceSql2.getHeads());
+		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception, instanceOf(MalformedDataException.class));
-		assertEquals("Unknown fields: [clicks, conversions]", exception.getMessage());
+
+		String expectedMessage = testName.equals("OT graph") ?
+				"Unknown fields: [clicks, conversions]" :
+				"Unknown measures [clicks, conversions] in aggregation 'date'";
+		assertEquals(expectedMessage, exception.getMessage());
 	}
 
 	@Test
-	public void testUnknownAggregation() throws Throwable {
+	public void testUnknownAggregation() {
 		{
-			Cube cube1 = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+			Cube cube1 = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 					.withDimension("date", ofLocalDate())
 					.withMeasure("impressions", sum(ofLong()))
 					.withMeasure("clicks", sum(ofLong()))
@@ -333,19 +289,14 @@ public class CubeMeasureRemovalTest {
 							.withDimensions("date")
 							.withMeasures("clicks"));
 
-			LogDiffCodec<CubeDiff> diffCodec1 = LogDiffCodec.create(CubeDiffCodec.create(cube1));
-			OTSystem<LogDiff<CubeDiff>> otSystem = LogOT.createLogOT(CubeOT.createCubeOT());
-			OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-					otSystem, diffCodec1);
-			initializeRepository(repository);
+			OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
 
 			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube1);
-			OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
-			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
+			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
 
 			LogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
 
-			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(eventloop,
+			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(EVENTLOOP,
 					multilog, logStreamConsumer1, "testlog", asList("partitionA"), cubeDiffLogOTState);
 
 			await(logCubeStateManager1.checkout());
@@ -357,21 +308,20 @@ public class CubeMeasureRemovalTest {
 		}
 
 		// Initialize cube with new structure (remove "impressions" aggregation from cube configuration)
-		Cube cube2 = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		Cube cube2 = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withMeasure("impressions", sum(ofLong()))
 				.withMeasure("clicks", sum(ofLong()))
 				.withAggregation(id("date")
 						.withDimensions("date")
-						.withMeasures("impressions", "clicks"));
+						.withMeasures("impressions", "clicks"))
+				.withAggregation(id("otherAggregation")
+						.withDimensions("date")
+						.withMeasures("clicks"));
 
-		LogDiffCodec<CubeDiff> diffCodec2 = LogDiffCodec.create(CubeDiffCodec.create(cube2));
-		OTSystem<LogDiff<CubeDiff>> otSystem = LogOT.createLogOT(CubeOT.createCubeOT());
-		OTRepositoryMySql<LogDiff<CubeDiff>> otSourceSql2 = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-				otSystem, diffCodec2);
-		otSourceSql2.initialize();
+		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
 
-		Throwable exception = awaitException(otSourceSql2.getHeads());
+		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception, instanceOf(MalformedDataException.class));
 		assertEquals("Unknown aggregation: impressionsAggregation", exception.getMessage());
 	}

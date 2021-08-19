@@ -5,97 +5,63 @@ import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.Cube;
+import io.activej.cube.CubeTestBase;
 import io.activej.cube.IdGeneratorStub;
 import io.activej.cube.LogItem;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffCodec;
-import io.activej.cube.ot.CubeOT;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.etl.*;
-import io.activej.eventloop.Eventloop;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogOTState;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
-import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.repository.OTRepositoryMySql;
-import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplinkImpl;
+import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
-import io.activej.test.rules.ByteBufRule;
-import io.activej.test.rules.ClassBuilderConstantsRule;
-import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import javax.sql.DataSource;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.collection.CollectionUtils.first;
 import static io.activej.cube.Cube.AggregationConfig.id;
-import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
-public final class CubeLogProcessorControllerTest {
-	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
-
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@ClassRule
-	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@Rule
-	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
-
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
+public final class CubeLogProcessorControllerTest extends CubeTestBase {
 	private Multilog<LogItem> multilog;
 	private LocalActiveFs logsFs;
 	private CubeLogProcessorController<Long, Long> controller;
 
 	@Before
 	public void setUp() throws Exception {
-		DataSource dataSource = dataSource("test.properties");
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
-		Executor executor = Executors.newCachedThreadPool();
 
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		LocalActiveFs aggregationFs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalActiveFs aggregationFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
 		await(aggregationFs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(EVENTLOOP, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
 				LZ4FrameFormat.create(), aggregationFs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -116,22 +82,19 @@ public final class CubeLogProcessorControllerTest {
 						.withDimensions("advertiser")
 						.withMeasures("impressions", "clicks", "conversions", "revenue"));
 
-		OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-				OT_SYSTEM, LogDiffCodec.create(CubeDiffCodec.create(cube)));
-		initializeRepository(repository);
+		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> uplink = OTUplinkImpl.create(repository, OT_SYSTEM);
 		LogOTState<CubeDiff> logState = LogOTState.create(cube);
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(eventloop, OT_SYSTEM, uplink, logState);
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, logState);
 
-		logsFs = LocalActiveFs.create(eventloop, executor, logsDir);
+		logsFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, logsDir);
 		await(logsFs.start());
-		BinarySerializer<LogItem> serializer = SerializerBuilder.create(classLoader)
+		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER)
 				.build(LogItem.class);
-		multilog = MultilogImpl.create(eventloop, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
+		multilog = MultilogImpl.create(EVENTLOOP, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
-				eventloop,
+				EVENTLOOP,
 				multilog,
 				cube.logStreamConsumer(LogItem.class),
 				"test",
@@ -139,7 +102,7 @@ public final class CubeLogProcessorControllerTest {
 				logState);
 
 		controller = CubeLogProcessorController.create(
-				eventloop,
+				EVENTLOOP,
 				logState,
 				stateManager,
 				aggregationChunkStorage,
