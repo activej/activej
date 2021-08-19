@@ -48,17 +48,16 @@
       <groupId>org.lz4</groupId>
       <artifactId>lz4-java</artifactId>
     </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-test</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <optional>true</optional>
       <scope>test</scope>
     </dependency>
   </dependencies>

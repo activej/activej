@@ -106,7 +106,7 @@ public final class Utils {
 
 	@SuppressWarnings("unchecked")
 	public static <D, C> Set<C> chunksInDiffs(CubeDiffScheme<D> cubeDiffsExtractor,
-                                              List<? extends D> diffs) {
+			List<? extends D> diffs) {
 		return diffs.stream()
 				.flatMap(cubeDiffsExtractor::unwrapToStream)
 				.flatMap(CubeDiff::addedChunks)
