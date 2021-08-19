@@ -4,13 +4,13 @@ import io.activej.codegen.DefiningClassLoader;
 import static io.activej.codegen.expression.Expressions.*;
 
 public final class CodegenExpressionsExample {
+	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
+
 	public static void main(String[] args) throws ReflectiveOperationException {
 		//[START REGION_1]
-		Class<Example> example = ClassBuilder
-				// DefiningClassLoader represents a loader for defining dynamically generated classes
-				.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader()), Example.class)
+		Class<Example> example = ClassBuilder.create(Example.class)
 				.withMethod("sayHello", call(staticField(System.class, "out"), "println", value("Hello world")))
-				.build();
+				.defineClass(CLASS_LOADER);
 		//[END REGION_1]
 
 		//[START REGION_2]

@@ -16,31 +16,25 @@
 
 package io.activej.codegen;
 
-import io.activej.codegen.DefiningClassLoader.ClassKey;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionConstant;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.codegen.util.WithInitializer;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.codegen.util.Utils.getPathSetting;
 import static io.activej.codegen.util.Utils.getStringSetting;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -54,27 +48,21 @@ import static org.objectweb.asm.commons.Method.getMethod;
  *
  * @param <T> type of item
  */
-@SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
+@SuppressWarnings({"WeakerAccess", "unused"})
 public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final String CLASS_BUILDER_MARKER = "$GENERATED";
 	public static final String PACKAGE_PREFIX = getStringSetting(ClassBuilder.class, "packagePrefix", "io.activej.codegen.");
-	public static final Path DEFAULT_SAVE_DIR = getPathSetting(ClassBuilder.class, "saveDir", null);
 
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 	private static final ConcurrentHashMap<Integer, Object> STATIC_CONSTANTS = new ConcurrentHashMap<>();
 
-	private final DefiningClassLoader classLoader;
-	private final String className;
-
 	protected final Class<?> superclass;
 	protected final List<Class<?>> interfaces;
-	@Nullable
-	private ClassKey classKey;
-	private Path bytecodeSaveDir = DEFAULT_SAVE_DIR;
-	@Nullable
-	private String customClassName;
+
+	private String className;
+	private final String autoClassName;
 
 	protected final Map<String, Class<?>> fields = new LinkedHashMap<>();
 	protected final Set<String> fieldsFinal = new HashSet<>();
@@ -92,50 +80,37 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	/**
 	 * Creates a new instance of ClassBuilder
 	 *
-	 * @param classLoader class loader
-	 * @param superclass  type of dynamic class
+	 * @param superclass type of dynamic class
 	 */
-	private ClassBuilder(DefiningClassLoader classLoader, Class<?> superclass, List<Class<?>> interfaces, @NotNull String className) {
-		this.classLoader = classLoader;
+	private ClassBuilder(Class<?> superclass, List<Class<?>> interfaces, @NotNull String className) {
 		this.superclass = superclass;
 		this.interfaces = interfaces;
-		this.className = PACKAGE_PREFIX + className;
-		this.classKey = null;
+		this.autoClassName = PACKAGE_PREFIX + className;
 		withStaticField(CLASS_BUILDER_MARKER, Void.class);
 	}
 
-	public static <T> ClassBuilder<T> create(DefiningClassLoader classLoader, Class<? super T> implementation, Class<?>... interfaces) {
-		return create(classLoader, implementation, asList(interfaces));
+	public static <T> ClassBuilder<T> create(Class<T> implementation, Class<?>... interfaces) {
+		return create(implementation, asList(interfaces));
 	}
 
-	public static <T> ClassBuilder<T> create(DefiningClassLoader classLoader, Class<? super T> implementation, List<Class<?>> interfaces) {
+	public static <T> ClassBuilder<T> create(Class<?> implementation, List<Class<?>> interfaces) {
 		if (!interfaces.stream().allMatch(Class::isInterface))
 			throw new IllegalArgumentException();
 		if (implementation.isInterface()) {
-			return new ClassBuilder<>(classLoader,
+			return new ClassBuilder<>(
 					Object.class,
 					Stream.concat(Stream.of(implementation), interfaces.stream()).collect(toList()),
 					implementation.getName());
 		} else {
-			return new ClassBuilder<>(classLoader,
+			return new ClassBuilder<>(
 					implementation,
 					interfaces,
 					implementation.getName());
 		}
 	}
 
-	public ClassBuilder<T> withBytecodeSaveDir(Path bytecodeSaveDir) {
-		this.bytecodeSaveDir = bytecodeSaveDir;
-		return this;
-	}
-
-	public ClassBuilder<T> withClassKey(Object... keyParameters) {
-		this.classKey = keyParameters != null ? new ClassKey(superclass, new HashSet<>(interfaces), asList(keyParameters)) : null;
-		return this;
-	}
-
 	public ClassBuilder<T> withClassName(String name) {
-		this.customClassName = name;
+		this.className = name;
 		return this;
 	}
 
@@ -278,55 +253,42 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 	// endregion
 
-	public Class<T> build() {
-		if (classKey != null) {
-			Class<?> cachedClass = classLoader.getCachedClass(classKey);
+	public Class<T> defineClass(@NotNull DefiningClassLoader classLoader) {
+		return build(classLoader, className != null ? className : autoClassName + '_' + COUNTER.incrementAndGet());
+	}
 
-			if (cachedClass != null) {
-				cleanup();
-				return (Class<T>) cachedClass;
-			}
-		}
-
+	public T defineClassAndCreateInstance(DefiningClassLoader classLoader, Object... arguments) {
 		try {
-			String actualClassName = customClassName != null ? customClassName : className + '_' + COUNTER.incrementAndGet();
-			byte[] bytecode = defineNewClass(actualClassName);
+			return defineClass(classLoader)
+					.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))
+					.newInstance(arguments);
+		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-			synchronized (classLoader) {
-				if (classKey != null) {
-					Class<?> cachedClass = classLoader.getCachedClass(classKey);
+	Class<T> build(DefiningClassLoader classLoader, String className) {
+		Class<T> aClass;
+		try {
+			byte[] bytecode = toBytecode(className, classLoader);
+			//noinspection unchecked
+			aClass = (Class<T>) classLoader.defineClass(className, bytecode);
 
-					if (cachedClass != null) {
-						return (Class<T>) cachedClass;
-					}
-				}
-				Class<T> aClass = (Class<T>) classLoader.defineAndCacheClass(classKey, actualClassName, bytecode);
-				try {
-					Field field = aClass.getField(CLASS_BUILDER_MARKER);
-					//noinspection ResultOfMethodCallIgnored
-					field.get(null);
-				} catch (IllegalAccessException | NoSuchFieldException e) {
-					throw new AssertionError(e);
-				}
-				return aClass;
-			}
+			Field field = aClass.getField(CLASS_BUILDER_MARKER);
+			//noinspection ResultOfMethodCallIgnored
+			field.get(null);
+			return aClass;
+		} catch (IllegalAccessException | NoSuchFieldException e) {
+			throw new AssertionError(e);
 		} finally {
 			cleanup();
 		}
 	}
 
-	public void cleanup() {
-		for (Expression expression : this.fieldExpressions.values()) {
-			if (expression instanceof ExpressionConstant) {
-				STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
-			}
-		}
-	}
-
-	private byte[] defineNewClass(String actualClassName) {
+	private byte[] toBytecode(String className, ClassLoader classLoader) {
 		DefiningClassWriter cw = DefiningClassWriter.create(classLoader);
 
-		Type classType = getType('L' + actualClassName.replace('.', '/') + ';');
+		Type classType = getType('L' + className.replace('.', '/') + ';');
 
 		cw.visit(V1_6, ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
 				classType.getInternalName(),
@@ -428,45 +390,17 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 			g.endMethod();
 		}
 
-		if (bytecodeSaveDir != null) {
-			String classFileName = customClassName != null ? actualClassName : actualClassName.substring(PACKAGE_PREFIX.length());
-			try (FileOutputStream fos = new FileOutputStream(bytecodeSaveDir.resolve(classFileName + ".class").toFile())) {
-				fos.write(cw.toByteArray());
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
 		cw.visitEnd();
 
 		return cw.toByteArray();
 	}
 
-	public T buildClassAndCreateNewInstance() {
-		try {
-			return build().getConstructor().newInstance();
-		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-			throw new RuntimeException(e);
+	private void cleanup() {
+		for (Expression expression : this.fieldExpressions.values()) {
+			if (expression instanceof ExpressionConstant) {
+				STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
+			}
 		}
 	}
 
-	public T buildClassAndCreateNewInstance(Object... constructorParameters) {
-		Class<?>[] constructorParameterTypes = new Class<?>[constructorParameters.length];
-		for (int i = 0; i < constructorParameters.length; i++) {
-			constructorParameterTypes[i] = constructorParameters[i].getClass();
-		}
-		return buildClassAndCreateNewInstance(constructorParameterTypes, constructorParameters);
-	}
-
-	public T buildClassAndCreateNewInstance(Class<?>[] constructorParameterTypes, Object[] constructorParameters) {
-		try {
-			return build().getConstructor(constructorParameterTypes).newInstance(constructorParameters);
-		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public DefiningClassLoader getClassLoader() {
-		return classLoader;
-	}
 }

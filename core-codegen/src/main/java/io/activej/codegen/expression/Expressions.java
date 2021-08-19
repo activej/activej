@@ -75,9 +75,16 @@ public class Expressions {
 	}
 
 	public static Expression sequence(Consumer<List<Expression>> consumer) {
-		List<Expression> expressions = new ArrayList<>();
-		consumer.accept(expressions);
-		return new ExpressionSequence(expressions);
+		List<Expression> seq = new ArrayList<>();
+		consumer.accept(seq);
+		return new ExpressionSequence(seq);
+	}
+
+	public static Expression sequence(Function<List<Expression>, Expression> fn) {
+		List<Expression> seq = new ArrayList<>();
+		Expression result = fn.apply(seq);
+		seq.add(result);
+		return new ExpressionSequence(seq);
 	}
 
 	public static Expression let(Expression expression, Function<Variable, Expression> fn) {

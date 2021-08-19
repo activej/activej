@@ -84,11 +84,10 @@ public final class StreamCodecs {
 	private static <T> StreamCodec<T> buildCodec(Class<T> itemType, String encode, String decode) {
 		//noinspection unchecked
 		return (StreamCodec<T>) CODECS.computeIfAbsent(itemType, $ ->
-				(StreamCodec<T>) ClassBuilder.create(CLASS_LOADER, StreamCodec.class)
-//						.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
+				(StreamCodec<T>) ClassBuilder.create(StreamCodec.class)
 						.withMethod("encode", call(arg(0), encode, cast(arg(1), itemType)))
 						.withMethod("decode", call(arg(0), decode))
-						.buildClassAndCreateNewInstance());
+						.defineClassAndCreateInstance(CLASS_LOADER));
 	}
 
 	public static StreamCodec<boolean[]> ofBooleanArray() {
@@ -140,8 +139,7 @@ public final class StreamCodecs {
 		Variable stream = arg(0);
 		//noinspection unchecked
 		return (StreamCodec<T>) CODECS.computeIfAbsent(arrayType, $ ->
-				(StreamCodec<T>) ClassBuilder.create(CLASS_LOADER, StreamCodec.class)
-//						.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
+				(StreamCodec<T>) ClassBuilder.create(StreamCodec.class)
 						.withMethod("encode", let(cast(arg(1), arrayType),
 								array -> sequence(
 										call(stream, "writeVarInt", length(array)),
@@ -159,7 +157,7 @@ public final class StreamCodecs {
 																		loop(value(0), length(array),
 																				i -> arraySet(array, i, call(in, decode))),
 																		array))))))
-						.buildClassAndCreateNewInstance());
+						.defineClassAndCreateInstance(CLASS_LOADER));
 	}
 
 	public static StreamCodec<int[]> ofVarIntArray() {

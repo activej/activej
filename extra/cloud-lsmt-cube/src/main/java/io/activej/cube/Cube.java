@@ -25,6 +25,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionComparator;
@@ -610,11 +611,12 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			AggregationPredicate predicate,
 			DefiningClassLoader classLoader,
 			Map<String, FieldType> keyTypes) {
-		return ClassBuilder.create(classLoader, Predicate.class)
-				.withClassKey(inputClass, predicate)
-				.withMethod("test", boolean.class, singletonList(Object.class),
-						predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
-				.buildClassAndCreateNewInstance();
+		return classLoader.ensureClassAndCreateInstance(
+				ClassKey.of(Predicate.class, inputClass, predicate),
+				() -> ClassBuilder.create(Predicate.class)
+						.withMethod("test", boolean.class, singletonList(Object.class),
+								predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
+		);
 	}
 
 	/**
@@ -976,65 +978,68 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		RecordFunction createRecordFunction() {
-			return ClassBuilder.create(queryClassLoader, RecordFunction.class)
-					.withClassKey(resultClass, recordScheme.getFields())
-					.withMethod("copyAttributes",
-							sequence(expressions -> {
-								for (String field : recordScheme.getFields()) {
-									int fieldIndex = recordScheme.getFieldIndex(field);
-									if (dimensionTypes.containsKey(field)) {
-										expressions.add(call(arg(1), "set", value(fieldIndex),
-												cast(dimensionTypes.get(field).toValue(
-														property(cast(arg(0), resultClass), field)), Object.class)));
-									}
-								}
-							}))
-					.withMethod("copyMeasures",
-							sequence(expressions -> {
-								for (String field : recordScheme.getFields()) {
-									int fieldIndex = recordScheme.getFieldIndex(field);
-									if (!dimensionTypes.containsKey(field)) {
-										if (measures.containsKey(field)) {
-											Variable fieldValue = property(cast(arg(0), resultClass), field);
-											expressions.add(call(arg(1), "set", value(fieldIndex),
-													cast(measures.get(field).getFieldType().toValue(
-															measures.get(field).valueOfAccumulator(fieldValue)), Object.class)));
-										} else {
-											expressions.add(call(arg(1), "set", value(fieldIndex),
-													cast(property(cast(arg(0), resultClass), field.replace('.', '$')), Object.class)));
+			return queryClassLoader.ensureClassAndCreateInstance(
+					ClassKey.of(RecordFunction.class, resultClass, recordScheme.getFields()),
+					() -> ClassBuilder.create(RecordFunction.class)
+							.withMethod("copyAttributes",
+									sequence(seq -> {
+										for (String field : recordScheme.getFields()) {
+											int fieldIndex = recordScheme.getFieldIndex(field);
+											if (dimensionTypes.containsKey(field)) {
+												seq.add(call(arg(1), "set", value(fieldIndex),
+														cast(dimensionTypes.get(field).toValue(
+																property(cast(arg(0), resultClass), field)), Object.class)));
+											}
 										}
-									}
-								}
-							}))
-					.buildClassAndCreateNewInstance();
+									}))
+							.withMethod("copyMeasures",
+									sequence(seq -> {
+										for (String field : recordScheme.getFields()) {
+											int fieldIndex = recordScheme.getFieldIndex(field);
+											if (!dimensionTypes.containsKey(field)) {
+												if (measures.containsKey(field)) {
+													Variable fieldValue = property(cast(arg(0), resultClass), field);
+													seq.add(call(arg(1), "set", value(fieldIndex),
+															cast(measures.get(field).getFieldType().toValue(
+																	measures.get(field).valueOfAccumulator(fieldValue)), Object.class)));
+												} else {
+													seq.add(call(arg(1), "set", value(fieldIndex),
+															cast(property(cast(arg(0), resultClass), field.replace('.', '$')), Object.class)));
+												}
+											}
+										}
+									}))
+			);
 		}
 
 		MeasuresFunction<R> createMeasuresFunction() {
-			return ClassBuilder.create(queryClassLoader, MeasuresFunction.class)
-					.withClassKey(resultClass, resultComputedMeasures)
-					.withInitializer(cb ->
-							resultComputedMeasures.forEach(computedMeasure ->
-									cb.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
-					.withMethod("computeMeasures", sequence(list -> {
-						for (String computedMeasure : resultComputedMeasures) {
-							Expression record = cast(arg(0), resultClass);
-							list.add(set(property(record, computedMeasure),
-									computedMeasures.get(computedMeasure).getExpression(record, measures)));
-						}
+			return queryClassLoader.ensureClassAndCreateInstance(
+					ClassKey.of(MeasuresFunction.class, resultClass, resultComputedMeasures),
+					() -> ClassBuilder.create(MeasuresFunction.class)
+							.withInitializer(cb ->
+									resultComputedMeasures.forEach(computedMeasure ->
+											cb.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
+							.withMethod("computeMeasures", sequence(seq -> {
+								for (String computedMeasure : resultComputedMeasures) {
+									Expression record = cast(arg(0), resultClass);
+									seq.add(set(property(record, computedMeasure),
+											computedMeasures.get(computedMeasure).getExpression(record, measures)));
+								}
 
-					}))
-					.buildClassAndCreateNewInstance();
+							}))
+			);
 		}
 
 		private Predicate<R> createHavingPredicate() {
 			if (queryHaving == AggregationPredicates.alwaysTrue()) return o -> true;
 			if (queryHaving == AggregationPredicates.alwaysFalse()) return o -> false;
 
-			return ClassBuilder.create(queryClassLoader, Predicate.class)
-					.withClassKey(resultClass, queryHaving)
-					.withMethod("test",
-							queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes))
-					.buildClassAndCreateNewInstance();
+			return queryClassLoader.ensureClassAndCreateInstance(
+					ClassKey.of(Predicate.class, resultClass, queryHaving),
+					() -> ClassBuilder.create(Predicate.class)
+							.withMethod("test",
+									queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes))
+			);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -1042,27 +1047,28 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			if (query.getOrderings().isEmpty())
 				return (o1, o2) -> 0;
 
-			return ClassBuilder.create(queryClassLoader, Comparator.class)
-					.withClassKey(resultClass, query.getOrderings())
-					.withMethod("compare", get(() -> {
-						ExpressionComparator comparator = ExpressionComparator.create();
+			return queryClassLoader.ensureClassAndCreateInstance(
+					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
+					() -> ClassBuilder.create(Comparator.class)
+							.withMethod("compare", get(() -> {
+								ExpressionComparator comparator = ExpressionComparator.create();
 
-						for (Ordering ordering : query.getOrderings()) {
-							String field = ordering.getField();
+								for (Ordering ordering : query.getOrderings()) {
+									String field = ordering.getField();
 
-							if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
-								String property = field.replace('.', '$');
-								comparator.with(
-										ordering.isAsc() ? leftProperty(resultClass, property) : rightProperty(resultClass, property),
-										ordering.isAsc() ? rightProperty(resultClass, property) : leftProperty(resultClass, property),
-										true);
-								resultOrderings.add(field);
-							}
-						}
+									if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
+										String property = field.replace('.', '$');
+										comparator.with(
+												ordering.isAsc() ? leftProperty(resultClass, property) : rightProperty(resultClass, property),
+												ordering.isAsc() ? rightProperty(resultClass, property) : leftProperty(resultClass, property),
+												true);
+										resultOrderings.add(field);
+									}
+								}
 
-						return comparator;
-					}))
-					.buildClassAndCreateNewInstance();
+								return comparator;
+							}))
+			);
 		}
 
 		Promise<QueryResult> processResults(List<R> results) {
@@ -1162,8 +1168,8 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 			Ref<Object> attributesRef = new Ref<>();
 			return resolverContainer.resolver.resolveAttributes(singletonList(key),
-					result1 -> (Object[]) result1,
-					(result12, attributes) -> attributesRef.value = attributes)
+							result1 -> (Object[]) result1,
+							(result12, attributes) -> attributesRef.value = attributes)
 					.whenResult(() -> {
 						for (int i = 0; i < resolverContainer.attributes.size(); i++) {
 							String attribute = resolverContainer.attributes.get(i);
@@ -1206,43 +1212,44 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		TotalsFunction<R, R> createTotalsFunction() {
-			return ClassBuilder.create(queryClassLoader, TotalsFunction.class)
-					.withClassKey(resultClass, resultStoredMeasures, resultComputedMeasures)
-					.withMethod("zero",
-							sequence(expressions -> {
-								for (String field : resultStoredMeasures) {
-									Measure measure = measures.get(field);
-									expressions.add(measure.zeroAccumulator(
-											property(cast(arg(0), resultClass), field)));
-								}
-							}))
-					.withMethod("init",
-							sequence(expressions -> {
-								for (String field : resultStoredMeasures) {
-									Measure measure = measures.get(field);
-									expressions.add(measure.initAccumulatorWithAccumulator(
-											property(cast(arg(0), resultClass), field),
-											property(cast(arg(1), resultClass), field)));
-								}
-							}))
-					.withMethod("accumulate",
-							sequence(expressions -> {
-								for (String field : resultStoredMeasures) {
-									Measure measure = measures.get(field);
-									expressions.add(measure.reduce(
-											property(cast(arg(0), resultClass), field),
-											property(cast(arg(1), resultClass), field)));
-								}
-							}))
-					.withMethod("computeMeasures",
-							sequence(expressions -> {
-								for (String computedMeasure : resultComputedMeasures) {
-									Expression result = cast(arg(0), resultClass);
-									expressions.add(set(property(result, computedMeasure),
-											computedMeasures.get(computedMeasure).getExpression(result, measures)));
-								}
-							}))
-					.buildClassAndCreateNewInstance();
+			return queryClassLoader.ensureClassAndCreateInstance(
+					ClassKey.of(TotalsFunction.class, resultClass, resultStoredMeasures, resultComputedMeasures),
+					() -> ClassBuilder.create(TotalsFunction.class)
+							.withMethod("zero",
+									sequence(seq -> {
+										for (String field : resultStoredMeasures) {
+											Measure measure = measures.get(field);
+											seq.add(measure.zeroAccumulator(
+													property(cast(arg(0), resultClass), field)));
+										}
+									}))
+							.withMethod("init",
+									sequence(seq -> {
+										for (String field : resultStoredMeasures) {
+											Measure measure = measures.get(field);
+											seq.add(measure.initAccumulatorWithAccumulator(
+													property(cast(arg(0), resultClass), field),
+													property(cast(arg(1), resultClass), field)));
+										}
+									}))
+							.withMethod("accumulate",
+									sequence(seq -> {
+										for (String field : resultStoredMeasures) {
+											Measure measure = measures.get(field);
+											seq.add(measure.reduce(
+													property(cast(arg(0), resultClass), field),
+													property(cast(arg(1), resultClass), field)));
+										}
+									}))
+							.withMethod("computeMeasures",
+									sequence(seq -> {
+										for (String computedMeasure : resultComputedMeasures) {
+											Expression result = cast(arg(0), resultClass);
+											seq.add(set(property(result, computedMeasure),
+													computedMeasures.get(computedMeasure).getExpression(result, measures)));
+										}
+									}))
+			);
 		}
 
 	}

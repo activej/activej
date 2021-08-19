@@ -311,8 +311,8 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 					return let(factory == null ?
 									callConstructor(decodeType, map, version) :
 									callFactoryMethod(map, version),
-							instance -> sequence(list -> {
-								list.add(instanceInitializer.apply(instance));
+							instance -> sequence(seq -> {
+								seq.add(instanceInitializer.apply(instance));
 								for (Map.Entry<Method, List<String>> entry : setters.entrySet()) {
 									Method method = entry.getKey();
 									List<String> fieldNames = entry.getValue();
@@ -340,7 +340,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 												temp[j] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[j]);
 											}
 										}
-										list.add(call(instance, method.getName(), temp));
+										seq.add(call(instance, method.getName(), temp));
 									}
 								}
 
@@ -352,10 +352,10 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 									if (fieldDef.field == null || isFinal(fieldDef.field.getModifiers()))
 										continue;
 									Variable property = property(instance, fieldName);
-									list.add(set(property, cast(map.get(fieldName), fieldDef.getRawType())));
+									seq.add(set(property, cast(map.get(fieldName), fieldDef.getRawType())));
 								}
 
-								list.add(instance);
+								return instance;
 							}));
 
 				});
@@ -404,26 +404,25 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 
 	private Expression deserializeInterface(StaticDecoders staticDecoders, Expression in,
 			int version, CompatibilityLevel compatibilityLevel) {
-		ClassBuilder<?> classBuilder = staticDecoders.buildClass(decodeType);
+
+		if (fields.values().stream().anyMatch(fieldDef -> fieldDef.method == null)) {
+			throw new NullPointerException();
+		}
+
+		ClassBuilder<?> classBuilder = ClassBuilder.create( decodeType);
 		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 			String fieldName = entry.getKey();
-
-			if (entry.getValue().method == null) {
-				classBuilder.cleanup();
-				throw new NullPointerException();
-			}
 			Method method = entry.getValue().method;
-
 			classBuilder
 					.withField(fieldName, method.getReturnType())
 					.withMethod(method.getName(), property(self(), fieldName));
 		}
 
-		Class<?> newClass = classBuilder.build();
+		Class<?> newClass = staticDecoders.buildClass(classBuilder);
 
 		return let(
 				constructor(newClass),
-				instance -> sequence(expressions -> {
+				instance -> sequence(seq -> {
 					for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 						FieldDef fieldDef = entry.getValue();
 						if (!fieldDef.hasVersion(version))
@@ -432,9 +431,9 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 
 						Expression expression =
 								fieldDef.serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel);
-						expressions.add(set(property, expression));
+						seq.add(set(property, expression));
 					}
-					expressions.add(instance);
+					return instance;
 				}));
 	}
 
@@ -443,17 +442,17 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		return let(
 				constructor(decodeType),
 				instance ->
-						sequence(expressions -> {
-							expressions.add(instanceInitializer.apply(instance));
+						sequence(seq -> {
+							seq.add(instanceInitializer.apply(instance));
 							for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 								FieldDef fieldDef = entry.getValue();
 								if (!fieldDef.hasVersion(version)) continue;
 
-								expressions.add(
+								seq.add(
 										set(property(instance, entry.getKey()),
 												fieldDef.serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)));
 							}
-							expressions.add(instance);
+							return instance;
 						}));
 	}
 

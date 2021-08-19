@@ -19,12 +19,17 @@ package io.activej.codegen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.*;
+import static io.activej.codegen.util.Utils.getPathSetting;
+import static java.util.function.UnaryOperator.identity;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * Represents a loader for defining dynamically generated classes.
@@ -33,36 +38,9 @@ import static java.util.stream.Collectors.*;
 @SuppressWarnings("WeakerAccess")
 public final class DefiningClassLoader extends ClassLoader implements DefiningClassLoaderMBean {
 
-	private final AtomicInteger definedClasses = new AtomicInteger();
-
-	private final Map<@NotNull ClassKey, Class<?>> cachedClasses = new HashMap<>();
-
-	public static final class ClassKey {
-		private final Class<?> superclass;
-		private final Set<Class<?>> interfaces;
-		private final List<Object> parameters;
-
-		public ClassKey(Class<?> superclass, Set<Class<?>> interfaces, List<Object> parameters) {
-			this.superclass = superclass;
-			this.interfaces = interfaces;
-			this.parameters = parameters;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			ClassKey key = (ClassKey) o;
-			return superclass.equals(key.superclass) &&
-					interfaces.equals(key.interfaces) &&
-					parameters.equals(key.parameters);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(superclass, interfaces, parameters);
-		}
-	}
+	private final Map<String, Class<?>> definedClasses = new ConcurrentHashMap<>();
+	private final Map<ClassKey<?>, Class<?>> cachedClasses = new ConcurrentHashMap<>();
+	public static final Path DEFAULT_SAVE_DIR = getPathSetting(DefiningClassLoader.class, "saveDir", null);
 
 	// region builders
 	private DefiningClassLoader() {
@@ -81,40 +59,79 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	}
 	// endregion
 
-	public Class<?> defineClass(String className, byte[] bytecode) {
-		Class<?> definedClass = defineClass(className, bytecode, 0, bytecode.length);
-		definedClasses.incrementAndGet();
-		return definedClass;
+	public DefiningClassLoader withBytecodeSaveDir(Path path) {
+		return null;
 	}
 
-	public synchronized Class<?> defineAndCacheClass(@Nullable ClassKey key, String className, byte[] bytecode) {
-		Class<?> definedClass = defineClass(className, bytecode);
-		if (key != null) {
-			cachedClasses.put(key, definedClass);
+	public Class<?> defineClass(String className, byte[] bytecode) {
+		Class<?> aClass = super.defineClass(className, bytecode, 0, bytecode.length);
+		definedClasses.put(className, aClass);
+		return aClass;
+	}
+
+	@SuppressWarnings("unchecked")
+	@NotNull
+	public <T> Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilderSupplier) {
+		synchronized (getClassLoadingLock(className)) {
+			Class<?> aClass = findLoadedClass(className);
+			if (aClass != null) return (Class<T>) aClass;
+			ClassBuilder<T> builder = classBuilderSupplier.get();
+			return builder.build(this, className);
 		}
-		return definedClass;
+	}
+
+	@NotNull
+	public <T> Class<T> ensureClass(ClassKey<? super T> key, Supplier<ClassBuilder<T>> classBuilderSupplier) {
+		//noinspection unchecked
+		return (Class<T>) cachedClasses.computeIfAbsent(key, $ -> {
+			ClassBuilder<T> builder = classBuilderSupplier.get();
+			return builder.defineClass(this);
+		});
+	}
+
+	@NotNull
+	public <T> T ensureClassAndCreateInstance(ClassKey<? super T> key, Supplier<ClassBuilder<T>> classBuilderSupplier,
+			Object... arguments) {
+		try {
+			return ensureClass(key, classBuilderSupplier)
+					.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))
+					.newInstance(arguments);
+		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	// JMX
+
+	@Override
+	public int getDefinedClassesCount() {
+		return definedClasses.size();
+	}
+
+	@Override
+	public Map<String, Long> getDefinedClassesCountByType() {
+		return definedClasses.values().stream()
+				.map(aClass -> aClass.getSuperclass() == Object.class && aClass.getInterfaces().length != 0 ?
+						aClass.getInterfaces()[0] :
+						aClass.getSuperclass())
+				.map(Class::getName)
+				.collect(groupingBy(identity(), counting()));
 	}
 
 	@Nullable
-	public synchronized Class<?> getCachedClass(@NotNull ClassKey key) {
+	public Class<?> getCachedClass(@NotNull ClassKey<?> key) {
 		return cachedClasses.get(key);
 	}
 
-	// jmx
 	@Override
-	public synchronized int getDefinedClassesCount() {
+	public int getCachedClassesCount() {
 		return cachedClasses.size();
 	}
 
 	@Override
-	public synchronized int getCachedClassesCount() {
-		return cachedClasses.size();
-	}
-
-	@Override
-	public synchronized Map<String, Long> getCachedClassesCountByType() {
+	public Map<String, Long> getCachedClassesCountByType() {
 		return cachedClasses.keySet().stream()
-				.map(key -> Stream.concat(Stream.of(key.superclass), key.interfaces.stream()).collect(toList()).toString())
+				.map(key -> key.getKeyClass().getName())
 				.collect(groupingBy(identity(), counting()));
 	}
 

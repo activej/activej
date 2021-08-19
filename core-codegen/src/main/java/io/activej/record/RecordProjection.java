@@ -1,6 +1,7 @@
 package io.activej.record;
 
 import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
@@ -65,23 +66,20 @@ public abstract class RecordProjection implements Function<Record, Record>, BiCo
 			Map<String, Function<Expression, Expression>> mapping) {
 		schemeFrom.build();
 		schemeTo.build();
-		ClassBuilder<RecordProjection> builder = ClassBuilder.create(classLoader, RecordProjection.class)
-				.withClassKey(classKey)
-//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
-				.withConstructor(asList(RecordScheme.class, RecordScheme.class),
-						superConstructor(arg(0), arg(1)));
-
-		builder.withMethod("accept", void.class, asList(Record.class, Record.class), sequence(
-				expressions -> {
-					for (String field : mapping.keySet()) {
-						expressions.add(Expressions.set(
-								schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), field),
-								mapping.get(field).apply(cast(arg(0), schemeFrom.getRecordClass()))
-						));
-					}
-				}));
-
-		return builder.buildClassAndCreateNewInstance(schemeFrom, schemeTo);
+		return classLoader.ensureClassAndCreateInstance(
+				ClassKey.of(RecordProjection.class, classKey),
+				() -> ClassBuilder.create(RecordProjection.class)
+						.withConstructor(asList(RecordScheme.class, RecordScheme.class),
+								superConstructor(arg(0), arg(1)))
+						.withMethod("accept", void.class, asList(Record.class, Record.class), sequence(seq -> {
+							for (String field : mapping.keySet()) {
+								seq.add(Expressions.set(
+										schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), field),
+										mapping.get(field).apply(cast(arg(0), schemeFrom.getRecordClass()))
+								));
+							}
+						})),
+				schemeFrom, schemeTo);
 	}
 
 	private static DefiningClassLoader getClassLoaderChild(DefiningClassLoader classLoader1, DefiningClassLoader classLoader2) {

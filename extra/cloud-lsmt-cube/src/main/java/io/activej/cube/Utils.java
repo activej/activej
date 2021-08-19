@@ -17,6 +17,7 @@
 package io.activej.cube;
 
 import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.attributes.AttributeResolver;
 import io.activej.cube.attributes.AttributeResolver.AttributesFunction;
@@ -34,15 +35,20 @@ public final class Utils {
 
 	public static <R> Class<R> createResultClass(Collection<String> attributes, Collection<String> measures,
 			Cube cube, DefiningClassLoader classLoader) {
-		ClassBuilder<R> builder = ClassBuilder.create(classLoader, Object.class);
-		builder.withClassKey(new HashSet<>(attributes), new HashSet<>(measures));
-		for (String attribute : attributes) {
-			builder.withField(attribute.replace('.', '$'), cube.getAttributeInternalType(attribute));
-		}
-		for (String measure : measures) {
-			builder.withField(measure, cube.getMeasureInternalType(measure));
-		}
-		return builder.build();
+		return classLoader.ensureClass(
+				ClassKey.of(Object.class, new HashSet<>(attributes), new HashSet<>(measures)),
+				() -> {
+					//noinspection unchecked
+					ClassBuilder<R> builder = ClassBuilder.create((Class<R>) Object.class);
+					for (String attribute : attributes) {
+						builder.withField(attribute.replace('.', '$'), cube.getAttributeInternalType(attribute));
+					}
+					for (String measure : measures) {
+						builder.withField(measure, cube.getMeasureInternalType(measure));
+					}
+					return builder;
+				}
+		);
 	}
 
 	static boolean startsWith(List<String> list, List<String> prefix) {
@@ -69,44 +75,47 @@ public final class Utils {
 				fullySpecifiedDimensionsArray[i] = fullySpecifiedDimensions.get(dimension);
 			}
 		}
-		KeyFunction keyFunction = ClassBuilder.create(classLoader, KeyFunction.class)
-				.withClassKey(recordClass, recordDimensions, Arrays.asList(fullySpecifiedDimensionsArray))
-				.withMethod("extractKey",
-						let(
-								arrayNew(Object[].class, value(recordDimensions.size())),
-								key -> sequence(expressions -> {
-									for (int i = 0; i < recordDimensions.size(); i++) {
-										String dimension = recordDimensions.get(i);
-										expressions.add(arraySet(key, value(i),
-												fullySpecifiedDimensions.containsKey(dimension) ?
-														arrayGet(value(fullySpecifiedDimensionsArray), value(i)) :
-														cast(property(cast(arg(0), recordClass), dimension), Object.class)));
-									}
-									expressions.add(key);
-								})))
-				.buildClassAndCreateNewInstance();
 
-		List<String> resolverAttributes = new ArrayList<>(attributeResolver.getAttributeTypes().keySet());
-		AttributesFunction attributesFunction = ClassBuilder.create(classLoader, AttributesFunction.class)
-				.withClassKey(recordClass, new HashSet<>(recordAttributes))
-				.withMethod("applyAttributes",
-						sequence(expressions -> {
-							for (String attribute : recordAttributes) {
-								String attributeName = attribute.substring(attribute.indexOf('.') + 1);
-								int resolverAttributeIndex = resolverAttributes.indexOf(attributeName);
-								expressions.add(set(
-										property(cast(arg(0), recordClass), attribute.replace('.', '$')),
-										arrayGet(arg(1), value(resolverAttributeIndex))));
-							}
-						}))
-				.buildClassAndCreateNewInstance();
+		KeyFunction keyFunction = classLoader.ensureClassAndCreateInstance(
+				ClassKey.of(KeyFunction.class, recordClass, recordDimensions, Arrays.asList(fullySpecifiedDimensionsArray)),
+				() -> ClassBuilder.create(KeyFunction.class)
+						.withMethod("extractKey",
+								let(
+										arrayNew(Object[].class, value(recordDimensions.size())),
+										key -> sequence(seq -> {
+											for (int i = 0; i < recordDimensions.size(); i++) {
+												String dimension = recordDimensions.get(i);
+												seq.add(arraySet(key, value(i),
+														fullySpecifiedDimensions.containsKey(dimension) ?
+																arrayGet(value(fullySpecifiedDimensionsArray), value(i)) :
+																cast(property(cast(arg(0), recordClass), dimension), Object.class)));
+											}
+											return key;
+										})))
+		);
+
+		AttributesFunction attributesFunction = classLoader.ensureClassAndCreateInstance(
+				ClassKey.of(AttributesFunction.class, recordClass, new HashSet<>(recordAttributes)),
+				() -> ClassBuilder.create(AttributesFunction.class)
+						.withMethod("applyAttributes",
+								sequence(seq -> {
+									List<String> resolverAttributes = new ArrayList<>(attributeResolver.getAttributeTypes().keySet());
+									for (String attribute : recordAttributes) {
+										String attributeName = attribute.substring(attribute.indexOf('.') + 1);
+										int resolverAttributeIndex = resolverAttributes.indexOf(attributeName);
+										seq.add(set(
+												property(cast(arg(0), recordClass), attribute.replace('.', '$')),
+												arrayGet(arg(1), value(resolverAttributeIndex))));
+									}
+								}))
+		);
 
 		return attributeResolver.resolveAttributes((List<Object>) results, keyFunction, attributesFunction);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static <D, C> Set<C> chunksInDiffs(CubeDiffScheme<D> cubeDiffsExtractor,
-                                              List<? extends D> diffs) {
+			List<? extends D> diffs) {
 		return diffs.stream()
 				.flatMap(cubeDiffsExtractor::unwrapToStream)
 				.flatMap(CubeDiff::addedChunks)

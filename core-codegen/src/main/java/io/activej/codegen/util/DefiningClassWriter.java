@@ -20,14 +20,14 @@ import io.activej.codegen.DefiningClassLoader;
 import org.objectweb.asm.ClassWriter;
 
 public final class DefiningClassWriter extends ClassWriter {
-	private final DefiningClassLoader classLoader;
+	private final ClassLoader classLoader;
 
-	private DefiningClassWriter(DefiningClassLoader classLoader) {
+	private DefiningClassWriter(ClassLoader classLoader) {
 		super(ClassWriter.COMPUTE_FRAMES);
 		this.classLoader = classLoader;
 	}
 
-	public static DefiningClassWriter create(DefiningClassLoader classLoader) {
+	public static DefiningClassWriter create(ClassLoader classLoader) {
 		return new DefiningClassWriter(classLoader);
 	}
 

@@ -10,10 +10,14 @@ import static io.activej.codegen.expression.Expressions.*;
  * Methods are constructed programmatically using our fluent API built on top of ASM.
  */
 public class DynamicClassCreationExample {
+	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
+
 	public static void main(String[] args) throws ReflectiveOperationException {
 		//[START REGION_2]
-		Class<Person> personClass = ClassBuilder.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader()), Person.class)
-
+		// declare fields
+		// setter for both fields - a sequence of actions
+		// compareTo, equals, hashCode and toString methods implementations follow the standard convention
+		Class<Person> personClass = ClassBuilder.create(Person.class)
 				// declare fields
 				.withField("id", int.class)
 				.withField("name", String.class)
@@ -34,7 +38,7 @@ public class DynamicClassCreationExample {
 						.withQuotes("{", "}", ", ")
 						.with("id: ", property(self(), "id"))
 						.with("name: ", property(self(), "name")))
-				.build();
+				.defineClass(CLASS_LOADER);
 		//[END REGION_2]
 
 		//[START REGION_3]

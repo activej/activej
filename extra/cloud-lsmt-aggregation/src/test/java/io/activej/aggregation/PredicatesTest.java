@@ -19,6 +19,8 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class PredicatesTest {
+	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
+
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
@@ -576,10 +578,10 @@ public class PredicatesTest {
 	@SuppressWarnings("unchecked")
 	private boolean matches(Record record, String field, String pattern) {
 		AggregationPredicate aggregationPredicate = AggregationPredicates.regexp(field, pattern);
-		return ClassBuilder.create(DefiningClassLoader.create(), Predicate.class)
+		return ClassBuilder.create(Predicate.class)
 				.withMethod("test", boolean.class, singletonList(Object.class),
 						aggregationPredicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
-				.buildClassAndCreateNewInstance()
+				.defineClassAndCreateInstance(CLASS_LOADER)
 				.test(record);
 	}
 

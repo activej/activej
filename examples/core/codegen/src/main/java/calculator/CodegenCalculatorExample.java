@@ -15,6 +15,7 @@ import java.util.function.DoubleUnaryOperator;
 import static org.jparsec.Scanners.*;
 
 public final class CodegenCalculatorExample {
+	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
 
 	private static final Parser<Void> IGNORED = Parsers.or(WHITESPACES, JAVA_LINE_COMMENT, JAVA_BLOCK_COMMENT).skipMany();
 
@@ -46,6 +47,7 @@ public final class CodegenCalculatorExample {
 			.prefix(DELIMITERS.token("-").retn(Expressions::neg), 30)
 			.infixr(DELIMITERS.token("^").retn((left, right) -> Expressions.staticCall(Math.class, "pow", left, right)), 40)
 			.build(ATOM);
+
 	//[END REGION_1]
 	static {
 		EXPRESSION_REF.set(EXPRESSION);
@@ -53,13 +55,11 @@ public final class CodegenCalculatorExample {
 
 	public static final Parser<Expression> PARSER = EXPRESSION.from(LEXER, IGNORED);
 
-	private static final DefiningClassLoader DEFINING_CLASS_LOADER = DefiningClassLoader.create();
-
 	//[START REGION_2]
 	public static Class<DoubleUnaryOperator> compile(String expression) {
-		return ClassBuilder.create(DEFINING_CLASS_LOADER, DoubleUnaryOperator.class)
+		return ClassBuilder.create(DoubleUnaryOperator.class)
 				.withMethod("applyAsDouble", PARSER.parse(expression))
-				.build();
+				.defineClass(CLASS_LOADER);
 	}
 	//[END REGION_2]
 

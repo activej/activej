@@ -78,7 +78,7 @@ public interface SerializerDef {
 
 		Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression in, int version, CompatibilityLevel compatibilityLevel);
 
-		<T> ClassBuilder<T> buildClass(Class<T> type);
+		<T> Class<T> buildClass(ClassBuilder<T> classBuilder);
 	}
 
 	/**

@@ -42,7 +42,7 @@ import static org.objectweb.asm.Type.*;
  * Contains information about a dynamic class
  */
 public final class Context {
-	private final DefiningClassLoader classLoader;
+	private final ClassLoader classLoader;
 	private final ClassBuilder<?> classBuilder;
 	private final GeneratorAdapter g;
 	private final Type selfType;
@@ -50,7 +50,7 @@ public final class Context {
 
 	private Set<Method> accessibleMethods;
 
-	public Context(DefiningClassLoader classLoader, ClassBuilder<?> builder,
+	public Context(ClassLoader classLoader, ClassBuilder<?> builder,
 			GeneratorAdapter g,
 			Type selfType,
 			Method method) {
@@ -61,7 +61,7 @@ public final class Context {
 		this.method = method;
 	}
 
-	public DefiningClassLoader getClassLoader() {
+	public ClassLoader getClassLoader() {
 		return classLoader;
 	}
 

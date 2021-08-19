@@ -23,6 +23,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.Utils;
 import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.process.frames.FrameFormat;
@@ -508,7 +509,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private <T> StreamSupplier<T> chunkReaderWithFilter(AggregationPredicate where, AggregationChunk chunk,
 			Class<T> chunkRecordClass, DefiningClassLoader queryClassLoader) {
 		return StreamSupplier.ofPromise(
-				aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader))
+						aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader))
 				.transformWith(where != AggregationPredicates.alwaysTrue() ?
 						StreamFilter.create(
 								createPredicate(chunkRecordClass, where, queryClassLoader)) :
@@ -517,11 +518,12 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 	private <T> Predicate<T> createPredicate(Class<T> chunkRecordClass,
 			AggregationPredicate where, DefiningClassLoader classLoader) {
-		return ClassBuilder.create(classLoader, Predicate.class)
-				.withClassKey(chunkRecordClass, where)
-				.withMethod("test", boolean.class, singletonList(Object.class),
-						where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes()))
-				.buildClassAndCreateNewInstance();
+		return classLoader.ensureClassAndCreateInstance(
+				ClassKey.of(Predicate.class, chunkRecordClass, where),
+				() -> ClassBuilder.create(Predicate.class)
+						.withMethod("test", boolean.class, singletonList(Object.class),
+								where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes()))
+		);
 	}
 
 	@JmxAttribute

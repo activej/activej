@@ -17,6 +17,7 @@
 package io.activej.record;
 
 import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionComparator;
@@ -220,65 +221,65 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			hashCodeEqualsFields = fieldTypes.keySet();
 		}
 
-		ClassBuilder<Record> builder = ClassBuilder.create(this.classLoader, Record.class)
-				.withClassKey(this)
-//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
-				.withConstructor(asList(RecordScheme.class),
-						superConstructor(arg(0)))
-				.withMethod("hashCode",
-						hash(hashCodeEqualsFields.stream().map(this::getClassField).map(f -> Expressions.property(self(), f)).collect(toList())))
-				.withMethod("equals",
-						equalsImpl(hashCodeEqualsFields.stream().map(this::getClassField).collect(toList())));
-		for (String field : fieldTypes.keySet()) {
-			Type type = fieldTypes.get(field);
-			//noinspection rawtypes
-			builder.withField(getClassField(field), type instanceof Class ? ((Class) type) : Object.class);
-		}
-		generatedClass = builder.build();
+		generatedClass = classLoader.ensureClass(
+				ClassKey.of(Record.class, this),
+				() -> ClassBuilder.create(Record.class)
+						.withConstructor(asList(RecordScheme.class),
+								superConstructor(arg(0)))
+						.withMethod("hashCode",
+								hash(hashCodeEqualsFields.stream().map(this::getClassField).map(f -> Expressions.property(self(), f)).collect(toList())))
+						.withMethod("equals",
+								equalsImpl(hashCodeEqualsFields.stream().map(this::getClassField).collect(toList())))
+						.withInitializer(b -> {
+							for (String field : fieldTypes.keySet()) {
+								Type type = fieldTypes.get(field);
+								//noinspection rawtypes
+								b.withField(getClassField(field), type instanceof Class ? ((Class) type) : Object.class);
+							}
+						}));
 
 		recordGetters = new RecordGetter[size()];
 		recordSetters = new RecordSetter[size()];
 		for (String field : fieldTypes.keySet()) {
 			Type fieldType = fieldTypes.get(field);
 			Variable property = this.property(cast(arg(0), generatedClass), field);
-			RecordGetter<?> recordGetter = ClassBuilder.create(this.classLoader, RecordGetter.class)
-					.withClassKey(this, field)
-//					.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
-					.withMethod("get", property)
-					.withInitializer(cb -> {
-						if (fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
-								fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class) {
-							cb.withMethod("getInt", property);
-							cb.withMethod("getLong", property);
-							cb.withMethod("getFloat", property);
-							cb.withMethod("getDouble", property);
-						}
-					})
-					.withMethod("getScheme", value(this))
-					.withMethod("getField", value(field))
-					.withMethod("getType", value(fieldType))
-					.buildClassAndCreateNewInstance();
+			RecordGetter<?> recordGetter = classLoader.ensureClassAndCreateInstance(
+					ClassKey.of(RecordGetter.class, this, field),
+					() -> ClassBuilder.create(RecordGetter.class)
+							.withMethod("get", property)
+							.withInitializer(cb -> {
+								if (fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
+										fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class) {
+									cb.withMethod("getInt", property);
+									cb.withMethod("getLong", property);
+									cb.withMethod("getFloat", property);
+									cb.withMethod("getDouble", property);
+								}
+							})
+							.withMethod("getScheme", value(this))
+							.withMethod("getField", value(field))
+							.withMethod("getType", value(fieldType))
+			);
 			recordGetters[recordGettersMap.size()] = recordGetter;
 			recordGettersMap.put(field, recordGetter);
 
 			Expression set = Expressions.set(property, arg(1));
-			RecordSetter<?> recordSetter = ClassBuilder.create(this.classLoader, RecordSetter.class)
-					.withClassKey(this, field)
-//					.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
-					.withMethod("set", set)
-					.withInitializer(cb -> {
-						if (fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
-								fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class) {
-							cb.withMethod("setInt", set);
-							cb.withMethod("setLong", set);
-							cb.withMethod("setFloat", set);
-							cb.withMethod("setDouble", set);
-						}
-					})
-					.withMethod("getScheme", value(this))
-					.withMethod("getField", value(field))
-					.withMethod("getType", value(fieldType))
-					.buildClassAndCreateNewInstance();
+			RecordSetter<?> recordSetter = classLoader.ensureClassAndCreateInstance(
+					ClassKey.of(RecordSetter.class, this, field),
+					() -> ClassBuilder.create(RecordSetter.class)
+							.withMethod("set", set)
+							.withInitializer(cb -> {
+								if (fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
+										fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class) {
+									cb.withMethod("setInt", set);
+									cb.withMethod("setLong", set);
+									cb.withMethod("setFloat", set);
+									cb.withMethod("setDouble", set);
+								}
+							})
+							.withMethod("getScheme", value(this))
+							.withMethod("getField", value(field))
+							.withMethod("getType", value(fieldType)));
 			recordSetters[recordSettersMap.size()] = recordSetter;
 			recordSettersMap.put(field, recordSetter);
 		}
@@ -296,18 +297,17 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			}
 
 			//noinspection unchecked
-			comparator = ClassBuilder.create(this.classLoader, Comparator.class)
+			comparator = ClassBuilder.create(Comparator.class)
 					.withMethod("compare", expressionComparator)
-					.buildClassAndCreateNewInstance();
+					.defineClassAndCreateInstance(classLoader);
 		}
 
-		factory = ClassBuilder.create(this.classLoader, RecordFactory.class)
-				.withClassKey(this)
-//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
-				.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
-				.withMethod("create", Record.class, asList(),
-						constructor(generatedClass, staticField("SCHEME")))
-				.buildClassAndCreateNewInstance();
+		factory = classLoader.ensureClassAndCreateInstance(
+				ClassKey.of(RecordFactory.class, this),
+				() -> ClassBuilder.create(RecordFactory.class)
+						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
+						.withMethod("create", Record.class, asList(),
+								constructor(generatedClass, staticField("SCHEME"))));
 	}
 
 	private Set<String> getMissingFields(List<String> fields) {

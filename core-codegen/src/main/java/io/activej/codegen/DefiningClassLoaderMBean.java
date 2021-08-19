@@ -22,6 +22,8 @@ public interface DefiningClassLoaderMBean {
 	// jmx
 	int getDefinedClassesCount();
 
+	Map<String, Long> getDefinedClassesCountByType();
+
 	int getCachedClassesCount();
 
 	Map<String, Long> getCachedClassesCountByType();
