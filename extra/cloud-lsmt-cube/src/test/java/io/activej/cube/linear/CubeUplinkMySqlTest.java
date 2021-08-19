@@ -5,6 +5,7 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredCodecs;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
@@ -22,6 +23,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -30,12 +33,12 @@ import java.util.concurrent.ThreadLocalRandom;
 import static io.activej.codec.StructuredCodecs.STRING_CODEC;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.cube.TestUtils.initializeUplink;
+import static io.activej.cube.linear.CubeUplinkMySqlTest.SimplePositionDiff.diff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -53,12 +56,13 @@ public class CubeUplinkMySqlTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 	public static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
+	private DataSource dataSource;
 	private CubeUplinkMySql uplink;
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Before
 	public void setUp() throws Exception {
-		DataSource dataSource = dataSource("test.properties");
+		dataSource = dataSource("test.properties");
 
 		StructuredCodec<PrimaryKey> primaryKeyCodec = StructuredCodecs.ofList(STRING_CODEC)
 				.transform(value -> PrimaryKey.ofList((List<Object>) (List) value),
@@ -278,6 +282,325 @@ public class CubeUplinkMySqlTest {
 		Throwable exception = awaitException(uplink.push(protoCommit2));
 		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
 		assertEquals("Chunk is already removed", exception.getMessage());
+	}
+
+	@Test
+	/*
+			+----------+-----------+-------------+
+			| Chunk ID | Added rev | Removed rev |
+			+----------+-----------+-------------+
+			|        1 |         1 | <null>      |
+			|        2 |         1 | 2           |
+			|        3 |         1 | 3           |
+			|        4 |         1 | 5           |
+			|        5 |         3 | <null>      |
+			|        6 |         3 | 4           |
+			|        7 |         3 | 5           |
+			|        8 |         5 | <null>      |
+			|        9 |         5 | 6           |
+			+----------+-----------+-------------+
+	*/
+	public void fetchChunkDiffs() throws SQLException, MalformedDataException {
+		List<LogDiff<CubeDiff>> diffsRev1 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggr1", AggregationDiff.of(
+						set(chunk(1), chunk(2), chunk(3), chunk(4))
+				)))));
+		await(uplink.push(await(uplink.createProtoCommit(0L, diffsRev1, 0))));
+
+		List<LogDiff<CubeDiff>> diffsRev2 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggr1", AggregationDiff.of(
+						emptySet(),
+						set(chunk(2))
+				)))));
+		await(uplink.push(await(uplink.createProtoCommit(1L, diffsRev2, 1))));
+
+		List<LogDiff<CubeDiff>> diffsRev3 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggr1", AggregationDiff.of(
+						set(chunk(5), chunk(6), chunk(7)),
+						set(chunk(3))
+				)))));
+		await(uplink.push(await(uplink.createProtoCommit(2L, diffsRev3, 2))));
+
+		List<LogDiff<CubeDiff>> diffsRev4 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggr1", AggregationDiff.of(
+						emptySet(),
+						set(chunk(6))
+				)))));
+		await(uplink.push(await(uplink.createProtoCommit(3L, diffsRev4, 3))));
+
+		List<LogDiff<CubeDiff>> diffsRev5 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggr1", AggregationDiff.of(
+						set(chunk(8), chunk(9)),
+						set(chunk(4), chunk(7))
+				)))));
+		await(uplink.push(await(uplink.createProtoCommit(4L, diffsRev5, 4))));
+
+		List<LogDiff<CubeDiff>> diffsRev6 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggr1", AggregationDiff.of(
+						emptySet(),
+						set(chunk(9))
+				)))));
+		await(uplink.push(await(uplink.createProtoCommit(5L, diffsRev6, 5))));
+
+		try (Connection connection = dataSource.getConnection()) {
+			{
+				CubeDiff diff0to1 = uplink.fetchChunkDiffs(connection, 0, 1);
+				assertCubeDiff(set(1L, 2L, 3L, 4L), emptySet(), diff0to1);
+
+				CubeDiff diff0to2 = uplink.fetchChunkDiffs(connection, 0, 2);
+				assertCubeDiff(set(1L, 3L, 4L), emptySet(), diff0to2);
+
+				CubeDiff diff0to3 = uplink.fetchChunkDiffs(connection, 0, 3);
+				assertCubeDiff(set(1L, 4L, 5L, 6L, 7L), emptySet(), diff0to3);
+
+				CubeDiff diff0to4 = uplink.fetchChunkDiffs(connection, 0, 4);
+				assertCubeDiff(set(1L, 4L, 5L, 7L), emptySet(), diff0to4);
+
+				CubeDiff diff0to5 = uplink.fetchChunkDiffs(connection, 0, 5);
+				assertCubeDiff(set(1L, 5L, 8L, 9L), emptySet(), diff0to5);
+
+				CubeDiff diff0to6 = uplink.fetchChunkDiffs(connection, 0, 6);
+				assertCubeDiff(set(1L, 5L, 8L), emptySet(), diff0to6);
+			}
+
+			{
+				CubeDiff diff1to2 = uplink.fetchChunkDiffs(connection, 1, 2);
+				assertCubeDiff(emptySet(), set(2L), diff1to2);
+
+				CubeDiff diff1to3 = uplink.fetchChunkDiffs(connection, 1, 3);
+				assertCubeDiff(set(5L, 6L, 7L), set(2L, 3L), diff1to3);
+
+				CubeDiff diff1to4 = uplink.fetchChunkDiffs(connection, 1, 4);
+				assertCubeDiff(set(5L, 7L), set(2L, 3L), diff1to4);
+
+				CubeDiff diff1to5 = uplink.fetchChunkDiffs(connection, 1, 5);
+				assertCubeDiff(set(5L, 8L, 9L), set(2L, 3L, 4L), diff1to5);
+
+				CubeDiff diff1to6 = uplink.fetchChunkDiffs(connection, 1, 6);
+				assertCubeDiff(set(5L, 8L), set(2L, 3L, 4L), diff1to6);
+			}
+
+			{
+				CubeDiff diff2to3 = uplink.fetchChunkDiffs(connection, 2, 3);
+				assertCubeDiff(set(5L, 6L, 7L), set(3L), diff2to3);
+
+				CubeDiff diff2to4 = uplink.fetchChunkDiffs(connection, 2, 4);
+				assertCubeDiff(set(5L, 7L), set(3L), diff2to4);
+
+				CubeDiff diff2to5 = uplink.fetchChunkDiffs(connection, 2, 5);
+				assertCubeDiff(set(5L, 8L, 9L), set(3L, 4L), diff2to5);
+
+				CubeDiff diff2to6 = uplink.fetchChunkDiffs(connection, 2, 6);
+				assertCubeDiff(set(5L, 8L), set(3L, 4L), diff2to6);
+			}
+
+			{
+				CubeDiff diff3to4 = uplink.fetchChunkDiffs(connection, 3, 4);
+				assertCubeDiff(emptySet(), set(6L), diff3to4);
+
+				CubeDiff diff3to5 = uplink.fetchChunkDiffs(connection, 3, 5);
+				assertCubeDiff(set(8L, 9L), set(4L, 6L, 7L), diff3to5);
+
+				CubeDiff diff3to6 = uplink.fetchChunkDiffs(connection, 3, 6);
+				assertCubeDiff(set(8L), set(4L, 6L, 7L), diff3to6);
+			}
+
+			{
+				CubeDiff diff4to5 = uplink.fetchChunkDiffs(connection, 4, 5);
+				assertCubeDiff(set(8L, 9L), set(4L, 7L), diff4to5);
+
+				CubeDiff diff4to6 = uplink.fetchChunkDiffs(connection, 4, 6);
+				assertCubeDiff(set(8L), set(4L, 7L), diff4to6);
+			}
+
+			{
+				CubeDiff diff5to6 = uplink.fetchChunkDiffs(connection, 5, 6);
+				assertCubeDiff(emptySet(), set(9L), diff5to6);
+			}
+		}
+	}
+
+	@Test
+	/*
+			+----------+-----------+----------+
+			| Revision | Partition | Position |
+			+----------+-----------+----------+
+			|        1 | a         |      101 |
+			|        1 | b         |      102 |
+			|        1 | c         |      103 |
+			|        2 | a         |      201 |
+			|        2 | b         |      202 |
+			|        3 | a         |      301 |
+			|        4 | a         |      401 |
+			+----------+-----------+----------+
+	*/
+	public void fetchPositionDiffs() throws SQLException {
+		List<LogDiff<CubeDiff>> diffsRev1 = singletonList(LogDiff.of(
+				map(
+						"a", new LogPositionDiff(
+								LogPosition.initial(),
+								LogPosition.create(new LogFile("a", 0), 101)),
+						"b", new LogPositionDiff(
+								LogPosition.initial(),
+								LogPosition.create(new LogFile("b", 0), 102)),
+						"c", new LogPositionDiff(
+								LogPosition.initial(),
+								LogPosition.create(new LogFile("c", 0), 103))
+				), emptyList()
+		));
+		await(uplink.push(await(uplink.createProtoCommit(0L, diffsRev1, 0))));
+
+		List<LogDiff<CubeDiff>> diffsRev2 = singletonList(LogDiff.of(
+				map(
+						"a", new LogPositionDiff(
+								LogPosition.create(new LogFile("a", 0), 101),
+								LogPosition.create(new LogFile("a", 0), 201)),
+						"b", new LogPositionDiff(
+								LogPosition.create(new LogFile("b", 0), 102),
+								LogPosition.create(new LogFile("b", 0), 202))
+				), emptyList()
+		));
+		await(uplink.push(await(uplink.createProtoCommit(1L, diffsRev2, 1))));
+
+		List<LogDiff<CubeDiff>> diffsRev3 = singletonList(LogDiff.of(
+				map(
+						"a", new LogPositionDiff(
+								LogPosition.create(new LogFile("a", 0), 201),
+								LogPosition.create(new LogFile("a", 0), 301))
+				), emptyList()
+		));
+		await(uplink.push(await(uplink.createProtoCommit(2L, diffsRev3, 2))));
+
+		List<LogDiff<CubeDiff>> diffsRev4 = singletonList(LogDiff.of(
+				map(
+						"a", new LogPositionDiff(
+								LogPosition.create(new LogFile("a", 0), 301),
+								LogPosition.create(new LogFile("a", 0), 401))
+				), emptyList()
+		));
+		await(uplink.push(await(uplink.createProtoCommit(3L, diffsRev4, 3))));
+
+		try (Connection connection = dataSource.getConnection()) {
+			{
+				Map<String, LogPositionDiff> diff0to1 = uplink.fetchPositionDiffs(connection, 0, 1);
+				assertPositionDiff(map(
+						"a", diff(0, 101),
+						"b", diff(0, 102),
+						"c", diff(0, 103)
+				), diff0to1);
+
+				Map<String, LogPositionDiff> diff0to2 = uplink.fetchPositionDiffs(connection, 0, 2);
+				assertPositionDiff(map(
+						"a", diff(0, 201),
+						"b", diff(0, 202),
+						"c", diff(0, 103)
+				), diff0to2);
+
+				Map<String, LogPositionDiff> diff0to3 = uplink.fetchPositionDiffs(connection, 0, 3);
+				assertPositionDiff(map(
+						"a", diff(0, 301),
+						"b", diff(0, 202),
+						"c", diff(0, 103)
+				), diff0to3);
+
+				Map<String, LogPositionDiff> diff0to4 = uplink.fetchPositionDiffs(connection, 0, 4);
+				assertPositionDiff(map(
+						"a", diff(0, 401),
+						"b", diff(0, 202),
+						"c", diff(0, 103)
+				), diff0to4);
+			}
+
+			{
+				Map<String, LogPositionDiff> diff1to2 = uplink.fetchPositionDiffs(connection, 1, 2);
+				assertPositionDiff(map(
+						"a", diff(101, 201),
+						"b", diff(102, 202)
+				), diff1to2);
+
+				Map<String, LogPositionDiff> diff1to3 = uplink.fetchPositionDiffs(connection, 1, 3);
+				assertPositionDiff(map(
+						"a", diff(101, 301),
+						"b", diff(102, 202)
+				), diff1to3);
+
+				Map<String, LogPositionDiff> diff1to4 = uplink.fetchPositionDiffs(connection, 1, 4);
+				assertPositionDiff(map(
+						"a", diff(101, 401),
+						"b", diff(102, 202)
+				), diff1to4);
+			}
+
+			{
+				Map<String, LogPositionDiff> diff2to3 = uplink.fetchPositionDiffs(connection, 2, 3);
+				assertPositionDiff(map(
+						"a", diff(201, 301)
+				), diff2to3);
+
+				Map<String, LogPositionDiff> diff2to4 = uplink.fetchPositionDiffs(connection, 2, 4);
+				assertPositionDiff(map(
+						"a", diff(201, 401)
+				), diff2to4);
+			}
+
+			{
+				Map<String, LogPositionDiff> diff3to4 = uplink.fetchPositionDiffs(connection, 3, 4);
+				assertPositionDiff(map(
+						"a", diff(301, 401)
+				), diff3to4);
+			}
+		}
+	}
+
+	private static void assertCubeDiff(Set<Long> added, Set<Long> removed, CubeDiff actual) {
+		Set<Long> actualAdded = new HashSet<>();
+		Set<Long> actualRemoved = new HashSet<>();
+		for (Map.Entry<String, AggregationDiff> entry : actual.entrySet()) {
+			for (AggregationChunk chunk : entry.getValue().getAddedChunks()) {
+				actualAdded.add((Long) chunk.getChunkId());
+			}
+			for (AggregationChunk chunk : entry.getValue().getRemovedChunks()) {
+				actualRemoved.add((Long) chunk.getChunkId());
+			}
+		}
+		assertTrue(intersection(actualAdded, actualRemoved).isEmpty());
+		assertEquals(added, actualAdded);
+		assertEquals(removed, actualRemoved);
+	}
+
+	private static void assertPositionDiff(Map<String, SimplePositionDiff> expected, Map<String, LogPositionDiff> actual) {
+		assertEquals(expected.size(), actual.size());
+		for (Map.Entry<String, LogPositionDiff> entry : actual.entrySet()) {
+			String partition = entry.getKey();
+			SimplePositionDiff simplePositionDiff = expected.get(partition);
+			LogPositionDiff actualPositionDiff = entry.getValue();
+			LogPosition actualFrom = actualPositionDiff.from;
+			LogPosition actualTo = actualPositionDiff.to;
+
+			assertEquals(simplePositionDiff.to, actualTo.getPosition());
+
+			if (simplePositionDiff.from == 0L) {
+				assertEquals(LogPosition.initial(), actualFrom);
+			} else {
+				assertEquals(partition, actualFrom.getLogFile().getName());
+				assertEquals(simplePositionDiff.from, actualFrom.getPosition());
+			}
+			assertEquals(partition, actualTo.getLogFile().getName());
+		}
+	}
+
+	static class SimplePositionDiff {
+		private final long from;
+		private final long to;
+
+		private SimplePositionDiff(long from, long to) {
+			this.from = from;
+			this.to = to;
+		}
+
+		static SimplePositionDiff diff(long from, long to) {
+			return new SimplePositionDiff(from, to);
+		}
 	}
 
 	private static void assertDiffs(List<LogDiff<CubeDiff>> expected, List<LogDiff<CubeDiff>> actual) {

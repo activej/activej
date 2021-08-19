@@ -257,7 +257,8 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 				});
 	}
 
-	private CubeDiff fetchChunkDiffs(Connection connection, long from, long to) throws SQLException, MalformedDataException {
+	// VisibleForTesting
+	CubeDiff fetchChunkDiffs(Connection connection, long from, long to) throws SQLException, MalformedDataException {
 		CubeDiff cubeDiff;
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
 				"SELECT `id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`," +
@@ -310,7 +311,8 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		return cubeDiff;
 	}
 
-	private Map<String, LogPositionDiff> fetchPositionDiffs(Connection connection, long from, long to) throws SQLException {
+	// VisibleForTesting
+	Map<String, LogPositionDiff> fetchPositionDiffs(Connection connection, long from, long to) throws SQLException {
 		Map<String, LogPositionDiff> positions = new HashMap<>();
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
 				"SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position`, g.`to` " +
