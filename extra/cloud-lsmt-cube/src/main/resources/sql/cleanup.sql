@@ -3,11 +3,11 @@ SET autocommit = 0;
 START TRANSACTION;
 
 SET @start_revision = (SELECT MAX(`revision`)
-                       FROM {revision} r
-                                INNER JOIN
-                                (SELECT MAX(`revision`) - {min_revisions} as `max_revision` FROM {revision}) g
+                       FROM (SELECT MAX(`revision`) - {min_revisions} as `max_revision` FROM {revision}) g
+                                LEFT JOIN
+                                {revision} r
                                 ON r.`revision` <= g.`max_revision`
-                       WHERE `created_at` < NOW() - INTERVAL {cleanup_from});
+                       WHERE `created_at` < NOW() - INTERVAL {cleanup_from} SECOND);
 
 DELETE
 FROM {revision}

@@ -19,13 +19,12 @@ WHERE `added_revision` <= {backup_revision} AND (`removed_revision` IS NULL OR `
 
 INSERT INTO {backup_position}
 SELECT {backup_revision}, p.*
-FROM {position} p
-INNER JOIN
- (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`
- FROM {position}
- WHERE `revision_id` <= {backup_revision}
- GROUP BY `partition_id`) g
-ON p.`partition_id` = g.`partition_id`
-AND p.`revision_id` = g.`max_revision`;
+FROM (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`
+      FROM {position}
+      WHERE `revision_id` <= {backup_revision}
+      GROUP BY `partition_id`) g
+         LEFT JOIN {position} p
+                   ON p.`partition_id` = g.`partition_id`
+                       AND p.`revision_id` = g.`max_revision`;
 
 -- COMMIT; -commit will be made after chunk files are backed up

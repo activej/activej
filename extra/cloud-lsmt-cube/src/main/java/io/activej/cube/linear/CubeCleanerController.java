@@ -155,7 +155,7 @@ public final class CubeCleanerController {
 				.replace("{position}", tablePosition)
 				.replace("{chunk}", tableChunk)
 				.replace("{min_revisions}", String.valueOf(minimalNumberOfRevisions))
-				.replace("{cleanup_from}", cleanupOlderThan.getSeconds() + " SECOND");
+				.replace("{cleanup_from}", String.valueOf(cleanupOlderThan.getSeconds()));
 	}
 
 	public interface ChunksCleanerService {

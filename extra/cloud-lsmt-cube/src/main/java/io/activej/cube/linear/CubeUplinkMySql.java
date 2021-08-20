@@ -47,6 +47,8 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.transformMapValues;
 import static io.activej.cube.linear.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
+import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
 
@@ -106,6 +108,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(false);
+						connection.setTransactionIsolation(TRANSACTION_REPEATABLE_READ);
 
 						long revision;
 						revision = getMaxRevision(connection);
@@ -142,11 +145,11 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 						Map<String, LogPositionDiff> positions = new HashMap<>();
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
 								"SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position` " +
-								"FROM {position} p " +
-								"INNER JOIN" +
-								" (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`" +
+								"FROM (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`" +
 								" FROM {position}" +
 								" GROUP BY `partition_id`) g " +
+								"LEFT JOIN" +
+								" {position} p " +
 								"ON p.`partition_id` = g.`partition_id` " +
 								"AND p.`revision_id` = g.`max_revision`"
 						))) {
@@ -175,6 +178,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(false);
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						long revision = getMaxRevision(connection);
 						if (revision == currentCommitId) return new FetchData<>(revision, revision, emptyList());
@@ -203,6 +207,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(false);
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						long revision = getMaxRevision(connection);
 						if (revision < protoCommit.parentRevision) {
@@ -316,14 +321,14 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		Map<String, LogPositionDiff> positions = new HashMap<>();
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
 				"SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position`, g.`to` " +
-				"FROM {position} p" +
-				" INNER JOIN" +
-				" (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, IF(`revision_id`>?, TRUE, FALSE) as `to`" +
+				"FROM (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, `revision_id`>? as `to`" +
 				" FROM {position}" +
 				" WHERE `revision_id`<=?" +
-				" GROUP BY `partition_id`, `to`) g" +
-				" ON p.`partition_id` = g.`partition_id`" +
-				" AND p.`revision_id` = g.`max_revision`" +
+				" GROUP BY `partition_id`, `to`) g " +
+				"LEFT JOIN" +
+				" {position} p " +
+				"ON p.`partition_id` = g.`partition_id` " +
+				"AND p.`revision_id` = g.`max_revision` " +
 				"ORDER BY p.`partition_id`, `to`"
 		))) {
 			ps.setLong(1, from);
