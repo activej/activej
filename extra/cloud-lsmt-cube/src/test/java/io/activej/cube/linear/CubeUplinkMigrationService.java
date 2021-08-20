@@ -3,6 +3,7 @@ package io.activej.cube.linear;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.collection.CollectionUtils;
 import io.activej.cube.Cube;
 import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
@@ -20,6 +21,7 @@ import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +50,14 @@ final class CubeUplinkMigrationService {
 			;
 
 	public void migrate(DataSource repoDataSource, DataSource uplinkDataSource) throws ExecutionException, InterruptedException {
+		doMigrate(repoDataSource, uplinkDataSource, null);
+	}
+
+	public void migrate(DataSource repoDataSource, DataSource uplinkDataSource, long startRevision) throws ExecutionException, InterruptedException {
+		doMigrate(repoDataSource, uplinkDataSource, startRevision);
+	}
+
+	private void doMigrate(DataSource repoDataSource, DataSource uplinkDataSource, @Nullable Long startRevision) throws ExecutionException, InterruptedException {
 		OTRepositoryMySql<LogDiff<CubeDiff>> repo = createRepo(repoDataSource);
 		CubeUplinkMySql uplink = createUplink(uplinkDataSource);
 
@@ -59,10 +69,14 @@ final class CubeUplinkMigrationService {
 									!checkoutData.getDiffs().isEmpty()) {
 								throw new IllegalStateException("Uplink repository is not empty");
 							}
-							return OTAlgorithms.mergeAndUpdateHeads(repo, OT_SYSTEM);
+							return startRevision == null ?
+									repo.getHeads().map(CollectionUtils::first) :
+									Promise.of(startRevision);
 						})
-						.whenResult(mergeId -> logger.info("Migrating starting from commit {}", mergeId))
-						.then(mergeId -> OTAlgorithms.checkout(repo, OT_SYSTEM, mergeId))
+						.then(head -> {
+							logger.info("Migrating starting from commit {}", head);
+							return OTAlgorithms.checkout(repo, OT_SYSTEM, head);
+						})
 						.whenResult(diffs -> logger.info("Found {} diffs to be migrated", diffs.size()))
 						.map(OT_SYSTEM::squash)
 						.then(diffs -> uplink.push(new UplinkProtoCommit(0, diffs)))
@@ -82,8 +96,10 @@ final class CubeUplinkMigrationService {
 		DataSource repoDataSource = dataSource(args[0]);
 		DataSource uplinkDataSource = dataSource(args[1]);
 
+		Long startRevision = args.length == 3 ? Long.parseLong(args[2]) : null;
+
 		CubeUplinkMigrationService service = new CubeUplinkMigrationService();
-		service.migrate(repoDataSource, uplinkDataSource);
+		service.doMigrate(repoDataSource, uplinkDataSource, startRevision);
 	}
 
 	private OTRepositoryMySql<LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
