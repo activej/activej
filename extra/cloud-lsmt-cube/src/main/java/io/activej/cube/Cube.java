@@ -1047,25 +1047,28 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			if (query.getOrderings().isEmpty())
 				return (o1, o2) -> 0;
 
+			for (Ordering ordering : query.getOrderings()) {
+				String field = ordering.getField();
+				if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
+					resultOrderings.add(field);
+				}
+			}
+
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
 					() -> ClassBuilder.create(Comparator.class)
 							.withMethod("compare", get(() -> {
 								ExpressionComparator comparator = ExpressionComparator.create();
-
 								for (Ordering ordering : query.getOrderings()) {
 									String field = ordering.getField();
-
 									if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
 										String property = field.replace('.', '$');
 										comparator.with(
 												ordering.isAsc() ? leftProperty(resultClass, property) : rightProperty(resultClass, property),
 												ordering.isAsc() ? rightProperty(resultClass, property) : leftProperty(resultClass, property),
 												true);
-										resultOrderings.add(field);
 									}
 								}
-
 								return comparator;
 							}))
 			);

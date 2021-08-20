@@ -25,7 +25,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -44,7 +46,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	public static final Path DEFAULT_DEBUG_OUTPUT_DIR = getPathSetting(ClassBuilder.class, "debugOutputDir", null);
 
 	private final Map<String, Class<?>> definedClasses = new ConcurrentHashMap<>();
-	private final Map<ClassKey<?>, Class<?>> cachedClasses = new ConcurrentHashMap<>();
+	private final Map<ClassKey<?>, AtomicReference<Class<?>>> cachedClasses = new ConcurrentHashMap<>();
 
 	@Nullable
 	private BytecodeStorage bytecodeStorage;
@@ -102,9 +104,16 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	}
 
 	@NotNull
+	public <T> T ensureClassAndCreateInstance(String className, Supplier<ClassBuilder<T>> classBuilder,
+			Object... arguments) {
+		return createInstance(ensureClass(className, classBuilder), arguments);
+	}
+
+	@NotNull
 	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder,
 			Object... arguments) {
-		return ensureClassAndCreateInstance(key, classLoader -> classBuilder.get().toBytecode(classLoader), arguments);
+		Class<T> aClass = ensureClass(key, classBuilder);
+		return createInstance(aClass, arguments);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -142,15 +151,34 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 
 	@NotNull
 	public <T> Class<T> ensureClass(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder) {
+		AtomicReference<Class<?>> reference = cachedClasses.computeIfAbsent(key, k -> new AtomicReference<>());
+		Class<?> aClass = reference.get();
+		if (aClass == null) {
+			//noinspection SynchronizationOnLocalVariableOrMethodParameter
+			synchronized (reference) {
+				aClass = reference.get();
+				if (aClass == null) {
+					GeneratedBytecode generatedBytecode = bytecodeBuilder.apply(this);
+					aClass = generatedBytecode.defineClass(this);
+					reference.set(aClass);
+				}
+			}
+		}
 		//noinspection unchecked
-		return (Class<T>) cachedClasses.computeIfAbsent(key, k -> bytecodeBuilder.apply(this).defineClass(this));
+		return (Class<T>) aClass;
 	}
 
 	@NotNull
 	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder,
 			Object... arguments) {
+		Class<T> aClass = ensureClass(key, bytecodeBuilder);
+		return createInstance(aClass, arguments);
+	}
+
+	@NotNull
+	static <T> T createInstance(Class<T> aClass, Object[] arguments) {
 		try {
-			return ensureClass(key, bytecodeBuilder)
+			return aClass
 					.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))
 					.newInstance(arguments);
 		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
@@ -177,7 +205,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 
 	@Nullable
 	public Class<?> getCachedClass(@NotNull ClassKey<?> key) {
-		return cachedClasses.get(key);
+		return Optional.ofNullable(cachedClasses.get(key)).map(AtomicReference::get).orElse(null);
 	}
 
 	@Override

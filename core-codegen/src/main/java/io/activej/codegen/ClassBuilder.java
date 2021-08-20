@@ -28,12 +28,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static io.activej.codegen.DefiningClassLoader.createInstance;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.getStringSetting;
 import static java.util.Arrays.asList;
@@ -260,13 +260,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 
 	public T defineClassAndCreateInstance(DefiningClassLoader classLoader, Object... arguments) {
-		try {
-			return defineClass(classLoader)
-					.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))
-					.newInstance(arguments);
-		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-			throw new RuntimeException(e);
-		}
+		Class<T> aClass = defineClass(classLoader);
+		return createInstance(aClass, arguments);
 	}
 
 	public GeneratedBytecode toBytecode(ClassLoader classLoader) {

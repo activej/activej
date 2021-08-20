@@ -73,7 +73,6 @@ public final class SerializerBuilder {
 	private final TypeScannerRegistry<SerializerDef> registry = TypeScannerRegistry.create();
 
 	private String profile;
-	private String className;
 	private int encodeVersionMax = Integer.MAX_VALUE;
 	private int decodeVersionMin = 0;
 	private int decodeVersionMax = Integer.MAX_VALUE;
@@ -267,33 +266,16 @@ public final class SerializerBuilder {
 		return this;
 	}
 
-	public SerializerBuilder withClassName(String className) {
-		setClassName(className);
-		return this;
-	}
-
-	public void setClassName(String className) {
-		this.className = className;
-	}
-
 	public <T> SerializerBuilder withSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
-		setSubclasses(subclassesId, subclasses);
-		return this;
-	}
-
-	public <T> void setSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
 		extraSubclassesMap.put(subclassesId, (List) subclasses);
+		return this;
 	}
 
 	public <T> SerializerBuilder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
-		setSubclasses(type, subclasses);
-		return this;
-	}
-
-	public <T> void setSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
 		extraSubclassesMap.put(type, (List) subclasses);
+		return this;
 	}
 
 	public <T> BinarySerializer<T> build(Type type) {
@@ -309,6 +291,19 @@ public final class SerializerBuilder {
 				});
 	}
 
+	public <T> BinarySerializer<T> build(String className, Type type) {
+		return build(className, annotatedTypeOf(type));
+	}
+
+	public <T> BinarySerializer<T> build(String className, AnnotatedType type) {
+		return classLoader.ensureClassAndCreateInstance(
+				className,
+				() -> {
+					SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
+					return toClassBuilder(serializer);
+				});
+	}
+
 	public <T> BinarySerializer<T> build(SerializerDef serializer) {
 		//noinspection unchecked
 		return (BinarySerializer<T>) toClassBuilder(serializer).defineClassAndCreateInstance(DefiningClassLoader.create());
@@ -317,10 +312,6 @@ public final class SerializerBuilder {
 	public <T> ClassBuilder<BinarySerializer<T>> toClassBuilder(SerializerDef serializer) {
 		//noinspection unchecked,rawtypes
 		ClassBuilder<BinarySerializer<T>> classBuilder = ClassBuilder.create((Class<BinarySerializer<T>>) (Class) BinarySerializer.class);
-
-		if (className != null) {
-			classBuilder.withClassName(className);
-		}
 
 		Set<Integer> collectedVersions = new HashSet<>();
 		Map<Object, Expression> encoderInitializers = new HashMap<>();

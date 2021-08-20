@@ -28,16 +28,14 @@ public final class ClassKey<T> {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		ClassKey<?> key = (ClassKey<?>) o;
-		return clazz.equals(key.clazz) &&
-				Arrays.equals(this.parameters, key.parameters);
+		ClassKey<?> that = (ClassKey<?>) o;
+		return clazz.equals(that.clazz) &&
+				Arrays.equals(this.parameters, that.parameters);
 	}
 
 	@Override
 	public int hashCode() {
-		int result = clazz.hashCode();
-		result = 31 * result + Arrays.hashCode(parameters);
-		return result;
+		return clazz.hashCode() * 31 + Arrays.hashCode(parameters);
 	}
 
 	@Override
