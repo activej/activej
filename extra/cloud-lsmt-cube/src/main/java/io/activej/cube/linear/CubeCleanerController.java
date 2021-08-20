@@ -39,11 +39,11 @@ public final class CubeCleanerController {
 
 	public static final Duration CHUNKS_CLEANUP_DELAY = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupDelay", Duration.ofMinutes(1));
 	public static final Duration CLEANUP_OLDER_THAN = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupOlderThan", Duration.ofMinutes(10));
-	public static final int MINIMAL_REVISIONS = ApplicationSettings.getInt(CubeCleanerController.class, "minimalRevisions", 0);
+	public static final int MINIMAL_REVISIONS = ApplicationSettings.getInt(CubeCleanerController.class, "minimalRevisions", 1);
 
-	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "revisionTable", "revision");
-	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "positionTable", "position");
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "chunkTable", "chunk");
+	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "revisionTable", "cube_revision");
+	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "positionTable", "cube_position");
+	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "chunkTable", "cube_chunk");
 
 	private static final String SQL_CLEANUP_SCRIPT = "sql/cleanup.sql";
 

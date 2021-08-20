@@ -40,7 +40,7 @@ import static java.util.stream.Collectors.joining;
 public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	private static final Logger logger = LoggerFactory.getLogger(ChunkLockerMySql.class);
 
-	public static final String DEFAULT_LOCK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "lockTable", "chunk_lock");
+	public static final String DEFAULT_LOCK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "lockTable", "aggregation_chunk_lock");
 	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(ChunkLockerMySql.class, "lockTtl", Duration.ofMinutes(5));
 	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(ChunkLockerMySql.class, "lockedBy", null);
 

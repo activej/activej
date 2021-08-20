@@ -204,7 +204,7 @@ public class CubeBackupControllerTest {
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement stmt = connection.prepareStatement("" +
 					"SELECT `revision` " +
-					"FROM `backup` "
+					"FROM " + CubeBackupController.BACKUP_REVISION_TABLE
 			)) {
 				ResultSet resultSet = stmt.executeQuery();
 
@@ -224,8 +224,8 @@ public class CubeBackupControllerTest {
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement stmt = connection.prepareStatement("" +
 					"SELECT `id`, `added_revision` <= `backup_id` " +
-					"FROM `backup_chunk` " +
-					"WHERE `backup_id` = ? "
+					"FROM " + CubeBackupController.BACKUP_CHUNK_TABLE +
+					" WHERE `backup_id` = ? "
 			)) {
 				stmt.setLong(1, backupId);
 
@@ -259,8 +259,8 @@ public class CubeBackupControllerTest {
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement stmt = connection.prepareStatement("" +
 					"SELECT `partition_id`, `filename`, `remainder`, `position` " +
-					"FROM `backup_position` " +
-					"WHERE `backup_id` = ? "
+					"FROM " + CubeBackupController.BACKUP_POSITION_TABLE +
+					" WHERE `backup_id` = ? "
 			)) {
 				stmt.setLong(1, backupId);
 

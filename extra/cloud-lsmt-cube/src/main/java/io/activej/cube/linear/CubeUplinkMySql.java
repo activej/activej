@@ -55,9 +55,9 @@ import static java.util.stream.Collectors.joining;
 public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, CubeUplinkMySql.UplinkProtoCommit> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeUplinkMySql.class);
 
-	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "revisionTable", "revision");
-	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "positionTable", "position");
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "chunkTable", "chunk");
+	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "revisionTable", "cube_revision");
+	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "positionTable", "cube_position");
+	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "chunkTable", "cube_chunk");
 
 	public static final long ROOT_REVISION = 0L;
 

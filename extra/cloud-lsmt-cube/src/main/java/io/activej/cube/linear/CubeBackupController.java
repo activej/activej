@@ -35,13 +35,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class CubeBackupController {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
-	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "revisionTable", "revision");
-	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "positionTable", "position");
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeBackupController.class, "chunkTable", "chunk");
+	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "revisionTable", "cube_revision");
+	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "positionTable", "cube_position");
+	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeBackupController.class, "chunkTable", "cube_chunk");
 
-	public static final String BACKUP_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupTable", "backup");
-	public static final String BACKUP_POSITION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupPositionTable", "backup_position");
-	public static final String BACKUP_CHUNK_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupChunkTable", "backup_chunk");
+	public static final String BACKUP_REVISION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupTable", "cube_revision_backup");
+	public static final String BACKUP_POSITION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupPositionTable", "cube_position_backup");
+	public static final String BACKUP_CHUNK_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupChunkTable", "cube_chunk_backup");
 
 	private static final String SQL_BACKUP_SCRIPT = "sql/backup.sql";
 
@@ -52,7 +52,7 @@ public final class CubeBackupController {
 	private String tablePosition = POSITION_TABLE;
 	private String tableChunk = CHUNK_TABLE;
 
-	private String tableBackup = BACKUP_TABLE;
+	private String tableBackup = BACKUP_REVISION_TABLE;
 	private String tablePositionBackup = BACKUP_POSITION_TABLE;
 	private String tableChunkBackup = BACKUP_CHUNK_TABLE;
 
