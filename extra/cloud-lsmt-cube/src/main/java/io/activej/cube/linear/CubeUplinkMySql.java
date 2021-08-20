@@ -31,6 +31,7 @@ import io.activej.multilog.LogPosition;
 import io.activej.ot.exception.OTException;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.promise.Promise;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,6 @@ import static io.activej.common.collection.CollectionUtils.transformMapValues;
 import static io.activej.cube.linear.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
-import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
 
@@ -58,6 +58,8 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "revisionTable", "revision");
 	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "positionTable", "position");
 	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "chunkTable", "chunk");
+
+	public static final long ROOT_REVISION = 0L;
 
 	private static final MeasuresValidator NO_MEASURE_VALIDATION = ($1, $2) -> {};
 
@@ -107,77 +109,23 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		return Promise.ofBlockingCallable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						connection.setAutoCommit(false);
-						connection.setTransactionIsolation(TRANSACTION_REPEATABLE_READ);
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						long revision;
 						revision = getMaxRevision(connection);
 
-						CubeDiff cubeDiff;
-						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"SELECT `id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count` " +
-								"FROM {chunk} " +
-								"WHERE `removed_revision` IS NULL"
-						))) {
-							ResultSet resultSet = ps.executeQuery();
+						if (revision == ROOT_REVISION) return new FetchData<>(revision, revision, emptyList());
 
-							Map<String, Set<AggregationChunk>> aggregationDiffs = new HashMap<>();
-							while (resultSet.next()) {
-								long chunkId = resultSet.getLong(1);
-								String aggregationId = resultSet.getString(2);
-								List<String> measures = measuresFromString(resultSet.getString(3));
-								measuresValidator.validate(aggregationId, measures);
-								StructuredCodec<PrimaryKey> codec = primaryKeyCodecs.getCodec(aggregationId);
-								if (codec == null) {
-									throw new MalformedDataException("Unknown aggregation: " + aggregationId);
-								}
-								PrimaryKey minKey = fromJson(codec, resultSet.getString(4));
-								PrimaryKey maxKey = fromJson(codec, resultSet.getString(5));
-								int count = resultSet.getInt(6);
-
-								aggregationDiffs.computeIfAbsent(aggregationId, $ -> new HashSet<>())
-										.add(AggregationChunk.create(chunkId, measures, minKey, maxKey, count));
-							}
-
-							cubeDiff = CubeDiff.of(transformMapValues(aggregationDiffs, AggregationDiff::of));
-						}
-
-						Map<String, LogPositionDiff> positions = new HashMap<>();
-						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position` " +
-								"FROM (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`" +
-								" FROM {position}" +
-								" GROUP BY `partition_id`) g " +
-								"LEFT JOIN" +
-								" {position} p " +
-								"ON p.`partition_id` = g.`partition_id` " +
-								"AND p.`revision_id` = g.`max_revision`"
-						))) {
-							ResultSet resultSet = ps.executeQuery();
-							while (resultSet.next()) {
-								String partition = resultSet.getString(1);
-								String filename = resultSet.getString(2);
-								int remainder = resultSet.getInt(3);
-								long position = resultSet.getLong(4);
-
-								LogFile logFile = new LogFile(filename, remainder);
-								LogPosition logPosition = LogPosition.create(logFile, position);
-								LogPositionDiff logPositionDiff = new LogPositionDiff(LogPosition.initial(), logPosition);
-
-								positions.put(partition, logPositionDiff);
-							}
-						}
-						return new FetchData<>(revision, revision, toLogDiffs(cubeDiff, positions));
+						return new FetchData<>(revision, revision, doFetch(connection, ROOT_REVISION, revision));
 					}
 				});
 	}
 
 	@Override
-	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(Long currentCommitId) {
+	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(@NotNull Long currentCommitId) {
 		return Promise.ofBlockingCallable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						connection.setAutoCommit(false);
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						long revision = getMaxRevision(connection);
@@ -186,10 +134,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 							throw new IllegalArgumentException("Passed revision is higher than uplink revision");
 						}
 
-						return new FetchData<>(revision, revision, toLogDiffs(
-								fetchChunkDiffs(connection, currentCommitId, revision),
-								fetchPositionDiffs(connection, currentCommitId, revision)
-						));
+						return new FetchData<>(revision, revision, doFetch(connection, currentCommitId, revision));
 					}
 				});
 	}
@@ -254,10 +199,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 							return new FetchData<>(revision, revision, emptyList());
 						}
 
-						return new FetchData<>(revision, revision, toLogDiffs(
-								fetchChunkDiffs(connection, protoCommit.parentRevision, revision - 1),
-								fetchPositionDiffs(connection, protoCommit.parentRevision, revision - 1)
-						));
+						return new FetchData<>(revision, revision, doFetch(connection, protoCommit.parentRevision, revision - 1));
 					}
 				});
 	}
@@ -368,6 +310,13 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 			}
 		}
 		return positions;
+	}
+
+	private List<LogDiff<CubeDiff>> doFetch(Connection connection, long from, long to) throws SQLException, MalformedDataException {
+		return toLogDiffs(
+				fetchChunkDiffs(connection, from, to),
+				fetchPositionDiffs(connection, from, to)
+		);
 	}
 
 	private void addChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException {
