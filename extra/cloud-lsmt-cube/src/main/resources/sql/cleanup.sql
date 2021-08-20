@@ -18,12 +18,12 @@ FROM {chunk}
 WHERE `removed_revision` <= @start_revision;
 
 DELETE p
-FROM {position} p
-         INNER JOIN (SELECT `partition_id`, MAX(`revision_id`) as `max_rev`
-                     FROM {position}
-                     GROUP BY `partition_id`) g
-                    ON p.`revision_id` != g.`max_rev` AND
-                       p.`partition_id` = g.`partition_id`
-WHERE `revision_id` <= @start_revision;
+FROM (SELECT `partition_id`, MAX(`revision_id`) as `max_rev`
+      FROM {position}
+      WHERE `revision_id` < @start_revision
+      GROUP BY `partition_id`) g
+         LEFT JOIN {position} p
+ON p.`partition_id` = g.`partition_id`
+WHERE p.`revision_id` < g.`max_rev`;
 
 COMMIT;
