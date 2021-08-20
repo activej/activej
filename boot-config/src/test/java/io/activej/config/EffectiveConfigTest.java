@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 
 public class EffectiveConfigTest {
 	@Rule
-	public final TemporaryFolder folder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private EffectiveConfig config;
 
@@ -113,7 +113,7 @@ public class EffectiveConfigTest {
 		assertEquals("root", config.get("DataBase.password", "default"));
 
 		assertEquals(1000L, (long) config.get(ofLong(), "Server.AsyncClient.clientTimeout"));
-		Path outputPath = folder.newFile("./effective.properties").toPath();
+		Path outputPath = temporaryFolder.newFile("./effective.properties").toPath();
 		config.saveEffectiveConfigTo(outputPath);
 		assertTrue(Files.exists(outputPath));
 	}

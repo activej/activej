@@ -36,7 +36,7 @@ public final class ChannelFileReaderWriterTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Rule
-	public final TemporaryFolder tempFolder = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Test
 	public void streamFileReader() throws IOException {
@@ -58,7 +58,7 @@ public final class ChannelFileReaderWriterTest {
 
 	@Test
 	public void streamFileWriter() throws IOException {
-		Path tempPath = tempFolder.getRoot().toPath().resolve("out.dat");
+		Path tempPath = temporaryFolder.getRoot().toPath().resolve("out.dat");
 		byte[] bytes = {'T', 'e', 's', 't', '1', ' ', 'T', 'e', 's', 't', '2', ' ', 'T', 'e', 's', 't', '3', '\n', 'T', 'e', 's', 't', '\n'};
 
 		await(ChannelSupplier.of(ByteBuf.wrapForReading(bytes))
@@ -69,7 +69,7 @@ public final class ChannelFileReaderWriterTest {
 
 	@Test
 	public void streamFileWriterRecycle() {
-		Path tempPath = tempFolder.getRoot().toPath().resolve("out.dat");
+		Path tempPath = temporaryFolder.getRoot().toPath().resolve("out.dat");
 		byte[] bytes = {'T', 'e', 's', 't', '1', ' ', 'T', 'e', 's', 't', '2', ' ', 'T', 'e', 's', 't', '3', '\n', 'T', 'e', 's', 't', '\n'};
 
 		ChannelFileWriter writer = await(ChannelFileWriter.open(newCachedThreadPool(), tempPath));
@@ -85,7 +85,7 @@ public final class ChannelFileReaderWriterTest {
 
 	@Test
 	public void streamFileReaderWhenFileMultipleOfBuffer() throws IOException {
-		Path folder = tempFolder.newFolder().toPath();
+		Path folder = temporaryFolder.newFolder().toPath();
 		byte[] data = new byte[3 * ChannelFileReader.DEFAULT_BUFFER_SIZE.toInt()];
 		for (int i = 0; i < data.length; i++) {
 			data[i] = (byte) (i % 256 - 127);
@@ -103,7 +103,7 @@ public final class ChannelFileReaderWriterTest {
 
 	@Test
 	public void close() throws Exception {
-		File file = tempFolder.newFile("2Mb");
+		File file = temporaryFolder.newFile("2Mb");
 		byte[] data = new byte[2 * 1024 * 1024]; // the larger the file the less chance that it will be read fully before close completes
 		ThreadLocalRandom.current().nextBytes(data);
 

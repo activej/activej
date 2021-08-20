@@ -19,11 +19,15 @@ package io.activej.codegen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.codegen.util.Utils.getPathSetting;
@@ -37,10 +41,15 @@ import static java.util.stream.Collectors.groupingBy;
  */
 @SuppressWarnings("WeakerAccess")
 public final class DefiningClassLoader extends ClassLoader implements DefiningClassLoaderMBean {
+	public static final Path DEFAULT_DEBUG_OUTPUT_DIR = getPathSetting(ClassBuilder.class, "debugOutputDir", null);
 
 	private final Map<String, Class<?>> definedClasses = new ConcurrentHashMap<>();
 	private final Map<ClassKey<?>, Class<?>> cachedClasses = new ConcurrentHashMap<>();
-	public static final Path DEFAULT_SAVE_DIR = getPathSetting(DefiningClassLoader.class, "saveDir", null);
+
+	@Nullable
+	private BytecodeStorage bytecodeStorage;
+
+	private Path debugOutputDir = DEFAULT_DEBUG_OUTPUT_DIR;
 
 	// region builders
 	private DefiningClassLoader() {
@@ -59,41 +68,89 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	}
 	// endregion
 
-	public DefiningClassLoader withBytecodeSaveDir(Path path) {
-		return null;
+	public DefiningClassLoader withBytecodeStorage(BytecodeStorage bytecodeStorage) {
+		this.bytecodeStorage = bytecodeStorage;
+		return this;
+	}
+
+	public DefiningClassLoader withDebugOutputDir(Path debugOutputDir) {
+		this.debugOutputDir = debugOutputDir;
+		return this;
 	}
 
 	public Class<?> defineClass(String className, byte[] bytecode) {
 		Class<?> aClass = super.defineClass(className, bytecode, 0, bytecode.length);
 		definedClasses.put(className, aClass);
+		if (debugOutputDir != null) {
+			try (FileOutputStream fos = new FileOutputStream(debugOutputDir.resolve(className + ".class").toFile())) {
+				fos.write(bytecode);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 		return aClass;
+	}
+
+	@NotNull
+	public <T> Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilder) {
+		return ensureClass(className, (cl, s) -> classBuilder.get().toBytecode(cl, s));
+	}
+
+	@NotNull
+	public <T> Class<T> ensureClass(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder) {
+		return ensureClass(key, classLoader -> classBuilder.get().toBytecode(classLoader));
+	}
+
+	@NotNull
+	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder,
+			Object... arguments) {
+		return ensureClassAndCreateInstance(key, classLoader -> classBuilder.get().toBytecode(classLoader), arguments);
 	}
 
 	@SuppressWarnings("unchecked")
 	@NotNull
-	public <T> Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilderSupplier) {
+	public <T> Class<T> ensureClass(String className, BiFunction<ClassLoader, String, GeneratedBytecode> bytecodeBuilder) {
 		synchronized (getClassLoadingLock(className)) {
 			Class<?> aClass = findLoadedClass(className);
 			if (aClass != null) return (Class<T>) aClass;
-			ClassBuilder<T> builder = classBuilderSupplier.get();
-			return builder.build(this, className);
+			byte[] bytecode;
+			if (bytecodeStorage != null) {
+				try {
+					bytecode = bytecodeStorage.loadBytecode(className).orElse(null);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				if (bytecode != null) {
+					return (Class<T>) defineClass(className, bytecode);
+				}
+			}
+
+			GeneratedBytecode generatedBytecode = bytecodeBuilder.apply(this, className);
+			aClass = generatedBytecode.defineClass(this);
+
+			if (bytecodeStorage != null) {
+				try {
+					bytecodeStorage.saveBytecode(className, generatedBytecode.getBytecode());
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+			return (Class<T>) aClass;
 		}
 	}
 
 	@NotNull
-	public <T> Class<T> ensureClass(ClassKey<? super T> key, Supplier<ClassBuilder<T>> classBuilderSupplier) {
+	public <T> Class<T> ensureClass(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder) {
 		//noinspection unchecked
-		return (Class<T>) cachedClasses.computeIfAbsent(key, $ -> {
-			ClassBuilder<T> builder = classBuilderSupplier.get();
-			return builder.defineClass(this);
-		});
+		return (Class<T>) cachedClasses.computeIfAbsent(key, k -> bytecodeBuilder.apply(this).defineClass(this));
 	}
 
 	@NotNull
-	public <T> T ensureClassAndCreateInstance(ClassKey<? super T> key, Supplier<ClassBuilder<T>> classBuilderSupplier,
+	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder,
 			Object... arguments) {
 		try {
-			return ensureClass(key, classBuilderSupplier)
+			return ensureClass(key, bytecodeBuilder)
 					.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))
 					.newInstance(arguments);
 		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {

@@ -254,7 +254,9 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	// endregion
 
 	public Class<T> defineClass(@NotNull DefiningClassLoader classLoader) {
-		return build(classLoader, className != null ? className : autoClassName + '_' + COUNTER.incrementAndGet());
+		GeneratedBytecode generatedBytecode = toBytecode(classLoader);
+		//noinspection unchecked
+		return (Class<T>) generatedBytecode.defineClass(classLoader);
 	}
 
 	public T defineClassAndCreateInstance(DefiningClassLoader classLoader, Object... arguments) {
@@ -267,22 +269,31 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		}
 	}
 
-	Class<T> build(DefiningClassLoader classLoader, String className) {
-		Class<T> aClass;
-		try {
-			byte[] bytecode = toBytecode(className, classLoader);
-			//noinspection unchecked
-			aClass = (Class<T>) classLoader.defineClass(className, bytecode);
+	public GeneratedBytecode toBytecode(ClassLoader classLoader) {
+		return toBytecode(classLoader, className != null ? className : autoClassName + '_' + COUNTER.incrementAndGet());
+	}
 
-			Field field = aClass.getField(CLASS_BUILDER_MARKER);
-			//noinspection ResultOfMethodCallIgnored
-			field.get(null);
-			return aClass;
-		} catch (IllegalAccessException | NoSuchFieldException e) {
-			throw new AssertionError(e);
-		} finally {
-			cleanup();
-		}
+	public GeneratedBytecode toBytecode(ClassLoader classLoader, String className) {
+		byte[] bytecode = toBytecode(className, classLoader);
+		return new GeneratedBytecode(className, bytecode) {
+			@Override
+			protected void onDefinedClass(Class<?> clazz) {
+				try {
+					Field field = clazz.getField(CLASS_BUILDER_MARKER);
+					//noinspection ResultOfMethodCallIgnored
+					field.get(null);
+				} catch (IllegalAccessException | NoSuchFieldException e) {
+					throw new AssertionError(e);
+				} finally {
+					cleanup();
+				}
+			}
+
+			@Override
+			protected void onError(Exception e) {
+				cleanup();
+			}
+		};
 	}
 
 	private byte[] toBytecode(String className, ClassLoader classLoader) {

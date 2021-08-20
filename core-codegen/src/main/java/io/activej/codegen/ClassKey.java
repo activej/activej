@@ -11,8 +11,9 @@ public final class ClassKey<T> {
 		this.parameters = parameters;
 	}
 
-	public static <T> ClassKey<T> of(Class<T> clazz, Object... parameters) {
-		return new ClassKey<T>(clazz, parameters);
+	public static <T> ClassKey<T> of(Class<? super T> clazz, Object... parameters) {
+		//noinspection unchecked,rawtypes
+		return new ClassKey<T>((Class) clazz, parameters);
 	}
 
 	public Class<T> getKeyClass() {

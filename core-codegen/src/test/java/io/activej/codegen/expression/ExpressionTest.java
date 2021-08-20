@@ -22,12 +22,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
-@SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
+@SuppressWarnings({"ArraysAsListWithZeroOrOneArgument"})
 public class ExpressionTest {
 	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
-	@Rule
-	public final TemporaryFolder tempFolder = new TemporaryFolder();
 
+	@Rule
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+	@SuppressWarnings("unused")
 	public static class TestPojo {
 		public int property1;
 		public int property2;
@@ -115,7 +117,7 @@ public class ExpressionTest {
 			result = property1 != null ? property1.hashCode() : 0;
 			result = 31 * result + property2;
 			result = 31 * result + (int) (property3 ^ (property3 >>> 32));
-			result = 31 * result + (property4 != +0.0f ? Float.floatToIntBits(property4) : 0);
+			result = 31 * result + (property4 != 0.0f ? Float.floatToIntBits(property4) : 0);
 			result = 31 * result + property5;
 			temp = Double.doubleToLongBits(property6);
 			result = 31 * result + (int) (temp ^ (temp >>> 32));
@@ -128,6 +130,7 @@ public class ExpressionTest {
 		int hash(TestPojo2 pojo);
 	}
 
+	@SuppressWarnings("unused")
 	public interface Test extends Comparator<TestPojo>, Comparable<Test> {
 		Integer test(Integer argument);
 
@@ -484,6 +487,7 @@ public class ExpressionTest {
 		Object write(WriteFirstElement w, Object o);
 	}
 
+	@SuppressWarnings("unused")
 	public static class WriteFirstElement {
 		public Object writeFirst(Object[] i) {
 			return i[0];
@@ -601,13 +605,11 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testBuiltInstance() {
-		DefiningClassLoader definingClassLoader = CLASS_LOADER;
-
-		Class<?> testClass1 = definingClassLoader.ensureClass(
+		Class<?> testClass1 = CLASS_LOADER.ensureClass(
 				ClassKey.of(Object.class, "TestKey"),
 				() -> ClassBuilder.create(Object.class));
 
-		Class<?> testClass2 = definingClassLoader.ensureClass(
+		Class<?> testClass2 = CLASS_LOADER.ensureClass(
 				ClassKey.of(Object.class, "TestKey"),
 				() -> ClassBuilder.create(Object.class));
 
@@ -627,7 +629,6 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testCompare() throws ReflectiveOperationException {
-		DefiningClassLoader definingClassLoader = CLASS_LOADER;
 		Class<TestCompare> test1 = ClassBuilder.create(TestCompare.class)
 				.withMethod("compareObjectLE", cmp(CompareOperation.LE, arg(0), arg(1)))
 				.withMethod("comparePrimitiveLE", cmp(CompareOperation.LE, arg(0), arg(1)))
@@ -719,7 +720,6 @@ public class ExpressionTest {
 	@SuppressWarnings("unchecked")
 	@org.junit.Test
 	public void testComparatorNullable() {
-		DefiningClassLoader classLoader = CLASS_LOADER;
 		Comparator<StringHolder> generatedComparator = ClassBuilder.create(Comparator.class)
 				.withMethod("compare", ExpressionComparator.create()
 						.with(leftProperty(StringHolder.class, "string1"), rightProperty(StringHolder.class, "string1"), true)
@@ -747,7 +747,6 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testAbstractClassWithInterface() {
-		DefiningClassLoader classLoader = CLASS_LOADER;
 		TestAbstract testObj = ClassBuilder.create(TestAbstract.class)
 				.withMethod("returnInt", value(42))
 				.withMethod("returnDouble", value(-1.0))
@@ -774,7 +773,6 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testMultipleInterfacesWithAbstract() {
-		DefiningClassLoader definingClassLoader = CLASS_LOADER;
 		A instance = ClassBuilder.create(A.class, B.class, C.class)
 				.withMethod("a", value(42))
 				.withMethod("b", value(43))
@@ -815,18 +813,16 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testSetSaveBytecode() throws IOException {
-		File folder = tempFolder.newFolder();
-		DefiningClassLoader definingClassLoader = CLASS_LOADER
-				.withBytecodeSaveDir(folder.toPath());
-
+		File dir = temporaryFolder.newFolder();
 		B instance = ClassBuilder.create(B.class)
 				.withMethod("b", nullRef(Integer.class))
 				.withMethod("toString",
 						ExpressionToString.create()
 								.withQuotes("{", "}", ", ")
 								.with(call(self(), "b")))
-				.defineClassAndCreateInstance(definingClassLoader);
-		assertEquals(1, folder.list().length);
+				.defineClassAndCreateInstance(DefiningClassLoader.create()
+						.withDebugOutputDir(dir.toPath()));
+		assertEquals(1, dir.list().length);
 		assertNull(instance.b());
 		assertEquals("{null}", instance.toString());
 	}
@@ -864,7 +860,6 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testIsNull() {
-		DefiningClassLoader definingClassLoader = CLASS_LOADER;
 		TestIsNull instance = ClassBuilder.create(TestIsNull.class)
 				.withMethod("method", isNull(arg(0)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
@@ -878,7 +873,6 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testIsNotNull() {
-		DefiningClassLoader definingClassLoader = CLASS_LOADER;
 		TestIsNotNull instance = ClassBuilder.create(TestIsNotNull.class)
 				.withMethod("method", isNotNull(arg(0)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
@@ -895,7 +889,6 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testNewArray() {
-		DefiningClassLoader definingClassLoader = CLASS_LOADER;
 		TestNewArray instance = ClassBuilder.create(TestNewArray.class)
 				.withMethod("ints", arrayNew(int[].class, arg(0)))
 				.withMethod("integers", arrayNew(String[].class, arg(0)))

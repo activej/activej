@@ -46,7 +46,7 @@ public class ActiveFsChunkStorageTest {
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	@Rule
-	public final TemporaryFolder temp = new TemporaryFolder();
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
 	private final AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
@@ -57,7 +57,7 @@ public class ActiveFsChunkStorageTest {
 	@Test
 	public void testAcknowledge() throws IOException {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		Path storageDir = temp.newFolder().toPath();
+		Path storageDir = temporaryFolder.newFolder().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newCachedThreadPool(), storageDir);
 		await(fs.start());
 		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(

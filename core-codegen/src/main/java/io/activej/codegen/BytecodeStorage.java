@@ -1,12 +1,10 @@
 package io.activej.codegen;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
+import java.util.Optional;
 
 public interface BytecodeStorage {
-	@Nullable
-	byte[] loadBytecode(String className) throws IOException;
+	Optional<byte[]> loadBytecode(String className) throws IOException;
 
 	void saveBytecode(String className, byte[] bytecode) throws IOException;
 }
