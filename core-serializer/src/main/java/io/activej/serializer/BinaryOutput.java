@@ -18,7 +18,7 @@ package io.activej.serializer;
 
 import io.activej.serializer.util.BinaryOutputUtils;
 
-public final class BinaryOutput {
+public class BinaryOutput {
 	private final byte[] array;
 	private int pos;
 

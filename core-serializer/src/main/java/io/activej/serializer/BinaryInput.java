@@ -29,7 +29,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * and Strings from byte arrays
  */
 @SuppressWarnings({"unused", "WeakerAccess", "DuplicatedCode", "SpellCheckingInspection"})
-public final class BinaryInput {
+public class BinaryInput {
 	public final byte[] array;
 	public int pos;
 
