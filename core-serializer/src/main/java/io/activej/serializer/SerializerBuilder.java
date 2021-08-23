@@ -282,6 +282,10 @@ public final class SerializerBuilder {
 		return build(annotatedTypeOf(type));
 	}
 
+	public <T> BinarySerializer<T> build(Class<T> type) {
+		return build(annotatedTypeOf(type));
+	}
+
 	public <T> BinarySerializer<T> build(AnnotatedType type) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(BinarySerializer.class, type),
@@ -289,6 +293,10 @@ public final class SerializerBuilder {
 					SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
 					return toClassBuilder(serializer);
 				});
+	}
+
+	public <T> BinarySerializer<T> build(TypeT<T> typeT) {
+		return build(typeT.getAnnotatedType());
 	}
 
 	public <T> BinarySerializer<T> build(String className, Type type) {

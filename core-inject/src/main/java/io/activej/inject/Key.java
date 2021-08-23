@@ -108,7 +108,7 @@ public abstract class Key<T> {
 	}
 
 	/**
-	 * A shortcut for <code>{@link Types# getRawClass(Type)}(key.getType())</code>.
+	 * A shortcut for <code>{@link Types#getRawType(Type)}(key.getType())</code>.
 	 * Also casts the result to a properly parameterized class.
 	 */
 	@SuppressWarnings("unchecked")

@@ -24,6 +24,7 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.promise.Promise;
+import io.activej.types.TypeT;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -315,6 +316,17 @@ public abstract class HttpMessage {
 	/**
 	 * @see #attach(Type, Object)
 	 */
+	public <T> void attach(TypeT<T> typeT, T extra) {
+		if (CHECK) checkState(!isRecycled());
+		if (attachments == null) {
+			attachments = new HashMap<>();
+		}
+		attachments.put(typeT.getAnnotatedType(), extra);
+	}
+
+	/**
+	 * @see #attach(Type, Object)
+	 */
 	public void attach(Object extra) {
 		if (CHECK) checkState(!isRecycled());
 		if (attachments == null) {
@@ -344,6 +356,18 @@ public abstract class HttpMessage {
 			return null;
 		}
 		Object res = attachments.get(type);
+		return (T) res;
+	}
+
+	/**
+	 * @see #attach(Type, Object)
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T getAttachment(TypeT<T> typeT) {
+		if (attachments == null) {
+			return null;
+		}
+		Object res = attachments.get(typeT.getAnnotatedType());
 		return (T) res;
 	}
 
