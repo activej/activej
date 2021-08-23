@@ -922,9 +922,7 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testStaticFields() throws ReflectiveOperationException {
-		//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 		Class<StaticPojo> build = ClassBuilder.create(StaticPojo.class)
-//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 				.withStaticField("field", int.class, value(10))
 				.withMethod("getField", staticField(StaticFieldHolder.class, "field"))
 				.withMethod("setField", set(staticField(StaticFieldHolder.class, "field"), arg(0)))
@@ -1002,9 +1000,7 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testSuperMethods() {
 		ClassBuilder.clearStaticConstants();
-		//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 		Super instance = ClassBuilder.create(Super.class)
-//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 				.withMethod("getString", concat(value("super returns: "), callSuper("getString")))
 				.withMethod("change", add(callSuper("change", arg(0)), value(100)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
@@ -1030,9 +1026,7 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testCallingOfProtectedMethods() {
 		ClassBuilder.clearStaticConstants();
-		//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 		Cashier instance = ClassBuilder.create(Cashier.class)
-//				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 				.withMethod("getPrice", mul(Expressions.value(2), Expressions.call(self(), "hiddenPrice")))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		assertEquals(200, instance.getPrice());
