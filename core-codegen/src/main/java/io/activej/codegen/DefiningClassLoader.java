@@ -43,7 +43,7 @@ import static java.util.stream.Collectors.groupingBy;
  */
 @SuppressWarnings("WeakerAccess")
 public final class DefiningClassLoader extends ClassLoader implements DefiningClassLoaderMBean {
-	public static final Path DEFAULT_DEBUG_OUTPUT_DIR = getPathSetting(ClassBuilder.class, "debugOutputDir", null);
+	public static final Path DEFAULT_DEBUG_OUTPUT_DIR = getPathSetting(DefiningClassLoader.class, "debugOutputDir", null);
 
 	private final Map<String, Class<?>> definedClasses = new ConcurrentHashMap<>();
 	private final Map<ClassKey<?>, AtomicReference<Class<?>>> cachedClasses = new ConcurrentHashMap<>();
@@ -122,13 +122,8 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 		synchronized (getClassLoadingLock(className)) {
 			Class<?> aClass = findLoadedClass(className);
 			if (aClass != null) return (Class<T>) aClass;
-			byte[] bytecode;
 			if (bytecodeStorage != null) {
-				try {
-					bytecode = bytecodeStorage.loadBytecode(className).orElse(null);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+				byte[] bytecode = bytecodeStorage.loadBytecode(className).orElse(null);
 				if (bytecode != null) {
 					return (Class<T>) defineClass(className, bytecode);
 				}
@@ -138,11 +133,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 			aClass = generatedBytecode.defineClass(this);
 
 			if (bytecodeStorage != null) {
-				try {
-					bytecodeStorage.saveBytecode(className, generatedBytecode.getBytecode());
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+				bytecodeStorage.saveBytecode(className, generatedBytecode.getBytecode());
 			}
 
 			return (Class<T>) aClass;

@@ -16,6 +16,9 @@
 
 package io.activej.codegen;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +26,8 @@ import java.io.OutputStream;
 import java.util.Optional;
 
 public abstract class AbstractIOBytecodeStorage implements BytecodeStorage {
+	private final Logger logger = LoggerFactory.getLogger(getClass());
+
 	private static final int DEFAULT_BUFFER_SIZE = 8192;
 
 	protected abstract Optional<InputStream> getInputStream(String className) throws IOException;
@@ -30,25 +35,32 @@ public abstract class AbstractIOBytecodeStorage implements BytecodeStorage {
 	protected abstract OutputStream getOutputStream(String className) throws IOException;
 
 	@Override
-	public final Optional<byte[]> loadBytecode(String className) throws IOException {
-		Optional<InputStream> maybeInputStream = getInputStream(className);
-		if (!maybeInputStream.isPresent()) return Optional.empty();
+	public final Optional<byte[]> loadBytecode(String className) {
+		try {
+			Optional<InputStream> maybeInputStream = getInputStream(className);
+			if (!maybeInputStream.isPresent()) return Optional.empty();
 
-		try (InputStream stream = maybeInputStream.get()) {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-			int size;
-			while ((size = stream.read(buffer)) != -1) {
-				baos.write(buffer, 0, size);
+			try (InputStream stream = maybeInputStream.get()) {
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+				int size;
+				while ((size = stream.read(buffer)) != -1) {
+					baos.write(buffer, 0, size);
+				}
+				return Optional.of(baos.toByteArray());
 			}
-			return Optional.of(baos.toByteArray());
+		} catch (IOException e) {
+			logger.warn("Could not load bytecode for class: {}", className, e);
+			return Optional.empty();
 		}
 	}
 
 	@Override
-	public final void saveBytecode(String className, byte[] bytecode) throws IOException {
+	public final void saveBytecode(String className, byte[] bytecode) {
 		try (OutputStream outputStream = getOutputStream(className)) {
 			outputStream.write(bytecode);
+		} catch (IOException e) {
+			logger.warn("Could not save bytecode for class: " + className);
 		}
 	}
 }
