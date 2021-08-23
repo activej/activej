@@ -1,6 +1,7 @@
 package io.activej.serializer.stream;
 
 import io.activej.test.rules.ClassBuilderConstantsRule;
+import io.activej.types.TypeT;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ public class StreamCodecRegistryTest {
 	@Test
 	public void test1() throws IOException {
 		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
-		StreamCodec<List<String>> codec = registry.get(new StreamCodecT<List<String>>() {});
+		StreamCodec<List<String>> codec = registry.get(new TypeT<List<String>>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (StreamOutput output = StreamOutput.create(baos, 1)) {
@@ -64,7 +65,7 @@ public class StreamCodecRegistryTest {
 						output.writeVarInt(item.x);
 					}
 				}));
-		StreamCodec<List<A>> codec = registry.get(new StreamCodecT<List<A>>() {});
+		StreamCodec<List<A>> codec = registry.get(new TypeT<List<A>>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (StreamOutput output = StreamOutput.create(baos, 1)) {
@@ -80,7 +81,7 @@ public class StreamCodecRegistryTest {
 	@Test
 	public void test3() throws IOException {
 		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
-		StreamCodec<int[]> codec = registry.get(new StreamCodecT<int[]>() {});
+		StreamCodec<int[]> codec = registry.get(new TypeT<int[]>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (StreamOutput output = StreamOutput.create(baos, 1)) {
@@ -96,7 +97,7 @@ public class StreamCodecRegistryTest {
 	@Test
 	public void test4() throws IOException {
 		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
-		StreamCodec<int[][]> codec = registry.get(new StreamCodecT<int[][]>() {});
+		StreamCodec<int[][]> codec = registry.get(new TypeT<int[][]>() {});
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (StreamOutput output = StreamOutput.create(baos, 1)) {
@@ -113,7 +114,7 @@ public class StreamCodecRegistryTest {
 	public void notRegisteredCodec() {
 		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
 		try {
-			registry.get(new StreamCodecT<Object>() {});
+			registry.get(new TypeT<Object>() {});
 			fail();
 		} catch (IllegalArgumentException e) {
 			assertEquals("Codec is not registered for " + Object.class, e.getMessage());

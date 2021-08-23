@@ -16,6 +16,8 @@
 
 package io.activej.serializer.stream;
 
+import io.activej.types.TypeT;
+
 import java.lang.reflect.Type;
 
 /**
@@ -26,7 +28,7 @@ public interface StreamCodecFactory {
 		return get((Type) type);
 	}
 
-	default <T> StreamCodec<T> get(StreamCodecT<T> type) {
+	default <T> StreamCodec<T> get(TypeT<T> type) {
 		return get(type.getType());
 	}
 
