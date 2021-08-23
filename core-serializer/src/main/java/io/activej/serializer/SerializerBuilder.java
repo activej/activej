@@ -16,6 +16,7 @@
 
 package io.activej.serializer;
 
+import io.activej.codegen.BytecodeStorage;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
@@ -278,14 +279,36 @@ public final class SerializerBuilder {
 		return this;
 	}
 
+	/**
+	 * @see #build(AnnotatedType)
+	 */
 	public <T> BinarySerializer<T> build(Type type) {
 		return build(annotatedTypeOf(type));
 	}
 
+	/**
+	 * @see #build(AnnotatedType)
+	 */
 	public <T> BinarySerializer<T> build(Class<T> type) {
 		return build(annotatedTypeOf(type));
 	}
 
+	/**
+	 * @see #build(AnnotatedType)
+	 */
+	public <T> BinarySerializer<T> build(TypeT<T> typeT) {
+		return build(typeT.getAnnotatedType());
+	}
+
+	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * <p>
+	 * If {@link #classLoader} has already defined the serializer class, the class would be taken from
+	 * the class loader's cache.
+	 *
+	 * @param type a type data that would be serialized
+	 * @return a generated {@link BinarySerializer}
+	 */
 	public <T> BinarySerializer<T> build(AnnotatedType type) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(BinarySerializer.class, type),
@@ -295,14 +318,41 @@ public final class SerializerBuilder {
 				});
 	}
 
-	public <T> BinarySerializer<T> build(TypeT<T> typeT) {
-		return build(typeT.getAnnotatedType());
-	}
-
+	/**
+	 * @see #build(String, AnnotatedType)
+	 */
 	public <T> BinarySerializer<T> build(String className, Type type) {
 		return build(className, annotatedTypeOf(type));
 	}
 
+	/**
+	 * @see #build(String, AnnotatedType)
+	 */
+	public <T> BinarySerializer<T> build(String className, Class<T> type) {
+		return build(className, annotatedTypeOf(type));
+	}
+
+	/**
+	 * @see #build(String, AnnotatedType)
+	 */
+	public <T> BinarySerializer<T> build(String className, TypeT<T> typeT) {
+		return build(className, typeT.getAnnotatedType());
+	}
+
+	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * <p>
+	 * A built serializer would have a class name equal to the one that passed to this method.
+	 * <p>
+	 * If {@link #classLoader} has already defined the serializer class, the class would be taken from
+	 * the class loader's cache.
+	 * Moreover, if a {@link DefiningClassLoader} has a persistent {@link BytecodeStorage},
+	 * the serializer class would be taken from that persistent cache.
+	 *
+	 * @param className a name of the class of a serializer
+	 * @param type      a type data that would be serialized
+	 * @return a generated {@link BinarySerializer}
+	 */
 	public <T> BinarySerializer<T> build(String className, AnnotatedType type) {
 		return classLoader.ensureClassAndCreateInstance(
 				className,
@@ -312,6 +362,12 @@ public final class SerializerBuilder {
 				});
 	}
 
+	/**
+	 * Builds a {@link BinarySerializer} out of some {@link SerializerDef}.
+	 *
+	 * @param serializer a {@link SerializerDef} that would be used to create a {@link BinarySerializer}
+	 * @return a generated {@link BinarySerializer}
+	 */
 	public <T> BinarySerializer<T> build(SerializerDef serializer) {
 		//noinspection unchecked
 		return (BinarySerializer<T>) toClassBuilder(serializer).defineClassAndCreateInstance(DefiningClassLoader.create());

@@ -2,6 +2,11 @@ package io.activej.codegen;
 
 import java.util.Arrays;
 
+/**
+ * A key that is used as a cache key in a {@link DefiningClassLoader}.
+ * <p>
+ * Represents some superclass with an array of parameters.
+ */
 public final class ClassKey<T> {
 	private final Class<T> clazz;
 	private final Object[] parameters;

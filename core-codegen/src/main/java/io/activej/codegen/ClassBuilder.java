@@ -253,12 +253,26 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 	// endregion
 
+	/**
+	 * Defines a class from {@code this} {@link ClassBuilder} using given {@link DefiningClassLoader}
+	 *
+	 * @param classLoader a class loader that would be used to define a class
+	 * @return a defined class
+	 */
 	public Class<T> defineClass(@NotNull DefiningClassLoader classLoader) {
 		GeneratedBytecode generatedBytecode = toBytecode(classLoader);
 		//noinspection unchecked
 		return (Class<T>) generatedBytecode.defineClass(classLoader);
 	}
 
+	/**
+	 * Defines a class from {@code this} {@link ClassBuilder} using given {@link DefiningClassLoader}
+	 * and creates an instance of defined class.
+	 *
+	 * @param classLoader a class loader that would be used to define a class
+	 * @param arguments   an array of parameters that would be passed to the constructor of a defined class
+	 * @return an instance of a defined class
+	 */
 	public T defineClassAndCreateInstance(DefiningClassLoader classLoader, Object... arguments) {
 		Class<T> aClass = defineClass(classLoader);
 		return createInstance(aClass, arguments);
