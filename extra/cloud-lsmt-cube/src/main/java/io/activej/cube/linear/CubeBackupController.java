@@ -19,12 +19,17 @@ package io.activej.cube.linear;
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.common.ApplicationSettings;
 import io.activej.cube.exception.CubeException;
+import io.activej.jmx.api.ConcurrentJmxBean;
+import io.activej.jmx.api.attribute.JmxAttribute;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,7 +37,7 @@ import static io.activej.cube.linear.Utils.executeSqlScript;
 import static io.activej.cube.linear.Utils.loadResource;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class CubeBackupController {
+public final class CubeBackupController implements ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "revisionTable", "cube_revision");
@@ -57,6 +62,28 @@ public final class CubeBackupController {
 	private String tableChunkBackup = BACKUP_CHUNK_TABLE;
 
 	private String backupBy = "null";
+
+	// region JMX
+	private long backupLastStartTimestamp;
+	private long backupLastCompleteTimestamp;
+	private long backupDurationMillis;
+	private @Nullable Throwable backupException;
+
+	private long backupDbLastStartTimestamp;
+	private long backupDbLastCompleteTimestamp;
+	private long backupDbDurationMillis;
+	private @Nullable Throwable backupDbException;
+
+	private long getChunksToBackupLastStartTimestamp;
+	private long getChunksToBackupLastCompleteTimestamp;
+	private long getChunksToBackupDurationMillis;
+	private @Nullable Throwable getChunksToBackupException;
+
+	private long backupChunksLastStartTimestamp;
+	private long backupChunksLastCompleteTimestamp;
+	private long backupChunksDurationMillis;
+	private @Nullable Throwable backupChunksException;
+	// endregion
 
 	private CubeBackupController(DataSource dataSource, ChunksBackupService chunksBackupService) {
 		this.dataSource = dataSource;
@@ -92,22 +119,42 @@ public final class CubeBackupController {
 	}
 
 	public void backup() throws CubeException {
+		backupLastStartTimestamp = System.currentTimeMillis();
+
 		try (Connection connection = dataSource.getConnection()) {
 			connection.setAutoCommit(false);
 			long maxRevisionId = getMaxRevisionId(connection);
 			doBackup(connection, maxRevisionId);
 		} catch (SQLException e) {
-			throw new CubeException("Failed to connect to the database", e);
+			CubeException exception = new CubeException("Failed to connect to the database", e);
+			backupException = exception;
+
+			throw exception;
+		} finally {
+			backupLastCompleteTimestamp = System.currentTimeMillis();
+			backupDurationMillis = backupLastCompleteTimestamp - backupLastStartTimestamp;
 		}
+
+		backupException = null;
 	}
 
 	public void backup(long revisionId) throws CubeException {
+		backupLastStartTimestamp = System.currentTimeMillis();
+
 		try (Connection connection = dataSource.getConnection()) {
 			connection.setAutoCommit(false);
 			doBackup(connection, revisionId);
 		} catch (SQLException e) {
-			throw new CubeException("Failed to connect to the database", e);
+			CubeException exception = new CubeException("Failed to connect to the database", e);
+			backupException = exception;
+
+			throw exception;
+		} finally {
+			backupLastCompleteTimestamp = System.currentTimeMillis();
+			backupDurationMillis = backupLastCompleteTimestamp - backupLastStartTimestamp;
 		}
+
+		backupException = null;
 	}
 
 	private void doBackup(Connection connection, long revisionId) throws CubeException {
@@ -138,19 +185,31 @@ public final class CubeBackupController {
 	private void backupDb(Connection connection, long revisionId) throws CubeException {
 		logger.trace("Backing up database on revision {}", revisionId);
 
+		backupDbLastStartTimestamp = 0;
+
 		try (Statement statement = connection.createStatement()) {
 			String backupScript = sql(new String(loadResource(SQL_BACKUP_SCRIPT), UTF_8))
 					.replace("{backup_revision}", String.valueOf(revisionId));
 			statement.execute(backupScript);
 		} catch (SQLException | IOException e) {
-			throw new CubeException("Failed to back up database", e);
+			CubeException exception = new CubeException("Failed to back up database", e);
+			backupDbException = exception;
+			throw exception;
+		} finally {
+			backupDbLastCompleteTimestamp = System.currentTimeMillis();
+			backupDbDurationMillis = backupDbLastCompleteTimestamp - backupDbLastStartTimestamp;
 		}
+
+		backupDbException = null;
 
 		logger.trace("Database is backed up on revision {} " +
 				"Waiting for chunks to back up prior to commit", revisionId);
 	}
 
 	private Set<Long> getChunksToBackup(Connection connection, long revisionId) throws CubeException {
+		getChunksToBackupLastStartTimestamp = 0;
+
+		Set<Long> chunkIds = new HashSet<>();
 		try (PreparedStatement stmt = connection.prepareStatement(sql("" +
 				"SELECT `id` " +
 				"FROM {backup_chunk} " +
@@ -159,24 +218,40 @@ public final class CubeBackupController {
 
 			ResultSet resultSet = stmt.executeQuery();
 
-			Set<Long> chunkIds = new HashSet<>();
 			while (resultSet.next()) {
 				chunkIds.add(resultSet.getLong(1));
 			}
-			return chunkIds;
 		} catch (SQLException e) {
-			throw new CubeException("Failed to retrieve chunks to back up", e);
+			CubeException exception = new CubeException("Failed to retrieve chunks to back up", e);
+			getChunksToBackupException = exception;
+			throw exception;
+		} finally {
+			getChunksToBackupLastCompleteTimestamp = System.currentTimeMillis();
+			getChunksToBackupDurationMillis = getChunksToBackupLastCompleteTimestamp - getChunksToBackupLastStartTimestamp;
 		}
+
+		getChunksToBackupException = null;
+
+		return chunkIds;
 	}
 
 	private void backupChunks(Set<Long> chunkIds, long revisionId) throws CubeException {
 		logger.trace("Backing up chunks {} on revision {}", chunkIds, revisionId);
 
+		backupChunksLastStartTimestamp = 0;
+
 		try {
 			chunksBackupService.backup(revisionId, chunkIds);
 		} catch (IOException e) {
-			throw new CubeException("Failed to backup chunks", e);
+			CubeException exception = new CubeException("Failed to backup chunks", e);
+			backupChunksException = exception;
+			throw exception;
+		} finally {
+			backupChunksLastCompleteTimestamp = System.currentTimeMillis();
+			backupChunksDurationMillis = backupChunksLastCompleteTimestamp - backupChunksLastStartTimestamp;
 		}
+
+		backupChunksException = null;
 
 		logger.trace("Chunks {} are backed up on revision {}", chunkIds, revisionId);
 	}
@@ -214,6 +289,132 @@ public final class CubeBackupController {
 			}
 		}
 	}
+
+	// region JMX getters
+	@JmxAttribute
+	@Nullable
+	public Instant getBackupLastStartTime() {
+		return backupLastStartTimestamp != 0L ? Instant.ofEpochMilli(backupLastStartTimestamp) : null;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Instant getBackupLastCompleteTime() {
+		return backupLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(backupLastCompleteTimestamp) : null;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Duration getBackupCurrentDuration() {
+		return backupLastStartTimestamp - backupLastCompleteTimestamp > 0 ?
+				Duration.ofMillis(System.currentTimeMillis() - backupLastStartTimestamp) :
+				null;
+	}
+
+	@JmxAttribute
+	public Duration getBackupLastDuration() {
+		return Duration.ofMinutes(backupDurationMillis);
+	}
+
+	@JmxAttribute(optional = true)
+	@Nullable
+	public Throwable getBackupLastException() {
+		return backupException;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Instant getBackupDbLastStartTime() {
+		return backupDbLastStartTimestamp != 0L ? Instant.ofEpochMilli(backupDbLastStartTimestamp) : null;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Instant getBackupDbLastCompleteTime() {
+		return backupDbLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(backupDbLastCompleteTimestamp) : null;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Duration getBackupDbCurrentDuration() {
+		return backupDbLastStartTimestamp - backupDbLastCompleteTimestamp > 0 ?
+				Duration.ofMillis(System.currentTimeMillis() - backupDbLastStartTimestamp) :
+				null;
+	}
+
+	@JmxAttribute
+	public Duration getBackupDbLastDuration() {
+		return Duration.ofMinutes(backupDbDurationMillis);
+	}
+
+	@JmxAttribute(optional = true)
+	@Nullable
+	public Throwable getBackupDbLastException() {
+		return backupDbException;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Instant getGetChunksToBackupLastStartTime() {
+		return getChunksToBackupLastStartTimestamp != 0L ? Instant.ofEpochMilli(getChunksToBackupLastStartTimestamp) : null;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Instant getGetChunksToBackupLastCompleteTime() {
+		return getChunksToBackupLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(getChunksToBackupLastCompleteTimestamp) : null;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Duration getGetChunksToBackupCurrentDuration() {
+		return getChunksToBackupLastStartTimestamp - getChunksToBackupLastCompleteTimestamp > 0 ?
+				Duration.ofMillis(System.currentTimeMillis() - getChunksToBackupLastStartTimestamp) :
+				null;
+	}
+
+	@JmxAttribute
+	public Duration getGetChunksToBackupLastDuration() {
+		return Duration.ofMinutes(getChunksToBackupDurationMillis);
+	}
+
+	@JmxAttribute(optional = true)
+	@Nullable
+	public Throwable getGetChunksToBackupLastException() {
+		return getChunksToBackupException;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Instant getBackupChunksLastStartTime() {
+		return backupChunksLastStartTimestamp != 0L ? Instant.ofEpochMilli(backupChunksLastStartTimestamp) : null;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Instant getBackupChunksLastCompleteTime() {
+		return backupChunksLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(backupChunksLastCompleteTimestamp) : null;
+	}
+
+	@JmxAttribute
+	@Nullable
+	public Duration getBackupChunksCurrentDuration() {
+		return backupChunksLastStartTimestamp - backupChunksLastCompleteTimestamp > 0 ?
+				Duration.ofMillis(System.currentTimeMillis() - backupChunksLastStartTimestamp) :
+				null;
+	}
+
+	@JmxAttribute
+	public Duration getBackupChunksLastDuration() {
+		return Duration.ofMinutes(backupChunksDurationMillis);
+	}
+
+	@JmxAttribute(optional = true)
+	@Nullable
+	public Throwable getBackupChunksLastException() {
+		return backupChunksException;
+	}
+	// endregion
 
 	public interface ChunksBackupService {
 		void backup(long revisionId, Set<Long> chunkIds) throws IOException;
