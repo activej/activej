@@ -119,11 +119,22 @@ public class SerializerBuilder2Test {
 			Integer[] testData2 = doTest(new TypeT<@SerializeVarLength Integer[]>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
+		{
+			Integer[][] testData1 = new Integer[][]{new Integer[]{0}, new Integer[]{1, 2, 3}, new Integer[]{4, 5, 6}};
+			Integer[][] testData2 = doTest(new TypeT<Integer[][]>() {}, testData1);
+			assertArrayEquals(testData1, testData2);
+		}
 
 		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
 		{
 			Integer[] testData1 = new Integer[]{1, 2, null, 3};
 			Integer[] testData2 = doTest(new TypeT<@SerializeNullable @SerializeVarLength Integer[]>() {}, testData1);
+			assertArrayEquals(testData1, testData2);
+		}
+
+		{
+			Integer[][] testData1 = new Integer[][]{null, new Integer[]{null, 0}, new Integer[]{1, 2, 3}, new Integer[]{4, 5, 6}};
+			Integer[][] testData2 = doTest(new TypeT<@SerializeVarLength @SerializeNullable Integer[] @SerializeNullable []>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 	}
