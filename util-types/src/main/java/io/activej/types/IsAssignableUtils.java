@@ -2,6 +2,7 @@ package io.activej.types;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
@@ -53,6 +54,8 @@ public class IsAssignableUtils {
 			}
 			return true;
 		}
+		if (to instanceof GenericArrayType) to = getRawType(to);
+		if (from instanceof GenericArrayType) from = getRawType(from);
 		if (!strict && to instanceof Class) {
 			return ((Class<?>) to).isAssignableFrom(getRawType(from));
 		}

@@ -30,6 +30,13 @@ public class Types {
 			WildcardType wildcardType = (WildcardType) type;
 			Type[] upperBounds = wildcardType.getUpperBounds();
 			return getRawType(getUppermostType(upperBounds));
+		} else if (type instanceof GenericArrayType) {
+			Class<?> rawComponentType = getRawType(((GenericArrayType) type).getGenericComponentType());
+			try {
+				return Class.forName("[L" + rawComponentType.getName() + ";");
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException(e);
+			}
 		}
 		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
@@ -51,11 +58,12 @@ public class Types {
 
 	public static Type[] getActualTypeArguments(Type type) {
 		if (type instanceof Class) {
-			return NO_TYPES;
-		}
-		if (type instanceof ParameterizedType) {
+			return ((Class<?>) type).isArray() ? new Type[]{((Class<?>) type).getComponentType()} : NO_TYPES;
+		} else if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
 			return parameterizedType.getActualTypeArguments();
+		} else if (type instanceof GenericArrayType) {
+			return new Type[]{((GenericArrayType) type).getGenericComponentType()};
 		}
 		throw new IllegalArgumentException("Unsupported type: " + type);
 	}

@@ -502,6 +502,9 @@ public class BinarySerializerTest {
 		private List<TestDataGenericNested<K, V>> list;
 
 		@Serialize
+		public K @SerializeNullable [] keys;
+
+		@Serialize
 		@Override
 		public List<TestDataGenericNested<K, V>> getList() {
 			return list;
@@ -534,8 +537,10 @@ public class BinarySerializerTest {
 				new TestDataGenericNested<>(10, "a"),
 				new TestDataGenericNested<>(20, "b")
 		));
+		testData1.data.keys = new Integer[]{1, 2, 3};
 		GenericHolder testData2 = doTest(GenericHolder.class, testData1);
 		assertEquals(testData1.data.list.size(), testData2.data.list.size());
+		assertArrayEquals(testData1.data.keys, testData2.data.keys);
 		for (int i = 0; i < testData1.data.list.size(); i++) {
 			assertEqualsGenericNested(testData1.data.list.get(i), testData2.data.list.get(i));
 		}

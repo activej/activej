@@ -1,5 +1,6 @@
 package io.activej.types;
 
+import io.activej.types.Types.GenericArrayTypeImpl;
 import io.activej.types.scanner.TestClass1;
 import io.activej.types.scanner.TestClass2;
 import org.junit.Test;
@@ -403,5 +404,51 @@ public class IsAssignableTest {
 				new TypeT<Collection<? super String>>() {}.getType(),
 				new TypeT<Queue>() {}.getType()
 		));
+	}
+
+	@Test
+	public void test10() {
+		{
+			Object[] to = null;
+			Integer[] from = null;
+			to = from;
+			assertTrue(isAssignable(
+					new TypeT<Object[]>() {}.getType(),
+					new TypeT<Integer[]>() {}.getType()
+			));
+			assertTrue(isAssignable(
+					new GenericArrayTypeImpl(Object.class),
+					new GenericArrayTypeImpl(Integer.class)
+			));
+			assertTrue(isAssignable(
+					Object[].class,
+					new GenericArrayTypeImpl(Integer.class)
+			));
+			assertTrue(isAssignable(
+					new GenericArrayTypeImpl(Object.class),
+					Integer[].class
+			));
+		}
+		{
+			Integer[] to = null;
+			Object[] from = null;
+//			to = from;
+			assertFalse(isAssignable(
+					new TypeT<Integer[]>() {}.getType(),
+					new TypeT<Object[]>() {}.getType()
+			));
+			assertFalse(isAssignable(
+					new GenericArrayTypeImpl(Integer.class),
+					new GenericArrayTypeImpl(Object.class)
+			));
+			assertFalse(isAssignable(
+					new GenericArrayTypeImpl(Integer.class),
+					Object[].class
+			));
+			assertFalse(isAssignable(
+					Integer[].class,
+					new GenericArrayTypeImpl(Object.class)
+			));
+		}
 	}
 }
