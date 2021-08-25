@@ -179,9 +179,12 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	@SuppressWarnings("unchecked")
 	@NotNull
 	public <T> Class<T> ensureClass(String className, BiFunction<ClassLoader, String, GeneratedBytecode> bytecodeBuilder) {
+		try {
+			return (Class<T>) loadClass(className, false);
+		} catch (ClassNotFoundException ignored) {
+		}
+
 		synchronized (getClassLoadingLock(className)) {
-			Class<?> aClass = findLoadedClass(className);
-			if (aClass != null) return (Class<T>) aClass;
 			if (bytecodeStorage != null) {
 				byte[] bytecode = bytecodeStorage.loadBytecode(className).orElse(null);
 				if (bytecode != null) {
@@ -190,7 +193,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 			}
 
 			GeneratedBytecode generatedBytecode = bytecodeBuilder.apply(this, className);
-			aClass = generatedBytecode.defineClass(this);
+			Class<?> aClass = generatedBytecode.defineClass(this);
 
 			if (bytecodeStorage != null) {
 				bytecodeStorage.saveBytecode(className, generatedBytecode.getBytecode());

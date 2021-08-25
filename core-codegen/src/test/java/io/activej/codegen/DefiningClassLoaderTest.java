@@ -115,9 +115,31 @@ public class DefiningClassLoaderTest {
 		}
 	}
 
+	@Test
+	@SuppressWarnings("unchecked")
+	public void classShouldBeLoadedFromClassPathIfPossible() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+		String className = "io.activej.codegen.DefiningClassLoaderTest$MySupplier";
+
+		Class<Supplier> cls = classLoader.ensureClass(className, failingSupplier());
+
+		Supplier<String> supplier = cls.getConstructor().newInstance();
+
+		assertEquals(MySupplier.FROM_CLASS_PATH, supplier.get());
+		assertEquals(MySupplier.class, cls);
+	}
+
 	private Supplier<ClassBuilder<Supplier>> failingSupplier() {
 		return () -> {
 			throw new AssertionError();
 		};
+	}
+
+	public static final class MySupplier implements Supplier<String> {
+		public static final String FROM_CLASS_PATH = "From class path";
+
+		@Override
+		public String get() {
+			return FROM_CLASS_PATH;
+		}
 	}
 }
