@@ -20,7 +20,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public final class FileBytecodeStorage extends AbstractIOBytecodeStorage {
+public final class FileBytecodeStorage extends AbstractBytecodeStorage {
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
 	private final Path storageDir;
@@ -44,7 +44,7 @@ public final class FileBytecodeStorage extends AbstractIOBytecodeStorage {
 	}
 
 	@Override
-	protected OutputStream getOutputStream(String className) throws IOException {
-		return new FileOutputStream(storageDir.resolve(className + CLASS_FILE_EXTENSION).toFile());
+	protected Optional<OutputStream> getOutputStream(String className) throws IOException {
+		return Optional.of(new FileOutputStream(storageDir.resolve(className + CLASS_FILE_EXTENSION).toFile()));
 	}
 }

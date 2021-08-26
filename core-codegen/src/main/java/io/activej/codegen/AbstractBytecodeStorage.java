@@ -25,14 +25,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
-public abstract class AbstractIOBytecodeStorage implements BytecodeStorage {
+public abstract class AbstractBytecodeStorage implements BytecodeStorage {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static final int DEFAULT_BUFFER_SIZE = 8192;
 
 	protected abstract Optional<InputStream> getInputStream(String className) throws IOException;
 
-	protected abstract OutputStream getOutputStream(String className) throws IOException;
+	protected abstract Optional<OutputStream> getOutputStream(String className) throws IOException;
 
 	@Override
 	public final Optional<byte[]> loadBytecode(String className) {
@@ -50,17 +50,31 @@ public abstract class AbstractIOBytecodeStorage implements BytecodeStorage {
 				return Optional.of(baos.toByteArray());
 			}
 		} catch (IOException e) {
-			logger.warn("Could not load bytecode for class: {}", className, e);
+			onLoadError(className, e);
 			return Optional.empty();
 		}
 	}
 
 	@Override
 	public final void saveBytecode(String className, byte[] bytecode) {
-		try (OutputStream outputStream = getOutputStream(className)) {
-			outputStream.write(bytecode);
+		try {
+			Optional<OutputStream> maybeOutputStream = getOutputStream(className);
+			if (!maybeOutputStream.isPresent()) return;
+
+			try (OutputStream outputStream = maybeOutputStream.get()) {
+				outputStream.write(bytecode);
+			}
 		} catch (IOException e) {
-			logger.warn("Could not save bytecode for class: " + className);
+			onSaveError(className, bytecode, e);
 		}
 	}
+
+	protected void onLoadError(String className, IOException e) {
+		logger.warn("Could not load bytecode for class: {}", className, e);
+	}
+
+	protected void onSaveError(String className, byte[] bytecode, IOException e) {
+		logger.warn("Could not save bytecode for class: " + className, e);
+	}
+
 }
