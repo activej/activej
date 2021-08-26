@@ -6,6 +6,7 @@ import io.activej.http.session.SessionStoreInMemory;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.promise.Promise;
 
 import java.time.Duration;
 import java.util.Map;
@@ -13,7 +14,6 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.http.AsyncServletDecorator.loadBody;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -54,6 +54,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 	@Provides
 	@Named("public")
 	AsyncServlet publicServlet(AuthService authService, SessionStore<String> store, StaticLoader staticLoader) {
+		StaticServlet staticServlet = StaticServlet.create(staticLoader, "errorPage.html");
 		return RoutingServlet.create()
 				//[START REGION_3]
 				.map("/", request -> HttpResponse.redirect302("/login"))
@@ -61,25 +62,23 @@ public final class AuthLauncher extends HttpServerLauncher {
 				.map(GET, "/signup", StaticServlet.create(staticLoader, "signup.html"))
 				.map(GET, "/login", StaticServlet.create(staticLoader, "login.html"))
 				//[START REGION_4]
-				.map(POST, "/login", loadBody()
-						.serveFirstSuccessful(
-								request -> {
-									Map<String, String> params = request.getPostParameters();
-									String username = params.get("username");
-									String password = params.get("password");
-									if (authService.authorize(username, password)) {
-										String sessionId = UUID.randomUUID().toString();
+				.map(POST, "/login", request -> request.loadBody()
+						.then(() -> {
+							Map<String, String> params = request.getPostParameters();
+							String username = params.get("username");
+							String password = params.get("password");
+							if (authService.authorize(username, password)) {
+								String sessionId = UUID.randomUUID().toString();
 
-										store.save(sessionId, "My object saved in session");
-										return HttpResponse.redirect302("/members")
-												.withCookie(HttpCookie.of(SESSION_ID, sessionId));
-									}
-									return AsyncServlet.NEXT;
-								},
-								StaticServlet.create(staticLoader, "errorPage.html")))
+								store.save(sessionId, "My object saved in session");
+								return Promise.of(HttpResponse.redirect302("/members")
+										.withCookie(HttpCookie.of(SESSION_ID, sessionId)));
+							}
+							return staticServlet.serve(request);
+						}))
 				//[END REGION_4]
-				.map(POST, "/signup", loadBody()
-						.serve(request -> {
+				.map(POST, "/signup", request -> request.loadBody()
+						.map($ -> {
 							Map<String, String> params = request.getPostParameters();
 							String username = params.get("username");
 							String password = params.get("password");

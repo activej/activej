@@ -4,7 +4,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.common.collection.Either;
 import io.activej.http.AsyncServlet;
-import io.activej.http.AsyncServletDecorator;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
 import io.activej.http.decoder.DecodeErrors;
@@ -61,8 +60,8 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 				.map("/", request ->
 						HttpResponse.ok200()
 								.withBody(applyTemplate(contactListView, mapOf("contacts", contactDAO.list()))))
-				.map(POST, "/add", AsyncServletDecorator.loadBody()
-						.serve(request -> {
+				.map(POST, "/add", request -> request.loadBody()
+						.map($ -> {
 							//[START REGION_3]
 							Either<Contact, DecodeErrors> decodedUser = CONTACT_DECODER.decode(request);
 							//[END REGION_3]

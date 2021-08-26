@@ -122,15 +122,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>ServletDecoratorExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>ServletDecoratorExample</mainClass>
-            </configuration>
-          </execution>
-          <execution>
             <id>StaticServletExample</id>
             <goals>
               <goal>java</goal>

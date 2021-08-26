@@ -8,7 +8,6 @@ import io.activej.launchers.http.HttpServerLauncher;
 
 import java.util.concurrent.Executor;
 
-import static io.activej.http.AsyncServletDecorator.loadBody;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -25,8 +24,8 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet(Executor executor) {
 		return RoutingServlet.create()
-				.map(POST, "/hello", loadBody()
-						.serve(request -> {
+				.map(POST, "/hello", request -> request.loadBody()
+						.map($ -> {
 							String name = request.getPostParameters().get("name");
 							return HttpResponse.ok200()
 									.withHtml("<h1><center>Hello from POST, " + name + "!</center></h1>");

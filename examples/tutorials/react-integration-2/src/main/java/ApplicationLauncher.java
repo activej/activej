@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import static io.activej.http.AsyncServletDecorator.loadBody;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 import static java.lang.Integer.parseInt;
@@ -45,8 +44,8 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 						.withIndexHtml())
 				//[END REGION_2]
 				//[START REGION_3]
-				.map(POST, "/add", loadBody()
-						.serve(request -> {
+				.map(POST, "/add", request -> request.loadBody()
+						.map($ -> {
 							ByteBuf body = request.getBody();
 							try {
 								byte[] bodyBytes = body.getArray();

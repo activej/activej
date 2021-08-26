@@ -67,7 +67,7 @@ public final class BasicAuth implements AsyncServlet {
 		return this;
 	}
 
-	public static AsyncServletDecorator decorator(String realm, BiFunction<String, String, Promise<Boolean>> credentialsLookup) {
+	public static Function<AsyncServlet, AsyncServlet> decorator(String realm, BiFunction<String, String, Promise<Boolean>> credentialsLookup) {
 		return next -> new BasicAuth(next, realm, credentialsLookup);
 	}
 

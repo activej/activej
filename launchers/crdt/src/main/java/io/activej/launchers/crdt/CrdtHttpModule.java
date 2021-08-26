@@ -17,7 +17,6 @@
 package io.activej.launchers.crdt;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.types.TypeT;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.storage.local.CrdtStorageMap;
@@ -28,12 +27,12 @@ import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
+import io.activej.types.TypeT;
 
 import java.util.concurrent.Executor;
 
 import static io.activej.crdt.util.Utils.fromJson;
 import static io.activej.crdt.util.Utils.toJson;
-import static io.activej.http.AsyncServletDecorator.loadBody;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -59,8 +58,8 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 			@Optional BackupService<K, S> backupService
 	) {
 		RoutingServlet servlet = RoutingServlet.create()
-				.map(POST, "/", loadBody()
-						.serve(request -> {
+				.map(POST, "/", request -> request.loadBody()
+						.then(() -> {
 							try {
 								K key = fromJson(descriptor.getKeyManifest(), request.getBody());
 								S state = client.get(key);
@@ -74,8 +73,8 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								return Promise.ofException(HttpError.ofCode(400, e));
 							}
 						}))
-				.map(PUT, "/", loadBody()
-						.serve(request -> {
+				.map(PUT, "/", request -> request.loadBody()
+						.then(() -> {
 							try {
 								client.put(fromJson(crdtDataManifest.getType(), request.getBody()));
 								return Promise.of(HttpResponse.ok200());
@@ -83,8 +82,8 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								return Promise.ofException(HttpError.ofCode(400, e));
 							}
 						}))
-				.map(DELETE, "/", loadBody()
-						.serve(request -> {
+				.map(DELETE, "/", request -> request.loadBody()
+						.then(() -> {
 							try {
 								K key = fromJson(descriptor.getKeyManifest(), request.getBody());
 								if (client.remove(key)) {

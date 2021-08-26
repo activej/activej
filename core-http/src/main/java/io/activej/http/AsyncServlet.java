@@ -19,14 +19,9 @@ package io.activej.http;
 import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
-import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.stream.Stream;
-
-import static io.activej.promise.Promises.isResult;
 
 /**
  * An interface for a servlet function that asynchronously receives a {@link HttpRequest},
@@ -42,10 +37,6 @@ public interface AsyncServlet {
 		return serve(request).promise();
 	}
 
-	default AsyncServlet then(AsyncServletDecorator decorator) {
-		return decorator.serve(this);
-	}
-
 	/**
 	 * Wraps given {@link BlockingServlet} into async one using given {@link Executor}.
 	 */
@@ -54,12 +45,5 @@ public interface AsyncServlet {
 		return request -> request.loadBody()
 				.then(() -> Promise.ofBlockingCallable(executor,
 						() -> blockingServlet.serve(request)));
-	}
-
-	Promise<HttpResponse> NEXT = Promise.of(null);
-
-	static AsyncServlet firstSuccessful(AsyncServlet... servlets) {
-		return httpRequest -> Promises.first(isResult(Objects::nonNull),
-				Stream.of(servlets).map(servlet -> () -> servlet.serveAsync(httpRequest)));
 	}
 }

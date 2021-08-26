@@ -13,7 +13,6 @@ import io.activej.promise.Promise;
 import java.util.Map;
 
 import static io.activej.common.Utils.*;
-import static io.activej.http.AsyncServletDecorator.loadBody;
 import static io.activej.http.HttpHeaders.REFERER;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
@@ -56,8 +55,8 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 				.map(GET, "/create", request ->
 						HttpResponse.ok200()
 								.withBody(applyTemplate(singlePollCreate, emptyMap())))
-				.map(POST, "/vote", loadBody()
-						.serve(request -> {
+				.map(POST, "/vote", request -> request.loadBody()
+						.then(() -> {
 							Map<String, String> params = request.getPostParameters();
 							String option = params.get("option");
 							String stringId = params.get("id");
@@ -70,10 +69,10 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 							question.vote(option);
 
-							return HttpResponse.redirect302(nonNullElse(request.getHeader(REFERER), "/"));
+							return Promise.of(HttpResponse.redirect302(nonNullElse(request.getHeader(REFERER), "/")));
 						}))
-				.map(POST, "/add", loadBody()
-						.serve(request -> {
+				.map(POST, "/add", request -> request.loadBody()
+						.map($ -> {
 							Map<String, String> params = request.getPostParameters();
 							String title = params.get("title");
 							String message = params.get("message");
@@ -84,8 +83,8 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							int id = pollDao.add(new PollDao.Poll(title, message, listOf(option1, option2)));
 							return HttpResponse.redirect302("poll/" + id);
 						}))
-				.map(POST, "/delete", loadBody()
-						.serve(request -> {
+				.map(POST, "/delete", request -> request.loadBody()
+						.then(() -> {
 							Map<String, String> params = request.getPostParameters();
 							String id = params.get("id");
 							if (id == null) {
@@ -93,7 +92,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							}
 							pollDao.remove(Integer.parseInt(id));
 
-							return HttpResponse.redirect302("/");
+							return Promise.of(HttpResponse.redirect302("/"));
 						}));
 		//[END REGION_4]
 	}
