@@ -13,7 +13,6 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
-import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -22,7 +21,6 @@ import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
-import java.time.Duration;
 import java.util.*;
 
 import static io.activej.promise.TestUtils.await;
@@ -83,12 +81,10 @@ public final class TestDyingPartitions {
 			data.add(new CrdtData<>(String.valueOf(i), TimestampContainer.now(i + 1)));
 		}
 
-		Promise<Void> uploadPromise = StreamSupplier.ofIterator(data.iterator())
-				.streamTo(StreamConsumer.ofPromise(cluster.upload()));
+		await(StreamSupplier.ofIterator(data.iterator())
+				.streamTo(StreamConsumer.ofPromise(cluster.upload()
+						.whenResult(this::shutdown2Servers))));
 
-		Eventloop.getCurrentEventloop().delay(Duration.ofMillis(50), this::shutdown2Servers);
-
-		await(uploadPromise);
 		assertEquals(2, cluster.getPartitions().getDeadPartitions().size());
 
 		Set<CrdtData<String, TimestampContainer<Integer>>> result = new HashSet<>();
@@ -110,12 +106,9 @@ public final class TestDyingPartitions {
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(cluster.upload())));
 
-		Promise<List<CrdtData<String, TimestampContainer<Integer>>>> downloadPromise = cluster.download()
-				.then(StreamSupplier::toList);
-
-		Eventloop.getCurrentEventloop().delay(Duration.ofMillis(10), this::shutdown2Servers);
-
-		List<CrdtData<String, TimestampContainer<Integer>>> downloaded = await(downloadPromise);
+		List<CrdtData<String, TimestampContainer<Integer>>> downloaded = await(cluster.download()
+				.whenResult(this::shutdown2Servers)
+				.then(StreamSupplier::toList));
 
 		assertEquals(new HashSet<>(data), new HashSet<>(downloaded));
 		shutdownAllEventloops();
@@ -130,7 +123,7 @@ public final class TestDyingPartitions {
 			eventloop.execute(() -> {
 				for (SelectionKey key : eventloop.getSelector().keys()) {
 					Object attachment = key.attachment();
-					if (attachment instanceof AsyncCloseable){
+					if (attachment instanceof AsyncCloseable) {
 						((AsyncCloseable) attachment).close();
 					}
 				}
