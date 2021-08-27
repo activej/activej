@@ -28,7 +28,6 @@ import io.activej.launcher.annotation.Args;
 import io.activej.launcher.annotation.OnComplete;
 import io.activej.launcher.annotation.OnRun;
 import io.activej.launcher.annotation.OnStart;
-import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;

@@ -35,7 +35,6 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -22,7 +22,6 @@ import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.*;
-import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

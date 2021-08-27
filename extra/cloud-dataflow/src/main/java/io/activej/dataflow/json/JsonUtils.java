@@ -25,7 +25,6 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.inject.Key;
 import io.activej.inject.util.Constructors;
-import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

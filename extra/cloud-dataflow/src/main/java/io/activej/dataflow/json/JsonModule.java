@@ -44,7 +44,6 @@ import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.Dependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
-import io.activej.types.Types;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;

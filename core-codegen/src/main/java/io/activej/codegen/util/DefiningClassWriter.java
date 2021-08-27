@@ -16,7 +16,6 @@
 
 package io.activej.codegen.util;
 
-import io.activej.codegen.DefiningClassLoader;
 import org.objectweb.asm.ClassWriter;
 
 public final class DefiningClassWriter extends ClassWriter {

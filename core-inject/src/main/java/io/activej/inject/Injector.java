@@ -24,7 +24,6 @@ import io.activej.inject.module.DefaultModule;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.inject.util.Trie;
-import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

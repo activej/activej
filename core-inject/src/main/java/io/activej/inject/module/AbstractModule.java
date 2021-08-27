@@ -26,7 +26,6 @@ import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
-import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

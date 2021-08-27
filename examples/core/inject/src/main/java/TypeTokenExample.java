@@ -1,7 +1,6 @@
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.AbstractModule;
-import io.activej.types.Types;
 
 import java.util.List;
 
