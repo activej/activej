@@ -20,7 +20,7 @@ WHERE `removed_revision` <= @start_revision;
 DELETE p
 FROM (SELECT `partition_id`, MAX(`revision_id`) as `max_rev`
       FROM {position}
-      WHERE `revision_id` < @start_revision
+      WHERE `revision_id` <= @start_revision
       GROUP BY `partition_id`) g
          LEFT JOIN {position} p
 ON p.`partition_id` = g.`partition_id`
