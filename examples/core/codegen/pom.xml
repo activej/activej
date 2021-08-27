@@ -24,43 +24,4 @@
       <version>${project.version}</version>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>CodegenCalculatorExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>calculator.CodegenCalculatorExample</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>CodegenExpressionsExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>CodegenExpressionsExample</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>DynamicClassCreationExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>DynamicClassCreationExample</mainClass>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
 </project>

@@ -38,43 +38,4 @@
       <artifactId>lz4-java</artifactId>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>CrdtExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>CrdtExample</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>CrdtClusterExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>CrdtClusterExample</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>CrdtFsConsolidationExample</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>CrdtFsConsolidationExample</mainClass>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
 </project>
