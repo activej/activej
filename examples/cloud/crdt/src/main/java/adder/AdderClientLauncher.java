@@ -54,6 +54,8 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 
 	@Override
 	protected void run() throws Exception {
+		System.out.println("\nUsage: \n" +
+				"\t>put <long id> <float amount>\n\t>get <long id>\n\n");
 		Scanner scanIn = new Scanner(System.in);
 		while (true) {
 			System.out.print("> ");

@@ -15,6 +15,7 @@ import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.service.ServiceGraphModuleSettings;
 
 import java.util.Map;
+import java.util.UUID;
 
 import static adder.AdderCommands.*;
 import static io.activej.common.Utils.mapOf;
@@ -23,14 +24,14 @@ public class AdderServerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-//		install(new InMemoryStorageModule());
-		install(new PersistentStorageModule());
+		install(new InMemoryStorageModule());
+//		install(new PersistentStorageModule());
 	}
 
 	@Provides
 	@ServerId
 	String serverId(Config config) {
-		return config.get("serverId");
+		return config.get("serverId", UUID.randomUUID().toString());
 	}
 
 	@Provides
