@@ -11,7 +11,7 @@ SELECT {backup_revision},
        `item_count`,
        `added_revision`
 FROM {chunk}
-WHERE `added_revision` <= {backup_revision} AND (`removed_revision` IS NULL OR `removed_revision` > {backup_revision});
+WHERE `id` IN ({backup_chunk_ids});
 
 INSERT INTO {backup_position}
 SELECT {backup_revision}, p.*

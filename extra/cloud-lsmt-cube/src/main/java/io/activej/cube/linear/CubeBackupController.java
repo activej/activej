@@ -37,6 +37,7 @@ import static io.activej.cube.linear.Utils.executeSqlScript;
 import static io.activej.cube.linear.Utils.loadResource;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
+import static java.util.stream.Collectors.joining;
 
 public final class CubeBackupController implements ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
@@ -123,9 +124,6 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 		backupLastStartTimestamp = System.currentTimeMillis();
 
 		try (Connection connection = dataSource.getConnection()) {
-			connection.setAutoCommit(false);
-			connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
-
 			long maxRevisionId = getMaxRevisionId(connection);
 			doBackup(connection, maxRevisionId);
 		} catch (SQLException e) {
@@ -145,9 +143,6 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 		backupLastStartTimestamp = System.currentTimeMillis();
 
 		try (Connection connection = dataSource.getConnection()) {
-			connection.setAutoCommit(false);
-			connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
-
 			doBackup(connection, revisionId);
 		} catch (SQLException e) {
 			CubeException exception = new CubeException("Failed to connect to the database", e);
@@ -162,16 +157,10 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 		backupException = null;
 	}
 
-	private void doBackup(Connection connection, long revisionId) throws CubeException {
-		backupDb(connection, revisionId);
-		Set<Long> chunkIds = getChunksToBackup(connection, revisionId);
-		backupChunks(chunkIds, revisionId);
-
-		try {
-			connection.commit();
-		} catch (SQLException e) {
-			throw new CubeException("Failed to commit backup transaction", e);
-		}
+	private void doBackup(Connection connection, long maxRevisionId) throws CubeException {
+		Set<Long> chunkIds = getChunksToBackup(connection, maxRevisionId);
+		backupChunks(chunkIds, maxRevisionId);
+		backupDb(connection, chunkIds, maxRevisionId);
 	}
 
 	private long getMaxRevisionId(Connection connection) throws CubeException {
@@ -187,15 +176,24 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 		}
 	}
 
-	private void backupDb(Connection connection, long revisionId) throws CubeException {
+	private void backupDb(Connection connection, Set<Long> chunkIds, long revisionId) throws CubeException {
 		logger.trace("Backing up database on revision {}", revisionId);
 
 		backupDbLastStartTimestamp = 0;
 
 		try (Statement statement = connection.createStatement()) {
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+
 			String backupScript = sql(new String(loadResource(SQL_BACKUP_SCRIPT), UTF_8))
-					.replace("{backup_revision}", String.valueOf(revisionId));
+					.replace("{backup_revision}", String.valueOf(revisionId))
+					.replace("{backup_chunk_ids}", chunkIds.isEmpty() ?
+							"null" :
+							chunkIds.stream()
+									.map(Object::toString)
+									.collect(joining(",")));
 			statement.execute(backupScript);
+			connection.commit();
 		} catch (SQLException | IOException e) {
 			CubeException exception = new CubeException("Failed to back up database", e);
 			backupDbException = exception;
@@ -217,9 +215,10 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 		Set<Long> chunkIds = new HashSet<>();
 		try (PreparedStatement stmt = connection.prepareStatement(sql("" +
 				"SELECT `id` " +
-				"FROM {backup_chunk} " +
-				"WHERE `backup_id` = ?"))) {
+				"FROM {chunk} " +
+				"WHERE `added_revision`<=? AND (`removed_revision` IS NULL OR `removed_revision`>?);"))) {
 			stmt.setLong(1, revisionId);
+			stmt.setLong(2, revisionId);
 
 			ResultSet resultSet = stmt.executeQuery();
 
