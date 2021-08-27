@@ -310,7 +310,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getBackupLastDuration() {
-		return Duration.ofMinutes(backupDurationMillis);
+		return Duration.ofMillis(backupDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)
@@ -341,7 +341,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getBackupDbLastDuration() {
-		return Duration.ofMinutes(backupDbDurationMillis);
+		return Duration.ofMillis(backupDbDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)
@@ -372,7 +372,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getGetChunksToBackupLastDuration() {
-		return Duration.ofMinutes(getChunksToBackupDurationMillis);
+		return Duration.ofMillis(getChunksToBackupDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)
@@ -403,7 +403,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getBackupChunksLastDuration() {
-		return Duration.ofMinutes(backupChunksDurationMillis);
+		return Duration.ofMillis(backupChunksDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)

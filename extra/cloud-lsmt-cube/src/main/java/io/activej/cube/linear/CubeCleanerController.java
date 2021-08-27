@@ -280,7 +280,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getCleanupLastDuration() {
-		return Duration.ofMinutes(cleanupDurationMillis);
+		return Duration.ofMillis(cleanupDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)
@@ -313,7 +313,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getCleanupConsolidatedChunksLastDuration() {
-		return Duration.ofMinutes(cleanupConsolidatedChunksDurationMillis);
+		return Duration.ofMillis(cleanupConsolidatedChunksDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)
@@ -346,7 +346,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getGetRequiredChunksLastDuration() {
-		return Duration.ofMinutes(getRequiredChunksDurationMillis);
+		return Duration.ofMillis(getRequiredChunksDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)
@@ -379,7 +379,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getCheckRequiredChunksLastDuration() {
-		return Duration.ofMinutes(checkRequiredChunksDurationMillis);
+		return Duration.ofMillis(checkRequiredChunksDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)
@@ -412,7 +412,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute
 	public Duration getCleanupChunksLastDuration() {
-		return Duration.ofMinutes(cleanupChunksDurationMillis);
+		return Duration.ofMillis(cleanupChunksDurationMillis);
 	}
 
 	@JmxAttribute(optional = true)
