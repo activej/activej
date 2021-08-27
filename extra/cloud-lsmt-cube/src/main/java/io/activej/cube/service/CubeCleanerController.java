@@ -179,8 +179,8 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 						.then(lastSnapshot -> {
 							if (lastSnapshot.isPresent())
 								return Promises.toTuple(Tuple::new,
-										collectRequiredChunks(checkpointNode),
-										repository.loadCommit(lastSnapshot.get()))
+												collectRequiredChunks(checkpointNode),
+												repository.loadCommit(lastSnapshot.get()))
 										.then(tuple ->
 												cleanup(lastSnapshot.get(),
 														union(chunksInDiffs(cubeDiffScheme, checkpointDiffs), tuple.collectedChunks),

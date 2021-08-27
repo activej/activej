@@ -78,7 +78,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 						.get()
 						.then(streamIds -> {
 							ArrayList<T> sortedList = input.list;
-							input.list = new ArrayList<>(itemsInMemory);
+							input.list = null;
 							return Promise.ofBlockingRunnable(sortingExecutor, () -> sortedList.sort(itemComparator))
 									.map($ -> {
 										StreamSupplier<T> listSupplier = StreamSupplier.ofIterator(deduplicate ?

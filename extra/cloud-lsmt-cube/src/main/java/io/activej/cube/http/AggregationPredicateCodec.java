@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 
 import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.aggregation.AggregationPredicates.*;
-import static io.activej.cube.http.Utils.CUBE_DSL_JSON;
+import static io.activej.cube.Utils.CUBE_DSL_JSON;
 import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes")

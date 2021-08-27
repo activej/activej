@@ -2,32 +2,17 @@ package io.activej.cube;
 
 import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffCodec;
-import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogDiffCodec;
-import io.activej.etl.LogOT;
 import io.activej.etl.LogOTState;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
-import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.repository.OTRepositoryMySql;
-import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplinkImpl;
-import io.activej.test.rules.ByteBufRule;
-import io.activej.test.rules.EventloopRule;
+import io.activej.ot.uplink.OTUplink;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import javax.sql.DataSource;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -36,8 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.PrimaryKey.ofArray;
@@ -45,25 +28,11 @@ import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.mapOf;
 import static io.activej.cube.Cube.AggregationConfig.id;
-import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
-public final class CubeGetIrrelevantChunksTest {
-	private static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
-	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
-
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@ClassRule
-	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
+public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private static final int NUMBER_MIN = 0;
 	private static final int NUMBER_MAX = 100;
 
@@ -76,13 +45,11 @@ public final class CubeGetIrrelevantChunksTest {
 	private static final int LOWER_NUMBER_BOUNDARY = 50;
 	private static final AggregationPredicate ADVERTISER_PREDICATE = gt("advertiser", LOWER_NUMBER_BOUNDARY);
 
-	private Eventloop eventloop;
 	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
 	private ActiveFsChunkStorage<Long> chunkStorage;
-	private Executor executor;
 	private Cube.AggregationConfig dateAggregation;
 	private Cube.AggregationConfig advertiserDateAggregation;
-	private OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node;
+	private OTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
 	private Cube basicCube;
 	private Cube cube;
 
@@ -96,17 +63,13 @@ public final class CubeGetIrrelevantChunksTest {
 		chunkId = 0;
 		toBeCleanedUp.clear();
 		toBePreserved.clear();
-
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		eventloop = Eventloop.getCurrentEventloop();
-		executor = Executors.newCachedThreadPool();
-
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir)
+		LocalActiveFs fs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		chunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		chunkStorage = ActiveFsChunkStorage.create(EVENTLOOP, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")
@@ -120,14 +83,9 @@ public final class CubeGetIrrelevantChunksTest {
 				.withAggregation(dateAggregation)
 				.withAggregation(advertiserDateAggregation);
 
-		DataSource dataSource = dataSource("test.properties");
-		OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-				OT_SYSTEM, LogDiffCodec.create(CubeDiffCodec.create(basicCube)));
-		initializeRepository(repository);
-
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
-		node = OTUplinkImpl.create(repository, OT_SYSTEM);
-		stateManager = OTStateManager.create(eventloop, OT_SYSTEM, node, cubeDiffLogOTState);
+		uplink = uplinkFactory.create(basicCube);
+		stateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
 		await(stateManager.checkout());
 	}
 
@@ -201,7 +159,7 @@ public final class CubeGetIrrelevantChunksTest {
 
 		assertEquals(expectedChunks, basicCube.getAllChunks());
 
-		stateManager = OTStateManager.create(eventloop, OT_SYSTEM, node, LogOTState.create(cube));
+		stateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, LogOTState.create(cube));
 		await(stateManager.checkout());
 
 		Set<Object> irrelevantChunks = cube.getIrrelevantChunks()
@@ -229,7 +187,7 @@ public final class CubeGetIrrelevantChunksTest {
 	}
 
 	private Cube createBasicCube() {
-		return Cube.create(eventloop, executor, CLASS_LOADER, chunkStorage)
+		return Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

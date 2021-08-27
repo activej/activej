@@ -37,6 +37,8 @@ import java.util.Map;
 
 import static io.activej.aggregation.util.Utils.wrapException;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.cube.Utils.fromJson;
+import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 

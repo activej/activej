@@ -226,11 +226,11 @@ public final class StreamCodecs {
 		};
 	}
 
-	public static <T> StreamCodec<T[]> ofArray(StreamCodec<? extends T> itemCodec) {
-		return ofArray($ -> itemCodec);
+	public static <T> StreamCodec<T[]> ofArray(StreamCodec<T> itemCodec, IntFunction<T[]> factory) {
+		return ofArray($ -> itemCodec, factory);
 	}
 
-	public static <T> StreamCodec<T[]> ofArray(IntFunction<? extends StreamCodec<? extends T>> itemCodecFn) {
+	public static <T> StreamCodec<T[]> ofArray(IntFunction<? extends StreamCodec<? extends T>> itemCodecFn, IntFunction<T[]> factory) {
 		return new StreamCodec<T[]>() {
 			@Override
 			public void encode(StreamOutput output, T[] list) throws IOException {
@@ -244,12 +244,12 @@ public final class StreamCodecs {
 
 			@Override
 			public T[] decode(StreamInput input) throws IOException {
-				Object[] array = new Object[input.readVarInt()];
-				for (int i = 0; i < array.length; i++) {
+				int size = input.readVarInt();
+				T[] array = factory.apply(size);
+				for (int i = 0; i < size; i++) {
 					array[i] = itemCodecFn.apply(i).decode(input);
 				}
-				//noinspection unchecked
-				return (T[]) array;
+				return array;
 			}
 		};
 	}
@@ -286,6 +286,41 @@ public final class StreamCodecs {
 				return Optional.of(codec.decode(input));
 			}
 		};
+	}
+
+	public static <T, C extends Collection<T>> StreamCodec<C> ofCollection(StreamCodec<T> itemCodec, IntFunction<C> factory) {
+		return new StreamCodec<C>() {
+			@Override
+			public void encode(StreamOutput output, C c) throws IOException {
+				output.writeVarInt(c.size());
+				for (T e : c) {
+					itemCodec.encode(output, e);
+				}
+			}
+
+			@Override
+			public C decode(StreamInput input) throws IOException {
+				int size = input.readVarInt();
+				C c = factory.apply(size);
+				for (int i = 0; i < size; i++) {
+					T e = itemCodec.decode(input);
+					c.add(e);
+				}
+				return c;
+			}
+		};
+	}
+
+	public static <T> StreamCodec<Collection<T>> ofCollection(StreamCodec<T> itemCodec) {
+		return ofCollection(itemCodec, ArrayList::new);
+	}
+
+	public static <T> StreamCodec<Set<T>> ofSet(StreamCodec<T> itemCodec) {
+		return ofCollection(itemCodec, LinkedHashSet::new);
+	}
+
+	public static <E extends Enum<E>> StreamCodec<Set<E>> ofEnumSet(Class<E> type) {
+		return ofCollection(StreamCodecs.ofEnum(type), $ -> EnumSet.noneOf(type));
 	}
 
 	public static <T> StreamCodec<List<T>> ofList(StreamCodec<T> itemCodec) {
@@ -349,47 +384,58 @@ public final class StreamCodecs {
 
 	}
 
-	public static <T> StreamCodec<Set<T>> ofSet(StreamCodec<T> codec) {
-		return transform(ofList(codec), LinkedHashSet::new, ArrayList::new);
-	}
+	public static class SubtypeBuilder<T> {
+		private static final class SubclassEntry<T> {
+			final byte idx;
+			final StreamCodec<T> codec;
 
-	private static final class SubclassEntry<T> {
-		final int idx;
-		final StreamCodec<? extends T> codec;
+			private SubclassEntry(byte idx, StreamCodec<T> codec) {
+				this.idx = idx;
+				this.codec = codec;
+			}
+		}
 
-		private SubclassEntry(int idx, StreamCodec<? extends T> codec) {
-			this.idx = idx;
-			this.codec = codec;
+		private final Map<Class<?>, SubclassEntry<? extends T>> encoders = new HashMap<>();
+		private final List<StreamDecoder<? extends T>> decoders = new ArrayList<>();
+
+		public <E extends T> SubtypeBuilder<T> add(Class<E> type, StreamCodec<E> codec) {
+			byte idx = (byte) encoders.size();
+			encoders.put(type, new SubclassEntry<>(idx, codec));
+			decoders.add(codec);
+			return this;
+		}
+
+		public StreamCodec<T> build() {
+			if (encoders.isEmpty()) throw new IllegalStateException("No subtype codec has been specified");
+
+			return new StreamCodec<T>() {
+				@Override
+				public void encode(StreamOutput output, T item) throws IOException {
+					Class<?> type = item.getClass();
+					//noinspection unchecked
+					SubclassEntry<T> entry = (SubclassEntry<T>) encoders.get(type);
+					if (entry == null) throw new IllegalArgumentException("Unsupported type " + type);
+					output.writeByte(entry.idx);
+					entry.codec.encode(output, item);
+				}
+
+				@Override
+				public T decode(StreamInput input) throws IOException {
+					int idx = input.readByte();
+					if (idx < 0 || idx >= decoders.size()) throw new CorruptedDataException();
+					return decoders.get(idx).decode(input);
+				}
+			};
 		}
 	}
 
-	public static <T> StreamCodec<? extends T> ofSubtype(LinkedHashMap<Class<? extends T>, StreamCodec<? extends T>> codecs) {
-		Map<Class<? extends T>, SubclassEntry<T>> encoders = new HashMap<>();
-		//noinspection unchecked
-		StreamDecoder<? extends T>[] decoders = new StreamDecoder[codecs.size()];
-		for (Map.Entry<Class<? extends T>, StreamCodec<? extends T>> entry : codecs.entrySet()) {
-			int idx = encoders.size();
-			encoders.put(entry.getKey(), new SubclassEntry<>(idx, entry.getValue()));
-			decoders[idx] = entry.getValue();
+	public static <T> StreamCodec<T> ofSubtype(LinkedHashMap<Class<? extends T>, StreamCodec<? extends T>> codecs) {
+		SubtypeBuilder<T> builder = new SubtypeBuilder<>();
+		for (Map.Entry<Class<? extends T>, StreamCodec<? extends T>> e : codecs.entrySet()) {
+			//noinspection unchecked
+			builder.add((Class<T>) e.getKey(), (StreamCodec<T>) e.getValue());
 		}
-		return new StreamCodec<T>() {
-			@Override
-			public void encode(StreamOutput output, T item) throws IOException {
-				Class<?> type = item.getClass();
-				SubclassEntry<T> entry = encoders.get(type);
-				if (entry == null) throw new IllegalArgumentException();
-				output.writeByte((byte) entry.idx);
-				//noinspection unchecked
-				((StreamCodec<T>) entry.codec).encode(output, item);
-			}
-
-			@Override
-			public T decode(StreamInput input) throws IOException {
-				int idx = input.readByte();
-				if (idx < 0 || idx >= decoders.length) throw new CorruptedDataException();
-				return decoders[idx].decode(input);
-			}
-		};
+		return builder.build();
 	}
 
 	public static <T> StreamCodec<@Nullable T> ofNullable(StreamCodec<@NotNull T> codec) {
@@ -424,6 +470,19 @@ public final class StreamCodecs {
 			public R decode(StreamInput input) throws IOException {
 				T result = codec.decode(input);
 				return reader.apply(result);
+			}
+		};
+	}
+
+	public static <T> StreamCodec<T> singleton(T instance) {
+		return new StreamCodec<T>() {
+			@Override
+			public void encode(StreamOutput output, T item) {
+			}
+
+			@Override
+			public T decode(StreamInput input) {
+				return instance;
 			}
 		};
 	}

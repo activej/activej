@@ -5,39 +5,33 @@ import io.activej.aggregation.annotation.Key;
 import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.*;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffCodec;
-import io.activej.cube.ot.CubeOT;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
-import io.activej.etl.*;
-import io.activej.eventloop.Eventloop;
+import io.activej.etl.LogDataConsumerSplitter;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
-import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.repository.OTRepositoryMySql;
-import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplinkImpl;
+import io.activej.ot.uplink.OTUplink;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Serialize;
-import io.activej.test.rules.ClassBuilderConstantsRule;
-import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -46,8 +40,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import static io.activej.aggregation.AggregationPredicates.*;
@@ -59,11 +51,9 @@ import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
-import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.http.ReportingTest.LogItem.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.dataSource;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -72,23 +62,13 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
-public final class ReportingTest {
+public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
 
-	private Eventloop eventloop;
 	private AsyncHttpServer cubeHttpServer;
 	private CubeHttpClient cubeHttpClient;
 	private Cube cube;
 	private int serverPort;
-
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-	@Rule
-	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
 			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
@@ -274,16 +254,12 @@ public final class ReportingTest {
 		serverPort = getFreePort();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		eventloop = Eventloop.getCurrentEventloop();
-		Executor executor = Executors.newCachedThreadPool();
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
-
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalActiveFs fs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop,
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(EVENTLOOP,
 				ChunkIdCodec.ofLong(), new IdGeneratorStub(), LZ4FrameFormat.create(), fs);
-		cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
-				.withClassLoaderCache(CubeClassLoaderCache.create(classLoader, 5))
+		cube = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
 				.withInitializer(cube -> MEASURES.forEach(cube::addMeasure))
 				.withRelation("campaign", "advertiser")
@@ -308,25 +284,20 @@ public final class ReportingTest {
 						.withDimensions(DIMENSIONS_DATE_AGGREGATION.keySet())
 						.withMeasures(MEASURES.keySet()));
 
-		DataSource dataSource = dataSource("test.properties");
-		OTSystem<LogDiff<CubeDiff>> otSystem = LogOT.createLogOT(CubeOT.createCubeOT());
-		OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
-				otSystem, LogDiffCodec.create(CubeDiffCodec.create(cube)));
-		initializeRepository(repository);
+		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
-		OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> node = OTUplinkImpl.create(repository, otSystem);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, otSystem, node, cubeDiffLogOTState);
+		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalActiveFs activeFs = LocalActiveFs.create(eventloop, executor, temporaryFolder.newFolder().toPath());
+		LocalActiveFs activeFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(activeFs.start());
-		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
+		Multilog<LogItem> multilog = MultilogImpl.create(EVENTLOOP,
 				activeFs,
 				LZ4FrameFormat.create(),
-				SerializerBuilder.create(classLoader).build(LogItem.class),
+				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
-		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(eventloop,
+		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(EVENTLOOP,
 				multilog,
 				new LogItemSplitter(cube),
 				"testlog",
@@ -364,7 +335,7 @@ public final class ReportingTest {
 
 		cubeHttpServer = startHttpServer();
 
-		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
+		AsyncHttpClient httpClient = AsyncHttpClient.create(EVENTLOOP)
 				.withNoKeepAlive();
 		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
@@ -389,7 +360,7 @@ public final class ReportingTest {
 	}
 
 	private AsyncHttpServer startHttpServer() {
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop, ReportingServiceServlet.createRootServlet(eventloop, cube))
+		AsyncHttpServer server = AsyncHttpServer.create(EVENTLOOP, ReportingServiceServlet.createRootServlet(EVENTLOOP, cube))
 				.withListenPort(serverPort)
 				.withAcceptOnce();
 		try {
@@ -402,8 +373,8 @@ public final class ReportingTest {
 
 	@After
 	public void after() {
-		cubeHttpServer.closeFuture();
-		eventloop.run();
+		if (cubeHttpServer != null) cubeHttpServer.closeFuture();
+		if (EVENTLOOP != null) EVENTLOOP.run();
 	}
 
 	@Test

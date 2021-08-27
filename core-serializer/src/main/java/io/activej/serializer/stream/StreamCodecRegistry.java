@@ -16,6 +16,7 @@
 
 package io.activej.serializer.stream;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -119,7 +120,7 @@ public final class StreamCodecRegistry implements StreamCodecFactory {
 				Class<?> componentClazz = rawType.getComponentType();
 
 				StreamCodec<Object> componentCodec = this.get((Type) componentClazz);
-				StreamCodec<Object[]> codec = ofArray(componentCodec);
+				StreamCodec<Object[]> codec = ofArray(componentCodec, len -> (Object[]) Array.newInstance(componentClazz, len));
 				return (StreamCodec<T>) codec;
 			}
 

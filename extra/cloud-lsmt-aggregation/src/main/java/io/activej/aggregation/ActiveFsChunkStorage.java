@@ -299,7 +299,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 		return list(s -> true, timestamp -> true)
 				.whenResult(actualChunks -> chunksCount.recordValue(actualChunks.size()))
 				.then(actualChunks -> actualChunks.containsAll(requiredChunks) ?
-						Promise.of((Void) null) :
+						Promise.complete() :
 						Promise.ofException(new AggregationException("Missed chunks from storage: " +
 								Utils.toString(difference(requiredChunks, actualChunks)))))
 				.whenComplete(promiseCleanupCheckRequiredChunks.recordStats())

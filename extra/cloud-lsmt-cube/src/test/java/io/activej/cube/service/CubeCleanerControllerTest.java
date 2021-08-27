@@ -90,7 +90,7 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(eventloop,
-				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
+						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofMillis(0))
 				.withExtraSnapshotsCount(1000);
 
@@ -103,7 +103,7 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(eventloop,
-				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
+						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofSeconds(10));
 
 		await(cleanerController.cleanup());

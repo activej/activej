@@ -37,7 +37,7 @@ import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.cube.ReportType.*;
-import static io.activej.cube.http.Utils.CUBE_DSL_JSON;
+import static io.activej.cube.Utils.CUBE_DSL_JSON;
 
 final class QueryResultCodec implements JsonCodec<QueryResult> {
 	private static final String MEASURES_FIELD = "measures";

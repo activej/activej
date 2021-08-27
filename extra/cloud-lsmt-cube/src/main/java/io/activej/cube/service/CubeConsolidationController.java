@@ -19,6 +19,7 @@ package io.activej.cube.service;
 import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.ChunkLocker;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.cube.Cube;
@@ -38,8 +39,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -49,23 +52,32 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.transformMap;
+import static io.activej.cube.service.ChunkLockerFactory.NOOP_CHUNK_LOCKER;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanEx {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
-	public static final Supplier<Function<Aggregation, Promise<AggregationDiff>>> DEFAULT_STRATEGY = new Supplier<Function<Aggregation,
+	public static final Supplier<BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>>> DEFAULT_LOCKER_STRATEGY = new Supplier<BiFunction<Aggregation,
+			ChunkLocker<Object>,
 			Promise<AggregationDiff>>>() {
 		private boolean hotSegment = false;
 
 		@Override
-		public Function<Aggregation, Promise<AggregationDiff>> get() {
+		public BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>> get() {
+			//noinspection AssignmentUsedAsCondition
 			return (hotSegment = !hotSegment) ?
 					Aggregation::consolidateHotSegment :
 					Aggregation::consolidateMinKey;
 		}
 	};
+
+	@Deprecated
+	public static final Supplier<Function<Aggregation, Promise<AggregationDiff>>> DEFAULT_STRATEGY = () ->
+			aggregation ->
+					DEFAULT_LOCKER_STRATEGY.get().apply(aggregation, NOOP_CHUNK_LOCKER);
+
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final Eventloop eventloop;
@@ -74,7 +86,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	private final OTStateManager<K, D> stateManager;
 	private final AggregationChunkStorage<C> aggregationChunkStorage;
 
-	private final Supplier<Function<Aggregation, Promise<AggregationDiff>>> strategy;
+	private final Map<Aggregation, String> aggregationsMapReversed;
 
 	private final PromiseStats promiseConsolidate = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseConsolidateImpl = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -85,6 +97,9 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
 
+	private Supplier<BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>>> strategy = DEFAULT_LOCKER_STRATEGY;
+	private ChunkLockerFactory<C> chunkLockerFactory = new ChunkLockerFactory<>();
+
 	private boolean consolidating;
 	private boolean cleaning;
 
@@ -92,13 +107,13 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 			CubeDiffScheme<D> cubeDiffScheme, Cube cube,
 			OTStateManager<K, D> stateManager,
 			AggregationChunkStorage<C> aggregationChunkStorage,
-			Supplier<Function<Aggregation, Promise<AggregationDiff>>> strategy) {
+			Map<Aggregation, String> aggregationsMapReversed) {
 		this.eventloop = eventloop;
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cube = cube;
 		this.stateManager = stateManager;
 		this.aggregationChunkStorage = aggregationChunkStorage;
-		this.strategy = strategy;
+		this.aggregationsMapReversed = aggregationsMapReversed;
 	}
 
 	public static <K, D, C> CubeConsolidationController<K, D, C> create(Eventloop eventloop,
@@ -106,11 +121,26 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 			Cube cube,
 			OTStateManager<K, D> stateManager,
 			AggregationChunkStorage<C> aggregationChunkStorage) {
-		return new CubeConsolidationController<>(eventloop, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, DEFAULT_STRATEGY);
+		Map<Aggregation, String> map = new IdentityHashMap<>();
+		for (String aggregationId : cube.getAggregationIds()) {
+			map.put(cube.getAggregation(aggregationId), aggregationId);
+		}
+		return new CubeConsolidationController<>(eventloop, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map);
 	}
 
+	@Deprecated
 	public CubeConsolidationController<K, D, C> withStrategy(Supplier<Function<Aggregation, Promise<AggregationDiff>>> strategy) {
-		return new CubeConsolidationController<>(eventloop, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, strategy);
+		return withLockerStrategy(() -> (aggregation, chunkLocker) -> strategy.get().apply(aggregation));
+	}
+
+	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>>> strategy) {
+		this.strategy = strategy;
+		return this;
+	}
+
+	public CubeConsolidationController<K, D, C> withChunkLockerFactory(Function<String, ChunkLocker<C>> factory) {
+		this.chunkLockerFactory = new ChunkLockerFactory<>(factory);
+		return this;
 	}
 
 	private final AsyncSupplier<Void> consolidate = reuse(this::doConsolidate);
@@ -132,7 +162,12 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		return Promise.complete()
 				.then(stateManager::sync)
 				.thenEx(wrapException(e -> new CubeException("Failed to synchronize state prior to consolidation", e)))
-				.then(() -> cube.consolidate(strategy.get()).whenComplete(promiseConsolidateImpl.recordStats()))
+				.then(() -> cube.consolidate(aggregation -> {
+							String aggregationId = aggregationsMapReversed.get(aggregation);
+							ChunkLocker<Object> locker = chunkLockerFactory.ensureLocker(aggregationId);
+							return strategy.get().apply(aggregation, locker);
+						})
+						.whenComplete(promiseConsolidateImpl.recordStats()))
 				.whenResult(this::cubeDiffJmx)
 				.whenComplete(this::logCubeDiff)
 				.then(cubeDiff -> {
@@ -147,6 +182,8 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 							.whenException(e -> stateManager.reset())
 							.whenComplete(toLogger(logger, thisMethod(), cubeDiff));
 				})
+				.thenEx((result, e) -> chunkLockerFactory.tryReleaseAll()
+						.then(() -> Promise.of(result, e)))
 				.whenComplete(promiseConsolidate.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), stateManager))
 				.whenComplete(() -> consolidating = false);
