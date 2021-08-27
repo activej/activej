@@ -61,13 +61,6 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	private String tablePosition = POSITION_TABLE;
 	private String tableChunk = CHUNK_TABLE;
 
-	/*
-			private final PromiseStats promiseCleanup = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
-			private final PromiseStats promiseCleanupCollectRequiredChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
-			private final PromiseStats promiseCleanupRepository = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
-			private final PromiseStats promiseCleanupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
-	 */
-
 	// region JMX
 	private long cleanupLastStartTimestamp;
 	private long cleanupLastCompleteTimestamp;

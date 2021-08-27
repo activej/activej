@@ -1,6 +1,6 @@
 SET autocommit = 0;
 
-START TRANSACTION;
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 
 SET @start_revision = (SELECT MAX(`revision`)
                        FROM (SELECT MAX(`revision`) - {min_revisions} as `max_revision` FROM {revision}) g

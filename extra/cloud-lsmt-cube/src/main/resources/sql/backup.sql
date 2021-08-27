@@ -1,6 +1,6 @@
 SET autocommit = 0;
 
-START TRANSACTION;
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 
 INSERT INTO {backup} (`revision`, `created_at`, `created_by`, `backup_by`)
 SELECT {backup_revision}, `created_at`, `created_by`, {backup_by} FROM {revision} WHERE `revision`={backup_revision};
