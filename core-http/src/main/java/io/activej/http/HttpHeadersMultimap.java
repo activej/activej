@@ -78,7 +78,7 @@ final class HttpHeadersMultimap<K, V> {
 		}
 	}
 
-	public final Collection<Map.Entry<K, V>> getEntries() {
+	public Collection<Map.Entry<K, V>> getEntries() {
 		return new AbstractCollection<Map.Entry<K, V>>() {
 			@Override
 			public int size() {

@@ -29,7 +29,7 @@ public final class CompleteResultPromise<T> extends CompletePromise<T> {
 	}
 
 	@Override
-	public final T getResult() {
+	public T getResult() {
 		return result;
 	}
 

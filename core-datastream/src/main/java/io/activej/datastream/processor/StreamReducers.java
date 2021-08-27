@@ -195,7 +195,7 @@ public final class StreamReducers {
 			 * @return accumulator with result
 			 */
 			@Override
-			public final A onFirstItem(StreamDataAcceptor<O> stream, K key, I firstValue) {
+			public A onFirstItem(StreamDataAcceptor<O> stream, K key, I firstValue) {
 				A accumulator = reducerToResult.createAccumulator(key);
 				return reducerToResult.accumulate(accumulator, firstValue);
 			}
@@ -210,7 +210,7 @@ public final class StreamReducers {
 			 * @return accumulator with result
 			 */
 			@Override
-			public final A onNextItem(StreamDataAcceptor<O> stream, K key, I nextValue, A accumulator) {
+			public A onNextItem(StreamDataAcceptor<O> stream, K key, I nextValue, A accumulator) {
 				return reducerToResult.accumulate(accumulator, nextValue);
 			}
 
@@ -222,7 +222,7 @@ public final class StreamReducers {
 			 * @param accumulator accumulator which contains results of all previous operations
 			 */
 			@Override
-			public final void onComplete(StreamDataAcceptor<O> stream, K key, A accumulator) {
+			public void onComplete(StreamDataAcceptor<O> stream, K key, A accumulator) {
 				stream.accept(reducerToResult.produceResult(accumulator));
 			}
 		}

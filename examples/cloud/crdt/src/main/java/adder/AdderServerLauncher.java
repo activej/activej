@@ -23,7 +23,7 @@ public final class AdderServerLauncher extends Launcher {
 	));
 
 	@Override
-	protected final Module getModule() {
+	protected Module getModule() {
 		return Modules.combine(
 				ServiceGraphModule.create(),
 				ConfigModule.create()

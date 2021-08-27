@@ -22,7 +22,6 @@ import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
 import io.activej.inject.util.LocationInfo;
 import io.activej.inject.util.Trie;
-import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -114,7 +113,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public final ModuleBuilder1<T> in(@NotNull Class<? extends Annotation> annotationClass, @NotNull Class<?>... annotationClasses) {
+	public ModuleBuilder1<T> in(@NotNull Class<? extends Annotation> annotationClass, @NotNull Class<?>... annotationClasses) {
 		return in(Stream.concat(Stream.of(annotationClass), Arrays.stream((Class<? extends Annotation>[]) annotationClasses)).map(Scope::of).toArray(Scope[]::new));
 	}
 
@@ -205,22 +204,22 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 		completePreviousStep(); // finish the last binding
 		return new Module() {
 			@Override
-			public final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> getBindings() {
+			public Trie<Scope, Map<Key<?>, Set<Binding<?>>>> getBindings() {
 				return bindings;
 			}
 
 			@Override
-			public final Map<KeyPattern<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
+			public Map<KeyPattern<?>, Set<BindingGenerator<?>>> getBindingGenerators() {
 				return bindingGenerators;
 			}
 
 			@Override
-			public final Map<KeyPattern<?>, Set<BindingTransformer<?>>> getBindingTransformers() {
+			public Map<KeyPattern<?>, Set<BindingTransformer<?>>> getBindingTransformers() {
 				return bindingTransformers;
 			}
 
 			@Override
-			public final Map<Key<?>, Multibinder<?>> getMultibinders() {
+			public Map<Key<?>, Multibinder<?>> getMultibinders() {
 				return multibinders;
 			}
 		};

@@ -148,7 +148,7 @@ public final class StaticServlet implements AsyncServlet {
 
 	@NotNull
 	@Override
-	public final Promise<HttpResponse> serve(@NotNull HttpRequest request) {
+	public Promise<HttpResponse> serve(@NotNull HttpRequest request) {
 		String mappedPath = pathMapper.apply(request);
 		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);

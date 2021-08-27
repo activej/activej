@@ -21,7 +21,7 @@ public final class BannerServerLauncher extends Launcher {
 	));
 
 	@Override
-	protected final Module getModule() {
+	protected Module getModule() {
 		return Modules.combine(
 				ServiceGraphModule.create(),
 				ConfigModule.create()

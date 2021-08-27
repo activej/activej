@@ -237,7 +237,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	}
 
 	@Override
-	public final boolean isSettable(@NotNull String attrName) {
+	public boolean isSettable(@NotNull String attrName) {
 		if (!fullNameToNode.containsKey(attrName)) {
 			throw new IllegalArgumentException("There is no attribute with name: " + attrName);
 		}
@@ -247,7 +247,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	}
 
 	@Override
-	public final void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
+	public void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
 		List<?> notNullTargets = targets.stream().filter(Objects::nonNull).collect(Collectors.toList());
 		if (notNullTargets.isEmpty()) {
 			return;

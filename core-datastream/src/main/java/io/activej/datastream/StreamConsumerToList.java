@@ -48,7 +48,7 @@ public final class StreamConsumerToList<T> extends AbstractStreamConsumer<T> {
 		return resultPromise;
 	}
 
-	public final List<T> getList() {
+	public List<T> getList() {
 		return list;
 	}
 

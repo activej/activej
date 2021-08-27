@@ -36,7 +36,7 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 		private final List<LogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();
 		private Iterator<? extends StreamDataAcceptor<?>> acceptors;
 
-		public final <X> StreamDataAcceptor<X> addOutput(LogDataConsumer<X, D> logDataConsumer) {
+		public <X> StreamDataAcceptor<X> addOutput(LogDataConsumer<X, D> logDataConsumer) {
 			if (acceptors == null) {
 				// initial run, recording scheme
 				logDataConsumers.add(logDataConsumer);

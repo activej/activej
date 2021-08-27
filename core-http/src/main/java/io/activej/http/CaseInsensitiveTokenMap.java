@@ -61,7 +61,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 	/**
 	 * Creates a token with given value and places it in the registry, also returning it.
 	 */
-	public final T register(String name) {
+	public T register(String name) {
 		T token = create(name);
 
 		for (int p = 0; p < maxProbings; p++) {
@@ -77,7 +77,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 	/**
 	 * Creates a token with given value but does not place it into the registry.
 	 */
-	public final T create(String name) {
+	public T create(String name) {
 		byte[] bytes = encodeAscii(name);
 
 		byte[] lowerCase = new byte[bytes.length];
@@ -94,7 +94,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 	/**
 	 * @see #getOrCreate(int, byte[], int, int)
 	 */
-	public final T getOrCreate(byte[] bytes, int offset, int length) {
+	public T getOrCreate(byte[] bytes, int offset, int length) {
 		int hashCodeCI = hashCodeCI(bytes, offset, length);
 		return getOrCreate(hashCodeCI, bytes, offset, length);
 	}
@@ -102,7 +102,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 	/**
 	 * Gets the cached token value for given input, or creates a new one without putting it in the registry.
 	 */
-	public final T getOrCreate(int hashCodeCI, byte[] bytes, int offset, int length) {
+	public T getOrCreate(int hashCodeCI, byte[] bytes, int offset, int length) {
 		T t = get(hashCodeCI, bytes, offset, length);
 		return t != null ? t : factory.create(hashCodeCI, bytes, offset, length, null);
 	}
@@ -110,7 +110,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 	/**
 	 * Returns registered token value for given input, or null if no such value was registered.
 	 */
-	public final T get(int hashCodeCI, byte[] array, int offset, int length) {
+	public T get(int hashCodeCI, byte[] array, int offset, int length) {
 		int slot = hashCodeCI & (tokens.length - 1);
 		T t = tokens[slot];
 		if (t == null) return null;
