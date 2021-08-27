@@ -196,7 +196,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				if (supplier != null) return supplier.get();
-				return promise.thenEx((supplier, e) -> {
+				return promise.then((supplier, e) -> {
 					if (e == null) {
 						this.supplier = supplier;
 						return supplier.get();
@@ -436,7 +436,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		return new AbstractChannelSupplier<T>(this) {
 			@Override
 			protected Promise<T> doGet() {
-				return ChannelSupplier.this.get().thenEx((value, e) -> Promise.of(value));
+				return ChannelSupplier.this.get().then((value, e) -> Promise.of(value));
 			}
 		};
 	}
@@ -482,7 +482,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
-						.thenEx((item, e) -> {
+						.then((item, e) -> {
 							if (e == null) {
 								if (item != null) return Promise.of(item);
 								endOfStream.trySet(null);

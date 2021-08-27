@@ -122,7 +122,7 @@ public final class RedisClient {
 	 */
 	public Promise<RedisConnection> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
-				.thenEx((AsyncTcpSocket socket, Throwable e) -> {
+				.then((AsyncTcpSocket socket, Throwable e) -> {
 					if (e != null) {
 						return Promise.ofException(new RedisException("Failed to connect to Redis server: " + address, e));
 					}
@@ -181,7 +181,7 @@ public final class RedisClient {
 		return connect()
 				.then(connection ->
 						connection.cmd(RedisRequest.of(args), RedisResponse.OK)
-								.thenEx(($, e) -> {
+								.then(($, e) -> {
 									if (e == null) return Promise.of(connection);
 
 									connection.close();

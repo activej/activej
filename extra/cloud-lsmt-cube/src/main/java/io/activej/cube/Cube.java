@@ -771,7 +771,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			Aggregation aggregation = entry.getValue().aggregation;
 
 			runnables.add(() -> strategy.apply(aggregation)
-					.thenEx((aggregationDiff, e) -> {
+					.then((aggregationDiff, e) -> {
 						if (e == null) {
 							if (!aggregationDiff.isEmpty()) {
 								map.put(aggregationId, aggregationDiff);

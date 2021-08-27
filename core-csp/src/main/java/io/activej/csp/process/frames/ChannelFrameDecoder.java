@@ -100,14 +100,14 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 							closeEx(new TruncatedBlockException(e));
 						}
 					} else {
-						sanitize(result, e)
+						doSanitize(result, e)
 								.whenResult(buf -> {
 									if (buf != END_OF_STREAM) {
 										output.accept(buf)
 												.whenResult(this::doProcess);
 									} else {
 										input.endOfStream()
-												.thenEx(this::sanitize)
+												.then(this::doSanitize)
 												.then(() -> output.acceptEndOfStream())
 												.whenResult(this::completeProcess);
 									}

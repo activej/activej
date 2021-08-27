@@ -126,7 +126,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		return connect()
 				.then(messaging ->
 						messaging.send(CrdtMessages.UPLOAD)
-								.thenEx(wrapException(() -> "Failed to send 'Upload' message"))
+								.then(wrapException(() -> "Failed to send 'Upload' message"))
 								.map($ -> {
 									ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 											.withAcknowledgement(ack -> ack
@@ -137,7 +137,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 													.transformWith(ChannelSerializer.create(serializer))
 													.streamTo(consumer))
 											.withAcknowledgement(ack -> ack
-													.thenEx(wrapException(() -> "Upload failed")));
+													.then(wrapException(() -> "Upload failed")));
 								}));
 	}
 
@@ -145,9 +145,9 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return connect()
 				.then(messaging -> messaging.send(new Download(timestamp))
-						.thenEx(wrapException(() -> "Failed to send 'Download' message"))
+						.then(wrapException(() -> "Failed to send 'Download' message"))
 						.then(() -> messaging.receive()
-								.thenEx(wrapException(() -> "Failed to receive response")))
+								.then(wrapException(() -> "Failed to receive response")))
 						.then(response -> {
 							if (response == DOWNLOAD_STARTED) {
 								return Promise.complete();
@@ -163,7 +163,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 										.withEndOfStream(eos -> eos
 												.then(messaging::sendEndOfStream)
-												.thenEx(wrapException(() -> "Download failed"))
+												.then(wrapException(() -> "Download failed"))
 												.whenComplete(($2, e) -> {
 													if (e == null) {
 														messaging.close();
@@ -178,7 +178,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		return connect()
 				.then(messaging ->
 						messaging.send(CrdtMessages.REMOVE)
-								.thenEx(wrapException(() -> "Failed to send 'Remove' message"))
+								.then(wrapException(() -> "Failed to send 'Remove' message"))
 								.map($ -> {
 									ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 											.withAcknowledgement(ack -> ack
@@ -189,7 +189,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 													.transformWith(ChannelSerializer.create(keySerializer))
 													.streamTo(consumer))
 											.withAcknowledgement(ack -> ack
-													.thenEx(wrapException(() -> "Remove operation failed")));
+													.then(wrapException(() -> "Remove operation failed")));
 								}));
 	}
 
@@ -197,9 +197,9 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public Promise<Void> ping() {
 		return connect()
 				.then(messaging -> messaging.send(PING)
-						.thenEx(wrapException(() -> "Failed to send 'Ping'"))
+						.then(wrapException(() -> "Failed to send 'Ping'"))
 						.then(() -> messaging.receive()
-								.thenEx(wrapException(() -> "Failed to receive 'Pong'")))
+								.then(wrapException(() -> "Failed to receive 'Pong'")))
 						.then(simpleHandler(PONG))
 						.whenResult(messaging::close)
 						.whenException(messaging::closeEx));
@@ -232,7 +232,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtMessage>> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
-				.thenEx(wrapException(() -> "Failed to connect to " + address));
+				.then(wrapException(() -> "Failed to connect to " + address));
 	}
 
 	// region JMX

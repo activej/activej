@@ -12,7 +12,7 @@ public final class TestUtils {
 	public static <T> T await(RedisClient client, Function<RedisConnection, Promise<T>> clientCommand) {
 		return io.activej.promise.TestUtils.await(client.connect()
 				.then(connection -> clientCommand.apply(connection)
-						.thenEx((result, e) -> connection.quit()
+						.then((result, e) -> connection.quit()
 								.then(() -> e == null ?
 										Promise.of(result) :
 										Promise.ofException(e)))));

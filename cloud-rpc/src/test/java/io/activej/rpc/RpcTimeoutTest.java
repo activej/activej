@@ -99,7 +99,7 @@ public final class RpcTimeoutTest {
 		//noinspection ConstantConditions
 		Throwable exception = awaitException(client.start()
 				.then(() -> client.sendRequest(DATA, timeout))
-				.thenEx(($, e) -> client.stop()
+				.then(($, e) -> client.stop()
 						.then(server::close)
 						.then($2 -> Promise.ofException(e))));
 

@@ -240,7 +240,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 		if (currentPromise == null) {
 			return Promise.complete();
 		}
-		return currentPromise.mapEx(($, e) -> null);
+		return currentPromise.map(($, e) -> null);
 	}
 
 	public void setSchedule(Schedule schedule) {

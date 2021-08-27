@@ -185,7 +185,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 										}
 										return Promise.complete();
 									})
-									.thenEx(wrapException(() -> "Cluster 'upload' failed"))));
+									.then(wrapException(() -> "Cluster 'upload' failed"))));
 				});
 	}
 
@@ -205,7 +205,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 										}
 										return Promise.complete();
 									})
-									.thenEx(wrapException(() -> "Cluster 'download' failed")));
+									.then(wrapException(() -> "Cluster 'download' failed")));
 				});
 	}
 
@@ -231,7 +231,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 										}
 										return Promise.complete();
 									})
-									.thenEx(wrapException(() -> "Cluster 'remove' failed")));
+									.then(wrapException(() -> "Cluster 'remove' failed")));
 				});
 	}
 

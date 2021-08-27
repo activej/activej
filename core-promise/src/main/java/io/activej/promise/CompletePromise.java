@@ -87,7 +87,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public final <U> Promise<U> mapEx(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
+	public final <U> Promise<U> map(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult(), null));
 		} catch (UncheckedException u) {
@@ -118,7 +118,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@SuppressWarnings("unchecked")
 	@NotNull
 	@Override
-	public final <U> Promise<U> thenEx(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
+	public final <U> Promise<U> then(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
 		} catch (UncheckedException u) {

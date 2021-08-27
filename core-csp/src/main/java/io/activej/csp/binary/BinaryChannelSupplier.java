@@ -166,7 +166,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
 							closeEx(e);
 						})
-						.thenEx((value, e) -> {
+						.then((value, e) -> {
 							if (e == null) return Promise.of(value);
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return Promise.of(null);
 							return Promise.ofException(e);

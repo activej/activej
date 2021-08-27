@@ -50,7 +50,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 	public void malformedRequest() {
 		String result = await(redis -> redis.cmd(RedisRequest.of("SET", "x", "value"), OK)
 				.then(() -> redis.cmd(RedisRequest.of("GETTTTT"), BYTES_ISO_8859_1)
-						.thenEx(($, e) -> {
+						.then(($, e) -> {
 							assertNotNull(e);
 							assertThat(e, instanceOf(ServerError.class));
 							assertThat(e.getMessage(), containsString("ERR unknown command `GETTTTT`"));
@@ -91,7 +91,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 							redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
 							redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG));
 					return redis.exec()
-							.thenEx(($, e) -> {
+							.then(($, e) -> {
 								assertNotNull(e);
 								assertThat(e, instanceOf(ServerError.class));
 								assertThat(e.getMessage(), containsString("EXECABORT Transaction discarded because of previous errors."));
@@ -275,7 +275,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 				.then(() -> {
 					Promise<Void> setPromise = redis.cmd(RedisRequest.of("SET", key1, value), OK);
 					return redis.exec()
-							.thenEx((result, e) -> {
+							.then((result, e) -> {
 								assertThat(e, instanceOf(TransactionFailedException.class));
 								assertThat(setPromise.getException(), instanceOf(TransactionFailedException.class));
 								return Promise.complete();

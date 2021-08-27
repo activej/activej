@@ -118,10 +118,10 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanE
 	Promise<Boolean> process() {
 		return Promise.complete()
 				.then(stateManager::sync)
-				.thenEx(wrapException(e -> new CubeException("Failed to synchronize state prior to log processing", e)))
+				.then(wrapException(e -> new CubeException("Failed to synchronize state prior to log processing", e)))
 				.map($ -> stateManager.getCommitId())
 				.then(commitId -> predicate.test(commitId)
-						.thenEx(wrapException(e -> new CubeException("Failed to test commit '" + commitId + "' with predicate", e))))
+						.then(wrapException(e -> new CubeException("Failed to test commit '" + commitId + "' with predicate", e))))
 				.then(ok -> {
 					if (!ok) return Promise.of(false);
 
@@ -136,15 +136,15 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanE
 							Promises.reduce(toList(), 1, asPromises(tasks));
 
 					return promise
-							.thenEx(wrapException(e -> new CubeException("Failed to process logs", e)))
+							.then(wrapException(e -> new CubeException("Failed to process logs", e)))
 							.whenComplete(promiseProcessLogsImpl.recordStats())
 							.whenResult(this::cubeDiffJmx)
 							.then(diffs -> Promise.complete()
 									.then(() -> chunkStorage.finish(addedChunks(diffs)))
-									.thenEx(wrapException(e -> new CubeException("Failed to finalize chunks in storage", e)))
+									.then(wrapException(e -> new CubeException("Failed to finalize chunks in storage", e)))
 									.whenResult(() -> stateManager.addAll(diffs))
 									.then(() -> stateManager.sync()
-											.thenEx(wrapException(e -> new CubeException(
+											.then(wrapException(e -> new CubeException(
 													"Failed to synchronize state after log processing, resetting", e))))
 									.whenException(e -> stateManager.reset())
 									.map($ -> true));

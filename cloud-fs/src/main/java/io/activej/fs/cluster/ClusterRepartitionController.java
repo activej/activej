@@ -192,7 +192,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								})))
 				.whenComplete(() -> isRepartitioning = false)
 				.whenComplete(repartitionPromiseStats.recordStats())
-				.thenEx(($, e) -> {
+				.then(($, e) -> {
 					if (e != null) {
 						logger.warn("forced repartition finish, {} files ensured, {} errored, {} untouched", ensuredFiles, failedFiles, allFiles - ensuredFiles - failedFiles, e);
 					} else {
@@ -258,7 +258,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								lastPlanRecalculation = getEventloop().currentTimeMillis();
 								updateLastAlivePartitionIds();
 							})
-							.thenEx((v, e) -> {
+							.then((v, e) -> {
 								if (e == null) {
 									return Promise.complete();
 								} else {

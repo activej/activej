@@ -276,7 +276,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 							Object id = entry.getKey();
 							return entry.getValue()
 									.ping()
-									.mapEx(($, e) -> {
+									.map(($, e) -> {
 										if (e == null) {
 											markAlive(id);
 										} else {
@@ -292,7 +292,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 				deadPartitions.entrySet().stream()
 						.map(entry -> entry.getValue()
 								.ping()
-								.mapEx(($, e) -> {
+								.map(($, e) -> {
 									if (e == null) {
 										markAlive(entry.getKey());
 									}

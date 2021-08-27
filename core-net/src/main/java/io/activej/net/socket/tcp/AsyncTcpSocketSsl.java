@@ -158,7 +158,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 
 	private void doRead() {
 		upstream.read()
-				.thenEx(this::sanitize)
+				.then(this::sanitize)
 				.whenResult(buf -> {
 					if (isClosed()) {
 						assert pendingUpstreamWrite != null;
@@ -193,7 +193,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 			this.pendingUpstreamWrite = writePromise;
 		}
 		writePromise
-				.thenEx(this::sanitize)
+				.then(this::sanitize)
 				.whenComplete(() -> this.pendingUpstreamWrite = null)
 				.whenResult(() -> {
 					if (isClosed()) {

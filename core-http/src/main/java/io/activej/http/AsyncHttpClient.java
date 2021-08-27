@@ -451,7 +451,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		assert host != null;
 
 		return asyncDnsClient.resolve4(host)
-				.thenEx((dnsResponse, e) -> {
+				.then((dnsResponse, e) -> {
 					if (e == null) {
 						if (inspector != null) inspector.onResolve(request, dnsResponse);
 						if (dnsResponse.isSuccessful()) {
@@ -491,7 +491,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		if (inspector != null) inspector.onConnecting(request, address);
 
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
-				.thenEx((asyncTcpSocketImpl, e) -> {
+				.then((asyncTcpSocketImpl, e) -> {
 					if (e == null) {
 						AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
 						if (socketInspector != null) {

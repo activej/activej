@@ -39,7 +39,7 @@ public class StreamSuppliersTest {
 	public void withEndOfStream() {
 		StreamSupplier<Integer> failingSupplier = StreamSupplier.of(1, 2, 3)
 				.withEndOfStream(eos -> eos
-						.thenEx(($, e) -> Promise.ofException(new Exception("Test"))));
+						.then(($, e) -> Promise.ofException(new Exception("Test"))));
 
 		Throwable exception = awaitException(failingSupplier.toList());
 		assertEquals("Test", exception.getMessage());

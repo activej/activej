@@ -422,7 +422,7 @@ public abstract class AbstractHttpConnection {
 		BinaryChannelSupplier encodedStream = BinaryChannelSupplier.ofProvidedBufs(
 				readBufs,
 				() -> socket.read()
-						.thenEx((buf, e) -> {
+						.then((buf, e) -> {
 							if (e == null) {
 								if (buf != null) {
 									readBufs.add(buf);

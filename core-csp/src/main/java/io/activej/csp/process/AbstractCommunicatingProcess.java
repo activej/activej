@@ -191,7 +191,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 
 	protected final <T> Promise<T> sanitize(Promise<T> promise) {
 		return promise.async()
-				.thenEx(this::sanitize);
+				.then(this::doSanitize);
 	}
 
 	/**
@@ -207,7 +207,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	 * otherwise. If the process was already completed,
 	 * returns {@link ProcessCompleteException}.
 	 */
-	protected final <T> Promise<T> sanitize(T value, @Nullable Throwable e) {
+	protected final <T> Promise<T> doSanitize(T value, @Nullable Throwable e) {
 		if (isProcessComplete()) {
 			Recyclers.recycle(value);
 			ProcessCompleteException processCompleteException = new ProcessCompleteException();

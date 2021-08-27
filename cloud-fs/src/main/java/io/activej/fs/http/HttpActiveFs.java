@@ -106,6 +106,7 @@ public final class HttpActiveFs implements ActiveFs {
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+		//noinspection Convert2MethodRef
 		return client.request(
 				HttpRequest.get(
 						url + UrlBuilder.relative()
@@ -113,12 +114,13 @@ public final class HttpActiveFs implements ActiveFs {
 								.appendQuery("glob", glob)
 								.build()))
 				.then(HttpActiveFs::checkResponse)
-				.then(HttpMessage::loadBody)
+				.then(response -> response.loadBody())
 				.then(decodeBody(STRING_META_MAP_TYPE));
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+		//noinspection Convert2MethodRef
 		return client.request(
 				HttpRequest.get(
 						url + UrlBuilder.relative()
@@ -126,12 +128,13 @@ public final class HttpActiveFs implements ActiveFs {
 								.appendPathPart(name)
 								.build()))
 				.then(HttpActiveFs::checkResponse)
-				.then(HttpMessage::loadBody)
+				.then(response -> response.loadBody())
 				.then(decodeBody(FileMetadata.class));
 	}
 
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+		//noinspection Convert2MethodRef
 		return client.request(
 				HttpRequest.get(
 						url + UrlBuilder.relative()
@@ -139,7 +142,7 @@ public final class HttpActiveFs implements ActiveFs {
 								.build())
 						.withBody(toJson(names)))
 				.then(HttpActiveFs::checkResponse)
-				.then(HttpMessage::loadBody)
+				.then(response -> response.loadBody())
 				.then(decodeBody(STRING_META_MAP_TYPE));
 	}
 

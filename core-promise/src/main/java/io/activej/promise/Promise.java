@@ -134,7 +134,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * Creates a completed {@code Promise} from {@code T value} and
 	 * {@code Throwable e} parameters, any of them can be {@code null}.
-	 * Useful for {@link #thenEx(BiFunction)} passthroughs
+	 * Useful for {@link #then(BiFunction)} passthroughs
 	 * (for example, when mapping specific exceptions).
 	 *
 	 * @param value value to wrap when exception is null
@@ -380,7 +380,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * applied to the result of this {@code Promise}
 	 */
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> mapEx(@NotNull BiFunction<? super T, @Nullable Throwable, ? extends U> fn);
+	@NotNull <U> Promise<U> map(@NotNull BiFunction<? super T, @Nullable Throwable, ? extends U> fn);
+
+	@NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which, when this {@code Promise} completes
@@ -392,8 +394,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn);
 
-	@NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn);
-
 	/**
 	 * Returns a new {@code Promise} which, when this {@code Promise} completes either
 	 * successfully (if exception is {@code null}) or exceptionally (if exception is not
@@ -404,7 +404,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise}
 	 */
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> thenEx(@NotNull BiFunction<? super T, @Nullable Throwable, ? extends Promise<? extends U>> fn);
+	@NotNull <U> Promise<U> then(@NotNull BiFunction<? super T, @Nullable Throwable, ? extends Promise<? extends U>> fn);
 
 	/**
 	 * Subscribes given action to be executed

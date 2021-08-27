@@ -236,7 +236,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 							P id = entry.getKey();
 							return entry.getValue()
 									.ping()
-									.mapEx(($, e) -> {
+									.map(($, e) -> {
 										if (e == null) {
 											markAlive(id);
 										} else {
@@ -252,7 +252,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 				deadPartitions.entrySet().stream()
 						.map(entry -> entry.getValue()
 								.ping()
-								.mapEx(($, e) -> {
+								.map(($, e) -> {
 									if (e == null) {
 										markAlive(entry.getKey());
 									}

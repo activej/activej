@@ -267,7 +267,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		return StreamConsumerWithResult.of(groupReducer,
 				groupReducer.getResult()
 						.map(chunks -> AggregationDiff.of(new HashSet<>(chunks)))
-						.thenEx(wrapException(e -> new AggregationException("Failed to consume data", e))));
+						.then(wrapException(e -> new AggregationException("Failed to consume data", e))));
 	}
 
 	public <T> StreamConsumerWithResult<T, AggregationDiff> consume(Class<T> inputClass) {
@@ -301,7 +301,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		return consolidatedSupplier(query.getKeys(),
 				fields, outputClass, query.getPredicate(), allChunks, queryClassLoader)
 				.withEndOfStream(eos -> eos
-						.thenEx(wrapException(e -> new AggregationException("Query " + query + " failed", e))));
+						.then(wrapException(e -> new AggregationException("Query " + query + " failed", e))));
 	}
 
 	private <T> StreamSupplier<T> sortStream(StreamSupplier<T> unsortedStream, Class<T> resultClass,
@@ -569,8 +569,8 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 					return chunkLocker.lockChunks(consolidatingChunkIds)
 							.then($ -> doConsolidation(chunks))
 							.map(removedChunks -> AggregationDiff.of(new LinkedHashSet<>(removedChunks), new LinkedHashSet<>(chunks)))
-							.thenEx((aggregationDiff, e) -> chunkLocker.releaseChunks(consolidatingChunkIds)
-									.thenEx(($, e2) -> Promise.of(aggregationDiff, e)));
+							.then((aggregationDiff, e) -> chunkLocker.releaseChunks(consolidatingChunkIds)
+									.then(($, e2) -> Promise.of(aggregationDiff, e)));
 				})
 				.whenComplete(($, e) -> {
 					if (e == null) {

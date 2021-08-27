@@ -454,7 +454,7 @@ public final class OTAlgorithms {
 					graph.addNode(commit.getId(), commit.getLevel(), commit.getParents());
 					return resumePromise();
 				})
-				.thenEx((v, e) -> {
+				.then((v, e) -> {
 					if (e instanceof GraphExhaustedException) return Promise.of(null);
 					return Promise.of(v, e);
 				})

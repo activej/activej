@@ -43,6 +43,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+@SuppressWarnings("Convert2MethodRef")
 public final class AsyncHttpClientTest {
 	private static final byte[] HELLO_WORLD = encodeAscii("Hello, World!");
 
@@ -118,7 +119,7 @@ public final class AsyncHttpClientTest {
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
-				.then(HttpMessage::loadBody));
+				.then(response -> response.loadBody()));
 
 		assertThat(e, instanceOf(MalformedHttpException.class));
 	}
@@ -193,7 +194,7 @@ public final class AsyncHttpClientTest {
 		String text = "content";
 		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\r\n\r\n" + text));
 		String responseText = await(customResponse(req, false)
-				.then(HttpMessage::loadBody)
+				.then(response -> response.loadBody())
 				.map(byteBuf -> byteBuf.getString(UTF_8)));
 		assertEquals(text, responseText);
 	}
@@ -203,7 +204,7 @@ public final class AsyncHttpClientTest {
 		String text = "content";
 		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\r\n\r\n" + text));
 		String responseText = await(customResponse(req, false)
-				.then(HttpMessage::loadBody)
+				.then(response -> response.loadBody())
 				.map(byteBuf -> byteBuf.getString(UTF_8)));
 		assertEquals(text, responseText);
 	}
@@ -215,7 +216,7 @@ public final class AsyncHttpClientTest {
 				"Content-Encoding: gzip\r\n\r\n"));
 
 		String responseText = await(customResponse(ByteBufPool.append(headLines, GzipProcessorUtils.toGzip(wrapAscii(text))), false)
-				.then(HttpMessage::loadBody)
+				.then(response -> response.loadBody())
 				.map(byteBuf -> byteBuf.getString(UTF_8)));
 		assertEquals(text, responseText);
 	}
@@ -227,7 +228,7 @@ public final class AsyncHttpClientTest {
 				"Content-Encoding: gzip\r\n\r\n"));
 
 		String responseText = await(customResponse(ByteBufPool.append(headLines, GzipProcessorUtils.toGzip(wrapAscii(text))), true)
-				.then(HttpMessage::loadBody)
+				.then(response -> response.loadBody())
 				.map(byteBuf -> byteBuf.getString(UTF_8)));
 		assertEquals(text, responseText);
 	}
@@ -301,7 +302,7 @@ public final class AsyncHttpClientTest {
 				.withInspector(inspector);
 
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
-				.then(HttpMessage::loadBody));
+				.then(response -> response.loadBody()));
 
 		assertThat(e, instanceOf(MalformedHttpException.class));
 

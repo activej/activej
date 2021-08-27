@@ -172,8 +172,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 						.transformWith(ChannelSerializer.create(serializer))
 						.streamTo(consumer))
 						.withAcknowledgement(ack -> ack
-								.thenEx(wrapException(() -> "Error while uploading CRDT data to file"))))
-				.thenEx(wrapException(() -> "Failed to upload CRDT data to file"));
+								.then(wrapException(() -> "Error while uploading CRDT data to file"))))
+				.then(wrapException(() -> "Failed to upload CRDT data to file"));
 	}
 
 	@Override
@@ -208,9 +208,9 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 					return reducer.getOutput()
 							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 							.withEndOfStream(eos -> eos
-									.thenEx(wrapException(() -> "Error while downloading CRDT data")));
+									.then(wrapException(() -> "Error while downloading CRDT data")));
 				})
-				.thenEx(wrapException(() -> "Failed to download CRDT data"));
+				.then(wrapException(() -> "Failed to download CRDT data"));
 	}
 
 	@Override
@@ -221,14 +221,14 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 						.transformWith(ChannelSerializer.create(serializer.getKeySerializer()))
 						.streamTo(consumer))
 						.withAcknowledgement(ack -> ack
-								.thenEx(wrapException(() -> "Error while removing CRDT data"))))
-				.thenEx(wrapException(() -> "Failed to remove CRDT data"));
+								.then(wrapException(() -> "Error while removing CRDT data"))))
+				.then(wrapException(() -> "Failed to remove CRDT data"));
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		return fs.ping()
-				.thenEx(wrapException(() -> "Failed to PING file system"));
+				.then(wrapException(() -> "Failed to PING file system"));
 	}
 
 	@NotNull
@@ -281,7 +281,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 							.then(() -> consolidationFolderFs.delete(metafile))
 							.then(() -> fs.deleteAll(new HashSet<>(files)));
 				})
-				.thenEx(wrapException(() -> "Consolidation failed"))
+				.then(wrapException(() -> "Consolidation failed"))
 				.whenComplete(consolidationStats.recordStats());
 	}
 

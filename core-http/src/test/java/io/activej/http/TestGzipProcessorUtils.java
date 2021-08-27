@@ -122,10 +122,11 @@ public final class TestGzipProcessorUtils {
 
 		server.listen();
 
+		//noinspection Convert2MethodRef
 		ByteBuf body = await(client.request(request)
 				.whenComplete(assertComplete(response -> assertEquals("gzip", response.getHeader(CONTENT_ENCODING))))
 				.then(response -> response.loadBody(CHARACTERS_COUNT))
-				.map(ByteBuf::slice)
+				.map(buf -> buf.slice())
 				.whenComplete(() -> {
 					server.close();
 					client.stop();

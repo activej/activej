@@ -161,7 +161,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		consolidating = true;
 		return Promise.complete()
 				.then(stateManager::sync)
-				.thenEx(wrapException(e -> new CubeException("Failed to synchronize state prior to consolidation", e)))
+				.then(wrapException(e -> new CubeException("Failed to synchronize state prior to consolidation", e)))
 				.then(() -> cube.consolidate(aggregation -> {
 							String aggregationId = aggregationsMapReversed.get(aggregation);
 							ChunkLocker<Object> locker = chunkLockerFactory.ensureLocker(aggregationId);
@@ -174,15 +174,15 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 					if (cubeDiff.isEmpty()) return Promise.complete();
 					return Promise.complete()
 							.then(() -> aggregationChunkStorage.finish(addedChunks(cubeDiff)))
-							.thenEx(wrapException(e -> new CubeException("Failed to finalize chunks in storage", e)))
+							.then(wrapException(e -> new CubeException("Failed to finalize chunks in storage", e)))
 							.whenResult(() -> stateManager.add(cubeDiffScheme.wrap(cubeDiff)))
 							.then(() -> stateManager.sync()
-									.thenEx(wrapException(e -> new CubeException(
+									.then(wrapException(e -> new CubeException(
 											"Failed to synchronize state after consolidation, resetting", e))))
 							.whenException(e -> stateManager.reset())
 							.whenComplete(toLogger(logger, thisMethod(), cubeDiff));
 				})
-				.thenEx((result, e) -> chunkLockerFactory.tryReleaseAll()
+				.then((result, e) -> chunkLockerFactory.tryReleaseAll()
 						.then(() -> Promise.of(result, e)))
 				.whenComplete(promiseConsolidate.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), stateManager))
@@ -193,7 +193,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		checkState(!consolidating, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		cleaning = true;
 		return stateManager.sync()
-				.thenEx(wrapException(e -> new CubeException("Failed to synchronize state prior to cleaning up irrelevant chunks", e)))
+				.then(wrapException(e -> new CubeException("Failed to synchronize state prior to cleaning up irrelevant chunks", e)))
 				.then(() -> {
 					Map<String, Set<AggregationChunk>> irrelevantChunks = cube.getIrrelevantChunks();
 					if (irrelevantChunks.isEmpty()) {
@@ -207,7 +207,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 					cubeDiffJmx(cubeDiff);
 					stateManager.add(cubeDiffScheme.wrap(cubeDiff));
 					return stateManager.sync()
-							.thenEx(wrapException(e -> new CubeException(
+							.then(wrapException(e -> new CubeException(
 									"Failed to synchronize state after cleaning up irrelevant chunks, resetting", e)))
 							.whenException(e -> stateManager.reset());
 				})

@@ -418,7 +418,7 @@ public final class AsyncHttpServerTest {
 	public void testIncompleteRequest() throws IOException, ExecutionException, InterruptedException {
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, request ->
 				request.loadBody()
-						.mapEx(($, e) -> {
+						.map(($, e) -> {
 							assertTrue(e instanceof MalformedHttpException);
 
 							assertFalse(request.isRecycled());

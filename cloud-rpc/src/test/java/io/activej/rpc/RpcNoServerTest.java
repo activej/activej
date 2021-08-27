@@ -138,7 +138,7 @@ public final class RpcNoServerTest {
 							assertThat(e, instanceOf(RpcException.class));
 						}
 					})
-					.thenEx(($1, $2) -> rpcClient.stop())
+					.then(($1, $2) -> rpcClient.stop())
 					.whenComplete(() -> {
 						if (startServerAfterConnectTimeout) {
 							serverThread.start();

@@ -83,7 +83,7 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 				.then(() -> {
 					this.currentChunk = (currentChunk == null) ? newChunkName : new LogFile(newChunkName.getName(), 0);
 					return fs.append(namingScheme.path(logPartition, currentChunk), 0)
-							.thenEx(this::sanitize)
+							.then(this::doSanitize)
 							.whenResult(newConsumer -> this.currentConsumer = consumerTransformer.apply(sanitize(newConsumer)))
 							.toVoid();
 				});

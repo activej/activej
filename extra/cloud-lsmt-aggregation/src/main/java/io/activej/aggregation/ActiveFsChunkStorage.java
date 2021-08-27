@@ -167,7 +167,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
 		return fs.download(toPath(chunkId))
-				.thenEx(wrapException(e -> new AggregationException("Failed to download chunk '" + chunkId + '\'', e)))
+				.then(wrapException(e -> new AggregationException("Failed to download chunk '" + chunkId + '\'', e)))
 				.whenComplete(promiseOpenR.recordStats())
 				.map(supplier -> supplier
 						.transformWith(readFile)
@@ -176,7 +176,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 						.transformWith(ChannelDeserializer.create(
 								createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader)))
 						.transformWith((StreamStats<T>) (detailed ? readDeserializeDetailed : readDeserialize))
-						.withEndOfStream(eos -> eos.thenEx(wrapException(e -> new AggregationException("Failed to read chunk '" + chunkId + '\'', e)))));
+						.withEndOfStream(eos -> eos.then(wrapException(e -> new AggregationException("Failed to read chunk '" + chunkId + '\'', e)))));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -185,7 +185,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
 		return fs.upload(toTempPath(chunkId))
-				.thenEx(wrapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e)))
+				.then(wrapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e)))
 				.whenComplete(promiseOpenW.recordStats())
 				.map(consumer -> StreamConsumer.<T>ofSupplier(
 						supplier -> supplier
@@ -201,13 +201,13 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 										bufferSize.map(bytes -> bytes * 2)))
 								.transformWith(writeFile)
 								.streamTo(consumer))
-						.withAcknowledgement(ack -> ack.thenEx(wrapException(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e)))));
+						.withAcknowledgement(ack -> ack.then(wrapException(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e)))));
 	}
 
 	@Override
 	public Promise<Void> finish(Set<C> chunkIds) {
 		return fs.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
-				.thenEx(wrapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e)))
+				.then(wrapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e)))
 				.whenResult(() -> finishChunks = chunkIds.size())
 				.whenComplete(promiseFinishChunks.recordStats());
 	}
@@ -215,7 +215,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	@Override
 	public Promise<C> createId() {
 		return idGenerator.createId()
-				.thenEx(wrapException(e -> new AggregationException("Could not create ID", e)))
+				.then(wrapException(e -> new AggregationException("Could not create ID", e)))
 				.whenComplete(promiseIdGenerator.recordStats());
 	}
 
@@ -223,7 +223,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 		return fs.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
 				.then(() -> ChannelSupplier.<ByteBuf>of().streamTo(
 						fs.upload(toBackupPath(backupId, null), 0)))
-				.thenEx(wrapException(e ->
+				.then(wrapException(e ->
 						new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e
 						)
 				))
@@ -241,7 +241,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 		RefInt skipped = new RefInt(0);
 		RefInt deleted = new RefInt(0);
 		return fs.list(toDir(chunksPath) + "*" + LOG)
-				.thenEx(wrapException(e -> new AggregationException("Failed to list chunks for cleanup", e)))
+				.then(wrapException(e -> new AggregationException("Failed to list chunks for cleanup", e)))
 				.then(list -> {
 					Set<String> toDelete = list.entrySet().stream()
 							.filter(entry -> {
@@ -269,7 +269,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 							.collect(toSet());
 					if (toDelete.isEmpty()) return Promise.complete();
 					return fs.deleteAll(toDelete)
-							.thenEx(wrapException(e -> new AggregationException("Failed to clean up chunks", e)));
+							.then(wrapException(e -> new AggregationException("Failed to clean up chunks", e)));
 				})
 				.whenResult(() -> {
 					cleanupPreservedFiles = preserveChunks.size();
@@ -283,7 +283,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 
 	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, Predicate<Long> lastModifiedPredicate) {
 		return fs.list(toDir(chunksPath) + "*" + LOG)
-				.thenEx(wrapException(e -> new AggregationException("Failed to list chunks", e)))
+				.then(wrapException(e -> new AggregationException("Failed to list chunks", e)))
 				.map(list ->
 						list.entrySet().stream()
 								.filter(entry -> lastModifiedPredicate.test(entry.getValue().getTimestamp()))
@@ -346,7 +346,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	@Override
 	public Promise<Void> start() {
 		return fs.ping()
-				.thenEx(wrapException(e -> new AggregationException("Failed to start storage", e)));
+				.then(wrapException(e -> new AggregationException("Failed to start storage", e)));
 	}
 
 	@NotNull

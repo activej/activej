@@ -109,9 +109,9 @@ public final class CubeHttpClient implements ICube {
 	@Override
 	public Promise<QueryResult> query(CubeQuery query) {
 		return httpClient.request(buildRequest(query))
-				.thenEx(wrapException(e -> new CubeException("HTTP request failed", e)))
+				.then(wrapException(e -> new CubeException("HTTP request failed", e)))
 				.then(response -> response.loadBody()
-						.thenEx(wrapException(e -> new CubeException("HTTP request failed", e)))
+						.then(wrapException(e -> new CubeException("HTTP request failed", e)))
 						.then(body -> {
 							try {
 								if (response.getCode() != 200) {

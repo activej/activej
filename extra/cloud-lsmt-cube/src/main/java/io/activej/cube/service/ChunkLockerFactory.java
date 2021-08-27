@@ -61,7 +61,7 @@ class ChunkLockerFactory<C> {
 				.map(entry -> {
 					DelayedReleaseChunkLocker delayedLocker = entry.getValue();
 					return delayedLocker.doRelease()
-							.thenEx(($, e) -> {
+							.then(($, e) -> {
 								if (e != null) {
 									logger.warn("Failed to release chunks: {} in aggregation {}",
 											delayedLocker.chunksToBeReleased,

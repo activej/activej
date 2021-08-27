@@ -189,7 +189,7 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 			ChannelSupplier.ofPromise(ChannelFileReader.open(executor, file))
 					.transformWith(ChannelFrameDecoder.create(FRAME_FORMAT))
 					.withEndOfStream(eos -> eos
-							.thenEx(($, e) -> {
+							.then(($, e) -> {
 								if (e == null) return Promise.complete();
 								if (e instanceof TruncatedDataException) {
 									logger.warn("Write ahead log {} was truncated", file);

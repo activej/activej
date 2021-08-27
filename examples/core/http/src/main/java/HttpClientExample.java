@@ -24,6 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * HTTP client example.
  * You can launch HttpServerExample to test this.
  */
+@SuppressWarnings("Convert2MethodRef")
 public final class HttpClientExample extends Launcher {
 	@Inject
 	AsyncHttpClient httpClient;
@@ -76,7 +77,7 @@ public final class HttpClientExample extends Launcher {
 		System.out.println("\nHTTP request: " + url);
 		CompletableFuture<String> future = eventloop.submit(() ->
 				httpClient.request(HttpRequest.get(url))
-						.then(HttpMessage::loadBody)
+						.then(response -> response.loadBody())
 						.map(body -> body.getString(UTF_8))
 		);
 		System.out.println("HTTP response: " + future.get());

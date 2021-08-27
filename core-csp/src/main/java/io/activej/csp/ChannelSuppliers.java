@@ -496,7 +496,7 @@ public final class ChannelSuppliers {
 		@Override
 		protected Promise<T> doGet() {
 			return current.get()
-					.thenEx((value, e) -> {
+					.then((value, e) -> {
 						if (e == null) {
 							if (value != null) {
 								return Promise.of(value);

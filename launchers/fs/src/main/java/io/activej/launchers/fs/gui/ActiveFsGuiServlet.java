@@ -76,7 +76,7 @@ public final class ActiveFsGuiServlet {
 				.map("/", request -> {
 					String dir = decodeDir(request);
 					return fs.list(dir + "**")
-							.thenEx((files, e) -> {
+							.then((files, e) -> {
 								if (e != null) {
 									if (e instanceof FsException) {
 										return Promise.of(HttpResponse.ofCode(500)

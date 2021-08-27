@@ -129,7 +129,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 		}
 		ByteBuf buf = ByteBufPool.allocateExact((int) Math.min(bufferSize, limit));
 		return fileService.read(channel, position, buf.array(), buf.head(), buf.writeRemaining()) // reads are synchronized at least on asyncFile, so if produce() is called twice, position wont be broken (i hope)
-				.thenEx((bytesRead, e) -> {
+				.then((bytesRead, e) -> {
 					if (e != null) {
 						buf.recycle();
 						closeEx(e);

@@ -130,7 +130,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 										ChannelFrameEncoder.create(frameFormat)
 												.withEncoderResets()))))
 				.withAcknowledgement(ack -> ack
-						.thenEx(wrapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e)))));
+						.then(wrapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e)))));
 	}
 
 	@Override
@@ -167,7 +167,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 							.sorted()
 							.collect(toList()), lastFileRef.get());
 				})
-				.thenEx(wrapException(e -> new MultilogException("Failed to read logs from partition '" + logPartition + '\'', e)));
+				.then(wrapException(e -> new MultilogException("Failed to read logs from partition '" + logPartition + '\'', e)));
 	}
 
 	private StreamSupplierWithResult<T, LogPosition> readLogFiles(@NotNull String logPartition, @NotNull LogPosition startPosition, @NotNull List<LogPosition> logFiles, boolean lastFile) {
@@ -204,7 +204,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 
 				return StreamSupplier.ofPromise(
 						fs.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
-								.thenEx((fileStream, e) -> {
+								.then((fileStream, e) -> {
 									if (e != null) {
 										if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
 											if (logger.isWarnEnabled()) {
@@ -228,7 +228,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 															.withDecoderResets())
 											.transformWith(supplier ->
 													supplier.withEndOfStream(eos ->
-															eos.thenEx(($, e) -> {
+															eos.then(($, e) -> {
 																if (e == null ||
 																		e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
 																	return Promise.complete();

@@ -181,7 +181,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 							.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
 							.map(supplier -> supplier
 									.withEndOfStream(eos -> eos
-											.thenEx(partitions.wrapDeath(id))));
+											.then(partitions.wrapDeath(id))));
 				},
 				AsyncCloseable::close)
 				.then(filterErrors(() -> ofFailure("Could not download file '" + name + "' from any server")))
@@ -349,9 +349,9 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 												consumers.add(consumer);
 											}
 										})
-										.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.thenEx(partitions.wrapDeath(id))))))))
+										.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.then(partitions.wrapDeath(id))))))))
 						.limit(uploadTargetsMax))
-				.thenEx((containers, e) -> {
+				.then((containers, e) -> {
 					if (e != null) {
 						consumers.forEach(AsyncCloseable::close);
 						failed.set(true);
@@ -371,7 +371,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 			return Promise.ofException(new FsIOException("Partition '" + id + "' is not alive"));
 		}
 		return action.apply(id, fs)
-				.thenEx(partitions.wrapDeath(id));
+				.then(partitions.wrapDeath(id));
 	}
 
 	private <T> Promise<List<Try<T>>> broadcast(BiFunction<Object, ActiveFs, Promise<T>> action, Consumer<T> cleanup) {
@@ -379,7 +379,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 				.then(() -> Promise.ofCallback(cb ->
 						Promises.toList(partitions.getAlivePartitions().entrySet().stream()
 								.map(entry -> action.apply(entry.getKey(), entry.getValue())
-										.thenEx(partitions.wrapDeath(entry.getKey()))
+										.then(partitions.wrapDeath(entry.getKey()))
 										.whenResult(result -> {
 											if (cb.isComplete()) {
 												cleanup.accept(result);

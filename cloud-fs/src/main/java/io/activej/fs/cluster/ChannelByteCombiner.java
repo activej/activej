@@ -89,7 +89,7 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		RefLong inputOffset = new RefLong(0);
 		return Promises.repeat(
 				() -> input.get()
-						.thenEx((buf, e) -> {
+						.then((buf, e) -> {
 							if (e == null) {
 								return Promise.of(buf);
 							}

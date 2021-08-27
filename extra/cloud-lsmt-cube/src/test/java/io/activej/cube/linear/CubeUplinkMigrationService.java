@@ -69,8 +69,9 @@ final class CubeUplinkMigrationService {
 									!checkoutData.getDiffs().isEmpty()) {
 								throw new IllegalStateException("Uplink repository is not empty");
 							}
+							//noinspection Convert2MethodRef
 							return startRevision == null ?
-									repo.getHeads().map(Utils::first) :
+									repo.getHeads().map(iterable -> Utils.first(iterable)) :
 									Promise.of(startRevision);
 						})
 						.then(head -> {

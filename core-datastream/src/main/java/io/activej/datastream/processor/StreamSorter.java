@@ -207,8 +207,8 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 		protected void onEndOfStream() {
 			temporaryStreamsAccumulator.run();
 			output.getAcknowledgement()
-					.thenEx((ackRes, e) -> cleanup()
-							.thenEx(($, e1) -> Promise.of(ackRes, e)))
+					.then((ackRes, e) -> cleanup()
+							.then(($, e1) -> Promise.of(ackRes, e)))
 					.whenResult(this::acknowledge)
 					.whenException(this::closeEx);
 		}

@@ -316,7 +316,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 								.map(address -> {
 									logger.info("Connecting: {}", address);
 									return connect(address)
-											.thenEx(($, e) -> Promise.complete());
+											.then(($, e) -> Promise.complete());
 								}))
 						.then(() -> !forcedStart && requestSender instanceof NoSenderAvailable ?
 								Promise.ofException(START_EXCEPTION) :

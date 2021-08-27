@@ -157,14 +157,14 @@ public final class StaticServlet implements AsyncServlet {
 						tryLoadIndexResource(mappedPath) :
 						resourceLoader.load(mappedPath)
 								.map(byteBuf -> createHttpResponse(byteBuf, contentType))
-								.thenEx((value, e) -> {
+								.then((value, e) -> {
 									if (e instanceof ResourceIsADirectoryException) {
 										return tryLoadIndexResource(mappedPath);
 									} else {
 										return Promise.of(value, e);
 									}
 								}))
-				.thenEx((response, e) -> {
+				.then((response, e) -> {
 					if (e == null) {
 						return Promise.of(response);
 					} else if (e instanceof ResourceNotFoundException) {
@@ -183,7 +183,7 @@ public final class StaticServlet implements AsyncServlet {
 						.map(indexResource -> AsyncSupplier.of(() ->
 								resourceLoader.load(dirPath + indexResource)
 										.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource))))))
-				.thenEx(((response, e) -> e == null ?
+				.then(((response, e) -> e == null ?
 						Promise.of(response) :
 						Promise.ofException(new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e))));
 	}

@@ -88,7 +88,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public <U> Promise<U> mapEx(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
+	public <U> Promise<U> map(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
 		} catch (UncheckedException u) {
@@ -112,7 +112,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@SuppressWarnings("unchecked")
 	@NotNull
 	@Override
-	public <U> Promise<U> thenEx(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
+	public <U> Promise<U> then(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
 		} catch (UncheckedException u) {

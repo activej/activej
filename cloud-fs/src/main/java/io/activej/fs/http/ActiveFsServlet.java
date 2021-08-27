@@ -69,14 +69,14 @@ public final class ActiveFsServlet {
 					return (size == null ?
 							fs.upload(decodePath(request)) :
 							fs.upload(decodePath(request), size))
-							.mapEx(acknowledgeUpload(request));
+							.map(acknowledgeUpload(request));
 				})
 				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(fs::upload))
-						.mapEx(errorHandler()))
+						.map(errorHandler()))
 				.map(POST, "/" + APPEND + "/*", request -> {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					return fs.append(decodePath(request), offset)
-							.mapEx(acknowledgeUpload(request));
+							.map(acknowledgeUpload(request));
 				})
 				.map(GET, "/" + DOWNLOAD + "/*", request -> {
 					String name = decodePath(request);
@@ -87,7 +87,7 @@ public final class ActiveFsServlet {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
 					return fs.download(name, offset, limit)
-							.mapEx(errorHandler(supplier -> HttpResponse.ok200()
+							.map(errorHandler(supplier -> HttpResponse.ok200()
 									.withHeader(ACCEPT_RANGES, "bytes")
 									.withBodyStream(supplier)));
 				})
@@ -95,53 +95,53 @@ public final class ActiveFsServlet {
 					String glob = request.getQueryParameter("glob");
 					glob = glob != null ? glob : "**";
 					return (fs.list(glob))
-							.mapEx(errorHandler(list ->
+							.map(errorHandler(list ->
 									HttpResponse.ok200()
 											.withBody(toJson(list))
 											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))));
 				})
 				.map(GET, "/" + INFO + "/*", request ->
 						fs.info(decodePath(request))
-								.mapEx(errorHandler(meta ->
+								.map(errorHandler(meta ->
 										HttpResponse.ok200()
 												.withBody(toJson(meta))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)))))
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
 						.then(decodeBody(STRING_SET_TYPE))
 						.then(fs::infoAll)
-						.mapEx(errorHandler(map ->
+						.map(errorHandler(map ->
 								HttpResponse.ok200()
 										.withBody(toJson(map))
 										.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)))))
 				.map(GET, "/" + PING, request -> fs.ping()
-						.mapEx(errorHandler()))
+						.map(errorHandler()))
 				.map(POST, "/" + MOVE, request -> {
 					String name = getQueryParameter(request, "name");
 					String target = getQueryParameter(request, "target");
 					return fs.move(name, target)
-							.mapEx(errorHandler());
+							.map(errorHandler());
 				})
 				.map(POST, "/" + MOVE_ALL, request -> request.loadBody()
 						.then(decodeBody(STRING_STRING_MAP_TYPE))
 						.then(fs::moveAll)
-						.mapEx(errorHandler()))
+						.map(errorHandler()))
 				.map(POST, "/" + COPY, request -> {
 					String name = getQueryParameter(request, "name");
 					String target = getQueryParameter(request, "target");
 					return fs.copy(name, target)
-							.mapEx(errorHandler());
+							.map(errorHandler());
 				})
 				.map(POST, "/" + COPY_ALL, request -> request.loadBody()
 						.then(decodeBody(STRING_STRING_MAP_TYPE))
 						.then(fs::copyAll)
-						.mapEx(errorHandler()))
+						.map(errorHandler()))
 				.map(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
 						fs.delete(decodePath(request))
-								.mapEx(errorHandler()))
+								.map(errorHandler()))
 				.map(POST, "/" + DELETE_ALL, request -> request.loadBody()
 						.then(decodeBody(STRING_SET_TYPE))
 						.then(fs::deleteAll)
-						.mapEx(errorHandler()));
+						.map(errorHandler()));
 	}
 
 	@NotNull
@@ -158,7 +158,7 @@ public final class ActiveFsServlet {
 							rangeHeader,
 							inline);
 				})
-				.mapEx(errorHandler(Function.identity()));
+				.map(errorHandler(Function.identity()));
 	}
 
 	private static String decodePath(HttpRequest request) {
@@ -212,7 +212,7 @@ public final class ActiveFsServlet {
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBodyStream(ChannelSupplier.ofPromise(request.getBodyStream()
 						.streamTo(consumer)
-						.mapEx(($, e) -> e == null ?
+						.map(($, e) -> e == null ?
 								UploadAcknowledgement.ok() :
 								UploadAcknowledgement.ofError(castError(e)))
 						.map(ack -> ChannelSupplier.of(toJson(ack))))));

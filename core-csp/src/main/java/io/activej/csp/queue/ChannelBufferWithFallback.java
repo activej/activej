@@ -104,7 +104,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 	private Promise<Void> secondaryPut(@Nullable T item) {
 		assert buffer != null;
 		return buffer.put(item)
-				.thenEx(($, e) -> {
+				.then(($, e) -> {
 					if (e == null) {
 						return Promise.complete();
 					}
@@ -123,7 +123,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 			return doTake();
 		}
 		return buffer.take()
-				.thenEx((item, e) -> {
+				.then((item, e) -> {
 					if (e != null) {
 						if (!(e instanceof AsyncCloseException)) {
 							return Promise.ofException(e);

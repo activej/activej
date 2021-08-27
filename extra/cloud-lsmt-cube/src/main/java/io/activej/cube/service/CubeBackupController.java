@@ -93,7 +93,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanEx {
 
 	public Promise<Void> backupHead() {
 		return repository.getHeads()
-				.thenEx(wrapException(e -> new CubeException("Failed to get heads", e)))
+				.then(wrapException(e -> new CubeException("Failed to get heads", e)))
 				.then(heads -> {
 					if (heads.isEmpty()) {
 						return Promise.ofException(new CubeException("Heads are empty"));
@@ -106,7 +106,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanEx {
 
 	public Promise<Void> backup(K commitId) {
 		return Promises.toTuple(repository.loadCommit(commitId), checkout(repository, otSystem, commitId))
-				.thenEx(wrapException(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e)))
+				.then(wrapException(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e)))
 				.then(tuple -> Promises.sequence(
 						() -> backupChunks(commitId, chunksInDiffs(cubeDiffScheme, tuple.getValue2())),
 						() -> backupDb(tuple.getValue1(), tuple.getValue2())))
@@ -115,7 +115,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanEx {
 
 	private Promise<Void> backupChunks(K commitId, Set<C> chunkIds) {
 		return storage.backup(String.valueOf(commitId), chunkIds)
-				.thenEx(wrapException(e -> new CubeException("Failed to backup chunks on storage: " + storage, e)))
+				.then(wrapException(e -> new CubeException("Failed to backup chunks on storage: " + storage, e)))
 				.whenComplete(promiseBackupChunks.recordStats())
 				.whenComplete(logger.isTraceEnabled() ?
 						toLogger(logger, TRACE, thisMethod(), chunkIds) :
@@ -124,7 +124,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanEx {
 
 	private Promise<Void> backupDb(OTCommit<K, D> commit, List<D> snapshot) {
 		return repository.backup(commit, snapshot)
-				.thenEx(wrapException(e -> new CubeException("Failed to backup chunks in repository: " + repository, e)))
+				.then(wrapException(e -> new CubeException("Failed to backup chunks in repository: " + repository, e)))
 				.whenComplete(promiseBackupDb.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), commit, snapshot));
 	}

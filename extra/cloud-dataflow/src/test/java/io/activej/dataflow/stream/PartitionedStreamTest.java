@@ -584,7 +584,7 @@ public final class PartitionedStreamTest {
 								}
 								return null;
 							})
-							.thenEx((value, e) -> {
+							.then((value, e) -> {
 								if (e == null) return Promise.of(value);
 								if (e instanceof TruncatedDataException) {
 									ByteBufs bufs = binaryChannelSupplier.getBufs();
