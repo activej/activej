@@ -58,22 +58,22 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 	private static final ConcurrentHashMap<Integer, Object> STATIC_CONSTANTS = new ConcurrentHashMap<>();
 
-	protected final Class<?> superclass;
-	protected final List<Class<?>> interfaces;
+	final Class<?> superclass;
+	final List<Class<?>> interfaces;
 
 	private String className;
 	private final String autoClassName;
 
-	protected final Map<String, Class<?>> fields = new LinkedHashMap<>();
-	protected final Set<String> fieldsFinal = new HashSet<>();
-	protected final Set<String> fieldsStatic = new HashSet<>();
-	protected final Map<String, Expression> fieldExpressions = new HashMap<>();
+	final Map<String, Class<?>> fields = new LinkedHashMap<>();
+	final Set<String> fieldsFinal = new HashSet<>();
+	final Set<String> fieldsStatic = new HashSet<>();
+	final Map<String, Expression> fieldExpressions = new HashMap<>();
 
-	protected final Map<Method, Expression> methods = new LinkedHashMap<>();
-	protected final Map<Method, Expression> staticMethods = new LinkedHashMap<>();
+	final Map<Method, Expression> methods = new LinkedHashMap<>();
+	final Map<Method, Expression> staticMethods = new LinkedHashMap<>();
 
-	protected final Map<Method, Expression> constructors = new LinkedHashMap<>();
-	protected final List<Expression> staticInitializers = new ArrayList<>();
+	private final Map<Method, Expression> constructors = new LinkedHashMap<>();
+	private final List<Expression> staticInitializers = new ArrayList<>();
 
 	// region builders
 

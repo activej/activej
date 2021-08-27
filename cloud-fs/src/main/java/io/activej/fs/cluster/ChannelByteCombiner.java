@@ -85,7 +85,7 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 				.whenComplete(this::completeProcess);
 	}
 
-	protected Promise<Void> doProcessInput(ChannelSupplier<ByteBuf> input) {
+	private Promise<Void> doProcessInput(ChannelSupplier<ByteBuf> input) {
 		RefLong inputOffset = new RefLong(0);
 		return Promises.repeat(
 				() -> input.get()

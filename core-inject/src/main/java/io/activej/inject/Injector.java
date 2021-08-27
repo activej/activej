@@ -216,7 +216,7 @@ public final class Injector implements ResourceLocator {
 		return new Injector(parent, scopeDataTree);
 	}
 
-	protected static Trie<Scope, ScopeLocalData> compileBindingsTrie(int scope, Scope[] path,
+	private static Trie<Scope, ScopeLocalData> compileBindingsTrie(int scope, Scope[] path,
 			Trie<Scope, Map<Key<?>, Binding<?>>> bindings,
 			Map<Key<?>, CompiledBinding<?>> compiledBindingsOfParent) {
 
@@ -234,7 +234,7 @@ public final class Injector implements ResourceLocator {
 	}
 
 	@SuppressWarnings("Convert2Lambda")
-	protected static ScopeLocalData compileBindings(int scope, Scope[] path,
+	private static ScopeLocalData compileBindings(int scope, Scope[] path,
 			Map<Key<?>, Binding<?>> bindings,
 			Map<Key<?>, CompiledBinding<?>> compiledBindingsOfParent
 	) {

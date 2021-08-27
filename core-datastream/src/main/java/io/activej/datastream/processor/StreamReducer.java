@@ -56,7 +56,7 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 	private int streamsAwaiting;
 	private int streamsOpen;
 
-	protected StreamReducer(@NotNull PriorityQueue<Input<?>> priorityQueue) {
+	private StreamReducer(@NotNull PriorityQueue<Input<?>> priorityQueue) {
 		this.output = new Output();
 		this.priorityQueue = priorityQueue;
 	}

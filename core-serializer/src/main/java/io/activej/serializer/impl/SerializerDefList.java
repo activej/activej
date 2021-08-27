@@ -31,11 +31,11 @@ import static io.activej.serializer.impl.SerializerExpressions.*;
 
 public final class SerializerDefList extends AbstractSerializerDef implements SerializerDefWithNullable {
 
-	protected final SerializerDef valueSerializer;
-	protected final Class<?> encodeType;
-	protected final Class<?> decodeType;
-	protected final Class<?> elementType;
-	protected final boolean nullable;
+	private final SerializerDef valueSerializer;
+	private final Class<?> encodeType;
+	private final Class<?> decodeType;
+	private final Class<?> elementType;
+	private final boolean nullable;
 
 	public SerializerDefList(SerializerDef valueSerializer) {
 		this(valueSerializer, false);

@@ -46,11 +46,11 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 		}
 	}
 
-	protected final T[] tokens;
-	protected final int maxProbings;
+	private final T[] tokens;
+	private final int maxProbings;
 	private final TokenFactory<T> factory;
 
-	protected CaseInsensitiveTokenMap(int slotsNumber, int maxProbings, Class<T> elementsType, TokenFactory<T> factory) {
+	CaseInsensitiveTokenMap(int slotsNumber, int maxProbings, Class<T> elementsType, TokenFactory<T> factory) {
 		checkArgument(Integer.bitCount(slotsNumber) == 1);
 		this.maxProbings = maxProbings;
 		this.factory = factory;

@@ -43,11 +43,11 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	private static final int WS_ORDINAL = HttpMethod.values().length;
 	private static final int ANY_HTTP_ORDINAL = WS_ORDINAL + 1;
 
-	protected final AsyncServlet[] rootServlets = new AsyncServlet[ANY_HTTP_ORDINAL + 1];
-	protected final AsyncServlet[] fallbackServlets = new AsyncServlet[ANY_HTTP_ORDINAL + 1];
+	private final AsyncServlet[] rootServlets = new AsyncServlet[ANY_HTTP_ORDINAL + 1];
+	private final AsyncServlet[] fallbackServlets = new AsyncServlet[ANY_HTTP_ORDINAL + 1];
 
-	protected final Map<String, RoutingServlet> routes = new HashMap<>();
-	protected final Map<String, RoutingServlet> parameters = new HashMap<>();
+	private final Map<String, RoutingServlet> routes = new HashMap<>();
+	private final Map<String, RoutingServlet> parameters = new HashMap<>();
 
 	private RoutingServlet() {
 	}

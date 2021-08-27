@@ -40,26 +40,27 @@ import static java.util.stream.Collectors.*;
 public final class RecordScheme implements WithInitializer<RecordScheme> {
 	private RecordFactory factory;
 
-	protected RecordGetter<?>[] recordGetters;
-	protected RecordSetter<?>[] recordSetters;
+	private RecordGetter<?>[] recordGetters;
+	private RecordSetter<?>[] recordSetters;
 
 	@Nullable
-	protected Comparator<Record> comparator;
+	private Comparator<Record> comparator;
 
-	protected final HashMap<String, RecordGetter<?>> recordGettersMap = new HashMap<>();
-	protected final HashMap<String, RecordSetter<?>> recordSettersMap = new HashMap<>();
+	private final HashMap<String, RecordGetter<?>> recordGettersMap = new HashMap<>();
+	private final HashMap<String, RecordSetter<?>> recordSettersMap = new HashMap<>();
 
-	protected final LinkedHashMap<String, Type> fieldTypes = new LinkedHashMap<>();
-	protected final LinkedHashMap<String, Integer> fieldIndices = new LinkedHashMap<>();
-	protected String[] fields = {};
-	protected Type[] types = {};
-	protected final HashMap<String, String> classFields = new HashMap<>();
+	private final LinkedHashMap<String, Type> fieldTypes = new LinkedHashMap<>();
+	private final LinkedHashMap<String, Integer> fieldIndices = new LinkedHashMap<>();
+	private Type[] types = {};
+	private final HashMap<String, String> classFields = new HashMap<>();
 
-	@Nullable
-	protected List<String> hashCodeEqualsFields;
+	String[] fields = {};
 
 	@Nullable
-	protected List<String> comparedFields;
+	private List<String> hashCodeEqualsFields;
+
+	@Nullable
+	private List<String> comparedFields;
 
 	@NotNull
 	private final DefiningClassLoader classLoader;
