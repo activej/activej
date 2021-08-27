@@ -36,6 +36,7 @@ import java.util.Set;
 
 import static io.activej.cube.linear.Utils.loadResource;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 
 public final class CubeCleanerController implements ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
@@ -135,6 +136,9 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 		try {
 			Set<Long> requiredChunks;
 			try (Connection connection = dataSource.getConnection()) {
+				connection.setAutoCommit(false);
+				connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+
 				cleanupConsolidatedChunks(connection);
 				requiredChunks = getRequiredChunks(connection);
 			} catch (SQLException e) {
@@ -167,6 +171,8 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 		try (Statement statement = connection.createStatement()) {
 			String cleanupScript = sql(new String(loadResource(SQL_CLEANUP_SCRIPT), UTF_8));
 			statement.execute(cleanupScript);
+
+			connection.commit();
 		} catch (SQLException | IOException e) {
 			CubeException exception = new CubeException("Failed to clean up consolidated chunks", e);
 			cleanupConsolidatedChunksException = exception;

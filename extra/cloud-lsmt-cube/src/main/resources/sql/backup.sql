@@ -1,7 +1,3 @@
-SET autocommit = 0;
-
-SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-
 INSERT INTO {backup} (`revision`, `created_at`, `created_by`, `backup_by`)
 SELECT {backup_revision}, `created_at`, `created_by`, {backup_by} FROM {revision} WHERE `revision`={backup_revision};
 
@@ -26,5 +22,3 @@ FROM (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`
          LEFT JOIN {position} p
                    ON p.`partition_id` = g.`partition_id`
                        AND p.`revision_id` = g.`max_revision`;
-
--- COMMIT; -commit will be made after chunk files are backed up

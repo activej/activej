@@ -1,7 +1,3 @@
-SET autocommit = 0;
-
-SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-
 SET @start_revision = (SELECT MAX(`revision`)
                        FROM (SELECT MAX(`revision`) - {min_revisions} as `max_revision` FROM {revision}) g
                                 LEFT JOIN
@@ -25,5 +21,3 @@ FROM (SELECT `partition_id`, MAX(`revision_id`) as `max_rev`
          LEFT JOIN {position} p
 ON p.`partition_id` = g.`partition_id`
 WHERE p.`revision_id` < g.`max_rev`;
-
-COMMIT;

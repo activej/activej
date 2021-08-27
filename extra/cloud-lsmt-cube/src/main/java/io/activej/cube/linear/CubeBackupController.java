@@ -36,6 +36,7 @@ import java.util.Set;
 import static io.activej.cube.linear.Utils.executeSqlScript;
 import static io.activej.cube.linear.Utils.loadResource;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 
 public final class CubeBackupController implements ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
@@ -123,6 +124,8 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 		try (Connection connection = dataSource.getConnection()) {
 			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+
 			long maxRevisionId = getMaxRevisionId(connection);
 			doBackup(connection, maxRevisionId);
 		} catch (SQLException e) {
@@ -143,6 +146,8 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 		try (Connection connection = dataSource.getConnection()) {
 			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+
 			doBackup(connection, revisionId);
 		} catch (SQLException e) {
 			CubeException exception = new CubeException("Failed to connect to the database", e);
