@@ -26,11 +26,13 @@ import io.activej.common.tuple.Tuple2;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
+import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.exception.OTException;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.promise.Promise;
+import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -39,9 +41,11 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.*;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 
+import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.common.Checks.checkArgument;
@@ -55,6 +59,7 @@ import static java.util.stream.Collectors.joining;
 public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, CubeUplinkMySql.UplinkProtoCommit> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeUplinkMySql.class);
 
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CubeUplinkMySql.class, "smoothingWindow", Duration.ofMinutes(5));
 	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "revisionTable", "cube_revision");
 	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "positionTable", "cube_position");
 	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "chunkTable", "cube_chunk");
@@ -76,6 +81,12 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 
 	@Nullable
 	private String createdBy = null;
+
+	// region JMX
+	private final PromiseStats promiseCheckout = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final PromiseStats promiseFetch = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final PromiseStats promisePush = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
+	// endregion
 
 	private CubeUplinkMySql(Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
 		this.executor = executor;
@@ -107,36 +118,44 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> checkout() {
 		return Promise.ofBlockingCallable(executor,
-				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+						() -> {
+							try (Connection connection = dataSource.getConnection()) {
+								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-						long revision;
-						revision = getMaxRevision(connection);
+								long revision;
+								revision = getMaxRevision(connection);
 
-						if (revision == ROOT_REVISION) return new FetchData<>(revision, revision, emptyList());
+								if (revision == ROOT_REVISION) {
+									return new FetchData<>(revision, revision, Collections.<LogDiff<CubeDiff>>emptyList());
+								}
 
-						return new FetchData<>(revision, revision, doFetch(connection, ROOT_REVISION, revision));
-					}
-				});
+								return new FetchData<>(revision, revision, doFetch(connection, ROOT_REVISION, revision));
+							}
+						})
+				.whenComplete(toLogger(logger, "checkout"))
+				.whenComplete(promiseCheckout.recordStats());
 	}
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(@NotNull Long currentCommitId) {
 		return Promise.ofBlockingCallable(executor,
-				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+						() -> {
+							try (Connection connection = dataSource.getConnection()) {
+								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-						long revision = getMaxRevision(connection);
-						if (revision == currentCommitId) return new FetchData<>(revision, revision, emptyList());
-						if (revision < currentCommitId) {
-							throw new IllegalArgumentException("Passed revision is higher than uplink revision");
-						}
+								long revision = getMaxRevision(connection);
+								if (revision == currentCommitId) {
+									return new FetchData<>(revision, revision, Collections.<LogDiff<CubeDiff>>emptyList());
+								}
+								if (revision < currentCommitId) {
+									throw new IllegalArgumentException("Passed revision is higher than uplink revision");
+								}
 
-						return new FetchData<>(revision, revision, doFetch(connection, currentCommitId, revision));
-					}
-				});
+								return new FetchData<>(revision, revision, doFetch(connection, currentCommitId, revision));
+							}
+						})
+				.whenComplete(toLogger(logger, "fetch", currentCommitId))
+				.whenComplete(promiseFetch.recordStats());
 	}
 
 	@Override
@@ -149,59 +168,64 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> push(UplinkProtoCommit protoCommit) {
 		return Promise.ofBlockingCallable(executor,
-				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						connection.setAutoCommit(false);
-						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+						() -> {
+							try (Connection connection = dataSource.getConnection()) {
+								connection.setAutoCommit(false);
+								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-						long revision = getMaxRevision(connection);
-						if (revision < protoCommit.parentRevision) {
-							throw new IllegalArgumentException("Uplink revision is less than parent revision");
-						}
-						while (true) {
-							try (PreparedStatement ps = connection.prepareStatement(sql("" +
-									"INSERT INTO {revision} (`revision`, `created_by`) VALUES (?,?)"
-							))) {
-								ps.setLong(1, ++revision);
-								ps.setString(2, createdBy);
-								ps.executeUpdate();
-								break;
-							} catch (SQLIntegrityConstraintViolationException ignored) {
-								// someone pushed to the same revision number, retry
+								long revision = getMaxRevision(connection);
+								if (revision < protoCommit.parentRevision) {
+									throw new IllegalArgumentException("Uplink revision is less than parent revision");
+								}
+								while (true) {
+									try (PreparedStatement ps = connection.prepareStatement(sql("" +
+											"INSERT INTO {revision} (`revision`, `created_by`) VALUES (?,?)"
+									))) {
+										ps.setLong(1, ++revision);
+										ps.setString(2, createdBy);
+										ps.executeUpdate();
+										logger.trace("Successfully inserted revision {}", revision);
+										break;
+									} catch (SQLIntegrityConstraintViolationException ignored) {
+										logger.warn("Someone pushed to the same revision number {}, retry with the next revision", revision);
+									}
+								}
+
+								List<LogDiff<CubeDiff>> diffsList = protoCommit.diffs;
+
+								Set<ChunkWithAggregationId> added = collectChunks(diffsList, true);
+								Set<ChunkWithAggregationId> removed = collectChunks(diffsList, false);
+
+								// squash
+								added.removeAll(removed);
+								removed.removeAll(added);
+
+								if (!added.isEmpty()) {
+									addChunks(connection, revision, added);
+								}
+
+								if (!removed.isEmpty()) {
+									removeChunks(connection, revision, removed);
+								}
+
+								Map<String, LogPosition> positions = collectPositions(diffsList);
+								if (!positions.isEmpty()) {
+									updatePositions(connection, revision, positions);
+								}
+
+								connection.commit();
+
+								if (revision == protoCommit.parentRevision + 1) {
+									logger.trace("Nothing to fetch after diffs are pushed");
+									return new FetchData<>(revision, revision, Collections.<LogDiff<CubeDiff>>emptyList());
+								}
+
+								logger.trace("Fetching diffs from finished concurrent pushes");
+								return new FetchData<>(revision, revision, doFetch(connection, protoCommit.parentRevision, revision - 1));
 							}
-						}
-
-						List<LogDiff<CubeDiff>> diffsList = protoCommit.diffs;
-
-						Set<ChunkWithAggregationId> added = collectChunks(diffsList, true);
-						Set<ChunkWithAggregationId> removed = collectChunks(diffsList, false);
-
-						// squash
-						added.removeAll(removed);
-						removed.removeAll(added);
-
-						if (!added.isEmpty()) {
-							addChunks(connection, revision, added);
-						}
-
-						if (!removed.isEmpty()) {
-							removeChunks(connection, revision, removed);
-						}
-
-						Map<String, LogPosition> positions = collectPositions(diffsList);
-						if (!positions.isEmpty()) {
-							updatePositions(connection, revision, positions);
-						}
-
-						connection.commit();
-
-						if (revision == protoCommit.parentRevision + 1) {
-							return new FetchData<>(revision, revision, emptyList());
-						}
-
-						return new FetchData<>(revision, revision, doFetch(connection, protoCommit.parentRevision, revision - 1));
-					}
-				});
+						})
+				.whenComplete(toLogger(logger, "push", protoCommit))
+				.whenComplete(promisePush.recordStats());
 	}
 
 	// VisibleForTesting
@@ -467,6 +491,23 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		return result;
 	}
 
+	// region JMX getters
+	@JmxAttribute
+	public PromiseStats getPromiseCheckout() {
+		return promiseCheckout;
+	}
+
+	@JmxAttribute
+	public PromiseStats getPromiseFetch() {
+		return promiseFetch;
+	}
+
+	@JmxAttribute
+	public PromiseStats getPromisePush() {
+		return promisePush;
+	}
+	// endregion
+
 	public static final class UplinkProtoCommit {
 		private final long parentRevision;
 		private final List<LogDiff<CubeDiff>> diffs;
@@ -482,6 +523,11 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 
 		public List<LogDiff<CubeDiff>> getDiffs() {
 			return diffs;
+		}
+
+		@Override
+		public String toString() {
+			return "{parentRevision=" + parentRevision + ", diffs=" + diffs + '}';
 		}
 	}
 }
