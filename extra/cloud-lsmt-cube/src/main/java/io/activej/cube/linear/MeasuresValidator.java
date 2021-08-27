@@ -21,6 +21,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.Cube;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public interface MeasuresValidator {
@@ -35,9 +36,9 @@ public interface MeasuresValidator {
 			} catch (NullPointerException ignored) {
 				throw new MalformedDataException("Unknown aggregation: " + aggregationId);
 			}
-			List<String> aggregationMeasures = aggregation.getMeasures();
+			Set<String> allowedMeasures = aggregation.getMeasureTypes().keySet();
 			List<String> unknownMeasures = measures.stream()
-					.filter(measure -> !aggregationMeasures.contains(measure))
+					.filter(measure -> !allowedMeasures.contains(measure))
 					.collect(Collectors.toList());
 			if (!unknownMeasures.isEmpty()) {
 				throw new MalformedDataException(String.format("Unknown measures %s in aggregation '%s'", unknownMeasures, aggregationId));
