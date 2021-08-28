@@ -164,7 +164,7 @@ public final class ActiveFsServlet {
 	private static String decodePath(HttpRequest request) {
 		String value = UrlParser.urlParse(request.getRelativePath());
 		if (value == null) {
-			throw new UncheckedException(HttpError.ofCode(400, "Path contains invalid UTF"));
+			throw UncheckedException.of(HttpError.ofCode(400, "Path contains invalid UTF"));
 		}
 		return value;
 	}
@@ -172,7 +172,7 @@ public final class ActiveFsServlet {
 	private static String getQueryParameter(HttpRequest request, String parameterName) {
 		String value = request.getQueryParameter(parameterName);
 		if (value == null) {
-			throw new UncheckedException(HttpError.ofCode(400, "No '" + parameterName + "' query parameter"));
+			throw UncheckedException.of(HttpError.ofCode(400, "No '" + parameterName + "' query parameter"));
 		}
 		return value;
 	}
@@ -189,7 +189,7 @@ public final class ActiveFsServlet {
 			}
 			return val;
 		} catch (NumberFormatException ignored) {
-			throw new UncheckedException(HttpError.ofCode(400, "Invalid '" + parameterName + "' value"));
+			throw UncheckedException.of(HttpError.ofCode(400, "Invalid '" + parameterName + "' value"));
 		}
 	}
 

@@ -20,6 +20,7 @@ import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.*;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Contract;
@@ -217,7 +218,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@FunctionalInterface
 	interface BlockingCallable<V> {
-		V call() throws Exception;
+		V call() throws UncheckedException, Exception;
 	}
 
 	/**
@@ -259,7 +260,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@FunctionalInterface
 	interface BlockingRunnable {
-		void run() throws Exception;
+		void run() throws UncheckedException, Exception;
 	}
 
 	/**
@@ -327,8 +328,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Otherwise, does nothing.
 	 */
 	@Contract(pure = true)
-	@NotNull
-	Promise<T> async();
+	@NotNull Promise<T> async();
 
 	@Contract(pure = true)
 	@NotNull
@@ -362,6 +362,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract(pure = true)
 	@NotNull <U> Promise<U> map(@NotNull Function<? super T, ? extends U> fn);
 
+	@Contract(pure = true)
+	@NotNull <U> Promise<U> mapEx(@NotNull ThrowingFunction<? super T, ? extends U> fn);
+
 	/**
 	 * Returns a new {@code Promise} which is executed with this
 	 * {@code Promise}'s result as the argument to the provided
@@ -378,7 +381,14 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract(pure = true)
 	@NotNull <U> Promise<U> map(@NotNull BiFunction<? super T, @Nullable Throwable, ? extends U> fn);
 
+	@Contract(pure = true)
+	@NotNull <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, @Nullable Throwable, ? extends U> fn);
+
+	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn);
+
+	@Contract(pure = true)
+	@NotNull <U> Promise<U> thenEx(@NotNull ThrowingSupplier<? extends Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which, when this {@code Promise} completes
@@ -389,6 +399,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn);
+
+	@Contract(pure = true)
+	@NotNull <U> Promise<U> thenEx(@NotNull ThrowingFunction<? super T, ? extends Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which, when this {@code Promise} completes either
@@ -401,6 +414,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull BiFunction<? super T, @Nullable Throwable, ? extends Promise<? extends U>> fn);
+
+	@Contract(pure = true)
+	@NotNull <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, @Nullable Throwable, ? extends Promise<? extends U>> fn);
 
 	/**
 	 * Subscribes given action to be executed
@@ -424,6 +440,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull
 	Promise<T> whenComplete(@NotNull Runnable action);
 
+	@Contract(pure = true)
+	@NotNull
+	Promise<T> whenCompleteEx(@NotNull ThrowingRunnable action);
+
 	/**
 	 * Subscribes given action to be executed after
 	 * this {@code Promise} completes successfully
@@ -435,7 +455,17 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull
 	Promise<T> whenResult(Consumer<? super T> action);
 
+	@Contract(pure = true)
+	@NotNull
+	Promise<T> whenResultEx(ThrowingConsumer<? super T> action);
+
+	@Contract(" _ -> this")
+	@NotNull
 	Promise<T> whenResult(@NotNull Runnable action);
+
+	@Contract(pure = true)
+	@NotNull
+	Promise<T> whenResultEx(@NotNull ThrowingRunnable action);
 
 	/**
 	 * Subscribes given action to be executed after

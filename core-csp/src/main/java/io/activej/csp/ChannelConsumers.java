@@ -17,7 +17,6 @@
 package io.activej.csp;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.recycle.Recyclers;
 import io.activej.eventloop.Eventloop;
@@ -94,15 +93,14 @@ public final class ChannelConsumers {
 			@Override
 			protected Promise<Void> doAccept(@Nullable ByteBuf buf) {
 				return Promise.ofBlockingRunnable(executor, () -> {
-					try {
-						if (buf != null) {
+					if (buf != null) {
+						try {
 							outputStream.write(buf.array(), buf.head(), buf.readRemaining());
+						} finally {
 							buf.recycle();
-						} else {
-							outputStream.close();
 						}
-					} catch (IOException e) {
-						throw new UncheckedException(e);
+					} else {
+						outputStream.close();
 					}
 				});
 			}

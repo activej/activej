@@ -576,7 +576,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {
 			logger.warn("Failed to retrieve metadata for {}", path, e);
-			throw new UncheckedException(new FsIOException("Failed to retrieve metadata"));
+			throw UncheckedException.of(new FsIOException("Failed to retrieve metadata"));
 		}
 	}
 

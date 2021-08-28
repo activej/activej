@@ -39,9 +39,7 @@ import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.nullify;
-import static io.activej.common.Utils.iteratorOf;
-import static io.activej.common.Utils.transformIterator;
+import static io.activej.common.Utils.*;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.util.Arrays.asList;
@@ -1255,7 +1253,7 @@ public final class Promises {
 		for (int i = 0; promises.hasNext() && i < maxCalls; i++) {
 			reduceImpl(asyncAccumulator, consumer, promises);
 		}
-		return asyncAccumulator.run().map(finisher);
+		return asyncAccumulator.run().map(finisher::apply);
 	}
 
 	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, BiConsumer<A, T> consumer, Iterator<Promise<T>> promises) {

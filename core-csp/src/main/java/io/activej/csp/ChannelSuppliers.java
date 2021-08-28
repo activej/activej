@@ -307,7 +307,8 @@ public final class ChannelSuppliers {
 					try {
 						readBytes = inputStream.read(buf.array(), 0, bufSize);
 					} catch (IOException e) {
-						throw new UncheckedException(e);
+						buf.recycle();
+						throw e;
 					}
 					if (readBytes != -1) {
 						buf.moveTail(readBytes);

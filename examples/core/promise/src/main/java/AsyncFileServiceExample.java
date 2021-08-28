@@ -29,7 +29,7 @@ public final class AsyncFileServiceExample {
 		try {
 			PATH = Files.createTempFile("NewFile", ".txt");
 		} catch (IOException e) {
-			throw new UncheckedException(e);
+			throw UncheckedException.of(e);
 		}
 	}
 

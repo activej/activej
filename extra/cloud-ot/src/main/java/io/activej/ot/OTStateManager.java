@@ -210,7 +210,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	@NotNull
 	private Promise<Void> pull() {
 		return fetch()
-				.whenResult(this::rebase)
+				.whenResultEx(this::rebase)
 				.toVoid()
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}
@@ -220,7 +220,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 		if (!isValid()) return Promise.complete();
 		K pollCommitId = this.originCommitId;
 		return uplink.poll(pollCommitId)
-				.whenResult(fetchData -> {
+				.whenResultEx(fetchData -> {
 					if (!isSyncing() && pollCommitId == this.originCommitId) {
 						updateOrigin(fetchData);
 						if (pendingProtoCommit == null) {
@@ -250,7 +250,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
-	private void rebase() {
+	private void rebase() throws TransformException {
 		assert pendingProtoCommit == null;
 		if (commitId == originCommitId) return;
 		logger.info("Rebasing - {} {}", commitId, originCommitId);
@@ -262,7 +262,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 					otSystem.squash(originDiffs));
 		} catch (TransformException e) {
 			invalidateInternalState();
-			throw new UncheckedException(e);
+			throw e;
 		}
 
 		apply(transformed.left);
@@ -295,7 +295,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	private Promise<Void> push() {
 		if (pendingProtoCommit == null) return Promise.complete();
 		return uplink.push(pendingProtoCommit)
-				.whenResult(fetchData -> {
+				.whenResultEx(fetchData -> {
 					pendingProtoCommit = null;
 					pendingProtoCommitDiffs = null;
 

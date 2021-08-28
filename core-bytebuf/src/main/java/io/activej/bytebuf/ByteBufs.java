@@ -95,7 +95,7 @@ public final class ByteBufs implements Recyclable {
 					if (size > maxSize || bufs.hasRemainingBytes(maxSize - size + 1)) {
 						bufs.recycle();
 						buf.recycle();
-						throw new UncheckedException(new InvalidSizeException(
+						throw UncheckedException.of(new InvalidSizeException(
 								"Size of ByteBufs exceeds maximum size of " + maxSize + " bytes"));
 					}
 					bufs.add(buf);

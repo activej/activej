@@ -321,7 +321,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {
 			logger.warn("Failed to retrieve metadata for {}", path, e);
-			throw new UncheckedException(e);
+			throw UncheckedException.of(e);
 		}
 	}
 

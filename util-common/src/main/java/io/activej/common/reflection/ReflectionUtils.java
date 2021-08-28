@@ -139,7 +139,7 @@ public final class ReflectionUtils {
 				try {
 					return (T) method.invoke(null);
 				} catch (IllegalAccessException | InvocationTargetException e) {
-					throw new UncheckedException(e);
+					throw UncheckedException.of(e);
 				}
 			};
 		}
@@ -150,7 +150,7 @@ public final class ReflectionUtils {
 					try {
 						return (T) c.newInstance();
 					} catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
-						throw new UncheckedException(e);
+						throw UncheckedException.of(e);
 					}
 				})
 				.orElse(null);

@@ -401,7 +401,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private void checkEnoughAlivePartitions() {
 		if (partitions.getAlivePartitions().size() < replicationCount) {
-			throw new UncheckedException(new FsIOException("Not enough alive partitions"));
+			throw UncheckedException.of(new FsIOException("Not enough alive partitions"));
 		}
 	}
 

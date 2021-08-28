@@ -180,13 +180,8 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 
 	void completeSync(long commitId, List<D> accumulatedDiffs, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs, SettablePromise<Void> cb) {
 		storage.fetch(commitId)
-				.whenResult(fetchData -> {
-					TransformResult<D> transformResult;
-					try {
-						transformResult = otSystem.transform(uplinkDiffs, fetchData.getDiffs());
-					} catch (TransformException e) {
-						throw new UncheckedException(e);
-					}
+				.whenResultEx(fetchData -> {
+					TransformResult<D> transformResult = otSystem.transform(uplinkDiffs, fetchData.getDiffs());
 
 					accumulatedDiffs.addAll(transformResult.left);
 					storage.completeSync(fetchData.getCommitId(), accumulatedDiffs, uplinkCommitId, uplinkLevel, transformResult.right)
@@ -237,13 +232,8 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 						cb.set(new FetchData<>(commitId + 1, NO_LEVEL, fetchedDiffs));
 					} else {
 						storage.fetch(commitId)
-								.whenResult(fetchData -> {
-									TransformResult<D> transformResult;
-									try {
-										transformResult = otSystem.transform(fetchData.getDiffs(), diffs);
-									} catch (TransformException e) {
-										throw new UncheckedException(e);
-									}
+								.whenResultEx(fetchData -> {
+									TransformResult<D> transformResult = otSystem.transform(fetchData.getDiffs(), diffs);
 									doPush(fetchData.getCommitId(), transformResult.left, concat(fetchedDiffs, transformResult.right), cb);
 								})
 								.whenException(cb::setException);

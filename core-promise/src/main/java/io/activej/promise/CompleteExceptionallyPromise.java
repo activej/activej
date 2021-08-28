@@ -18,7 +18,7 @@ package io.activej.promise;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.*;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,6 +31,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 /**
  * Represents a {@code Promise} which is completed with an exception.
  */
+@SuppressWarnings("unchecked")
 public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@NotNull
 	private final Throwable exception;
@@ -84,36 +85,62 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@NotNull
-	@Override
-	public <U> Promise<U> map(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
-		try {
-			return Promise.of(fn.apply(null, exception));
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
-		}
-	}
-
-	@NotNull
 	@SuppressWarnings("unchecked")
 	@Override
-	public <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn) {
+	public <U> Promise<U> mapEx(@NotNull ThrowingFunction<? super T, ? extends U> fn) {
 		return (Promise<U>) this;
 	}
 
-	@SuppressWarnings("unchecked")
+	@NotNull
+	@Override
+	public <U> Promise<U> map(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
+		return Promise.of(fn.apply(null, exception));
+	}
+
+	@NotNull
+	@Override
+	public <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends U> fn) {
+		try {
+			return Promise.of(fn.apply(null, exception));
+		} catch (Exception e) {
+			return Promise.ofException(e);
+		}
+	}
+
 	@Override
 	public @NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
+	public @NotNull <U> Promise<U> thenEx(@NotNull ThrowingFunction<? super T, ? extends Promise<? extends U>> fn) {
+		return (Promise<U>) this;
+	}
+
+	@NotNull
+	@Override
+	public <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn) {
+		return (Promise<U>) this;
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> thenEx(@NotNull ThrowingSupplier<? extends Promise<? extends U>> fn) {
+		return (Promise<U>) this;
+	}
+
 	@NotNull
 	@Override
 	public <U> Promise<U> then(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
+		return (Promise<U>) fn.apply(null, exception);
+	}
+
+	@NotNull
+	@Override
+	public <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
+		} catch (Exception e) {
+			return Promise.ofException(e);
 		}
 	}
 
@@ -131,6 +158,18 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		return this;
 	}
 
+	@Override
+	public @NotNull Promise<T> whenCompleteEx(@NotNull ThrowingRunnable action) {
+		try {
+			action.run();
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
 	@NotNull
 	@Override
 	public Promise<T> whenResult(@NotNull Consumer<? super T> action) {
@@ -138,7 +177,17 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Promise<T> whenResult(@NotNull Runnable action) {
+	public @NotNull Promise<T> whenResultEx(ThrowingConsumer<? super T> action) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenResult(@NotNull Runnable action) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenResultEx(@NotNull ThrowingRunnable action) {
 		return this;
 	}
 
@@ -155,7 +204,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@NotNull
-	@SuppressWarnings("unchecked")
 	@Override
 	public <U, V> Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
 		other.whenResult(Recyclers::recycle);
@@ -163,7 +211,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@NotNull
-	@SuppressWarnings("unchecked")
 	@Override
 	public Promise<Void> both(@NotNull Promise<?> other) {
 		other.whenResult(Recyclers::recycle);
@@ -171,7 +218,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@NotNull
-	@SuppressWarnings("unchecked")
 	@Override
 	public Promise<T> either(@NotNull Promise<? extends T> other) {
 		return (Promise<T>) other;
@@ -192,7 +238,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@NotNull
-	@SuppressWarnings("unchecked")
 	@Override
 	public Promise<Void> toVoid() {
 		return (Promise<Void>) this;

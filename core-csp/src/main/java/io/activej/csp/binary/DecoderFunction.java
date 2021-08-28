@@ -26,16 +26,6 @@ import java.util.function.Function;
 public interface DecoderFunction<T, R> {
 	R decode(T value) throws MalformedDataException;
 
-	static <T, R> Function<T, R> asFunction(DecoderFunction<T, R> fn) {
-		return item -> {
-			try {
-				return fn.decode(item);
-			} catch (MalformedDataException e) {
-				throw new UncheckedException(e);
-			}
-		};
-	}
-
 	static <T, R> DecoderFunction<T, R> of(Function<T, R> fn) {
 		return value -> {
 			try {
