@@ -466,7 +466,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 */
 	default <A, R> Promise<R> toCollector(Collector<T, A, R> collector) {
 		return ChannelSuppliers.collect(this,
-				collector.supplier().get(), ThrowingBiConsumer.of(collector.accumulator()), collector.finisher());
+				collector.supplier().get(), ThrowingBiConsumer.of(collector.accumulator()), ThrowingFunction.of(collector.finisher()));
 	}
 
 	/**

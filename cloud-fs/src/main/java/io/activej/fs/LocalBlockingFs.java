@@ -18,6 +18,7 @@ package io.activej.fs;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.ThrowingBiConsumer;
 import io.activej.common.service.BlockingService;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -44,6 +45,7 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
+import static io.activej.common.function.ThrowingBiConsumer.uncheckedOf;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.emptyMap;
@@ -280,13 +282,13 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		return findMatching(tempDir, subglob, subdirectory).stream()
 				.collect(Collector.of(
 						(Supplier<Map<String, FileMetadata>>) HashMap::new,
-						(map, path) -> {
+						uncheckedOf((map, path) -> {
 							FileMetadata metadata = toFileMetadata(path);
 							if (metadata != null) {
 								String filename = toRemoteName.apply(storage.relativize(path).toString());
 								map.put(filename, metadata);
 							}
-						},
+						}),
 						noMergeFunction())
 				);
 	}
@@ -316,12 +318,12 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 		return "LocalBlockingFs{storage=" + storage + '}';
 	}
 
-	private static FileMetadata toFileMetadata(Path path) {
+	private static FileMetadata toFileMetadata(Path path) throws IOException {
 		try {
 			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {
 			logger.warn("Failed to retrieve metadata for {}", path, e);
-			throw UncheckedException.of(e);
+			throw e;
 		}
 	}
 

@@ -18,6 +18,7 @@ package io.activej.async;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.ThrowingBiConsumer;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -45,7 +46,7 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 		return new AsyncAccumulator<>(accumulator);
 	}
 
-	public <T> AsyncAccumulator<A> withPromise(@NotNull Promise<T> promise, @NotNull BiConsumer<A, T> accumulator) {
+	public <T> AsyncAccumulator<A> withPromise(@NotNull Promise<T> promise, @NotNull ThrowingBiConsumer<A, T> accumulator) {
 		addPromise(promise, accumulator);
 		return this;
 	}
@@ -65,7 +66,7 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 		return run();
 	}
 
-	public <T> void addPromise(@NotNull Promise<T> promise, @NotNull BiConsumer<A, T> consumer) {
+	public <T> void addPromise(@NotNull Promise<T> promise, @NotNull ThrowingBiConsumer<A, T> consumer) {
 		if (resultPromise.isComplete()) {
 			promise.whenResult(Recyclers::recycle);
 			return;
@@ -80,8 +81,8 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 			if (e == null) {
 				try {
 					consumer.accept(accumulator, v);
-				} catch (UncheckedException u) {
-					resultPromise.setException(u.getCause());
+				} catch (Exception e0) {
+					resultPromise.setException(e0);
 					Recyclers.recycle(accumulator);
 					return;
 				}
@@ -95,7 +96,7 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 		});
 	}
 
-	public <V> SettablePromise<V> newPromise(@NotNull BiConsumer<A, V> consumer) {
+	public <V> SettablePromise<V> newPromise(@NotNull ThrowingBiConsumer<A, V> consumer) {
 		SettablePromise<V> resultPromise = new SettablePromise<>();
 		addPromise(resultPromise, consumer);
 		return resultPromise;

@@ -21,7 +21,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
@@ -59,6 +58,7 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
+import static io.activej.common.function.ThrowingBiConsumer.uncheckedOf;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.LocalFileUtils.*;
 import static io.activej.fs.util.RemoteFsUtils.batchEx;
@@ -312,13 +312,13 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					return LocalFileUtils.findMatching(tempDir, subglob, subdirectory).stream()
 							.collect(Collector.of(
 									(Supplier<Map<String, FileMetadata>>) HashMap::new,
-									(map, path) -> {
+									uncheckedOf((map, path) -> {
 										FileMetadata metadata = toFileMetadata(path);
 										if (metadata != null) {
 											String filename = toRemoteName.apply(storage.relativize(path).toString());
 											map.put(filename, metadata);
 										}
-									},
+									}),
 									noMergeFunction())
 							);
 				})
@@ -571,12 +571,12 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	@Nullable
-	private FileMetadata toFileMetadata(Path path) {
+	private FileMetadata toFileMetadata(Path path) throws FsIOException {
 		try {
 			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {
 			logger.warn("Failed to retrieve metadata for {}", path, e);
-			throw UncheckedException.of(new FsIOException("Failed to retrieve metadata"));
+			throw new FsIOException("Failed to retrieve metadata");
 		}
 	}
 

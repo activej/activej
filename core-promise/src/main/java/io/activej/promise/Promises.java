@@ -20,6 +20,8 @@ import io.activej.async.AsyncAccumulator;
 import io.activej.async.AsyncBuffer;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.function.ThrowingBiConsumer;
+import io.activej.common.function.ThrowingFunction;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.*;
 import io.activej.eventloop.Eventloop;
@@ -1229,7 +1231,8 @@ public final class Promises {
 	 */
 	public static <T, A, R> Promise<R> reduce(@NotNull Collector<T, A, R> collector, int maxCalls,
 			@NotNull Iterator<Promise<T>> promises) {
-		return reduce(collector.supplier().get(), collector.accumulator(), collector.finisher(), maxCalls, promises);
+		return reduce(collector.supplier().get(), ThrowingBiConsumer.of(collector.accumulator()), ThrowingFunction.of(collector.finisher()),
+				maxCalls, promises);
 	}
 
 	/**
@@ -1248,15 +1251,15 @@ public final class Promises {
 	 * with an exception will be returned.
 	 * @see Promises#reduce(Collector, int, Iterator)
 	 */
-	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumer<A, T> consumer, @NotNull Function<A, R> finisher, int maxCalls, @NotNull Iterator<Promise<T>> promises) {
+	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull ThrowingBiConsumer<A, T> consumer, @NotNull ThrowingFunction<A, R> finisher, int maxCalls, @NotNull Iterator<Promise<T>> promises) {
 		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
 		for (int i = 0; promises.hasNext() && i < maxCalls; i++) {
 			reduceImpl(asyncAccumulator, consumer, promises);
 		}
-		return asyncAccumulator.run().map(finisher::apply);
+		return asyncAccumulator.run().mapEx(finisher);
 	}
 
-	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, BiConsumer<A, T> consumer, Iterator<Promise<T>> promises) {
+	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, ThrowingBiConsumer<A, T> consumer, Iterator<Promise<T>> promises) {
 		while (promises.hasNext()) {
 			Promise<T> promise = promises.next();
 			if (promise.isComplete()) {

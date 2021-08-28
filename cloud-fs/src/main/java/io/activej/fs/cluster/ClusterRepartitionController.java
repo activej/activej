@@ -20,7 +20,6 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.common.Checks;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
@@ -171,7 +170,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 									if (!repartitionPlan.hasNext()) return Promise.of(false);
 									String name = repartitionPlan.next();
 									return localFs.info(name)
-											.then(meta -> {
+											.thenEx(meta -> {
 												if (meta == null) {
 													logger.warn("File '{}' that should be repartitioned has been deleted", name);
 													return Promise.of(false);
@@ -217,7 +216,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private Promise<Void> recalculatePlan() {
 		return localFs.list(glob)
-				.then(map -> {
+				.thenEx(map -> {
 					checkEnoughAlivePartitions();
 
 					allFiles = map.size();
@@ -270,7 +269,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 				});
 	}
 
-	private Promise<Boolean> repartitionFile(String name, FileMetadata meta) {
+	private Promise<Boolean> repartitionFile(String name, FileMetadata meta) throws FsIOException {
 		partitions.markAlive(localPartitionId); // ensure local partition could also be selected
 		checkEnoughAlivePartitions();
 		List<Object> selected = partitions.select(name).subList(0, replicationCount);
@@ -399,9 +398,9 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 		return true;
 	}
 
-	private void checkEnoughAlivePartitions() {
+	private void checkEnoughAlivePartitions() throws FsIOException {
 		if (partitions.getAlivePartitions().size() < replicationCount) {
-			throw UncheckedException.of(new FsIOException("Not enough alive partitions"));
+			throw new FsIOException("Not enough alive partitions");
 		}
 	}
 

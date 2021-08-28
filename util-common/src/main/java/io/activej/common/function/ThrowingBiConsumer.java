@@ -8,12 +8,22 @@ import java.util.function.BiConsumer;
 public interface ThrowingBiConsumer<T, U> {
 	void accept(T t, U u) throws Exception;
 
-	static <T, U> ThrowingBiConsumer<T, U> of(BiConsumer<T, U> fn) {
+	static <T, U> ThrowingBiConsumer<T, U> of(BiConsumer<T, U> uncheckedFn) {
 		return (t, u) -> {
 			try {
-				fn.accept(t, u);
+				uncheckedFn.accept(t, u);
 			} catch (UncheckedException e) {
 				throw e.getCause();
+			}
+		};
+	}
+
+	static <T, U> BiConsumer<T, U> uncheckedOf(ThrowingBiConsumer<T, U> checkedFn) {
+		return (t, u) -> {
+			try {
+				checkedFn.accept(t, u);
+			} catch (Exception e) {
+				throw UncheckedException.of(e);
 			}
 		};
 	}

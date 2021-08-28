@@ -120,13 +120,13 @@ public final class ChannelSuppliers {
 	 * @return a promise of accumulated result, transformed by the {@code finisher}
 	 */
 	public static <T, A, R> Promise<R> collect(ChannelSupplier<T> supplier,
-			A initialValue, ThrowingBiConsumer<A, T> accumulator, Function<A, R> finisher) {
+			A initialValue, ThrowingBiConsumer<A, T> accumulator, ThrowingFunction<A, R> finisher) {
 		return Promise.ofCallback(cb ->
 				toCollectorImpl(supplier, initialValue, accumulator, finisher, cb));
 	}
 
 	private static <T, A, R> void toCollectorImpl(ChannelSupplier<T> supplier,
-			A accumulatedValue, ThrowingBiConsumer<A, T> accumulator, Function<A, R> finisher,
+			A accumulatedValue, ThrowingBiConsumer<A, T> accumulator, ThrowingFunction<A, R> finisher,
 			SettablePromise<R> cb) {
 		Promise<T> promise;
 		while (true) {
@@ -159,10 +159,22 @@ public final class ChannelSuppliers {
 					}
 					toCollectorImpl(supplier, accumulatedValue, accumulator, finisher, cb);
 				} else {
-					cb.set(finisher.apply(accumulatedValue));
+					R result;
+					try {
+						result = finisher.apply(accumulatedValue);
+					} catch (Exception ex) {
+						cb.setException(ex);
+						return;
+					}
+					cb.set(result);
 				}
 			} else {
-				Recyclers.recycle(finisher.apply(accumulatedValue));
+				R result = null;
+				try {
+					result = finisher.apply(accumulatedValue);
+				} catch (Exception ignored) {
+				}
+				Recyclers.recycle(result);
 				cb.setException(e);
 			}
 		});

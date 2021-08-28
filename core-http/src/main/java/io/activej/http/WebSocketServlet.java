@@ -58,7 +58,7 @@ public abstract class WebSocketServlet implements AsyncServlet {
 
 	@NotNull
 	@Override
-	public final Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public final Promisable<HttpResponse> serve(@NotNull HttpRequest request) {
 		return validateHeaders(request)
 				.then(() -> processAnswer(request))
 				.then(answer -> {
