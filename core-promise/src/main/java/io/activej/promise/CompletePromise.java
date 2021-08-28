@@ -170,6 +170,18 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Throwable> action) {
+		try {
+			action.accept(getResult(), null);
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
 	public @NotNull Promise<T> whenComplete(@NotNull Runnable action) {
 		action.run();
 		return this;

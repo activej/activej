@@ -151,6 +151,18 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		return this;
 	}
 
+	@Override
+	public @NotNull Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Throwable> action) {
+		try {
+			action.accept(null, exception);
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
 	@NotNull
 	@Override
 	public Promise<T> whenComplete(@NotNull Runnable action) {

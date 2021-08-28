@@ -507,6 +507,41 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		return this;
 	}
 
+	@Override
+	public @NotNull Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Throwable> action) {
+		if (isComplete()) {
+			try {
+				action.accept(result, exception);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+			return this;
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Throwable e) {
+				try {
+					action.accept(result, null);
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenCompleteEx(" + formatToString(action) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
 	@NotNull
 	@Override
 	public Promise<T> whenComplete(@NotNull Runnable action) {

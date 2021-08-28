@@ -22,7 +22,6 @@ import io.activej.common.collection.Try;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.*;
 import io.activej.eventloop.Eventloop;
-import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -337,6 +336,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		this.run(result::post);
 		return result;
 	}
+
 	/**
 	 * Executes given {@code promise} after execution
 	 * of this {@code Promise} completes.
@@ -428,6 +428,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract(" _ -> this")
 	@NotNull
 	Promise<T> whenComplete(@NotNull BiConsumer<? super T, Throwable> action);
+
+	@Contract(" _ -> this")
+	@NotNull
+	Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Throwable> action);
 
 	/**
 	 * Subscribes given action to be executed
