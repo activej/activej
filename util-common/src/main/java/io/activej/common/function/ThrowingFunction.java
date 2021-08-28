@@ -12,8 +12,20 @@ public interface ThrowingFunction<T, R> {
 		return t -> {
 			try {
 				return fn.apply(t);
-			} catch (UncheckedException e) {
-				throw e.getCause();
+			} catch (UncheckedException ex) {
+				throw ex.getCause();
+			}
+		};
+	}
+
+	static <T, R> Function<T, R> uncheckedOf(ThrowingFunction<T, R> checkedFn) {
+		return t -> {
+			try {
+				return checkedFn.apply(t);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				throw UncheckedException.of(ex);
 			}
 		};
 	}

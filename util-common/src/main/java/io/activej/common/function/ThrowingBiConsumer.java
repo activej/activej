@@ -12,8 +12,8 @@ public interface ThrowingBiConsumer<T, U> {
 		return (t, u) -> {
 			try {
 				uncheckedFn.accept(t, u);
-			} catch (UncheckedException e) {
-				throw e.getCause();
+			} catch (UncheckedException ex) {
+				throw ex.getCause();
 			}
 		};
 	}
@@ -22,10 +22,10 @@ public interface ThrowingBiConsumer<T, U> {
 		return (t, u) -> {
 			try {
 				checkedFn.accept(t, u);
-			} catch (RuntimeException e) {
-				throw e;
-			} catch (Exception e) {
-				throw UncheckedException.of(e);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				throw UncheckedException.of(ex);
 			}
 		};
 	}
