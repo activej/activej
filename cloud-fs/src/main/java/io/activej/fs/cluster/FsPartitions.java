@@ -211,14 +211,13 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 					if (e == null) {
 						this.partitions.putAll(result);
 						this.alivePartitions.putAll(result);
-
 						checkAllPartitions()
-								.whenComplete(cb)
-								.whenResult(this::rediscover);
+								.run(cb);
 					} else {
 						cb.setException(e);
 					}
-				}));
+				}))
+				.whenResult(this::rediscover);
 	}
 
 	@NotNull

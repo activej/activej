@@ -115,7 +115,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (inspector != null) inspector.onAccept(this);
 		(pool = server.poolNew).addLastNode(this);
 		poolTimestamp = eventloop.currentTimeMillis();
-		socket.read().whenComplete(readMessageConsumer);
+		socket.read().run(readMessageConsumer);
 	}
 
 	public PoolLabel getCurrentPool() {

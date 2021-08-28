@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static io.activej.aggregation.util.Utils.wrapException;
@@ -300,7 +301,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 		return eventloop;
 	}
 
-	private static <T, R> Callback<R> transform(Function<? super R, ? extends T> fn, Callback<? super T> toConsumer) {
+	private static <T, R> BiConsumer<R, Throwable> transform(Function<? super R, ? extends T> fn, BiConsumer<? super T, Throwable> toConsumer) {
 		return (value, e) -> toConsumer.accept(value != null ? fn.apply(value) : null, e);
 	}
 }

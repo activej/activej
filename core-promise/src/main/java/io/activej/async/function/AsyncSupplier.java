@@ -131,12 +131,6 @@ public interface AsyncSupplier<T> {
 		return () -> get().whenResult(action);
 	}
 
-	@Contract(pure = true)
-	@NotNull
-	default AsyncSupplier<T> peekEx(@NotNull Callback<T> action) {
-		return () -> get().whenComplete(action);
-	}
-
 	/**
 	 * Applies function before supplying a {@code Promise}.
 	 *

@@ -208,14 +208,12 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 						this.partitions.putAll(result);
 						this.alivePartitions.putAll(result);
 						recompute();
-
-						checkAllPartitions()
-								.whenComplete(cb)
-								.whenResult(this::rediscover);
+						checkAllPartitions().run(cb);
 					} else {
 						cb.setException(e);
 					}
-				}));
+				}))
+				.whenResult(this::rediscover);
 	}
 
 	@NotNull

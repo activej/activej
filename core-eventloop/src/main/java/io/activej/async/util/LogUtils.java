@@ -106,7 +106,7 @@ public class LogUtils {
 		}
 	}
 
-	public static <T> Callback<T> toLogger(Logger logger,
+	public static <T> BiConsumer<T, Throwable> toLogger(Logger logger,
 			Level callLevel, Supplier<String> callMsg,
 			Level resultLevel, Function<T, String> resultMsg,
 			@Nullable Level errorLevel, Function<Throwable, String> errorMsg) {
@@ -127,7 +127,7 @@ public class LogUtils {
 		};
 	}
 
-	public static <T> Callback<T> toLogger(Logger logger,
+	public static <T> BiConsumer<T, Throwable> toLogger(Logger logger,
 			Level callLevel, Supplier<String> callMsg,
 			Level resultLevel, Function<T, String> resultMsg) {
 		return toLogger(logger,
@@ -136,7 +136,7 @@ public class LogUtils {
 				null, e -> callMsg.get());
 	}
 
-	public static <T> Callback<T> toLogger(Logger logger,
+	public static <T> BiConsumer<T, Throwable> toLogger(Logger logger,
 			Level callLevel, Level resultLevel, Level errorLevel,
 			String methodName, Object... parameters) {
 		return toLogger(logger,
@@ -147,19 +147,19 @@ public class LogUtils {
 						e -> formatResult(methodName, e, parameters));
 	}
 
-	public static <T> Callback<T> toLogger(Logger logger,
+	public static <T> BiConsumer<T, Throwable> toLogger(Logger logger,
 			Level callLevel, Level resultLevel,
 			String methodName, Object... parameters) {
 		return toLogger(logger, callLevel, resultLevel, null, methodName, parameters);
 	}
 
-	public static <T> Callback<T> toLogger(Logger logger,
+	public static <T> BiConsumer<T, Throwable> toLogger(Logger logger,
 			Level level,
 			String methodName, Object... parameters) {
 		return toLogger(logger, level, level, methodName, parameters);
 	}
 
-	public static <T> Callback<T> toLogger(Logger logger, String methodName, Object... parameters) {
+	public static <T> BiConsumer<T, Throwable> toLogger(Logger logger, String methodName, Object... parameters) {
 		return toLogger(logger, TRACE, INFO, methodName, parameters);
 	}
 

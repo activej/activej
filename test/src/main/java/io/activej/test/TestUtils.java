@@ -28,10 +28,7 @@ import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public final class TestUtils {
 	private static int activePromises = 0;
@@ -73,7 +70,7 @@ public final class TestUtils {
 		return dataSource;
 	}
 
-	public static <T> Callback<T> assertComplete(ThrowingConsumer<T> consumer) {
+	public static <T> BiConsumer<T, Throwable> assertComplete(ThrowingConsumer<T> consumer) {
 		activePromises++;
 		return (t, e) -> {
 			activePromises--;
@@ -93,7 +90,7 @@ public final class TestUtils {
 		};
 	}
 
-	public static <T> Callback<T> assertComplete() {
+	public static <T> BiConsumer<T, Throwable> assertComplete() {
 		return assertComplete($ -> {});
 	}
 
@@ -144,7 +141,7 @@ public final class TestUtils {
 		void accept(T result, @Nullable Throwable e) throws Throwable;
 	}
 
-	public static <T> Callback<T> asserting(ThrowingConsumerEx<T> consumer) {
+	public static <T> BiConsumer<T, Throwable> asserting(ThrowingConsumerEx<T> consumer) {
 		return (x, y) -> {
 			try {
 				consumer.accept(x, y);

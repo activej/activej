@@ -29,10 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -337,10 +334,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull
 	default Promise<T> post() {
 		SettablePromise<T> result = new SettablePromise<>();
-		whenComplete((Callback<T>) result::post);
+		this.run(result::post);
 		return result;
 	}
-
 	/**
 	 * Executes given {@code promise} after execution
 	 * of this {@code Promise} completes.
@@ -415,7 +411,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenComplete(@Async.Schedule @NotNull Callback<? super T> action);
+	Promise<T> whenComplete(@NotNull BiConsumer<? super T, Throwable> action);
 
 	/**
 	 * Subscribes given action to be executed
@@ -507,9 +503,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	Promise<Void> toVoid();
 
 	@Override
-	default void run(@NotNull Callback<? super T> action) {
-		whenComplete(action);
-	}
+	void run(@NotNull Callback<? super T> action);
 
 	/**
 	 * Wraps {@code Promise} into {@link CompletableFuture}.

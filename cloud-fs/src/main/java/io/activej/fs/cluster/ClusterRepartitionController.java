@@ -337,7 +337,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 																	logger.warn("failed uploading to partition {}", partitionId, e);
 																	partitions.markIfDead(partitionId, e);
 																})
-																.whenComplete(cb))));
+																.whenComplete(cb::accept))));
 							})
 							.map(Promise::toTry))
 							.then(tries -> {

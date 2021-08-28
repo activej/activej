@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -382,7 +383,7 @@ public final class ServiceAdapters {
 		};
 	}
 
-	private static <T> Callback<T> completeFuture(CompletableFuture<?> future) {
+	private static <T> BiConsumer<T, Throwable> completeFuture(CompletableFuture<?> future) {
 		return ($, e) -> {
 			if (e == null) {
 				future.complete(null);

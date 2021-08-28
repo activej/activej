@@ -28,10 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
@@ -375,12 +372,22 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public Promise<T> whenComplete(@NotNull Callback<? super T> action) {
+	public Promise<T> whenComplete(@NotNull BiConsumer<? super T, Throwable> action) {
 		if (isComplete()) {
 			action.accept(result, exception);
 			return this;
 		}
-		subscribe(action);
+		subscribe(new SimpleCallback<T>() {
+			@Override
+			public void accept(T result, @Nullable Throwable e) {
+				action.accept(result, e);
+			}
+
+			@Override
+			public String toString() {
+				return ".whenComplete(" + formatToString(action) + ')';
+			}
+		});
 		return this;
 	}
 
@@ -615,7 +622,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			return (Promise<Void>) other;
 		}
 		PromiseBoth<Object> resultPromise = new PromiseBoth<>();
-		other.whenComplete(resultPromise);
+		other.run(resultPromise);
 		subscribe(resultPromise);
 		return resultPromise;
 	}
@@ -665,7 +672,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			return this;
 		}
 		EitherPromise<T> resultPromise = new EitherPromise<>();
-		other.whenComplete(resultPromise);
+		other.run(resultPromise);
 		subscribe(resultPromise);
 		return resultPromise;
 	}
@@ -740,6 +747,15 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		};
 		subscribe(resultPromise);
 		return resultPromise;
+	}
+
+	@Override
+	public void run(@NotNull Callback<? super T> action) {
+		if (isComplete()) {
+			action.accept(result, exception);
+			return;
+		}
+		subscribe(action);
 	}
 
 	@NotNull

@@ -145,7 +145,7 @@ public final class Promises {
 	public static <T> Promise<T> delay(long delayMillis, @NotNull Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentEventloop().delay(delayMillis, wrapContext(cb, () -> promise.whenComplete(cb))));
+				getCurrentEventloop().delay(delayMillis, wrapContext(cb, () -> promise.run(cb))));
 	}
 
 	@Contract(pure = true)
@@ -218,7 +218,7 @@ public final class Promises {
 	@NotNull
 	public static <T> Promise<T> schedule(@NotNull Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentEventloop().schedule(timestamp, wrapContext(cb, () -> promise.whenComplete(cb))));
+				getCurrentEventloop().schedule(timestamp, wrapContext(cb, () -> promise.run(cb))));
 	}
 
 	/**
@@ -312,7 +312,7 @@ public final class Promises {
 				return Promise.ofException(promise.getException());
 			}
 			resultPromise.countdown++;
-			promise.whenComplete(resultPromise);
+			promise.run(resultPromise);
 		}
 		resultPromise.countdown--;
 		return resultPromise.countdown == 0 ? Promise.complete() : resultPromise;
@@ -444,7 +444,7 @@ public final class Promises {
 				continue;
 			}
 			resultPromise.countdown++;
-			promise.whenComplete(resultPromise);
+			promise.run(resultPromise);
 		}
 		resultPromise.countdown--;
 		return resultPromise.countdown == 0 ? any() : resultPromise;

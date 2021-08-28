@@ -222,13 +222,11 @@ public class MemcacheRpcBenchmark extends Launcher {
 	}
 
 	private void doPut(Callback<Void> callback) {
-		client.put(new byte[]{(byte) sent}, new Slice(BYTES))
-				.whenComplete(callback);
+		client.put(new byte[]{(byte) sent}, new Slice(BYTES)).run(callback);
 	}
 
 	private void doGet(Callback<Slice> callback) {
-		client.get(new byte[]{(byte) sent})
-				.whenComplete(callback);
+		client.get(new byte[]{(byte) sent}).run(callback);
 	}
 
 	public static void main(String[] args) throws Exception {

@@ -226,7 +226,7 @@ public abstract class AbstractHttpConnection {
 
 	protected void read() {
 		if (readBuf == null) {
-			socket.read().whenComplete(readMessageConsumer);
+			socket.read().run(readMessageConsumer);
 			return;
 		}
 		try {
@@ -251,7 +251,7 @@ public abstract class AbstractHttpConnection {
 		}
 		if (readBuf.readRemaining() > MAX_HEADER_LINE_SIZE_BYTES)
 			throw new MalformedHttpException("Header line exceeds max header size");
-		socket.read().whenComplete(readMessageConsumer);
+		socket.read().run(readMessageConsumer);
 	}
 
 	private void readHeaders(int from) throws MalformedHttpException {
@@ -306,7 +306,7 @@ public abstract class AbstractHttpConnection {
 		readBuf.head(offset);
 		if (readBuf.readRemaining() > MAX_HEADER_LINE_SIZE_BYTES)
 			throw new MalformedHttpException("Header line exceeds max header size");
-		socket.read().whenComplete(readHeadersConsumer);
+		socket.read().run(readHeadersConsumer);
 	}
 
 	private int scanHeader(int from, byte[] array, int head, int tail) throws MalformedHttpException {

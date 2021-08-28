@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.BiConsumer;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
@@ -91,7 +92,7 @@ public class PromiseStats {
 		return promise.whenComplete(recordStats());
 	}
 
-	public <T> Callback<T> recordStats() {
+	public <T> BiConsumer<T, Throwable> recordStats() {
 		activePromises++;
 		long before = currentTimeMillis();
 		lastStartTimestamp = before;

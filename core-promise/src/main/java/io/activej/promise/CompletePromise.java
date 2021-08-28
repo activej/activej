@@ -23,10 +23,7 @@ import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -128,7 +125,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public final Promise<T> whenComplete(@NotNull Callback<? super T> action) {
+	public final Promise<T> whenComplete(@NotNull BiConsumer<? super T, Throwable> action) {
 		action.accept(getResult(), null);
 		return this;
 	}
@@ -202,6 +199,11 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@Override
 	public final Promise<Void> toVoid() {
 		return Promise.complete();
+	}
+
+	@Override
+	public void run(@NotNull Callback<? super T> action) {
+		action.accept(getResult(), null);
 	}
 
 	@NotNull

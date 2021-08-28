@@ -388,7 +388,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 										.toTry()
 										.then(aTry -> checkStillNotDead(aTry)
 												.whenException(e -> aTry.ifSuccess(cleanup)))))
-								.whenComplete(cb)));
+								.run(cb)));
 	}
 
 	private <T> Function<List<Try<T>>, Promise<List<T>>> filterErrors() {

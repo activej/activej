@@ -17,13 +17,11 @@ public abstract class RedisBenchmarkConsecutive extends AbstractRedisBenchamark 
 
 	@Override
 	protected void onStart(RedisConnection connection, Callback<Object> cb) {
-		redisCommand(connection)
-				.whenComplete(cb);
+		redisCommand(connection).run(cb);
 	}
 
 	@Override
 	protected void onResponse(RedisConnection connection, Callback<Object> cb, int active) {
-		redisCommand(connection)
-				.whenComplete(cb);
+		redisCommand(connection).run(cb);
 	}
 }
