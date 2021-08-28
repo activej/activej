@@ -41,7 +41,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testBase() {
+	public void testBase() throws Exception {
 		RoutingServlet servlet1 = RoutingServlet.create();
 
 		AsyncServlet subservlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
@@ -62,7 +62,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testProcessWildCardRequest() {
+	public void testProcessWildCardRequest() throws Exception {
 		RoutingServlet servlet = RoutingServlet.create();
 		servlet.map("/a/b/c/d", request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8)));
 
@@ -72,7 +72,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testMicroMapping() {
+	public void testMicroMapping() throws Exception {
 		HttpRequest request1 = HttpRequest.get(TEMPLATE + "/");     // ok
 		HttpRequest request2 = HttpRequest.get(TEMPLATE + "/a");    // ok
 		HttpRequest request3 = HttpRequest.get(TEMPLATE + "/a/c");  // ok
@@ -117,7 +117,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testLongMapping() {
+	public void testLongMapping() throws Exception {
 		HttpRequest request1 = HttpRequest.get(TEMPLATE + "/");     // ok
 		HttpRequest request2 = HttpRequest.get(TEMPLATE + "/a");    // ok
 		HttpRequest request3 = HttpRequest.get(TEMPLATE + "/a/c");  // ok
@@ -156,7 +156,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testMerge() {
+	public void testMerge() throws Exception {
 		HttpRequest request1 = HttpRequest.get(TEMPLATE + "/");         // ok
 		HttpRequest request2 = HttpRequest.get(TEMPLATE + "/a");        // ok
 		HttpRequest request3 = HttpRequest.get(TEMPLATE + "/b");        // ok
@@ -192,7 +192,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testFailMerge() {
+	public void testFailMerge() throws Exception {
 		HttpRequest request = HttpRequest.get(TEMPLATE + "/a/c/f");    // fail
 
 		AsyncServlet action = req -> {
@@ -222,7 +222,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testParameter() {
+	public void testParameter() throws Exception {
 		AsyncServlet printParameters = request -> {
 			String body = request.getPathParameter("id")
 					+ " " + request.getPathParameter("uid");
@@ -242,7 +242,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testMultiParameters() {
+	public void testMultiParameters() throws Exception {
 		RoutingServlet ms = RoutingServlet.create()
 				.map(GET, "/serve/:cid/wash", request -> {
 					ByteBuf body = wrapUtf8("served car: " + request.getPathParameter("cid"));
@@ -260,7 +260,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testDifferentMethods() {
+	public void testDifferentMethods() throws Exception {
 		HttpRequest request1 = HttpRequest.get(TEMPLATE + "/a/b/c/action");
 		HttpRequest request2 = HttpRequest.post(TEMPLATE + "/a/b/c/action");
 		HttpRequest request3 = HttpRequest.of(CONNECT, TEMPLATE + "/a/b/c/action");
@@ -281,7 +281,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testDefault() {
+	public void testDefault() throws Exception {
 		HttpRequest request1 = HttpRequest.get(TEMPLATE + "/html/admin/action");
 		HttpRequest request2 = HttpRequest.get(TEMPLATE + "/html/admin/action/ban");
 
@@ -298,7 +298,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void test404() {
+	public void test404() throws Exception {
 		RoutingServlet main = RoutingServlet.create()
 				.map("/a/:id/b/d", request ->
 						HttpResponse.ofCode(200).withBody(wrapUtf8("All OK")));
@@ -310,7 +310,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void test405() {
+	public void test405() throws Exception {
 		RoutingServlet main = RoutingServlet.create()
 				.map(GET, "/a/:id/b/d", request ->
 						HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")));
@@ -320,7 +320,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void test405WithFallback() {
+	public void test405WithFallback() throws Exception {
 		RoutingServlet main = RoutingServlet.create()
 				.map(GET, "/a/:id/b/d", request ->
 						HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")))
@@ -330,7 +330,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testTail() {
+	public void testTail() throws Exception {
 		RoutingServlet main = RoutingServlet.create()
 				.map(GET, "/method/:var/*", request -> {
 					ByteBuf body = wrapUtf8("Success: " + request.getRelativePath());
@@ -346,7 +346,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testWebSocket() {
+	public void testWebSocket() throws Exception {
 		String wsPath = "/web/socket";
 		RoutingServlet main = RoutingServlet.create()
 				.mapWebSocket(wsPath, request -> HttpResponse.ok200())
@@ -363,7 +363,7 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testWebSocketSingle() {
+	public void testWebSocketSingle() throws Exception {
 		String wsPath = "/web/socket";
 		RoutingServlet main = RoutingServlet.create()
 				.mapWebSocket(wsPath, request -> HttpResponse.ok200());

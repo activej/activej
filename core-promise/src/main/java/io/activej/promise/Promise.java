@@ -92,11 +92,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull
 	static <T> Promise<T> ofCallback(@NotNull Consumer<@NotNull SettablePromise<T>> callbackConsumer) {
 		SettablePromise<T> cb = new SettablePromise<>();
-		try {
-			callbackConsumer.accept(cb);
-		} catch (UncheckedException u) {
-			return Promise.ofException(u.getCause());
-		}
+		callbackConsumer.accept(cb);
 		return cb;
 	}
 

@@ -190,7 +190,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 
 	@Override
 	@NotNull
-	public Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
 		return servlet.serve(request);
 	}
 }

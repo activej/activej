@@ -23,7 +23,7 @@ public class AsyncServletTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
-	public void testEnsureRequestBody() {
+	public void testEnsureRequestBody() throws Exception {
 		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE).map(body -> HttpResponse.ok200().withBody(body.slice()));
 
 		HttpRequest testRequest = HttpRequest.post("http://example.com")
@@ -40,7 +40,7 @@ public class AsyncServletTest {
 	}
 
 	@Test
-	public void testEnsureRequestBodyWithException() {
+	public void testEnsureRequestBodyWithException() throws Exception {
 		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE)
 				.map(body -> HttpResponse.ok200().withBody(body.slice()));
 		Exception exception = new Exception("TestException");

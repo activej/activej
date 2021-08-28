@@ -154,7 +154,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 
 	@NotNull
 	@Override
-	public Promise<HttpResponse> serve(@NotNull HttpRequest request) {
+	public Promise<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
 		Promise<HttpResponse> processed = tryServe(request);
 		return processed != null ?
 				processed :
@@ -177,7 +177,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	@Nullable
-	private Promise<HttpResponse> tryServe(HttpRequest request) {
+	private Promise<HttpResponse> tryServe(HttpRequest request) throws Exception {
 		int introPosition = request.getPos();
 		String urlPart = request.pollUrlPart();
 		Protocol protocol = request.getProtocol();

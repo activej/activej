@@ -22,16 +22,24 @@ import org.jetbrains.annotations.NotNull;
 public final class UncheckedException extends RuntimeException {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(UncheckedException.class, "withStackTrace", false);
 
-	private UncheckedException(@NotNull Throwable cause) {
+	private UncheckedException(@NotNull Exception cause) {
 		super(cause);
 	}
 
-	public static UncheckedException of(@NotNull Throwable cause) {
+	public static UncheckedException of(@NotNull Exception cause) {
 		return new UncheckedException(cause);
 	}
 
 	@Override
 	public Throwable fillInStackTrace() {
 		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
+	}
+
+	public Exception getCause() {
+		Throwable cause = super.getCause();
+		if (cause instanceof Exception) {
+			return (Exception) cause;
+		}
+		throw (Error) cause;
 	}
 }

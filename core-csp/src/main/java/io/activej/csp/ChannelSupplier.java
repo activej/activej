@@ -21,6 +21,8 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.ThrowingBiConsumer;
+import io.activej.common.function.ThrowingFunction;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.queue.ChannelQueue;
@@ -329,18 +331,18 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * based on current ChannelSupplier and when its Promise completes,
 	 * applies provided {@code fn} to the result.
 	 */
-	default <V> ChannelSupplier<V> map(Function<? super @NotNull T, ? extends V> fn) {
+	default <V> ChannelSupplier<V> map(ThrowingFunction<? super @NotNull T, ? extends V> fn) {
 		return new AbstractChannelSupplier<V>(this) {
 			@Override
 			protected Promise<V> doGet() {
 				return ChannelSupplier.this.get()
-						.map(value -> {
+						.mapEx(value -> {
 							if (value != null) {
 								try {
 									return fn.apply(value);
-								} catch (UncheckedException u) {
-									ChannelSupplier.this.closeEx(u.getCause());
-									throw u;
+								} catch (Exception e) {
+									ChannelSupplier.this.closeEx(e);
+									throw e;
 								}
 							} else {
 								return null;
@@ -464,7 +466,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 */
 	default <A, R> Promise<R> toCollector(Collector<T, A, R> collector) {
 		return ChannelSuppliers.collect(this,
-				collector.supplier().get(), collector.accumulator(), collector.finisher());
+				collector.supplier().get(), ThrowingBiConsumer.of(collector.accumulator()), collector.finisher());
 	}
 
 	/**

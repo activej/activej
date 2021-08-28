@@ -17,6 +17,9 @@
 package io.activej.common.collection;
 
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.ThrowingFunction;
+import io.activej.common.function.ThrowingRunnable;
+import io.activej.common.function.ThrowingSupplier;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -60,20 +63,20 @@ public final class Try<T> {
 		return new Try<>(null, e);
 	}
 
-	public static <T> Try<T> wrap(@NotNull Supplier<T> computation) {
+	public static <T> Try<T> wrap(@NotNull ThrowingSupplier<T> computation) {
 		try {
 			return new Try<>(computation.get(), null);
-		} catch (UncheckedException u) {
-			return new Try<>(null, u.getCause());
+		} catch (Exception e) {
+			return new Try<>(null, e);
 		}
 	}
 
-	public static <T> Try<T> wrap(@NotNull Runnable computation) {
+	public static <T> Try<T> wrap(@NotNull ThrowingRunnable computation) {
 		try {
 			computation.run();
 			return new Try<>(null, null);
-		} catch (UncheckedException u) {
-			return new Try<>(null, u.getCause());
+		} catch (Exception e) {
+			return new Try<>(null, e);
 		}
 	}
 
@@ -81,53 +84,11 @@ public final class Try<T> {
 		try {
 			@Nullable T result = computation.call();
 			return new Try<>(result, null);
-		} catch (UncheckedException u) {
-			return new Try<>(null, u.getCause());
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
 			return new Try<>(null, e);
 		}
-	}
-
-	public static Collector<Try<Void>, ?, Try<Void>> voidReducer() {
-		return reducer(($1, $2) -> null);
-	}
-
-	public static <T> Collector<Try<T>, ?, Try<T>> reducer(@NotNull BinaryOperator<T> combiner) {
-		return reducer(null, combiner);
-	}
-
-	public static <T> Collector<Try<T>, ?, Try<T>> reducer(@Nullable T identity, @NotNull BinaryOperator<T> combiner) {
-		class Accumulator {
-			T result = identity;
-			final List<Throwable> throwables = new ArrayList<>();
-		}
-		return Collector.of(Accumulator::new,
-				(acc, t) -> {
-					if (t.isSuccess()) {
-						acc.result = acc.result != null ? combiner.apply(acc.result, t.get()) : t.get();
-					} else {
-						acc.throwables.add(t.getException());
-					}
-				},
-				(acc1, acc2) -> {
-					acc1.result = combiner.apply(acc1.result, acc2.result);
-					acc1.throwables.addAll(acc2.throwables);
-					return acc1;
-				},
-				acc -> {
-					if (acc.throwables.isEmpty()) {
-						return Try.of(acc.result);
-					}
-					Throwable e = acc.throwables.get(0);
-					for (Throwable t : acc.throwables) {
-						if (t != e) {
-							e.addSuppressed(t);
-						}
-					}
-					return Try.ofException(e);
-				});
 	}
 
 	@Contract(pure = true)
@@ -214,12 +175,12 @@ public final class Try<T> {
 
 	@Contract(pure = true)
 	@NotNull
-	public <U> Try<U> map(@NotNull Function<T, U> function) {
+	public <U> Try<U> map(@NotNull ThrowingFunction<T, U> function) {
 		if (throwable == null) {
 			try {
 				return new Try<>(function.apply(result), null);
-			} catch (UncheckedException u) {
-				return new Try<>(null, u.getCause());
+			} catch (Exception e) {
+				return new Try<>(null, e);
 			}
 		}
 		return mold();

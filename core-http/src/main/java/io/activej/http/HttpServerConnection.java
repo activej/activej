@@ -354,8 +354,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		Promise<HttpResponse> servletResult;
 		try {
 			servletResult = servlet.serveAsync(request);
-		} catch (UncheckedException u) {
-			servletResult = Promise.ofException(u.getCause());
+		} catch (Exception e) {
+			servletResult = Promise.ofException(e);
 		}
 		servletResult.whenComplete((response, e) -> {
 			if (CHECK) checkState(eventloop.inEventloopThread());

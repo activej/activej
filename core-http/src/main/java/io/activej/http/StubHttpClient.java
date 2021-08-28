@@ -42,8 +42,8 @@ public final class StubHttpClient implements IAsyncHttpClient {
 		Promise<HttpResponse> servletResult;
 		try {
 			servletResult = servlet.serveAsync(request);
-		} catch (UncheckedException u) {
-			servletResult = Promise.ofException(u.getCause());
+		} catch (Exception e) {
+			servletResult = Promise.ofException(e);
 		}
 		return servletResult.then((res, e) -> {
 			request.recycleBody();

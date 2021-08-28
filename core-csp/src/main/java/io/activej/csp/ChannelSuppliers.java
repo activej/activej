@@ -21,7 +21,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.ThrowingBiConsumer;
+import io.activej.common.function.ThrowingFunction;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.queue.ChannelBuffer;
 import io.activej.csp.queue.ChannelZeroBuffer;
@@ -43,8 +44,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
-import static io.activej.common.Utils.nullify;
 import static io.activej.common.Utils.iteratorOf;
+import static io.activej.common.Utils.nullify;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
@@ -119,13 +120,13 @@ public final class ChannelSuppliers {
 	 * @return a promise of accumulated result, transformed by the {@code finisher}
 	 */
 	public static <T, A, R> Promise<R> collect(ChannelSupplier<T> supplier,
-			A initialValue, BiConsumer<A, T> accumulator, Function<A, R> finisher) {
+			A initialValue, ThrowingBiConsumer<A, T> accumulator, Function<A, R> finisher) {
 		return Promise.ofCallback(cb ->
 				toCollectorImpl(supplier, initialValue, accumulator, finisher, cb));
 	}
 
 	private static <T, A, R> void toCollectorImpl(ChannelSupplier<T> supplier,
-			A accumulatedValue, BiConsumer<A, T> accumulator, Function<A, R> finisher,
+			A accumulatedValue, ThrowingBiConsumer<A, T> accumulator, Function<A, R> finisher,
 			SettablePromise<R> cb) {
 		Promise<T> promise;
 		while (true) {
@@ -135,7 +136,7 @@ public final class ChannelSuppliers {
 			if (item != null) {
 				try {
 					accumulator.accept(accumulatedValue, item);
-				} catch (UncheckedException u) {
+				} catch (Exception u) {
 					Throwable cause = u.getCause();
 					supplier.closeEx(cause);
 					cb.setException(cause);
@@ -150,7 +151,7 @@ public final class ChannelSuppliers {
 				if (value != null) {
 					try {
 						accumulator.accept(accumulatedValue, value);
-					} catch (UncheckedException u) {
+					} catch (Exception u) {
 						Throwable cause = u.getCause();
 						supplier.closeEx(cause);
 						cb.setException(cause);

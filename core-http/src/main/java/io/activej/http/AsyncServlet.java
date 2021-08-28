@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -30,10 +29,10 @@ import java.util.concurrent.Executor;
 @FunctionalInterface
 public interface AsyncServlet {
 	@NotNull
-	Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException;
+	Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws Exception;
 
 	@NotNull
-	default Promise<HttpResponse> serveAsync(@NotNull HttpRequest request) throws UncheckedException {
+	default Promise<HttpResponse> serveAsync(@NotNull HttpRequest request) throws Exception {
 		return serve(request).promise();
 	}
 

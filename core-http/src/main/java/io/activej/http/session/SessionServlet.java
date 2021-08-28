@@ -60,7 +60,7 @@ public final class SessionServlet<T> implements AsyncServlet {
 	}
 
 	@Override
-	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws UncheckedException {
+	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
 		String id = sessionIdExtractor.apply(request);
 
 		if (id == null) {
@@ -68,7 +68,7 @@ public final class SessionServlet<T> implements AsyncServlet {
 		}
 
 		return store.get(id)
-				.then(sessionObject -> {
+				.thenEx(sessionObject -> {
 					if (sessionObject != null) {
 						request.attach(sessionObject);
 						return privateServlet.serveAsync(request);
