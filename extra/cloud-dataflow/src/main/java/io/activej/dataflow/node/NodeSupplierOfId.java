@@ -17,7 +17,7 @@
 package io.activej.dataflow.node;
 
 import com.dslplatform.json.CompiledJson;
-import io.activej.common.function.ThrowingSupplier;
+import io.activej.common.function.SupplierEx;
 import io.activej.csp.ChannelSupplier;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
@@ -70,8 +70,8 @@ public final class NodeSupplierOfId<T> extends AbstractNode {
 			supplier = StreamSupplier.ofIterable((Iterable<T>) object);
 		} else if (object instanceof Supplier) {
 			supplier = StreamSupplier.ofSupplier(((Supplier<T>) object)::get);
-		} else if (object instanceof ThrowingSupplier) {
-			supplier = StreamSupplier.ofSupplier((ThrowingSupplier<T>) object);
+		} else if (object instanceof SupplierEx) {
+			supplier = StreamSupplier.ofSupplier((SupplierEx<T>) object);
 		} else if (object instanceof Stream) {
 			supplier = StreamSupplier.ofStream((Stream<T>) object);
 		} else if (object instanceof StreamSupplier) {

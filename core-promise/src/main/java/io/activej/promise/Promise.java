@@ -355,7 +355,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull <U> Promise<U> map(@NotNull Function<? super T, ? extends U> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> mapEx(@NotNull ThrowingFunction<? super T, ? extends U> fn);
+	@NotNull <U> Promise<U> mapEx(@NotNull FunctionEx<? super T, ? extends U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is executed with this
@@ -374,13 +374,13 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull <U> Promise<U> map(@NotNull BiFunction<? super T, @Nullable Exception, ? extends U> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, @Nullable Exception, ? extends U> fn);
+	@NotNull <U> Promise<U> mapEx(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
 
 	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> thenEx(@NotNull ThrowingSupplier<? extends Promise<? extends U>> fn);
+	@NotNull <U> Promise<U> thenEx(@NotNull SupplierEx<? extends Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which, when this {@code Promise} completes
@@ -393,7 +393,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> thenEx(@NotNull ThrowingFunction<? super T, ? extends Promise<? extends U>> fn);
+	@NotNull <U> Promise<U> thenEx(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which, when this {@code Promise} completes either
@@ -408,7 +408,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull <U> Promise<U> then(@NotNull BiFunction<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
+	@NotNull <U> Promise<U> thenEx(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
 	/**
 	 * Subscribes given action to be executed
@@ -423,7 +423,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Exception> action);
+	Promise<T> whenCompleteEx(@NotNull BiConsumerEx<? super T, Exception> action);
 
 	/**
 	 * Subscribes given action to be executed
@@ -438,7 +438,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@Contract(pure = true)
 	@NotNull
-	Promise<T> whenCompleteEx(@NotNull ThrowingRunnable action);
+	Promise<T> whenCompleteEx(@NotNull RunnableEx action);
 
 	/**
 	 * Subscribes given action to be executed after
@@ -453,7 +453,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@Contract(pure = true)
 	@NotNull
-	Promise<T> whenResultEx(ThrowingConsumer<? super T> action);
+	Promise<T> whenResultEx(ConsumerEx<? super T> action);
 
 	@Contract(" _ -> this")
 	@NotNull
@@ -461,7 +461,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@Contract(pure = true)
 	@NotNull
-	Promise<T> whenResultEx(@NotNull ThrowingRunnable action);
+	Promise<T> whenResultEx(@NotNull RunnableEx action);
 
 	/**
 	 * Subscribes given action to be executed after
@@ -475,7 +475,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Exception> action);
+	Promise<T> whenExceptionEx(@NotNull ConsumerEx<Exception> action);
 
 	Promise<T> whenException(@NotNull Runnable action);
 

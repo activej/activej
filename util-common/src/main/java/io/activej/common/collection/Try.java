@@ -16,9 +16,9 @@
 
 package io.activej.common.collection;
 
-import io.activej.common.function.ThrowingFunction;
-import io.activej.common.function.ThrowingRunnable;
-import io.activej.common.function.ThrowingSupplier;
+import io.activej.common.function.FunctionEx;
+import io.activej.common.function.RunnableEx;
+import io.activej.common.function.SupplierEx;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -59,7 +59,7 @@ public final class Try<T> {
 		return new Try<>(null, e);
 	}
 
-	public static <T> Try<T> wrap(@NotNull ThrowingSupplier<T> computation) {
+	public static <T> Try<T> wrap(@NotNull SupplierEx<T> computation) {
 		try {
 			return new Try<>(computation.get(), null);
 		} catch (RuntimeException ex) {
@@ -69,7 +69,7 @@ public final class Try<T> {
 		}
 	}
 
-	public static <T> Try<T> wrap(@NotNull ThrowingRunnable computation) {
+	public static <T> Try<T> wrap(@NotNull RunnableEx computation) {
 		try {
 			computation.run();
 			return new Try<>(null, null);
@@ -175,7 +175,7 @@ public final class Try<T> {
 
 	@Contract(pure = true)
 	@NotNull
-	public <U> Try<U> map(@NotNull ThrowingFunction<T, U> function) {
+	public <U> Try<U> map(@NotNull FunctionEx<T, U> function) {
 		if (exception == null) {
 			try {
 				return new Try<>(function.apply(result), null);

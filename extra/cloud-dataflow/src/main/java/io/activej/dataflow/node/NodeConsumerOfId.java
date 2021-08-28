@@ -2,7 +2,7 @@ package io.activej.dataflow.node;
 
 import com.dslplatform.json.CompiledJson;
 import io.activej.async.function.AsyncConsumer;
-import io.activej.common.function.ThrowingConsumer;
+import io.activej.common.function.ConsumerEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
@@ -55,8 +55,8 @@ public final class NodeConsumerOfId<T> extends AbstractNode {
 			streamConsumer = StreamConsumer.ofConsumer(((Collection<T>) object)::add);
 		} else if (object instanceof Consumer) {
 			streamConsumer = StreamConsumer.ofConsumer(((Consumer<T>) object)::accept);
-		} else if (object instanceof ThrowingConsumer) {
-			streamConsumer = StreamConsumer.ofConsumer((ThrowingConsumer<T>) object);
+		} else if (object instanceof ConsumerEx) {
+			streamConsumer = StreamConsumer.ofConsumer((ConsumerEx<T>) object);
 		} else if (object instanceof AsyncConsumer) {
 			streamConsumer = StreamConsumer.ofChannelConsumer(ChannelConsumer.of((AsyncConsumer<T>) object));
 		} else if (object instanceof ChannelConsumer) {

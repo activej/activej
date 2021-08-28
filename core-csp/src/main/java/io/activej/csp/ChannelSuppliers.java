@@ -21,8 +21,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
 import io.activej.common.collection.Try;
-import io.activej.common.function.ThrowingBiConsumer;
-import io.activej.common.function.ThrowingFunction;
+import io.activej.common.function.BiConsumerEx;
+import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.queue.ChannelBuffer;
 import io.activej.csp.queue.ChannelZeroBuffer;
@@ -120,13 +120,13 @@ public final class ChannelSuppliers {
 	 * @return a promise of accumulated result, transformed by the {@code finisher}
 	 */
 	public static <T, A, R> Promise<R> collect(ChannelSupplier<T> supplier,
-			A initialValue, ThrowingBiConsumer<A, T> accumulator, ThrowingFunction<A, R> finisher) {
+			A initialValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher) {
 		return Promise.ofCallback(cb ->
 				toCollectorImpl(supplier, initialValue, accumulator, finisher, cb));
 	}
 
 	private static <T, A, R> void toCollectorImpl(ChannelSupplier<T> supplier,
-			A accumulatedValue, ThrowingBiConsumer<A, T> accumulator, ThrowingFunction<A, R> finisher,
+			A accumulatedValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher,
 			SettablePromise<R> cb) {
 		Promise<T> promise;
 		while (true) {

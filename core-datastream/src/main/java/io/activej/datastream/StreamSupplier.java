@@ -17,7 +17,7 @@
 package io.activej.datastream;
 
 import io.activej.async.process.AsyncCloseable;
-import io.activej.common.function.ThrowingSupplier;
+import io.activej.common.function.SupplierEx;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.StreamSuppliers.Closing;
 import io.activej.datastream.StreamSuppliers.ClosingWithError;
@@ -156,7 +156,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 * Creates a supplier which supplies items by calling a given lambda.
 	 * It closes itself (and changes to closed state) when lambda returns <code>null</code>.
 	 */
-	static <T> StreamSupplier<T> ofSupplier(ThrowingSupplier<T> supplier) {
+	static <T> StreamSupplier<T> ofSupplier(SupplierEx<T> supplier) {
 		return new AbstractStreamSupplier<T>() {
 			@Override
 			protected void onResumed() {

@@ -16,7 +16,7 @@
 
 package io.activej.datastream;
 
-import io.activej.common.function.ThrowingConsumer;
+import io.activej.common.function.ConsumerEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
@@ -54,9 +54,9 @@ final class StreamConsumers {
 	}
 
 	static final class OfConsumer<T> extends AbstractStreamConsumer<T> {
-		private final ThrowingConsumer<T> consumer;
+		private final ConsumerEx<T> consumer;
 
-		OfConsumer(ThrowingConsumer<T> consumer) {
+		OfConsumer(ConsumerEx<T> consumer) {
 			this.consumer = consumer;
 		}
 

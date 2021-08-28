@@ -43,7 +43,7 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
-import static io.activej.common.function.ThrowingBiConsumer.uncheckedOf;
+import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.emptyMap;

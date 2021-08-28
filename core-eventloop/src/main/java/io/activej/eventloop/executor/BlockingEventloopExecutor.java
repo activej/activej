@@ -17,8 +17,8 @@
 package io.activej.eventloop.executor;
 
 import io.activej.async.callback.AsyncComputation;
-import io.activej.common.function.ThrowingRunnable;
-import io.activej.common.function.ThrowingSupplier;
+import io.activej.common.function.RunnableEx;
+import io.activej.common.function.SupplierEx;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
 
@@ -104,7 +104,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 
 	@NotNull
 	@Override
-	public CompletableFuture<Void> submit(@NotNull ThrowingRunnable computation) {
+	public CompletableFuture<Void> submit(@NotNull RunnableEx computation) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		post(() -> {
 			try {
@@ -124,7 +124,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 
 	@NotNull
 	@Override
-	public <T> CompletableFuture<T> submit(ThrowingSupplier<? extends AsyncComputation<T>> computation) {
+	public <T> CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<T>> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		post(() -> {
 			try {

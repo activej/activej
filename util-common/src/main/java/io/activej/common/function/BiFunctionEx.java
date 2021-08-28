@@ -5,10 +5,10 @@ import io.activej.common.exception.UncheckedException;
 import java.util.function.BiFunction;
 
 @FunctionalInterface
-public interface ThrowingBiFunction<T, U, R> {
+public interface BiFunctionEx<T, U, R> {
 	R apply(T t, U u) throws Exception;
 
-	static <T, U, R> ThrowingBiFunction<T, U, R> of(BiFunction<T, U, R> uncheckedFn) {
+	static <T, U, R> BiFunctionEx<T, U, R> of(BiFunction<T, U, R> uncheckedFn) {
 		return (t, u) -> {
 			try {
 				return uncheckedFn.apply(t, u);
@@ -18,7 +18,7 @@ public interface ThrowingBiFunction<T, U, R> {
 		};
 	}
 
-	static <T, U, R> BiFunction<T, U, R> uncheckedOf(ThrowingBiFunction<T, U, R> checkedFn) {
+	static <T, U, R> BiFunction<T, U, R> uncheckedOf(BiFunctionEx<T, U, R> checkedFn) {
 		return (t, u) -> {
 			try {
 				return checkedFn.apply(t, u);

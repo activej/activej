@@ -20,8 +20,8 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.function.ThrowingBiConsumer;
-import io.activej.common.function.ThrowingFunction;
+import io.activej.common.function.BiConsumerEx;
+import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.queue.ChannelQueue;
@@ -330,7 +330,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * based on current ChannelSupplier and when its Promise completes,
 	 * applies provided {@code fn} to the result.
 	 */
-	default <V> ChannelSupplier<V> map(ThrowingFunction<? super @NotNull T, ? extends V> fn) {
+	default <V> ChannelSupplier<V> map(FunctionEx<? super @NotNull T, ? extends V> fn) {
 		return new AbstractChannelSupplier<V>(this) {
 			@Override
 			protected Promise<V> doGet() {
@@ -467,7 +467,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 */
 	default <A, R> Promise<R> toCollector(Collector<T, A, R> collector) {
 		return ChannelSuppliers.collect(this,
-				collector.supplier().get(), ThrowingBiConsumer.of(collector.accumulator()), ThrowingFunction.of(collector.finisher()));
+				collector.supplier().get(), BiConsumerEx.of(collector.accumulator()), FunctionEx.of(collector.finisher()));
 	}
 
 	/**

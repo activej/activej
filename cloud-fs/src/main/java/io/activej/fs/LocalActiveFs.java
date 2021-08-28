@@ -58,7 +58,7 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
-import static io.activej.common.function.ThrowingBiConsumer.uncheckedOf;
+import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.LocalFileUtils.*;
 import static io.activej.fs.util.RemoteFsUtils.batchEx;

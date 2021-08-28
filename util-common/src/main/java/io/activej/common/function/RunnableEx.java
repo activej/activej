@@ -2,26 +2,24 @@ package io.activej.common.function;
 
 import io.activej.common.exception.UncheckedException;
 
-import java.util.function.Function;
-
 @FunctionalInterface
-public interface ThrowingFunction<T, R> {
-	R apply(T t) throws Exception;
+public interface RunnableEx {
+	void run() throws Exception;
 
-	static <T, R> ThrowingFunction<T, R> of(Function<T, R> fn) {
-		return t -> {
+	static RunnableEx of(Runnable uncheckedFn) {
+		return () -> {
 			try {
-				return fn.apply(t);
+				uncheckedFn.run();
 			} catch (UncheckedException ex) {
 				throw ex.getCause();
 			}
 		};
 	}
 
-	static <T, R> Function<T, R> uncheckedOf(ThrowingFunction<T, R> checkedFn) {
-		return t -> {
+	static Runnable uncheckedOf(RunnableEx checkedFn) {
+		return () -> {
 			try {
-				return checkedFn.apply(t);
+				checkedFn.run();
 			} catch (RuntimeException ex) {
 				throw ex;
 			} catch (Exception ex) {

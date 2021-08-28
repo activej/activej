@@ -21,8 +21,8 @@ import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.Checks;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.function.ThrowingRunnable;
-import io.activej.common.function.ThrowingSupplier;
+import io.activej.common.function.RunnableEx;
+import io.activej.common.function.SupplierEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.reflection.ReflectionUtils;
@@ -1090,7 +1090,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 */
 	@NotNull
 	@Override
-	public CompletableFuture<Void> submit(@NotNull ThrowingRunnable computation) {
+	public CompletableFuture<Void> submit(@NotNull RunnableEx computation) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		execute(() -> {
 			try {
@@ -1108,7 +1108,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	@NotNull
 	@Override
-	public <T> CompletableFuture<T> submit(ThrowingSupplier<? extends AsyncComputation<T>> computation) {
+	public <T> CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<T>> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		execute(() -> {
 			try {

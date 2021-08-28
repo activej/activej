@@ -20,7 +20,7 @@ import io.activej.async.function.AsyncConsumer;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.function.ThrowingFunction;
+import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelQueue;
@@ -342,7 +342,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @param <V> type of data accepted and returned by the {@code fn} and accepted by ChannelConsumer
 	 * @return a wrapper ChannelConsumer
 	 */
-	default <V> ChannelConsumer<V> map(ThrowingFunction<? super V, ? extends T> fn) {
+	default <V> ChannelConsumer<V> map(FunctionEx<? super V, ? extends T> fn) {
 		return new AbstractChannelConsumer<V>(this) {
 			@Override
 			protected Promise<Void> doAccept(V value) {

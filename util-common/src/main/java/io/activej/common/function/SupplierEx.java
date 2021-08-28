@@ -5,10 +5,10 @@ import io.activej.common.exception.UncheckedException;
 import java.util.function.Supplier;
 
 @FunctionalInterface
-public interface ThrowingSupplier<T> {
+public interface SupplierEx<T> {
 	T get() throws Exception;
 
-	static <T> ThrowingSupplier<T> of(Supplier<T> uncheckedFn) {
+	static <T> SupplierEx<T> of(Supplier<T> uncheckedFn) {
 		return () -> {
 			try {
 				return uncheckedFn.get();
@@ -18,7 +18,7 @@ public interface ThrowingSupplier<T> {
 		};
 	}
 
-	static <T> Supplier<T> uncheckedOf(ThrowingSupplier<T> checkedFn) {
+	static <T> Supplier<T> uncheckedOf(SupplierEx<T> checkedFn) {
 		return () -> {
 			try {
 				return checkedFn.get();

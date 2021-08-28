@@ -5,10 +5,10 @@ import io.activej.common.exception.UncheckedException;
 import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface ThrowingConsumer<T> {
+public interface ConsumerEx<T> {
 	void accept(T t) throws Exception;
 
-	static <T> ThrowingConsumer<T> of(Consumer<T> uncheckedFn) {
+	static <T> ConsumerEx<T> of(Consumer<T> uncheckedFn) {
 		return t -> {
 			try {
 				uncheckedFn.accept(t);
@@ -18,7 +18,7 @@ public interface ThrowingConsumer<T> {
 		};
 	}
 
-	static <T> Consumer<T> uncheckedOf(ThrowingConsumer<T> checkedFn) {
+	static <T> Consumer<T> uncheckedOf(ConsumerEx<T> checkedFn) {
 		return t -> {
 			try {
 				checkedFn.accept(t);
