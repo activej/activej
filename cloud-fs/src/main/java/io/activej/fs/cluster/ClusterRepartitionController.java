@@ -237,16 +237,16 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 					//noinspection ConstantConditions - get() after select()
 					return Promises.reduce(
-							filteredMap.entrySet().stream()
-									.map(e -> new InfoResults(e.getKey(), e.getValue()))
-									.collect(toMap(InfoResults::getName, Function.identity())),
-							(result, metas) -> filteredMap.keySet().forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
-							Map::values,
-							groupedById.size(),
-							groupedById.entrySet().stream()
-									.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
-											.whenException(e -> partitions.markIfDead(entry.getKey(), e)))
-									.iterator())
+									filteredMap.entrySet().stream()
+											.map(e -> new InfoResults(e.getKey(), e.getValue()))
+											.collect(toMap(InfoResults::getName, Function.identity())),
+									(result, metas) -> filteredMap.keySet().forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
+									Map::values,
+									groupedById.size(),
+									groupedById.entrySet().stream()
+											.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
+													.whenException(e -> partitions.markIfDead(entry.getKey(), e)))
+											.iterator())
 							.whenResult(results -> {
 								repartitionPlan = results.stream()
 										.sorted()
@@ -308,37 +308,37 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 					RefInt idx = new RefInt(0);
 					return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
-							.map(remoteMeta -> {
-								Object partitionId = ids.get(idx.value++);
-								if (remoteMeta != null && remoteMeta.getSize() >= meta.getSize()) {
-									return Promise.of(Try.of(null));
-								}
-								// upload file to this partition
-								ActiveFs fs = partitions.get(partitionId);
-								if (fs == null) {
-									return Promise.ofException(new FsIOException("File system '" + partitionId + "' is not alive"));
-								}
-								return Promise.<Void>ofCallback(cb ->
-										splitter.addOutput()
-												.set(ChannelConsumer.ofPromise(Promise.complete()
-														.then(() -> remoteMeta == null ?
-																fs.upload(name, meta.getSize()) :
-																fs.append(name, remoteMeta.getSize())
-																		.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
-														.whenException(e -> {
-															if (e instanceof PathContainsFileException) {
-																logger.error("Cluster contains files with clashing paths", e);
-															}
-														}))
-														.withAcknowledgement(ack -> ack
-																.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
-																.whenException(e -> {
-																	logger.warn("failed uploading to partition {}", partitionId, e);
-																	partitions.markIfDead(partitionId, e);
-																})
-																.whenComplete(cb::accept))));
-							})
-							.map(Promise::toTry))
+									.map(remoteMeta -> {
+										Object partitionId = ids.get(idx.value++);
+										if (remoteMeta != null && remoteMeta.getSize() >= meta.getSize()) {
+											return Promise.of(Try.of(null));
+										}
+										// upload file to this partition
+										ActiveFs fs = partitions.get(partitionId);
+										if (fs == null) {
+											return Promise.ofException(new FsIOException("File system '" + partitionId + "' is not alive"));
+										}
+										return Promise.<Void>ofCallback(cb ->
+												splitter.addOutput()
+														.set(ChannelConsumer.ofPromise(Promise.complete()
+																		.then(() -> remoteMeta == null ?
+																				fs.upload(name, meta.getSize()) :
+																				fs.append(name, remoteMeta.getSize())
+																						.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
+																		.whenException(e -> {
+																			if (e instanceof PathContainsFileException) {
+																				logger.error("Cluster contains files with clashing paths", e);
+																			}
+																		}))
+																.withAcknowledgement(ack -> ack
+																		.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
+																		.whenException(e -> {
+																			logger.warn("failed uploading to partition {}", partitionId, e);
+																			partitions.markIfDead(partitionId, e);
+																		})
+																		.whenComplete(cb::accept))));
+									})
+									.map(Promise::toTry))
 							.then(tries -> {
 								if (!tries.stream().allMatch(Try::isSuccess)) { // if anybody failed uploading then we skip this file
 									logger.warn("failed uploading file {}, skipping", meta);
@@ -365,17 +365,17 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 		InfoResults infoResults = new InfoResults(name, fileToUpload);
 		//noinspection ConstantConditions - get() right after select()
 		return Promises.toList(selected.stream()
-				.map(partitionId -> partitions.get(partitionId)
-						.info(name) // checking file existence and size on particular partition
-						.whenComplete((meta, e) -> {
-							if (e != null) {
-								logger.warn("failed connecting to partition {}", partitionId, e);
-								partitions.markIfDead(partitionId, e);
-								return;
-							}
-							infoResults.remoteMetadata.add(meta);
-						})
-						.toTry()))
+						.map(partitionId -> partitions.get(partitionId)
+								.info(name) // checking file existence and size on particular partition
+								.whenComplete((meta, e) -> {
+									if (e != null) {
+										logger.warn("failed connecting to partition {}", partitionId, e);
+										partitions.markIfDead(partitionId, e);
+										return;
+									}
+									infoResults.remoteMetadata.add(meta);
+								})
+								.toTry()))
 				.map(tries -> {
 					if (!tries.stream().allMatch(Try::isSuccess)) { // any of info calls failed
 						logger.warn("failed figuring out partitions for file {}, skipping", fileToUpload);
@@ -473,9 +473,9 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private static final Comparator<InfoResults> INFO_RESULTS_COMPARATOR =
 			Comparator.<InfoResults>comparingLong(infoResults -> infoResults.remoteMetadata.stream()
-					.filter(Objects::isNull)
-					.count() +
-					(infoResults.isLocalMetaTheBest() ? 1 : 0))
+							.filter(Objects::isNull)
+							.count() +
+							(infoResults.isLocalMetaTheBest() ? 1 : 0))
 					.thenComparingLong(infoResults -> infoResults.remoteMetadata.stream()
 							.filter(Objects::nonNull)
 							.findAny().orElse(infoResults.localMetadata)

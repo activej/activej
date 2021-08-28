@@ -22,7 +22,6 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;

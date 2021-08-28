@@ -136,7 +136,7 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 
 	static <T> StreamConsumer<T> ofAnotherEventloop(@NotNull Eventloop anotherEventloop,
 			@NotNull StreamConsumer<T> anotherEventloopConsumer) {
-		if (Eventloop.getCurrentEventloop() == anotherEventloop){
+		if (Eventloop.getCurrentEventloop() == anotherEventloop) {
 			return anotherEventloopConsumer;
 		}
 		return new StreamConsumers.OfAnotherEventloop<>(anotherEventloop, anotherEventloopConsumer);

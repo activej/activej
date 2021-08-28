@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.UncheckedException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
@@ -50,7 +49,7 @@ public final class StubHttpClient implements IAsyncHttpClient {
 			if (e == null) {
 				ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
 				Eventloop eventloop = Eventloop.getCurrentEventloop();
-				if (bodyStream != null){
+				if (bodyStream != null) {
 					res.setBodyStream(bodyStream
 							.withEndOfStream(eos -> eos
 									.whenComplete(() -> eventloop.post(res::recycle))));

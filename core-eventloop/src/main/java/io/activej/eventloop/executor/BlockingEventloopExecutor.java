@@ -17,7 +17,6 @@
 package io.activej.eventloop.executor;
 
 import io.activej.async.callback.AsyncComputation;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.ThrowingRunnable;
 import io.activej.common.function.ThrowingSupplier;
 import io.activej.eventloop.Eventloop;
@@ -28,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
 
 /**
  * An implementation of the {@link EventloopExecutor} which posts

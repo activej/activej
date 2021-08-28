@@ -1,6 +1,5 @@
 package io.activej.launchers.crdt;
 
-import io.activej.types.TypeT;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtStorageClient;
@@ -22,6 +21,7 @@ import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import io.activej.test.rules.LoggingRule;
+import io.activej.types.TypeT;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -173,10 +173,10 @@ public final class CrdtClusterTest {
 		Type manifest = new TypeT<CrdtData<String, Integer>>() {}.getType();
 
 		Promises.sequence(IntStream.range(0, 1_000_000)
-				.mapToObj(i ->
-						() -> client.request(HttpRequest.of(PUT, "http://127.0.0.1:7000")
-								.withBody(toJson(manifest, new CrdtData<>("value_" + i, i))))
-								.toVoid()))
+						.mapToObj(i ->
+								() -> client.request(HttpRequest.of(PUT, "http://127.0.0.1:7000")
+												.withBody(toJson(manifest, new CrdtData<>("value_" + i, i))))
+										.toVoid()))
 				.whenException(Throwable::printStackTrace)
 				.whenComplete(uploadStat.recordStats())
 				.whenComplete(assertComplete($ -> System.out.println(uploadStat)));
@@ -196,7 +196,7 @@ public final class CrdtClusterTest {
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
 		StreamSupplier.ofStream(IntStream.range(0, 1000000)
-				.mapToObj(i -> new CrdtData<>("value_" + i, i))).streamTo(StreamConsumer.ofPromise(client.upload()))
+						.mapToObj(i -> new CrdtData<>("value_" + i, i))).streamTo(StreamConsumer.ofPromise(client.upload()))
 				.whenComplete(uploadStat.recordStats())
 				.whenComplete(assertComplete($ -> {
 					System.out.println(uploadStat);

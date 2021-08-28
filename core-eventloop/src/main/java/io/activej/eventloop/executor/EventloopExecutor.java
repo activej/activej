@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Supplier;
 
 /**
  * An abstraction over the {@link Eventloop} that can receive, dispatch and run tasks in it.

@@ -16,9 +16,7 @@
 
 package io.activej.ot.uplink;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.ot.TransformResult;
-import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplinkStorage.Storage.SyncData;
 import io.activej.promise.Promise;
@@ -71,12 +69,12 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 			return getHead()
 					.then(headCommitId ->
 							Promises.loop(commitId + 1L,
-									i -> i <= headCommitId,
-									i -> getCommit(i)
-											.map(commit -> {
-												diffs.addAll(commit.getDiffs());
-												return i + 1;
-											}))
+											i -> i <= headCommitId,
+											i -> getCommit(i)
+													.map(commit -> {
+														diffs.addAll(commit.getDiffs());
+														return i + 1;
+													}))
 									.map($ -> new FetchData<>(headCommitId, NO_LEVEL, diffs)));
 		}
 

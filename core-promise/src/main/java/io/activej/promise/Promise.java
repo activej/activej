@@ -19,7 +19,6 @@ package io.activej.promise;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.*;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.Contract;

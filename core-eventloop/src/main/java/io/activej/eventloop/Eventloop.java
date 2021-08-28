@@ -18,12 +18,12 @@ package io.activej.eventloop;
 
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.Checks;
+import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.ThrowingRunnable;
 import io.activej.common.function.ThrowingSupplier;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.reflection.ReflectionUtils;
 import io.activej.common.time.CurrentTimeProvider;

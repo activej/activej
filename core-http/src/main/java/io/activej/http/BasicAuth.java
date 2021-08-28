@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 

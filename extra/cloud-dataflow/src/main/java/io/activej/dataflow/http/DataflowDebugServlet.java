@@ -16,7 +16,6 @@
 
 package io.activej.dataflow.http;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;

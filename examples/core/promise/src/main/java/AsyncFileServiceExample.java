@@ -74,8 +74,8 @@ public final class AsyncFileServiceExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 		Promises.sequence(
-				() -> writeToFile(),
-				() -> readFromFile().toVoid())
+						() -> writeToFile(),
+						() -> readFromFile().toVoid())
 				.whenComplete(($, e) -> {
 					if (e != null) {
 						System.out.println("Something went wrong : " + e);

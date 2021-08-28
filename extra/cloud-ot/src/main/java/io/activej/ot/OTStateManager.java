@@ -19,7 +19,6 @@ package io.activej.ot;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.EventloopService;
-import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
@@ -89,7 +88,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 
 	@NotNull
 	public static <K, D> OTStateManager<K, D> create(@NotNull Eventloop eventloop, @NotNull OTSystem<D> otSystem,
-													 @NotNull OTUplink<K, D, ?> repository, @NotNull OTState<D> state) {
+			@NotNull OTUplink<K, D, ?> repository, @NotNull OTState<D> state) {
 		return new OTStateManager<>(eventloop, otSystem, repository, state);
 	}
 

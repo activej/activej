@@ -16,7 +16,6 @@
 
 package io.activej.datastream;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.ThrowingConsumer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.eventloop.Eventloop;
@@ -29,7 +28,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Collector;
 
 import static io.activej.common.Utils.nullify;

@@ -20,7 +20,6 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.ThrowingBiConsumer;
 import io.activej.common.function.ThrowingFunction;
 import io.activej.common.recycle.Recyclers;
@@ -321,7 +320,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
-						.whenResult(value -> { if (value != null) fn.accept(value);});
+						.whenResult(value -> {if (value != null) fn.accept(value);});
 			}
 		};
 	}

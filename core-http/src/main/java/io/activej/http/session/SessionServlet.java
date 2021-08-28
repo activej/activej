@@ -16,7 +16,6 @@
 
 package io.activej.http.session;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;

@@ -17,7 +17,6 @@
 package io.activej.csp.binary;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.exception.UncheckedException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;

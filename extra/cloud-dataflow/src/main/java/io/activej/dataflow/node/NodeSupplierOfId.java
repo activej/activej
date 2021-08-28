@@ -46,7 +46,7 @@ public final class NodeSupplierOfId<T> extends AbstractNode {
 		this(index, id, partitionIndex, maxPartitions, new StreamId());
 	}
 
-	public NodeSupplierOfId(int index, String id, int partitionIndex, int maxPartitions,  StreamId output) {
+	public NodeSupplierOfId(int index, String id, int partitionIndex, int maxPartitions, StreamId output) {
 		super(index);
 		this.id = id;
 		this.partitionIndex = partitionIndex;

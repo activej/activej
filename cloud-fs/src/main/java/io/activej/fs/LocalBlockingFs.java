@@ -17,8 +17,6 @@
 package io.activej.fs;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.exception.UncheckedException;
-import io.activej.common.function.ThrowingBiConsumer;
 import io.activej.common.service.BlockingService;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.fs.exception.ForbiddenPathException;
