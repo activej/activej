@@ -2,6 +2,7 @@ package io.activej.rpc.memcache;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.MemSize;
+import io.activej.common.function.ThrowingSupplier;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
@@ -137,7 +138,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 	}
 
 	private long round(Supplier<Promise<Long>> function) throws Exception {
-		return eventloop.submit(function).get();
+		return eventloop.submit(function::get).get();
 	}
 
 	int sent;

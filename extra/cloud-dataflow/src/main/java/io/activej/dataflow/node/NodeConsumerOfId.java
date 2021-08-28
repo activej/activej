@@ -2,6 +2,7 @@ package io.activej.dataflow.node;
 
 import com.dslplatform.json.CompiledJson;
 import io.activej.async.function.AsyncConsumer;
+import io.activej.common.function.ThrowingConsumer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
@@ -51,15 +52,13 @@ public final class NodeConsumerOfId<T> extends AbstractNode {
 		Object object = task.get(id);
 		StreamConsumer<T> streamConsumer;
 		if (object instanceof Collection) {
-			Collection<T> set = (Collection<T>) object;
-			streamConsumer = StreamConsumer.of(set::add);
+			streamConsumer = StreamConsumer.ofConsumer(((Collection<T>) object)::add);
 		} else if (object instanceof Consumer) {
-			Consumer<T> consumer = (Consumer<T>) object;
-			streamConsumer = StreamConsumer.of(consumer);
+			streamConsumer = StreamConsumer.ofConsumer(((Consumer<T>) object)::accept);
+		} else if (object instanceof ThrowingConsumer) {
+			streamConsumer = StreamConsumer.ofConsumer((ThrowingConsumer<T>) object);
 		} else if (object instanceof AsyncConsumer) {
-			AsyncConsumer<T> consumer = (AsyncConsumer<T>) object;
-			ChannelConsumer<T> channelConsumer = ChannelConsumer.of(consumer);
-			streamConsumer = StreamConsumer.ofChannelConsumer(channelConsumer);
+			streamConsumer = StreamConsumer.ofChannelConsumer(ChannelConsumer.of((AsyncConsumer<T>) object));
 		} else if (object instanceof ChannelConsumer) {
 			streamConsumer = StreamConsumer.ofChannelConsumer((ChannelConsumer<T>) object);
 		} else if (object instanceof StreamConsumer) {

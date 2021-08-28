@@ -134,7 +134,7 @@ public class CspBenchmark extends Launcher {
 		ChannelSupplier<Integer> input = inputProvider.get();
 		ChannelConsumer<Integer> output = outputProvider.get();
 		long start = System.currentTimeMillis();
-		return input.map(Function.identity())
+		return input.map(v -> v)
 				.streamTo(output)
 				.map($ -> System.currentTimeMillis() - start);
 	}

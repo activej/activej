@@ -17,6 +17,7 @@
 package io.activej.datastream;
 
 import io.activej.async.process.AsyncCloseable;
+import io.activej.common.function.ThrowingSupplier;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.StreamSuppliers.Closing;
 import io.activej.datastream.StreamSuppliers.ClosingWithError;
@@ -32,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -156,22 +156,27 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 * Creates a supplier which supplies items by calling a given lambda.
 	 * It closes itself (and changes to closed state) when lambda returns <code>null</code>.
 	 */
-	static <T> StreamSupplier<T> ofSupplier(Supplier<T> supplier) {
-		return new OfIterator<>(new Iterator<T>() {
-			private T next = supplier.get();
-
+	static <T> StreamSupplier<T> ofSupplier(ThrowingSupplier<T> supplier) {
+		return new AbstractStreamSupplier<T>() {
 			@Override
-			public boolean hasNext() {
-				return next != null;
+			protected void onResumed() {
+				while (isReady()) {
+					T t;
+					try {
+						t = supplier.get();
+					} catch (Exception e) {
+						closeEx(e);
+						break;
+					}
+					if (t != null) {
+						send(t);
+					} else {
+						sendEndOfStream();
+						break;
+					}
+				}
 			}
-
-			@Override
-			public T next() {
-				T n = next;
-				next = supplier.get();
-				return n;
-			}
-		});
+		};
 	}
 
 	/**

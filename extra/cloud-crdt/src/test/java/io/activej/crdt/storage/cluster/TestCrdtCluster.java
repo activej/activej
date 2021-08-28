@@ -138,7 +138,7 @@ public final class TestCrdtCluster {
 		await(partitions.start()
 				.then(() -> cluster.download())
 				.then(supplier -> supplier
-						.streamTo(StreamConsumer.of(localStorage::put)))
+						.streamTo(StreamConsumer.ofConsumer(localStorage::put)))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
 		assertEquals(setOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1).getState());

@@ -91,7 +91,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		return Promise.of(StreamConsumer.of(this::doPut)
+		return Promise.of(StreamConsumer.ofConsumer(this::doPut)
 				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats));
 	}
 
@@ -103,7 +103,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
-		return Promise.of(StreamConsumer.<K>of(map::remove)
+		return Promise.of(StreamConsumer.<K>ofConsumer(map::remove)
 				.transformWith(detailedStats ? removeStatsDetailed : removeStats));
 	}
 

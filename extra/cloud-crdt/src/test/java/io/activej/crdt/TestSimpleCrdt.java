@@ -81,7 +81,7 @@ public final class TestSimpleCrdt {
 		CrdtStorageMap<String, TimestampContainer<Integer>> localStorage = CrdtStorageMap.create(getCurrentEventloop(), TimestampContainer.createCrdtFunction(Integer::max));
 
 		await(client.download().then(supplier -> supplier
-				.streamTo(StreamConsumer.of(localStorage::put))
+				.streamTo(StreamConsumer.ofConsumer(localStorage::put))
 				.whenComplete(server::close)));
 
 		System.out.println("Data fetched from 'remote' storage:");

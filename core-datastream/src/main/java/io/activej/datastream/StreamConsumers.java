@@ -17,6 +17,7 @@
 package io.activej.datastream;
 
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.ThrowingConsumer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
@@ -55,9 +56,9 @@ final class StreamConsumers {
 	}
 
 	static final class OfConsumer<T> extends AbstractStreamConsumer<T> {
-		private final Consumer<T> consumer;
+		private final ThrowingConsumer<T> consumer;
 
-		OfConsumer(Consumer<T> consumer) {
+		OfConsumer(ThrowingConsumer<T> consumer) {
 			this.consumer = consumer;
 		}
 
@@ -66,8 +67,8 @@ final class StreamConsumers {
 			resume(item -> {
 				try {
 					consumer.accept(item);
-				} catch (UncheckedException u) {
-					closeEx(u.getCause());
+				} catch (Exception e) {
+					closeEx(e);
 				}
 			});
 		}

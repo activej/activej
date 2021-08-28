@@ -208,6 +208,6 @@ public final class CrdtClusterTest {
 	public void downloadStuff() {
 		CrdtStorageClient<String, Integer> client = CrdtStorageClient.create(Eventloop.getCurrentEventloop(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
 
-		await(client.download().then(supplier -> supplier.streamTo(StreamConsumer.of(System.out::println))));
+		await(client.download().then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(System.out::println))));
 	}
 }

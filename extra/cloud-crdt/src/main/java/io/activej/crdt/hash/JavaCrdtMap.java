@@ -83,6 +83,6 @@ public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, E
 	private Promise<Void> doRefresh(CrdtStorage<K, S> storage) {
 		assert storage != null;
 		return storage.download()
-						.then(supplier -> supplier.streamTo(StreamConsumer.of(crdtData -> map.put(crdtData.getKey(), crdtData.getState()))));
+						.then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(crdtData -> map.put(crdtData.getKey(), crdtData.getState()))));
 	}
 }

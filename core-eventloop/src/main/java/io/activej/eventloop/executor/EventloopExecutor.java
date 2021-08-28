@@ -17,6 +17,8 @@
 package io.activej.eventloop.executor;
 
 import io.activej.async.callback.AsyncComputation;
+import io.activej.common.function.ThrowingRunnable;
+import io.activej.common.function.ThrowingSupplier;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,11 +37,11 @@ public interface EventloopExecutor extends Executor {
 	/**
 	 * Executes the given computation at some time in the future in some underlying eventloop.
 	 */
-	@NotNull CompletableFuture<Void> submit(@NotNull Runnable computation);
+	@NotNull CompletableFuture<Void> submit(@NotNull ThrowingRunnable computation);
 
 	/**
 	 * Executes the given computation at some time in the future in some undelying eventloop
 	 * and returns its result in a {@link CompletableFuture future}.
 	 */
-	@NotNull <T> CompletableFuture<T> submit(Supplier<? extends AsyncComputation<T>> computation);
+	@NotNull <T> CompletableFuture<T> submit(ThrowingSupplier<? extends AsyncComputation<T>> computation);
 }

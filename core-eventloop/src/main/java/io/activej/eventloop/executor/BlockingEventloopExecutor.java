@@ -18,6 +18,8 @@ package io.activej.eventloop.executor;
 
 import io.activej.async.callback.AsyncComputation;
 import io.activej.common.exception.UncheckedException;
+import io.activej.common.function.ThrowingRunnable;
+import io.activej.common.function.ThrowingSupplier;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
 
@@ -104,13 +106,15 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 
 	@NotNull
 	@Override
-	public CompletableFuture<Void> submit(@NotNull Runnable computation) {
+	public CompletableFuture<Void> submit(@NotNull ThrowingRunnable computation) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		post(() -> {
 			try {
 				computation.run();
-			} catch (UncheckedException u) {
-				future.completeExceptionally(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				future.completeExceptionally(e);
 				return;
 			} finally {
 				complete();
@@ -122,7 +126,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 
 	@NotNull
 	@Override
-	public <T> CompletableFuture<T> submit(Supplier<? extends AsyncComputation<T>> computation) {
+	public <T> CompletableFuture<T> submit(ThrowingSupplier<? extends AsyncComputation<T>> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		post(() -> {
 			try {
@@ -133,8 +137,6 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 						future.completeExceptionally(e);
 					}
 				});
-			} catch (UncheckedException u) {
-				future.completeExceptionally(u.getCause());
 			} catch (RuntimeException e) {
 				throw e;
 			} catch (Exception e) {

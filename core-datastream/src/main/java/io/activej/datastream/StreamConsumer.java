@@ -17,6 +17,7 @@
 package io.activej.datastream;
 
 import io.activej.async.process.AsyncCloseable;
+import io.activej.common.function.ThrowingConsumer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.datastream.StreamConsumers.ClosingWithError;
 import io.activej.datastream.StreamConsumers.Idle;
@@ -93,7 +94,7 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 	 * it receives.
 	 * Its acknowledgement completes when the supplier closes.
 	 */
-	static <T> StreamConsumer<T> of(Consumer<T> consumer) {
+	static <T> StreamConsumer<T> ofConsumer(ThrowingConsumer<T> consumer) {
 		return new StreamConsumers.OfConsumer<>(consumer);
 	}
 

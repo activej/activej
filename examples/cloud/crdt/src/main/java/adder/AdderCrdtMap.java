@@ -60,7 +60,7 @@ public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, Eventlo
 	private Promise<Void> doRefresh(CrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		return storage.download()
 				.then(supplier -> supplier.streamTo(
-						StreamConsumer.of(crdtData -> {
+						StreamConsumer.ofConsumer(crdtData -> {
 							DetailedSumsCrdtState globalState = crdtData.getState();
 
 							float localSum = globalState.getSumFor(localServerId);

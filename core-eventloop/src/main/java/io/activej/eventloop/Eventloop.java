@@ -19,6 +19,8 @@ package io.activej.eventloop;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.Checks;
+import io.activej.common.function.ThrowingRunnable;
+import io.activej.common.function.ThrowingSupplier;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.exception.UncheckedException;
@@ -1088,13 +1090,15 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 */
 	@NotNull
 	@Override
-	public CompletableFuture<Void> submit(@NotNull Runnable computation) {
+	public CompletableFuture<Void> submit(@NotNull ThrowingRunnable computation) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		execute(() -> {
 			try {
 				computation.run();
-			} catch (UncheckedException u) {
-				future.completeExceptionally(u.getCause());
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				future.completeExceptionally(e);
 				return;
 			}
 			future.complete(null);
@@ -1104,7 +1108,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	@NotNull
 	@Override
-	public <T> CompletableFuture<T> submit(Supplier<? extends AsyncComputation<T>> computation) {
+	public <T> CompletableFuture<T> submit(ThrowingSupplier<? extends AsyncComputation<T>> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		execute(() -> {
 			try {
@@ -1115,8 +1119,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 						future.completeExceptionally(e);
 					}
 				});
-			} catch (UncheckedException u) {
-				future.completeExceptionally(u.getCause());
 			} catch (RuntimeException e) {
 				throw e;
 			} catch (Exception e) {
