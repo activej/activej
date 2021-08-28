@@ -130,7 +130,7 @@ public class DataflowServerTest {
 	@Test
 	public void testMapReduceWithMalformedServer() throws Exception {
 		launchServers(asList("dog", "cat", "horse", "cat"), asList("dog", "cat"), true);
-		Throwable exception = awaitException(mapReduce(new ArrayList<>()));
+		Exception exception = awaitException(mapReduce(new ArrayList<>()));
 
 		assertThat(exception.getMessage(), containsString("Error on remote server"));
 	}
@@ -176,7 +176,7 @@ public class DataflowServerTest {
 	@Test
 	public void testRepartitionAndSortWithMalformedServer() throws Exception {
 		launchServers(asList("dog", "cat", "horse", "cat", "cow"), asList("dog", "cat", "cow"), true);
-		Throwable exception = awaitException(repartitionAndSort());
+		Exception exception = awaitException(repartitionAndSort());
 
 		assertThat(exception.getMessage(), containsString("Error on remote server"));
 	}

@@ -85,7 +85,7 @@ public class RpcStrategyFirstValidResultTest {
 	}
 
 	@Test(expected = ExpectedException.class)
-	public void itShouldCallOnExceptionIfAllSendersReturnsNullAndValidatorIsDefaultButExceptionIsSpecified() throws Throwable {
+	public void itShouldCallOnExceptionIfAllSendersReturnsNullAndValidatorIsDefaultButExceptionIsSpecified() throws Exception {
 		// default validator should check whether result is not null
 		RpcStrategy strategy1 = new RequestSenderOnResultWithNullStrategy();
 		RpcStrategy strategy2 = new RequestSenderOnResultWithNullStrategy();
@@ -100,7 +100,7 @@ public class RpcStrategyFirstValidResultTest {
 		try {
 			future.get();
 		} catch (ExecutionException e) {
-			throw e.getCause();
+			throw (Exception) e.getCause();
 		}
 	}
 

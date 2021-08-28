@@ -44,7 +44,7 @@ import static java.util.stream.Collectors.toList;
 
 public final class Utils {
 
-	public static <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> wrapException(Supplier<String> errorMessageSupplier) {
+	public static <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> wrapException(Supplier<String> errorMessageSupplier) {
 		return (v, e) -> e == null ?
 				Promise.of(v) :
 				e instanceof CrdtException ?

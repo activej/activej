@@ -101,7 +101,7 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 	/**
 	 * Creates a consumer that is in the closed state with given error set.
 	 */
-	static <T> StreamConsumer<T> closingWithError(Throwable e) {
+	static <T> StreamConsumer<T> closingWithError(Exception e) {
 		return new ClosingWithError<>(e);
 	}
 

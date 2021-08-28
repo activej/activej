@@ -25,7 +25,7 @@ public class AsyncCloseException extends AsyncException {
 		super(message);
 	}
 
-	public AsyncCloseException(String message, Throwable cause) {
+	public AsyncCloseException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

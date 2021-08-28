@@ -26,11 +26,11 @@ public class RedisException extends Exception {
 		super(message);
 	}
 
-	public RedisException(@NotNull String message, @NotNull Throwable cause) {
+	public RedisException(@NotNull String message, @NotNull Exception cause) {
 		super(message, cause);
 	}
 
-	public RedisException(@NotNull Throwable cause) {
+	public RedisException(@NotNull Exception cause) {
 		super(cause);
 	}
 }

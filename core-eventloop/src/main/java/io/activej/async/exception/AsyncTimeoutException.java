@@ -21,7 +21,7 @@ public class AsyncTimeoutException extends AsyncException {
 		super(message);
 	}
 
-	public AsyncTimeoutException(String message, Throwable cause) {
+	public AsyncTimeoutException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

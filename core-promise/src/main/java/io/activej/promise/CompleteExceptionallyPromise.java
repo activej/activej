@@ -34,9 +34,9 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 @SuppressWarnings("unchecked")
 public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@NotNull
-	private final Throwable exception;
+	private final Exception exception;
 
-	public CompleteExceptionallyPromise(@NotNull Throwable e) {
+	public CompleteExceptionallyPromise(@NotNull Exception e) {
 		this.exception = e;
 	}
 
@@ -61,7 +61,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Throwable getException() {
+	public Exception getException() {
 		return exception;
 	}
 
@@ -93,13 +93,13 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public <U> Promise<U> map(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
+	public <U> Promise<U> map(@NotNull BiFunction<? super T, Exception, ? extends U> fn) {
 		return Promise.of(fn.apply(null, exception));
 	}
 
 	@NotNull
 	@Override
-	public <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends U> fn) {
+	public <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
 		} catch (RuntimeException ex) {
@@ -132,13 +132,13 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public <U> Promise<U> then(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
+	public <U> Promise<U> then(@NotNull BiFunction<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		return (Promise<U>) fn.apply(null, exception);
 	}
 
 	@NotNull
 	@Override
-	public <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
+	public <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
 		} catch (RuntimeException ex) {
@@ -150,13 +150,13 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public Promise<T> whenComplete(@NotNull BiConsumer<? super T, Throwable> action) {
+	public Promise<T> whenComplete(@NotNull BiConsumer<? super T, Exception> action) {
 		action.accept(null, exception);
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Throwable> action) {
+	public @NotNull Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Exception> action) {
 		try {
 			action.accept(null, exception);
 			return this;
@@ -208,13 +208,13 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Promise<T> whenException(@NotNull Consumer<Throwable> action) {
+	public Promise<T> whenException(@NotNull Consumer<Exception> action) {
 		action.accept(exception);
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Throwable> action) {
+	public @NotNull Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Exception> action) {
 		try {
 			action.accept(exception);
 			return this;

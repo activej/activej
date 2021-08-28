@@ -17,7 +17,6 @@
 package io.activej.test;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
-import io.activej.async.callback.Callback;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sql.DataSource;
@@ -70,14 +69,14 @@ public final class TestUtils {
 		return dataSource;
 	}
 
-	public static <T> BiConsumer<T, Throwable> assertComplete(ThrowingConsumer<T> consumer) {
+	public static <T> BiConsumer<T, Exception> assertComplete(ThrowingConsumer<T> consumer) {
 		activePromises++;
 		return (t, e) -> {
 			activePromises--;
 			if (e != null) {
-				if (e instanceof AssertionError) {
-					throw (AssertionError) e;
-				}
+//				if (e instanceof AssertionError) {
+//					throw (AssertionError) e;
+//				}
 				throw new AssertionError(e);
 			}
 			try {
@@ -90,7 +89,7 @@ public final class TestUtils {
 		};
 	}
 
-	public static <T> BiConsumer<T, Throwable> assertComplete() {
+	public static <T> BiConsumer<T, Exception> assertComplete() {
 		return assertComplete($ -> {});
 	}
 
@@ -121,7 +120,7 @@ public final class TestUtils {
 
 	@FunctionalInterface
 	public interface ThrowingConsumer<T> {
-		void accept(T t) throws Throwable;
+		void accept(T t) throws Exception;
 	}
 
 	public static <T> Consumer<T> asserting(ThrowingConsumer<T> consumer) {
@@ -141,7 +140,7 @@ public final class TestUtils {
 		void accept(T result, @Nullable Throwable e) throws Throwable;
 	}
 
-	public static <T> BiConsumer<T, Throwable> asserting(ThrowingConsumerEx<T> consumer) {
+	public static <T> BiConsumer<T, Exception> asserting(ThrowingConsumerEx<T> consumer) {
 		return (x, y) -> {
 			try {
 				consumer.accept(x, y);

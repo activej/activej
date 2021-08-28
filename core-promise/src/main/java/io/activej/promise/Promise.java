@@ -76,10 +76,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * Creates an exceptionally completed {@code Promise}.
 	 *
-	 * @param e Throwable
+	 * @param e Exception
 	 */
 	@NotNull
-	static <T> CompleteExceptionallyPromise<T> ofException(@NotNull Throwable e) {
+	static <T> CompleteExceptionallyPromise<T> ofException(@NotNull Exception e) {
 		return new CompleteExceptionallyPromise<>(e);
 	}
 
@@ -118,14 +118,14 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@NotNull
 	@SuppressWarnings({"OptionalUsedAsFieldOrParameterType"})
-	static <T> Promise<T> ofOptional(@NotNull Optional<T> optional, @NotNull Supplier<? extends Throwable> errorSupplier) {
+	static <T> Promise<T> ofOptional(@NotNull Optional<T> optional, @NotNull Supplier<? extends Exception> errorSupplier) {
 		if (optional.isPresent()) return Promise.of(optional.get());
 		return Promise.ofException(errorSupplier.get());
 	}
 
 	/**
 	 * Creates a completed {@code Promise} from {@code T value} and
-	 * {@code Throwable e} parameters, any of them can be {@code null}.
+	 * {@code Exception e} parameters, any of them can be {@code null}.
 	 * Useful for {@link #then(BiFunction)} passthroughs
 	 * (for example, when mapping specific exceptions).
 	 *
@@ -133,7 +133,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param e     possibly-null exception, determines type of promise completion
 	 */
 	@NotNull
-	static <T> Promise<T> of(@Nullable T value, @Nullable Throwable e) {
+	static <T> Promise<T> of(@Nullable T value, @Nullable Exception e) {
 		checkArgument(!(value != null && e != null), "Either value or exception should be 'null'");
 		return e == null ? of(value) : ofException(e);
 	}
@@ -170,7 +170,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
 			completionStage.whenCompleteAsync((result, e) -> {
-				eventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
+				if (!(e instanceof Exception)) throw (Error) e;
+				eventloop.execute(wrapContext(cb, () -> cb.accept(result, (Exception) e)));
 				eventloop.completeExternalTask();
 			});
 		});
@@ -194,10 +195,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 						T value = future.get();
 						eventloop.execute(wrapContext(cb, () -> cb.set(value)));
 					} catch (ExecutionException e) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(e.getCause())));
+						eventloop.execute(wrapContext(cb, () -> cb.setException((Exception) e.getCause())));
 					} catch (InterruptedException e) {
 						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
-					} catch (Throwable e) {
+					} catch (Exception e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, future));
 					} finally {
 						eventloop.completeExternalTask();
@@ -306,7 +307,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	T getResult();
 
 	@Contract(pure = true)
-	Throwable getException();
+	Exception getException();
 
 	@Contract(pure = true)
 	Try<T> getTry();
@@ -370,10 +371,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * applied to the result of this {@code Promise}
 	 */
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> map(@NotNull BiFunction<? super T, @Nullable Throwable, ? extends U> fn);
+	@NotNull <U> Promise<U> map(@NotNull BiFunction<? super T, @Nullable Exception, ? extends U> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, @Nullable Throwable, ? extends U> fn);
+	@NotNull <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, @Nullable Exception, ? extends U> fn);
 
 	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn);
@@ -404,10 +405,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise}
 	 */
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> then(@NotNull BiFunction<? super T, @Nullable Throwable, ? extends Promise<? extends U>> fn);
+	@NotNull <U> Promise<U> then(@NotNull BiFunction<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, @Nullable Throwable, ? extends Promise<? extends U>> fn);
+	@NotNull <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
 	/**
 	 * Subscribes given action to be executed
@@ -418,11 +419,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenComplete(@NotNull BiConsumer<? super T, Throwable> action);
+	Promise<T> whenComplete(@NotNull BiConsumer<? super T, Exception> action);
 
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Throwable> action);
+	Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Exception> action);
 
 	/**
 	 * Subscribes given action to be executed
@@ -470,11 +471,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action to be executed
 	 */
 	@Contract("_ -> this")
-	Promise<T> whenException(@NotNull Consumer<Throwable> action);
+	Promise<T> whenException(@NotNull Consumer<Exception> action);
 
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Throwable> action);
+	Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Exception> action);
 
 	Promise<T> whenException(@NotNull Runnable action);
 

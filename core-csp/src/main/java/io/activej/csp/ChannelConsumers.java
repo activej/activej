@@ -106,7 +106,7 @@ public final class ChannelConsumers {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				executor.execute(() -> {
 					try {
 						outputStream.close();
@@ -142,11 +142,10 @@ public final class ChannelConsumers {
 					eventloop.execute(wrapContext(channelConsumer, channelConsumer::close));
 					throw new IOException(e);
 				} catch (ExecutionException e) {
-					Throwable cause = e.getCause();
+					Exception cause = (Exception) e.getCause();
 					if (cause instanceof IOException) throw (IOException) cause;
 					if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-					if (cause instanceof Exception) throw new IOException(cause);
-					throw (Error) cause;
+					throw new IOException(cause);
 				}
 			}
 		};

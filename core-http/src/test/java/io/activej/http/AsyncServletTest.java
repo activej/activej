@@ -54,7 +54,7 @@ public class AsyncServletTest {
 						ChannelSupplier.ofException(exception)
 				));
 
-		Throwable e = awaitException(servlet.serveAsync(testRequest));
+		Exception e = awaitException(servlet.serveAsync(testRequest));
 
 		assertSame(exception, e);
 	}

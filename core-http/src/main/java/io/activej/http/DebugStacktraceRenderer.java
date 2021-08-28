@@ -77,7 +77,7 @@ public final class DebugStacktraceRenderer {
 		STACK_TRACE_ELEMENT = Pattern.compile("(at ((?:" + ident + "\\.)+)" + ident + "\\()(" + ident + "(\\." + ident + ")(:\\d+)?)\\)");
 	}
 
-	public static HttpResponse render(Throwable e, int code) {
+	public static HttpResponse render(Exception e, int code) {
 		StringWriter writer = new StringWriter();
 		e.printStackTrace(new PrintWriter(writer));
 		Matcher matcher = STACK_TRACE_ELEMENT.matcher(writer.toString());

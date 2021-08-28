@@ -79,8 +79,8 @@ public class ChannelConsumerTest {
 		};
 
 		ChannelConsumer<ByteBuf> channelConsumer = outputStreamAsChannelConsumer(newSingleThreadExecutor(), outputStream);
-		Throwable throwable = awaitException(channelConsumer.acceptAll(ByteBuf.empty(), ByteBuf.wrapForReading("Hello".getBytes())));
-		assertSame(exception, throwable);
+		Exception exception2 = awaitException(channelConsumer.acceptAll(ByteBuf.empty(), ByteBuf.wrapForReading("Hello".getBytes())));
+		assertSame(exception, exception2);
 	}
 
 	@Test
@@ -177,7 +177,7 @@ public class ChannelConsumerTest {
 		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherEventloop(anotherEventloop, anotherEventloopConsumer);
 
 		startAnotherEventloop(anotherEventloop);
-		Throwable exception = awaitException(consumer.accept(1)
+		Exception exception = awaitException(consumer.accept(1)
 				.then(() -> consumer.accept(2))
 				.whenComplete(() -> consumer.closeEx(expectedException))
 				.then(() -> consumer.accept(3)));

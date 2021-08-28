@@ -250,7 +250,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 								}));
 			}
 
-			private void log(Throwable e) {
+			private void log(Exception e) {
 				if (e == null && logger.isTraceEnabled()) {
 					logger.trace("Finish log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
 							fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
@@ -277,7 +277,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 	}
 
 
-	private static <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> wrapException(Function<Throwable, Throwable> wrapFn) {
+	private static <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> wrapException(Function<Exception, Exception> wrapFn) {
 		return (v, e) -> e == null ?
 				Promise.of(v) :
 				Promise.ofException(wrapFn.apply(e));

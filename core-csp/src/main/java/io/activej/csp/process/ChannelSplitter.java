@@ -128,7 +128,7 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 	}
 
 	@Override
-	protected void doClose(Throwable e) {
+	protected void doClose(Exception e) {
 		input.closeEx(e);
 		outputs.forEach(output -> output.closeEx(e));
 	}

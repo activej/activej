@@ -147,7 +147,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * @return <code>true</code> if partition was alive and <code>false</code> otherwise
 	 */
 	@SuppressWarnings("UnusedReturnValue")
-	public boolean markDead(Object partitionId, @Nullable Throwable e) {
+	public boolean markDead(Object partitionId, @Nullable Exception e) {
 		ActiveFs partition = alivePartitions.remove(partitionId);
 		if (partition != null) {
 			logger.warn("marking {} as dead ", partitionId, e);
@@ -169,13 +169,13 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * If partition has returned exception other than {@link FsException} that indicates that there were connection problems
 	 * or that there were no response at all
 	 */
-	public void markIfDead(Object partitionId, Throwable e) {
+	public void markIfDead(Object partitionId, Exception e) {
 		if (!(e instanceof FsException) || e instanceof FsIOException) {
 			markDead(partitionId, e);
 		}
 	}
 
-	public <T> BiFunction<T, Throwable, Promise<T>> wrapDeath(Object partitionId) {
+	public <T> BiFunction<T, Exception, Promise<T>> wrapDeath(Object partitionId) {
 		return (res, e) -> {
 			if (e == null) {
 				return Promise.of(res);

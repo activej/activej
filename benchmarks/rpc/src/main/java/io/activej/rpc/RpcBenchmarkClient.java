@@ -151,7 +151,7 @@ public class RpcBenchmarkClient extends Launcher {
 
 		Callback<Integer> callback = new Callback<Integer>() {
 			@Override
-			public void accept(Integer result, @Nullable Throwable e) {
+			public void accept(Integer result, @Nullable Exception e) {
 				completed++;
 
 				int active = sent - completed;

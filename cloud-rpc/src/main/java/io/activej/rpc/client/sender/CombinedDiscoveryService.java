@@ -30,7 +30,7 @@ class CombinedDiscoveryService implements DiscoveryService {
 	private final Set<Callback<Map<Object, InetSocketAddress>>> callbacks = new HashSet<>();
 
 	private Map<Object, InetSocketAddress> totalDiscovered = new HashMap<>();
-	private Throwable error;
+	private Exception error;
 
 	CombinedDiscoveryService(List<DiscoveryService> discoveryServices) {
 		this.discoveryServicesSize = discoveryServices.size();
@@ -65,7 +65,7 @@ class CombinedDiscoveryService implements DiscoveryService {
 		});
 	}
 
-	private void onError(@NotNull Throwable e) {
+	private void onError(@NotNull Exception e) {
 		error = e;
 		completeCallbacks();
 	}

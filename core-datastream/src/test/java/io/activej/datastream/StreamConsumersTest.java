@@ -20,7 +20,7 @@ public class StreamConsumersTest {
 				.withAcknowledgement(ack -> ack
 						.then(($, e) -> Promise.ofException(new Exception("Test"))));
 
-		Throwable exception = awaitException(supplier.streamTo(failingConsumer));
+		Exception exception = awaitException(supplier.streamTo(failingConsumer));
 		assertEquals("Test", exception.getMessage());
 	}
 }

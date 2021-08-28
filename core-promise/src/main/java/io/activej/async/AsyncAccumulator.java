@@ -127,7 +127,7 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 	}
 
 	@Override
-	public void closeEx(@NotNull Throwable e) {
+	public void closeEx(@NotNull Exception e) {
 		if (resultPromise.trySetException(e)) {
 			Recyclers.recycle(accumulator);
 		}

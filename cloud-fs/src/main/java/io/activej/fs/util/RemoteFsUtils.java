@@ -27,7 +27,6 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.ref.RefLong;
-import io.activej.types.TypeT;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.fs.exception.FsBatchException;
@@ -35,6 +34,7 @@ import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
 import io.activej.fs.exception.FsScalarException;
 import io.activej.promise.Promise;
+import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -144,7 +144,7 @@ public final class RemoteFsUtils {
 		Casting received errors before sending to remote peer
 		ActiveFs.class is used as a component to hide implementation details from peer
 	 */
-	public static FsException castError(Throwable e) {
+	public static FsException castError(Exception e) {
 		return e instanceof FsException ? (FsException) e : new FsIOException("Unknown error");
 	}
 
@@ -157,7 +157,7 @@ public final class RemoteFsUtils {
 		for (Try<Void> aTry : tries) {
 			String source = sources.next();
 			if (aTry.isSuccess()) continue;
-			Throwable exception = aTry.getException();
+			Exception exception = aTry.getException();
 			if (exception instanceof FsScalarException) {
 				scalarExceptions.put(source, ((FsScalarException) exception));
 			} else {

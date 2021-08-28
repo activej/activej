@@ -149,7 +149,7 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 
 		Callback<HttpResponse> callback = new Callback<HttpResponse>() {
 			@Override
-			public void accept(HttpResponse result, @Nullable Throwable e) {
+			public void accept(HttpResponse result, @Nullable Exception e) {
 				completed++;
 				int active = sent - completed;
 

@@ -25,7 +25,7 @@ public class UnknownFormatException extends MalformedDataException {
 		super(message);
 	}
 
-	public UnknownFormatException(String message, Throwable cause) {
+	public UnknownFormatException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

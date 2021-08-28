@@ -16,9 +16,9 @@
 
 package io.activej.http;
 
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
-import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
@@ -89,9 +89,9 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 
 		void onHttpResponse(HttpRequest request, HttpResponse httpResponse);
 
-		void onServletException(HttpRequest request, Throwable e);
+		void onServletException(HttpRequest request, Exception e);
 
-		void onHttpError(HttpServerConnection connection, Throwable e);
+		void onHttpError(HttpServerConnection connection, Exception e);
 
 		void onDisconnect(HttpServerConnection connection);
 	}
@@ -124,12 +124,12 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		}
 
 		@Override
-		public void onServletException(HttpRequest request, Throwable e) {
+		public void onServletException(HttpRequest request, Exception e) {
 			servletExceptions.recordException(e, request.toString());
 		}
 
 		@Override
-		public void onHttpError(HttpServerConnection connection, Throwable e) {
+		public void onHttpError(HttpServerConnection connection, Exception e) {
 			if (e instanceof AsyncTimeoutException) {
 				httpTimeouts.recordEvent();
 			} else {
@@ -369,7 +369,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		return poolReadWriteExpired;
 	}
 
-	HttpResponse formatHttpError(Throwable e) {
+	HttpResponse formatHttpError(Exception e) {
 		return errorFormatter.formatException(e);
 	}
 

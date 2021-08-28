@@ -99,7 +99,7 @@ public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 	}
 
 	@Override
-	protected void doClose(Throwable e) {
+	protected void doClose(Exception e) {
 		input.closeEx(e);
 		output.closeEx(e);
 	}

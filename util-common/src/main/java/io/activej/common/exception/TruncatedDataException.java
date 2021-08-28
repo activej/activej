@@ -25,7 +25,7 @@ public class TruncatedDataException extends MalformedDataException {
 		super(message);
 	}
 
-	public TruncatedDataException(String message, Throwable cause) {
+	public TruncatedDataException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

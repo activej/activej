@@ -109,7 +109,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private long consolidationStarted;
 	private long consolidationLastTimeMillis;
 	private int consolidations;
-	private Throwable consolidationLastError;
+	private Exception consolidationLastError;
 
 	private Aggregation(Eventloop eventloop, Executor executor, DefiningClassLoader classLoader,
 			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
@@ -677,7 +677,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	@JmxAttribute
-	public Throwable getConsolidationLastError() {
+	public Exception getConsolidationLastError() {
 		return consolidationLastError;
 	}
 

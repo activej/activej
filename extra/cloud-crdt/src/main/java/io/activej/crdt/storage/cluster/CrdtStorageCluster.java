@@ -18,8 +18,8 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.collection.Try;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefInt;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
@@ -275,7 +275,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 		for (Container<StreamConsumer<T>> container : containers) {
 			StreamSupplier<T> supplier = splitter.addOutput(splitter.new Output() {
 				@Override
-				protected void onError(Throwable e) {
+				protected void onError(Exception e) {
 					partitions.markDead(container.id, e);
 					sharder.recompute(partitions.getAlivePartitions().keySet());
 					if (++failed.value == containers.size()) {
@@ -316,7 +316,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 						boolean awaiting;
 
 						@Override
-						protected void onError(Throwable e) {
+						protected void onError(Exception e) {
 							if (awaiting) {
 								advance();
 							}

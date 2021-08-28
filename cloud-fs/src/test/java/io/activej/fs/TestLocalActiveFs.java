@@ -125,13 +125,13 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testUploadToDirectory() {
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.upload("1")));
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.upload("1")));
 		assertThat(exception, instanceOf(IsADirectoryException.class));
 	}
 
 	@Test
 	public void testAppendToDirectory() {
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.append("1", 0)));
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.append("1", 0)));
 		assertThat(exception, instanceOf(IsADirectoryException.class));
 	}
 
@@ -155,7 +155,7 @@ public final class TestLocalActiveFs {
 		long size = Files.size(storagePath.resolve(path));
 		assertTrue(size > 0);
 
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("appended"))
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("appended"))
 				.streamTo(client.append(path, size * 2)));
 
 		assertThat(exception, instanceOf(IllegalOffsetException.class));
@@ -170,7 +170,7 @@ public final class TestLocalActiveFs {
 		ExpectedException expectedException = new ExpectedException();
 		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename));
 
-		Throwable exception = awaitException(ChannelSuppliers.concat(
+		Exception exception = awaitException(ChannelSuppliers.concat(
 				ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
 				ChannelSupplier.ofException(expectedException))
 				.streamTo(consumer));
@@ -188,7 +188,7 @@ public final class TestLocalActiveFs {
 
 		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
 
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
 
 		assertThat(exception, instanceOf(TruncatedDataException.class));
 
@@ -203,7 +203,7 @@ public final class TestLocalActiveFs {
 
 		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
 
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
 
 		assertThat(exception, instanceOf(UnexpectedDataException.class));
 
@@ -235,7 +235,7 @@ public final class TestLocalActiveFs {
 		String filename = "filename";
 		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
 
-		Throwable exception = awaitException(client.download(filename, 100, Long.MAX_VALUE));
+		Exception exception = awaitException(client.download(filename, 100, Long.MAX_VALUE));
 		assertThat(exception, instanceOf(IllegalOffsetException.class));
 	}
 
@@ -251,7 +251,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testDownloadNonExistingFile() {
-		Throwable e = awaitException(client.download("no_file.txt"));
+		Exception e = awaitException(client.download("no_file.txt"));
 
 		assertThat(e, instanceOf(FileNotFoundException.class));
 	}
@@ -318,7 +318,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testMoveNothingIntoNothing() {
-		Throwable exception = awaitException(client.move("i_do_not_exist.txt", "neither_am_i.txt"));
+		Exception exception = awaitException(client.move("i_do_not_exist.txt", "neither_am_i.txt"));
 
 		assertThat(exception, instanceOf(FileNotFoundException.class));
 	}
@@ -340,7 +340,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testListMalformedGlob() {
-		Throwable exception = awaitException(client.list("["));
+		Exception exception = awaitException(client.list("["));
 		assertThat(exception, instanceOf(MalformedGlobException.class));
 	}
 
@@ -488,7 +488,7 @@ public final class TestLocalActiveFs {
 		Path randomPath = emptyDirs.get(ThreadLocalRandom.current().nextInt(emptyDirs.size()));
 		Files.createFile(randomPath.resolve("file"));
 		String data = "test";
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
 		assertThat(exception, instanceOf(IsADirectoryException.class));
 	}
 

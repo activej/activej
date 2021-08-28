@@ -67,7 +67,7 @@ public final class ChannelByteCombinerTest {
 			combiner.addInput().set(failing());
 		}
 
-		Throwable exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector()));
+		Exception exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector()));
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 	}
@@ -81,7 +81,7 @@ public final class ChannelByteCombinerTest {
 		combiner.addInput().set(ChannelSuppliers.concat(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")),
 				failing()).async());
 
-		Throwable exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector()));
+		Exception exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector()));
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 	}

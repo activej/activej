@@ -333,7 +333,7 @@ public final class ChannelSuppliers {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				executor.execute(() -> {
 					try {
 						inputStream.close();
@@ -374,11 +374,10 @@ public final class ChannelSuppliers {
 							throw new IOException(e);
 						} catch (ExecutionException e) {
 							isClosed = true;
-							Throwable cause = e.getCause();
+							Exception cause = (Exception) e.getCause();
 							if (cause instanceof IOException) throw (IOException) cause;
 							if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-							if (cause instanceof Exception) throw new IOException(cause);
-							throw (Error) cause;
+							throw new IOException(cause);
 						}
 						if (buf == null) {
 							isClosed = true;
@@ -483,9 +482,9 @@ public final class ChannelSuppliers {
 	 * Represents a {@code ChannelSupplier} which always returns a promise of exception.
 	 */
 	public static final class ChannelSupplierOfException<T> extends AbstractChannelSupplier<T> {
-		private final Throwable e;
+		private final Exception e;
 
-		public ChannelSupplierOfException(Throwable e) {
+		public ChannelSupplierOfException(Exception e) {
 			this.e = e;
 		}
 
@@ -529,7 +528,7 @@ public final class ChannelSuppliers {
 		}
 
 		@Override
-		protected void onClosed(@NotNull Throwable e) {
+		protected void onClosed(@NotNull Exception e) {
 			current.closeEx(e);
 			if (ownership) {
 				iterator.forEachRemaining(Recyclers::recycle);

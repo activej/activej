@@ -179,7 +179,7 @@ public abstract class AbstractRedisBenchamark extends Launcher {
 
 							Callback<Object> callback = new Callback<Object>() {
 								@Override
-								public void accept(Object $, @Nullable Throwable e) {
+								public void accept(Object $, @Nullable Exception e) {
 									if (e != null) {
 										promise.setException(e);
 										return;

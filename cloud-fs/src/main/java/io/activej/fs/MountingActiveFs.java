@@ -186,7 +186,7 @@ final class MountingActiveFs implements ActiveFs {
 
 		return Promises.toList(movePromises.stream().map(AsyncSupplier::get))
 				.then(list -> {
-					List<Tuple2<String, Throwable>> exceptions = list.stream()
+					List<Tuple2<String, Exception>> exceptions = list.stream()
 							.filter(tuple -> tuple.getValue2().isException())
 							.map(tuple -> new Tuple2<>(tuple.getValue1(), tuple.getValue2().getException()))
 							.collect(toList());
@@ -194,8 +194,8 @@ final class MountingActiveFs implements ActiveFs {
 						return Promise.complete();
 					}
 					Map<String, FsScalarException> scalarExceptions = new HashMap<>();
-					for (Tuple2<String, Throwable> tuple : exceptions) {
-						Throwable exception = tuple.getValue2();
+					for (Tuple2<String, Exception> tuple : exceptions) {
+						Exception exception = tuple.getValue2();
 						if (exception instanceof FsScalarException) {
 							scalarExceptions.put(tuple.getValue1(), (FsScalarException) exception);
 						} else if (exception instanceof FsBatchException) {

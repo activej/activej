@@ -74,7 +74,7 @@ public class StreamBufferTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		StreamBuffer<Integer> buffer = StreamBuffer.create(1, 2);
-		Throwable exception = awaitException(supplier.streamTo(consumer.transformWith(buffer).transformWith(randomlySuspending())));
+		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(buffer).transformWith(randomlySuspending())));
 		assertSame(expectedException, exception);
 
 		assertEquals(asList(1, 2, 3, 4, 5), consumer.getList());
@@ -89,7 +89,7 @@ public class StreamBufferTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		StreamBuffer<Integer> buffer = StreamBuffer.create(1, 2);
-		Throwable exception = awaitException(supplier.streamTo(consumer
+		Exception exception = awaitException(supplier.streamTo(consumer
 				.transformWith(buffer)
 				.transformWith(decorate(promise -> promise.then(
 						item -> item == 5 ? Promise.ofException(expectedException) : Promise.of(item))))

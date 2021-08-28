@@ -69,7 +69,7 @@ public interface Node {
 	/**
 	 * Is called when all streams that were exported by this node finish streaming.
 	 */
-	void finish(@Nullable Throwable error);
+	void finish(@Nullable Exception error);
 
 	/**
 	 * Returns a point in time when this node instance finished processing data.
@@ -82,7 +82,7 @@ public interface Node {
 	 * If this node caused the task to fail, returns the exception that caused it.
 	 */
 	@Nullable
-	Throwable getError();
+	Exception getError();
 
 	/**
 	 * Optionally return some custom node statistics for debugging.

@@ -64,7 +64,7 @@ public class TestStreamTransformers {
 		}
 
 		@Override
-		protected void onClosed(@NotNull Throwable e) {
+		protected void onClosed(@NotNull Exception e) {
 			internalSupplier.closeEx(e);
 		}
 	}

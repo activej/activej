@@ -127,7 +127,7 @@ public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
 	}
 
 	@Override
-	public void closeEx(@NotNull Throwable e) {
+	public void closeEx(@NotNull Exception e) {
 		if (exception != null) {
 			return;
 		}

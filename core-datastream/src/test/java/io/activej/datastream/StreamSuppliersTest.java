@@ -41,7 +41,7 @@ public class StreamSuppliersTest {
 				.withEndOfStream(eos -> eos
 						.then(($, e) -> Promise.ofException(new Exception("Test"))));
 
-		Throwable exception = awaitException(failingSupplier.toList());
+		Exception exception = awaitException(failingSupplier.toList());
 		assertEquals("Test", exception.getMessage());
 	}
 }

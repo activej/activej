@@ -102,7 +102,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 	}
 
 	@Override
-	protected void onClosed(@NotNull Throwable e) {
+	protected void onClosed(@NotNull Exception e) {
 		try {
 			closeFile();
 		} catch (IOException ex) {

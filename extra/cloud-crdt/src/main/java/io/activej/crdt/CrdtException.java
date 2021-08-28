@@ -21,7 +21,7 @@ public class CrdtException extends Exception {
 		super(message);
 	}
 
-	public CrdtException(String message, Throwable cause) {
+	public CrdtException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

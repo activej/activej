@@ -273,7 +273,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	// endregion
 
 	@Override
-	protected void doClose(Throwable e) {
+	protected void doClose(Exception e) {
 		inflater.end();
 		input.closeEx(e);
 		output.closeEx(e);

@@ -70,9 +70,9 @@ public class TestUtils {
 		@Nullable
 		private ByteBuf expectedBuf;
 		@Nullable
-		private Class<? extends Throwable> expectedExceptionType;
+		private Class<? extends Exception> expectedExceptionType;
 		@Nullable
-		private Consumer<Throwable> exceptionValidator;
+		private Consumer<Exception> exceptionValidator;
 
 		public void setExpectedByteArray(@Nullable byte[] expectedByteArray) {
 			this.expectedByteArray = expectedByteArray;
@@ -86,11 +86,11 @@ public class TestUtils {
 			this.expectedBuf = expectedBuf;
 		}
 
-		public void setExpectedExceptionType(@Nullable Class<? extends Throwable> expectedExceptionType) {
+		public void setExpectedExceptionType(@Nullable Class<? extends Exception> expectedExceptionType) {
 			this.expectedExceptionType = expectedExceptionType;
 		}
 
-		public void setExceptionValidator(@Nullable Consumer<Throwable> exceptionValidator) {
+		public void setExceptionValidator(@Nullable Consumer<Exception> exceptionValidator) {
 			this.exceptionValidator = exceptionValidator;
 		}
 
@@ -142,7 +142,7 @@ public class TestUtils {
 		}
 
 		@Override
-		protected void onClosed(@NotNull Throwable e) {
+		protected void onClosed(@NotNull Exception e) {
 			executed = true;
 			if (expectedExceptionType != null) {
 				assertThat(e, instanceOf(expectedExceptionType));

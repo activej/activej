@@ -192,21 +192,21 @@ public final class ActiveFsServlet {
 		}
 	}
 
-	private static HttpResponse getErrorResponse(Throwable e) {
+	private static HttpResponse getErrorResponse(Exception e) {
 		return HttpResponse.ofCode(500)
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBody(toJson(FsException.class, castError(e)));
 	}
 
-	private static <T> BiFunction<T, Throwable, HttpResponse> errorHandler() {
+	private static <T> BiFunction<T, Exception, HttpResponse> errorHandler() {
 		return errorHandler($ -> HttpResponse.ok200().withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8)));
 	}
 
-	private static <T> BiFunction<T, Throwable, HttpResponse> errorHandler(Function<T, HttpResponse> successful) {
+	private static <T> BiFunction<T, Exception, HttpResponse> errorHandler(Function<T, HttpResponse> successful) {
 		return (res, e) -> e == null ? successful.apply(res) : getErrorResponse(e);
 	}
 
-	private static BiFunction<ChannelConsumer<ByteBuf>, Throwable, HttpResponse> acknowledgeUpload(@NotNull HttpRequest request) {
+	private static BiFunction<ChannelConsumer<ByteBuf>, Exception, HttpResponse> acknowledgeUpload(@NotNull HttpRequest request) {
 		return errorHandler(consumer -> HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBodyStream(ChannelSupplier.ofPromise(request.getBodyStream()

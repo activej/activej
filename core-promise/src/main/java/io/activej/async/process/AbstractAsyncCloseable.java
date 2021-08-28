@@ -33,9 +33,9 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 	@Nullable
 	private AsyncCloseable closeable;
 
-	private Throwable exception;
+	private Exception exception;
 
-	public Throwable getException() {
+	public Exception getException() {
 		return exception;
 	}
 
@@ -43,14 +43,14 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 		this.closeable = closeable;
 	}
 
-	protected void onClosed(@NotNull Throwable e) {
+	protected void onClosed(@NotNull Exception e) {
 	}
 
 	protected void onCleanup() {
 	}
 
 	@Override
-	public final void closeEx(@NotNull Throwable e) {
+	public final void closeEx(@NotNull Exception e) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (isClosed()) return;
 		exception = e;
@@ -72,7 +72,7 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 	}
 
 	@NotNull
-	protected final <T> Promise<T> doSanitize(T value, @Nullable Throwable e) {
+	protected final <T> Promise<T> doSanitize(T value, @Nullable Exception e) {
 		if (exception != null) {
 			Recyclers.recycle(value);
 			if (value instanceof AsyncCloseable) {

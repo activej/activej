@@ -157,7 +157,7 @@ public class OTUplinkImplTest {
 
 	@Test
 	public void testFetchInvalidRevision() {
-		Throwable exception = awaitException(node.fetch(100));
+		Exception exception = awaitException(node.fetch(100));
 		assertThat(exception, instanceOf(GraphExhaustedException.class));
 	}
 

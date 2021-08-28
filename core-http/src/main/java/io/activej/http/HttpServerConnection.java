@@ -148,7 +148,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onClosedWithError(@NotNull Throwable e) {
+	protected void onClosedWithError(@NotNull Exception e) {
 		if (inspector != null) {
 			inspector.onHttpError(this, e);
 		}
@@ -454,7 +454,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 	}
 
-	private void writeException(Throwable e) {
+	private void writeException(Exception e) {
 		writeHttpResponse(server.formatHttpError(e));
 	}
 

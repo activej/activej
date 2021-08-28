@@ -16,8 +16,8 @@
 
 package io.activej.rpc.protocol;
 
-import io.activej.common.MemSize;
 import io.activej.async.exception.AsyncCloseException;
+import io.activej.common.MemSize;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
@@ -63,11 +63,11 @@ public final class RpcStream {
 	public interface Listener extends StreamDataAcceptor<RpcMessage> {
 		void onReceiverEndOfStream();
 
-		void onReceiverError(@NotNull Throwable e);
+		void onReceiverError(@NotNull Exception e);
 
-		void onSenderError(@NotNull Throwable e);
+		void onSenderError(@NotNull Exception e);
 
-		void onSerializationError(RpcMessage message, @NotNull Throwable e);
+		void onSerializationError(RpcMessage message, @NotNull Exception e);
 
 		void onSenderReady(@NotNull StreamDataAcceptor<RpcMessage> acceptor);
 
@@ -137,7 +137,7 @@ public final class RpcStream {
 		closeEx(new AsyncCloseException("RPC Channel Closed"));
 	}
 
-	public void closeEx(@NotNull Throwable e) {
+	public void closeEx(@NotNull Exception e) {
 		socket.closeEx(e);
 		serializer.closeEx(e);
 		deserializer.closeEx(e);

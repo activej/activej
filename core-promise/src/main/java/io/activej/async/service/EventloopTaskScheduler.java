@@ -54,7 +54,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	private long lastStartTime;
 	private long lastCompleteTime;
 	@Nullable
-	private Throwable lastException;
+	private Exception lastException;
 	private int errorCount;
 
 	@Nullable
@@ -285,7 +285,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 	@JmxAttribute
 	@Nullable
-	public Throwable getLastException() {
+	public Exception getLastException() {
 		return lastException;
 	}
 

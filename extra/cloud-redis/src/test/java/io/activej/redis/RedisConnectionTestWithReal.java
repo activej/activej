@@ -96,7 +96,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 								assertThat(e, instanceOf(ServerError.class));
 								assertThat(e.getMessage(), containsString("EXECABORT Transaction discarded because of previous errors."));
 
-								Throwable exception = listPromise.getException();
+								Exception exception = listPromise.getException();
 								assertThat(exception, instanceOf(ServerError.class));
 								assertThat(exception.getMessage(), containsString("ERR unknown command `SETTTTTTT`"));
 								return redis.cmd(RedisRequest.of("SET", "x", "value"), OK)
@@ -391,7 +391,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		byte[] password = new byte[100];
 		ThreadLocalRandom.current().nextBytes(password);
 
-		Throwable exception = awaitException(client.connect(password));
+		Exception exception = awaitException(client.connect(password));
 		assertThat(exception, instanceOf(RedisAuthenticationException.class));
 	}
 
@@ -415,7 +415,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 
 			assertEquals("PONG", response);
 
-			Throwable exception = awaitException(client.connect(username, password)
+			Exception exception = awaitException(client.connect(username, password)
 					.then(connection -> connection.cmd(RedisRequest.of("GET", "x"), STRING)
 							.whenComplete(connection::close)));
 
@@ -446,7 +446,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 
 			assertNull(result);
 
-			Throwable exception = awaitException(client.connect(username, password)
+			Exception exception = awaitException(client.connect(username, password)
 					.then(connection -> connection.cmd(RedisRequest.of("GET", "b"), BYTES_ISO_8859_1)
 							.whenComplete(connection::close)));
 

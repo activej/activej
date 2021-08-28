@@ -442,7 +442,7 @@ public final class HttpUtils {
 		}
 	}
 
-	static Throwable translateToHttpException(Throwable e) {
+	static Exception translateToHttpException(Exception e) {
 		if (e instanceof HttpException) return e;
 		if (e instanceof MalformedDataException) return new MalformedHttpException(e);
 		return new HttpException(e);

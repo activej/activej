@@ -39,23 +39,23 @@ public final class Try<T> {
 	private final T result;
 
 	@Nullable
-	private final Throwable throwable;
+	private final Exception exception;
 
-	private Try(@Nullable T result, @Nullable Throwable e) {
+	private Try(@Nullable T result, @Nullable Exception e) {
 		this.result = result;
-		this.throwable = e;
+		this.exception = e;
 	}
 
 	public static <T> Try<T> of(@Nullable T result) {
 		return new Try<>(result, null);
 	}
 
-	public static <T> Try<T> of(@Nullable T result, @Nullable Throwable e) {
+	public static <T> Try<T> of(@Nullable T result, @Nullable Exception e) {
 		checkArgument(result == null || e == null, "Either result or exception should be null");
 		return new Try<>(result, e);
 	}
 
-	public static <T> Try<T> ofException(@NotNull Throwable e) {
+	public static <T> Try<T> ofException(@NotNull Exception e) {
 		return new Try<>(null, e);
 	}
 
@@ -93,12 +93,12 @@ public final class Try<T> {
 
 	@Contract(pure = true)
 	public boolean isSuccess() {
-		return throwable == null;
+		return exception == null;
 	}
 
 	@Contract(pure = true)
 	public boolean isException() {
-		return throwable != null;
+		return exception != null;
 	}
 
 	@Contract(pure = true)
@@ -109,18 +109,18 @@ public final class Try<T> {
 
 	@Contract(pure = true)
 	public T getElse(@Nullable T defaultValue) {
-		return throwable == null ? result : defaultValue;
+		return exception == null ? result : defaultValue;
 	}
 
 	@Contract(pure = true)
 	public T getElseGet(@NotNull Supplier<? extends T> defaultValueSupplier) {
-		return throwable == null ? result : defaultValueSupplier.get();
+		return exception == null ? result : defaultValueSupplier.get();
 	}
 
 	@Contract(pure = true)
 	@Nullable
-	public Throwable getException() {
-		return throwable;
+	public Exception getException() {
+		return exception;
 	}
 
 	@NotNull
@@ -132,25 +132,25 @@ public final class Try<T> {
 	}
 
 	@NotNull
-	public Try<T> ifException(@NotNull Consumer<Throwable> exceptionConsumer) {
+	public Try<T> ifException(@NotNull Consumer<Exception> exceptionConsumer) {
 		if (isException()) {
-			exceptionConsumer.accept(throwable);
+			exceptionConsumer.accept(exception);
 		}
 		return this;
 	}
 
 	@NotNull
-	public Try<T> consume(@NotNull BiConsumer<? super T, Throwable> consumer) {
-		consumer.accept(result, throwable);
+	public Try<T> consume(@NotNull BiConsumer<? super T, Exception> consumer) {
+		consumer.accept(result, exception);
 		return this;
 	}
 
 	@NotNull
-	public Try<T> consume(@NotNull Consumer<? super T> resultConsumer, @NotNull Consumer<Throwable> exceptionConsumer) {
+	public Try<T> consume(@NotNull Consumer<? super T> resultConsumer, @NotNull Consumer<Exception> exceptionConsumer) {
 		if (isSuccess()) {
 			resultConsumer.accept(result);
 		} else {
-			exceptionConsumer.accept(throwable);
+			exceptionConsumer.accept(exception);
 		}
 		return this;
 	}
@@ -164,19 +164,19 @@ public final class Try<T> {
 	}
 
 	@Contract(pure = true)
-	public <U> U reduce(@NotNull Function<? super T, ? extends U> function, @NotNull Function<Throwable, ? extends U> exceptionFunction) {
-		return throwable == null ? function.apply(result) : exceptionFunction.apply(throwable);
+	public <U> U reduce(@NotNull Function<? super T, ? extends U> function, @NotNull Function<Exception, ? extends U> exceptionFunction) {
+		return exception == null ? function.apply(result) : exceptionFunction.apply(exception);
 	}
 
 	@Contract(pure = true)
-	public <U> U reduce(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
-		return fn.apply(result, throwable);
+	public <U> U reduce(@NotNull BiFunction<? super T, Exception, ? extends U> fn) {
+		return fn.apply(result, exception);
 	}
 
 	@Contract(pure = true)
 	@NotNull
 	public <U> Try<U> map(@NotNull ThrowingFunction<T, U> function) {
-		if (throwable == null) {
+		if (exception == null) {
 			try {
 				return new Try<>(function.apply(result), null);
 			} catch (RuntimeException ex) {
@@ -191,13 +191,13 @@ public final class Try<T> {
 	@Contract(pure = true)
 	@NotNull
 	public <U> Try<U> flatMap(@NotNull Function<T, Try<U>> function) {
-		return throwable == null ? function.apply(result) : mold();
+		return exception == null ? function.apply(result) : mold();
 	}
 
 	@Contract(pure = true)
 	@NotNull
-	public Either<T, Throwable> toEither() {
-		return throwable == null ? Either.left(result) : Either.right(throwable);
+	public Either<T, Exception> toEither() {
+		return exception == null ? Either.left(result) : Either.right(exception);
 	}
 
 	@Override
@@ -206,18 +206,18 @@ public final class Try<T> {
 		if (o == null || getClass() != o.getClass()) return false;
 		Try<?> other = (Try<?>) o;
 		if (!Objects.equals(result, other.result)) return false;
-		return Objects.equals(throwable, other.throwable);
+		return Objects.equals(exception, other.exception);
 	}
 
 	@Override
 	public int hashCode() {
 		int hash = result != null ? result.hashCode() : 0;
-		hash = 31 * hash + (throwable != null ? throwable.hashCode() : 0);
+		hash = 31 * hash + (exception != null ? exception.hashCode() : 0);
 		return hash;
 	}
 
 	@Override
 	public String toString() {
-		return "{" + (isSuccess() ? "" + result : "" + throwable) + "}";
+		return "{" + (isSuccess() ? "" + result : "" + exception) + "}";
 	}
 }

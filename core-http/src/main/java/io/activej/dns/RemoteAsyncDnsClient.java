@@ -16,10 +16,10 @@
 
 package io.activej.dns;
 
+import io.activej.async.exception.AsyncCloseException;
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
-import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -248,7 +248,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 
 		void onDnsQueryResult(DnsQuery query, DnsResponse result);
 
-		void onDnsQueryError(DnsQuery query, Throwable e);
+		void onDnsQueryError(DnsQuery query, Exception e);
 
 		void onDnsQueryExpiration(DnsQuery query);
 	}
@@ -273,7 +273,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		}
 
 		@Override
-		public void onDnsQueryError(DnsQuery query, Throwable e) {
+		public void onDnsQueryError(DnsQuery query, Exception e) {
 			failedQueries.recordEvent();
 		}
 

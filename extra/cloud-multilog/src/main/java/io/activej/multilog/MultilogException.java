@@ -21,7 +21,7 @@ public final class MultilogException extends Exception {
 		super(message);
 	}
 
-	public MultilogException(String message, Throwable cause) {
+	public MultilogException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

@@ -17,7 +17,6 @@
 package io.activej.cube.service;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
-import io.activej.async.callback.Callback;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.Utils;
 import io.activej.cube.exception.CubeException;
@@ -301,7 +300,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx 
 		return eventloop;
 	}
 
-	private static <T, R> BiConsumer<R, Throwable> transform(Function<? super R, ? extends T> fn, BiConsumer<? super T, Throwable> toConsumer) {
+	private static <T, R> BiConsumer<R, Exception> transform(Function<? super R, ? extends T> fn, BiConsumer<? super T, Exception> toConsumer) {
 		return (value, e) -> toConsumer.accept(value != null ? fn.apply(value) : null, e);
 	}
 }

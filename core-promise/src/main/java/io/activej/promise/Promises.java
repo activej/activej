@@ -85,7 +85,7 @@ public final class Promises {
 					}));
 
 			@Override
-			public void accept(T result, @Nullable Throwable e) {
+			public void accept(T result, @Nullable Exception e) {
 				schedule = nullify(schedule, ScheduledRunnable::cancel);
 				if (e == null) {
 					tryComplete(result);
@@ -389,42 +389,42 @@ public final class Promises {
 
 	@Contract(pure = true)
 	@NotNull
-	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T> promise1) {
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Promise<? extends T> promise1) {
 		return any(predicate, singletonList(promise1));
 	}
 
 	@Contract(pure = true)
 	@NotNull
-	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
 		return any(predicate, asList(promise1, promise2));
 	}
 
 	@Contract(pure = true)
 	@NotNull
 	@SafeVarargs
-	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Promise<? extends T>... promises) {
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Promise<? extends T>... promises) {
 		return any(predicate, asList(promises));
 	}
 
 	@Contract(pure = true)
 	@NotNull
-	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Stream<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Stream<? extends Promise<? extends T>> promises) {
 		return any(predicate, promises.iterator());
 	}
 
 	@Contract(pure = true)
 	@NotNull
-	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull List<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull List<? extends Promise<? extends T>> promises) {
 		return anyIterator(predicate, promises.iterator(), true);
 	}
 
 	@NotNull
-	public static <T> Promise<T> any(@NotNull BiPredicate<T, Throwable> predicate, @NotNull Iterator<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Iterator<? extends Promise<? extends T>> promises) {
 		return anyIterator(predicate, promises, false);
 	}
 
 	@NotNull
-	private static <T> Promise<T> anyIterator(@NotNull BiPredicate<T, Throwable> predicate,
+	private static <T> Promise<T> anyIterator(@NotNull BiPredicate<T, Exception> predicate,
 			@NotNull Iterator<? extends Promise<? extends T>> promises, boolean ownership) {
 		if (!promises.hasNext()) return any();
 		PromiseAny<T> resultPromise = new PromiseAny<>(predicate);
@@ -959,7 +959,7 @@ public final class Promises {
 	 */
 	@NotNull
 	@SafeVarargs
-	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Throwable> predicate,
+	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
 			@NotNull AsyncSupplier<? extends T>... promises) {
 		return first(predicate, asList(promises));
 	}
@@ -968,7 +968,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
-	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Throwable> predicate,
+	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
 			@NotNull Iterable<? extends AsyncSupplier<? extends T>> promises) {
 		return first(predicate, asPromises(promises));
 	}
@@ -977,7 +977,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@NotNull
-	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Throwable> predicate,
+	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
 			@NotNull Stream<? extends AsyncSupplier<? extends T>> promises) {
 		return first(predicate, asPromises(promises));
 	}
@@ -987,20 +987,20 @@ public final class Promises {
 	 * @return first completed result of {@code Promise} that satisfies predicate
 	 */
 	@NotNull
-	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Throwable> predicate,
+	public static <T> Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
 			@NotNull Iterator<? extends Promise<? extends T>> promises) {
 		return Promise.ofCallback(cb ->
 				firstImpl(promises, predicate, cb));
 	}
 
 	private static <T> void firstImpl(Iterator<? extends Promise<? extends T>> promises,
-			@NotNull BiPredicate<? super T, ? super Throwable> predicate,
+			@NotNull BiPredicate<? super T, ? super Exception> predicate,
 			SettablePromise<T> cb) {
 		while (promises.hasNext()) {
 			Promise<? extends T> nextPromise = promises.next();
 			if (nextPromise.isComplete()) {
 				T v = nextPromise.getResult();
-				Throwable e = nextPromise.getException();
+				Exception e = nextPromise.getException();
 				if (predicate.test(v, e)) {
 					cb.accept(v, e);
 					return;
@@ -1026,19 +1026,19 @@ public final class Promises {
 	 * {@code Promise} wasn't completed exceptionally.
 	 */
 	@NotNull
-	public static <T> BiPredicate<T, Throwable> isResult() {
+	public static <T> BiPredicate<T, Exception> isResult() {
 		return ($, e) -> e == null;
 	}
 
-	public static <T> BiPredicate<T, Throwable> isResult(Predicate<? super T> predicate) {
+	public static <T> BiPredicate<T, Exception> isResult(Predicate<? super T> predicate) {
 		return (v, e) -> e == null && predicate.test(v);
 	}
 
-	public static <T> BiPredicate<T, Throwable> isResultOrError(Predicate<? super T> predicate) {
+	public static <T> BiPredicate<T, Exception> isResultOrError(Predicate<? super T> predicate) {
 		return (v, e) -> e != null || predicate.test(v);
 	}
 
-	public static <T> BiPredicate<T, Throwable> isResultOrError(Predicate<? super T> predicate, Predicate<? super Throwable> predicateError) {
+	public static <T> BiPredicate<T, Exception> isResultOrError(Predicate<? super T> predicate, Predicate<? super Exception> predicateError) {
 		return (v, e) -> e == null ? predicate.test(v) : predicateError.test(e);
 	}
 
@@ -1047,12 +1047,12 @@ public final class Promises {
 	 * {@code Promise} was completed with an exception.
 	 */
 	@NotNull
-	public static <T> BiPredicate<T, Throwable> isError() {
+	public static <T> BiPredicate<T, Exception> isError() {
 		return ($, e) -> e != null;
 	}
 
 	@NotNull
-	public static <T> BiPredicate<T, Throwable> isError(Predicate<? super Throwable> predicate) {
+	public static <T> BiPredicate<T, Exception> isError(Predicate<? super Exception> predicate) {
 		return ($, e) -> e != null && predicate.test(e);
 	}
 
@@ -1142,7 +1142,7 @@ public final class Promises {
 		return retry(isResult(), asyncSupplier);
 	}
 
-	public static <T> Promise<T> retry(BiPredicate<T, Throwable> breakCondition, AsyncSupplier<T> asyncSupplier) {
+	public static <T> Promise<T> retry(BiPredicate<T, Exception> breakCondition, AsyncSupplier<T> asyncSupplier) {
 		return first(breakCondition, Stream.generate(() -> asyncSupplier));
 	}
 
@@ -1150,12 +1150,12 @@ public final class Promises {
 		return retry(asyncSupplier, (v, e) -> e == null, retryPolicy);
 	}
 
-	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, BiPredicate<T, Throwable> breakCondition, @NotNull RetryPolicy<?> retryPolicy) {
+	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, BiPredicate<T, Exception> breakCondition, @NotNull RetryPolicy<?> retryPolicy) {
 		return Promise.ofCallback(cb ->
 				retryImpl(asyncSupplier, breakCondition, (RetryPolicy<Object>) retryPolicy, null, cb));
 	}
 
-	private static <T> void retryImpl(@NotNull AsyncSupplier<? extends T> next, BiPredicate<T, Throwable> breakCondition,
+	private static <T> void retryImpl(@NotNull AsyncSupplier<? extends T> next, BiPredicate<T, Exception> breakCondition,
 			@NotNull RetryPolicy<Object> retryPolicy, Object retryState,
 			SettablePromise<T> cb) {
 		next.get()
@@ -1292,7 +1292,7 @@ public final class Promises {
 		int countdown = 1;
 
 		@Override
-		public void accept(@Nullable T result, @Nullable Throwable e) {
+		public void accept(@Nullable T result, @Nullable Exception e) {
 			if (e == null) {
 				Recyclers.recycle(result);
 				if (--countdown == 0) {
@@ -1310,13 +1310,13 @@ public final class Promises {
 	}
 
 	private static final class PromiseAny<T> extends NextPromise<T, T> {
-		private final BiPredicate<? super T, ? super Throwable> predicate;
+		private final BiPredicate<? super T, ? super Exception> predicate;
 		int countdown = 1;
 
-		private PromiseAny(BiPredicate<? super T, ? super Throwable> predicate) {this.predicate = predicate;}
+		private PromiseAny(BiPredicate<? super T, ? super Exception> predicate) {this.predicate = predicate;}
 
 		@Override
-		public void accept(@Nullable T result, @Nullable Throwable e) {
+		public void accept(@Nullable T result, @Nullable Exception e) {
 			if (predicate.test(result, e)) {
 				if (!tryComplete(result, e)) {
 					Recyclers.recycle(result);

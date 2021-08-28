@@ -195,7 +195,7 @@ public class OTStateManagerTest {
 		initializeRepository(repository, stateManager);
 
 		stateManager.add(add(1));
-		Throwable exception = awaitException(stateManager.sync());
+		Exception exception = awaitException(stateManager.sync());
 
 		assertEquals(FAILED, exception);
 		assertEquals((Integer) 0, stateManager.getCommitId());
@@ -232,7 +232,7 @@ public class OTStateManagerTest {
 		});
 
 		stateManager.add(add(1));
-		Throwable exception = awaitException(stateManager.sync());
+		Exception exception = awaitException(stateManager.sync());
 
 		assertEquals(FAILED, exception);
 		assertEquals((Integer) 0, stateManager.getCommitId());
@@ -265,7 +265,7 @@ public class OTStateManagerTest {
 		initializeRepository(repository, stateManager);
 
 		stateManager.add(add(1));
-		Throwable exception = awaitException(stateManager.sync());
+		Exception exception = awaitException(stateManager.sync());
 
 		assertEquals(FAILED, exception);
 		assertEquals((Integer) 0, stateManager.getCommitId());
@@ -417,7 +417,7 @@ public class OTStateManagerTest {
 		initializeRepository(repository, stateManager);
 
 		stateManager.add(add(1));
-		Throwable exception = awaitException(stateManager.sync());
+		Exception exception = awaitException(stateManager.sync());
 		assertSame(FAILED, exception);
 		assertTrue(stateManager.hasPendingCommits());
 

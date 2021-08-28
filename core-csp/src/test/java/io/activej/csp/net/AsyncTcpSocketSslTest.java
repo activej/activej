@@ -1,8 +1,8 @@
 package io.activej.csp.net;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
@@ -201,7 +201,7 @@ public final class AsyncTcpSocketSslTest {
 						.then(() -> socket.write(wrapAscii("ello")))
 						.whenComplete(($, e) -> assertThat(e, instanceOf(AsyncCloseException.class))));
 
-		Throwable e = awaitException(AsyncTcpSocketNio.connect(address)
+		Exception e = awaitException(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
 				.then(sslSocket -> {
 					BinaryChannelSupplier supplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket));
@@ -225,7 +225,7 @@ public final class AsyncTcpSocketSslTest {
 
 		serverThread.start();
 
-		Throwable exception = awaitException(AsyncTcpSocketNio.connect(address)
+		Exception exception = awaitException(AsyncTcpSocketNio.connect(address)
 				.whenResult(asyncTcpSocket -> {
 					try {
 						// noinspection ConstantConditions - Imitating a suddenly closed channel

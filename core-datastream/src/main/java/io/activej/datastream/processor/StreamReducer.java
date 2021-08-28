@@ -161,7 +161,7 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			output.closeEx(e);
 		}
 
@@ -271,7 +271,7 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			for (Input input : inputs) {
 				input.closeEx(e);
 			}

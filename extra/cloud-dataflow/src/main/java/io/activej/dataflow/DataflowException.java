@@ -21,11 +21,11 @@ public class DataflowException extends Exception {
 		super(message);
 	}
 
-	public DataflowException(Throwable cause) {
+	public DataflowException(Exception cause) {
 		super(cause);
 	}
 
-	public DataflowException(String message, Throwable cause) {
+	public DataflowException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

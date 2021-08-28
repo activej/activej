@@ -147,7 +147,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 	 * @return <code>true</code> if partition was alive and <code>false</code> otherwise
 	 */
 	@SuppressWarnings("UnusedReturnValue")
-	public boolean markDead(P partitionId, @Nullable Throwable e) {
+	public boolean markDead(P partitionId, @Nullable Exception e) {
 		CrdtStorage<K, S> partition = alivePartitions.remove(partitionId);
 		if (partition != null) {
 			logger.warn("marking {} as dead ", partitionId, e);

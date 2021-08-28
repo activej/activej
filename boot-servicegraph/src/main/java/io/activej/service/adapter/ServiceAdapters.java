@@ -16,13 +16,12 @@
 
 package io.activej.service.adapter;
 
-import io.activej.async.callback.Callback;
 import io.activej.async.service.EventloopService;
 import io.activej.common.service.BlockingService;
-import io.activej.service.Service;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.BlockingSocketServer;
 import io.activej.net.EventloopServer;
+import io.activej.service.Service;
 import org.slf4j.Logger;
 
 import javax.sql.DataSource;
@@ -383,7 +382,7 @@ public final class ServiceAdapters {
 		};
 	}
 
-	private static <T> BiConsumer<T, Throwable> completeFuture(CompletableFuture<?> future) {
+	private static <T> BiConsumer<T, Exception> completeFuture(CompletableFuture<?> future) {
 		return ($, e) -> {
 			if (e == null) {
 				future.complete(null);

@@ -112,7 +112,7 @@ public final class StreamSorterTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
 		ExpectedException exception = new ExpectedException();
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source.streamTo(sorter.getInput()),
 				sorter.getOutput()
 						.streamTo(consumer
@@ -142,7 +142,7 @@ public final class StreamSorterTest {
 
 		StreamConsumerToList<Integer> consumerToList = StreamConsumerToList.create();
 
-		Throwable e = awaitException(source.transformWith(sorter)
+		Exception e = awaitException(source.transformWith(sorter)
 				.streamTo(consumerToList));
 
 		assertSame(exception, e);
@@ -190,7 +190,7 @@ public final class StreamSorterTest {
 	public void testErrorsOnStorage() throws IOException {
 		FailingStreamSorterStorageStub<Integer> failingNewPartitionStorage = FailingStreamSorterStorageStub.<Integer>create().withFailNewPartition();
 		doTestFailingStorage(failingNewPartitionStorage, (streamPromise, sorter, supplier, consumerToList) -> {
-			Throwable exception = awaitException(streamPromise);
+			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
 			assertClosedWithError(STORAGE_EXCEPTION, sorter);
 			assertClosedWithError(STORAGE_EXCEPTION, supplier, consumerToList);
@@ -199,7 +199,7 @@ public final class StreamSorterTest {
 
 		FailingStreamSorterStorageStub<Integer> failingWriteStorage = FailingStreamSorterStorageStub.<Integer>create().withFailWrite();
 		doTestFailingStorage(failingWriteStorage, (streamPromise, sorter, supplier, consumerToList) -> {
-			Throwable exception = awaitException(streamPromise);
+			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
 			assertClosedWithError(STORAGE_EXCEPTION, sorter);
 			assertClosedWithError(STORAGE_EXCEPTION, supplier, consumerToList);
@@ -208,7 +208,7 @@ public final class StreamSorterTest {
 
 		FailingStreamSorterStorageStub<Integer> failingReadStorage = FailingStreamSorterStorageStub.<Integer>create().withFailRead();
 		doTestFailingStorage(failingReadStorage, (streamPromise, sorter, supplier, consumerToList) -> {
-			Throwable exception = awaitException(streamPromise);
+			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
 			assertClosedWithError(STORAGE_EXCEPTION, sorter);
 			assertClosedWithError(supplier);

@@ -115,7 +115,7 @@ public final class FsIntegrationTest {
 		Path path = storage.resolve(filename);
 		assertFalse(Files.exists(path));
 
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data"))
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data"))
 				.streamTo(fs.upload(filename, 10))
 				.whenComplete(server::close));
 
@@ -130,7 +130,7 @@ public final class FsIntegrationTest {
 		Path path = storage.resolve(filename);
 		assertFalse(Files.exists(path));
 
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data"))
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data"))
 				.streamTo(fs.upload(filename, 10))
 				.whenComplete(server::close));
 
@@ -175,7 +175,7 @@ public final class FsIntegrationTest {
 
 	@Test
 	public void testUploadServerFail() {
-		Throwable exception = awaitException(upload("../../nonlocal/../file.txt", CONTENT)
+		Exception exception = awaitException(upload("../../nonlocal/../file.txt", CONTENT)
 				.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(ForbiddenPathException.class));
@@ -191,7 +191,7 @@ public final class FsIntegrationTest {
 				ChannelSupplier.ofException(new FsIOException("Test exception")),
 				ChannelSupplier.of(wrapUtf8("Test4")));
 
-		Throwable exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(fs.upload(resultFile, Long.MAX_VALUE)))
+		Exception exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(fs.upload(resultFile, Long.MAX_VALUE)))
 				.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(FsException.class));
@@ -230,7 +230,7 @@ public final class FsIntegrationTest {
 	@Test
 	public void testDownloadNotExist() {
 		String file = "file_not_exist_downloaded.txt";
-		Throwable exception = awaitException(ChannelSupplier.ofPromise(fs.download(file))
+		Exception exception = awaitException(ChannelSupplier.ofPromise(fs.download(file))
 				.streamTo(ChannelConsumer.of($ -> Promise.complete()))
 				.whenComplete(server::close));
 

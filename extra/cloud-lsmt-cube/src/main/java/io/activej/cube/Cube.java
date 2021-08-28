@@ -173,7 +173,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	private final AggregationStats aggregationStats = new AggregationStats();
 	private final ValueStats queryTimes = ValueStats.create(Duration.ofMinutes(10));
 	private long queryErrors;
-	private Throwable queryLastError;
+	private Exception queryLastError;
 
 	Cube(Eventloop eventloop, Executor executor, DefiningClassLoader classLoader,
 			AggregationChunkStorage aggregationChunkStorage) {
@@ -1384,7 +1384,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	}
 
 	@JmxAttribute
-	public Throwable getQueryLastError() {
+	public Exception getQueryLastError() {
 		return queryLastError;
 	}
 

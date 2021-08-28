@@ -28,7 +28,7 @@ import static java.lang.Math.*;
 public interface RetryPolicy<S> {
 	S createRetryState();
 
-	long nextRetryTimestamp(long now, Throwable lastError, S retryState);
+	long nextRetryTimestamp(long now, Exception lastError, S retryState);
 
 	abstract class StatelessRetryPolicy implements RetryPolicy<Void> {
 		@Override
@@ -40,7 +40,7 @@ public interface RetryPolicy<S> {
 	static RetryPolicy<Void> noRetry() {
 		return new StatelessRetryPolicy() {
 			@Override
-			public long nextRetryTimestamp(long now, Throwable lastError, Void retryState) {
+			public long nextRetryTimestamp(long now, Exception lastError, Void retryState) {
 				return 0;
 			}
 		};
@@ -49,7 +49,7 @@ public interface RetryPolicy<S> {
 	static RetryPolicy<Void> immediateRetry() {
 		return new StatelessRetryPolicy() {
 			@Override
-			public long nextRetryTimestamp(long now, Throwable lastError, Void retryState) {
+			public long nextRetryTimestamp(long now, Exception lastError, Void retryState) {
 				return now;
 			}
 		};
@@ -62,14 +62,14 @@ public interface RetryPolicy<S> {
 	static RetryPolicy<Void> fixedDelay(long delay) {
 		return new StatelessRetryPolicy() {
 			@Override
-			public long nextRetryTimestamp(long now, Throwable lastError, Void retryState) {
+			public long nextRetryTimestamp(long now, Exception lastError, Void retryState) {
 				return now + delay;
 			}
 		};
 	}
 
 	class SimpleRetryState {
-		protected Throwable lastError;
+		protected Exception lastError;
 		protected int retryCount;
 		protected long retryFirstTimestamp;
 	}
@@ -81,7 +81,7 @@ public interface RetryPolicy<S> {
 		}
 
 		@Override
-		public final long nextRetryTimestamp(long now, Throwable lastError, SimpleRetryState retryState) {
+		public final long nextRetryTimestamp(long now, Exception lastError, SimpleRetryState retryState) {
 			retryState.lastError = lastError;
 			retryState.retryCount++;
 			if (retryState.retryFirstTimestamp == 0L) {
@@ -90,7 +90,7 @@ public interface RetryPolicy<S> {
 			return nextRetryTimestamp(now, lastError, retryState.retryCount, retryState.retryFirstTimestamp);
 		}
 
-		public abstract long nextRetryTimestamp(long now, Throwable lastError, int retryCount, long firstRetryTimestamp);
+		public abstract long nextRetryTimestamp(long now, Exception lastError, int retryCount, long firstRetryTimestamp);
 	}
 
 	static RetryPolicy<?> exponentialBackoff(Duration initialDelay, Duration maxDelay, double exponent) {
@@ -103,7 +103,7 @@ public interface RetryPolicy<S> {
 		int maxRetryCount = (int) ceil(log((double) maxDelay / initialDelay) / log(exponent));
 		return new SimpleRetryPolicy() {
 			@Override
-			public long nextRetryTimestamp(long now, Throwable lastError, int retryCount, long firstRetryTimestamp) {
+			public long nextRetryTimestamp(long now, Exception lastError, int retryCount, long firstRetryTimestamp) {
 				return now + (
 						retryCount > maxRetryCount ?
 								maxDelay :
@@ -135,11 +135,11 @@ public interface RetryPolicy<S> {
 		protected abstract S doCreateRetryState();
 
 		@Override
-		public final long nextRetryTimestamp(long now, Throwable lastError, Tuple2<S, DS> retryState) {
+		public final long nextRetryTimestamp(long now, Exception lastError, Tuple2<S, DS> retryState) {
 			return nextRetryTimestamp(now, lastError, retryState.getValue1(), retryState.getValue2());
 		}
 
-		public abstract long nextRetryTimestamp(long now, Throwable lastError, S retryState, DS delegateRetryState);
+		public abstract long nextRetryTimestamp(long now, Exception lastError, S retryState, DS delegateRetryState);
 	}
 
 	default RetryPolicy<Tuple2<RefInt, S>> withMaxTotalRetryCount(int maxRetryCount) {
@@ -150,7 +150,7 @@ public interface RetryPolicy<S> {
 			}
 
 			@Override
-			public long nextRetryTimestamp(long now, Throwable lastError, RefInt retryState, S delegateRetryState) {
+			public long nextRetryTimestamp(long now, Exception lastError, RefInt retryState, S delegateRetryState) {
 				if (retryState.value++ < maxRetryCount) {
 					return RetryPolicy.this.nextRetryTimestamp(now, lastError, delegateRetryState);
 				} else {
@@ -169,7 +169,7 @@ public interface RetryPolicy<S> {
 			}
 
 			@Override
-			public long nextRetryTimestamp(long now, Throwable lastError, RefLong retryState, S delegateRetryState) {
+			public long nextRetryTimestamp(long now, Exception lastError, RefLong retryState, S delegateRetryState) {
 				if (retryState.value == 0) retryState.value = now;
 				if (now < retryState.value + maxRetryTimeoutMillis) {
 					return RetryPolicy.this.nextRetryTimestamp(now, lastError, delegateRetryState);

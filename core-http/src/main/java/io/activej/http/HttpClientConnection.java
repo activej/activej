@@ -129,7 +129,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onClosedWithError(@NotNull Throwable e) {
+	protected void onClosedWithError(@NotNull Exception e) {
 		if (inspector != null) inspector.onHttpError(this, e);
 		if (promise != null) {
 			SettablePromise<HttpResponse> promise = this.promise;

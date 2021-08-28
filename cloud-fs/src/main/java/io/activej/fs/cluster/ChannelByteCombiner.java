@@ -113,7 +113,7 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 	}
 
 	@Override
-	protected void doClose(Throwable e) {
+	protected void doClose(Exception e) {
 		// not passing the exception to all the outputs,
 		// so that they wouldn't be marked dead
 		inputs.forEach(input -> input.closeEx(LOCAL_EXCEPTION));

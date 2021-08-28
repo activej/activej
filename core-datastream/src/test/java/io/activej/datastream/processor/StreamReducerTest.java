@@ -112,7 +112,7 @@ public class StreamReducerTest {
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
 				source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER)),
 				source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER)),
@@ -146,7 +146,7 @@ public class StreamReducerTest {
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
 				source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER)),
 				source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER)),

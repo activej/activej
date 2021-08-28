@@ -103,11 +103,11 @@ public class UploadOutputStream extends OutputStream {
 	private void run(IORunnable runnable) throws IOException {
 		try {
 			runnable.run();
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			try {
 				peer.close();
 				Files.deleteIfExists(tempPath);
-			} catch (Throwable e2) {
+			} catch (Exception e2) {
 				e2.addSuppressed(e);
 				throw e2;
 			}

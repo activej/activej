@@ -48,7 +48,7 @@ public class OTAlgorithmsTest {
 		Integer id2 = await(REPOSITORY.createCommitId());
 		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, emptyList(), id1)));
 
-		Throwable exception = awaitException(checkout(REPOSITORY, TEST_OP, id2));
+		Exception exception = awaitException(checkout(REPOSITORY, TEST_OP, id2));
 		assertThat(exception, instanceOf(GraphExhaustedException.class));
 	}
 
@@ -60,7 +60,7 @@ public class OTAlgorithmsTest {
 		Integer id2 = await(REPOSITORY.createCommitId());
 		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, emptyList(), id1)));
 
-		Throwable exception = awaitException(findParent(REPOSITORY, TEST_OP, singleton(id2), DiffsReducer.toVoid(),
+		Exception exception = awaitException(findParent(REPOSITORY, TEST_OP, singleton(id2), DiffsReducer.toVoid(),
 				commit -> REPOSITORY.loadSnapshot(commit.getId())
 						.map(Optional::isPresent)));
 		assertThat(exception, instanceOf(GraphExhaustedException.class));

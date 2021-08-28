@@ -7,6 +7,7 @@ import io.activej.promise.Promises;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.RpcClientConnection;
 import io.activej.rpc.server.RpcServer;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -66,12 +67,12 @@ public final class TestRpcClientShutdown {
 
 		rpcServer.listen();
 
-		Throwable exception = awaitException(rpcClient.start()
+		Exception exception = awaitException(rpcClient.start()
 				.then(() -> Promises.all(
 						rpcClient.sendRequest(new Request())
 								.whenComplete(() -> {
 									for (RpcClientConnection conn : rpcClient.getRequestStatsPerConnection().values()) {
-										conn.onSenderError(new Error());
+										conn.onSenderError(new ExpectedException());
 									}
 								}),
 						rpcClient.sendRequest(new Request()),

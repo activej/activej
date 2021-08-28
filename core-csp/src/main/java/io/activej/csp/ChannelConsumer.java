@@ -48,7 +48,7 @@ import java.util.function.Supplier;
  * After consumer is closed, all subsequent calls to {@link #accept(Object)} will
  * return a completed exceptionally promise.
  * <p>
- * If any exception is caught while consuming data items, {@link #closeEx(Throwable)}
+ * If any exception is caught while consuming data items, {@link #closeEx(Exception)}
  * method should be called. All resources should be freed and the caught exception
  * should be propagated to all related processes.
  * <p>
@@ -143,7 +143,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @return an AbstractChannelConsumer which always
 	 * returns Promise of exception when accepts values
 	 */
-	static <T> ChannelConsumer<T> ofException(Throwable e) {
+	static <T> ChannelConsumer<T> ofException(Exception e) {
 		return new AbstractChannelConsumer<T>() {
 			@Override
 			protected Promise<Void> doAccept(T value) {
@@ -184,7 +184,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 		if (promise.isResult()) return promise.getResult();
 		return new AbstractChannelConsumer<T>() {
 			ChannelConsumer<T> consumer;
-			Throwable exception;
+			Exception exception;
 
 			@Override
 			protected Promise<Void> doAccept(T value) {
@@ -201,7 +201,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				exception = e;
 				promise.whenResult(supplier -> supplier.closeEx(e));
 			}
@@ -228,7 +228,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				eventloop.startExternalTask();
 				anotherEventloop.execute(() -> {
 					anotherEventloopConsumer.closeEx(e);
@@ -256,7 +256,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				if (consumer != null) {
 					consumer.closeEx(e);
 				}
@@ -441,7 +441,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				acknowledgement.trySetException(e);
 			}
 		};

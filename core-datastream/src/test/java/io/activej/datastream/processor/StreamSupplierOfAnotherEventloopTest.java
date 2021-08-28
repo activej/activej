@@ -70,7 +70,7 @@ public class StreamSupplierOfAnotherEventloopTest {
 		StreamSupplier<Integer> supplier = StreamSupplier.ofAnotherEventloop(anotherEventloop, anotherEventloopSupplier);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
-		Throwable exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
+		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertSame(expectedException, exception);
 		assertClosedWithError(expectedException, supplier, consumer);
@@ -84,7 +84,7 @@ public class StreamSupplierOfAnotherEventloopTest {
 		StreamSupplier<Integer> supplier = StreamSupplier.ofAnotherEventloop(anotherEventloop, anotherEventloopSupplier);
 		StreamConsumer<Integer> consumer = StreamConsumerToList.create();
 
-		Throwable exception = awaitException(supplier.streamTo(consumer
+		Exception exception = awaitException(supplier.streamTo(consumer
 				.transformWith(decorate(promise -> promise
 						.then(item -> item == 4 ? Promise.ofException(expectedException) : Promise.of(item))))));
 

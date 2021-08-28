@@ -936,7 +936,7 @@ public final class TestLocalBlockingFsInvariants {
 		try {
 			fsConsumer.accept(first);
 			fsConsumer.accept(second);
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}

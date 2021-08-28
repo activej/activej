@@ -16,11 +16,11 @@
 
 package io.activej.dataflow;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
@@ -130,19 +130,19 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 			lastTasks.put(taskId, task);
 			runningTasks.put(taskId, task);
 			task.execute()
-					.whenComplete(($, throwable) -> {
+					.whenComplete(($, exception) -> {
 						runningTasks.remove(taskId);
-						if (throwable == null) {
+						if (exception == null) {
 							succeededTasks++;
 							logger.info("Task executed successfully: {}", command);
-						} else if (throwable instanceof AsyncCloseException) {
+						} else if (exception instanceof AsyncCloseException) {
 							canceledTasks++;
-							logger.error("Canceled task: {}", command, throwable);
+							logger.error("Canceled task: {}", command, exception);
 						} else {
 							failedTasks++;
-							logger.error("Failed to execute task: {}", command, throwable);
+							logger.error("Failed to execute task: {}", command, exception);
 						}
-						sendResponse(messaging, throwable);
+						sendResponse(messaging, exception);
 					});
 
 			messaging.receive()
@@ -189,10 +189,10 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		});
 	}
 
-	private void sendResponse(Messaging<DataflowCommand, DataflowResponse> messaging, @Nullable Throwable throwable) {
+	private void sendResponse(Messaging<DataflowCommand, DataflowResponse> messaging, @Nullable Exception exception) {
 		String error = null;
-		if (throwable != null) {
-			error = throwable.getClass().getSimpleName() + ": " + throwable.getMessage();
+		if (exception != null) {
+			error = exception.getClass().getSimpleName() + ": " + exception.getMessage();
 		}
 		messaging.send(new DataflowResponseResult(error))
 				.whenComplete(messaging::close);

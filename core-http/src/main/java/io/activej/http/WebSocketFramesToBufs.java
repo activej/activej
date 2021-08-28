@@ -16,11 +16,11 @@
 
 package io.activej.http;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.Checks;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -203,7 +203,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	}
 
 	@Override
-	protected void doClose(Throwable e) {
+	protected void doClose(Exception e) {
 		if (output == null || input == null) return;
 
 		WebSocketException exception;

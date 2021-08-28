@@ -103,7 +103,7 @@ public final class ActiveFsServletAndClientTest {
 		ExpectedException expectedException = new ExpectedException();
 		ChannelConsumer<ByteBuf> consumer = await(fs.upload(filename));
 
-		Throwable exception = awaitException(ChannelSuppliers.concat(
+		Exception exception = awaitException(ChannelSuppliers.concat(
 				ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
 				ChannelSupplier.ofException(expectedException))
 				.streamTo(consumer));
@@ -121,7 +121,7 @@ public final class ActiveFsServletAndClientTest {
 
 		ChannelConsumer<ByteBuf> consumer = await(fs.upload(filename, 10));
 
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
 
 		assertThat(exception, instanceOf(TruncatedDataException.class));
 
@@ -136,7 +136,7 @@ public final class ActiveFsServletAndClientTest {
 
 		ChannelConsumer<ByteBuf> consumer = await(fs.upload(filename, 10));
 
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
 
 		assertThat(exception, instanceOf(UnexpectedDataException.class));
 
@@ -145,7 +145,7 @@ public final class ActiveFsServletAndClientTest {
 
 	@Test
 	public void uploadIllegalPath() {
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("test")).streamTo(fs.upload("../outside")));
+		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("test")).streamTo(fs.upload("../outside")));
 		assertThat(exception, instanceOf(ForbiddenPathException.class));
 	}
 
@@ -161,7 +161,7 @@ public final class ActiveFsServletAndClientTest {
 
 	@Test
 	public void downloadNonExistent() {
-		Throwable exception = awaitException(fs.download("nonExistent"));
+		Exception exception = awaitException(fs.download("nonExistent"));
 		assertThat(exception, instanceOf(FileNotFoundException.class));
 	}
 

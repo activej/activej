@@ -17,9 +17,9 @@
 package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.Checks;
-import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.exception.AsyncCloseException;
+import io.activej.async.exception.AsyncTimeoutException;
+import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.time.Stopwatch;
 import io.activej.datastream.StreamDataAcceptor;
@@ -134,7 +134,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 		}
 
 		@Override
-		public void accept(O result, @Nullable Throwable e) {
+		public void accept(O result, @Nullable Exception e) {
 			if (scheduledRunnable != null) {
 				scheduledRunnable.cancel();
 				cb.accept(result, e);
@@ -271,7 +271,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	}
 
 	@Override
-	public void onReceiverError(@NotNull Throwable e) {
+	public void onReceiverError(@NotNull Exception e) {
 		if (isClosed()) return;
 		logger.error("Receiver error: {}", address, e);
 		rpcClient.getLastProtocolError().recordException(e, address);
@@ -280,7 +280,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	}
 
 	@Override
-	public void onSenderError(@NotNull Throwable e) {
+	public void onSenderError(@NotNull Exception e) {
 		if (isClosed()) return;
 		logger.error("Sender error: {}", address, e);
 		rpcClient.getLastProtocolError().recordException(e, address);
@@ -289,7 +289,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	}
 
 	@Override
-	public void onSerializationError(RpcMessage message, @NotNull Throwable e) {
+	public void onSerializationError(RpcMessage message, @NotNull Exception e) {
 		if (isClosed()) return;
 		logger.error("Serialization error: {} for data {}", address, message.getData(), e);
 		rpcClient.getLastProtocolError().recordException(e, address);
@@ -380,7 +380,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 		}
 
 		@Override
-		public void accept(T result, @Nullable Throwable e) {
+		public void accept(T result, @Nullable Exception e) {
 			if (e == null) {
 				onResult(result);
 			} else {
@@ -397,7 +397,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 			callback.accept(result, null);
 		}
 
-		private void onException(@NotNull Throwable e) {
+		private void onException(@NotNull Exception e) {
 			if (e instanceof RpcRemoteException) {
 				int responseTime = timeElapsed();
 				connectionStats.getFailedRequests().recordEvent();

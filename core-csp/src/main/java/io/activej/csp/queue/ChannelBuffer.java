@@ -296,7 +296,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 	 * @param e exception that is used to close buffer with
 	 */
 	@Override
-	public void closeEx(@NotNull Throwable e) {
+	public void closeEx(@NotNull Exception e) {
 		if (exception != null) return;
 		exception = e instanceof Exception ? (Exception) e : new RuntimeException(e);
 		if (put != null) {
@@ -315,7 +315,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 	}
 
 	@Nullable
-	public Throwable getException() {
+	public Exception getException() {
 		return exception;
 	}
 }

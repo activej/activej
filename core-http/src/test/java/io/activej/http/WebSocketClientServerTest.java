@@ -95,7 +95,7 @@ public final class WebSocketClientServerTest {
 						})
 				.streamTo(webSocket.messageWriteChannel()));
 
-		Throwable receivedEx = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+		Exception receivedEx = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.messageReadChannel().streamTo(ChannelConsumer.ofConsumer(messages::add))));
 
@@ -164,7 +164,7 @@ public final class WebSocketClientServerTest {
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
-		Throwable exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+		Exception exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
@@ -186,7 +186,7 @@ public final class WebSocketClientServerTest {
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
-		Throwable exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+		Exception exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
@@ -268,7 +268,7 @@ public final class WebSocketClientServerTest {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		List<String> messages = asList("first", "second", "third");
 		List<String> result = new ArrayList<>();
-		Ref<Throwable> serverErrorRef = new Ref<>();
+		Ref<Exception> serverErrorRef = new Ref<>();
 
 		startTestServer(webSocket -> webSocket.readMessage()
 				.then(message -> {
@@ -349,7 +349,7 @@ public final class WebSocketClientServerTest {
 				.withAcceptOnce()
 				.listen();
 
-		Throwable exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+		Exception exception = awaitException(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);

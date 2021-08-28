@@ -325,7 +325,7 @@ public class Utils {
 		return measureFields;
 	}
 
-	public static <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> wrapException(Function<Throwable, Throwable> wrapFn) {
+	public static <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> wrapException(Function<Exception, Exception> wrapFn) {
 		return (v, e) -> e == null ?
 				Promise.of(v) :
 				Promise.ofException(wrapFn.apply(e));

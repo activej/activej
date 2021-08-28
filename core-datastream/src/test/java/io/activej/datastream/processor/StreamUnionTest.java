@@ -80,7 +80,7 @@ public class StreamUnionTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source0.streamTo(streamUnion.newInput()),
 				source1.streamTo(streamUnion.newInput()),
 				source2.streamTo(streamUnion.newInput()),
@@ -119,7 +119,7 @@ public class StreamUnionTest {
 
 		StreamConsumer<Integer> consumer = StreamConsumerToList.create();
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source0.streamTo(streamUnion.newInput()),
 				source1.streamTo(streamUnion.newInput()),
 				streamUnion.getOutput()

@@ -68,7 +68,7 @@ public final class StreamConsumerToList<T> extends AbstractStreamConsumer<T> {
 	}
 
 	@Override
-	protected void onError(Throwable e) {
+	protected void onError(Exception e) {
 		resultPromise.setException(e);
 	}
 }

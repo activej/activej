@@ -16,10 +16,10 @@
 
 package io.activej.net.socket.tcp;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.eventloop.net.CloseWithoutNotifyException;
 import io.activej.promise.Promise;
@@ -98,7 +98,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	}
 
 	@NotNull
-	private <T> Promise<T> sanitize(T value, @Nullable Throwable e) {
+	private <T> Promise<T> sanitize(T value, @Nullable Exception e) {
 		if (e == null) {
 			return Promise.of(value);
 		} else {
@@ -408,7 +408,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	}
 
 	@Override
-	public void closeEx(@NotNull Throwable e) {
+	public void closeEx(@NotNull Exception e) {
 		if (isClosed()) return;
 		Recyclers.recycle(net2engine);
 		Recyclers.recycle(engine2app);

@@ -16,11 +16,11 @@
 
 package io.activej.http;
 
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.service.EventloopService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
@@ -57,9 +57,9 @@ import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
+import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -125,18 +125,18 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onResolve(HttpRequest request, DnsResponse dnsResponse);
 
-		void onResolveError(HttpRequest request, Throwable e);
+		void onResolveError(HttpRequest request, Exception e);
 
 		default void onConnecting(HttpRequest request, InetSocketAddress address) {
 		}
 
 		void onConnect(HttpRequest request, HttpClientConnection connection);
 
-		void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e);
+		void onConnectError(HttpRequest request, InetSocketAddress address, Exception e);
 
 		void onHttpResponse(HttpResponse response);
 
-		void onHttpError(HttpClientConnection connection, Throwable e);
+		void onHttpError(HttpClientConnection connection, Exception e);
 
 		void onDisconnect(HttpClientConnection connection);
 	}
@@ -167,7 +167,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onResolveError(HttpRequest request, Throwable e) {
+		public void onResolveError(HttpRequest request, Exception e) {
 			resolveErrors.recordException(e, request.getUrl().getHost());
 		}
 
@@ -184,7 +184,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onConnectError(HttpRequest request, InetSocketAddress address, Throwable e) {
+		public void onConnectError(HttpRequest request, InetSocketAddress address, Exception e) {
 			connecting--;
 			connectErrors.recordException(e, request.getUrl().getHost());
 		}
@@ -195,7 +195,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
-		public void onHttpError(HttpClientConnection connection, Throwable e) {
+		public void onHttpError(HttpClientConnection connection, Exception e) {
 			if (e instanceof AsyncTimeoutException) {
 				httpTimeouts.recordEvent();
 				return;

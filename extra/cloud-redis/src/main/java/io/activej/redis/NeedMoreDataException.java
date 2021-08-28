@@ -30,7 +30,7 @@ public final class NeedMoreDataException extends RuntimeException {
 	}
 
 	@Override
-	public Throwable fillInStackTrace() {
+	public Exception fillInStackTrace() {
 		return this;
 	}
 }

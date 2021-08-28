@@ -80,9 +80,9 @@ final class StreamConsumers {
 	}
 
 	static final class ClosingWithError<T> extends AbstractStreamConsumer<T> {
-		private Throwable error;
+		private Exception error;
 
-		ClosingWithError(Throwable e) {
+		ClosingWithError(Exception e) {
 			this.error = e;
 		}
 
@@ -185,7 +185,7 @@ final class StreamConsumers {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			consumer.closeEx(e);
 		}
 	}
@@ -222,7 +222,7 @@ final class StreamConsumers {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			resultPromise.setException(e);
 		}
 
@@ -313,7 +313,7 @@ final class StreamConsumers {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			internalSupplier.execute(() -> internalSupplier.closeEx(e));
 		}
 
@@ -388,7 +388,7 @@ final class StreamConsumers {
 			}
 
 			@Override
-			protected void onError(Throwable e) {
+			protected void onError(Exception e) {
 				OfAnotherEventloop.this.execute(() -> OfAnotherEventloop.this.closeEx(e));
 			}
 

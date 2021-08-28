@@ -150,7 +150,7 @@ public final class BufsConsumerChunkedDecoderTest {
 		decodeThreeStrings(message1, message2, message3);
 	}
 
-	private void decodeOneString(String message, @Nullable Class<? extends Throwable> exceptionType) {
+	private void decodeOneString(String message, @Nullable Class<? extends Exception> exceptionType) {
 		byte[] bytes = message.getBytes();
 		ByteBuf buf = ByteBufPool.allocate(bytes.length);
 		buf.put(bytes);
@@ -189,13 +189,13 @@ public final class BufsConsumerChunkedDecoderTest {
 		doTest(null);
 	}
 
-	private void doTest(@Nullable Class<? extends Throwable> expectedExceptionType) {
+	private void doTest(@Nullable Class<? extends Exception> expectedExceptionType) {
 		chunkedDecoder.getInput().set(BinaryChannelSupplier.of(chunkedByByte(ChannelSupplier.ofList(list))));
 		Promise<?> processResult = chunkedDecoder.getProcessCompletion();
 		if (expectedExceptionType == null) {
 			await(processResult);
 		} else {
-			Throwable actualException = awaitException(processResult);
+			Exception actualException = awaitException(processResult);
 			assertThat(actualException, instanceOf(expectedExceptionType));
 		}
 	}

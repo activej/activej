@@ -269,7 +269,7 @@ public final class TestLocalActiveFsInvariants {
 		both(client -> {
 			// first call completes successfully
 			await(client.move("file", "newFile"));
-			Throwable e = awaitException(client.move("file", "newFile"));
+			Exception e = awaitException(client.move("file", "newFile"));
 			assertThat(e, instanceOf(FileNotFoundException.class));
 		});
 		assertFilesAreSame(firstPath, secondPath);
@@ -404,7 +404,7 @@ public final class TestLocalActiveFsInvariants {
 	public void deleteAllSingleDirectory() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Throwable exception = awaitException(client.deleteAll(singleton("directory")));
+			Exception exception = awaitException(client.deleteAll(singleton("directory")));
 			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
 		});
 
@@ -416,7 +416,7 @@ public final class TestLocalActiveFsInvariants {
 	public void deleteAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Throwable exception = awaitException(client.deleteAll(setOf("directory", "directory2")));
+			Exception exception = awaitException(client.deleteAll(setOf("directory", "directory2")));
 			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
 		});
 
@@ -427,7 +427,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void deleteAllFilesAndDirectories() {
 		both(client -> {
-			Throwable exception = awaitException(client.deleteAll(setOf("file", "directory")));
+			Exception exception = awaitException(client.deleteAll(setOf("file", "directory")));
 			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
 		});
 		assertFilesAreSame(firstPath, secondPath);
@@ -450,7 +450,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void deleteAllWithFileOutsideRoot() {
 		both(client -> {
-			Throwable exception = awaitException(client.deleteAll(setOf("file", "..")));
+			Exception exception = awaitException(client.deleteAll(setOf("file", "..")));
 			assertBatchException(exception, mapOf("..", ForbiddenPathException.class));
 		});
 		assertFilesAreSame(firstPath, secondPath);
@@ -504,7 +504,7 @@ public final class TestLocalActiveFsInvariants {
 	public void copyAllFromSingleDirectory() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Throwable exception = awaitException(client.copyAll(mapOf("directory", "newFile")));
+			Exception exception = awaitException(client.copyAll(mapOf("directory", "newFile")));
 			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
 		});
 
@@ -516,7 +516,7 @@ public final class TestLocalActiveFsInvariants {
 	public void copyAllToSingleDirectory() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Throwable exception = awaitException(client.copyAll(mapOf("file", "directory")));
+			Exception exception = awaitException(client.copyAll(mapOf("file", "directory")));
 			assertBatchException(exception, mapOf("file", IsADirectoryException.class));
 		});
 
@@ -528,7 +528,7 @@ public final class TestLocalActiveFsInvariants {
 	public void copyAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.copyAll((mapOf(
 							"directory", "newDirectory",
 							"directory2", "newDirectory2"
@@ -543,7 +543,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void copyAllFilesAndDirectories() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.copyAll(mapOf(
 							"file", "newFile",
 							"directory", "newDirectory"
@@ -556,7 +556,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void copyAllWithFromNonExisting() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.copyAll(mapOf(
 							"file", "newFile",
 							"nonexistent", "newFile2"
@@ -570,7 +570,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void copyAllFromRoot() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.copyAll(mapOf(
 							"file", "newFile",
 							"", "newRoot"
@@ -584,7 +584,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void copyAllToRoot() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.copyAll(mapOf(
 							"file", "newFile",
 							"file2", ""
@@ -597,7 +597,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void copyAllToFileOutsideRoot() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.copyAll(mapOf(
 							"file", "newFile",
 							"file2", "../new"
@@ -610,7 +610,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void copyAllFromFileOutsideRoot() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.copyAll(mapOf(
 							"file", "newFile",
 							"../new", "newFile2"
@@ -706,7 +706,7 @@ public final class TestLocalActiveFsInvariants {
 	public void moveAllFromSingleDirectory() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Throwable exception = awaitException(client.moveAll(mapOf("directory", "newFile")));
+			Exception exception = awaitException(client.moveAll(mapOf("directory", "newFile")));
 			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
 		});
 
@@ -718,7 +718,7 @@ public final class TestLocalActiveFsInvariants {
 	public void moveAllToSingleDirectory() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Throwable exception = awaitException(client.moveAll(mapOf("file", "directory")));
+			Exception exception = awaitException(client.moveAll(mapOf("file", "directory")));
 			assertBatchException(exception, mapOf("file", IsADirectoryException.class));
 		});
 
@@ -730,7 +730,7 @@ public final class TestLocalActiveFsInvariants {
 	public void moveAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll((mapOf(
 							"directory", "newDirectory",
 							"directory2", "newDirectory2"
@@ -745,7 +745,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveAllFilesAndDirectories() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"directory", "newDirectory"
@@ -757,7 +757,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveAllWithFromNonExisting() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"nonexistent", "newFile2"
@@ -769,7 +769,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveAllFromRoot() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"", "newRoot"
@@ -781,7 +781,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveAllToRoot() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"file2", ""
@@ -793,7 +793,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveAllToFileOutsideRoot() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"file2", "../new"
@@ -805,7 +805,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveAllFromFileOutsideRoot() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"../new", "newFile2"
@@ -818,7 +818,7 @@ public final class TestLocalActiveFsInvariants {
 	public void moveAllNotIdempotent() {
 		both(client -> {
 			await(client.moveAll(mapOf("file", "newFile", "file2", "newFile2")));
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"file2", "newFile2"
@@ -874,7 +874,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveAllWithSelfNonExistent() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"nonexistent", "nonexistent"
@@ -886,7 +886,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void moveAllWithSelfDirectory() {
 		both(client -> {
-			Throwable exception = awaitException(
+			Exception exception = awaitException(
 					client.moveAll(mapOf(
 							"file", "newFile",
 							"directory", "directory"

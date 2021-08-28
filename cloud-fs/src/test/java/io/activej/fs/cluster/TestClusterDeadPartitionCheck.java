@@ -218,7 +218,7 @@ public final class TestClusterDeadPartitionCheck {
 	public void testServersFailOnStreamingUpload() {
 		Set<Integer> toBeAlive = setOf(1, 3);
 		String filename = "test";
-		Throwable exception = awaitException(fs.upload(filename)
+		Exception exception = awaitException(fs.upload(filename)
 				.whenComplete(assertComplete($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))
 				.then(consumer -> {
 					RefInt dataBeforeShutdown = new RefInt(100);

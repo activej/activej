@@ -279,7 +279,7 @@ public class CubeUplinkMySqlTest {
 		assertEquals(2, (long) fetch1.getCommitId());
 		assertTrue(fetch1.getDiffs().isEmpty());
 
-		Throwable exception = awaitException(uplink.push(protoCommit2));
+		Exception exception = awaitException(uplink.push(protoCommit2));
 		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
 		assertEquals("Chunk is already removed", exception.getMessage());
 	}

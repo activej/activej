@@ -214,7 +214,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			temporaryStreamsAccumulator.closeEx(e);
 		}
 

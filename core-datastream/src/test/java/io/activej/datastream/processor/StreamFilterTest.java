@@ -48,7 +48,7 @@ public class StreamFilterTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		Throwable e = awaitException(source.transformWith(streamFilter)
+		Exception e = awaitException(source.transformWith(streamFilter)
 				.streamTo(consumer
 						.transformWith(decorate(promise ->
 								promise.then(item -> item == 4 ? Promise.ofException(exception) : Promise.of(item))))));
@@ -72,7 +72,7 @@ public class StreamFilterTest {
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
-		Throwable e = awaitException(source.transformWith(streamFilter)
+		Exception e = awaitException(source.transformWith(streamFilter)
 				.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertSame(exception, e);

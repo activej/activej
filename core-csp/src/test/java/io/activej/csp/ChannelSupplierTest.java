@@ -61,7 +61,7 @@ public class ChannelSupplierTest {
 				ChannelSupplier.ofException(exception)
 		);
 
-		Throwable e = awaitException(supplier.toCollector(ByteBufs.collector()));
+		Exception e = awaitException(supplier.toCollector(ByteBufs.collector()));
 		assertSame(exception, e);
 	}
 
@@ -74,9 +74,9 @@ public class ChannelSupplierTest {
 
 		await(ChannelSupplier.of(byteBuf1).toCollector(ByteBufs.collector(2)));
 		await(ChannelSupplier.of(byteBuf2).toCollector(ByteBufs.collector(2)));
-		Throwable e1 = awaitException(ChannelSupplier.of(byteBuf3).toCollector(ByteBufs.collector(2)));
+		Exception e1 = awaitException(ChannelSupplier.of(byteBuf3).toCollector(ByteBufs.collector(2)));
 		assertThat(e1.getMessage(), containsString("Size of ByteBufs exceeds maximum size of 2 bytes"));
-		Throwable e2 = awaitException(ChannelSupplier.of(byteBuf4).toCollector(ByteBufs.collector(2)));
+		Exception e2 = awaitException(ChannelSupplier.of(byteBuf4).toCollector(ByteBufs.collector(2)));
 		assertThat(e2.getMessage(), containsString("Size of ByteBufs exceeds maximum size of 2 bytes"));
 	}
 

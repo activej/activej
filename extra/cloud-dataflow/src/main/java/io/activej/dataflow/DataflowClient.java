@@ -204,7 +204,7 @@ public final class DataflowClient {
 		}
 
 		@Override
-		public void closeEx(@NotNull Throwable e) {
+		public void closeEx(@NotNull Exception e) {
 			messaging.closeEx(e);
 		}
 	}
@@ -215,7 +215,7 @@ public final class DataflowClient {
 				.then(wrapException(e -> new DataflowException("Could not connect to " + address, e)));
 	}
 
-	private static <T> BiFunction<T, @Nullable Throwable, Promise<? extends T>> wrapException(Function<Throwable, Throwable> wrapFn) {
+	private static <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> wrapException(Function<Exception, Exception> wrapFn) {
 		return (v, e) -> e == null ?
 				Promise.of(v) :
 				Promise.ofException(wrapFn.apply(e));

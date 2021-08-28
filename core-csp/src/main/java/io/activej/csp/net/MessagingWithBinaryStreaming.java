@@ -128,7 +128,7 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 	}
 
 	@Override
-	protected void onClosed(@NotNull Throwable e) {
+	protected void onClosed(@NotNull Exception e) {
 		socket.closeEx(e);
 		bufs.recycle();
 	}

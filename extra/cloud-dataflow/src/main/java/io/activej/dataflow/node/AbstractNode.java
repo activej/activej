@@ -13,14 +13,14 @@ public abstract class AbstractNode implements Node {
 	protected Instant finished = null;
 
 	@Nullable
-	protected Throwable error = null;
+	protected Exception error = null;
 
 	public AbstractNode(int index) {
 		this.index = index;
 	}
 
 	@Override
-	public void finish(@Nullable Throwable e) {
+	public void finish(@Nullable Exception e) {
 		if (e != null && !(e instanceof DataflowException)){
 			e = new DataflowException(e);
 		}
@@ -34,7 +34,7 @@ public abstract class AbstractNode implements Node {
 	}
 
 	@Nullable
-	public Throwable getError() {
+	public Exception getError() {
 		return error;
 	}
 

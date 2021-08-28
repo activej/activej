@@ -85,7 +85,7 @@ public final class AsyncBuffer<A, R> {
 		return bufferedPromise;
 	}
 
-	public void cancelBufferedPromise(@NotNull Throwable e) {
+	public void cancelBufferedPromise(@NotNull Exception e) {
 		if (bufferedPromise != null) {
 			SettablePromise<R> bufferedPromise = this.bufferedPromise;
 			this.bufferedPromise = null;

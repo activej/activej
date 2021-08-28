@@ -31,9 +31,9 @@ import static io.activej.common.Utils.nullify;
 final class StreamSuppliers {
 
 	static final class ClosingWithError<T> extends AbstractStreamSupplier<T> {
-		private Throwable error;
+		private Exception error;
 
-		ClosingWithError(Throwable e) {
+		ClosingWithError(Exception e) {
 			this.error = e;
 		}
 
@@ -166,7 +166,7 @@ final class StreamSuppliers {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			internalConsumer.closeEx(e);
 			iterator.closeEx(e);
 		}
@@ -203,7 +203,7 @@ final class StreamSuppliers {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			supplier.closeEx(e);
 		}
 	}
@@ -291,7 +291,7 @@ final class StreamSuppliers {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			internalConsumer.execute(() -> internalConsumer.closeEx(e));
 		}
 
@@ -357,7 +357,7 @@ final class StreamSuppliers {
 			}
 
 			@Override
-			protected void onError(Throwable e) {
+			protected void onError(Exception e) {
 				OfAnotherEventloop.this.execute(() -> OfAnotherEventloop.this.closeEx(e));
 			}
 

@@ -16,9 +16,9 @@
 
 package io.activej.csp.process;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncProcess;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
@@ -48,7 +48,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	protected void beforeProcess() {
 	}
 
-	protected void afterProcess(@SuppressWarnings("unused") @Nullable Throwable e) {
+	protected void afterProcess(@SuppressWarnings("unused") @Nullable Exception e) {
 	}
 
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -64,7 +64,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 		completeProcessEx(null);
 	}
 
-	protected final void completeProcessEx(@Nullable Throwable e) {
+	protected final void completeProcessEx(@Nullable Exception e) {
 		if (isProcessComplete()) return;
 		if (e == null) {
 			processComplete = true; // setting flag here only, as closeEx() method sets it on its own
@@ -109,13 +109,13 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 
 	/**
 	 * Closes this process if it is not completed yet.
-	 * Executes {@link #doClose(Throwable)} and
-	 * {@link #afterProcess(Throwable)}.
+	 * Executes {@link #doClose(Exception)} and
+	 * {@link #afterProcess(Exception)}.
 	 *
 	 * @param e exception that is used to close process with
 	 */
 	@Override
-	public final void closeEx(@NotNull Throwable e) {
+	public final void closeEx(@NotNull Exception e) {
 		if (isProcessComplete()) return;
 		processComplete = true;
 		doClose(e);
@@ -129,7 +129,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	 *
 	 * @param e an exception thrown on closing
 	 */
-	protected abstract void doClose(Throwable e);
+	protected abstract void doClose(Exception e);
 
 	/**
 	 * Closes this process with {@link AsyncCloseException}
@@ -147,7 +147,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				supplier.closeEx(e);
 				AbstractCommunicatingProcess.this.closeEx(e);
 			}
@@ -162,7 +162,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				consumer.closeEx(e);
 				AbstractCommunicatingProcess.this.closeEx(e);
 			}
@@ -182,7 +182,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 			}
 
 			@Override
-			public void onClosed(@NotNull Throwable e) {
+			public void onClosed(@NotNull Exception e) {
 				supplier.closeEx(e);
 				AbstractCommunicatingProcess.this.closeEx(e);
 			}
@@ -207,7 +207,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	 * otherwise. If the process was already completed,
 	 * returns {@link ProcessCompleteException}.
 	 */
-	protected final <T> Promise<T> doSanitize(T value, @Nullable Throwable e) {
+	protected final <T> Promise<T> doSanitize(T value, @Nullable Exception e) {
 		if (isProcessComplete()) {
 			Recyclers.recycle(value);
 			ProcessCompleteException processCompleteException = new ProcessCompleteException();

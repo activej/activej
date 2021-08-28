@@ -85,7 +85,7 @@ public class StreamSharderTest {
 		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source.streamTo(streamSharder.getInput()),
 				streamSharder.newOutput().streamTo(consumer1),
 				streamSharder.newOutput().streamTo(
@@ -120,7 +120,7 @@ public class StreamSharderTest {
 		StreamConsumerToList<Integer> consumer1 = StreamConsumerToList.create();
 		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source.streamTo(streamSharder.getInput()),
 				streamSharder.newOutput().streamTo(consumer1.transformWith(oneByOne())),
 				streamSharder.newOutput().streamTo(consumer2.transformWith(oneByOne()))

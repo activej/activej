@@ -119,7 +119,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	/**
 	 * Creates a supplier that is in the closed state with given error set.
 	 */
-	static <T> StreamSupplier<T> closingWithError(Throwable e) {
+	static <T> StreamSupplier<T> closingWithError(Exception e) {
 		return new ClosingWithError<>(e);
 	}
 

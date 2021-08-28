@@ -21,7 +21,7 @@ public class ToDoException extends RuntimeException {
 	public ToDoException() {
 	}
 
-	public ToDoException(String message, Throwable cause) {
+	public ToDoException(String message, Exception cause) {
 		super(message, cause);
 	}
 
@@ -29,7 +29,7 @@ public class ToDoException extends RuntimeException {
 		super(s);
 	}
 
-	public ToDoException(Throwable cause) {
+	public ToDoException(Exception cause) {
 		super(cause);
 	}
 }

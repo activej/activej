@@ -39,12 +39,12 @@ public class HttpError extends HttpException implements Promisable<HttpResponse>
 		this.code = code;
 	}
 
-	protected HttpError(int code, String message, Throwable cause) {
+	protected HttpError(int code, String message, Exception cause) {
 		super(message, cause);
 		this.code = code;
 	}
 
-	protected HttpError(int code, Throwable cause) {
+	protected HttpError(int code, Exception cause) {
 		super(cause);
 		this.code = code;
 	}
@@ -57,11 +57,11 @@ public class HttpError extends HttpException implements Promisable<HttpResponse>
 		return new HttpError(code, message);
 	}
 
-	public static HttpError ofCode(int code, String message, Throwable cause) {
+	public static HttpError ofCode(int code, String message, Exception cause) {
 		return new HttpError(code, message, cause);
 	}
 
-	public static HttpError ofCode(int code, Throwable cause) {
+	public static HttpError ofCode(int code, Exception cause) {
 		return new HttpError(code, cause);
 	}
 

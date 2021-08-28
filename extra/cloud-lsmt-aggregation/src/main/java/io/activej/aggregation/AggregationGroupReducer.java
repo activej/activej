@@ -144,7 +144,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	}
 
 	@Override
-	protected void onError(Throwable e) {
+	protected void onError(Exception e) {
 		chunksAccumulator.closeEx(e);
 	}
 

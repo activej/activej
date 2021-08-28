@@ -110,7 +110,7 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			outputs.forEach(output -> output.closeEx(e));
 		}
 	}
@@ -131,7 +131,7 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			input.closeEx(e);
 		}
 

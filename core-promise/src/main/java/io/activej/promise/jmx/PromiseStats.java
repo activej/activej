@@ -16,7 +16,6 @@
 
 package io.activej.promise.jmx;
 
-import io.activej.async.callback.Callback;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -92,7 +91,7 @@ public class PromiseStats {
 		return promise.whenComplete(recordStats());
 	}
 
-	public <T> BiConsumer<T, Throwable> recordStats() {
+	public <T> BiConsumer<T, Exception> recordStats() {
 		activePromises++;
 		long before = currentTimeMillis();
 		lastStartTimestamp = before;

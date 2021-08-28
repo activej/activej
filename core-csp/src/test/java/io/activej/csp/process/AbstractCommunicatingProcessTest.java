@@ -131,7 +131,7 @@ public final class AbstractCommunicatingProcessTest {
 		}
 
 		@Override
-		protected void doClose(Throwable e) {
+		protected void doClose(Exception e) {
 			output.closeEx(e);
 			input.closeEx(e);
 		}

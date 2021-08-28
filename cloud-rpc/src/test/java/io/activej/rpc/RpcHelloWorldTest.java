@@ -70,7 +70,7 @@ public final class RpcHelloWorldTest {
 			try {
 				result = helloService.hello(request.name);
 			} catch (Exception e) {
-				return Promise.ofException((Throwable) e);
+				return Promise.ofException((Exception) e);
 			}
 			return Promise.of(new HelloResponse(result));
 		};

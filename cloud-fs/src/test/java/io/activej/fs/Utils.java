@@ -36,11 +36,11 @@ public final class Utils {
 		}
 	}
 
-	public static void assertBatchException(@NotNull Throwable e, String name, Class<? extends FsScalarException> exceptionClass) {
+	public static void assertBatchException(@NotNull Exception e, String name, Class<? extends FsScalarException> exceptionClass) {
 		assertBatchException(e, mapOf(name, exceptionClass));
 	}
 
-	public static void assertBatchException(@NotNull Throwable e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {
+	public static void assertBatchException(@NotNull Exception e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {
 		assertThat(e, instanceOf(FsBatchException.class));
 		FsBatchException batchEx = (FsBatchException) e;
 
@@ -133,7 +133,7 @@ public final class Utils {
 		try {
 			pathConsumer.accept(firstPath);
 			pathConsumer.accept(secondPath);
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			throw new AssertionError(e);
 		}
 	}

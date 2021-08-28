@@ -176,8 +176,8 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testBodySupplierClosingOnDisconnect() throws Exception {
-		SettablePromise<Throwable> throwablePromise = new SettablePromise<>();
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(() -> Promise.of(wrapAscii("Hello")), throwablePromise::set);
+		SettablePromise<Exception> exceptionPromise = new SettablePromise<>();
+		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(() -> Promise.of(wrapAscii("Hello")), exceptionPromise::set);
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier))
 				.withListenPort(port)
 				.withAcceptOnce();
@@ -192,8 +192,8 @@ public final class AsyncHttpServerTest {
 				throw new AssertionError(e);
 			}
 		}).start();
-		Throwable throwable = await(throwablePromise);
-		assertThat(throwable, instanceOf(IOException.class));
+		Exception exception = await(exceptionPromise);
+		assertThat(exception, instanceOf(IOException.class));
 	}
 
 	@Test

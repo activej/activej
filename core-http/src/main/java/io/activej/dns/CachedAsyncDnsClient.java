@@ -124,7 +124,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		};
 	}
 
-	private void addToCache(DnsQuery query, DnsResponse response, @Nullable Throwable e) {
+	private void addToCache(DnsQuery query, DnsResponse response, @Nullable Exception e) {
 		if (e == null) {
 			cache.add(query, response);
 		} else if (e instanceof DnsQueryException) {

@@ -44,7 +44,7 @@ public class StreamSupplierConcatTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		Throwable e = awaitException(StreamSupplier.concat(
+		Exception e = awaitException(StreamSupplier.concat(
 				StreamSupplier.of(1, 2, 3),
 				StreamSupplier.of(4, 5, 6),
 				StreamSupplier.closingWithError(exception),
@@ -74,7 +74,7 @@ public class StreamSupplierConcatTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		Throwable e = awaitException(StreamSupplier.concat(
+		Exception e = awaitException(StreamSupplier.concat(
 				StreamSupplier.of(1, 2, 3),
 				StreamSupplier.of(4, 5, 6),
 				StreamSupplier.closingWithError(exception))

@@ -223,7 +223,7 @@ public final class HttpStreamTest {
 
 		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 						.request(HttpRequest.post("http://127.0.0.1:" + port)
 								.withBodyStream(ChannelSuppliers.concat(

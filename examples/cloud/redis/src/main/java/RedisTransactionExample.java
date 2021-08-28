@@ -54,7 +54,7 @@ public final class RedisTransactionExample {
 							.then(() -> connection.cmd(RedisRequest.of("DEL", LIST_KEY), RedisResponse.SKIP))
 							.then(connection::quit);
 				})
-				.whenException(Throwable::printStackTrace);
+				.whenException(Exception::printStackTrace);
 
 		eventloop.run();
 	}

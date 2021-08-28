@@ -67,7 +67,7 @@ public final class Task {
 	@Nullable
 	private Instant finished;
 	@Nullable
-	private Throwable error;
+	private Exception error;
 
 	@Nullable
 	private List<Promise<Void>> currentNodeAcks;
@@ -177,7 +177,7 @@ public final class Task {
 	}
 
 	@Nullable
-	public Throwable getError() {
+	public Exception getError() {
 		return error;
 	}
 
@@ -252,7 +252,7 @@ public final class Task {
 			sb.append("  ").append(id)
 					.append(" [label=\"").append(name.startsWith("Node") ? name.substring(4) : name)
 					.append("\" id=").append(id);
-			Throwable error = node.getError();
+			Exception error = node.getError();
 			if (error != null) {
 				StringWriter str = new StringWriter();
 				error.printStackTrace(new PrintWriter(str));

@@ -16,12 +16,12 @@
 
 package io.activej.net.socket.tcp;
 
+import io.activej.async.exception.AsyncCloseException;
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
-import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
@@ -555,7 +555,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	}
 
 	@Override
-	public void closeEx(@NotNull Throwable e) {
+	public void closeEx(@NotNull Exception e) {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (isClosed()) return;
 		doClose();

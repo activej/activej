@@ -312,7 +312,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	}
 
 	@Override
-	protected void doClose(Throwable e) {
+	protected void doClose(Exception e) {
 		if (output != null) {
 			output.closeEx(e instanceof TruncatedDataException ? CLOSE_FRAME_MISSING : e);
 		}

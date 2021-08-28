@@ -402,9 +402,9 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 				return Promise.of(successes);
 			}
 
-			List<Throwable> exceptions = tries.stream().filter(Try::isException).map(Try::getException).collect(toList());
+			List<Exception> exceptions = tries.stream().filter(Try::isException).map(Try::getException).collect(toList());
 			if (!exceptions.isEmpty()) {
-				Throwable exception = exceptions.get(0);
+				Exception exception = exceptions.get(0);
 				if (exceptions.stream().skip(1).allMatch(e -> e == exception)) {
 					return Promise.ofException(exception);
 				}

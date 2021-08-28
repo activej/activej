@@ -74,7 +74,7 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
 	}
 
 	@Override
-	protected void onError(Throwable e) {
+	protected void onError(Exception e) {
 		internalSupplier.closeEx(e);
 		for (InternalSupplier pendingAcknowledgement : pendingAcknowledgements) {
 			pendingAcknowledgement.getConsumer().closeEx(e);
@@ -116,7 +116,7 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			StreamConsumerSwitcher.this.closeEx(e);
 		}
 	}

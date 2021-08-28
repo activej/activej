@@ -88,7 +88,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	}
 
 	@Override
-	protected final void doClose(@NotNull Throwable e) {
+	protected final void doClose(@NotNull Exception e) {
 		Eventloop.getCurrentEventloop().post(this::onCleanup);
 		input.closeEx(e);
 		output.closeEx(e);

@@ -66,27 +66,27 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	private long cleanupLastStartTimestamp;
 	private long cleanupLastCompleteTimestamp;
 	private long cleanupDurationMillis;
-	private @Nullable Throwable cleanupException;
+	private @Nullable Exception cleanupException;
 
 	private long cleanupConsolidatedChunksLastStartTimestamp;
 	private long cleanupConsolidatedChunksLastCompleteTimestamp;
 	private long cleanupConsolidatedChunksDurationMillis;
-	private @Nullable Throwable cleanupConsolidatedChunksException;
+	private @Nullable Exception cleanupConsolidatedChunksException;
 
 	private long getRequiredChunksLastStartTimestamp;
 	private long getRequiredChunksLastCompleteTimestamp;
 	private long getRequiredChunksDurationMillis;
-	private @Nullable Throwable getRequiredChunksException;
+	private @Nullable Exception getRequiredChunksException;
 
 	private long checkRequiredChunksLastStartTimestamp;
 	private long checkRequiredChunksLastCompleteTimestamp;
 	private long checkRequiredChunksDurationMillis;
-	private @Nullable Throwable checkRequiredChunksException;
+	private @Nullable Exception checkRequiredChunksException;
 
 	private long cleanupChunksLastStartTimestamp;
 	private long cleanupChunksLastCompleteTimestamp;
 	private long cleanupChunksDurationMillis;
-	private @Nullable Throwable cleanupChunksException;
+	private @Nullable Exception cleanupChunksException;
 	// endregion
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
@@ -285,7 +285,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getCleanupLastException() {
+	public Exception getCleanupLastException() {
 		return cleanupException;
 	}
 
@@ -318,7 +318,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getCleanupConsolidatedChunksLastException() {
+	public Exception getCleanupConsolidatedChunksLastException() {
 		return cleanupConsolidatedChunksException;
 	}
 
@@ -351,7 +351,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getGetRequiredChunksLastException() {
+	public Exception getGetRequiredChunksLastException() {
 		return getRequiredChunksException;
 	}
 
@@ -384,7 +384,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getCheckRequiredChunksLastException() {
+	public Exception getCheckRequiredChunksLastException() {
 		return checkRequiredChunksException;
 	}
 
@@ -417,7 +417,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getCleanupChunksLastException() {
+	public Exception getCleanupChunksLastException() {
 		return cleanupChunksException;
 	}
 	// endregion

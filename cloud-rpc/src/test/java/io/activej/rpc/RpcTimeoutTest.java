@@ -97,7 +97,7 @@ public final class RpcTimeoutTest {
 	public void shouldTimeout() {
 		int timeout = SERVER_DELAY / 2;
 		//noinspection ConstantConditions
-		Throwable exception = awaitException(client.start()
+		Exception exception = awaitException(client.start()
 				.then(() -> client.sendRequest(DATA, timeout))
 				.then(($, e) -> client.stop()
 						.then(server::close)

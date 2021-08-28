@@ -64,7 +64,7 @@ public class StreamSplitterTest {
 		StreamConsumerToList<Integer> badConsumer = StreamConsumerToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source.streamTo(streamSplitter.getInput()),
 				streamSplitter.newOutput()
 						.streamTo(consumerToList1
@@ -111,7 +111,7 @@ public class StreamSplitterTest {
 		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
 		StreamConsumerToList<Integer> consumer3 = StreamConsumerToList.create();
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source.streamTo(splitter.getInput()),
 				splitter.newOutput().streamTo(consumer1.transformWith(oneByOne())),
 				splitter.newOutput().streamTo(consumer2.transformWith(oneByOne())),

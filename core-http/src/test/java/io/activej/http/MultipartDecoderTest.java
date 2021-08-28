@@ -6,6 +6,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.promise.Promise;
+import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -99,12 +100,12 @@ public final class MultipartDecoderTest {
 		await(decoder.split(ChannelSupplier.of(buf), new MultipartDecoder.MultipartDataHandler() {
 			@Override
 			public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
-				return Promise.ofException(new AssertionError());
+				return Promise.ofException(new ExpectedException());
 			}
 
 			@Override
 			public Promise<? extends ChannelConsumer<ByteBuf>> handleFile(String fieldName, String fileName) {
-				return Promise.ofException(new AssertionError());
+				return Promise.ofException(new ExpectedException());
 			}
 		}));
 	}

@@ -27,34 +27,34 @@ public class TestUtils {
 		assertTrue(streamSupplier.isException());
 	}
 
-	public static void assertClosedWithError(Throwable throwable, StreamSupplier<?> streamSupplier) {
-		assertSame(throwable, streamSupplier.getEndOfStream().getException());
+	public static void assertClosedWithError(Exception exception, StreamSupplier<?> streamSupplier) {
+		assertSame(exception, streamSupplier.getEndOfStream().getException());
 	}
 
-	public static void assertClosedWithError(Class<? extends Throwable> throwableType, StreamSupplier<?> streamSupplier) {
-		assertThat(streamSupplier.getEndOfStream().getException(), instanceOf(throwableType));
+	public static void assertClosedWithError(Class<? extends Exception> exceptionType, StreamSupplier<?> streamSupplier) {
+		assertThat(streamSupplier.getEndOfStream().getException(), instanceOf(exceptionType));
 	}
 
 	public static void assertClosedWithError(StreamConsumer<?> streamConsumer) {
 		assertTrue(streamConsumer.isException());
 	}
 
-	public static void assertClosedWithError(Throwable throwable, StreamConsumer<?> streamConsumer) {
-		assertSame(throwable, streamConsumer.getAcknowledgement().getException());
+	public static void assertClosedWithError(Exception exception, StreamConsumer<?> streamConsumer) {
+		assertSame(exception, streamConsumer.getAcknowledgement().getException());
 	}
 
-	public static void assertClosedWithError(Class<? extends Throwable> throwableType, StreamConsumer<?> streamConsumer) {
-		assertThat(streamConsumer.getAcknowledgement().getException(), instanceOf(throwableType));
+	public static void assertClosedWithError(Class<? extends Exception> exceptionType, StreamConsumer<?> streamConsumer) {
+		assertThat(streamConsumer.getAcknowledgement().getException(), instanceOf(exceptionType));
 	}
 
-	public static void assertClosedWithError(Throwable throwable, StreamSupplier<?> streamSupplier, StreamConsumer<?> streamConsumer) {
-		assertSame(throwable, streamSupplier.getEndOfStream().getException());
-		assertSame(throwable, streamConsumer.getAcknowledgement().getException());
+	public static void assertClosedWithError(Exception exception, StreamSupplier<?> streamSupplier, StreamConsumer<?> streamConsumer) {
+		assertSame(exception, streamSupplier.getEndOfStream().getException());
+		assertSame(exception, streamConsumer.getAcknowledgement().getException());
 	}
 
-	public static void assertClosedWithError(Class<? extends Throwable> throwableType, StreamSupplier<?> streamSupplier, StreamConsumer<?> streamConsumer) {
-		assertThat(streamSupplier.getEndOfStream().getException(), instanceOf(throwableType));
-		assertThat(streamConsumer.getAcknowledgement().getException(), instanceOf(throwableType));
+	public static void assertClosedWithError(Class<? extends Exception> exceptionType, StreamSupplier<?> streamSupplier, StreamConsumer<?> streamConsumer) {
+		assertThat(streamSupplier.getEndOfStream().getException(), instanceOf(exceptionType));
+		assertThat(streamConsumer.getAcknowledgement().getException(), instanceOf(exceptionType));
 	}
 
 	public static void assertSuppliersEndOfStream(List<? extends StreamSupplier<?>> streamSuppliers) {
@@ -83,9 +83,9 @@ public class TestUtils {
 		assertTrue(streamTransformer.getOutput().isException());
 	}
 
-	public static void assertClosedWithError(Throwable throwable, StreamTransformer<?, ?> streamTransformer) {
-		assertSame(throwable, streamTransformer.getInput().getAcknowledgement().getException());
-		assertSame(throwable, streamTransformer.getOutput().getEndOfStream().getException());
+	public static void assertClosedWithError(Exception exception, StreamTransformer<?, ?> streamTransformer) {
+		assertSame(exception, streamTransformer.getInput().getAcknowledgement().getException());
+		assertSame(exception, streamTransformer.getOutput().getEndOfStream().getException());
 	}
 
 	public static class CountingStreamConsumer<T> extends AbstractStreamConsumer<T> {

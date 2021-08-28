@@ -221,7 +221,7 @@ public final class TestClusterActiveFs {
 		int allClientsSize = partitions.getPartitions().size();
 		client.withReplicationCount(allClientsSize);
 
-		Throwable exception = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8)))
+		Exception exception = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8)))
 				.streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded.txt"))));
 
 		assertThat(exception, instanceOf(FsException.class));
@@ -232,7 +232,7 @@ public final class TestClusterActiveFs {
 	public void downloadNonExisting() {
 		String fileName = "i_dont_exist.txt";
 
-		Throwable exception = awaitException(ChannelSupplier.ofPromise(client.download(fileName))
+		Exception exception = awaitException(ChannelSupplier.ofPromise(client.download(fileName))
 				.streamTo(ChannelConsumer.of(AsyncConsumer.of(ByteBuf::recycle))));
 
 		assertThat(exception, instanceOf(FsException.class));
@@ -372,7 +372,7 @@ public final class TestClusterActiveFs {
 		String nonexistent = "nonexistent.txt";
 		sourceToTarget.put(nonexistent, "new_nonexistent.txt");
 
-		Throwable exception = awaitException(client.copyAll(sourceToTarget));
+		Exception exception = awaitException(client.copyAll(sourceToTarget));
 		assertTrue(exception.getMessage().startsWith("Could not download file '" + nonexistent + '\''));
 	}
 
@@ -452,7 +452,7 @@ public final class TestClusterActiveFs {
 		String nonexistent = "nonexistent.txt";
 		sourceToTarget.put(nonexistent, "new_nonexistent.txt");
 
-		Throwable exception = awaitException(client.moveAll(sourceToTarget));
+		Exception exception = awaitException(client.moveAll(sourceToTarget));
 		assertTrue(exception.getMessage().startsWith("Could not download file '" + nonexistent + '\''));
 	}
 

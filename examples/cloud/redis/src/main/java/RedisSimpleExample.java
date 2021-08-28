@@ -27,7 +27,7 @@ public final class RedisSimpleExample {
 						})
 						.then(connection::quit)
 				)
-				.whenException(Throwable::printStackTrace);
+				.whenException(Exception::printStackTrace);
 
 
 		eventloop.run();

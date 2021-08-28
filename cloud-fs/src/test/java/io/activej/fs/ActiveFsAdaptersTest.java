@@ -52,8 +52,8 @@ public final class ActiveFsAdaptersTest {
 	}
 
 	private void uploadForbidden(ActiveFs fs, String filename) {
-		Throwable throwable = awaitException(fs.upload(filename).then(ChannelConsumer::acceptEndOfStream));
-		assertThat(throwable, instanceOf(ForbiddenPathException.class));
+		Exception exception = awaitException(fs.upload(filename).then(ChannelConsumer::acceptEndOfStream));
+		assertThat(exception, instanceOf(ForbiddenPathException.class));
 	}
 
 	private void expect(String... realFiles) {

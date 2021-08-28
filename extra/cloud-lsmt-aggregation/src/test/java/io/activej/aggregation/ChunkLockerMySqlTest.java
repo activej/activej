@@ -100,7 +100,7 @@ public class ChunkLockerMySqlTest {
 
 		Set<Long> lockedByB = setOf(4L, 5L, 6L, 1L);
 
-		Throwable exception = awaitException(lockerB.lockChunks(lockedByB));
+		Exception exception = awaitException(lockerB.lockChunks(lockedByB));
 		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
 
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
@@ -151,7 +151,7 @@ public class ChunkLockerMySqlTest {
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
 
 		Set<Long> locked2 = setOf(1L, 4L);
-		Throwable exception = awaitException(lockerA.lockChunks(locked2));
+		Exception exception = awaitException(lockerA.lockChunks(locked2));
 		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
 
 		expireLockedChunk(1L);
@@ -173,8 +173,8 @@ public class ChunkLockerMySqlTest {
 
 				assertEquals(1, ps.executeUpdate());
 			}
-		} catch (SQLException throwables) {
-			throw new AssertionError(throwables);
+		} catch (SQLException exceptions) {
+			throw new AssertionError(exceptions);
 		}
 	}
 

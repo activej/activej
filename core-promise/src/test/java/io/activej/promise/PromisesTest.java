@@ -235,7 +235,7 @@ public final class PromisesTest {
 	@Test
 	public void testRepeat() {
 		Exception exception = new Exception();
-		Throwable e = awaitException(repeat(() -> {
+		Exception e = awaitException(repeat(() -> {
 			if (counter.get() == 5) {
 				return Promise.ofException(exception);
 			}

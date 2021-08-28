@@ -161,7 +161,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	@Override
-	protected void onClosed(@NotNull Throwable e) {
+	protected void onClosed(@NotNull Exception e) {
 		frameOutput.closeEx(e);
 		frameInput.closeEx(e);
 		readPromise = nullify(readPromise, SettablePromise::setException, e);
@@ -228,7 +228,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				WebSocketImpl.this.closeEx(e);
 			}
 		};
@@ -242,7 +242,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				WebSocketImpl.this.closeEx(e);
 			}
 		};

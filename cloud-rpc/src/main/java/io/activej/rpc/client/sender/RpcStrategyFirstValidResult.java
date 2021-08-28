@@ -98,7 +98,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		private int expectedCalls;
 		private final ResultValidator<T> resultValidator;
 		private final Callback<T> resultCallback;
-		private Throwable lastException;
+		private Exception lastException;
 		@Nullable
 		private final Exception noValidResultException;
 
@@ -112,7 +112,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		}
 
 		@Override
-		public void accept(T result, @Nullable Throwable e) {
+		public void accept(T result, @Nullable Exception e) {
 			if (e == null) {
 				if (--expectedCalls >= 0) {
 					if (resultValidator.isValidResult(result)) {

@@ -180,7 +180,7 @@ public class RpcBenchmark extends Launcher {
 
 		Callback<Integer> callback = new Callback<Integer>() {
 			@Override
-			public void accept(Integer result, @Nullable Throwable e) {
+			public void accept(Integer result, @Nullable Exception e) {
 				if (e != null) return;
 				completed++;
 

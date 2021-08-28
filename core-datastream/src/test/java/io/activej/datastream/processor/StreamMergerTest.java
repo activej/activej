@@ -135,7 +135,7 @@ public class StreamMergerTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 		Exception exception = new Exception("Test Exception");
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
 				source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
 				merger.getOutput()

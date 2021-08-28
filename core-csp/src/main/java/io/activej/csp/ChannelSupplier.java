@@ -52,7 +52,7 @@ import static java.util.Arrays.asList;
  * After supplier is closed, all subsequent calls to {@link #get()} will return promise,
  * completed exceptionally.
  * <p>
- * If any exception is caught while supplying data items, {@link #closeEx(Throwable)} method
+ * If any exception is caught while supplying data items, {@link #closeEx(Exception)} method
  * should be called. All resources should be freed and the caught exception should be
  * propagated to all related processes.
  * <p>
@@ -133,9 +133,9 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * Returns a {@link ChannelSuppliers.ChannelSupplierOfException}
 	 * of provided exception.
 	 *
-	 * @param e a {@link Throwable} to be wrapped in ChannelSupplier
+	 * @param e a {@link Exception} to be wrapped in ChannelSupplier
 	 */
-	static <T> ChannelSupplier<T> ofException(Throwable e) {
+	static <T> ChannelSupplier<T> ofException(Exception e) {
 		return new ChannelSuppliers.ChannelSupplierOfException<>(e);
 	}
 
@@ -192,7 +192,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		if (promise.isResult()) return promise.getResult();
 		return new AbstractChannelSupplier<T>() {
 			ChannelSupplier<T> supplier;
-			Throwable exception;
+			Exception exception;
 
 			@Override
 			protected Promise<T> doGet() {
@@ -208,7 +208,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				exception = e;
 				promise.whenResult(supplier -> supplier.closeEx(e));
 			}
@@ -235,7 +235,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				eventloop.startExternalTask();
 				anotherEventloop.execute(() -> {
 					anotherEventloopSupplier.closeEx(e);
@@ -264,7 +264,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				if (supplier != null) {
 					supplier.closeEx(e);
 				}
@@ -497,7 +497,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				endOfStream.trySetException(e);
 			}
 		};

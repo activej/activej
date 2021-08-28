@@ -104,7 +104,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		supplier.trySend(4);
 		supplier.trySend(5);
 		closeEither();
-		Throwable exception = awaitException(supplier.streamTo(consumer));
+		Exception exception = awaitException(supplier.streamTo(consumer));
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 		assertClosedWithError(EXPECTED_EXCEPTION, supplier, consumer);
@@ -122,7 +122,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		supplier.trySend(5);
 		Promise<Void> streamPromise = supplier.streamTo(consumer);
 		closeEither();
-		Throwable exception = awaitException(streamPromise);
+		Exception exception = awaitException(streamPromise);
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 		assertClosedWithError(EXPECTED_EXCEPTION, supplier, consumer);
@@ -140,7 +140,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		supplier.trySend(5);
 		supplier.trySendEndOfStream();
 		closeEither();
-		Throwable exception = awaitException(supplier.streamTo(consumer));
+		Exception exception = awaitException(supplier.streamTo(consumer));
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 		assertClosedWithError(EXPECTED_EXCEPTION, supplier, consumer);
@@ -162,7 +162,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 
 		closeEither();
 		consumer.resume(dataAcceptor);
-		Throwable exception = awaitException(streamPromise);
+		Exception exception = awaitException(streamPromise);
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 		assertClosedWithError(EXPECTED_EXCEPTION, supplier, consumer);
@@ -285,7 +285,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		supplier.trySend(5);
 		supplier.closeEx(EXPECTED_EXCEPTION);
 		supplier.closeEx(secondException);
-		Throwable exception = awaitException(supplier.streamTo(consumer));
+		Exception exception = awaitException(supplier.streamTo(consumer));
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 		assertClosedWithError(EXPECTED_EXCEPTION, supplier, consumer);
@@ -306,7 +306,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		supplier.trySend(5);
 		consumer.closeEx(EXPECTED_EXCEPTION);
 		consumer.closeEx(secondException);
-		Throwable exception = awaitException(streamPromise);
+		Exception exception = awaitException(streamPromise);
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 		assertClosedWithError(EXPECTED_EXCEPTION, supplier, consumer);
@@ -399,7 +399,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			statuses.add(ERROR);
 		}
 
@@ -438,7 +438,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			statuses.add(ERROR);
 		}
 

@@ -69,7 +69,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 
 	@Nullable
 	private Duration autoFlushInterval;
-	private BiConsumer<T, Throwable> serializationErrorHandler = ($, e) -> closeEx(e);
+	private BiConsumer<T, Exception> serializationErrorHandler = ($, e) -> closeEx(e);
 
 	private Input input;
 	private ChannelConsumer<ByteBuf> output;
@@ -123,7 +123,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	 * Sets a serialization error handler for this serializer. Handler accepts serialized item and serialization error.
 	 * The default handler simply closes serializer with received error.
 	 */
-	public ChannelSerializer<T> withSerializationErrorHandler(BiConsumer<T, Throwable> handler) {
+	public ChannelSerializer<T> withSerializationErrorHandler(BiConsumer<T, Exception> handler) {
 		this.serializationErrorHandler = handler;
 		return this;
 	}
@@ -169,7 +169,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	}
 
 	@Override
-	protected void onError(Throwable e) {
+	protected void onError(Exception e) {
 		output.closeEx(e);
 	}
 
@@ -223,9 +223,9 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 
 		private final int autoFlushIntervalMillis;
 		private boolean flushPosted;
-		private final BiConsumer<T, Throwable> serializationErrorHandler;
+		private final BiConsumer<T, Exception> serializationErrorHandler;
 
-		public Input(@NotNull BinarySerializer<T> serializer, int initialBufferSize, BiConsumer<T, Throwable> serializationErrorHandler) {
+		public Input(@NotNull BinarySerializer<T> serializer, int initialBufferSize, BiConsumer<T, Exception> serializationErrorHandler) {
 			this.serializer = serializer;
 			this.initialBufferSize = initialBufferSize;
 			this.autoFlushIntervalMillis = autoFlushInterval == null ? Integer.MAX_VALUE : (int) autoFlushInterval.toMillis();

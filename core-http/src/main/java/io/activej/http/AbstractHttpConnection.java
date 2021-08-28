@@ -93,7 +93,7 @@ public abstract class AbstractHttpConnection {
 	protected long contentLength;
 
 	@Nullable
-	protected Throwable closeException;
+	protected Exception closeException;
 
 	@Nullable
 	private Object userData;
@@ -140,7 +140,7 @@ public abstract class AbstractHttpConnection {
 
 	protected abstract void onClosed();
 
-	protected abstract void onClosedWithError(@NotNull Throwable e);
+	protected abstract void onClosedWithError(@NotNull Exception e);
 
 	public final boolean isClosed() {
 		return flags < 0;
@@ -200,7 +200,7 @@ public abstract class AbstractHttpConnection {
 		return numberOfRequests;
 	}
 
-	protected void closeWebSocketConnection(Throwable e) {
+	protected void closeWebSocketConnection(Exception e) {
 		if (e instanceof WebSocketException) {
 			close();
 		} else {
@@ -215,7 +215,7 @@ public abstract class AbstractHttpConnection {
 		socket.close();
 	}
 
-	protected final void closeWithError(@NotNull Throwable e) {
+	protected final void closeWithError(@NotNull Exception e) {
 		if (isClosed()) return;
 		flags |= CLOSED;
 		onClosedWithError(e);
@@ -571,7 +571,7 @@ public abstract class AbstractHttpConnection {
 
 	protected abstract class ReadConsumer implements Callback<ByteBuf> {
 		@Override
-		public void accept(ByteBuf buf, Throwable e) {
+		public void accept(ByteBuf buf, Exception e) {
 			assert !isClosed() || e != null;
 			if (e == null) {
 				if (buf != null) {

@@ -118,7 +118,7 @@ public class StreamJoinTest {
 				.transformWith(decorate(promise ->
 						promise.then(item -> Promise.ofException(exception))));
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source1.streamTo(streamJoin.getLeft()),
 				source2.streamTo(streamJoin.getRight()),
 				streamJoin.getOutput().streamTo(consumer)
@@ -168,7 +168,7 @@ public class StreamJoinTest {
 		List<DataItemMasterDetail> list = new ArrayList<>();
 		StreamConsumer<DataItemMasterDetail> consumer = StreamConsumerToList.create(list);
 
-		Throwable e = awaitException(
+		Exception e = awaitException(
 				source1.streamTo(streamJoin.getLeft()),
 				source2.streamTo(streamJoin.getRight()),
 				streamJoin.getOutput().streamTo(consumer.transformWith(oneByOne()))

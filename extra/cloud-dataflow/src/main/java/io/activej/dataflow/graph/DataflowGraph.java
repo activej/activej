@@ -84,7 +84,7 @@ public final class DataflowGraph {
 		}
 
 		@Override
-		public void closeEx(@NotNull Throwable e) {
+		public void closeEx(@NotNull Exception e) {
 			session.closeEx(e);
 		}
 	}

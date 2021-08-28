@@ -69,22 +69,22 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	private long backupLastStartTimestamp;
 	private long backupLastCompleteTimestamp;
 	private long backupDurationMillis;
-	private @Nullable Throwable backupException;
+	private @Nullable Exception backupException;
 
 	private long backupDbLastStartTimestamp;
 	private long backupDbLastCompleteTimestamp;
 	private long backupDbDurationMillis;
-	private @Nullable Throwable backupDbException;
+	private @Nullable Exception backupDbException;
 
 	private long getChunksToBackupLastStartTimestamp;
 	private long getChunksToBackupLastCompleteTimestamp;
 	private long getChunksToBackupDurationMillis;
-	private @Nullable Throwable getChunksToBackupException;
+	private @Nullable Exception getChunksToBackupException;
 
 	private long backupChunksLastStartTimestamp;
 	private long backupChunksLastCompleteTimestamp;
 	private long backupChunksDurationMillis;
-	private @Nullable Throwable backupChunksException;
+	private @Nullable Exception backupChunksException;
 	// endregion
 
 	private CubeBackupController(DataSource dataSource, ChunksBackupService chunksBackupService) {
@@ -315,7 +315,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getBackupLastException() {
+	public Exception getBackupLastException() {
 		return backupException;
 	}
 
@@ -346,7 +346,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getBackupDbLastException() {
+	public Exception getBackupDbLastException() {
 		return backupDbException;
 	}
 
@@ -377,7 +377,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getGetChunksToBackupLastException() {
+	public Exception getGetChunksToBackupLastException() {
 		return getChunksToBackupException;
 	}
 
@@ -408,7 +408,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	@JmxAttribute(optional = true)
 	@Nullable
-	public Throwable getBackupChunksLastException() {
+	public Exception getBackupChunksLastException() {
 		return backupChunksException;
 	}
 	// endregion

@@ -109,7 +109,7 @@ public class StreamConsumerSwitcherTest {
 			}
 		};
 
-		Throwable exception = awaitException(streamSupplier.streamTo(switcher));
+		Exception exception = awaitException(streamSupplier.streamTo(switcher));
 
 		assertSame(expectedException, exception);
 		assertClosedWithError(expectedException, streamSupplier, switcher);

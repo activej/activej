@@ -125,7 +125,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 	}
 
 	@Override
-	protected void doClose(Throwable e) {
+	protected void doClose(Exception e) {
 		input.closeEx(e);
 
 		// not passing the exception to all the outputs,

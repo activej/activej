@@ -251,7 +251,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> impl
 	}
 
 	@Override
-	protected void onError(Throwable e) {
+	protected void onError(Exception e) {
 		input.closeEx(e);
 	}
 

@@ -1,8 +1,8 @@
 package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufStrings;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
@@ -157,7 +157,7 @@ public class FrameFormatTest {
 		// add trailing 0 - bytes
 		bufs.add(ByteBuf.wrapForReading(new byte[10]));
 
-		Throwable e = awaitException(ChannelSupplier.of(bufs.takeRemaining())
+		Exception e = awaitException(ChannelSupplier.of(bufs.takeRemaining())
 				.transformWith(decompressor)
 				.streamTo(ChannelConsumer.ofConsumer(ByteBuf::recycle)));
 

@@ -28,11 +28,11 @@ public class HttpException extends Exception {
 		super(message);
 	}
 
-	public HttpException(Throwable cause) {
+	public HttpException(Exception cause) {
 		super(cause);
 	}
 
-	public HttpException(String message, Throwable cause) {
+	public HttpException(String message, Exception cause) {
 		super(message, cause);
 	}
 

@@ -25,7 +25,7 @@ public class UnexpectedDataException extends MalformedDataException {
 		super(message);
 	}
 
-	public UnexpectedDataException(String message, Throwable cause) {
+	public UnexpectedDataException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

@@ -51,7 +51,7 @@ public class StreamMapperTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		Throwable e = awaitException(source1.transformWith(mapper)
+		Exception e = awaitException(source1.transformWith(mapper)
 				.streamTo(consumer
 						.transformWith(decorate(promise -> promise.then(
 								item -> item == 2 * 2 ? Promise.ofException(exception) : Promise.of(item))))));
@@ -76,7 +76,7 @@ public class StreamMapperTest {
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
-		Throwable e = awaitException(supplier.transformWith(mapper)
+		Exception e = awaitException(supplier.transformWith(mapper)
 				.streamTo(consumer));
 
 		assertSame(exception, e);

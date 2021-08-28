@@ -71,7 +71,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 
 	/**
 	 * This method will be called exactly once: either in the next eventloop tick after creation of this supplier
-	 * or right before {@link #onStarted()} or {@link #onError(Throwable)} calls
+	 * or right before {@link #onStarted()} or {@link #onError(Exception)} calls
 	 */
 	protected void onInit() {
 	}
@@ -146,7 +146,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	}
 
 	@Override
-	public final void closeEx(@NotNull Throwable e) {
+	public final void closeEx(@NotNull Exception e) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		ensureInitialized();
 		endOfStream = true;
@@ -159,7 +159,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	/**
 	 * This method will be called when this consumer erroneously changes to the acknowledged state.
 	 */
-	protected void onError(Throwable e) {
+	protected void onError(Exception e) {
 	}
 
 	/**

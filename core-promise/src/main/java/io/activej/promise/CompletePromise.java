@@ -56,7 +56,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	abstract public T getResult();
 
 	@Override
-	public final Throwable getException() {
+	public final Exception getException() {
 		return null;
 	}
 
@@ -92,13 +92,13 @@ public abstract class CompletePromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public final <U> Promise<U> map(@NotNull BiFunction<? super T, Throwable, ? extends U> fn) {
+	public final <U> Promise<U> map(@NotNull BiFunction<? super T, Exception, ? extends U> fn) {
 		return Promise.of(fn.apply(getResult(), null));
 	}
 
 	@NotNull
 	@Override
-	public final <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends U> fn) {
+	public final <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult(), null));
 		} catch (RuntimeException ex) {
@@ -153,7 +153,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@SuppressWarnings("unchecked")
 	@NotNull
 	@Override
-	public final <U> Promise<U> then(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
+	public final <U> Promise<U> then(@NotNull BiFunction<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
 		} catch (Exception ex) {
@@ -164,7 +164,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@SuppressWarnings("unchecked")
 	@NotNull
 	@Override
-	public final <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
+	public final <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
 		} catch (RuntimeException ex) {
@@ -176,13 +176,13 @@ public abstract class CompletePromise<T> implements Promise<T> {
 
 	@NotNull
 	@Override
-	public final Promise<T> whenComplete(@NotNull BiConsumer<? super T, Throwable> action) {
+	public final Promise<T> whenComplete(@NotNull BiConsumer<? super T, Exception> action) {
 		action.accept(getResult(), null);
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Throwable> action) {
+	public @NotNull Promise<T> whenCompleteEx(@NotNull ThrowingBiConsumer<? super T, Exception> action) {
 		try {
 			action.accept(getResult(), null);
 			return this;
@@ -249,12 +249,12 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public final Promise<T> whenException(@NotNull Consumer<Throwable> action) {
+	public final Promise<T> whenException(@NotNull Consumer<Exception> action) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Throwable> action) {
+	public @NotNull Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Exception> action) {
 		return this;
 	}
 

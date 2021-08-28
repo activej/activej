@@ -94,7 +94,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				input.closeEx(e);
 			}
 		};
@@ -114,7 +114,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Throwable e) {
+			protected void onClosed(@NotNull Exception e) {
 				closeable.closeEx(e);
 			}
 		};

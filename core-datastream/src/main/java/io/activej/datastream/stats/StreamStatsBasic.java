@@ -67,7 +67,7 @@ public class StreamStatsBasic<T> implements StreamStats<T> {
 	}
 
 	@Override
-	public void onError(Throwable e) {
+	public void onError(Exception e) {
 		error.recordException(e);
 	}
 

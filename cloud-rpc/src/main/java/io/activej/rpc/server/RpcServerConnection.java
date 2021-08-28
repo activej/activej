@@ -116,7 +116,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	}
 
 	@Override
-	public void onReceiverError(@NotNull Throwable e) {
+	public void onReceiverError(@NotNull Exception e) {
 		logger.error("Receiver error {}", remoteAddress, e);
 		rpcServer.getLastProtocolError().recordException(e, remoteAddress);
 		doClose();
@@ -124,7 +124,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	}
 
 	@Override
-	public void onSenderError(@NotNull Throwable e) {
+	public void onSenderError(@NotNull Exception e) {
 		logger.error("Sender error: {}", remoteAddress, e);
 		rpcServer.getLastProtocolError().recordException(e, remoteAddress);
 		doClose();
@@ -132,7 +132,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	}
 
 	@Override
-	public void onSerializationError(RpcMessage message, @NotNull Throwable e) {
+	public void onSerializationError(RpcMessage message, @NotNull Exception e) {
 		logger.error("Serialization error: {} for data {}", remoteAddress, message.getData(), e);
 		RpcMessage errorMessage = RpcMessage.of(message.getCookie(), new RpcRemoteException(e));
 		sendError(errorMessage, message.getData(), e);
@@ -149,7 +149,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 		stream.receiverSuspend();
 	}
 
-	private void sendError(RpcMessage errorMessage, Object messageData, @Nullable Throwable e) {
+	private void sendError(RpcMessage errorMessage, Object messageData, @Nullable Exception e) {
 		downstreamDataAcceptor.accept(errorMessage);
 		lastRequestHandlingException.recordException(e, messageData);
 		rpcServer.getLastRequestHandlingException().recordException(e, messageData);

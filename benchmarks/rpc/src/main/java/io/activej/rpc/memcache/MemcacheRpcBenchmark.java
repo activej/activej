@@ -148,7 +148,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 
 		Callback<Void> callback = new Callback<Void>() {
 			@Override
-			public void accept(Void result, @Nullable Throwable e) {
+			public void accept(Void result, @Nullable Exception e) {
 				completed++;
 
 				int active = sent - completed;
@@ -187,7 +187,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 
 		Callback<Slice> callback = new Callback<Slice>() {
 			@Override
-			public void accept(Slice result, @Nullable Throwable e) {
+			public void accept(Slice result, @Nullable Exception e) {
 				completed++;
 
 				int active = sent - completed;

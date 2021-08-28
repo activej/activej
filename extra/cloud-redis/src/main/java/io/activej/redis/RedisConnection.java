@@ -17,12 +17,12 @@
 package io.activej.redis;
 
 import io.activej.async.callback.Callback;
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
@@ -391,7 +391,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	}
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
-	protected void onClosed(@NotNull Throwable e) {
+	protected void onClosed(@NotNull Exception e) {
 		socket.closeEx(e);
 		writeBuf = nullify(writeBuf, ByteBuf::recycle);
 		readBuf = nullify(readBuf, ByteBuf::recycle);
@@ -402,7 +402,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		transactionQueue = nullify(transactionQueue, queue -> abortTransaction(queue, e));
 	}
 
-	private void abortTransaction(ArrayList<?> transactionQueue, Throwable e) {
+	private void abortTransaction(ArrayList<?> transactionQueue, Exception e) {
 		for (int i = 0; i < transactionQueue.size() / 2; i++) {
 			SettablePromise<?> promise = (SettablePromise<?>) transactionQueue.get(2 * i + 1);
 			promise.trySetException(e);

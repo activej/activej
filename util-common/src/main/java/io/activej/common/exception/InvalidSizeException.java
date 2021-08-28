@@ -25,7 +25,7 @@ public class InvalidSizeException extends MalformedDataException {
 		super(message);
 	}
 
-	public InvalidSizeException(String message, Throwable cause) {
+	public InvalidSizeException(String message, Exception cause) {
 		super(message, cause);
 	}
 }

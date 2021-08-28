@@ -36,21 +36,21 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 public final class SettablePromise<T> extends AbstractPromise<T> implements Callback<T> {
 	/**
 	 * Accepts the provided values and performs this operation
-	 * on them. If the {@code Throwable e} is {@code null},
+	 * on them. If the {@code Exception e} is {@code null},
 	 * provided {@code result} will be set to this
 	 * {@code SettablePromise}.
 	 * <p>
-	 * Otherwise, {@code Throwable e} will be set.
+	 * Otherwise, {@code Exception e} will be set.
 	 *
 	 * @param result a value to be set to this
 	 *               {@code SettablePromise} if
 	 *               {@code e} is {@code null}
-	 * @param e      a {@code Throwable}, which will
+	 * @param e      a {@code Exception}, which will
 	 *               be set to this {@code SettablePromise}
 	 *               if not {@code null}
 	 */
 	@Override
-	public void accept(T result, @Nullable Throwable e) {
+	public void accept(T result, @Nullable Exception e) {
 		if (e == null) {
 			set(result);
 		} else {
@@ -76,7 +76,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * @param e exception
 	 */
 	@Async.Execute
-	public void setException(@NotNull Throwable e) {
+	public void setException(@NotNull Exception e) {
 		completeExceptionally(e);
 	}
 
@@ -100,7 +100,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * Otherwise does nothing.
 	 */
 	@Async.Execute
-	public boolean trySetException(@NotNull Throwable e) {
+	public boolean trySetException(@NotNull Exception e) {
 		if (!isComplete()) {
 			setException(e);
 			return true;
@@ -113,7 +113,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * if it not completed yet. Otherwise does nothing.
 	 */
 	@Async.Execute
-	public boolean trySet(T result, @Nullable Throwable e) {
+	public boolean trySet(T result, @Nullable Exception e) {
 		if (!isComplete()) {
 			if (e == null) {
 				set(result);
@@ -129,11 +129,11 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 		getCurrentEventloop().post(wrapContext(this, () -> set(result)));
 	}
 
-	public void postException(@NotNull Throwable e) {
+	public void postException(@NotNull Exception e) {
 		getCurrentEventloop().post(wrapContext(this, () -> setException(e)));
 	}
 
-	public void post(T result, @Nullable Throwable e) {
+	public void post(T result, @Nullable Exception e) {
 		getCurrentEventloop().post(wrapContext(this, () -> accept(result, e)));
 	}
 
@@ -141,11 +141,11 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 		getCurrentEventloop().post(wrapContext(this, () -> trySet(result)));
 	}
 
-	public void tryPostException(@NotNull Throwable e) {
+	public void tryPostException(@NotNull Exception e) {
 		getCurrentEventloop().post(wrapContext(this, () -> trySetException(e)));
 	}
 
-	public void tryPost(T result, @Nullable Throwable e) {
+	public void tryPost(T result, @Nullable Exception e) {
 		getCurrentEventloop().post(wrapContext(this, () -> trySet(result, e)));
 	}
 

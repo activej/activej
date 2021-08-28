@@ -87,7 +87,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 			System.out.println(graph.toGraphViz());
 
 			graph.execute().both(resultSupplier.streamTo(resultConsumer))
-					.whenException(Throwable::printStackTrace)
+					.whenException(Exception::printStackTrace)
 					.whenResult(() -> {
 						System.out.println("Top 100 words:");
 						resultConsumer.getList().stream().limit(100).forEach(System.out::println);

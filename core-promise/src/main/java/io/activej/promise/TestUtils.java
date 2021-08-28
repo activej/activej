@@ -36,19 +36,19 @@ public class TestUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T, E extends Throwable> E awaitException(Promise<T> promise) {
+	public static <T, E extends Exception> E awaitException(Promise<T> promise) {
 		try {
 			compute(promise);
 		} catch (ExecutionException e) {
 			return (E) e.getCause();
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			return (E) e;
 		}
 		throw new AssertionError("Promise did not fail");
 	}
 
 	@SafeVarargs
-	public static <T, E extends Throwable> E awaitException(Promise<T>... promises) {
+	public static <T, E extends Exception> E awaitException(Promise<T>... promises) {
 		return awaitException(Promises.all(promises));
 	}
 

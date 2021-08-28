@@ -183,7 +183,7 @@ public final class AggregationChunkerTest {
 				structure, structure.getMeasures(), recordClass, singlePartition(),
 				aggregationChunkStorage, classLoader, 1);
 
-		Throwable e = awaitException(supplier.streamTo(chunker));
+		Exception e = awaitException(supplier.streamTo(chunker));
 		assertSame(exception, e);
 
 		// this must be checked after eventloop completion :(

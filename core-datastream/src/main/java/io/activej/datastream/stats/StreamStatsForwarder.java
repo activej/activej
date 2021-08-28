@@ -67,7 +67,7 @@ public class StreamStatsForwarder<T> implements StreamTransformer<T, T> {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			stats.onError(e);
 		}
 	}
@@ -86,7 +86,7 @@ public class StreamStatsForwarder<T> implements StreamTransformer<T, T> {
 		}
 
 		@Override
-		protected void onError(Throwable e) {
+		protected void onError(Exception e) {
 			stats.onError(e);
 		}
 	}

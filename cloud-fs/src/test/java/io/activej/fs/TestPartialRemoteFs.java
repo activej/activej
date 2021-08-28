@@ -134,7 +134,7 @@ public final class TestPartialRemoteFs {
 
 	@Test
 	public void downloadOver() {
-		Throwable exception = awaitException(ChannelSupplier.ofPromise(client.download(FILE, 123, 123))
+		Exception exception = awaitException(ChannelSupplier.ofPromise(client.download(FILE, 123, 123))
 				.toCollector(ByteBufs.collector())
 				.whenComplete(server::close));
 
@@ -143,7 +143,7 @@ public final class TestPartialRemoteFs {
 
 	@Test
 	public void malformedGlob() {
-		Throwable exception = awaitException(client.list("[")
+		Exception exception = awaitException(client.list("[")
 				.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(MalformedGlobException.class));

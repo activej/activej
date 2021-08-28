@@ -209,7 +209,7 @@ public final class BufsConsumerGzipInflaterTest {
 		doTest(null);
 	}
 
-	private void doTest(@Nullable Class<? extends Throwable> expectedExceptionType) {
+	private void doTest(@Nullable Class<? extends Exception> expectedExceptionType) {
 		gunzip.getInput().set(ChannelSupplier.ofList(list));
 		Promise<Void> processResult = gunzip.getProcessCompletion();
 		if (expectedExceptionType == null) {

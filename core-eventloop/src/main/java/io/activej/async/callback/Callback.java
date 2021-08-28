@@ -29,7 +29,7 @@ public interface Callback<T> {
 	/**
 	 * Performs action upon of completion of Completable computation
 	 */
-	void accept(T result, @Nullable Throwable e);
+	void accept(T result, @Nullable Exception e);
 
 	static <T> Callback<T> toAnotherEventloop(Eventloop anotherEventloop, Callback<T> cb) {
 		return (result, e) -> anotherEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));

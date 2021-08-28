@@ -81,7 +81,7 @@ public final class ChannelByteSplitterTest {
 			splitter.addOutput().set(output);
 			outputs.add(output);
 		}
-		Throwable exception = awaitException(splitter.getProcessCompletion());
+		Exception exception = awaitException(splitter.getProcessCompletion());
 
 		assertSame(EXPECTED_EXCEPTION, exception);
 		for (ChannelConsumer<ByteBuf> output : outputs) {
@@ -140,9 +140,9 @@ public final class ChannelByteSplitterTest {
 			}
 
 		}
-		Throwable throwable = awaitException(splitter.getProcessCompletion());
+		Exception exception = awaitException(splitter.getProcessCompletion());
 
-		assertThat(throwable.getMessage(), containsString("Not enough successes"));
+		assertThat(exception.getMessage(), containsString("Not enough successes"));
 		assertEquals(6, outputs.size());
 		for (ChannelConsumer<ByteBuf> output : outputs) {
 			assertSame(LOCAL_EXCEPTION, ((AbstractChannelConsumer<ByteBuf>) output).getException());

@@ -41,7 +41,7 @@ public class StreamSupplierOfPromiseTest {
 		StreamSupplier<Integer> supplier = StreamSupplier.ofPromise(Promise.complete().async().map($ -> delayedSupplier));
 		supplier.close();
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
-		Throwable exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
+		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertThat(exception, instanceOf(AsyncCloseException.class));
 		assertClosedWithError(AsyncCloseException.class, supplier, consumer);
@@ -55,7 +55,7 @@ public class StreamSupplierOfPromiseTest {
 		delayedSupplier.close();
 		StreamSupplier<Integer> supplier = StreamSupplier.ofPromise(Promise.complete().async().map($ -> delayedSupplier));
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
-		Throwable exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
+		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertThat(exception, instanceOf(AsyncCloseException.class));
 		assertClosedWithError(AsyncCloseException.class, supplier, consumer);

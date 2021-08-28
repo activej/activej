@@ -177,7 +177,7 @@ public final class CrdtClusterTest {
 								() -> client.request(HttpRequest.of(PUT, "http://127.0.0.1:7000")
 												.withBody(toJson(manifest, new CrdtData<>("value_" + i, i))))
 										.toVoid()))
-				.whenException(Throwable::printStackTrace)
+				.whenException(Exception::printStackTrace)
 				.whenComplete(uploadStat.recordStats())
 				.whenComplete(assertComplete($ -> System.out.println(uploadStat)));
 

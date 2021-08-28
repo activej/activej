@@ -22,7 +22,7 @@ public final class ConsumerExample<T> extends AbstractStreamConsumer<T> {
 	}
 
 	@Override
-	protected void onError(Throwable t) {
+	protected void onError(Exception t) {
 		System.out.println("Error handling logic must be here. No confirmation to upstream is needed");
 	}
 //[END EXAMPLE]
