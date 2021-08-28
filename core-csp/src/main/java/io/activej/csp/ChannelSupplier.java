@@ -340,9 +340,11 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 							if (value != null) {
 								try {
 									return fn.apply(value);
-								} catch (Exception e) {
-									ChannelSupplier.this.closeEx(e);
-									throw e;
+								} catch (RuntimeException ex) {
+									throw ex;
+								} catch (Exception ex) {
+									ChannelSupplier.this.closeEx(ex);
+									throw ex;
 								}
 							} else {
 								return null;

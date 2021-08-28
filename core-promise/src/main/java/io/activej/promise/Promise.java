@@ -213,7 +213,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@FunctionalInterface
 	interface BlockingCallable<V> {
-		V call() throws UncheckedException, Exception;
+		V call() throws Exception;
 	}
 
 	/**
@@ -234,8 +234,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					try {
 						T result = callable.call();
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
-					} catch (UncheckedException u) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(u.getCause())));
 					} catch (RuntimeException e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, callable));
 					} catch (Exception e) {
@@ -255,7 +253,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@FunctionalInterface
 	interface BlockingRunnable {
-		void run() throws UncheckedException, Exception;
+		void run() throws Exception;
 	}
 
 	/**
@@ -272,8 +270,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					try {
 						runnable.run();
 						eventloop.execute(wrapContext(cb, () -> cb.set(null)));
-					} catch (UncheckedException u) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(u.getCause())));
 					} catch (RuntimeException e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, runnable));
 					} catch (Exception e) {

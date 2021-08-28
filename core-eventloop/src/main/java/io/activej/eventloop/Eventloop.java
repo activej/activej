@@ -1095,10 +1095,10 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		execute(() -> {
 			try {
 				computation.run();
-			} catch (RuntimeException e) {
-				throw e;
-			} catch (Exception e) {
-				future.completeExceptionally(e);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				future.completeExceptionally(ex);
 				return;
 			}
 			future.complete(null);
@@ -1119,10 +1119,10 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 						future.completeExceptionally(e);
 					}
 				});
-			} catch (RuntimeException e) {
-				throw e;
-			} catch (Exception e) {
-				future.completeExceptionally(e);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				future.completeExceptionally(ex);
 			}
 		});
 		return future;

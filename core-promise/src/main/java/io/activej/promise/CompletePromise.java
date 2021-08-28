@@ -83,8 +83,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> mapEx(@NotNull ThrowingFunction<? super T, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult()));
-		} catch (Exception e0) {
-			return Promise.ofException(e0);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 
@@ -99,8 +101,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult(), null));
-		} catch (Exception e0) {
-			return Promise.ofException(e0);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 
@@ -117,8 +121,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> thenEx(@NotNull ThrowingFunction<? super T, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
-		} catch (Exception e0) {
-			return Promise.ofException(e0);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 
@@ -126,8 +132,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public @NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.get();
-		} catch (Exception e0) {
-			return Promise.ofException(e0);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 
@@ -135,8 +143,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public @NotNull <U> Promise<U> thenEx(@NotNull ThrowingSupplier<? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.get();
-		} catch (Exception e0) {
-			return Promise.ofException(e0);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 
@@ -146,8 +156,8 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> then(@NotNull BiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
-		} catch (Exception e0) {
-			return Promise.ofException(e0);
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 
@@ -157,8 +167,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
-		} catch (Exception e0) {
-			return Promise.ofException(e0);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 

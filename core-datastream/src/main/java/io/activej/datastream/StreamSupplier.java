@@ -164,8 +164,10 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 					T t;
 					try {
 						t = supplier.get();
-					} catch (Exception e) {
-						closeEx(e);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						closeEx(ex);
 						break;
 					}
 					if (t != null) {

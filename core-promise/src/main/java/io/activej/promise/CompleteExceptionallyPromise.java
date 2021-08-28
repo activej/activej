@@ -102,8 +102,10 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public <U> Promise<U> mapEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
-		} catch (Exception e) {
-			return Promise.ofException(e);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 
@@ -139,8 +141,10 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public <U> Promise<U> thenEx(@NotNull ThrowingBiFunction<? super T, Throwable, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
-		} catch (Exception e) {
-			return Promise.ofException(e);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
 		}
 	}
 

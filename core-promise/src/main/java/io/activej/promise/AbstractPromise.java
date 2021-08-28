@@ -208,8 +208,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return isResult() ? Promise.of(fn.apply(result)) : (Promise<U>) this;
-			} catch (Exception e0) {
-				return Promise.ofException(e0);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -219,8 +221,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					U newResult;
 					try {
 						newResult = fn.apply(result);
-					} catch (Exception e0) {
-						completeExceptionally(e0);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
 						return;
 					}
 					complete(newResult);
@@ -265,8 +269,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return Promise.of(fn.apply(result, exception));
-			} catch (Exception e0) {
-				return Promise.ofException(e0);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -275,8 +281,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				U newResult;
 				try {
 					newResult = fn.apply(result, e);
-				} catch (Exception e0) {
-					completeExceptionally(e0);
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
 					return;
 				}
 				complete(newResult);
@@ -320,8 +328,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return isResult() ? (Promise<U>) fn.get() : (Promise<U>) this;
-			} catch (Exception e0) {
-				return Promise.ofException(e0);
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -331,8 +339,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.get();
-					} catch (Exception e0) {
-						completeExceptionally(e0);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -381,8 +391,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return isResult() ? (Promise<U>) fn.apply(result) : (Promise<U>) this;
-			} catch (Exception e0) {
-				return Promise.ofException(e0);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -392,8 +404,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(result);
-					} catch (Exception e0) {
-						completeExceptionally(e0);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -426,8 +440,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(null, e);
-					} catch (Exception e0) {
-						completeExceptionally(e0);
+					} catch (Exception ex) {
+						completeExceptionally(ex);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -449,8 +463,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				return (Promise<U>) fn.apply(result, exception);
-			} catch (Exception e0) {
-				return Promise.ofException(e0);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
 			}
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
@@ -460,8 +476,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(result, null);
-					} catch (Exception e0) {
-						completeExceptionally(e0);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
 						return;
 					}
 					promise.whenComplete(this::complete);
@@ -469,8 +487,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					Promise<? extends U> promise;
 					try {
 						promise = fn.apply(null, e);
-					} catch (Exception e0) {
-						completeExceptionally(e0);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
 						return;
 					}
 					promise.whenComplete(this::complete);

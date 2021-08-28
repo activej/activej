@@ -22,6 +22,8 @@ public interface ThrowingBiConsumer<T, U> {
 		return (t, u) -> {
 			try {
 				checkedFn.accept(t, u);
+			} catch (RuntimeException e) {
+				throw e;
 			} catch (Exception e) {
 				throw UncheckedException.of(e);
 			}

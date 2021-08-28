@@ -351,9 +351,11 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 					T newValue;
 					try {
 						newValue = fn.apply(value);
-					} catch (Exception e) {
-						ChannelConsumer.this.closeEx(e);
-						return Promise.ofException(e);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						ChannelConsumer.this.closeEx(ex);
+						return Promise.ofException(ex);
 					}
 					return ChannelConsumer.this.accept(newValue);
 				} else {

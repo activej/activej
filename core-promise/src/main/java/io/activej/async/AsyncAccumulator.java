@@ -81,8 +81,10 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 			if (e == null) {
 				try {
 					consumer.accept(accumulator, v);
-				} catch (Exception e0) {
-					resultPromise.setException(e0);
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					resultPromise.setException(ex);
 					Recyclers.recycle(accumulator);
 					return;
 				}

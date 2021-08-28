@@ -136,10 +136,11 @@ public final class ChannelSuppliers {
 			if (item != null) {
 				try {
 					accumulator.accept(accumulatedValue, item);
-				} catch (Exception u) {
-					Throwable cause = u.getCause();
-					supplier.closeEx(cause);
-					cb.setException(cause);
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					supplier.closeEx(ex);
+					cb.setException(ex);
 					return;
 				}
 				continue;
@@ -151,10 +152,11 @@ public final class ChannelSuppliers {
 				if (value != null) {
 					try {
 						accumulator.accept(accumulatedValue, value);
-					} catch (Exception u) {
-						Throwable cause = u.getCause();
-						supplier.closeEx(cause);
-						cb.setException(cause);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						supplier.closeEx(ex);
+						cb.setException(ex);
 						return;
 					}
 					toCollectorImpl(supplier, accumulatedValue, accumulator, finisher, cb);
@@ -162,6 +164,8 @@ public final class ChannelSuppliers {
 					R result;
 					try {
 						result = finisher.apply(accumulatedValue);
+					} catch (RuntimeException ex) {
+						throw ex;
 					} catch (Exception ex) {
 						cb.setException(ex);
 						return;
@@ -169,12 +173,7 @@ public final class ChannelSuppliers {
 					cb.set(result);
 				}
 			} else {
-				R result = null;
-				try {
-					result = finisher.apply(accumulatedValue);
-				} catch (Exception ignored) {
-				}
-				Recyclers.recycle(result);
+				Recyclers.recycle(accumulatedValue);
 				cb.setException(e);
 			}
 		});

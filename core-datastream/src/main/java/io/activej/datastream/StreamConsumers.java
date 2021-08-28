@@ -67,8 +67,10 @@ final class StreamConsumers {
 			resume(item -> {
 				try {
 					consumer.accept(item);
-				} catch (Exception e) {
-					closeEx(e);
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					closeEx(ex);
 				}
 			});
 		}

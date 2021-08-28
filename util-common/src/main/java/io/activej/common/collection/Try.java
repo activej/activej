@@ -16,7 +16,6 @@
 
 package io.activej.common.collection;
 
-import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.ThrowingFunction;
 import io.activej.common.function.ThrowingRunnable;
 import io.activej.common.function.ThrowingSupplier;
@@ -25,12 +24,9 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.*;
-import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
@@ -66,8 +62,10 @@ public final class Try<T> {
 	public static <T> Try<T> wrap(@NotNull ThrowingSupplier<T> computation) {
 		try {
 			return new Try<>(computation.get(), null);
-		} catch (Exception e) {
-			return new Try<>(null, e);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return new Try<>(null, ex);
 		}
 	}
 
@@ -75,8 +73,10 @@ public final class Try<T> {
 		try {
 			computation.run();
 			return new Try<>(null, null);
-		} catch (Exception e) {
-			return new Try<>(null, e);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return new Try<>(null, ex);
 		}
 	}
 
@@ -179,8 +179,10 @@ public final class Try<T> {
 		if (throwable == null) {
 			try {
 				return new Try<>(function.apply(result), null);
-			} catch (Exception e) {
-				return new Try<>(null, e);
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return new Try<>(null, ex);
 			}
 		}
 		return mold();
