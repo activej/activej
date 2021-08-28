@@ -481,7 +481,15 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract("_ -> this")
 	Promise<T> whenException(@NotNull Consumer<Throwable> action);
 
+	@Contract(" _ -> this")
+	@NotNull
+	Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Throwable> action);
+
 	Promise<T> whenException(@NotNull Runnable action);
+
+	@Contract(" _ -> this")
+	@NotNull
+	Promise<T> whenExceptionEx(@NotNull Runnable action);
 
 	/**
 	 * Returns a new {@code Promise} that, when this and the other

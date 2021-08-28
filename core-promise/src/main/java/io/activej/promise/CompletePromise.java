@@ -242,7 +242,17 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Throwable> action) {
+		return this;
+	}
+
+	@Override
 	public Promise<T> whenException(@NotNull Runnable action) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenExceptionEx(@NotNull Runnable action) {
 		return this;
 	}
 

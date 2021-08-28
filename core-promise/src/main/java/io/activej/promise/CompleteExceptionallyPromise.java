@@ -210,9 +210,33 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Throwable> action) {
+		try {
+			action.accept(exception);
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
 	public Promise<T> whenException(@NotNull Runnable action) {
 		action.run();
 		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenExceptionEx(@NotNull Runnable action) {
+		try {
+			action.run();
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
 	}
 
 	@NotNull

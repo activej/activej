@@ -568,12 +568,12 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			try {
 				action.run();
-				return this;
 			} catch (RuntimeException ex) {
 				throw ex;
 			} catch (Exception ex) {
 				return Promise.ofException(ex);
 			}
+			return this;
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
 			@Override
@@ -625,12 +625,14 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@Override
 	public Promise<T> whenResultEx(ThrowingConsumer<? super T> action) {
 		if (isComplete()) {
-			try {
-				if (isResult()) action.accept(result);
-			} catch (RuntimeException ex) {
-				throw ex;
-			} catch (Exception ex) {
-				return Promise.ofException(ex);
+			if (isResult()) {
+				try {
+					action.accept(result);
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					return Promise.ofException(ex);
+				}
 			}
 			return this;
 		}
@@ -686,18 +688,20 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@Override
 	public @NotNull Promise<T> whenResultEx(@NotNull ThrowingRunnable action) {
 		if (isComplete()) {
-			try {
-				if (isResult()) action.run();
-				return this;
-			} catch (RuntimeException ex) {
-				throw ex;
-			} catch (Exception ex) {
-				return Promise.ofException(ex);
+			if (isResult()) {
+				try {
+					action.run();
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					return Promise.ofException(ex);
+				}
 			}
+			return this;
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
 			@Override
-			public void accept(T result1, @Nullable Throwable e) {
+			public void accept(T result, @Nullable Throwable e) {
 				if (e == null) {
 					try {
 						action.run();
@@ -707,7 +711,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					complete(result);
+					complete(this.result);
 				} else {
 					completeExceptionally(e);
 				}
@@ -747,6 +751,45 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenExceptionEx(@NotNull ThrowingConsumer<Throwable> action) {
+		if (isComplete()) {
+			if (isException()) {
+				try {
+					action.accept(exception);
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					return Promise.ofException(ex);
+				}
+			}
+			return this;
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Throwable e) {
+				if (e != null) {
+					try {
+						action.accept(e);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
+						return;
+					}
+				}
+				complete(result);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenExceptionEx(" + formatToString(action) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
 	public Promise<T> whenException(@NotNull Runnable action) {
 		if (isComplete()) {
 			if (isException()) {
@@ -768,6 +811,45 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 		});
 		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenExceptionEx(@NotNull Runnable action) {
+		if (isComplete()) {
+			if (isException()) {
+				try {
+					action.run();
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					return Promise.ofException(ex);
+				}
+			}
+			return this;
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Throwable e) {
+				if (e != null) {
+					try {
+						action.run();
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
+						return;
+					}
+				}
+				complete(result);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenExceptionEx(" + formatToString(action) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
 	}
 
 	private static final Object NO_RESULT = new Object();
