@@ -172,30 +172,31 @@ public final class SerializerBuilder {
 			Class<?> rawClass = ctx.getRawType();
 			SerializerDef serializerDef;
 			SerializeClass annotationClass;
-			SerializeSubclasses annotationSubclass;
 			if (false ||
 					(annotationClass = ctx.getAnnotation(SerializeClass.class)) != null ||
 					(annotationClass = getAnnotation(SerializeClass.class, rawClass.getAnnotations())) != null) {
-				try {
-					serializerDef = annotationClass.value().getDeclaredConstructor().newInstance();
-				} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+				if (annotationClass.value() != SerializerDef.class) {
 					try {
-						serializerDef = (SerializerDef) annotationClass.value().getMethod("instance").invoke(null);
-					} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException ignored) {
+						serializerDef = annotationClass.value().getDeclaredConstructor().newInstance();
+					} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
 						throw new RuntimeException(e);
 					}
+				} else {
+					LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
+					LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(asList(annotationClass.subclasses()));
+					subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, emptyList()));
+					subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), emptyList()));
+					for (Class<?> subclass : subclassesSet) {
+						map.put(subclass, ctx.scan(subclass));
+					}
+					serializerDef = new SerializerDefSubclass(rawClass, map, annotationClass.subclassesIdx());
 				}
-			} else if (false ||
-					(annotationSubclass = ctx.getAnnotation(SerializeSubclasses.class)) != null ||
-					(annotationSubclass = getAnnotation(SerializeSubclasses.class, rawClass.getAnnotations())) != null) {
+			} else if (extraSubclassesMap.containsKey(rawClass)) {
 				LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
-				LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(asList(annotationSubclass.value()));
-				subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, emptyList()));
-				subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationSubclass.extraSubclassesId(), emptyList()));
-				for (Class<?> subclass : subclassesSet) {
+				for (Class<?> subclass : extraSubclassesMap.get(rawClass)) {
 					map.put(subclass, ctx.scan(subclass));
 				}
-				serializerDef = new SerializerDefSubclass(rawClass, map, annotationSubclass.startIndex());
+				serializerDef = new SerializerDefSubclass(rawClass, map, 0);
 			} else {
 				serializerDef = fn.apply(ctx);
 			}
@@ -855,8 +856,8 @@ public final class SerializerBuilder {
 					repeated = ((SerializeReferenceEx) annotation).value();
 				} else if (annotation instanceof SerializeStringFormatEx) {
 					repeated = ((SerializeStringFormatEx) annotation).value();
-				} else if (annotation instanceof SerializeSubclassesEx) {
-					repeated = ((SerializeSubclassesEx) annotation).value();
+				} else if (annotation instanceof SerializeClassEx) {
+					repeated = ((SerializeClassEx) annotation).value();
 				} else if (annotation instanceof SerializeVarLengthEx) {
 					repeated = ((SerializeVarLengthEx) annotation).value();
 				} else {
@@ -873,8 +874,8 @@ public final class SerializerBuilder {
 						p = ((SerializeReference) a).path();
 					} else if (a instanceof SerializeStringFormat) {
 						p = ((SerializeStringFormat) a).path();
-					} else if (a instanceof SerializeSubclasses) {
-						p = ((SerializeSubclasses) a).path();
+					} else if (a instanceof SerializeClass) {
+						p = ((SerializeClass) a).path();
 					} else if (a instanceof SerializeVarLength) {
 						p = ((SerializeVarLength) a).path();
 					} else {

@@ -1,7 +1,7 @@
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Serialize;
-import io.activej.serializer.annotations.SerializeSubclasses;
+import io.activej.serializer.annotations.SerializeClass;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ public final class SerializeSubclassesExample {
 	//[START HOLDER]
 	public static class ListHolder {
 		@Serialize
-		public List<@SerializeSubclasses(extraSubclassesId = "list") Object> list = new ArrayList<>();
+		public List<@SerializeClass(subclassesId = "list") Object> list = new ArrayList<>();
 	}
 	//[END HOLDER]
 

@@ -1,8 +1,8 @@
 package io.activej.serializer;
 
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeClass;
 import io.activej.serializer.annotations.SerializeNullable;
-import io.activej.serializer.annotations.SerializeSubclasses;
 import io.activej.serializer.annotations.SerializeVarLength;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.types.TypeT;
@@ -165,22 +165,22 @@ public class SerializerBuilder2Test {
 
 		{
 			Object testData1 = 1;
-			Object testData2 = doTest(new TypeT<@SerializeSubclasses({String.class, Integer.class}) Object>() {}, testData1);
+			Object testData2 = doTest(new TypeT<@SerializeClass(subclasses = {String.class, Integer.class}) Object>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 		{
 			Object testData1 = "abc";
-			Object testData2 = doTest(new TypeT<@SerializeSubclasses({String.class, Integer.class}) Object>() {}, testData1);
+			Object testData2 = doTest(new TypeT<@SerializeClass(subclasses = {String.class, Integer.class}) Object>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 		{
 			Object testData1 = null;
-			Object testData2 = doTest(new TypeT<@SerializeSubclasses({String.class, Integer.class}) @SerializeNullable Object>() {}, testData1);
+			Object testData2 = doTest(new TypeT<@SerializeClass(subclasses = {String.class, Integer.class}) @SerializeNullable Object>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 		{
 			Object testData1 = 1;
-			Object testData2 = doTest(new TypeT<@SerializeSubclasses(extraSubclassesId = "extraSubclasses1") Object>() {}, testData1);
+			Object testData2 = doTest(new TypeT<@SerializeClass(subclassesId = "extraSubclasses1") Object>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 	}

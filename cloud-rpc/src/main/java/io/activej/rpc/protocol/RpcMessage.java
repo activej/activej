@@ -18,8 +18,8 @@ package io.activej.rpc.protocol;
 
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeClass;
 import io.activej.serializer.annotations.SerializeNullable;
-import io.activej.serializer.annotations.SerializeSubclasses;
 
 public final class RpcMessage {
 	public static final String MESSAGE_TYPES = "messageTypes";
@@ -42,10 +42,9 @@ public final class RpcMessage {
 	}
 
 	@Serialize(order = 2)
-	@SerializeSubclasses(
-			startIndex = -1, value = {RpcControlMessage.class, RpcRemoteException.class},
-			extraSubclassesId = MESSAGE_TYPES
-	)
+	@SerializeClass(subclassesIdx = -1,
+			subclasses = {RpcControlMessage.class, RpcRemoteException.class},
+			subclassesId = MESSAGE_TYPES)
 	@SerializeNullable
 	public Object getData() {
 		return data;

@@ -649,7 +649,7 @@ public class BinarySerializerTest {
 
 	public static class TestDataSuperclassHolder {
 		@Serialize
-		@SerializeSubclasses({TestDataSubclass1.class, TestDataSubclass2.class})
+		@SerializeClass(subclasses = {TestDataSubclass1.class, TestDataSubclass2.class})
 		@SerializeNullable
 		public TestDataSuperclass data;
 	}
@@ -1054,11 +1054,11 @@ public class BinarySerializerTest {
 
 	public static class TestDataExtraSubclasses {
 		@Serialize
-		@SerializeSubclasses(value = String.class, extraSubclassesId = "extraSubclasses1")
+		@SerializeClass(subclasses = String.class, subclassesId = "extraSubclasses1")
 		public Object object1;
 
 		@Serialize
-		@SerializeSubclasses(value = String.class, extraSubclassesId = "extraSubclasses2")
+		@SerializeClass(subclasses = String.class, subclassesId = "extraSubclasses2")
 		public Object object2;
 	}
 
@@ -1085,7 +1085,7 @@ public class BinarySerializerTest {
 		assertEquals(testData1.object2, testData3.object2);
 	}
 
-	@SerializeSubclasses(value = TestDataExtraSubclasses1.class, extraSubclassesId = "extraSubclasses")
+	@SerializeClass(subclasses = TestDataExtraSubclasses1.class, subclassesId = "extraSubclasses")
 	public interface TestDataExtraSubclassesInterface {
 	}
 
@@ -1125,7 +1125,6 @@ public class BinarySerializerTest {
 		assertEquals(((TestDataExtraSubclasses3) testData1).s, ((TestDataExtraSubclasses3) testData3).s);
 	}
 
-	@SerializeSubclasses
 	public static abstract class TestDataAbstract {
 		private final int position;
 
@@ -1660,11 +1659,11 @@ public class BinarySerializerTest {
 		@SerializeClass(SerializerDefString.class)
 		public Object string;
 		@Serialize
-		@SerializeSubclasses({Inet4Address.class, Inet6Address.class})
+		@SerializeClass(subclasses = {Inet4Address.class, Inet6Address.class})
 		public Object address;
 
 		@Serialize
-		@SerializeSubclasses({Inet4Address.class, Inet6Address.class})
+		@SerializeClass(subclasses = {Inet4Address.class, Inet6Address.class})
 		public Object address2;
 
 		@Serialize
@@ -1736,7 +1735,7 @@ public class BinarySerializerTest {
 
 		@Serialize
 		@SerializeNullable
-		@SerializeSubclasses({TestEnum2.class, String.class})
+		@SerializeClass(subclasses = {TestEnum2.class, String.class})
 		public Object subclass;
 	}
 
@@ -1974,7 +1973,7 @@ public class BinarySerializerTest {
 		}
 	}
 
-	@SerializeSubclasses({TestNullableInterfaceImpl.class})
+	@SerializeClass(subclasses = {TestNullableInterfaceImpl.class})
 	public interface TestNullableInterface {
 	}
 

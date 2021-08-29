@@ -2,8 +2,8 @@ package io.activej.serializer;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeClass;
 import io.activej.serializer.annotations.SerializeStringFormat;
-import io.activej.serializer.annotations.SerializeSubclasses;
 import io.activej.serializer.annotations.SerializeVarLength;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -147,7 +147,7 @@ public class SerializerBenchmark {
 		public Map<Integer, TestDataSubElement> subelements = new HashMap<>();
 	}
 
-	@SerializeSubclasses({TestDataSubElementA.class, TestDataSubElementB.class})
+	@SerializeClass(subclasses = {TestDataSubElementA.class, TestDataSubElementB.class})
 	public abstract static class TestDataSubElement {
 	}
 
