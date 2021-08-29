@@ -114,4 +114,12 @@ public interface OTRepository<K, D> extends OTCommitFactory<K, D> {
 	@NotNull
 	Promise<Void> saveSnapshot(@NotNull K revisionId, @NotNull List<D> diffs);
 
+	default Promise<Void> cleanup(K revisionId) {
+		throw new UnsupportedOperationException();
+	}
+
+	default Promise<Void> backup(OTCommit<K, D> commit, List<D> snapshot) {
+		throw new UnsupportedOperationException();
+	}
+
 }

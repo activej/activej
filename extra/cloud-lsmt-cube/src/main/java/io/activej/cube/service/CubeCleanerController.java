@@ -28,7 +28,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.reducers.DiffsReducer;
-import io.activej.ot.repository.OTRepositoryEx;
+import io.activej.ot.repository.OTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -65,7 +65,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 	private final Eventloop eventloop;
 
 	private final OTSystem<D> otSystem;
-	private final OTRepositoryEx<K, D> repository;
+	private final OTRepository<K, D> repository;
 	private final ActiveFsChunkStorage<C> chunksStorage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
@@ -82,7 +82,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 
 	CubeCleanerController(Eventloop eventloop,
 			CubeDiffScheme<D> cubeDiffScheme,
-			OTRepositoryEx<K, D> repository,
+			OTRepository<K, D> repository,
 			OTSystem<D> otSystem,
 			ActiveFsChunkStorage<C> chunksStorage) {
 		this.eventloop = eventloop;
@@ -94,7 +94,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 
 	public static <K, D, C> CubeCleanerController<K, D, C> create(Eventloop eventloop,
 			CubeDiffScheme<D> cubeDiffScheme,
-			OTRepositoryEx<K, D> repository,
+			OTRepository<K, D> repository,
 			OTSystem<D> otSystem,
 			ActiveFsChunkStorage<C> storage) {
 		return new CubeCleanerController<>(eventloop, cubeDiffScheme, repository, otSystem, storage);

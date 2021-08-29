@@ -26,7 +26,7 @@ import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
-import io.activej.ot.repository.OTRepositoryEx;
+import io.activej.ot.repository.OTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -55,7 +55,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 
 	private final Eventloop eventloop;
 	private final OTSystem<D> otSystem;
-	private final OTRepositoryEx<K, D> repository;
+	private final OTRepository<K, D> repository;
 	private final ActiveFsChunkStorage<C> storage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
@@ -66,7 +66,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 
 	CubeBackupController(Eventloop eventloop,
 			CubeDiffScheme<D> cubeDiffScheme,
-			OTRepositoryEx<K, D> repository,
+			OTRepository<K, D> repository,
 			OTSystem<D> otSystem,
 			ActiveFsChunkStorage<C> storage) {
 		this.eventloop = eventloop;
@@ -78,7 +78,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 
 	public static <K, D, C> CubeBackupController<K, D, C> create(Eventloop eventloop,
 			CubeDiffScheme<D> cubeDiffScheme,
-			OTRepositoryEx<K, D> otRepository,
+			OTRepository<K, D> otRepository,
 			OTSystem<D> otSystem,
 			ActiveFsChunkStorage<C> storage) {
 		return new CubeBackupController<>(eventloop, cubeDiffScheme, otRepository, otSystem, storage);

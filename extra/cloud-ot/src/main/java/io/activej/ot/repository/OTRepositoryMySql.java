@@ -61,7 +61,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public class OTRepositoryMySql<D> implements OTRepositoryEx<Long, D>, EventloopJmxBeanWithStats {
+public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";
