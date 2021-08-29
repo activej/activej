@@ -148,7 +148,7 @@ public final class RemoteFsUtils {
 		return e instanceof FsException ? (FsException) e : new FsIOException("Unknown error");
 	}
 
-	public static FsBatchException batchEx(String name, FsScalarException exception) {
+	public static FsBatchException fsBatchException(String name, FsScalarException exception) {
 		return new FsBatchException(mapOf(name, exception));
 	}
 

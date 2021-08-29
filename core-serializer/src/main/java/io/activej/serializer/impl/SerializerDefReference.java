@@ -90,7 +90,7 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 							Function<Expression, Expression> instanceInitializer = instance -> call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), instance);
 							return ifThenElse(cmpEq(index, value(0)),
 									serializer instanceof SerializerDefClass ?
-											((SerializerDefClass) serializer).decoderEx(staticDecoders, in, version, compatibilityLevel, instanceInitializer) :
+											((SerializerDefClass) serializer).decoder(staticDecoders, in, version, compatibilityLevel, instanceInitializer) :
 											let(serializer.decoder(staticDecoders, in, version, compatibilityLevel),
 													item -> sequence(
 															instanceInitializer.apply(item),

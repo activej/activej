@@ -399,16 +399,6 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		return getCookies().get(cookie);
 	}
 
-	private static void writeCodeMessageEx(@NotNull ByteBuf buf, int code) {
-		buf.put(HTTP11_BYTES);
-		putPositiveInt(buf, code);
-		if (code >= 400) {
-			buf.put(CODE_ERROR_BYTES);
-		} else {
-			buf.put(CODE_OK_BYTES);
-		}
-	}
-
 	private static void writeCodeMessage(@NotNull ByteBuf buf, int code) {
 		byte[] result;
 		switch (code) {
@@ -596,10 +586,20 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 				result = CODE_511_BYTES;
 				break;
 			default:
-				writeCodeMessageEx(buf, code);
+				writeCodeMessage2(buf, code);
 				return;
 		}
 		buf.put(result);
+	}
+
+	private static void writeCodeMessage2(@NotNull ByteBuf buf, int code) {
+		buf.put(HTTP11_BYTES);
+		putPositiveInt(buf, code);
+		if (code >= 400) {
+			buf.put(CODE_ERROR_BYTES);
+		} else {
+			buf.put(CODE_OK_BYTES);
+		}
 	}
 
 	@Override

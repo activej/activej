@@ -179,16 +179,16 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 						return;
 					}
 					if (length == 126) {
-						processLengthEx(2);
+						processLength2(2);
 					} else if (length == 127) {
-						processLengthEx(8);
+						processLength2(8);
 					} else {
 						processMask(length);
 					}
 				});
 	}
 
-	private void processLengthEx(int numberOfBytes) {
+	private void processLength2(int numberOfBytes) {
 		assert numberOfBytes == 2 || numberOfBytes == 8;
 		input.decode(ofFixedSize(numberOfBytes))
 				.whenResult(lenBuf -> {

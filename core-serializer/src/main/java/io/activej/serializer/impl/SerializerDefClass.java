@@ -279,10 +279,10 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return decoderEx(staticDecoders, in, version, compatibilityLevel, value -> sequence());
+		return decoder(staticDecoders, in, version, compatibilityLevel, value -> sequence());
 	}
 
-	public Expression decoderEx(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Function<Expression, Expression> instanceInitializer) {
+	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Function<Expression, Expression> instanceInitializer) {
 		if (decodeType.isInterface()) {
 			return deserializeInterface(staticDecoders, in, version, compatibilityLevel);
 		}

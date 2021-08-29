@@ -61,7 +61,7 @@ import static io.activej.common.Utils.*;
 import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.LocalFileUtils.*;
-import static io.activej.fs.util.RemoteFsUtils.batchEx;
+import static io.activej.fs.util.RemoteFsUtils.fsBatchException;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.*;
@@ -434,7 +434,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return "LocalActiveFs{storage=" + storage + '}';
 	}
 
-	private IsADirectoryException dirEx(String name) {
+	private static IsADirectoryException isADirectoryException(String name) {
 		return new IsADirectoryException("Path '" + name + "' is a directory");
 	}
 
@@ -543,7 +543,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				try {
 					Files.deleteIfExists(path);
 				} catch (DirectoryNotEmptyException e) {
-					throw dirEx(name);
+					throw isADirectoryException(name);
 				}
 			});
 		}
@@ -557,7 +557,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		try {
 			return LocalFileUtils.ensureTarget(source, target, fsyncDirectories, afterCreation);
 		} catch (DirectoryNotEmptyException e) {
-			throw dirEx(storage.relativize(target).toString());
+			throw isADirectoryException(storage.relativize(target).toString());
 		} catch (FileSystemException e) {
 			throw new PathContainsFileException();
 		}
@@ -604,7 +604,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				return Promise.ofException(e);
 			} else if (e instanceof FileAlreadyExistsException) {
 				return execute(() -> {
-					if (name != null && Files.isDirectory(resolve(name))) throw dirEx(name);
+					if (name != null && Files.isDirectory(resolve(name))) throw isADirectoryException(name);
 					throw new PathContainsFileException();
 				});
 			} else if (e instanceof NoSuchFileException) {
@@ -617,7 +617,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					Path path = resolve(name);
 					if (!Files.exists(path))
 						throw new FileNotFoundException("File '" + name + "' not found");
-					if (Files.isDirectory(path)) throw dirEx(name);
+					if (Files.isDirectory(path)) throw isADirectoryException(name);
 				}
 				logger.warn("Operation failed", e);
 				if (e instanceof IOException) {
@@ -634,12 +634,12 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		try {
 			runnable.run();
 		} catch (FsScalarException e) {
-			throw batchEx(first, e);
+			throw fsBatchException(first, e);
 		} catch (FileAlreadyExistsException e) {
 			checkIfDirectories(first, second);
-			throw batchEx(first, new PathContainsFileException());
+			throw fsBatchException(first, new PathContainsFileException());
 		} catch (NoSuchFileException e) {
-			throw batchEx(first, new FileNotFoundException());
+			throw fsBatchException(first, new FileNotFoundException());
 		} catch (IOException e) {
 			checkIfExists(first);
 			checkIfDirectories(first, second);
@@ -658,27 +658,27 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private void checkIfDirectories(@NotNull String first, @Nullable String second) throws FsBatchException {
 		try {
 			if (Files.isDirectory(resolve(first))) {
-				throw batchEx(first, dirEx(first));
+				throw fsBatchException(first, isADirectoryException(first));
 			}
 		} catch (ForbiddenPathException e) {
-			throw batchEx(first, e);
+			throw fsBatchException(first, e);
 		}
 		try {
 			if (Files.isDirectory(resolve(second))) {
-				throw batchEx(first, dirEx(second));
+				throw fsBatchException(first, isADirectoryException(second));
 			}
 		} catch (ForbiddenPathException e) {
-			throw batchEx(first, e);
+			throw fsBatchException(first, e);
 		}
 	}
 
 	private void checkIfExists(@NotNull String file) throws FsBatchException {
 		try {
 			if (!Files.exists(resolve(file))) {
-				throw batchEx(file, new FileNotFoundException("File '" + file + "' not found"));
+				throw fsBatchException(file, new FileNotFoundException("File '" + file + "' not found"));
 			}
 		} catch (ForbiddenPathException e) {
-			throw batchEx(file, e);
+			throw fsBatchException(file, e);
 		}
 	}
 
