@@ -31,7 +31,7 @@ import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
@@ -43,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtRepartitionController<K extends Comparable<K>, S, P extends Comparable<P>> implements EventloopJmxBeanEx {
+public final class CrdtRepartitionController<K extends Comparable<K>, S, P extends Comparable<P>> implements EventloopJmxBeanWithStats {
 	private final P localPartitionId;
 	private final CrdtStorage<K, S> localClient;
 	private final CrdtStorageCluster<K, S, P> cluster;

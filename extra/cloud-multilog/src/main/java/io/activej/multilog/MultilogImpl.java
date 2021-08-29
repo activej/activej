@@ -35,7 +35,7 @@ import io.activej.datastream.stats.StreamRegistry;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
@@ -58,7 +58,7 @@ import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
+public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(MultilogImpl.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);

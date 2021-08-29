@@ -25,7 +25,7 @@ import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
@@ -54,7 +54,7 @@ import static io.activej.promise.Promises.timeout;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanEx {
+public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(RemoteAsyncDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(RemoteAsyncDnsClient.class);
 

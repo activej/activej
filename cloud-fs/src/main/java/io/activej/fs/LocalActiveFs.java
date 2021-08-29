@@ -29,7 +29,7 @@ import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.exception.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -73,7 +73,7 @@ import static java.util.Collections.*;
  * <p>
  * This implementation does not define new limitations, other than those defined in {@link ActiveFs} interface.
  */
-public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
+public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";

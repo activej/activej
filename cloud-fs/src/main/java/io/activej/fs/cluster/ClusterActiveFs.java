@@ -27,7 +27,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsIOException;
@@ -71,7 +71,7 @@ import static java.util.stream.Collectors.toList;
  *     <li>Paths should not contain existing filenames as part of the path</li>
  * </ul>
  */
-public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterActiveFs>, EventloopService, EventloopJmxBeanEx {
+public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterActiveFs>, EventloopService, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterActiveFs.class);
 
 	private final FsPartitions partitions;

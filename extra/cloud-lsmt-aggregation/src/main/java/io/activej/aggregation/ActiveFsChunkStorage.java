@@ -38,7 +38,7 @@ import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -73,7 +73,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>, EventloopService, WithInitializer<ActiveFsChunkStorage<C>>, EventloopJmxBeanEx {
+public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>, EventloopService, WithInitializer<ActiveFsChunkStorage<C>>, EventloopJmxBeanWithStats {
 	private static final Logger logger = getLogger(ActiveFsChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 

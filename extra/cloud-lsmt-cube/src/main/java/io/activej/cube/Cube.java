@@ -52,7 +52,7 @@ import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.etl.LogDataConsumer;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -101,7 +101,7 @@ import static java.util.stream.Collectors.toList;
  * Also provides functionality for managing aggregations.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, EventloopJmxBeanEx {
+public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;

@@ -37,7 +37,7 @@ import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.StreamSorterStorageImpl;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
@@ -75,7 +75,7 @@ import static java.util.stream.Collectors.toSet;
  * Provides methods for loading and querying data.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class Aggregation implements IAggregation, WithInitializer<Aggregation>, EventloopJmxBeanEx {
+public class Aggregation implements IAggregation, WithInitializer<Aggregation>, EventloopJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;

@@ -40,7 +40,7 @@ import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -64,7 +64,7 @@ import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
-		WithInitializer<CrdtStorageFs<K, S>>, EventloopService, EventloopJmxBeanEx {
+		WithInitializer<CrdtStorageFs<K, S>>, EventloopService, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
 
 	private final Eventloop eventloop;

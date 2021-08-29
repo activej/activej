@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
-public abstract class AsyncServletWithStats implements AsyncServlet, EventloopJmxBeanEx {
+public abstract class AsyncServletWithStats implements AsyncServlet, EventloopJmxBeanWithStats {
 	@NotNull
 	protected final Eventloop eventloop;
 

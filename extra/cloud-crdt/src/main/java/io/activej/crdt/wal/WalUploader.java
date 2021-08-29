@@ -34,7 +34,7 @@ import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.StreamSorterStorageImpl;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -60,7 +60,7 @@ import static io.activej.crdt.wal.FileWriteAheadLog.FRAME_FORMAT;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
-public final class WalUploader<K extends Comparable<K>, S> implements EventloopJmxBeanEx {
+public final class WalUploader<K extends Comparable<K>, S> implements EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(WalUploader.class);
 
 	private static final int DEFAULT_SORT_ITEMS_IN_MEMORY = ApplicationSettings.getInt(WalUploader.class, "sortItemsInMemory", 100_000);

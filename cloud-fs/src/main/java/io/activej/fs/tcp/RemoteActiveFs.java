@@ -27,7 +27,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
@@ -68,7 +68,7 @@ import static java.util.Collections.emptyMap;
  * <p>
  * Inherits all of the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
  */
-public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanEx {
+public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);

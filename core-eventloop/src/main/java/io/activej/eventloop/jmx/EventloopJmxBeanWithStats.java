@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-public interface EventloopJmxBeanEx extends EventloopJmxBean {
+public interface EventloopJmxBeanWithStats extends EventloopJmxBean {
 
 	@JmxOperation
 	default void resetStats() {

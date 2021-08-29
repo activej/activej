@@ -20,7 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -38,7 +38,7 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class EventloopTaskScheduler implements EventloopService, WithInitializer<EventloopTaskScheduler>, EventloopJmxBeanEx {
+public final class EventloopTaskScheduler implements EventloopService, WithInitializer<EventloopTaskScheduler>, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(EventloopTaskScheduler.class);
 
 	private final Eventloop eventloop;

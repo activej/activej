@@ -27,7 +27,7 @@ import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -56,7 +56,7 @@ import static io.activej.cube.service.ChunkLockerFactory.NOOP_CHUNK_LOCKER;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanEx {
+public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
 	public static final Supplier<BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>>> DEFAULT_LOCKER_STRATEGY = new Supplier<BiFunction<Aggregation,

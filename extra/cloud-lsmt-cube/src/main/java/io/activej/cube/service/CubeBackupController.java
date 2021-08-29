@@ -22,7 +22,7 @@ import io.activej.common.Utils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
@@ -48,7 +48,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.checkout;
 
-public final class CubeBackupController<K, D, C> implements EventloopJmxBeanEx {
+public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);

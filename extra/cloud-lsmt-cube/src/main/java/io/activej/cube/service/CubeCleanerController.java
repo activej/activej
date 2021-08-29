@@ -22,7 +22,7 @@ import io.activej.common.Utils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
@@ -55,7 +55,7 @@ import static io.activej.ot.OTAlgorithms.*;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanEx {
+public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration DEFAULT_CHUNKS_CLEANUP_DELAY = Duration.ofMinutes(1);

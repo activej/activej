@@ -20,7 +20,7 @@ import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -63,7 +63,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * This is simply a higher-level wrapper around eventloop {@link Eventloop#listen} call.
  */
 @SuppressWarnings("WeakerAccess, unused")
-public abstract class AbstractServer<Self extends AbstractServer<Self>> implements EventloopServer, WorkerServer, WithInitializer<Self>, EventloopJmxBeanEx {
+public abstract class AbstractServer<Self extends AbstractServer<Self>> implements EventloopServer, WorkerServer, WithInitializer<Self>, EventloopJmxBeanWithStats {
 	protected Logger logger = getLogger(getClass());
 	private static final boolean CHECK = Checks.isEnabled(AbstractServer.class);
 

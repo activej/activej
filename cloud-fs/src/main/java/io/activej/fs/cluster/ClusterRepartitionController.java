@@ -26,7 +26,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteRanger;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsIOException;
@@ -59,7 +59,7 @@ import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
 
-public final class ClusterRepartitionController implements WithInitializer<ClusterRepartitionController>, EventloopJmxBeanEx, EventloopService {
+public final class ClusterRepartitionController implements WithInitializer<ClusterRepartitionController>, EventloopJmxBeanWithStats, EventloopService {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterRepartitionController.class);
 	private static final boolean CHECK = Checks.isEnabled(ClusterRepartitionController.class);
 

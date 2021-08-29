@@ -33,7 +33,7 @@ import io.activej.eventloop.error.FatalErrorHandlers;
 import io.activej.eventloop.executor.EventloopExecutor;
 import io.activej.eventloop.inspector.EventloopInspector;
 import io.activej.eventloop.inspector.EventloopStats;
-import io.activej.eventloop.jmx.EventloopJmxBeanEx;
+import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.schedule.ScheduledRunnable;
@@ -84,7 +84,7 @@ import static java.util.Collections.emptyIterator;
  * Working of this eventloop will be ended when it has no selected keys
  * and its queues with tasks are empty.
  */
-public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, WithInitializer<Eventloop>, EventloopJmxBeanEx {
+public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, WithInitializer<Eventloop>, EventloopJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
 	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
 
