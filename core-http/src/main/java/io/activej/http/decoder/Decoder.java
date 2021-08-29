@@ -23,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -67,19 +66,11 @@ public interface Decoder<T> {
 		};
 	}
 
-	default <V> Decoder<V> map(Function<T, V> fn) {
-		return mapEx(Mapper.of(fn));
-	}
-
-	default <V> Decoder<V> map(Function<T, V> fn, String message) {
-		return mapEx(Mapper.of(fn, message));
-	}
-
 	/**
 	 * Enhanced functional 'map' operation.
 	 * If mapped returns an errors, then the returned decoder fails with that error.
 	 */
-	default <V> Decoder<V> mapEx(Mapper<T, V> fn) {
+	default <V> Decoder<V> map(Mapper<T, V> fn) {
 		return new AbstractDecoder<V>(getId()) {
 			@Override
 			public Either<V, DecodeErrors> decode(@NotNull HttpRequest request) {
@@ -113,22 +104,12 @@ public interface Decoder<T> {
 		};
 	}
 
-	@NotNull
-	static <V> Decoder<V> create(Function<Object[], V> constructor, String message, Decoder<?>... decoders) {
-		return createEx(Mapper.of(constructor, message), decoders);
-	}
-
-	@NotNull
-	static <V> Decoder<V> create(Function<Object[], V> constructor, Decoder<?>... decoders) {
-		return createEx(Mapper.of(constructor), decoders);
-	}
-
 	/**
 	 * Plainly combines given decoders (they are called on the same request) into one, mapping the result
 	 * with the supplied mapper.
 	 */
 	@NotNull
-	static <V> Decoder<V> createEx(Mapper<Object[], V> constructor, Decoder<?>... decoders) {
+	static <V> Decoder<V> create(Mapper<Object[], V> fn, Decoder<?>... decoders) {
 		return new AbstractDecoder<V>("") {
 			@Override
 			public Either<V, DecodeErrors> decode(@NotNull HttpRequest request) {
@@ -146,7 +127,7 @@ public interface Decoder<T> {
 				if (errors.hasErrors()) {
 					return Either.right(errors);
 				}
-				return constructor.map(args)
+				return fn.map(args)
 						.mapRight(DecodeErrors::of);
 			}
 		};
@@ -154,64 +135,79 @@ public interface Decoder<T> {
 
 	@SuppressWarnings("unchecked")
 	@NotNull
-	static <R, T1> Decoder<R> of(TupleConstructor1<T1, R> constructor, Decoder<T1> param1) {
-		return create(params -> constructor.create((T1) params[0]),
-				param1);
+	static <R, T1> Decoder<R> of(TupleConstructor1<T1, R> constructor, Decoder<T1> decoder1) {
+		return create(Mapper.of(params -> constructor.create((T1) params[0])),
+				decoder1);
 	}
 
 	@SuppressWarnings("unchecked")
 	@NotNull
 	static <R, T1, T2> Decoder<R> of(TupleConstructor2<T1, T2, R> constructor,
-			Decoder<T1> param1,
-			Decoder<T2> param2) {
-		return create(params -> constructor.create((T1) params[0], (T2) params[1]),
-				param1, param2);
+			Decoder<T1> decoder1,
+			Decoder<T2> decoder2) {
+		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1])),
+				decoder1,
+				decoder2);
 	}
 
 	@SuppressWarnings("unchecked")
 	@NotNull
 	static <R, T1, T2, T3> Decoder<R> of(TupleConstructor3<T1, T2, T3, R> constructor,
-			Decoder<T1> param1,
-			Decoder<T2> param2,
-			Decoder<T3> param3) {
-		return create(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2]),
-				param1, param2, param3);
+			Decoder<T1> decoder1,
+			Decoder<T2> decoder2,
+			Decoder<T3> decoder3) {
+		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2])),
+				decoder1,
+				decoder2,
+				decoder3);
 	}
 
 	@SuppressWarnings("unchecked")
 	@NotNull
 	static <R, T1, T2, T3, T4> Decoder<R> of(TupleConstructor4<T1, T2, T3, T4, R> constructor,
-			Decoder<T1> param1,
-			Decoder<T2> param2,
-			Decoder<T3> param3,
-			Decoder<T4> param4) {
-		return create(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3]),
-				param1, param2, param3, param4);
+			Decoder<T1> decoder1,
+			Decoder<T2> decoder2,
+			Decoder<T3> decoder3,
+			Decoder<T4> decoder4) {
+		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3])),
+				decoder1,
+				decoder2,
+				decoder3,
+				decoder4);
 	}
 
 	@SuppressWarnings("unchecked")
 	@NotNull
 	static <R, T1, T2, T3, T4, T5> Decoder<R> of(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
-			Decoder<T1> param1,
-			Decoder<T2> param2,
-			Decoder<T3> param3,
-			Decoder<T4> param4,
-			Decoder<T5> param5) {
-		return create(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3], (T5) params[4]),
-				param1, param2, param3, param4, param5);
+			Decoder<T1> decoder1,
+			Decoder<T2> decoder2,
+			Decoder<T3> decoder3,
+			Decoder<T4> decoder4,
+			Decoder<T5> decoder5) {
+		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3], (T5) params[4])),
+				decoder1,
+				decoder2,
+				decoder3,
+				decoder4,
+				decoder5);
 	}
 
 	@SuppressWarnings("unchecked")
 	@NotNull
 	static <R, T1, T2, T3, T4, T5, T6> Decoder<R> of(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
-			Decoder<T1> param1,
-			Decoder<T2> param2,
-			Decoder<T3> param3,
-			Decoder<T4> param4,
-			Decoder<T5> param5,
-			Decoder<T6> param6) {
-		return create(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3], (T5) params[5], (T6) params[6]),
-				param1, param2, param3, param4, param5, param6);
+			Decoder<T1> decoder1,
+			Decoder<T2> decoder2,
+			Decoder<T3> decoder3,
+			Decoder<T4> decoder4,
+			Decoder<T5> decoder5,
+			Decoder<T6> decoder6) {
+		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3], (T5) params[5], (T6) params[6])),
+				decoder1,
+				decoder2,
+				decoder3,
+				decoder4,
+				decoder5,
+				decoder6);
 	}
 }
 

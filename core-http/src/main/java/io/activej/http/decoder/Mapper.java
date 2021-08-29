@@ -17,6 +17,7 @@
 package io.activej.http.decoder;
 
 import io.activej.common.collection.Either;
+import io.activej.common.function.FunctionEx;
 
 import java.util.List;
 import java.util.function.Function;
@@ -37,11 +38,11 @@ public interface Mapper<T, V> {
 		return value -> Either.left(fn.apply(value));
 	}
 
-	static <T, V> Mapper<T, V> of(Function<T, V> fn, String message) {
+	static <T, V> Mapper<T, V> ofEx(FunctionEx<T, V> fn, String message) {
 		return value -> {
 			try {
 				return Either.left(fn.apply(value));
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				return Either.right(singletonList(DecodeError.of(message, value)));
 			}
 		};

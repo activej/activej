@@ -8,6 +8,7 @@ import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
 import io.activej.http.decoder.DecodeErrors;
 import io.activej.http.decoder.Decoder;
+import io.activej.http.decoder.Mapper;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -22,20 +23,21 @@ import static io.activej.http.decoder.Decoders.ofPost;
 public final class HttpDecoderExample extends HttpServerLauncher {
 	private static final String SEPARATOR = "-";
 
-	private static final Decoder<Address> ADDRESS_DECODER = Decoder.of(Address::new,
-			ofPost("title", "")
-					.validate(param -> !param.isEmpty(), "Title cannot be empty")
-	);
+	private static final Decoder<Address> ADDRESS_DECODER = Decoder.
+			of(Address::new,
+					ofPost("title", "")
+							.validate(param -> !param.isEmpty(), "Title cannot be empty")
+			);
 
 	private static final Decoder<Contact> CONTACT_DECODER = Decoder.of(Contact::new,
 			ofPost("name")
 					.validate(name -> !name.isEmpty(), "Name cannot be empty"),
 			ofPost("age")
-					.map(Integer::valueOf, "Cannot decode age")
+					.map(Mapper.ofEx(Integer::valueOf, "Cannot decode age"))
 					.validate(age -> age >= 18, "Age must not be less than 18"),
 			ADDRESS_DECODER.withId("contact-address")
 	);
-	//[END REGION_1]
+//[END REGION_1]
 
 	//[START REGION_5]
 	private static ByteBuf applyTemplate(Mustache mustache, Map<String, Object> scopes) {

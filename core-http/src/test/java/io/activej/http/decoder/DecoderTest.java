@@ -24,9 +24,9 @@ public class DecoderTest {
 	@Test
 	public void testMap() {
 		Decoder<Double> parser = Decoders.ofCookie("key")
-				.map(Integer::parseInt)
+				.map(Mapper.of(Integer::parseInt))
 				.validate(Validator.of(param -> param > 10, "Lower then 10"))
-				.map(Integer::doubleValue)
+				.map(Mapper.of(Integer::doubleValue))
 				.validate(Validator.of(value -> value % 2 == 0, "Is even"));
 
 		Either<Double, DecodeErrors> key = parser.decode(HttpRequest.get("http://example.com")
