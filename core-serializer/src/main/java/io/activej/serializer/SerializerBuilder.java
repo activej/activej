@@ -848,18 +848,18 @@ public final class SerializerBuilder {
 			List<Annotation> result = new ArrayList<>();
 			for (Annotation annotation : annotations) {
 				Annotation[] repeated;
-				if (annotation instanceof SerializeFixedSizeEx) {
-					repeated = ((SerializeFixedSizeEx) annotation).value();
-				} else if (annotation instanceof SerializeNullableEx) {
-					repeated = ((SerializeNullableEx) annotation).value();
-				} else if (annotation instanceof SerializeReferenceEx) {
-					repeated = ((SerializeReferenceEx) annotation).value();
-				} else if (annotation instanceof SerializeStringFormatEx) {
-					repeated = ((SerializeStringFormatEx) annotation).value();
-				} else if (annotation instanceof SerializeClassEx) {
-					repeated = ((SerializeClassEx) annotation).value();
-				} else if (annotation instanceof SerializeVarLengthEx) {
-					repeated = ((SerializeVarLengthEx) annotation).value();
+				if (annotation instanceof SerializeFixedSizes) {
+					repeated = ((SerializeFixedSizes) annotation).value();
+				} else if (annotation instanceof SerializeNullables) {
+					repeated = ((SerializeNullables) annotation).value();
+				} else if (annotation instanceof SerializeReferences) {
+					repeated = ((SerializeReferences) annotation).value();
+				} else if (annotation instanceof SerializeStringFormats) {
+					repeated = ((SerializeStringFormats) annotation).value();
+				} else if (annotation instanceof SerializeClasses) {
+					repeated = ((SerializeClasses) annotation).value();
+				} else if (annotation instanceof SerializeVarLengths) {
+					repeated = ((SerializeVarLengths) annotation).value();
 				} else {
 					repeated = new Annotation[]{annotation};
 				}

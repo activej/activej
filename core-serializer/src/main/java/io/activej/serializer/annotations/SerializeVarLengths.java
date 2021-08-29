@@ -25,6 +25,6 @@ import java.lang.annotation.Target;
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD})
-public @interface SerializeNullableEx {
-	SerializeNullable[] value();
+public @interface SerializeVarLengths {
+	SerializeVarLength[] value();
 }

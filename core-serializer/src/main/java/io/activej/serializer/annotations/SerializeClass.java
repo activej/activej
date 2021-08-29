@@ -25,7 +25,7 @@ import java.lang.annotation.*;
 		ElementType.FIELD,
 		ElementType.METHOD,
 		ElementType.TYPE_USE})
-@Repeatable(SerializeClassEx.class)
+@Repeatable(SerializeClasses.class)
 public @interface SerializeClass {
 	Class<? extends SerializerDef> value() default SerializerDef.class;
 

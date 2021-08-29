@@ -25,6 +25,6 @@ import java.lang.annotation.Target;
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD})
-public @interface SerializeFixedSizeEx {
-	SerializeFixedSize[] value();
+public @interface SerializeNullables {
+	SerializeNullable[] value();
 }

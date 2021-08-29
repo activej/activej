@@ -23,7 +23,7 @@ import java.lang.annotation.*;
 		ElementType.FIELD,
 		ElementType.METHOD,
 		ElementType.TYPE_USE})
-@Repeatable(SerializeStringFormatEx.class)
+@Repeatable(SerializeStringFormats.class)
 public @interface SerializeStringFormat {
 	io.activej.serializer.StringFormat value();
 

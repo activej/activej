@@ -25,6 +25,6 @@ import java.lang.annotation.Target;
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD})
-public @interface SerializeClassEx {
-	SerializeClass[] value();
+public @interface SerializeFixedSizes {
+	SerializeFixedSize[] value();
 }

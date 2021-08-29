@@ -23,7 +23,7 @@ import java.lang.annotation.*;
 		ElementType.FIELD,
 		ElementType.METHOD,
 		ElementType.TYPE_USE})
-@Repeatable(SerializeFixedSizeEx.class)
+@Repeatable(SerializeFixedSizes.class)
 public @interface SerializeFixedSize {
 	int value();
 
