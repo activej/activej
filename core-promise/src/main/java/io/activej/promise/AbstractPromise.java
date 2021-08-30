@@ -308,7 +308,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
-					fn.get().whenComplete(this::complete);
+					fn.get().run(this::complete);
 				} else {
 					completeExceptionally(e);
 				}
@@ -347,7 +347,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.whenComplete(this::complete);
+					promise.run(this::complete);
 				} else {
 					completeExceptionally(e);
 				}
@@ -372,7 +372,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
-					fn.apply(result).whenComplete(this::complete);
+					fn.apply(result).run(this::complete);
 				} else {
 					completeExceptionally(e);
 				}
@@ -412,7 +412,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.whenComplete(this::complete);
+					promise.run(this::complete);
 				} else {
 					completeExceptionally(e);
 				}
@@ -437,9 +437,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
-					fn.apply(result, null).whenComplete(this::complete);
+					fn.apply(result, null).run(this::complete);
 				} else {
-					fn.apply(null, e).whenComplete(this::complete);
+					fn.apply(null, e).run(this::complete);
 				}
 			}
 
@@ -477,7 +477,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.whenComplete(this::complete);
+					promise.run(this::complete);
 				} else {
 					Promise<? extends U> promise;
 					try {
@@ -488,7 +488,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.whenComplete(this::complete);
+					promise.run(this::complete);
 				}
 			}
 
@@ -905,7 +905,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			return (Promise<V>) other;
 		}
 		PromiseCombine<T, V, U> resultPromise = new PromiseCombine<>(fn);
-		other.whenComplete(resultPromise::acceptOther);
+		other.run(resultPromise::acceptOther);
 		subscribe(resultPromise);
 		return resultPromise;
 	}

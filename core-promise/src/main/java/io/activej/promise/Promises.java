@@ -904,7 +904,7 @@ public final class Promises {
 		while (promises.hasNext()) {
 			Promise<?> promise = promises.next();
 			if (promise.isResult()) continue;
-			promise.whenComplete((result, e) -> {
+			promise.run((result, e) -> {
 				if (e == null) {
 					sequenceImpl(promises, cb);
 				} else {
@@ -1008,7 +1008,7 @@ public final class Promises {
 				Recyclers.recycle(v);
 				continue;
 			}
-			nextPromise.whenComplete((v, e) -> {
+			nextPromise.run((v, e) -> {
 				if (predicate.test(v, e)) {
 					cb.accept(v, e);
 				} else {
@@ -1075,7 +1075,7 @@ public final class Promises {
 				cb.set(null);
 				break;
 			}
-			promise.whenComplete((b, e) -> {
+			promise.run((b, e) -> {
 				if (e == null) {
 					if (b == Boolean.TRUE) {
 						repeatImpl(supplier, cb);
@@ -1122,7 +1122,7 @@ public final class Promises {
 					break;
 				}
 			} else {
-				promise.whenComplete((newValue, e) -> {
+				promise.run((newValue, e) -> {
 					if (e == null) {
 						if (breakCondition.test(newValue)) {
 							cb.set(newValue);
@@ -1159,7 +1159,7 @@ public final class Promises {
 			@NotNull RetryPolicy<Object> retryPolicy, Object retryState,
 			SettablePromise<T> cb) {
 		next.get()
-				.whenComplete((v, e) -> {
+				.run((v, e) -> {
 					if (breakCondition.test(v, e)) {
 						cb.accept(v, e);
 					} else {
@@ -1358,7 +1358,7 @@ public final class Promises {
 				}
 			} else {
 				countdown++;
-				promise.whenComplete((result, e) -> {
+				promise.run((result, e) -> {
 					if (e == null) {
 						if (!isComplete()) {
 							array[i] = result;
