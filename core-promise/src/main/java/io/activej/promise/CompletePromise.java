@@ -130,13 +130,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 
 	@Override
 	public @NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn) {
-		try {
-			return (Promise<U>) fn.get();
-		} catch (RuntimeException ex) {
-			throw ex;
-		} catch (Exception ex) {
-			return Promise.ofException(ex);
-		}
+		return (Promise<U>) fn.get();
 	}
 
 	@Override
@@ -154,11 +148,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@NotNull
 	@Override
 	public final <U> Promise<U> then(@NotNull BiFunction<? super T, Exception, ? extends Promise<? extends U>> fn) {
-		try {
-			return (Promise<U>) fn.apply(getResult(), null);
-		} catch (Exception ex) {
-			return Promise.ofException(ex);
-		}
+		return (Promise<U>) fn.apply(getResult(), null);
 	}
 
 	@SuppressWarnings("unchecked")
