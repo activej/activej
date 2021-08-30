@@ -265,12 +265,12 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
 		Eventloop eventloop = getCurrentEventloop();
 		return Promise.<SocketChannel>ofCallback(cb -> eventloop.connect(address, timeout, cb))
-				.then(channel -> {
+				.mapEx(channel -> {
 					try {
-						return Promise.of(wrapChannel(eventloop, channel, address, socketSettings));
+						return wrapChannel(eventloop, channel, address, socketSettings);
 					} catch (IOException e) {
 						eventloop.closeChannel(channel, null);
-						return Promise.ofException(e);
+						throw e;
 					}
 				});
 	}

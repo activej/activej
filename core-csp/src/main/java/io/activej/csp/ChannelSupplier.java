@@ -197,13 +197,9 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				if (supplier != null) return supplier.get();
-				return promise.then((supplier, e) -> {
-					if (e == null) {
-						this.supplier = supplier;
-						return supplier.get();
-					} else {
-						return Promise.ofException(e);
-					}
+				return promise.then(supplier -> {
+					this.supplier = supplier;
+					return supplier.get();
 				});
 			}
 

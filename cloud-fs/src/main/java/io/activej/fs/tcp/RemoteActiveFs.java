@@ -21,6 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
+import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -158,13 +159,14 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(MessagingWithBinaryStreaming<FsResponse, FsCommand> messaging, @NotNull String name, @Nullable Long size) {
 		return messaging.send(new Upload(name, size))
 				.then(messaging::receive)
-				.then(msg -> cast(msg, UploadAck.class))
+				.mapEx(castFn(UploadAck.class))
 				.then(() -> Promise.of(messaging.sendBinaryStream()
 						.transformWith(size == null ? identity() : ofFixedSize(size))
 						.withAcknowledgement(ack -> ack
 								.then(messaging::receive)
 								.whenResult(messaging::close)
-								.then(msg -> cast(msg, UploadFinished.class).toVoid())
+								.mapEx(castFn(UploadFinished.class))
+								.toVoid()
 								.whenException(e -> {
 									messaging.closeEx(e);
 									logger.warn("Cancelled while trying to upload file {}: {}", name, this, e);
@@ -183,12 +185,13 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.then(messaging ->
 						messaging.send(new Append(name, offset))
 								.then(messaging::receive)
-								.then(msg -> cast(msg, AppendAck.class))
+								.mapEx(castFn(AppendAck.class))
 								.then(() -> Promise.of(messaging.sendBinaryStream()
 										.withAcknowledgement(ack -> ack
 												.then(messaging::receive)
 												.whenResult(messaging::close)
-												.then(msg -> cast(msg, AppendFinished.class).toVoid())
+												.mapEx(castFn(AppendFinished.class))
+												.toVoid()
 												.whenException(messaging::closeEx)
 												.whenComplete(appendFinishPromise.recordStats())
 												.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)))))
@@ -206,11 +209,11 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.then(messaging ->
 						messaging.send(new Download(name, offset, limit))
 								.then(messaging::receive)
-								.then(msg -> cast(msg, DownloadSize.class))
-								.then(msg -> {
+								.mapEx(castFn(DownloadSize.class))
+								.thenEx(msg -> {
 									long receivingSize = msg.getSize();
 									if (receivingSize > limit) {
-										return Promise.ofException(new UnexpectedDataException());
+										throw new UnexpectedDataException();
 									}
 
 									logger.trace("download size for file {} is {}: {}", name, receivingSize, this);
@@ -220,18 +223,17 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 											.peek(buf -> size.inc(buf.readRemaining()))
 											.withEndOfStream(eos -> eos
 													.then(messaging::sendEndOfStream)
-													.then(() -> {
+													.whenResultEx(() -> {
 														if (size.get() == receivingSize) {
-															return Promise.complete();
+															return;
 														}
 														logger.error("invalid stream size for file " + name +
 																" (offset " + offset + ", limit " + limit + ")," +
 																" expected: " + receivingSize +
 																" actual: " + size.get());
-														return Promise.ofException(size.get() < receivingSize ?
+														throw size.get() < receivingSize ?
 																new TruncatedDataException() :
-																new UnexpectedDataException()
-														);
+																new UnexpectedDataException();
 													})
 													.whenComplete(downloadFinishPromise.recordStats())
 													.whenComplete(toLogger(logger, "onDownloadComplete", name, offset, limit, this))
@@ -341,14 +343,16 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.whenComplete(connectPromise.recordStats());
 	}
 
-	private static <T extends FsResponse> Promise<T> cast(FsResponse msg, Class<T> expectedClass) {
-		if (expectedClass == msg.getClass()) {
-			return Promise.of(expectedClass.cast(msg));
-		}
-		if (msg instanceof ServerError) {
-			return Promise.ofException(((ServerError) msg).getError());
-		}
-		return Promise.ofException(new FsIOException("Invalid or unexpected message received"));
+	private static <T extends FsResponse> FunctionEx<FsResponse, T> castFn(Class<T> expectedClass) {
+		return msg -> {
+			if (expectedClass == msg.getClass()) {
+				return expectedClass.cast(msg);
+			}
+			if (msg instanceof ServerError) {
+				throw ((ServerError) msg).getError();
+			}
+			throw new FsIOException("Invalid or unexpected message received");
+		};
 	}
 
 	private <T, R extends FsResponse> Promise<T> simpleCommand(FsCommand command, Class<R> responseType, Function<R, T> answerExtractor) {
@@ -357,7 +361,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 						messaging.send(command)
 								.then(messaging::receive)
 								.whenResult(messaging::close)
-								.then(msg -> cast(msg, responseType))
+								.mapEx(castFn(responseType))
 								.map(answerExtractor)
 								.whenException(e -> {
 									messaging.closeEx(e);

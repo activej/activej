@@ -170,7 +170,8 @@ public interface ActiveFs {
 	 */
 	default Promise<Void> deleteAll(Set<String> toDelete) {
 		return Promises.toList(toDelete.stream().map(name -> delete(name).toTry()))
-				.then(tries -> reduceErrors(tries, toDelete.iterator()));
+				.whenResultEx(tries -> reduceErrors(tries, toDelete.iterator()))
+				.toVoid();
 	}
 
 	/**
@@ -203,7 +204,8 @@ public interface ActiveFs {
 		Set<Entry<String, String>> entrySet = sourceToTarget.entrySet();
 		return Promises.toList(entrySet.stream()
 				.map(entry -> copy(entry.getKey(), entry.getValue()).toTry()))
-				.then(tries -> reduceErrors(tries, transformIterator(entrySet.iterator(), Entry::getKey)));
+				.whenResultEx(tries -> reduceErrors(tries, transformIterator(entrySet.iterator(), Entry::getKey)))
+				.toVoid();
 	}
 
 	/**

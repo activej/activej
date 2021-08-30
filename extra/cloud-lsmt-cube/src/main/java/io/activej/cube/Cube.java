@@ -771,17 +771,17 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			Aggregation aggregation = entry.getValue().aggregation;
 
 			runnables.add(() -> strategy.apply(aggregation)
-					.then((aggregationDiff, e) -> {
+					.whenCompleteEx((aggregationDiff, e) -> {
 						if (e == null) {
 							if (!aggregationDiff.isEmpty()) {
 								map.put(aggregationId, aggregationDiff);
 							}
-							return Promise.complete();
 						} else {
-							return Promise.ofException(new CubeException(
-									"Failed to consolidate aggregation '" + aggregationId + '\'', e));
+							throw new CubeException(
+									"Failed to consolidate aggregation '" + aggregationId + '\'', e);
 						}
-					}));
+					})
+					.toVoid());
 		}
 
 		return Promises.sequence(runnables).map($ -> CubeDiff.of(map));

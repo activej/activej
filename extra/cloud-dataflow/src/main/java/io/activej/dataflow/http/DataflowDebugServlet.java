@@ -81,52 +81,53 @@ public final class DataflowDebugServlet implements AsyncServlet {
 											return ok200()
 													.withJson(toJson(taskListCodec, tasks));
 										}))
-						.map(GET, "/tasks/:taskID", request ->
-								getTaskId(request).then(id ->
-										Promises.toList(partitions.stream().map(p -> getTask(p.getAddress(), id)).collect(toList()))
-												.map(localStats -> {
-													List<@Nullable TaskStatus> statuses = Arrays.asList(new TaskStatus[localStats.size()]);
+						.map(GET, "/tasks/:taskID", request -> {
+							long id = getTaskId(request);
+							return Promises.toList(partitions.stream().map(p -> getTask(p.getAddress(), id)).collect(toList()))
+									.map(localStats -> {
+										List<@Nullable TaskStatus> statuses = Arrays.asList(new TaskStatus[localStats.size()]);
 
-													Map<Integer, List<@Nullable NodeStat>> nodeStats = new HashMap<>();
+										Map<Integer, List<@Nullable NodeStat>> nodeStats = new HashMap<>();
 
-													for (int i = 0; i < localStats.size(); i++) {
-														DataflowResponseTaskData localTaskData = localStats.get(i);
-														if (localTaskData == null) {
-															continue;
-														}
-														statuses.set(i, localTaskData.getStatus());
-														int finalI = i;
-														localTaskData.getNodes()
-																.forEach((index, nodeStat) ->
-																		nodeStats.computeIfAbsent(index, $ -> Arrays.asList(new NodeStat[localStats.size()]))
-																				.set(finalI, nodeStat));
+										for (int i = 0; i < localStats.size(); i++) {
+											DataflowResponseTaskData localTaskData = localStats.get(i);
+											if (localTaskData == null) {
+												continue;
+											}
+											statuses.set(i, localTaskData.getStatus());
+											int finalI = i;
+											localTaskData.getNodes()
+													.forEach((index, nodeStat) ->
+															nodeStats.computeIfAbsent(index, $ -> Arrays.asList(new NodeStat[localStats.size()]))
+																	.set(finalI, nodeStat));
+										}
+
+										Map<Integer, @Nullable NodeStat> reduced = nodeStats.entrySet().stream()
+												.collect(HashMap::new, (m, e) -> {
+													NodeStat r = reduce(e.getValue(), env);
+													if (r != null) {
+														m.put(e.getKey(), r);
 													}
+												}, HashMap::putAll);
 
-													Map<Integer, @Nullable NodeStat> reduced = nodeStats.entrySet().stream()
-															.collect(HashMap::new, (m, e) -> {
-																NodeStat r = reduce(e.getValue(), env);
-																if (r != null) {
-																	m.put(e.getKey(), r);
-																}
-															}, HashMap::putAll);
-
-													ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).getGraphViz(), reduced);
-													return ok200().withJson(toJson(reducedTaskDataCodec, taskData));
-												})))
-						.map(GET, "/tasks/:taskID/:index", request ->
-								getTaskId(request).then(id -> {
-									String indexParam = request.getPathParameter("index");
-									Partition partition;
-									try {
-										partition = partitions.get(Integer.parseInt(indexParam));
-									} catch (NumberFormatException | IndexOutOfBoundsException e) {
-										return Promise.ofException(HttpError.ofCode(400, "Bad index"));
-									}
-									return getTask(partition.getAddress(), id)
-											.map(task -> ok200()
-													.withJson(toJson(localTaskDataCodec,
-															new LocalTaskData(task.getStatus(), task.getGraphViz(), task.getNodes(), task.getStartTime(), task.getFinishTime(), task.getErrorString()))));
-								})));
+										ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).getGraphViz(), reduced);
+										return ok200().withJson(toJson(reducedTaskDataCodec, taskData));
+									});
+						})
+						.map(GET, "/tasks/:taskID/:index", request -> {
+							long id = getTaskId(request);
+							String indexParam = request.getPathParameter("index");
+							Partition partition;
+							try {
+								partition = partitions.get(Integer.parseInt(indexParam));
+							} catch (NumberFormatException | IndexOutOfBoundsException e) {
+								throw HttpError.ofCode(400, "Bad index");
+							}
+							return getTask(partition.getAddress(), id)
+									.map(task -> ok200()
+											.withJson(toJson(localTaskDataCodec,
+													new LocalTaskData(task.getStatus(), task.getGraphViz(), task.getNodes(), task.getStartTime(), task.getFinishTime(), task.getErrorString()))));
+						}));
 	}
 
 	@Nullable
@@ -142,12 +143,12 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		return reducer.reduce(stats);
 	}
 
-	private static Promise<Long> getTaskId(HttpRequest request) {
+	private static long getTaskId(HttpRequest request) throws HttpError {
 		String param = request.getPathParameter("taskID");
 		try {
-			return Promise.of(Long.parseLong(param));
+			return Long.parseLong(param);
 		} catch (NumberFormatException e) {
-			return Promise.ofException(HttpError.ofCode(400, "Bad number " + param));
+			throw HttpError.ofCode(400, "Bad number " + param);
 		}
 	}
 
@@ -157,14 +158,14 @@ public final class DataflowDebugServlet implements AsyncServlet {
 					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return messaging.send(new DataflowCommandGetTasks(null))
 							.then($ -> messaging.receive())
-							.then(response -> {
+							.mapEx(response -> {
 								messaging.close();
 								if (response instanceof DataflowResponsePartitionData) {
-									return Promise.of(((DataflowResponsePartitionData) response));
+									return (DataflowResponsePartitionData) response;
 								} else if (response instanceof DataflowResponseResult) {
-									return Promise.ofException(new DataflowException("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError()));
+									throw new DataflowException("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError());
 								}
-								return Promise.ofException(new DataflowException("Bad response from server"));
+								throw new DataflowException("Bad response from server");
 							});
 				});
 	}
@@ -175,14 +176,14 @@ public final class DataflowDebugServlet implements AsyncServlet {
 					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return messaging.send(new DataflowCommandGetTasks(taskId))
 							.then($ -> messaging.receive())
-							.then(response -> {
+							.mapEx(response -> {
 								messaging.close();
 								if (response instanceof DataflowResponseTaskData) {
-									return Promise.of(((DataflowResponseTaskData) response));
+									return (DataflowResponseTaskData) response;
 								} else if (response instanceof DataflowResponseResult) {
-									return Promise.ofException(new DataflowException("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError()));
+									throw new DataflowException("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError());
 								}
-								return Promise.ofException(new DataflowException("Bad response from server"));
+								throw new DataflowException("Bad response from server");
 							});
 				});
 	}

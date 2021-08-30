@@ -151,16 +151,16 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 										.map(t -> new Container<>(entry.getKey(), t))
 										.whenException(err -> partitions.markDead(entry.getKey(), err))
 										.toTry()))
-				.then(this::checkStillNotDead)
-				.then(tries -> {
+				.mapEx(this::checkStillNotDead)
+				.mapEx(tries -> {
 					List<Container<T>> successes = tries.stream()
 							.filter(Try::isSuccess)
 							.map(Try::get)
 							.collect(toList());
 					if (successes.isEmpty()) {
-						return Promise.ofException(new CrdtException("No successful connections"));
+						throw new CrdtException("No successful connections");
 					}
-					return Promise.of(successes);
+					return successes;
 				});
 	}
 
@@ -179,12 +179,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return Promise.of(splitter.getInput()
 							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 							.withAcknowledgement(ack -> ack
-									.then(() -> {
+									.whenResultEx(() -> {
 										if (containers.size() - failedRef.value < replicationCount) {
-											return Promise.ofException(new CrdtException("Failed to upload data to the required number of partitions"));
+											throw new CrdtException("Failed to upload data to the required number of partitions");
 										}
-										return Promise.complete();
 									})
+									.toVoid()
 									.then(wrapException(() -> "Cluster 'upload' failed"))));
 				});
 	}
@@ -198,12 +198,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return streamReducer.getOutput()
 							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 							.withEndOfStream(eos -> eos
-									.then(() -> {
+									.whenResultEx(() -> {
 										int deadBeforeDownload = partitions.getPartitions().size() - containers.size();
 										if (deadBeforeDownload + failedRef.get() >= replicationCount) {
-											return Promise.ofException(new CrdtException("Failed to download from the required number of partitions"));
+											throw new CrdtException("Failed to download from the required number of partitions");
 										}
-										return Promise.complete();
 									})
 									.then(wrapException(() -> "Cluster 'download' failed")));
 				});
@@ -225,11 +224,10 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return splitter.getInput()
 							.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 							.withAcknowledgement(ack -> ack
-									.then(() -> {
+									.whenResultEx(() -> {
 										if (partitions.getPartitions().size() - containers.size() + failedRef.get() != 0) {
-											return Promise.ofException(new CrdtException("Failed to remove items from all partitions"));
+											throw new CrdtException("Failed to remove items from all partitions");
 										}
-										return Promise.complete();
 									})
 									.then(wrapException(() -> "Cluster 'remove' failed")));
 				});
@@ -252,7 +250,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 		return Promise.complete();
 	}
 
-	private <T extends AsyncCloseable> Promise<List<Try<Container<T>>>> checkStillNotDead(List<Try<Container<T>>> value) {
+	private <T extends AsyncCloseable> List<Try<Container<T>>> checkStillNotDead(List<Try<Container<T>>> value) throws CrdtException {
 		Map<P, CrdtStorage<K, S>> deadPartitions = partitions.getDeadPartitions();
 		if (deadPartitions.size() > deadPartitionsThreshold) {
 			CrdtException exception = new CrdtException("There are more dead partitions than allowed(" +
@@ -261,9 +259,9 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					.filter(Try::isSuccess)
 					.map(Try::get)
 					.forEach(container -> container.value.closeEx(exception));
-			return Promise.ofException(exception);
+			throw exception;
 		}
-		return Promise.of(value);
+		return value;
 	}
 
 	private <T> RefInt tolerantSplit(

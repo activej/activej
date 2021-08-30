@@ -185,27 +185,27 @@ final class MountingActiveFs implements ActiveFs {
 		}
 
 		return Promises.toList(movePromises.stream().map(AsyncSupplier::get))
-				.then(list -> {
+				.whenResultEx(list -> {
 					List<Tuple2<String, Exception>> exceptions = list.stream()
 							.filter(tuple -> tuple.getValue2().isException())
 							.map(tuple -> new Tuple2<>(tuple.getValue1(), tuple.getValue2().getException()))
 							.collect(toList());
-					if (exceptions.isEmpty()) {
-						return Promise.complete();
-					}
-					Map<String, FsScalarException> scalarExceptions = new HashMap<>();
-					for (Tuple2<String, Exception> tuple : exceptions) {
-						Exception exception = tuple.getValue2();
-						if (exception instanceof FsScalarException) {
-							scalarExceptions.put(tuple.getValue1(), (FsScalarException) exception);
-						} else if (exception instanceof FsBatchException) {
-							scalarExceptions.putAll(((FsBatchException) exception).getExceptions());
-						} else {
-							return Promise.ofException(exception);
+					if (!exceptions.isEmpty()) {
+						Map<String, FsScalarException> scalarExceptions = new HashMap<>();
+						for (Tuple2<String, Exception> tuple : exceptions) {
+							Exception exception = tuple.getValue2();
+							if (exception instanceof FsScalarException) {
+								scalarExceptions.put(tuple.getValue1(), (FsScalarException) exception);
+							} else if (exception instanceof FsBatchException) {
+								scalarExceptions.putAll(((FsBatchException) exception).getExceptions());
+							} else {
+								throw exception;
+							}
 						}
+						throw new FsBatchException(scalarExceptions);
 					}
-					return Promise.ofException(new FsBatchException(scalarExceptions));
-				});
+				})
+				.toVoid();
 	}
 
 }

@@ -19,6 +19,7 @@ package io.activej.crdt;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.function.ConsumerEx;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelConsumer;
@@ -43,7 +44,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
-import java.util.function.Function;
 
 import static io.activej.crdt.CrdtMessaging.*;
 import static io.activej.crdt.CrdtMessaging.CrdtMessages.PING;
@@ -131,7 +131,8 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 									ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 											.withAcknowledgement(ack -> ack
 													.then(messaging::receive)
-													.then(simpleHandler(UPLOAD_FINISHED)));
+													.whenResultEx(simpleHandlerFn(UPLOAD_FINISHED))
+													.toVoid());
 									return StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 													.transformWith(ChannelSerializer.create(serializer))
@@ -148,14 +149,14 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.then(wrapException(() -> "Failed to send 'Download' message"))
 						.then(() -> messaging.receive()
 								.then(wrapException(() -> "Failed to receive response")))
-						.then(response -> {
+						.whenResultEx(response -> {
 							if (response == DOWNLOAD_STARTED) {
-								return Promise.complete();
+								return;
 							}
 							if (response.getClass() == ServerError.class) {
-								return Promise.ofException(new CrdtException(((ServerError) response).getMsg()));
+								throw new CrdtException(((ServerError) response).getMsg());
 							}
-							return Promise.ofException(new CrdtException("Received message " + response + " instead of " + DOWNLOAD_STARTED));
+							throw new CrdtException("Received message " + response + " instead of " + DOWNLOAD_STARTED);
 						})
 						.map($ ->
 								messaging.receiveBinaryStream()
@@ -183,7 +184,8 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 									ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 											.withAcknowledgement(ack -> ack
 													.then(messaging::receive)
-													.then(simpleHandler(REMOVE_FINISHED)));
+													.whenResultEx(simpleHandlerFn(REMOVE_FINISHED))
+													.toVoid());
 									return StreamConsumer.<K>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 													.transformWith(ChannelSerializer.create(keySerializer))
@@ -200,7 +202,8 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.then(wrapException(() -> "Failed to send 'Ping'"))
 						.then(() -> messaging.receive()
 								.then(wrapException(() -> "Failed to receive 'Pong'")))
-						.then(simpleHandler(PONG))
+						.whenResultEx(simpleHandlerFn(PONG))
+						.toVoid()
 						.whenResult(messaging::close)
 						.whenException(messaging::closeEx));
 	}
@@ -217,15 +220,15 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		return Promise.complete();
 	}
 
-	private Function<CrdtResponse, Promise<Void>> simpleHandler(CrdtResponse expected) {
+	private ConsumerEx<CrdtResponse> simpleHandlerFn(CrdtResponse expected) {
 		return response -> {
 			if (response == expected) {
-				return Promise.complete();
+				return;
 			}
 			if (response instanceof ServerError) {
-				return Promise.ofException(new CrdtException(((ServerError) response).getMsg()));
+				throw new CrdtException(((ServerError) response).getMsg());
 			}
-			return Promise.ofException(new CrdtException("Received message " + response + " instead of " + expected));
+			throw new CrdtException("Received message " + response + " instead of " + expected);
 		};
 	}
 

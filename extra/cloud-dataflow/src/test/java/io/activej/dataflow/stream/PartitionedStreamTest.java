@@ -584,13 +584,13 @@ public final class PartitionedStreamTest {
 								}
 								return null;
 							})
-							.then((value, e) -> {
-								if (e == null) return Promise.of(value);
+							.mapEx((value, e) -> {
+								if (e == null) return value;
 								if (e instanceof TruncatedDataException) {
 									ByteBufs bufs = binaryChannelSupplier.getBufs();
-									return Promise.of(bufs.isEmpty() ? null : bufs.takeRemaining().asString(UTF_8));
+									return bufs.isEmpty() ? null : bufs.takeRemaining().asString(UTF_8);
 								}
-								return Promise.ofException(e);
+								throw e;
 							}),
 					binaryChannelSupplier));
 		}

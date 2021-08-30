@@ -63,12 +63,12 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			@Override
 			public Promise<Void> needMoreData() {
 				return input.get()
-						.then(buf -> {
+						.mapEx(buf -> {
 							if (buf != null) {
 								bufs.add(buf);
-								return Promise.complete();
+								return null;
 							} else {
-								return Promise.ofException(new TruncatedDataException("Unexpected end-of-stream"));
+								throw new TruncatedDataException("Unexpected end-of-stream");
 							}
 						});
 			}
@@ -82,14 +82,14 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 					return Promise.ofException(exception);
 				}
 				return input.get()
-						.then(buf -> {
+						.mapEx(buf -> {
 							if (buf == null) {
-								return Promise.complete();
+								return null;
 							} else {
 								buf.recycle();
 								Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
 								input.closeEx(exception);
-								return Promise.ofException(exception);
+								throw exception;
 							}
 						});
 			}
@@ -150,11 +150,11 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 
 	public final <T> Promise<T> decodeRemaining(ByteBufsDecoder<T> decoder) {
 		return decode(decoder)
-				.then(result -> {
+				.thenEx(result -> {
 					if (!bufs.isEmpty()) {
 						Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
 						closeEx(exception);
-						return Promise.ofException(exception);
+						throw exception;
 					}
 					return endOfStream().map($ -> result);
 				});
@@ -167,10 +167,10 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
 							closeEx(e);
 						})
-						.then((value, e) -> {
-							if (e == null) return Promise.of(value);
-							if (e instanceof TruncatedDataException && bufs.isEmpty()) return Promise.of(null);
-							return Promise.ofException(e);
+						.mapEx((value, e) -> {
+							if (e == null) return value;
+							if (e instanceof TruncatedDataException && bufs.isEmpty()) return null;
+							throw e;
 						}),
 				this);
 	}

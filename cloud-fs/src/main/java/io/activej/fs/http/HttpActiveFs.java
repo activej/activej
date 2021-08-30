@@ -16,7 +16,6 @@
 
 package io.activej.fs.http;
 
-
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.ChannelConsumer;
@@ -97,10 +96,10 @@ public final class HttpActiveFs implements ActiveFs {
 			urlBuilder.appendQuery("limit", limit);
 		}
 		return client.request(
-				HttpRequest.get(
-						url + urlBuilder
-								.build()))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.get(
+								url + urlBuilder
+										.build()))
+				.thenEx(HttpActiveFs::checkResponse)
 				.map(HttpMessage::getBodyStream);
 	}
 
@@ -108,65 +107,65 @@ public final class HttpActiveFs implements ActiveFs {
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		//noinspection Convert2MethodRef
 		return client.request(
-				HttpRequest.get(
-						url + UrlBuilder.relative()
-								.appendPathPart(LIST)
-								.appendQuery("glob", glob)
-								.build()))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.get(
+								url + UrlBuilder.relative()
+										.appendPathPart(LIST)
+										.appendQuery("glob", glob)
+										.build()))
+				.thenEx(HttpActiveFs::checkResponse)
 				.then(response -> response.loadBody())
-				.then(decodeBody(STRING_META_MAP_TYPE));
+				.mapEx(body -> fromJson(STRING_META_MAP_TYPE, body));
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		//noinspection Convert2MethodRef
 		return client.request(
-				HttpRequest.get(
-						url + UrlBuilder.relative()
-								.appendPathPart(INFO)
-								.appendPathPart(name)
-								.build()))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.get(
+								url + UrlBuilder.relative()
+										.appendPathPart(INFO)
+										.appendPathPart(name)
+										.build()))
+				.thenEx(HttpActiveFs::checkResponse)
 				.then(response -> response.loadBody())
-				.then(decodeBody(FileMetadata.class));
+				.mapEx(body -> fromJson(FileMetadata.class, body));
 	}
 
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		//noinspection Convert2MethodRef
 		return client.request(
-				HttpRequest.get(
-						url + UrlBuilder.relative()
-								.appendPathPart(INFO_ALL)
-								.build())
-						.withBody(toJson(names)))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.get(
+										url + UrlBuilder.relative()
+												.appendPathPart(INFO_ALL)
+												.build())
+								.withBody(toJson(names)))
+				.thenEx(HttpActiveFs::checkResponse)
 				.then(response -> response.loadBody())
-				.then(decodeBody(STRING_META_MAP_TYPE));
+				.mapEx(body -> fromJson(STRING_META_MAP_TYPE, body));
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		return client.request(
-				HttpRequest.get(
-						url + UrlBuilder.relative()
-								.appendPathPart(PING)
-								.build()))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.get(
+								url + UrlBuilder.relative()
+										.appendPathPart(PING)
+										.build()))
+				.thenEx(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		return client.request(
-				HttpRequest.post(
-						url + UrlBuilder.relative()
-								.appendPathPart(MOVE)
-								.appendQuery("name", name)
-								.appendQuery("target", target)
-								.build()))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.post(
+								url + UrlBuilder.relative()
+										.appendPathPart(MOVE)
+										.appendQuery("name", name)
+										.appendQuery("target", target)
+										.build()))
+				.thenEx(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -176,25 +175,25 @@ public final class HttpActiveFs implements ActiveFs {
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return client.request(
-				HttpRequest.post(
-						url + UrlBuilder.relative()
-								.appendPathPart(MOVE_ALL)
-								.build())
-						.withBody(toJson(sourceToTarget)))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.post(
+										url + UrlBuilder.relative()
+												.appendPathPart(MOVE_ALL)
+												.build())
+								.withBody(toJson(sourceToTarget)))
+				.thenEx(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return client.request(
-				HttpRequest.post(
-						url + UrlBuilder.relative()
-								.appendPathPart(COPY)
-								.appendQuery("name", name)
-								.appendQuery("target", target)
-								.build()))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.post(
+								url + UrlBuilder.relative()
+										.appendPathPart(COPY)
+										.appendQuery("name", name)
+										.appendQuery("target", target)
+										.build()))
+				.thenEx(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -204,55 +203,55 @@ public final class HttpActiveFs implements ActiveFs {
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return client.request(
-				HttpRequest.post(
-						url + UrlBuilder.relative()
-								.appendPathPart(COPY_ALL)
-								.build())
-						.withBody(toJson(sourceToTarget)))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.post(
+										url + UrlBuilder.relative()
+												.appendPathPart(COPY_ALL)
+												.build())
+								.withBody(toJson(sourceToTarget)))
+				.thenEx(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		return client.request(
-				HttpRequest.of(HttpMethod.DELETE,
-						url + UrlBuilder.relative()
-								.appendPathPart(DELETE)
-								.appendPath(name)
-								.build()))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.of(HttpMethod.DELETE,
+								url + UrlBuilder.relative()
+										.appendPathPart(DELETE)
+										.appendPath(name)
+										.build()))
+				.thenEx(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		return client.request(
-				HttpRequest.post(
-						url + UrlBuilder.relative()
-								.appendPathPart(DELETE_ALL)
-								.build())
-						.withBody(toJson(toDelete)))
-				.then(HttpActiveFs::checkResponse)
+						HttpRequest.post(
+										url + UrlBuilder.relative()
+												.appendPathPart(DELETE_ALL)
+												.build())
+								.withBody(toJson(toDelete)))
+				.thenEx(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
-	private static Promise<HttpResponse> checkResponse(HttpResponse response) {
+	private static Promise<HttpResponse> checkResponse(HttpResponse response) throws HttpError {
 		switch (response.getCode()) {
 			case 200:
 			case 206:
 				return Promise.of(response);
 			case 500:
 				return response.loadBody()
-						.then(body -> {
+						.thenEx(body -> {
 							try {
-								return Promise.ofException(fromJson(FsException.class, body));
+								throw fromJson(FsException.class, body);
 							} catch (MalformedDataException ignored) {
-								return Promise.ofException(HttpError.ofCode(500));
+								throw HttpError.ofCode(500);
 							}
 						});
 			default:
-				return Promise.ofException(HttpError.ofCode(response.getCode()));
+				throw HttpError.ofCode(response.getCode());
 		}
 	}
 
@@ -272,34 +271,32 @@ public final class HttpActiveFs implements ActiveFs {
 		SettablePromise<ChannelConsumer<ByteBuf>> channelPromise = new SettablePromise<>();
 		SettablePromise<HttpResponse> responsePromise = new SettablePromise<>();
 		client.request(request
-				.withBodyStream(ChannelSupplier.ofPromise(responsePromise
-						.map(response -> {
-							ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
-							ChannelConsumer<ByteBuf> consumer = buffer.getConsumer();
-							channelPromise.trySet(consumer
-									.transformWith(transformer)
-									.withAcknowledgement(ack -> ack.both(response.loadBody()
-											.then(decodeBody(UploadAcknowledgement.class))
-											.then(HttpActiveFs::failOnException)
-											.whenException(e -> {
-												channelPromise.trySetException(e);
-												buffer.closeEx(e);
-											}))));
-							return buffer.getSupplier();
-						}))))
-				.then(HttpActiveFs::checkResponse)
+						.withBodyStream(ChannelSupplier.ofPromise(responsePromise
+								.map(response -> {
+									ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
+									ChannelConsumer<ByteBuf> consumer = buffer.getConsumer();
+									channelPromise.trySet(consumer
+											.transformWith(transformer)
+											.withAcknowledgement(ack -> ack.both(response.loadBody()
+													.mapEx(body -> fromJson(UploadAcknowledgement.class, body))
+													.whenResultEx(HttpActiveFs::failOnException)
+													.whenException(e -> {
+														channelPromise.trySetException(e);
+														buffer.closeEx(e);
+													}))));
+									return buffer.getSupplier();
+								}))))
+				.thenEx(HttpActiveFs::checkResponse)
 				.whenException(channelPromise::trySetException)
 				.whenComplete(responsePromise::trySet);
 
 		return channelPromise;
 	}
 
-	private static Promise<Void> failOnException(UploadAcknowledgement ack) {
-		if (ack.isOk()) {
-			return Promise.complete();
+	private static void failOnException(UploadAcknowledgement ack) throws FsException {
+		if (!ack.isOk()) { // noinspection ConstantConditions - checked above
+			throw ack.getError();
 		}
-		//noinspection ConstantConditions - checked above
-		return Promise.ofException(ack.getError());
 	}
 
 }

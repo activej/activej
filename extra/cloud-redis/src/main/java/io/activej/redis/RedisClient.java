@@ -122,9 +122,9 @@ public final class RedisClient {
 	 */
 	public Promise<RedisConnection> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
-				.then((AsyncTcpSocket socket, Exception e) -> {
+				.mapEx((AsyncTcpSocket socket, Exception e) -> {
 					if (e != null) {
-						return Promise.ofException(new RedisException("Failed to connect to Redis server: " + address, e));
+						throw new RedisException("Failed to connect to Redis server: " + address, e);
 					}
 
 					socket = sslContext != null ?
@@ -134,7 +134,7 @@ public final class RedisClient {
 							socket;
 					RedisConnection connection = new RedisConnection(eventloop, this, socket, autoFlushInterval);
 					connection.start();
-					return Promise.of(connection);
+					return connection;
 				})
 				.whenComplete(toLogger(logger, TRACE, "connect", this));
 	}

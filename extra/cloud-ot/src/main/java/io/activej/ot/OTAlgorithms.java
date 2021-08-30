@@ -211,18 +211,18 @@ public final class OTAlgorithms {
 		return repository.getLevels(heads)
 				.then(levels ->
 						reduce(repository, system, heads, new LoadGraphReducer<>(system))
-								.then(graph -> {
+								.mapEx(graph -> {
 									try {
 										Map<K, List<D>> mergeResult = graph.merge(graph.excludeParents(heads));
 										if (logger.isTraceEnabled()) {
 											logger.info("{}\n", graph.toGraphViz());
 										}
-										return Promise.of(mergeResult);
+										return mergeResult;
 									} catch (OTException e) {
 										if (logger.isTraceEnabled()) {
 											logger.error("{}\n", graph.toGraphViz(), e);
 										}
-										return Promise.ofException(e);
+										throw e;
 									}
 								})
 								.then(mergeResult -> repository.createCommit(

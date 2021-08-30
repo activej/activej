@@ -47,7 +47,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -98,26 +97,6 @@ public final class RemoteFsUtils {
 		return str -> matcher.matches(Paths.get(str));
 	}
 
-	public static <T> Function<ByteBuf, Promise<T>> decodeBody(Class<T> cls) {
-		return body -> {
-			try {
-				return Promise.of(fromJson(cls, body));
-			} catch (MalformedDataException e) {
-				return Promise.ofException(e);
-			}
-		};
-	}
-
-	public static <T> Function<ByteBuf, Promise<T>> decodeBody(TypeT<? extends T> type) {
-		return body -> {
-			try {
-				return Promise.of(fromJson(type.getType(), body));
-			} catch (MalformedDataException e) {
-				return Promise.ofException(e);
-			}
-		};
-	}
-
 	public static ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> ofFixedSize(long size) {
 		return consumer -> {
 			RefLong total = new RefLong(size);
@@ -131,11 +110,10 @@ public final class RemoteFsUtils {
 						return Promise.of(byteBuf);
 					})
 					.withAcknowledgement(ack -> ack
-							.then(() -> {
+							.whenResultEx(() -> {
 								if (total.get() > 0) {
-									return Promise.ofException(new TruncatedDataException());
+									throw new TruncatedDataException();
 								}
-								return Promise.complete();
 							}));
 		};
 	}
@@ -152,7 +130,7 @@ public final class RemoteFsUtils {
 		return new FsBatchException(mapOf(name, exception));
 	}
 
-	public static Promise<Void> reduceErrors(List<Try<Void>> tries, Iterator<String> sources) {
+	public static void reduceErrors(List<Try<Void>> tries, Iterator<String> sources) throws Exception {
 		Map<String, FsScalarException> scalarExceptions = new HashMap<>();
 		for (Try<Void> aTry : tries) {
 			String source = sources.next();
@@ -161,13 +139,12 @@ public final class RemoteFsUtils {
 			if (exception instanceof FsScalarException) {
 				scalarExceptions.put(source, ((FsScalarException) exception));
 			} else {
-				return Promise.ofException(exception);
+				throw exception;
 			}
 		}
 		if (!scalarExceptions.isEmpty()) {
-			return Promise.ofException(new FsBatchException(scalarExceptions));
+			throw new FsBatchException(scalarExceptions);
 		}
-		return Promise.complete();
 	}
 
 	// region JSON
@@ -194,6 +171,14 @@ public final class RemoteFsUtils {
 			throw new IllegalArgumentException("Cannot serialize " + manifest);
 		}
 		return jsonWriter;
+	}
+
+	public static <T> T fromJson(@NotNull Class<T> type, @NotNull ByteBuf buf) throws MalformedDataException {
+		return fromJson((Type) type, buf);
+	}
+
+	public static <T> T fromJson(@NotNull TypeT<T> type, @NotNull ByteBuf buf) throws MalformedDataException {
+		return fromJson(type.getType(), buf);
 	}
 
 	public static <T> T fromJson(@NotNull Type manifest, @NotNull ByteBuf buf) throws MalformedDataException {

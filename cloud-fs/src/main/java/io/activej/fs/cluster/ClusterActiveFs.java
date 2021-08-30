@@ -16,11 +16,12 @@
 
 package io.activej.fs.cluster;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.collection.Try;
+import io.activej.common.function.FunctionEx;
+import io.activej.common.function.SupplierEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
@@ -53,7 +54,6 @@ import static io.activej.common.Utils.transformIterator;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.promise.Promises.first;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -181,10 +181,12 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 							.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
 							.map(supplier -> supplier
 									.withEndOfStream(eos -> eos
-											.then(partitions.wrapDeath(id))));
+											.whenExceptionEx(partitions.wrapDeathFn(id))));
 				},
 				AsyncCloseable::close)
-				.then(filterErrors(() -> ofFailure("Could not download file '" + name + "' from any server")))
+				.mapEx(filterErrorsFn(() -> {
+					throw new FsIOException("Could not download file '" + name + "' from any server");
+				}))
 				.then(suppliers -> {
 					ChannelByteCombiner combiner = ChannelByteCombiner.create();
 					for (ChannelSupplier<ByteBuf> supplier : suppliers) {
@@ -236,7 +238,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return broadcast(fs -> fs.list(glob))
-				.then(filterErrors())
+				.mapEx(filterErrorsFn())
 				.map(maps -> FileMetadata.flatten(maps.stream()))
 				.whenComplete(listPromise.recordStats());
 	}
@@ -244,7 +246,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return broadcast(fs -> fs.info(name))
-				.then(filterErrors())
+				.mapEx(filterErrorsFn())
 				.map(meta -> meta.stream().max(FileMetadata.COMPARATOR).orElse(null))
 				.whenComplete(infoPromise.recordStats());
 	}
@@ -254,7 +256,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		return broadcast(fs -> fs.infoAll(names))
-				.then(filterErrors())
+				.mapEx(filterErrorsFn())
 				.map(maps -> FileMetadata.flatten(maps.stream()))
 				.whenComplete(infoAllPromise.recordStats());
 	}
@@ -262,7 +264,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	@Override
 	public Promise<Void> ping() {
 		return partitions.checkAllPartitions()
-				.then(this::checkNotDead);
+				.then(this::ensureIsAlive);
 	}
 
 	@NotNull
@@ -287,21 +289,15 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		return "ClusterActiveFs{partitions=" + partitions + '}';
 	}
 
-	private static <T> Promise<T> ofFailure(String message) {
-		return Promise.ofException(new FsIOException(message));
+	public boolean isAlive() {
+		return partitions.getDeadPartitions().size() <= deadPartitionsThreshold;
 	}
 
-	private <T> Promise<T> checkStillNotDead(T value) {
-		Map<Object, ActiveFs> deadPartitions = partitions.getDeadPartitions();
-		if (deadPartitions.size() > deadPartitionsThreshold) {
-			return ofFailure("There are more dead partitions than allowed(" +
-					deadPartitions.size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting");
-		}
-		return Promise.of(value);
-	}
-
-	private Promise<Void> checkNotDead() {
-		return checkStillNotDead(null);
+	private Promise<Void> ensureIsAlive() {
+		return isAlive() ?
+				Promise.complete() :
+				Promise.ofException(new FsIOException("There are more dead partitions than allowed(" +
+						partitions.getDeadPartitions().size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting"));
 	}
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(
@@ -310,7 +306,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 			ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer,
 			PromiseStats startStats,
 			PromiseStats finishStats) {
-		return checkNotDead()
+		return ensureIsAlive()
 				.then(() -> collect(name, action))
 				.then(containers -> {
 					ChannelByteSplitter splitter = ChannelByteSplitter.create(uploadTargetsMin);
@@ -325,7 +321,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 					}
 
 					return Promise.of(splitter.getInput().getConsumer()
-							.transformWith(transformer))
+									.transformWith(transformer))
 							.whenComplete(finishStats.recordStats());
 				})
 				.whenComplete(startStats.recordStats());
@@ -339,25 +335,22 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		Set<ChannelConsumer<ByteBuf>> consumers = new HashSet<>();
 		RefBoolean failed = new RefBoolean(false);
 		return Promises.toList(
-				Stream.generate(() -> first(
-						transformIterator(idIterator,
-								id -> call(id, action)
-										.whenResult(consumer -> {
-											if (failed.get()) {
-												consumer.close();
-											} else {
-												consumers.add(consumer);
-											}
-										})
-										.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.then(partitions.wrapDeath(id))))))))
-						.limit(uploadTargetsMax))
-				.then((containers, e) -> {
-					if (e != null) {
-						consumers.forEach(AsyncCloseable::close);
-						failed.set(true);
-						return ofFailure("Didn't connect to enough partitions to upload '" + name + '\'');
-					}
-					return Promise.of(containers);
+						Stream.generate(() -> first(
+										transformIterator(idIterator,
+												id -> call(id, action)
+														.whenResult(consumer -> {
+															if (failed.get()) {
+																consumer.close();
+															} else {
+																consumers.add(consumer);
+															}
+														})
+														.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.whenExceptionEx(partitions.wrapDeathFn(id))))))))
+								.limit(uploadTargetsMax))
+				.whenExceptionEx(() -> {
+					consumers.forEach(AsyncCloseable::close);
+					failed.set(true);
+					throw new FsIOException("Didn't connect to enough partitions to upload '" + name + '\'');
 				});
 	}
 
@@ -371,42 +364,43 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 			return Promise.ofException(new FsIOException("Partition '" + id + "' is not alive"));
 		}
 		return action.apply(id, fs)
-				.then(partitions.wrapDeath(id));
+				.whenExceptionEx(partitions.wrapDeathFn(id));
 	}
 
 	private <T> Promise<List<Try<T>>> broadcast(BiFunction<Object, ActiveFs, Promise<T>> action, Consumer<T> cleanup) {
-		return checkNotDead()
+		return ensureIsAlive()
 				.then(() -> Promise.ofCallback(cb ->
 						Promises.toList(partitions.getAlivePartitions().entrySet().stream()
-								.map(entry -> action.apply(entry.getKey(), entry.getValue())
-										.then(partitions.wrapDeath(entry.getKey()))
-										.whenResult(result -> {
-											if (cb.isComplete()) {
-												cleanup.accept(result);
-											}
-										})
-										.toTry()
-										.then(aTry -> checkStillNotDead(aTry)
-												.whenException(e -> aTry.ifSuccess(cleanup)))))
+										.map(entry -> action.apply(entry.getKey(), entry.getValue())
+												.whenExceptionEx(partitions.wrapDeathFn(entry.getKey()))
+												.whenResult(result -> {
+													if (cb.isComplete()) {
+														cleanup.accept(result);
+													}
+												})
+												.toTry()
+												.then(aTry -> ensureIsAlive()
+														.map($ -> aTry)
+														.whenException(e -> aTry.ifSuccess(cleanup)))))
 								.run(cb)));
 	}
 
-	private <T> Function<List<Try<T>>, Promise<List<T>>> filterErrors() {
-		return filterErrors(() -> Promise.of(emptyList()));
+	private static <T> FunctionEx<List<Try<T>>, List<T>> filterErrorsFn() {
+		return filterErrorsFn(Collections::emptyList);
 	}
 
-	private <T> Function<List<Try<T>>, Promise<List<T>>> filterErrors(AsyncSupplier<List<T>> fallback) {
+	private static <T> FunctionEx<List<Try<T>>, List<T>> filterErrorsFn(SupplierEx<List<T>> fallback) {
 		return tries -> {
 			List<T> successes = tries.stream().filter(Try::isSuccess).map(Try::get).collect(toList());
 			if (!successes.isEmpty()) {
-				return Promise.of(successes);
+				return successes;
 			}
 
 			List<Exception> exceptions = tries.stream().filter(Try::isException).map(Try::getException).collect(toList());
 			if (!exceptions.isEmpty()) {
 				Exception exception = exceptions.get(0);
 				if (exceptions.stream().skip(1).allMatch(e -> e == exception)) {
-					return Promise.ofException(exception);
+					throw exception;
 				}
 			}
 			return fallback.get();

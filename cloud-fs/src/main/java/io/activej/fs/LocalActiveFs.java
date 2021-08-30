@@ -21,6 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.function.BiFunctionEx;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
@@ -49,7 +50,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
@@ -255,7 +255,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					}
 					return channel;
 				})
-				.then(translateScalarErrors(name))
+				.thenEx(translateScalarErrorsFn(name))
 				.whenComplete(appendBeginPromise.recordStats())
 				.map(channel -> {
 					ChannelFileWriter writer = ChannelFileWriter.create(executor, channel)
@@ -265,7 +265,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					}
 					return writer
 							.withAcknowledgement(ack -> ack
-									.then(translateScalarErrors(name))
+									.thenEx(translateScalarErrorsFn(name))
 									.whenComplete(appendFinishPromise.recordStats())
 									.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)));
 				})
@@ -276,25 +276,25 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		checkArgument(offset >= 0, "offset < 0");
 		checkArgument(limit >= 0, "limit < 0");
-
-		return resolveAsync(name)
-				.then(path -> execute(() -> {
+		return execute(
+				() -> {
+					Path path = resolve(name);
 					FileChannel channel = FileChannel.open(path, READ);
 					long size = channel.size();
 					if (size < offset) {
 						throw new IllegalOffsetException("Offset " + offset + " exceeds file size " + size);
 					}
 					return channel;
-				}))
+				})
 				.map(channel -> ChannelFileReader.create(executor, channel)
 						.withBufferSize(readerBufferSize)
 						.withOffset(offset)
 						.withLimit(limit)
 						.withEndOfStream(eos -> eos
-								.then(translateScalarErrors(name))
+								.thenEx(translateScalarErrorsFn(name))
 								.whenComplete(downloadFinishPromise.recordStats())
 								.whenComplete(toLogger(logger, TRACE, "onDownloadComplete", name, offset, limit))))
-				.then(translateScalarErrors(name))
+				.thenEx(translateScalarErrorsFn(name))
 				.whenComplete(toLogger(logger, TRACE, "download", name, offset, limit, this))
 				.whenComplete(downloadBeginPromise.recordStats());
 	}
@@ -322,7 +322,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 									noMergeFunction())
 							);
 				})
-				.then(translateScalarErrors())
+				.thenEx(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
@@ -330,7 +330,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return execute(() -> forEachPair(singletonMap(name, target), this::doCopy))
-				.then(translateScalarErrors())
+				.thenEx(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
 	}
@@ -348,7 +348,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		return execute(() -> forEachPair(singletonMap(name, target), this::doMove))
-				.then(translateScalarErrors())
+				.thenEx(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
 	}
@@ -366,7 +366,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		return execute(() -> deleteImpl(singleton(name)))
-				.then(translateScalarErrors(name))
+				.thenEx(translateScalarErrorsFn(name))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
 	}
@@ -442,14 +442,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return LocalFileUtils.resolve(storage, tempDir, toLocalName.apply(name));
 	}
 
-	private Promise<Path> resolveAsync(String name) {
-		try {
-			return Promise.of(resolve(name));
-		} catch (FsException e) {
-			return Promise.ofException(e);
-		}
-	}
-
 	private Promise<ChannelConsumer<ByteBuf>> uploadImpl(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
 				() -> {
@@ -471,12 +463,12 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 											tryFsync(target.getParent());
 										}
 									}))
-									.then(translateScalarErrors(name))
+									.thenEx(translateScalarErrorsFn(name))
 									.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
 									.whenComplete(uploadFinishPromise.recordStats())
 									.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this)));
 				})
-				.then(translateScalarErrors(name))
+				.thenEx(translateScalarErrorsFn(name))
 				.whenComplete(uploadBeginPromise.recordStats());
 	}
 
@@ -588,29 +580,29 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return Promise.ofBlockingRunnable(executor, runnable);
 	}
 
-	private <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> translateScalarErrors() {
-		return translateScalarErrors(null);
+	private <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> translateScalarErrorsFn() {
+		return translateScalarErrorsFn(null);
 	}
 
-	private <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> translateScalarErrors(@Nullable String name) {
+	private <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> translateScalarErrorsFn(@Nullable String name) {
 		return (v, e) -> {
 			if (e == null) {
 				return Promise.of(v);
 			} else if (e instanceof FsBatchException) {
 				Map<String, FsScalarException> exceptions = ((FsBatchException) e).getExceptions();
 				assert exceptions.size() == 1;
-				return Promise.ofException(first(exceptions.values()));
+				throw first(exceptions.values());
 			} else if (e instanceof FsException || e instanceof MalformedDataException) {
-				return Promise.ofException(e);
+				throw e;
 			} else if (e instanceof FileAlreadyExistsException) {
 				return execute(() -> {
 					if (name != null && Files.isDirectory(resolve(name))) throw isADirectoryException(name);
 					throw new PathContainsFileException();
 				});
 			} else if (e instanceof NoSuchFileException) {
-				return Promise.ofException(new FileNotFoundException());
+				throw new FileNotFoundException();
 			} else if (e instanceof GlobException) {
-				return Promise.ofException(new MalformedGlobException(e.getMessage()));
+				throw new MalformedGlobException(e.getMessage());
 			}
 			return execute(() -> {
 				if (name != null) {

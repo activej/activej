@@ -158,9 +158,9 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 			long offset = msg.getOffset();
 			long limit = msg.getLimit();
 			return fs.info(name)
-					.then(meta -> {
+					.thenEx(meta -> {
 						if (meta == null) {
-							return Promise.ofException(new FileNotFoundException());
+							throw new FileNotFoundException();
 						}
 
 						long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));

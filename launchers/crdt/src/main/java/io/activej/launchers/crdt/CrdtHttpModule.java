@@ -59,40 +59,40 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	) {
 		RoutingServlet servlet = RoutingServlet.create()
 				.map(POST, "/", request -> request.loadBody()
-						.then(() -> {
+						.mapEx(body -> {
 							try {
-								K key = fromJson(descriptor.getKeyManifest(), request.getBody());
+								K key = fromJson(descriptor.getKeyManifest(), body);
 								S state = client.get(key);
 								if (state != null) {
-									return Promise.of(HttpResponse.ok200()
-											.withBody(toJson(descriptor.getStateManifest(), state)));
+									return HttpResponse.ok200()
+											.withBody(toJson(descriptor.getStateManifest(), state));
 								}
-								return Promise.of(HttpResponse.ofCode(404)
-										.withBody(("Key '" + key + "' not found").getBytes(UTF_8)));
+								return HttpResponse.ofCode(404)
+										.withBody(("Key '" + key + "' not found").getBytes(UTF_8));
 							} catch (MalformedDataException e) {
-								return Promise.ofException(HttpError.ofCode(400, e));
+								throw HttpError.ofCode(400, e);
 							}
 						}))
 				.map(PUT, "/", request -> request.loadBody()
-						.then(() -> {
+						.mapEx(body -> {
 							try {
-								client.put(fromJson(crdtDataManifest.getType(), request.getBody()));
-								return Promise.of(HttpResponse.ok200());
+								client.put(fromJson(crdtDataManifest.getType(), body));
+								return HttpResponse.ok200();
 							} catch (MalformedDataException e) {
-								return Promise.ofException(HttpError.ofCode(400, e));
+								throw HttpError.ofCode(400, e);
 							}
 						}))
 				.map(DELETE, "/", request -> request.loadBody()
-						.then(() -> {
+						.mapEx(body -> {
 							try {
-								K key = fromJson(descriptor.getKeyManifest(), request.getBody());
+								K key = fromJson(descriptor.getKeyManifest(), body);
 								if (client.remove(key)) {
-									return Promise.of(HttpResponse.ok200());
+									return HttpResponse.ok200();
 								}
-								return Promise.of(HttpResponse.ofCode(404)
-										.withBody(("Key '" + key + "' not found").getBytes(UTF_8)));
+								return HttpResponse.ofCode(404)
+										.withBody(("Key '" + key + "' not found").getBytes(UTF_8));
 							} catch (MalformedDataException e) {
-								return Promise.ofException(HttpError.ofCode(400, e));
+								throw HttpError.ofCode(400, e);
 							}
 						}));
 		if (backupService == null) {

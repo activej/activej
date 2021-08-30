@@ -49,14 +49,14 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 		this.codec = codec;
 		this.bufsSupplier = BinaryChannelSupplier.ofProvidedBufs(bufs,
 				() -> this.socket.read()
-						.then(buf -> {
+						.whenResultEx(buf -> {
 							if (buf != null) {
 								bufs.add(buf);
-								return Promise.complete();
 							} else {
-								return Promise.ofException(new TruncatedDataException());
+								throw new TruncatedDataException();
 							}
 						})
+						.toVoid()
 						.whenException(this::closeEx),
 				Promise::complete,
 				this);

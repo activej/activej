@@ -19,6 +19,7 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
+import io.activej.common.function.ConsumerEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
@@ -37,7 +38,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
@@ -175,17 +175,14 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 		}
 	}
 
-	public <T> BiFunction<T, Exception, Promise<T>> wrapDeath(Object partitionId) {
-		return (res, e) -> {
-			if (e == null) {
-				return Promise.of(res);
-			}
+	public ConsumerEx<Exception> wrapDeathFn(Object partitionId) {
+		return e -> {
 			markIfDead(partitionId, e);
 			if (e instanceof FsException) {
-				return Promise.ofException(e);
+				throw e;
 			}
 			logger.warn("Node failed", e);
-			return Promise.ofException(new FsIOException("Node failed"));
+			throw new FsIOException("Node failed");
 		};
 	}
 

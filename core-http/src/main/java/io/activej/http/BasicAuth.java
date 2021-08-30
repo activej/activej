@@ -79,7 +79,7 @@ public final class BasicAuth implements AsyncServlet {
 
 	@NotNull
 	@Override
-	public Promise<HttpResponse> serve(@NotNull HttpRequest request) {
+	public Promise<HttpResponse> serve(@NotNull HttpRequest request) throws HttpError {
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
 			return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));
@@ -89,11 +89,11 @@ public final class BasicAuth implements AsyncServlet {
 			raw = DECODER.decode(header.substring(PREFIX.length()));
 		} catch (IllegalArgumentException e) {
 			// all the messages in decode method's illegal argument exception are informative enough
-			return Promise.ofException(HttpError.ofCode(400, "Base64: " + e.getMessage()));
+			throw HttpError.ofCode(400, "Base64: " + e.getMessage());
 		}
 		String[] authData = new String(raw, UTF_8).split(":", 2);
 		if (authData.length != 2) {
-			return Promise.ofException(HttpError.ofCode(400, "No ':' separator"));
+			throw HttpError.ofCode(400, "No ':' separator");
 		}
 		return credentialsLookup.apply(authData[0], authData[1])
 				.thenEx(result -> {

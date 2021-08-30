@@ -106,7 +106,7 @@ public final class ActiveFsServlet {
 												.withBody(toJson(meta))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)))))
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
-						.then(decodeBody(STRING_SET_TYPE))
+						.mapEx(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::infoAll)
 						.map(errorHandler(map ->
 								HttpResponse.ok200()
@@ -121,7 +121,7 @@ public final class ActiveFsServlet {
 							.map(errorHandler());
 				})
 				.map(POST, "/" + MOVE_ALL, request -> request.loadBody()
-						.then(decodeBody(STRING_STRING_MAP_TYPE))
+						.mapEx(body -> fromJson(STRING_STRING_MAP_TYPE, body))
 						.then(fs::moveAll)
 						.map(errorHandler()))
 				.map(POST, "/" + COPY, request -> {
@@ -131,14 +131,14 @@ public final class ActiveFsServlet {
 							.map(errorHandler());
 				})
 				.map(POST, "/" + COPY_ALL, request -> request.loadBody()
-						.then(decodeBody(STRING_STRING_MAP_TYPE))
+						.mapEx(body -> fromJson(STRING_STRING_MAP_TYPE, body))
 						.then(fs::copyAll)
 						.map(errorHandler()))
 				.map(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
 						fs.delete(decodePath(request))
 								.map(errorHandler()))
 				.map(POST, "/" + DELETE_ALL, request -> request.loadBody()
-						.then(decodeBody(STRING_SET_TYPE))
+						.mapEx(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::deleteAll)
 						.map(errorHandler()));
 	}
@@ -146,9 +146,9 @@ public final class ActiveFsServlet {
 	@NotNull
 	private static Promise<HttpResponse> rangeDownload(ActiveFs fs, boolean inline, String name, String rangeHeader) {
 		return fs.info(name)
-				.then(meta -> {
+				.thenEx(meta -> {
 					if (meta == null) {
-						return Promise.ofException(new FileNotFoundException());
+						throw new FileNotFoundException();
 					}
 					return HttpResponse.file(
 							(offset, limit) -> fs.download(name, offset, limit),

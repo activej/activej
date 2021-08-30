@@ -118,10 +118,10 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 
 	private Promise<Void> doUploadToStorage() {
 		return getWalFiles(executor, path)
-				.then(this::uploadWaLFiles);
+				.thenEx(this::uploadWaLFiles);
 	}
 
-	private Promise<Void> uploadWaLFiles(List<Path> walFiles) {
+	private Promise<Void> uploadWaLFiles(List<Path> walFiles) throws IOException {
 		if (walFiles.isEmpty()) {
 			logger.info("Nothing to upload");
 			return Promise.complete();
@@ -136,7 +136,7 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 			sortDir = createSortDir();
 		} catch (IOException e) {
 			logger.warn("Failed to create temporary sort directory", e);
-			return Promise.ofException(e);
+			throw e;
 		}
 
 		return createReducer(walFiles)
@@ -189,13 +189,13 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 			ChannelSupplier.ofPromise(ChannelFileReader.open(executor, file))
 					.transformWith(ChannelFrameDecoder.create(FRAME_FORMAT))
 					.withEndOfStream(eos -> eos
-							.then(($, e) -> {
-								if (e == null) return Promise.complete();
+							.mapEx(($, e) -> {
+								if (e == null) return null;
 								if (e instanceof TruncatedDataException) {
 									logger.warn("Write ahead log {} was truncated", file);
-									return Promise.complete();
+									return null;
 								}
-								return Promise.ofException(e);
+								throw e;
 							}))
 					.transformWith(ChannelDeserializer.create(serializer))
 					.streamTo(reducer.newInput(CrdtData::getKey, new WalReducer()));

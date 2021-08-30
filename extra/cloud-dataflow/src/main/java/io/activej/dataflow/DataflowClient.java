@@ -190,17 +190,17 @@ public final class DataflowClient {
 					.then(wrapException(e -> new DataflowException("Failed to send command to " + address, e)))
 					.then(() -> messaging.receive()
 							.then(wrapException(e -> new DataflowException("Failed to receive response from " + address, e))))
-					.then(response -> {
+					.whenResultEx(response -> {
 						messaging.close();
 						if (!(response instanceof DataflowResponseResult)) {
-							return Promise.ofException(new DataflowException("Bad response from server"));
+							throw new DataflowException("Bad response from server");
 						}
 						String error = ((DataflowResponseResult) response).getError();
 						if (error != null) {
-							return Promise.ofException(new DataflowException("Error on remote server " + address + ": " + error));
+							throw new DataflowException("Error on remote server " + address + ": " + error);
 						}
-						return Promise.complete();
-					});
+					})
+					.toVoid();
 		}
 
 		@Override

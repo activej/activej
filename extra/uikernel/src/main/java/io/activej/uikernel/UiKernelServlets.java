@@ -20,7 +20,6 @@ import com.google.gson.Gson;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.http.*;
-import io.activej.promise.Promise;
 
 import java.util.List;
 
@@ -52,11 +51,11 @@ public class UiKernelServlets {
 		return request -> {
 			try {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
-				return model.read(settings).map(response ->
-						createResponse(response.toJson(gson, model.getRecordType(), model.getIdType())));
+				return model.read(settings)
+						.map(response ->
+								createResponse(response.toJson(gson, model.getRecordType(), model.getIdType())));
 			} catch (MalformedDataException | MalformedHttpException e) {
-				return Promise.ofException(HttpError.ofCode(400, e));
-
+				throw HttpError.ofCode(400, e);
 			}
 		};
 	}
@@ -66,38 +65,41 @@ public class UiKernelServlets {
 			try {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
 				K id = fromJson(gson, request.getPathParameter(ID_PARAMETER_NAME), model.getIdType());
-				return model.read(id, settings).map(obj ->
-						createResponse(gson.toJson(obj, model.getRecordType())));
+				return model.read(id, settings)
+						.map(obj ->
+								createResponse(gson.toJson(obj, model.getRecordType())));
 			} catch (MalformedDataException | MalformedHttpException e) {
-				return Promise.ofException(HttpError.ofCode(400, e));
+				throw HttpError.ofCode(400, e);
 			}
 		};
 	}
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet create(GridModel<K, R> model, Gson gson) {
 		return request -> request.loadBody()
-				.then(() -> {
+				.thenEx(body -> {
 					try {
-						String json = request.getBody().getString(UTF_8);
+						String json = body.getString(UTF_8);
 						R obj = fromJson(gson, json, model.getRecordType());
-						return model.create(obj).map(response ->
-								createResponse(response.toJson(gson, model.getIdType())));
+						return model.create(obj)
+								.map(response ->
+										createResponse(response.toJson(gson, model.getIdType())));
 					} catch (MalformedDataException e) {
-						return Promise.ofException(HttpError.ofCode(400, e));
+						throw HttpError.ofCode(400, e);
 					}
 				});
 	}
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet update(GridModel<K, R> model, Gson gson) {
 		return request -> request.loadBody()
-				.then(() -> {
+				.thenEx(body -> {
 					try {
-						String json = request.getBody().getString(UTF_8);
+						String json = body.getString(UTF_8);
 						List<R> list = deserializeUpdateRequest(gson, json, model.getRecordType(), model.getIdType());
-						return model.update(list).map(result ->
-								createResponse(result.toJson(gson, model.getRecordType(), model.getIdType())));
+						return model.update(list)
+								.map(result ->
+										createResponse(result.toJson(gson, model.getRecordType(), model.getIdType())));
 					} catch (MalformedDataException e) {
-						return Promise.ofException(HttpError.ofCode(400, e));
+						throw HttpError.ofCode(400, e);
 					}
 				});
 	}
@@ -106,17 +108,18 @@ public class UiKernelServlets {
 		return request -> {
 			try {
 				K id = fromJson(gson, request.getPathParameter("id"), model.getIdType());
-				return model.delete(id).map(response -> {
-					HttpResponse res = HttpResponse.ok200();
-					if (response.hasErrors()) {
-						String json = gson.toJson(response.getErrors());
-						res.addHeader(CONTENT_TYPE, ofContentType(JSON_UTF8));
-						res.setBody(ByteBufStrings.wrapUtf8(json));
-					}
-					return res;
-				});
+				return model.delete(id)
+						.map(response -> {
+							HttpResponse res = HttpResponse.ok200();
+							if (response.hasErrors()) {
+								String json = gson.toJson(response.getErrors());
+								res.addHeader(CONTENT_TYPE, ofContentType(JSON_UTF8));
+								res.setBody(ByteBufStrings.wrapUtf8(json));
+							}
+							return res;
+						});
 			} catch (MalformedDataException e) {
-				return Promise.ofException(HttpError.ofCode(400, e));
+				throw HttpError.ofCode(400, e);
 			}
 		};
 	}

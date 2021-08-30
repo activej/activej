@@ -228,21 +228,20 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 															.withDecoderResets())
 											.transformWith(supplier ->
 													supplier.withEndOfStream(eos ->
-															eos.then(($, e) -> {
+															eos.whenCompleteEx(($, e) -> {
 																if (e == null ||
 																		e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
-																	return Promise.complete();
+																	return;
 																}
-
 																if (ignoreMalformedLogs && e instanceof MalformedDataException) {
 																	if (logger.isWarnEnabled()) {
 																		logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
 																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
 																				sw, countingFormat.getCount(), e);
 																	}
-																	return Promise.complete();
+																	return;
 																}
-																return Promise.ofException(e);
+																throw e;
 															})))
 											.transformWith(ChannelDeserializer.create(serializer))
 											.withEndOfStream(eos ->
