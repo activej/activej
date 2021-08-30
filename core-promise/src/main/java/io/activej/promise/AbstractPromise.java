@@ -726,7 +726,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					complete(this.result);
+					complete(result);
 				} else {
 					completeExceptionally(e);
 				}
@@ -829,7 +829,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenExceptionEx(@NotNull Runnable action) {
+	public @NotNull Promise<T> whenExceptionEx(@NotNull RunnableEx action) {
 		if (isComplete()) {
 			if (isException()) {
 				try {

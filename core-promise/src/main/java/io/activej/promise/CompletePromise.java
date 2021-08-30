@@ -254,7 +254,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenExceptionEx(@NotNull Runnable action) {
+	public @NotNull Promise<T> whenExceptionEx(@NotNull RunnableEx action) {
 		return this;
 	}
 

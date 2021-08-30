@@ -232,7 +232,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenExceptionEx(@NotNull Runnable action) {
+	public @NotNull Promise<T> whenExceptionEx(@NotNull RunnableEx action) {
 		try {
 			action.run();
 			return this;

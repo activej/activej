@@ -21,6 +21,7 @@ import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelSupplier;
@@ -131,7 +132,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 				T result;
 				try {
 					result = decoder.tryDecode(bufs);
-				} catch (Exception e) {
+				} catch (MalformedDataException e) {
 					closeEx(e);
 					return Promise.ofException(e);
 				}

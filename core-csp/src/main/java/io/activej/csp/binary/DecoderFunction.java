@@ -19,33 +19,16 @@ package io.activej.csp.binary;
 import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Function;
-
 @FunctionalInterface
 public interface DecoderFunction<T, R> {
 	R decode(T value) throws MalformedDataException;
 
-	static <T, R> DecoderFunction<T, R> of(Function<T, R> fn) {
-		return value -> {
-			try {
-				return fn.apply(value);
-			} catch (Exception e) {
-				throw new MalformedDataException(e);
-			}
-		};
-	}
-
-	default R decodeOrDefault(@Nullable T value, R defaultResult) {
+	default R decodeElse(@Nullable T value, R defaultResult) {
 		try {
 			if (value != null) {
 				return decode(value);
 			}
 		} catch (MalformedDataException ignore) {}
-
 		return defaultResult;
-	}
-
-	default <V> DecoderFunction<T, V> andThen(DecoderFunction<? super R, ? extends V> after) {
-		return (T t) -> after.decode(decode(t));
 	}
 }

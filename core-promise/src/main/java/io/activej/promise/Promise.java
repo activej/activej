@@ -481,7 +481,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenExceptionEx(@NotNull Runnable action);
+	Promise<T> whenExceptionEx(@NotNull RunnableEx action);
 
 	/**
 	 * Returns a new {@code Promise} that, when this and the other
