@@ -154,7 +154,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 	@Override
 	public void closeEx(@NotNull Exception e) {
 		if (exception != null) return;
-		exception = e instanceof Exception ? (Exception) e : new RuntimeException(e);
+		exception = e;
 		queue.closeEx(e);
 		if (waitingForBuffer != null) {
 			waitingForBuffer.whenResult(() -> {

@@ -131,7 +131,7 @@ public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
 		if (exception != null) {
 			return;
 		}
-		exception = e instanceof Exception ? (Exception) e : new RuntimeException(e);
+		exception = e;
 		writer.closeEx(e);
 		reader.closeEx(e);
 

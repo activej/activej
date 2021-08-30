@@ -298,7 +298,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 	@Override
 	public void closeEx(@NotNull Exception e) {
 		if (exception != null) return;
-		exception = e instanceof Exception ? (Exception) e : new RuntimeException(e);
+		exception = e;
 		if (put != null) {
 			put.setException(e);
 			put = null;
