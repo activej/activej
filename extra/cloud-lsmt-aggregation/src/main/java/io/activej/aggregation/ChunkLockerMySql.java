@@ -136,41 +136,29 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						try {
-							doLockChunks(connection, chunkIds);
-						} catch (SQLIntegrityConstraintViolationException e) {
-							int deletedStaleCount;
-							try (PreparedStatement ps = connection.prepareStatement(sql("" +
-									"DELETE FROM {lock} " +
-									"WHERE `locked_at` <= NOW() - INTERVAL ? SECOND"
-							))) {
-								ps.setLong(1, lockTtlSeconds);
-								deletedStaleCount = ps.executeUpdate();
-							} catch (SQLException de) {
-								e.addSuppressed(de);
-								throw e;
-							}
+						try (PreparedStatement ps = connection.prepareStatement(sql("" +
+								"DELETE FROM {lock} " +
+								"WHERE `locked_at` <= NOW() - INTERVAL ? SECOND"
+						))) {
+							ps.setLong(1, lockTtlSeconds);
+							int deletedCount = ps.executeUpdate();
+							logger.info("Deleted {} expired chunk locks", deletedCount);
+						}
 
-							if (deletedStaleCount == 0) throw e;
-							doLockChunks(connection, chunkIds);
+						try (PreparedStatement ps = connection.prepareStatement(sql("" +
+								"INSERT INTO {lock} (`aggregation_id`, `chunk_id`, `locked_by`) " +
+								"VALUES " + String.join(",", nCopies(chunkIds.size(), "(?,?,?)"))
+						))) {
+							int index = 1;
+							for (C chunkId : chunkIds) {
+								ps.setString(index++, aggregationId);
+								ps.setString(index++, idCodec.toFileName(chunkId));
+								ps.setString(index++, lockedBy);
+							}
+							ps.executeUpdate();
 						}
 					}
 				});
-	}
-
-	private void doLockChunks(Connection connection, Set<C> chunkIds) throws SQLException {
-		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"INSERT INTO {lock} (`aggregation_id`, `chunk_id`, `locked_by`) " +
-				"VALUES " + String.join(",", nCopies(chunkIds.size(), "(?,?,?)"))
-		))) {
-			int index = 1;
-			for (C chunkId : chunkIds) {
-				ps.setString(index++, aggregationId);
-				ps.setString(index++, idCodec.toFileName(chunkId));
-				ps.setString(index++, lockedBy);
-			}
-			ps.executeUpdate();
-		}
 	}
 
 	@Override
