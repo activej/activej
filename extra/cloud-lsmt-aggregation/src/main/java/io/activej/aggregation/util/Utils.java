@@ -17,6 +17,7 @@
 package io.activej.aggregation.util;
 
 import io.activej.aggregation.Aggregate;
+import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.annotation.Key;
 import io.activej.aggregation.annotation.Measures;
@@ -39,6 +40,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.activej.codec.StructuredCodecs.ofTupleArray;
 import static io.activej.codegen.expression.Expressions.*;
@@ -339,5 +341,9 @@ public class Utils {
 		return (v, e) -> e == null ?
 				Promise.of(v) :
 				Promise.ofException(wrapFn.apply(e));
+	}
+
+	public static <C> Set<C> collectChunkIds(Collection<AggregationChunk> chunks) {
+		return (Set<C>) chunks.stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet());
 	}
 }

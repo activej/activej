@@ -39,6 +39,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,8 +63,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static java.lang.Math.min;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.*;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.isEqual;
 import static java.util.stream.Collectors.toList;
@@ -547,27 +547,16 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	private Promise<AggregationDiff> doConsolidate(ChunkLocker<Object> chunkLocker, boolean hotSegment) {
-		return chunkLocker.getLockedChunks()
-				.then(lockedChunkIds -> {
-					List<AggregationChunk> chunks = hotSegment ?
-							state.findChunksForConsolidationHotSegment(maxChunksToConsolidate, lockedChunkIds) :
-							state.findChunksForConsolidationMinKey(maxChunksToConsolidate, chunkSize, lockedChunkIds);
+		return getChunksForConsolidation(chunkLocker, hotSegment)
+				.then(chunks -> {
 					if (chunks.isEmpty()) {
 						logger.info("Nothing to consolidate in aggregation '{}", this);
+
 						return Promise.of(AggregationDiff.empty());
 					}
-
-					logger.info("Starting consolidation of aggregation '{}'", this);
-					consolidationStarted = eventloop.currentTimeMillis();
-
-					Set<Object> consolidatingChunkIds = chunks.stream()
-							.map(AggregationChunk::getChunkId)
-							.collect(toSet());
-
-					return chunkLocker.lockChunks(consolidatingChunkIds)
-							.then($ -> doConsolidation(chunks))
-							.map(removedChunks -> AggregationDiff.of(new LinkedHashSet<>(removedChunks), new LinkedHashSet<>(chunks)))
-							.thenEx((aggregationDiff, e) -> chunkLocker.releaseChunks(consolidatingChunkIds)
+					return doConsolidation(chunks)
+							.map(newChunks -> AggregationDiff.of(new LinkedHashSet<>(newChunks), new LinkedHashSet<>(chunks)))
+							.thenEx((aggregationDiff, e) -> chunkLocker.releaseChunks(collectChunkIds(chunks))
 									.thenEx(($, e2) -> Promise.of(aggregationDiff, e)));
 				})
 				.whenComplete(($, e) -> {
@@ -579,6 +568,23 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 						consolidationLastError = e;
 					}
 				});
+	}
+
+	private Promise<List<AggregationChunk>> getChunksForConsolidation(ChunkLocker<Object> chunkLocker, boolean hotSegment) {
+		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
+				() -> chunkLocker.getLockedChunks()
+						.then(lockedChunkIds -> {
+							List<AggregationChunk> chunks = hotSegment ?
+									state.findChunksForConsolidationHotSegment(maxChunksToConsolidate, lockedChunkIds) :
+									state.findChunksForConsolidationMinKey(maxChunksToConsolidate, chunkSize, lockedChunkIds);
+							if (chunks.isEmpty()) return Promise.of(emptyList());
+
+							logger.info("Starting consolidation of aggregation '{}'", this);
+							consolidationStarted = eventloop.currentTimeMillis();
+
+							return chunkLocker.lockChunks(collectChunkIds(chunks))
+									.map($ -> chunks);
+						}));
 	}
 
 	private Path createSortDir() throws AggregationException {

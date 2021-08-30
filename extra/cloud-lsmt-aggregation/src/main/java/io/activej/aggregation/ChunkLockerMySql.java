@@ -156,6 +156,8 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 								ps.setString(index++, lockedBy);
 							}
 							ps.executeUpdate();
+						} catch (SQLIntegrityConstraintViolationException e) {
+							throw new ChunksAlreadyLockedException(e);
 						}
 					}
 				});
