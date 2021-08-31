@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation;
+package io.activej.cube.service;
 
+import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.ChunkLocker;
+import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.common.ApplicationSettings;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +45,7 @@ import static java.util.stream.Collectors.joining;
 public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	private static final Logger logger = LoggerFactory.getLogger(ChunkLockerMySql.class);
 
-	public static final String DEFAULT_LOCK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "lockTable", "aggregation_chunk_lock");
+	public static final String DEFAULT_LOCK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "lockTable", "cube_chunk_lock");
 	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(ChunkLockerMySql.class, "lockTtl", Duration.ofMinutes(5));
 	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(ChunkLockerMySql.class, "lockedBy", null);
 
@@ -112,7 +115,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 
 	private static byte[] loadInitScript() throws IOException {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		try (InputStream stream = classLoader.getResourceAsStream("sql/chunk_lock.sql")) {
+		try (InputStream stream = classLoader.getResourceAsStream("sql/ddl/chunk_lock.sql")) {
 			assert stream != null;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			byte[] buffer = new byte[4096];

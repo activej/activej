@@ -1,5 +1,7 @@
-package io.activej.aggregation;
+package io.activej.cube.service;
 
+import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -14,9 +16,9 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.aggregation.ChunkLockerMySql.DEFAULT_LOCK_TABLE;
-import static io.activej.aggregation.ChunkLockerMySql.DEFAULT_LOCK_TTL;
 import static io.activej.common.collection.CollectionUtils.set;
+import static io.activej.cube.service.ChunkLockerMySql.DEFAULT_LOCK_TABLE;
+import static io.activej.cube.service.ChunkLockerMySql.DEFAULT_LOCK_TTL;
 import static io.activej.inject.util.Utils.union;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;

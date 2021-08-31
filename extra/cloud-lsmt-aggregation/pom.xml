@@ -43,11 +43,6 @@
       <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <optional>true</optional>
-    </dependency>
 
     <dependency>
       <groupId>io.activej</groupId>
