@@ -128,7 +128,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * Creates a completed {@code Promise} from {@code T value} and
 	 * {@code Exception e} parameters, any of them can be {@code null}.
-	 * Useful for {@link #then(BiFunction)} passthroughs
+	 * Useful for {@link #then(BiFunctionEx)} passthroughs
 	 * (for example, when mapping specific exceptions).
 	 *
 	 * @param value value to wrap when exception is null

@@ -210,7 +210,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".mapEx(" + formatToString(fn) + ')';
+				return ".map(" + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -246,7 +246,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".mapEx(" + formatToString(fn) + ')';
+				return ".map(" + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -285,7 +285,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".thenEx(" + formatToString(fn) + ')';
+				return ".then(" + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -325,7 +325,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".thenEx(" + formatToString(fn) + ')';
+				return ".then(" + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -374,7 +374,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".thenEx(" + formatToString(fn) + ')';
+				return ".then(" + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -409,7 +409,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenCompleteEx(" + formatToString(action) + ')';
+				return ".whenComplete(" + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -444,7 +444,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenCompleteEx(" + formatToString(action) + ')';
+				return ".whenComplete(" + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -486,7 +486,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenResultEx(" + formatToString(action) + ')';
+				return ".whenResult(" + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -527,7 +527,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenResultEx(" + formatToString(action) + ')';
+				return ".whenResult(" + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -568,7 +568,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenExceptionEx(" + formatToString(action) + ')';
+				return ".whenException(" + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -609,7 +609,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenExceptionEx(" + formatToString(action) + ')';
+				return ".whenException(" + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);
