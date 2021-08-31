@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
+import static io.activej.common.Checks.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
@@ -133,6 +134,8 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 
 	@Override
 	public Promise<Void> lockChunks(Set<C> chunkIds) {
+		checkArgument(!chunkIds.isEmpty(), "Nothing to lock");
+
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -165,6 +168,8 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 
 	@Override
 	public Promise<Void> releaseChunks(Set<C> chunkIds) {
+		checkArgument(!chunkIds.isEmpty(), "Nothing to release");
+
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {

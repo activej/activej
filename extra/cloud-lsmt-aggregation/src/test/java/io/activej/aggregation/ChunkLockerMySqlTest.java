@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -101,7 +100,7 @@ public class ChunkLockerMySqlTest {
 		Set<Long> lockedByB = set(4L, 5L, 6L, 1L);
 
 		Throwable exception = awaitException(lockerB.lockChunks(lockedByB));
-		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
+		assertThat(exception, instanceOf(ChunksAlreadyLockedException.class));
 
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
 		assertEquals(lockedByA, await(lockerB.getLockedChunks()));
@@ -152,7 +151,7 @@ public class ChunkLockerMySqlTest {
 
 		Set<Long> locked2 = set(1L, 4L);
 		Throwable exception = awaitException(lockerA.lockChunks(locked2));
-		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
+		assertThat(exception, instanceOf(ChunksAlreadyLockedException.class));
 
 		expireLockedChunk(1L);
 
