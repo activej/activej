@@ -209,7 +209,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	@NotNull
 	private Promise<Void> pull() {
 		return fetch()
-				.whenResultEx(this::rebase)
+				.whenResult(this::rebase)
 				.toVoid()
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}
@@ -219,7 +219,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 		if (!isValid()) return Promise.complete();
 		K pollCommitId = this.originCommitId;
 		return uplink.poll(pollCommitId)
-				.whenResultEx(fetchData -> {
+				.whenResult(fetchData -> {
 					if (!isSyncing() && pollCommitId == this.originCommitId) {
 						updateOrigin(fetchData);
 						if (pendingProtoCommit == null) {
@@ -294,7 +294,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	private Promise<Void> push() {
 		if (pendingProtoCommit == null) return Promise.complete();
 		return uplink.push(pendingProtoCommit)
-				.whenResultEx(fetchData -> {
+				.whenResult(fetchData -> {
 					pendingProtoCommit = null;
 					pendingProtoCommitDiffs = null;
 

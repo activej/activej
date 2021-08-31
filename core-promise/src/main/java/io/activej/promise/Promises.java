@@ -1256,7 +1256,7 @@ public final class Promises {
 		for (int i = 0; promises.hasNext() && i < maxCalls; i++) {
 			reduceImpl(asyncAccumulator, consumer, promises);
 		}
-		return asyncAccumulator.run().mapEx(finisher);
+		return asyncAccumulator.run().map(finisher);
 	}
 
 	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, BiConsumerEx<A, T> consumer, Iterator<Promise<T>> promises) {

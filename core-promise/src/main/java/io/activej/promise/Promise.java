@@ -28,7 +28,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.function.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -340,148 +342,44 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract("_ -> param1")
 	@NotNull <U, P extends Callback<? super T> & Promise<U>> Promise<U> next(@NotNull P promise);
 
-	/**
-	 * Returns a new {@code Promise} which is executed with this
-	 * {@code Promise}'s result as the argument to the provided
-	 * function when this {@code Promise} completes successfully.
-	 *
-	 * @param fn function to be applied to this {@code Promise}
-	 *           when it completes successfully
-	 * @return new {@code Promise} which is the result of function
-	 * applied to the result of this {@code Promise}
-	 * @see CompletionStage#thenApply(Function)
-	 */
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> map(@NotNull Function<? super T, ? extends U> fn);
+	@NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> mapEx(@NotNull FunctionEx<? super T, ? extends U> fn);
-
-	/**
-	 * Returns a new {@code Promise} which is executed with this
-	 * {@code Promise}'s result as the argument to the provided
-	 * function when this {@code Promise} completes either
-	 * successfully (when {@code exception} is {@code null}) or
-	 * with an exception.
-	 *
-	 * @param fn function to be applied to this {@code Promise}
-	 *           when it completes either successfully or with
-	 *           an exception
-	 * @return new {@code Promise} which is the result of function
-	 * applied to the result of this {@code Promise}
-	 */
-	@Contract(pure = true)
-	@NotNull <U> Promise<U> map(@NotNull BiFunction<? super T, @Nullable Exception, ? extends U> fn);
+	@NotNull <U> Promise<U> map(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> mapEx(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
+	@NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn);
+	@NotNull <U> Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn);
 
 	@Contract(pure = true)
-	@NotNull <U> Promise<U> thenEx(@NotNull SupplierEx<? extends Promise<? extends U>> fn);
-
-	/**
-	 * Returns a new {@code Promise} which, when this {@code Promise} completes
-	 * successfully, is executed with this {@code Promise's} result as
-	 * the argument to the supplied function.
-	 *
-	 * @param fn to be applied
-	 */
-	@Contract(pure = true)
-	@NotNull <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn);
-
-	@Contract(pure = true)
-	@NotNull <U> Promise<U> thenEx(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn);
-
-	/**
-	 * Returns a new {@code Promise} which, when this {@code Promise} completes either
-	 * successfully (if exception is {@code null}) or exceptionally (if exception is not
-	 * {@code null}), is executed with this {@code Promise's} result as the argument to
-	 * the supplied function.
-	 *
-	 * @param fn to be applied to the result of this {@code Promise}
-	 * @return new {@code Promise}
-	 */
-	@Contract(pure = true)
-	@NotNull <U> Promise<U> then(@NotNull BiFunction<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
-
-	@Contract(pure = true)
-	@NotNull <U> Promise<U> thenEx(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
-
-	/**
-	 * Subscribes given action to be executed
-	 * after this {@code Promise} completes and
-	 * returns a new {@code Promise}.
-	 *
-	 * @param action to be executed
-	 */
-	@Contract(" _ -> this")
-	@NotNull
-	Promise<T> whenComplete(@NotNull BiConsumer<? super T, Exception> action);
+	@NotNull <U> Promise<U> then(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenCompleteEx(@NotNull BiConsumerEx<? super T, Exception> action);
-
-	/**
-	 * Subscribes given action to be executed
-	 * after this {@code Promise} completes and
-	 * returns a new {@code Promise}.
-	 *
-	 * @param action to be executed
-	 */
-	@Contract(" _ -> this")
-	@NotNull
-	Promise<T> whenComplete(@NotNull Runnable action);
+	Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action);
 
 	@Contract(pure = true)
 	@NotNull
-	Promise<T> whenCompleteEx(@NotNull RunnableEx action);
-
-	/**
-	 * Subscribes given action to be executed after
-	 * this {@code Promise} completes successfully
-	 * and returns a new {@code Promise}.
-	 *
-	 * @param action to be executed
-	 */
-	@Contract(" _ -> this")
-	@NotNull
-	Promise<T> whenResult(Consumer<? super T> action);
+	Promise<T> whenComplete(@NotNull RunnableEx action);
 
 	@Contract(pure = true)
 	@NotNull
-	Promise<T> whenResultEx(ConsumerEx<? super T> action);
-
-	@Contract(" _ -> this")
-	@NotNull
-	Promise<T> whenResult(@NotNull Runnable action);
+	Promise<T> whenResult(ConsumerEx<? super T> action);
 
 	@Contract(pure = true)
 	@NotNull
-	Promise<T> whenResultEx(@NotNull RunnableEx action);
-
-	/**
-	 * Subscribes given action to be executed after
-	 * this {@code Promise} completes exceptionally
-	 * and returns a new {@code Promise}.
-	 *
-	 * @param action to be executed
-	 */
-	@Contract("_ -> this")
-	Promise<T> whenException(@NotNull Consumer<Exception> action);
+	Promise<T> whenResult(@NotNull RunnableEx action);
 
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenExceptionEx(@NotNull ConsumerEx<Exception> action);
-
-	Promise<T> whenException(@NotNull Runnable action);
+	Promise<T> whenException(@NotNull ConsumerEx<Exception> action);
 
 	@Contract(" _ -> this")
 	@NotNull
-	Promise<T> whenExceptionEx(@NotNull RunnableEx action);
+	Promise<T> whenException(@NotNull RunnableEx action);
 
 	/**
 	 * Returns a new {@code Promise} that, when this and the other

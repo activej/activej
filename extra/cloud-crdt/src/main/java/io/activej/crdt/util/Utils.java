@@ -23,6 +23,7 @@ import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.function.BiFunctionEx;
 import io.activej.crdt.CrdtException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +36,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -44,7 +44,7 @@ import static java.util.stream.Collectors.toList;
 
 public final class Utils {
 
-	public static <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> wrapException(Supplier<String> errorMessageSupplier) {
+	public static <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> wrapException(Supplier<String> errorMessageSupplier) {
 		return (v, e) -> e == null ?
 				Promise.of(v) :
 				e instanceof CrdtException ?

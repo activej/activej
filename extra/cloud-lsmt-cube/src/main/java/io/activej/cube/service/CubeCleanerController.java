@@ -19,6 +19,8 @@ package io.activej.cube.service;
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.Utils;
+import io.activej.common.function.BiConsumerEx;
+import io.activej.common.function.FunctionEx;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
@@ -41,10 +43,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
-import static io.activej.aggregation.util.Utils.wrapException;
+import static io.activej.aggregation.util.Utils.wrapExceptionFn;
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
@@ -124,7 +124,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 	private Promise<Void> doCleanup() {
 		return repository.getHeads()
 				.then(heads -> excludeParents(repository, otSystem, heads))
-				.then(wrapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to get heads", e)))
+				.then(wrapExceptionFn(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to get heads", e)))
 				.then(heads -> findFrozenCut(heads, eventloop.currentInstant().minus(freezeTimeout)))
 				.then(this::cleanupFrozenCut)
 				.then((v, e) -> {
@@ -138,7 +138,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 	private Promise<Set<K>> findFrozenCut(Set<K> heads, Instant freezeTimestamp) {
 		return findCut(repository, otSystem, heads,
 				commits -> commits.stream().allMatch(commit -> commit.getInstant().compareTo(freezeTimestamp) < 0))
-				.then(wrapException(e -> e instanceof GraphExhaustedException ?
+				.then(wrapExceptionFn(e -> e instanceof GraphExhaustedException ?
 						e :
 						new CubeException("Failed to find frozen cut, freeze timestamp: " + freezeTimestamp, e)))
 				.whenComplete(toLogger(logger, thisMethod(), heads, freezeTimestamp));
@@ -156,7 +156,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 								return trySaveSnapshotAndCleanupChunks(checkpointNode);
 							}
 						}))
-				.then(wrapException(e -> e instanceof GraphExhaustedException ?
+				.then(wrapExceptionFn(e -> e instanceof GraphExhaustedException ?
 						e :
 						new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e)))
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
@@ -300,7 +300,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 		return eventloop;
 	}
 
-	private static <T, R> BiConsumer<R, Exception> transform(Function<? super R, ? extends T> fn, BiConsumer<? super T, Exception> toConsumer) {
+	private static <T, R> BiConsumerEx<R, Exception> transform(FunctionEx<? super R, ? extends T> fn, BiConsumerEx<? super T, Exception> toConsumer) {
 		return (value, e) -> toConsumer.accept(value != null ? fn.apply(value) : null, e);
 	}
 }

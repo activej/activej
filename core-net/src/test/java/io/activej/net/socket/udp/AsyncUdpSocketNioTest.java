@@ -16,7 +16,7 @@ import java.util.Arrays;
 
 import static io.activej.eventloop.Eventloop.createDatagramChannel;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static org.junit.Assert.assertArrayEquals;
 
 public final class AsyncUdpSocketNioTest {
@@ -38,19 +38,19 @@ public final class AsyncUdpSocketNioTest {
 				.then(serverSocket -> serverSocket.receive()
 						.then(serverSocket::send)
 						.whenComplete(serverSocket::close))
-				.whenComplete(assertComplete());
+				.whenComplete(assertCompleteFn());
 
 		DatagramChannel clientDatagramChannel = createDatagramChannel(DatagramSocketSettings.create(), null, null);
 
 		Promise<AsyncUdpSocketNio> promise = AsyncUdpSocketNio.connect(Eventloop.getCurrentEventloop(), clientDatagramChannel)
-				.whenComplete(assertComplete(clientSocket -> {
+				.whenComplete(assertCompleteFn(clientSocket -> {
 
 					clientSocket.send(UdpPacket.of(ByteBuf.wrapForReading(bytesToSend), SERVER_ADDRESS))
-							.whenComplete(assertComplete());
+							.whenComplete(assertCompleteFn());
 
 					clientSocket.receive()
 							.whenComplete(clientSocket::close)
-							.whenComplete(assertComplete(packet -> {
+							.whenComplete(assertCompleteFn(packet -> {
 								byte[] message = packet.getBuf().asArray();
 
 								assertArrayEquals(bytesToSend, message);

@@ -17,17 +17,23 @@
 package io.activej.test;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
-import org.jetbrains.annotations.Nullable;
+import io.activej.common.function.*;
 
 import javax.sql.DataSource;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.function.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class TestUtils {
 	private static int activePromises = 0;
@@ -58,7 +64,7 @@ public final class TestUtils {
 
 	public static DataSource dataSource(String databasePropertiesPath) throws IOException, SQLException {
 		Properties properties = new Properties();
-		properties.load(new InputStreamReader(new BufferedInputStream(new FileInputStream(new File(databasePropertiesPath))), StandardCharsets.UTF_8));
+		properties.load(new InputStreamReader(new BufferedInputStream(new FileInputStream(databasePropertiesPath)), StandardCharsets.UTF_8));
 
 		MysqlDataSource dataSource = new MysqlDataSource();
 		dataSource.setUrl("jdbc:mysql://" + properties.getProperty("dataSource.serverName") + '/' + properties.getProperty("dataSource.databaseName"));
@@ -69,7 +75,7 @@ public final class TestUtils {
 		return dataSource;
 	}
 
-	public static <T> BiConsumer<T, Exception> assertComplete(ThrowingConsumer<T> consumer) {
+	public static <T> BiConsumerEx<T, Exception> assertCompleteFn(ConsumerEx<T> consumer) {
 		activePromises++;
 		return (t, e) -> {
 			activePromises--;
@@ -89,8 +95,8 @@ public final class TestUtils {
 		};
 	}
 
-	public static <T> BiConsumer<T, Exception> assertComplete() {
-		return assertComplete($ -> {});
+	public static <T> BiConsumerEx<T, Exception> assertCompleteFn() {
+		return assertCompleteFn($ -> {});
 	}
 
 	public static int getActivePromises() {
@@ -101,16 +107,11 @@ public final class TestUtils {
 		activePromises = 0;
 	}
 
-	@FunctionalInterface
-	public interface ThrowingSupplier<T> {
-		T get() throws Throwable;
-	}
-
-	public static <T> Supplier<T> asserting(ThrowingSupplier<T> supplier) {
+	public static <T> Supplier<T> assertingFn(SupplierEx<T> fn) {
 		return () -> {
 			try {
-				return supplier.get();
-			} catch (AssertionError e) {
+				return fn.get();
+			} catch (RuntimeException | Error e) {
 				throw e;
 			} catch (Throwable e) {
 				throw new AssertionError(e);
@@ -118,16 +119,11 @@ public final class TestUtils {
 		};
 	}
 
-	@FunctionalInterface
-	public interface ThrowingConsumer<T> {
-		void accept(T t) throws Exception;
-	}
-
-	public static <T> Consumer<T> asserting(ThrowingConsumer<T> consumer) {
+	public static <T> Consumer<T> assertingFn(ConsumerEx<T> fn) {
 		return x -> {
 			try {
-				consumer.accept(x);
-			} catch (AssertionError e) {
+				fn.accept(x);
+			} catch (RuntimeException | Error e) {
 				throw e;
 			} catch (Throwable e) {
 				throw new AssertionError(e);
@@ -135,15 +131,10 @@ public final class TestUtils {
 		};
 	}
 
-	@FunctionalInterface
-	public interface ThrowingConsumerEx<T> {
-		void accept(T result, @Nullable Throwable e) throws Throwable;
-	}
-
-	public static <T> BiConsumer<T, Exception> asserting(ThrowingConsumerEx<T> consumer) {
+	public static <T, U> BiConsumerEx<T, U> assertingFn(BiConsumerEx<T, U> fn) {
 		return (x, y) -> {
 			try {
-				consumer.accept(x, y);
+				fn.accept(x, y);
 			} catch (RuntimeException | Error e) {
 				throw e;
 			} catch (Throwable throwable) {
@@ -152,16 +143,11 @@ public final class TestUtils {
 		};
 	}
 
-	@FunctionalInterface
-	public interface ThrowingFunction<T, R> {
-		R apply(T t) throws Throwable;
-	}
-
-	public static <T, R> Function<T, R> asserting(ThrowingFunction<T, R> function) {
+	public static <T, R> Function<T, R> assertingFn(FunctionEx<T, R> fn) {
 		return x -> {
 			try {
-				return function.apply(x);
-			} catch (AssertionError e) {
+				return fn.apply(x);
+			} catch (RuntimeException | Error e) {
 				throw e;
 			} catch (Throwable e) {
 				throw new AssertionError(e);
@@ -169,16 +155,11 @@ public final class TestUtils {
 		};
 	}
 
-	@FunctionalInterface
-	public interface ThrowingBiFunction<T, U, R> {
-		R apply(T t, U u) throws Throwable;
-	}
-
-	public static <T, U, R> BiFunction<T, U, R> asserting(ThrowingBiFunction<T, U, R> function) {
+	public static <T, U, R> BiFunction<T, U, R> assertingFn(BiFunctionEx<T, U, R> fn) {
 		return (x, y) -> {
 			try {
-				return function.apply(x, y);
-			} catch (AssertionError e) {
+				return fn.apply(x, y);
+			} catch (RuntimeException | Error e) {
 				throw e;
 			} catch (Throwable e) {
 				throw new AssertionError(e);

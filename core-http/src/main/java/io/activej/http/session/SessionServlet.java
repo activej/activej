@@ -67,7 +67,7 @@ public final class SessionServlet<T> implements AsyncServlet {
 		}
 
 		return store.get(id)
-				.thenEx(sessionObject -> {
+				.then(sessionObject -> {
 					if (sessionObject != null) {
 						request.attach(sessionObject);
 						return privateServlet.serveAsync(request);

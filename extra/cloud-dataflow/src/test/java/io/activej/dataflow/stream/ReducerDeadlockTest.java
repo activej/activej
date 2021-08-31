@@ -31,7 +31,7 @@ import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertNotEquals;
@@ -112,7 +112,7 @@ public class ReducerDeadlockTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
 				})));

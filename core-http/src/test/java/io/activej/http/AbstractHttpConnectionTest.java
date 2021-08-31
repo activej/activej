@@ -13,6 +13,7 @@ import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -35,7 +36,6 @@ import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -82,7 +82,7 @@ public final class AbstractHttpConnectionTest {
 
 		await(client.request(HttpRequest.get(url))
 				.then(response -> response.loadBody()
-						.whenComplete(assertComplete(body -> {
+						.whenComplete(TestUtils.assertCompleteFn(body -> {
 							assertEquals("text/           html", response.getHeader(CONTENT_TYPE));
 							assertEquals("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>", body.getString(UTF_8));
 						}))));
@@ -102,7 +102,7 @@ public final class AbstractHttpConnectionTest {
 		await(client.request(HttpRequest.get(url)
 				.withHeader(ACCEPT_ENCODING, "gzip"))
 				.then(response -> response.loadBody()
-						.whenComplete(assertComplete(body -> {
+						.whenComplete(TestUtils.assertCompleteFn(body -> {
 							assertEquals("Test message", body.getString(UTF_8));
 							assertNotNull(response.getHeader(CONTENT_ENCODING));
 						}))));

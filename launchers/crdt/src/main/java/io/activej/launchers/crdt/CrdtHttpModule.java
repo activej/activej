@@ -59,7 +59,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	) {
 		RoutingServlet servlet = RoutingServlet.create()
 				.map(POST, "/", request -> request.loadBody()
-						.mapEx(body -> {
+						.map(body -> {
 							try {
 								K key = fromJson(descriptor.getKeyManifest(), body);
 								S state = client.get(key);
@@ -74,7 +74,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 							}
 						}))
 				.map(PUT, "/", request -> request.loadBody()
-						.mapEx(body -> {
+						.map(body -> {
 							try {
 								client.put(fromJson(crdtDataManifest.getType(), body));
 								return HttpResponse.ok200();
@@ -83,7 +83,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 							}
 						}))
 				.map(DELETE, "/", request -> request.loadBody()
-						.mapEx(body -> {
+						.map(body -> {
 							try {
 								K key = fromJson(descriptor.getKeyManifest(), body);
 								if (client.remove(key)) {

@@ -10,6 +10,7 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
+import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -35,7 +36,6 @@ import static io.activej.fs.Utils.initTempDir;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
@@ -122,7 +122,7 @@ public final class ClusterRepartitionControllerTest {
 		await(fsPartitions.start()
 				.then(controller::start)
 				.then(controller::repartition)
-				.whenComplete(assertComplete($ -> servers.forEach(AbstractServer::close))));
+				.whenComplete(TestUtils.assertCompleteFn($ -> servers.forEach(AbstractServer::close))));
 
 		assertTrue(fsPartitions.getAlivePartitions().containsKey("regular"));
 		assertFalse(fsPartitions.getAlivePartitions().containsKey("failing"));

@@ -584,7 +584,7 @@ public final class PartitionedStreamTest {
 								}
 								return null;
 							})
-							.mapEx((value, e) -> {
+							.map((value, e) -> {
 								if (e == null) return value;
 								if (e instanceof TruncatedDataException) {
 									ByteBufs bufs = binaryChannelSupplier.getBufs();

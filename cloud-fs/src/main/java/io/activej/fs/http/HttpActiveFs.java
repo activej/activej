@@ -99,7 +99,7 @@ public final class HttpActiveFs implements ActiveFs {
 						HttpRequest.get(
 								url + urlBuilder
 										.build()))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.map(HttpMessage::getBodyStream);
 	}
 
@@ -112,9 +112,9 @@ public final class HttpActiveFs implements ActiveFs {
 										.appendPathPart(LIST)
 										.appendQuery("glob", glob)
 										.build()))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.then(response -> response.loadBody())
-				.mapEx(body -> fromJson(STRING_META_MAP_TYPE, body));
+				.map(body -> fromJson(STRING_META_MAP_TYPE, body));
 	}
 
 	@Override
@@ -126,9 +126,9 @@ public final class HttpActiveFs implements ActiveFs {
 										.appendPathPart(INFO)
 										.appendPathPart(name)
 										.build()))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.then(response -> response.loadBody())
-				.mapEx(body -> fromJson(FileMetadata.class, body));
+				.map(body -> fromJson(FileMetadata.class, body));
 	}
 
 	@Override
@@ -140,9 +140,9 @@ public final class HttpActiveFs implements ActiveFs {
 												.appendPathPart(INFO_ALL)
 												.build())
 								.withBody(toJson(names)))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.then(response -> response.loadBody())
-				.mapEx(body -> fromJson(STRING_META_MAP_TYPE, body));
+				.map(body -> fromJson(STRING_META_MAP_TYPE, body));
 	}
 
 	@Override
@@ -152,7 +152,7 @@ public final class HttpActiveFs implements ActiveFs {
 								url + UrlBuilder.relative()
 										.appendPathPart(PING)
 										.build()))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -165,7 +165,7 @@ public final class HttpActiveFs implements ActiveFs {
 										.appendQuery("name", name)
 										.appendQuery("target", target)
 										.build()))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -180,7 +180,7 @@ public final class HttpActiveFs implements ActiveFs {
 												.appendPathPart(MOVE_ALL)
 												.build())
 								.withBody(toJson(sourceToTarget)))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -193,7 +193,7 @@ public final class HttpActiveFs implements ActiveFs {
 										.appendQuery("name", name)
 										.appendQuery("target", target)
 										.build()))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -208,7 +208,7 @@ public final class HttpActiveFs implements ActiveFs {
 												.appendPathPart(COPY_ALL)
 												.build())
 								.withBody(toJson(sourceToTarget)))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -220,7 +220,7 @@ public final class HttpActiveFs implements ActiveFs {
 										.appendPathPart(DELETE)
 										.appendPath(name)
 										.build()))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -232,7 +232,7 @@ public final class HttpActiveFs implements ActiveFs {
 												.appendPathPart(DELETE_ALL)
 												.build())
 								.withBody(toJson(toDelete)))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.toVoid();
 	}
 
@@ -243,7 +243,7 @@ public final class HttpActiveFs implements ActiveFs {
 				return Promise.of(response);
 			case 500:
 				return response.loadBody()
-						.thenEx(body -> {
+						.then(body -> {
 							try {
 								throw fromJson(FsException.class, body);
 							} catch (MalformedDataException ignored) {
@@ -278,15 +278,15 @@ public final class HttpActiveFs implements ActiveFs {
 									channelPromise.trySet(consumer
 											.transformWith(transformer)
 											.withAcknowledgement(ack -> ack.both(response.loadBody()
-													.mapEx(body -> fromJson(UploadAcknowledgement.class, body))
-													.whenResultEx(HttpActiveFs::failOnException)
+													.map(body -> fromJson(UploadAcknowledgement.class, body))
+													.whenResult(HttpActiveFs::failOnException)
 													.whenException(e -> {
 														channelPromise.trySetException(e);
 														buffer.closeEx(e);
 													}))));
 									return buffer.getSupplier();
 								}))))
-				.thenEx(HttpActiveFs::checkResponse)
+				.then(HttpActiveFs::checkResponse)
 				.whenException(channelPromise::trySetException)
 				.whenComplete(responsePromise::trySet);
 

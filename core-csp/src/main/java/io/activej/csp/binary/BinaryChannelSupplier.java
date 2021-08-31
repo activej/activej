@@ -63,7 +63,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			@Override
 			public Promise<Void> needMoreData() {
 				return input.get()
-						.mapEx(buf -> {
+						.map(buf -> {
 							if (buf != null) {
 								bufs.add(buf);
 								return null;
@@ -82,7 +82,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 					return Promise.ofException(exception);
 				}
 				return input.get()
-						.mapEx(buf -> {
+						.map(buf -> {
 							if (buf == null) {
 								return null;
 							} else {
@@ -150,7 +150,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 
 	public final <T> Promise<T> decodeRemaining(ByteBufsDecoder<T> decoder) {
 		return decode(decoder)
-				.thenEx(result -> {
+				.then(result -> {
 					if (!bufs.isEmpty()) {
 						Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
 						closeEx(exception);
@@ -167,7 +167,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
 							closeEx(e);
 						})
-						.mapEx((value, e) -> {
+						.map((value, e) -> {
 							if (e == null) return value;
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return null;
 							throw e;

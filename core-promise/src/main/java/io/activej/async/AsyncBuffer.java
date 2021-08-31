@@ -16,6 +16,7 @@
 
 package io.activej.async;
 
+import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +47,7 @@ public final class AsyncBuffer<A, R> {
 		return bufferedPromise;
 	}
 
-	public <V, T> Promise<T> add(BiConsumer<A, V> argumentAccumulator, Function<R, T> resultExtractor, V argument) {
+	public <V, T> Promise<T> add(BiConsumer<A, V> argumentAccumulator, FunctionEx<R, T> resultExtractor, V argument) {
 		return add(argumentAccumulator, argument).map(resultExtractor);
 	}
 

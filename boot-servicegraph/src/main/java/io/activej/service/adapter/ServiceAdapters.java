@@ -17,6 +17,7 @@
 package io.activej.service.adapter;
 
 import io.activej.async.service.EventloopService;
+import io.activej.common.function.BiConsumerEx;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.BlockingSocketServer;
@@ -30,7 +31,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
 
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -382,7 +382,7 @@ public final class ServiceAdapters {
 		};
 	}
 
-	private static <T> BiConsumer<T, Exception> completeFuture(CompletableFuture<?> future) {
+	private static <T> BiConsumerEx<T, Exception> completeFuture(CompletableFuture<?> future) {
 		return ($, e) -> {
 			if (e == null) {
 				future.complete(null);

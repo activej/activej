@@ -1,8 +1,8 @@
 package io.activej.http;
 
+import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
@@ -82,7 +82,7 @@ public final class AsyncHttpClientTest {
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
 		await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody()
-						.whenComplete(assertComplete(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))));
+						.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))));
 	}
 
 	@Test
@@ -271,7 +271,7 @@ public final class AsyncHttpClientTest {
 									});
 						})
 						.map(HttpResponse::getCode)
-						.whenComplete(asserting(($, e) -> {
+						.whenComplete(assertingFn(($, e) -> {
 							socketRef.get().close();
 							listener.close();
 						}))));

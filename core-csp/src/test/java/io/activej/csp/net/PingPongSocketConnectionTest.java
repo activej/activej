@@ -19,7 +19,7 @@ import java.net.InetSocketAddress;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static io.activej.promise.Promises.loop;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -61,7 +61,7 @@ public final class PingPongSocketConnectionTest {
 									.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
 									.map($ -> i - 1))
 							.whenComplete(socket::close)
-							.whenComplete(assertComplete());
+							.whenComplete(assertCompleteFn());
 				})
 				.withListenAddress(address)
 				.withAcceptOnce()

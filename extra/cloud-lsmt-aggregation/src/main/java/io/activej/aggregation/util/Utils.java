@@ -25,6 +25,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.function.BiFunctionEx;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
@@ -36,7 +37,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
@@ -325,7 +325,7 @@ public class Utils {
 		return measureFields;
 	}
 
-	public static <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> wrapException(Function<Exception, Exception> wrapFn) {
+	public static <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> wrapExceptionFn(Function<Exception, Exception> wrapFn) {
 		return (v, e) -> e == null ?
 				Promise.of(v) :
 				Promise.ofException(wrapFn.apply(e));

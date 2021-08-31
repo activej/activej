@@ -122,7 +122,7 @@ public final class RedisClient {
 	 */
 	public Promise<RedisConnection> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
-				.mapEx((AsyncTcpSocket socket, Exception e) -> {
+				.map((AsyncTcpSocket socket, Exception e) -> {
 					if (e != null) {
 						throw new RedisException("Failed to connect to Redis server: " + address, e);
 					}

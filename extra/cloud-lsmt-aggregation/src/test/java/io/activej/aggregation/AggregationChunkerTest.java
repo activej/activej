@@ -30,7 +30,7 @@ import static io.activej.aggregation.util.Utils.singlePartition;
 import static io.activej.common.Utils.last;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static org.junit.Assert.*;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -69,7 +69,7 @@ public final class AggregationChunkerTest {
 			@Override
 			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
 				StreamConsumerToList<T> consumer = StreamConsumerToList.create((List<T>) items);
-				consumer.getAcknowledgement().whenComplete(assertComplete());
+				consumer.getAcknowledgement().whenComplete(assertCompleteFn());
 				return Promise.of(consumer);
 			}
 

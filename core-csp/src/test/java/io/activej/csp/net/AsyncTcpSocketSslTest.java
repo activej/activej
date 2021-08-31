@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -96,7 +96,7 @@ public final class AsyncTcpSocketSslTest {
 		startServer(sslContext, sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 				.decode(DECODER)
 				.whenComplete(sslSocket::close)
-				.whenComplete(assertComplete(result -> assertEquals(TEST_STRING, result))));
+				.whenComplete(assertCompleteFn(result -> assertEquals(TEST_STRING, result))));
 
 		await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
@@ -109,7 +109,7 @@ public final class AsyncTcpSocketSslTest {
 	public void testRead() throws IOException {
 		startServer(sslContext, sslSocket ->
 				sslSocket.write(wrapAscii(TEST_STRING))
-						.whenComplete(assertComplete()));
+						.whenComplete(assertCompleteFn()));
 
 		String result = await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
@@ -126,7 +126,7 @@ public final class AsyncTcpSocketSslTest {
 				.decode(DECODER)
 				.then(result -> serverSsl.write(wrapAscii(result)))
 				.whenComplete(serverSsl::close)
-				.whenComplete(assertComplete()));
+				.whenComplete(assertCompleteFn()));
 
 		String result = await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
@@ -148,7 +148,7 @@ public final class AsyncTcpSocketSslTest {
 				.decode(DECODER)
 				.then(result -> serverSsl.write(wrapAscii(result)))
 				.whenComplete(serverSsl::close)
-				.whenComplete(assertComplete()));
+				.whenComplete(assertCompleteFn()));
 
 		String result = await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
@@ -168,7 +168,7 @@ public final class AsyncTcpSocketSslTest {
 		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
 				.decode(DECODER_LARGE)
 				.whenComplete(serverSsl::close)
-				.whenComplete(assertComplete(result -> assertEquals(result, sentData.toString()))));
+				.whenComplete(assertCompleteFn(result -> assertEquals(result, sentData.toString()))));
 
 		await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
@@ -182,7 +182,7 @@ public final class AsyncTcpSocketSslTest {
 		startServer(sslContext, serverSsl ->
 				sendData(serverSsl)
 						.whenComplete(serverSsl::close)
-						.whenComplete(assertComplete()));
+						.whenComplete(assertCompleteFn()));
 
 		String result = await(AsyncTcpSocketNio.connect(address)
 				.map(socket -> AsyncTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))

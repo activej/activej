@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.function.BiFunctionEx;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.Stopwatch;
 import io.activej.csp.ChannelSupplier;
@@ -50,7 +51,6 @@ import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
@@ -228,7 +228,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 															.withDecoderResets())
 											.transformWith(supplier ->
 													supplier.withEndOfStream(eos ->
-															eos.whenCompleteEx(($, e) -> {
+															eos.whenComplete(($, e) -> {
 																if (e == null ||
 																		e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
 																	return;
@@ -276,7 +276,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 	}
 
 
-	private static <T> BiFunction<T, @Nullable Exception, Promise<? extends T>> wrapException(Function<Exception, Exception> wrapFn) {
+	private static <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> wrapException(Function<Exception, Exception> wrapFn) {
 		return (v, e) -> e == null ?
 				Promise.of(v) :
 				Promise.ofException(wrapFn.apply(e));

@@ -9,6 +9,7 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promises;
+import io.activej.test.TestUtils;
 import io.activej.test.rules.*;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -25,7 +26,6 @@ import java.util.concurrent.Executors;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -153,7 +153,7 @@ public final class ClusterRepartitionControllerStressTest {
 		long start2 = System.nanoTime();
 
 		await(controller.repartition()
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(TestUtils.assertCompleteFn($ -> {
 					scheduler.stop();
 					double ms = (System.nanoTime() - start2) / 1e6;
 					System.out.printf("Done repartitioning in %.2f ms%n", ms);
@@ -162,7 +162,7 @@ public final class ClusterRepartitionControllerStressTest {
 								Map<String, FileMetadata> mss = ls.get();
 								return mss == null ? 0 : mss.values().stream().mapToLong(FileMetadata::getSize).sum();
 							}).sum())
-							.whenComplete(assertComplete(bytes -> {
+							.whenComplete(TestUtils.assertCompleteFn(bytes -> {
 								System.out.printf("%d overall bytes%n", bytes);
 								System.out.printf("Average speed was %.2f mbit/second%n", bytes / (1 << 17) * (1000 / ms));
 								finished = true;

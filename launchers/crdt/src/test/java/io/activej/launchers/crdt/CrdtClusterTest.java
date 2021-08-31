@@ -40,7 +40,7 @@ import static io.activej.http.HttpMethod.PUT;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 
 @Ignore("manual demos")
 public final class CrdtClusterTest {
@@ -179,7 +179,7 @@ public final class CrdtClusterTest {
 										.toVoid()))
 				.whenException(Exception::printStackTrace)
 				.whenComplete(uploadStat.recordStats())
-				.whenComplete(assertComplete($ -> System.out.println(uploadStat)));
+				.whenComplete(assertCompleteFn($ -> System.out.println(uploadStat)));
 
 		// RemoteCrdtClient<String, Integer> client = RemoteCrdtClient.create(eventloop, ADDRESS, CRDT_DATA_SERIALIZER);
 		//
@@ -198,7 +198,7 @@ public final class CrdtClusterTest {
 		StreamSupplier.ofStream(IntStream.range(0, 1000000)
 						.mapToObj(i -> new CrdtData<>("value_" + i, i))).streamTo(StreamConsumer.ofPromise(client.upload()))
 				.whenComplete(uploadStat.recordStats())
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(assertCompleteFn($ -> {
 					System.out.println(uploadStat);
 					System.out.println("finished");
 				}));

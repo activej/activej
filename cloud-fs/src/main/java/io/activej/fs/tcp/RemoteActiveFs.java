@@ -49,7 +49,6 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -159,13 +158,13 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(MessagingWithBinaryStreaming<FsResponse, FsCommand> messaging, @NotNull String name, @Nullable Long size) {
 		return messaging.send(new Upload(name, size))
 				.then(messaging::receive)
-				.mapEx(castFn(UploadAck.class))
+				.map(castFn(UploadAck.class))
 				.then(() -> Promise.of(messaging.sendBinaryStream()
 						.transformWith(size == null ? identity() : ofFixedSize(size))
 						.withAcknowledgement(ack -> ack
 								.then(messaging::receive)
 								.whenResult(messaging::close)
-								.mapEx(castFn(UploadFinished.class))
+								.map(castFn(UploadFinished.class))
 								.toVoid()
 								.whenException(e -> {
 									messaging.closeEx(e);
@@ -185,12 +184,12 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.then(messaging ->
 						messaging.send(new Append(name, offset))
 								.then(messaging::receive)
-								.mapEx(castFn(AppendAck.class))
+								.map(castFn(AppendAck.class))
 								.then(() -> Promise.of(messaging.sendBinaryStream()
 										.withAcknowledgement(ack -> ack
 												.then(messaging::receive)
 												.whenResult(messaging::close)
-												.mapEx(castFn(AppendFinished.class))
+												.map(castFn(AppendFinished.class))
 												.toVoid()
 												.whenException(messaging::closeEx)
 												.whenComplete(appendFinishPromise.recordStats())
@@ -209,8 +208,8 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.then(messaging ->
 						messaging.send(new Download(name, offset, limit))
 								.then(messaging::receive)
-								.mapEx(castFn(DownloadSize.class))
-								.thenEx(msg -> {
+								.map(castFn(DownloadSize.class))
+								.then(msg -> {
 									long receivingSize = msg.getSize();
 									if (receivingSize > limit) {
 										throw new UnexpectedDataException();
@@ -223,7 +222,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 											.peek(buf -> size.inc(buf.readRemaining()))
 											.withEndOfStream(eos -> eos
 													.then(messaging::sendEndOfStream)
-													.whenResultEx(() -> {
+													.whenResult(() -> {
 														if (size.get() == receivingSize) {
 															return;
 														}
@@ -355,13 +354,13 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		};
 	}
 
-	private <T, R extends FsResponse> Promise<T> simpleCommand(FsCommand command, Class<R> responseType, Function<R, T> answerExtractor) {
+	private <T, R extends FsResponse> Promise<T> simpleCommand(FsCommand command, Class<R> responseType, FunctionEx<R, T> answerExtractor) {
 		return connect(address)
 				.then(messaging ->
 						messaging.send(command)
 								.then(messaging::receive)
 								.whenResult(messaging::close)
-								.mapEx(castFn(responseType))
+								.map(castFn(responseType))
 								.map(answerExtractor)
 								.whenException(e -> {
 									messaging.closeEx(e);

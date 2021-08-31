@@ -178,7 +178,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 
 	void completeSync(long commitId, List<D> accumulatedDiffs, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs, SettablePromise<Void> cb) {
 		storage.fetch(commitId)
-				.whenResultEx(fetchData -> {
+				.whenResult(fetchData -> {
 					TransformResult<D> transformResult = otSystem.transform(uplinkDiffs, fetchData.getDiffs());
 
 					accumulatedDiffs.addAll(transformResult.left);
@@ -230,7 +230,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 						cb.set(new FetchData<>(commitId + 1, NO_LEVEL, fetchedDiffs));
 					} else {
 						storage.fetch(commitId)
-								.whenResultEx(fetchData -> {
+								.whenResult(fetchData -> {
 									TransformResult<D> transformResult = otSystem.transform(fetchData.getDiffs(), diffs);
 									doPush(fetchData.getCommitId(), transformResult.left, concat(fetchedDiffs, transformResult.right), cb);
 								})

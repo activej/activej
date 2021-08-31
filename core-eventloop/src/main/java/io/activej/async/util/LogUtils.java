@@ -17,6 +17,7 @@
 package io.activej.async.util;
 
 import io.activej.common.Utils;
+import io.activej.common.function.BiConsumerEx;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -105,7 +106,7 @@ public class LogUtils {
 		}
 	}
 
-	public static <T> BiConsumer<T, Exception> toLogger(Logger logger,
+	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
 			Level callLevel, Supplier<String> callMsg,
 			Level resultLevel, Function<T, String> resultMsg,
 			@Nullable Level errorLevel, Function<Exception, String> errorMsg) {
@@ -126,7 +127,7 @@ public class LogUtils {
 		};
 	}
 
-	public static <T> BiConsumer<T, Exception> toLogger(Logger logger,
+	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
 			Level callLevel, Supplier<String> callMsg,
 			Level resultLevel, Function<T, String> resultMsg) {
 		return toLogger(logger,
@@ -135,7 +136,7 @@ public class LogUtils {
 				null, e -> callMsg.get());
 	}
 
-	public static <T> BiConsumer<T, Exception> toLogger(Logger logger,
+	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
 			Level callLevel, Level resultLevel, Level errorLevel,
 			String methodName, Object... parameters) {
 		return toLogger(logger,
@@ -146,19 +147,19 @@ public class LogUtils {
 						e -> formatResult(methodName, e, parameters));
 	}
 
-	public static <T> BiConsumer<T, Exception> toLogger(Logger logger,
+	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
 			Level callLevel, Level resultLevel,
 			String methodName, Object... parameters) {
 		return toLogger(logger, callLevel, resultLevel, null, methodName, parameters);
 	}
 
-	public static <T> BiConsumer<T, Exception> toLogger(Logger logger,
+	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
 			Level level,
 			String methodName, Object... parameters) {
 		return toLogger(logger, level, level, methodName, parameters);
 	}
 
-	public static <T> BiConsumer<T, Exception> toLogger(Logger logger, String methodName, Object... parameters) {
+	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger, String methodName, Object... parameters) {
 		return toLogger(logger, TRACE, INFO, methodName, parameters);
 	}
 

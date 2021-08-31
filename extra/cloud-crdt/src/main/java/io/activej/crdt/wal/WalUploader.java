@@ -118,7 +118,7 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 
 	private Promise<Void> doUploadToStorage() {
 		return getWalFiles(executor, path)
-				.thenEx(this::uploadWaLFiles);
+				.then(this::uploadWaLFiles);
 	}
 
 	private Promise<Void> uploadWaLFiles(List<Path> walFiles) throws IOException {
@@ -189,7 +189,7 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 			ChannelSupplier.ofPromise(ChannelFileReader.open(executor, file))
 					.transformWith(ChannelFrameDecoder.create(FRAME_FORMAT))
 					.withEndOfStream(eos -> eos
-							.mapEx(($, e) -> {
+							.map(($, e) -> {
 								if (e == null) return null;
 								if (e instanceof TruncatedDataException) {
 									logger.warn("Write ahead log {} was truncated", file);

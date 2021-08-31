@@ -17,6 +17,7 @@
 package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.function.BiFunctionEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
@@ -27,7 +28,6 @@ import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static io.activej.fs.http.FsCommand.*;
@@ -68,14 +68,14 @@ public final class ActiveFsServlet {
 					return (size == null ?
 							fs.upload(decodePath(request)) :
 							fs.upload(decodePath(request), size))
-							.map(acknowledgeUpload(request));
+							.map(uploadAcknowledgeFn(request));
 				})
 				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(fs::upload))
-						.map(errorHandler()))
+						.map(errorHandlerFn()))
 				.map(POST, "/" + APPEND + "/*", request -> {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					return fs.append(decodePath(request), offset)
-							.map(acknowledgeUpload(request));
+							.map(uploadAcknowledgeFn(request));
 				})
 				.map(GET, "/" + DOWNLOAD + "/*", request -> {
 					String name = decodePath(request);
@@ -86,7 +86,7 @@ public final class ActiveFsServlet {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
 					return fs.download(name, offset, limit)
-							.map(errorHandler(supplier -> HttpResponse.ok200()
+							.map(errorHandlerFn(supplier -> HttpResponse.ok200()
 									.withHeader(ACCEPT_RANGES, "bytes")
 									.withBodyStream(supplier)));
 				})
@@ -94,59 +94,59 @@ public final class ActiveFsServlet {
 					String glob = request.getQueryParameter("glob");
 					glob = glob != null ? glob : "**";
 					return (fs.list(glob))
-							.map(errorHandler(list ->
+							.map(errorHandlerFn(list ->
 									HttpResponse.ok200()
 											.withBody(toJson(list))
 											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))));
 				})
 				.map(GET, "/" + INFO + "/*", request ->
 						fs.info(decodePath(request))
-								.map(errorHandler(meta ->
+								.map(errorHandlerFn(meta ->
 										HttpResponse.ok200()
 												.withBody(toJson(meta))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)))))
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
-						.mapEx(body -> fromJson(STRING_SET_TYPE, body))
+						.map(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::infoAll)
-						.map(errorHandler(map ->
+						.map(errorHandlerFn(map ->
 								HttpResponse.ok200()
 										.withBody(toJson(map))
 										.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)))))
 				.map(GET, "/" + PING, request -> fs.ping()
-						.map(errorHandler()))
+						.map(errorHandlerFn()))
 				.map(POST, "/" + MOVE, request -> {
 					String name = getQueryParameter(request, "name");
 					String target = getQueryParameter(request, "target");
 					return fs.move(name, target)
-							.map(errorHandler());
+							.map(errorHandlerFn());
 				})
 				.map(POST, "/" + MOVE_ALL, request -> request.loadBody()
-						.mapEx(body -> fromJson(STRING_STRING_MAP_TYPE, body))
+						.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
 						.then(fs::moveAll)
-						.map(errorHandler()))
+						.map(errorHandlerFn()))
 				.map(POST, "/" + COPY, request -> {
 					String name = getQueryParameter(request, "name");
 					String target = getQueryParameter(request, "target");
 					return fs.copy(name, target)
-							.map(errorHandler());
+							.map(errorHandlerFn());
 				})
 				.map(POST, "/" + COPY_ALL, request -> request.loadBody()
-						.mapEx(body -> fromJson(STRING_STRING_MAP_TYPE, body))
+						.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
 						.then(fs::copyAll)
-						.map(errorHandler()))
+						.map(errorHandlerFn()))
 				.map(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
 						fs.delete(decodePath(request))
-								.map(errorHandler()))
+								.map(errorHandlerFn()))
 				.map(POST, "/" + DELETE_ALL, request -> request.loadBody()
-						.mapEx(body -> fromJson(STRING_SET_TYPE, body))
+						.map(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::deleteAll)
-						.map(errorHandler()));
+						.map(errorHandlerFn()));
 	}
 
 	@NotNull
 	private static Promise<HttpResponse> rangeDownload(ActiveFs fs, boolean inline, String name, String rangeHeader) {
 		return fs.info(name)
-				.thenEx(meta -> {
+				.then(meta -> {
 					if (meta == null) {
 						throw new FileNotFoundException();
 					}
@@ -157,7 +157,7 @@ public final class ActiveFsServlet {
 							rangeHeader,
 							inline);
 				})
-				.map(errorHandler(Function.identity()));
+				.map(errorHandlerFn(Function.identity()));
 	}
 
 	private static String decodePath(HttpRequest request) throws HttpError {
@@ -198,16 +198,16 @@ public final class ActiveFsServlet {
 				.withBody(toJson(FsException.class, castError(e)));
 	}
 
-	private static <T> BiFunction<T, Exception, HttpResponse> errorHandler() {
-		return errorHandler($ -> HttpResponse.ok200().withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8)));
+	private static <T> BiFunctionEx<T, Exception, HttpResponse> errorHandlerFn() {
+		return errorHandlerFn($ -> HttpResponse.ok200().withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8)));
 	}
 
-	private static <T> BiFunction<T, Exception, HttpResponse> errorHandler(Function<T, HttpResponse> successful) {
+	private static <T> BiFunctionEx<T, Exception, HttpResponse> errorHandlerFn(Function<T, HttpResponse> successful) {
 		return (res, e) -> e == null ? successful.apply(res) : getErrorResponse(e);
 	}
 
-	private static BiFunction<ChannelConsumer<ByteBuf>, Exception, HttpResponse> acknowledgeUpload(@NotNull HttpRequest request) {
-		return errorHandler(consumer -> HttpResponse.ok200()
+	private static BiFunctionEx<ChannelConsumer<ByteBuf>, Exception, HttpResponse> uploadAcknowledgeFn(@NotNull HttpRequest request) {
+		return errorHandlerFn(consumer -> HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBodyStream(ChannelSupplier.ofPromise(request.getBodyStream()
 						.streamTo(consumer)

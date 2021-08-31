@@ -1,7 +1,7 @@
 package io.activej.fs;
 
+import io.activej.common.function.ConsumerEx;
 import io.activej.fs.LocalFileUtils.IORunnable;
-import io.activej.test.TestUtils.ThrowingConsumer;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
@@ -932,7 +932,7 @@ public final class TestLocalBlockingFsInvariants {
 		}
 	}
 
-	private void both(ThrowingConsumer<BlockingFs> fsConsumer) {
+	private void both(ConsumerEx<BlockingFs> fsConsumer) {
 		try {
 			fsConsumer.accept(first);
 			fsConsumer.accept(second);
@@ -941,7 +941,7 @@ public final class TestLocalBlockingFsInvariants {
 		}
 	}
 
-	private void bothPaths(ThrowingConsumer<Path> consumer) {
+	private void bothPaths(ConsumerEx<Path> consumer) {
 		Utils.bothPaths(firstPath, secondPath, consumer);
 	}
 

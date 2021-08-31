@@ -1,6 +1,7 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.function.ConsumerEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.exception.FileNotFoundException;
@@ -9,7 +10,6 @@ import io.activej.fs.exception.IsADirectoryException;
 import io.activej.fs.exception.PathContainsFileException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.test.TestUtils.ThrowingConsumer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.NotNull;
@@ -985,7 +985,7 @@ public final class TestLocalActiveFsInvariants {
 		fsConsumer.accept(second);
 	}
 
-	private void bothPaths(ThrowingConsumer<Path> consumer) {
+	private void bothPaths(ConsumerEx<Path> consumer) {
 		Utils.bothPaths(firstPath, secondPath, consumer);
 	}
 }

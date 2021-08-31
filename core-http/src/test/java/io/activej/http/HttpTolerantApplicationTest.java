@@ -21,7 +21,7 @@ import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.asserting;
+import static io.activej.test.TestUtils.assertingFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -97,7 +97,7 @@ public final class HttpTolerantApplicationTest {
 				.then(response -> response.loadBody()
 						.whenResult(body -> assertEquals(text, body.getString(UTF_8)))
 						.map($ -> response.getHeader(HttpHeaders.CONTENT_TYPE))
-						.whenComplete(asserting(($, e) -> {
+						.whenComplete(assertingFn(($, e) -> {
 							listener.close();
 						}))));
 

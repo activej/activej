@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * {@link TestRule} that fails if not all active promises have been completed either successfully or exceptionally.
- * Promises to be monitored should have either a {@link TestUtils#assertComplete()}
+ * Promises to be monitored should have either a {@link TestUtils#assertCompleteFn()}
  * listener attached
  */
 public final class ActivePromisesRule implements TestRule {

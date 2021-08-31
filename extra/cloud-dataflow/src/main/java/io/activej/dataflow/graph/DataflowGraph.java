@@ -106,7 +106,7 @@ public final class DataflowGraph {
 	private Promise<List<PartitionSession>> connect(Set<Partition> partitions) {
 		return Promises.toList(partitions.stream()
 				.map(partition -> client.connect(partition.getAddress()).map(session -> new PartitionSession(partition, session)).toTry()))
-				.mapEx(tries -> {
+				.map(tries -> {
 					List<PartitionSession> sessions = tries.stream()
 							.filter(Try::isSuccess)
 							.map(Try::get)

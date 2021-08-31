@@ -211,7 +211,7 @@ public final class OTAlgorithms {
 		return repository.getLevels(heads)
 				.then(levels ->
 						reduce(repository, system, heads, new LoadGraphReducer<>(system))
-								.mapEx(graph -> {
+								.map(graph -> {
 									try {
 										Map<K, List<D>> mergeResult = graph.merge(graph.excludeParents(heads));
 										if (logger.isTraceEnabled()) {

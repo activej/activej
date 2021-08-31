@@ -331,7 +331,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<V> doGet() {
 				return ChannelSupplier.this.get()
-						.mapEx(value -> {
+						.map(value -> {
 							if (value != null) {
 								try {
 									return fn.apply(value);

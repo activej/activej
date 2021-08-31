@@ -181,10 +181,10 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 							.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
 							.map(supplier -> supplier
 									.withEndOfStream(eos -> eos
-											.whenExceptionEx(partitions.wrapDeathFn(id))));
+											.whenException(partitions.wrapDeathFn(id))));
 				},
 				AsyncCloseable::close)
-				.mapEx(filterErrorsFn(() -> {
+				.map(filterErrorsFn(() -> {
 					throw new FsIOException("Could not download file '" + name + "' from any server");
 				}))
 				.then(suppliers -> {
@@ -238,7 +238,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		return broadcast(fs -> fs.list(glob))
-				.mapEx(filterErrorsFn())
+				.map(filterErrorsFn())
 				.map(maps -> FileMetadata.flatten(maps.stream()))
 				.whenComplete(listPromise.recordStats());
 	}
@@ -246,7 +246,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
 		return broadcast(fs -> fs.info(name))
-				.mapEx(filterErrorsFn())
+				.map(filterErrorsFn())
 				.map(meta -> meta.stream().max(FileMetadata.COMPARATOR).orElse(null))
 				.whenComplete(infoPromise.recordStats());
 	}
@@ -256,7 +256,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		return broadcast(fs -> fs.infoAll(names))
-				.mapEx(filterErrorsFn())
+				.map(filterErrorsFn())
 				.map(maps -> FileMetadata.flatten(maps.stream()))
 				.whenComplete(infoAllPromise.recordStats());
 	}
@@ -345,9 +345,9 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 																consumers.add(consumer);
 															}
 														})
-														.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.whenExceptionEx(partitions.wrapDeathFn(id))))))))
+														.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.whenException(partitions.wrapDeathFn(id))))))))
 								.limit(uploadTargetsMax))
-				.whenExceptionEx(() -> {
+				.whenException(() -> {
 					consumers.forEach(AsyncCloseable::close);
 					failed.set(true);
 					throw new FsIOException("Didn't connect to enough partitions to upload '" + name + '\'');
@@ -364,7 +364,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 			return Promise.ofException(new FsIOException("Partition '" + id + "' is not alive"));
 		}
 		return action.apply(id, fs)
-				.whenExceptionEx(partitions.wrapDeathFn(id));
+				.whenException(partitions.wrapDeathFn(id));
 	}
 
 	private <T> Promise<List<Try<T>>> broadcast(BiFunction<Object, ActiveFs, Promise<T>> action, Consumer<T> cleanup) {
@@ -372,7 +372,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 				.then(() -> Promise.ofCallback(cb ->
 						Promises.toList(partitions.getAlivePartitions().entrySet().stream()
 										.map(entry -> action.apply(entry.getKey(), entry.getValue())
-												.whenExceptionEx(partitions.wrapDeathFn(entry.getKey()))
+												.whenException(partitions.wrapDeathFn(entry.getKey()))
 												.whenResult(result -> {
 													if (cb.isComplete()) {
 														cleanup.accept(result);

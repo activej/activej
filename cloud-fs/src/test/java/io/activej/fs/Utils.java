@@ -1,8 +1,8 @@
 package io.activej.fs;
 
+import io.activej.common.function.ConsumerEx;
 import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsScalarException;
-import io.activej.test.TestUtils.ThrowingConsumer;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayOutputStream;
@@ -129,7 +129,7 @@ public final class Utils {
 		assertEquals(removeTimestamp(expected), removeTimestamp(actual));
 	}
 
-	public static void bothPaths(Path firstPath, Path secondPath, ThrowingConsumer<Path> pathConsumer) {
+	public static void bothPaths(Path firstPath, Path secondPath, ConsumerEx<Path> pathConsumer) {
 		try {
 			pathConsumer.accept(firstPath);
 			pathConsumer.accept(secondPath);

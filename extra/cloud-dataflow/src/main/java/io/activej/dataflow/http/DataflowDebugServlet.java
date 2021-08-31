@@ -158,7 +158,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return messaging.send(new DataflowCommandGetTasks(null))
 							.then($ -> messaging.receive())
-							.mapEx(response -> {
+							.map(response -> {
 								messaging.close();
 								if (response instanceof DataflowResponsePartitionData) {
 									return (DataflowResponsePartitionData) response;
@@ -176,7 +176,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return messaging.send(new DataflowCommandGetTasks(taskId))
 							.then($ -> messaging.receive())
-							.mapEx(response -> {
+							.map(response -> {
 								messaging.close();
 								if (response instanceof DataflowResponseTaskData) {
 									return (DataflowResponseTaskData) response;

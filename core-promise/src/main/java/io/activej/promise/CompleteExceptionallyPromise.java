@@ -23,7 +23,7 @@ import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.*;
+import java.util.function.BiFunction;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -80,26 +80,13 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@NotNull
 	@SuppressWarnings("unchecked")
 	@Override
-	public <U> Promise<U> map(@NotNull Function<? super T, ? extends U> fn) {
-		return (Promise<U>) this;
-	}
-
-	@NotNull
-	@SuppressWarnings("unchecked")
-	@Override
-	public <U> Promise<U> mapEx(@NotNull FunctionEx<? super T, ? extends U> fn) {
+	public <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn) {
 		return (Promise<U>) this;
 	}
 
 	@NotNull
 	@Override
-	public <U> Promise<U> map(@NotNull BiFunction<? super T, Exception, ? extends U> fn) {
-		return Promise.of(fn.apply(null, exception));
-	}
-
-	@NotNull
-	@Override
-	public <U> Promise<U> mapEx(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
+	public <U> Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
 		} catch (RuntimeException ex) {
@@ -110,35 +97,18 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> then(@NotNull Supplier<? extends Promise<? extends U>> fn) {
+	public @NotNull <U> Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> thenEx(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
-		return (Promise<U>) this;
-	}
-
-	@NotNull
-	@Override
-	public <U> Promise<U> then(@NotNull Function<? super T, ? extends Promise<? extends U>> fn) {
-		return (Promise<U>) this;
-	}
-
-	@Override
-	public @NotNull <U> Promise<U> thenEx(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
+	public @NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 
 	@NotNull
 	@Override
-	public <U> Promise<U> then(@NotNull BiFunction<? super T, Exception, ? extends Promise<? extends U>> fn) {
-		return (Promise<U>) fn.apply(null, exception);
-	}
-
-	@NotNull
-	@Override
-	public <U> Promise<U> thenEx(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
+	public <U> Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
 		} catch (RuntimeException ex) {
@@ -148,15 +118,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		}
 	}
 
-	@NotNull
 	@Override
-	public Promise<T> whenComplete(@NotNull BiConsumer<? super T, Exception> action) {
-		action.accept(null, exception);
-		return this;
-	}
-
-	@Override
-	public @NotNull Promise<T> whenCompleteEx(@NotNull BiConsumerEx<? super T, Exception> action) {
+	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
 		try {
 			action.accept(null, exception);
 			return this;
@@ -167,15 +130,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		}
 	}
 
-	@NotNull
 	@Override
-	public Promise<T> whenComplete(@NotNull Runnable action) {
-		action.run();
-		return this;
-	}
-
-	@Override
-	public @NotNull Promise<T> whenCompleteEx(@NotNull RunnableEx action) {
+	public @NotNull Promise<T> whenComplete(@NotNull RunnableEx action) {
 		try {
 			action.run();
 			return this;
@@ -186,35 +142,18 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		}
 	}
 
-	@NotNull
 	@Override
-	public Promise<T> whenResult(@NotNull Consumer<? super T> action) {
+	public @NotNull Promise<T> whenResult(ConsumerEx<? super T> action) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResultEx(ConsumerEx<? super T> action) {
+	public @NotNull Promise<T> whenResult(@NotNull RunnableEx action) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResult(@NotNull Runnable action) {
-		return this;
-	}
-
-	@Override
-	public @NotNull Promise<T> whenResultEx(@NotNull RunnableEx action) {
-		return this;
-	}
-
-	@Override
-	public Promise<T> whenException(@NotNull Consumer<Exception> action) {
-		action.accept(exception);
-		return this;
-	}
-
-	@Override
-	public @NotNull Promise<T> whenExceptionEx(@NotNull ConsumerEx<Exception> action) {
+	public @NotNull Promise<T> whenException(@NotNull ConsumerEx<Exception> action) {
 		try {
 			action.accept(exception);
 			return this;
@@ -226,13 +165,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Promise<T> whenException(@NotNull Runnable action) {
-		action.run();
-		return this;
-	}
-
-	@Override
-	public @NotNull Promise<T> whenExceptionEx(@NotNull RunnableEx action) {
+	public @NotNull Promise<T> whenException(@NotNull RunnableEx action) {
 		try {
 			action.run();
 			return this;

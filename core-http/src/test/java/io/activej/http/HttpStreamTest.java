@@ -10,6 +10,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -27,7 +28,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import static io.activej.http.stream.BufsConsumerChunkedDecoder.CRLF;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -66,7 +66,7 @@ public final class HttpStreamTest {
 				.getBodyStream()
 				.async()
 				.toCollector(ByteBufs.collector())
-				.whenComplete(assertComplete(buf -> assertEquals(requestBody, buf.asString(UTF_8))))
+				.whenComplete(TestUtils.assertCompleteFn(buf -> assertEquals(requestBody, buf.asString(UTF_8))))
 				.then(s -> Promise.of(HttpResponse.ok200())));
 
 		Integer code = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
@@ -89,7 +89,7 @@ public final class HttpStreamTest {
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.request(HttpRequest.post("http://127.0.0.1:" + port))
 				.async()
-				.whenComplete(assertComplete(response -> assertEquals(200, response.getCode())))
+				.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
 				.then(response -> response.getBodyStream().async().toCollector(ByteBufs.collector())));
 
 		assertEquals(requestBody, body.asString(UTF_8));
@@ -108,7 +108,7 @@ public final class HttpStreamTest {
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
-				.whenComplete(assertComplete(response -> assertEquals(200, response.getCode())))
+				.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
 				.then(response -> response.getBodyStream().async().toCollector(ByteBufs.collector())));
 
 		assertEquals(requestBody, body.asString(UTF_8));

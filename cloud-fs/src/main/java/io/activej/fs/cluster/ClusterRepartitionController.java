@@ -170,7 +170,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 									if (!repartitionPlan.hasNext()) return Promise.of(false);
 									String name = repartitionPlan.next();
 									return localFs.info(name)
-											.thenEx(meta -> {
+											.then(meta -> {
 												if (meta == null) {
 													logger.warn("File '{}' that should be repartitioned has been deleted", name);
 													return Promise.of(false);
@@ -216,7 +216,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private Promise<Void> recalculatePlan() {
 		return localFs.list(glob)
-				.thenEx(map -> {
+				.then(map -> {
 					checkEnoughAlivePartitions();
 
 					allFiles = map.size();

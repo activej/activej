@@ -151,8 +151,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 										.map(t -> new Container<>(entry.getKey(), t))
 										.whenException(err -> partitions.markDead(entry.getKey(), err))
 										.toTry()))
-				.mapEx(this::checkStillNotDead)
-				.mapEx(tries -> {
+				.map(this::checkStillNotDead)
+				.map(tries -> {
 					List<Container<T>> successes = tries.stream()
 							.filter(Try::isSuccess)
 							.map(Try::get)
@@ -179,7 +179,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return Promise.of(splitter.getInput()
 							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 							.withAcknowledgement(ack -> ack
-									.whenResultEx(() -> {
+									.whenResult(() -> {
 										if (containers.size() - failedRef.value < replicationCount) {
 											throw new CrdtException("Failed to upload data to the required number of partitions");
 										}
@@ -198,7 +198,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return streamReducer.getOutput()
 							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 							.withEndOfStream(eos -> eos
-									.whenResultEx(() -> {
+									.whenResult(() -> {
 										int deadBeforeDownload = partitions.getPartitions().size() - containers.size();
 										if (deadBeforeDownload + failedRef.get() >= replicationCount) {
 											throw new CrdtException("Failed to download from the required number of partitions");
@@ -224,7 +224,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return splitter.getInput()
 							.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 							.withAcknowledgement(ack -> ack
-									.whenResultEx(() -> {
+									.whenResult(() -> {
 										if (partitions.getPartitions().size() - containers.size() + failedRef.get() != 0) {
 											throw new CrdtException("Failed to remove items from all partitions");
 										}

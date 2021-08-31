@@ -10,6 +10,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.net.SimpleServer;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -25,7 +26,6 @@ import java.util.stream.LongStream;
 import static io.activej.csp.binary.ByteBufsDecoder.ofNullTerminatedBytes;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
-import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
@@ -99,7 +99,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.listen();
 
 		await(AsyncTcpSocketNio.connect(address)
-				.whenComplete(assertComplete(socket -> ping(3, MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))));
+				.whenComplete(TestUtils.assertCompleteFn(socket -> ping(3, MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))));
 	}
 
 	@Test
@@ -151,14 +151,14 @@ public final class MessagingWithBinaryStreamingTest {
 							MessagingWithBinaryStreaming.create(socket, serializer);
 
 					messaging.receive()
-							.whenComplete(assertComplete(msg -> assertEquals("start", msg)))
+							.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
 							.then(() ->
 									messaging.receiveBinaryStream()
 											.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
 											.toList()
 											.then(list ->
 													messaging.sendEndOfStream().map($2 -> list)))
-							.whenComplete(assertComplete(list -> assertEquals(source, list)));
+							.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
 				})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
@@ -198,7 +198,7 @@ public final class MessagingWithBinaryStreamingTest {
 													messaging.send("ack")
 															.then(messaging::sendEndOfStream)
 															.map($ -> list)))
-							.whenComplete(assertComplete(list -> assertEquals(source, list)));
+							.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
 				})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
@@ -231,13 +231,13 @@ public final class MessagingWithBinaryStreamingTest {
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
 
 					messaging.receive()
-							.whenComplete(assertComplete(msg -> assertEquals("start", msg)))
+							.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
 							.then(msg -> messaging.sendEndOfStream())
 							.then(msg ->
 									messaging.receiveBinaryStream()
 											.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
 											.toList())
-							.whenComplete(assertComplete(list -> assertEquals(source, list)));
+							.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
 				})
 				.withListenPort(listenPort)
 				.withAcceptOnce()

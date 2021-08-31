@@ -38,7 +38,7 @@ import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.naturalOrder;
 import static org.junit.Assert.assertEquals;
@@ -149,10 +149,10 @@ public class MapReduceTest {
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
 
-		resultSupplier.streamTo(resultConsumer).whenComplete(assertComplete());
+		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
 		await(graph.execute()
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
 				})));

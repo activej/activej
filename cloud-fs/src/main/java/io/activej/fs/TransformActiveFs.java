@@ -17,6 +17,7 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.function.FunctionEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -212,7 +213,7 @@ final class TransformActiveFs implements ActiveFs {
 		return action.apply(renamed);
 	}
 
-	private Function<Map<String, FileMetadata>, Map<String, FileMetadata>> transformMap(Predicate<String> postPredicate) {
+	private FunctionEx<Map<String, FileMetadata>, Map<String, FileMetadata>> transformMap(Predicate<String> postPredicate) {
 		return map -> map.entrySet().stream()
 				.map(entry -> from.apply(entry.getKey())
 						.map(mappedName -> new SimpleEntry<>(mappedName, entry.getValue())))

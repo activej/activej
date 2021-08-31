@@ -131,7 +131,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 									ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 											.withAcknowledgement(ack -> ack
 													.then(messaging::receive)
-													.whenResultEx(simpleHandlerFn(UPLOAD_FINISHED))
+													.whenResult(simpleHandlerFn(UPLOAD_FINISHED))
 													.toVoid());
 									return StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
@@ -149,7 +149,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.then(wrapException(() -> "Failed to send 'Download' message"))
 						.then(() -> messaging.receive()
 								.then(wrapException(() -> "Failed to receive response")))
-						.whenResultEx(response -> {
+						.whenResult(response -> {
 							if (response == DOWNLOAD_STARTED) {
 								return;
 							}
@@ -184,7 +184,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 									ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 											.withAcknowledgement(ack -> ack
 													.then(messaging::receive)
-													.whenResultEx(simpleHandlerFn(REMOVE_FINISHED))
+													.whenResult(simpleHandlerFn(REMOVE_FINISHED))
 													.toVoid());
 									return StreamConsumer.<K>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
@@ -202,7 +202,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.then(wrapException(() -> "Failed to send 'Ping'"))
 						.then(() -> messaging.receive()
 								.then(wrapException(() -> "Failed to receive 'Pong'")))
-						.whenResultEx(simpleHandlerFn(PONG))
+						.whenResult(simpleHandlerFn(PONG))
 						.toVoid()
 						.whenResult(messaging::close)
 						.whenException(messaging::closeEx));

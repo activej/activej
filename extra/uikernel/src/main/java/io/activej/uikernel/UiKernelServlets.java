@@ -76,7 +76,7 @@ public class UiKernelServlets {
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet create(GridModel<K, R> model, Gson gson) {
 		return request -> request.loadBody()
-				.thenEx(body -> {
+				.then(body -> {
 					try {
 						String json = body.getString(UTF_8);
 						R obj = fromJson(gson, json, model.getRecordType());
@@ -91,7 +91,7 @@ public class UiKernelServlets {
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet update(GridModel<K, R> model, Gson gson) {
 		return request -> request.loadBody()
-				.thenEx(body -> {
+				.then(body -> {
 					try {
 						String json = body.getString(UTF_8);
 						List<R> list = deserializeUpdateRequest(gson, json, model.getRecordType(), model.getIdType());

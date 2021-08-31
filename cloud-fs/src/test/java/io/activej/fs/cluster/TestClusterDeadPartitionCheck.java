@@ -15,6 +15,7 @@ import io.activej.http.AsyncHttpServer;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.test.TestUtils;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import io.activej.test.rules.LoggingRule;
@@ -49,7 +50,6 @@ import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.assertComplete;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -219,7 +219,7 @@ public final class TestClusterDeadPartitionCheck {
 		Set<Integer> toBeAlive = setOf(1, 3);
 		String filename = "test";
 		Exception exception = awaitException(fs.upload(filename)
-				.whenComplete(assertComplete($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))
+				.whenComplete(TestUtils.assertCompleteFn($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))
 				.then(consumer -> {
 					RefInt dataBeforeShutdown = new RefInt(100);
 					return ChannelSupplier.of(() -> Promise.of(wrapUtf8("data")))

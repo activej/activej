@@ -57,7 +57,7 @@ import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_ST
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
@@ -137,7 +137,7 @@ public final class DataflowTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
 				})));
@@ -190,7 +190,7 @@ public final class DataflowTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
 				})));
@@ -287,7 +287,7 @@ public final class DataflowTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
 					server3.close();
@@ -354,7 +354,7 @@ public final class DataflowTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
 				})));
@@ -410,10 +410,10 @@ public final class DataflowTest {
 		Collector<TestItem> collector = new Collector<>(sortedDataset, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
-		resultSupplier.streamTo(resultConsumer).whenComplete(assertComplete());
+		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
 		await(graph.execute()
-				.whenComplete(assertComplete($ -> {
+				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
 				})));

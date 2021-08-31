@@ -29,4 +29,8 @@ public interface FunctionEx<T, R> {
 			}
 		};
 	}
+
+	static <T> FunctionEx<T, T> identity() {
+		return t -> t;
+	}
 }

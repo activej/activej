@@ -2,6 +2,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.function.RunnableEx;
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.ref.RefInt;
@@ -236,7 +237,7 @@ public final class WebSocketClientServerTest {
 				.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
 				.then(() -> webSocket.writeMessage(Message.text(messages.get(2))))
 				.then(() -> webSocket.writeMessage(null))
-				.whenException((Runnable) Assert::fail)
+				.whenException((RunnableEx) Assert::fail)
 		);
 
 		List<String> result = new ArrayList<>();
@@ -333,7 +334,7 @@ public final class WebSocketClientServerTest {
 						.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
 						.then(() -> webSocket.writeMessage(Message.text(messages.get(2))))
 						.then(() -> webSocket.writeMessage(null))
-						.whenException((Runnable) Assert::fail)
+						.whenException((RunnableEx) Assert::fail)
 				));
 
 		assertTrue(lastMessageNull.get());

@@ -255,7 +255,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					}
 					return channel;
 				})
-				.thenEx(translateScalarErrorsFn(name))
+				.then(translateScalarErrorsFn(name))
 				.whenComplete(appendBeginPromise.recordStats())
 				.map(channel -> {
 					ChannelFileWriter writer = ChannelFileWriter.create(executor, channel)
@@ -265,7 +265,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					}
 					return writer
 							.withAcknowledgement(ack -> ack
-									.thenEx(translateScalarErrorsFn(name))
+									.then(translateScalarErrorsFn(name))
 									.whenComplete(appendFinishPromise.recordStats())
 									.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)));
 				})
@@ -291,10 +291,10 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						.withOffset(offset)
 						.withLimit(limit)
 						.withEndOfStream(eos -> eos
-								.thenEx(translateScalarErrorsFn(name))
+								.then(translateScalarErrorsFn(name))
 								.whenComplete(downloadFinishPromise.recordStats())
 								.whenComplete(toLogger(logger, TRACE, "onDownloadComplete", name, offset, limit))))
-				.thenEx(translateScalarErrorsFn(name))
+				.then(translateScalarErrorsFn(name))
 				.whenComplete(toLogger(logger, TRACE, "download", name, offset, limit, this))
 				.whenComplete(downloadBeginPromise.recordStats());
 	}
@@ -322,7 +322,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 									noMergeFunction())
 							);
 				})
-				.thenEx(translateScalarErrorsFn())
+				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
@@ -330,7 +330,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		return execute(() -> forEachPair(singletonMap(name, target), this::doCopy))
-				.thenEx(translateScalarErrorsFn())
+				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
 	}
@@ -348,7 +348,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		return execute(() -> forEachPair(singletonMap(name, target), this::doMove))
-				.thenEx(translateScalarErrorsFn())
+				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
 	}
@@ -366,7 +366,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		return execute(() -> deleteImpl(singleton(name)))
-				.thenEx(translateScalarErrorsFn(name))
+				.then(translateScalarErrorsFn(name))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
 	}
@@ -463,12 +463,12 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 											tryFsync(target.getParent());
 										}
 									}))
-									.thenEx(translateScalarErrorsFn(name))
+									.then(translateScalarErrorsFn(name))
 									.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
 									.whenComplete(uploadFinishPromise.recordStats())
 									.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this)));
 				})
-				.thenEx(translateScalarErrorsFn(name))
+				.then(translateScalarErrorsFn(name))
 				.whenComplete(uploadBeginPromise.recordStats());
 	}
 

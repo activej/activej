@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.activej.rpc.client.sender.RpcStrategies.server;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.junit.Assert.assertEquals;
@@ -155,7 +155,7 @@ public final class RpcHelloWorldTest {
 				String name = "World" + i;
 				client.eventloop.execute(() -> client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 						.whenComplete(latch::countDown)
-						.whenComplete(assertComplete(response -> assertEquals("Hello, " + name + "!", response.message))));
+						.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
 			}
 			latch.await();
 		} finally {
@@ -199,11 +199,11 @@ public final class RpcHelloWorldTest {
 				client1.eventloop.execute(() ->
 						client1.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 								.whenComplete(latch::countDown)
-								.whenComplete(assertComplete(response -> assertEquals("Hello, " + name + "!", response.message))));
+								.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
 				client2.eventloop.execute(() ->
 						client2.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 								.whenComplete(latch::countDown)
-								.whenComplete(assertComplete(response -> assertEquals("Hello, " + name + "!", response.message))));
+								.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
 			}
 			latch.await();
 		} finally {

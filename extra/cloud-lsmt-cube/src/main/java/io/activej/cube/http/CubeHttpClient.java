@@ -35,7 +35,7 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static io.activej.aggregation.util.Utils.wrapException;
+import static io.activej.aggregation.util.Utils.wrapExceptionFn;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
@@ -109,10 +109,10 @@ public final class CubeHttpClient implements ICube {
 	@Override
 	public Promise<QueryResult> query(CubeQuery query) {
 		return httpClient.request(buildRequest(query))
-				.then(wrapException(e -> new CubeException("HTTP request failed", e)))
+				.then(wrapExceptionFn(e -> new CubeException("HTTP request failed", e)))
 				.then(response -> response.loadBody()
-						.then(wrapException(e -> new CubeException("HTTP request failed", e)))
-						.mapEx(body -> {
+						.then(wrapExceptionFn(e -> new CubeException("HTTP request failed", e)))
+						.map(body -> {
 							try {
 								if (response.getCode() != 200) {
 									throw new CubeException("CubeHTTP query failed. Response code: " + response.getCode() + " Body: " + body.getString(UTF_8));

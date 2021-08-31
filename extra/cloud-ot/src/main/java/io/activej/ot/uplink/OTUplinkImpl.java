@@ -17,6 +17,7 @@
 package io.activej.ot.uplink;
 
 import io.activej.async.function.AsyncPredicate;
+import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefInt;
 import io.activej.ot.OTCommit;
@@ -31,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -47,11 +47,11 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC> {
 
 	private final OTSystem<D> otSystem;
 	private final OTRepository<K, D> repository;
-	private final Function<OTCommit<K, D>, PC> protoCommitEncoder;
-	private final Function<PC, OTCommit<K, D>> protoCommitDecoder;
+	private final FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder;
+	private final FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder;
 
-	private OTUplinkImpl(OTRepository<K, D> repository, OTSystem<D> otSystem, Function<OTCommit<K, D>, PC> protoCommitEncoder,
-			Function<PC, OTCommit<K, D>> protoCommitDecoder) {
+	private OTUplinkImpl(OTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
+			FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder) {
 		this.otSystem = otSystem;
 		this.repository = repository;
 		this.protoCommitEncoder = protoCommitEncoder;
@@ -59,7 +59,7 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC> {
 	}
 
 	public static <K, D, C> OTUplinkImpl<K, D, C> create(OTRepository<K, D> repository, OTSystem<D> otSystem,
-			Function<OTCommit<K, D>, C> commitToObject, Function<C, OTCommit<K, D>> objectToCommit) {
+			FunctionEx<OTCommit<K, D>, C> commitToObject, FunctionEx<C, OTCommit<K, D>> objectToCommit) {
 		return new OTUplinkImpl<>(repository, otSystem, commitToObject, objectToCommit);
 	}
 
@@ -80,7 +80,14 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC> {
 
 	@Override
 	public Promise<FetchData<K, D>> push(PC protoCommit) {
-		OTCommit<K, D> commit = protoCommitDecoder.apply(protoCommit);
+		OTCommit<K, D> commit;
+		try {
+			commit = protoCommitDecoder.apply(protoCommit);
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
 		return repository.push(commit)
 				.then(repository::getHeads)
 				.then(initialHeads -> excludeParents(repository, otSystem, union(initialHeads, singleton(commit.getId())))

@@ -9,7 +9,7 @@ import org.junit.Test;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
@@ -26,7 +26,7 @@ public final class RoutingServletTest {
 		if (promise.isResult()) {
 			HttpResponse result = promise.getResult();
 			result.loadBody()
-					.whenComplete(assertComplete($ -> {
+					.whenComplete(assertCompleteFn($ -> {
 						assertEquals(expectedBody, result.getBody().asString(UTF_8));
 						assertEquals(expectedCode, result.getCode());
 					}));

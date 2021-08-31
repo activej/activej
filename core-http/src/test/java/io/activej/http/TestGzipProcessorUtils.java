@@ -31,7 +31,7 @@ import static io.activej.http.GzipProcessorUtils.toGzip;
 import static io.activej.http.HttpHeaders.ACCEPT_ENCODING;
 import static io.activej.http.HttpHeaders.CONTENT_ENCODING;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.assertComplete;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
@@ -124,7 +124,7 @@ public final class TestGzipProcessorUtils {
 
 		//noinspection Convert2MethodRef
 		ByteBuf body = await(client.request(request)
-				.whenComplete(assertComplete(response -> assertEquals("gzip", response.getHeader(CONTENT_ENCODING))))
+				.whenComplete(assertCompleteFn(response -> assertEquals("gzip", response.getHeader(CONTENT_ENCODING))))
 				.then(response -> response.loadBody(CHARACTERS_COUNT))
 				.map(buf -> buf.slice())
 				.whenComplete(() -> {

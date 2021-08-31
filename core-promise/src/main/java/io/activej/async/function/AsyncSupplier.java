@@ -16,16 +16,16 @@
 
 package io.activej.async.function;
 
-import io.activej.async.callback.Callback;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.common.collection.Try;
+import io.activej.common.function.ConsumerEx;
+import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -127,7 +127,7 @@ public interface AsyncSupplier<T> {
 
 	@Contract(pure = true)
 	@NotNull
-	default AsyncSupplier<T> peek(@NotNull Consumer<? super T> action) {
+	default AsyncSupplier<T> peek(@NotNull ConsumerEx<? super T> action) {
 		return () -> get().whenResult(action);
 	}
 
@@ -139,7 +139,7 @@ public interface AsyncSupplier<T> {
 	 */
 	@Contract(pure = true)
 	@NotNull
-	default <V> AsyncSupplier<V> map(@NotNull Function<? super T, ? extends V> fn) {
+	default <V> AsyncSupplier<V> map(@NotNull FunctionEx<? super T, ? extends V> fn) {
 		return () -> get().map(fn);
 	}
 
@@ -150,7 +150,7 @@ public interface AsyncSupplier<T> {
 	 */
 	@Contract(pure = true)
 	@NotNull
-	default <V> AsyncSupplier<V> mapAsync(@NotNull Function<? super T, ? extends Promise<V>> fn) {
+	default <V> AsyncSupplier<V> mapAsync(@NotNull FunctionEx<? super T, ? extends Promise<V>> fn) {
 		return () -> get().then(fn);
 	}
 }
