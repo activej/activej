@@ -143,6 +143,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
+						connection.setAutoCommit(true);
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
@@ -179,6 +180,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
+						connection.setAutoCommit(true);
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
