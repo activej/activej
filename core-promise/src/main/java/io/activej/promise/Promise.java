@@ -342,42 +342,31 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract("_ -> param1")
 	@NotNull <U, P extends Callback<? super T> & Promise<U>> Promise<U> next(@NotNull P promise);
 
-	@Contract(pure = true)
 	@NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn);
 
-	@Contract(pure = true)
 	@NotNull <U> Promise<U> map(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
 
-	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn);
 
-	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn);
 
-	@Contract(pure = true)
 	@NotNull <U> Promise<U> then(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
-	@Contract(" _ -> this")
 	@NotNull
 	Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action);
 
-	@Contract(pure = true)
 	@NotNull
 	Promise<T> whenComplete(@NotNull RunnableEx action);
 
-	@Contract(pure = true)
 	@NotNull
 	Promise<T> whenResult(ConsumerEx<? super T> action);
 
-	@Contract(pure = true)
 	@NotNull
 	Promise<T> whenResult(@NotNull RunnableEx action);
 
-	@Contract(" _ -> this")
 	@NotNull
 	Promise<T> whenException(@NotNull ConsumerEx<Exception> action);
 
-	@Contract(" _ -> this")
 	@NotNull
 	Promise<T> whenException(@NotNull RunnableEx action);
 
