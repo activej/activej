@@ -73,6 +73,8 @@ public final class SerializerBuilder {
 
 	private final TypeScannerRegistry<SerializerDef> registry = TypeScannerRegistry.create();
 
+	private Class<?> implementationClass = Object.class;
+
 	private String profile;
 	private int encodeVersionMax = Integer.MAX_VALUE;
 	private int decodeVersionMin = 0;
@@ -222,6 +224,11 @@ public final class SerializerBuilder {
 
 			return serializerDef;
 		});
+		return this;
+	}
+
+	public SerializerBuilder withImplemenationClass(Class<?> implementationClass) {
+		this.implementationClass = implementationClass;
 		return this;
 	}
 
@@ -375,8 +382,8 @@ public final class SerializerBuilder {
 	}
 
 	public <T> ClassBuilder<BinarySerializer<T>> toClassBuilder(SerializerDef serializer) {
-		//noinspection unchecked,rawtypes
-		ClassBuilder<BinarySerializer<T>> classBuilder = ClassBuilder.create((Class<BinarySerializer<T>>) (Class) BinarySerializer.class);
+		//noinspection unchecked
+		ClassBuilder<BinarySerializer<T>> classBuilder = ClassBuilder.create((Class<BinarySerializer<T>>) implementationClass, BinarySerializer.class);
 
 		Set<Integer> collectedVersions = new HashSet<>();
 		Map<Object, Expression> encoderInitializers = new HashMap<>();
