@@ -79,9 +79,13 @@ public class AsyncSuppliersTest {
 
 		Promise<Void>[] nextPromise = new Promise[3];
 		Promise<Void> promise1 = subscribe.get()
-				.whenComplete(() -> nextPromise[0] = subscribe.get()
-						.whenComplete(() -> nextPromise[1] = subscribe.get()
-								.whenComplete(() -> nextPromise[2] = subscribe.get())));
+				.whenComplete(() -> {
+					nextPromise[0] = subscribe.get();
+					nextPromise[0].run(($, e) -> {
+						nextPromise[1] = subscribe.get();
+						nextPromise[1].run(($2, e2) -> nextPromise[2] = subscribe.get());
+					});
+				});
 
 		Promise<Void> promise2 = subscribe.get();
 		Promise<Void> promise3 = subscribe.get();
@@ -96,7 +100,7 @@ public class AsyncSuppliersTest {
 
 		// first recursion subscribed to secondly returned promise
 		assertNotSame(nextPromise[0], promise1);
-//		assertSame(nextPromise[0], promise2);
+		assertSame(nextPromise[0], promise2);
 
 		// next recursions subscribed to newly created promises
 		assertNotSame(nextPromise[0], nextPromise[1]);
@@ -111,16 +115,16 @@ public class AsyncSuppliersTest {
 		Promise<Void> promise1 = subscribe.get();
 
 		Promise<Void> promise2 = subscribe.get();
-		Promise<Void> promise3 = subscribe.get()
-				.whenComplete(() -> nextPromiseRef.value = subscribe.get());
+		Promise<Void> promise3 = subscribe.get();
+		promise3.run(($, e) -> nextPromiseRef.value = subscribe.get());
 		Promise<Void> promise4 = subscribe.get();
 
 		await(promise1);
 
 		assertNotSame(promise1, promise2);
 
-//		assertSame(promise2, promise3);
-//		assertSame(promise2, promise4);
+		assertSame(promise2, promise3);
+		assertSame(promise2, promise4);
 
 		// subscribed to new promise
 		assertNotSame(nextPromiseRef.value, promise1);
@@ -136,18 +140,22 @@ public class AsyncSuppliersTest {
 		Promise<Void> promise1 = subscribe.get();
 
 		Promise<Void> promise2 = subscribe.get();
-		Promise<Void> promise3 = subscribe.get()
-				.whenComplete(() -> nextPromise[0] = subscribe.get()
-						.whenComplete(() -> nextPromise[1] = subscribe.get()
-								.whenComplete(() -> nextPromise[2] = subscribe.get())));
+		Promise<Void> promise3 = subscribe.get();
+		promise3.run(($, e) -> {
+			nextPromise[0] = subscribe.get();
+			nextPromise[0].run(($2, e2) -> {
+				nextPromise[1] = subscribe.get();
+				nextPromise[1].run(($3, e3) -> nextPromise[2] = subscribe.get());
+			});
+		});
 		Promise<Void> promise4 = subscribe.get();
 
 		await(promise1);
 
 		assertNotSame(promise1, promise2);
 
-//		assertSame(promise2, promise3);
-//		assertSame(promise2, promise4);
+		assertSame(promise2, promise3);
+		assertSame(promise2, promise4);
 
 		// first recursion subscribed to new promise
 		assertNotSame(nextPromise[0], promise1);
@@ -168,21 +176,29 @@ public class AsyncSuppliersTest {
 		Promise<Void> promise1 = subscribe.get();
 
 		Promise<Void> promise2 = subscribe.get();
-		Promise<Void> promise3 = subscribe.get()
-				.whenComplete(() -> nextPromise1[0] = subscribe.get()
-						.whenComplete(() -> nextPromise1[1] = subscribe.get()
-								.whenComplete(() -> nextPromise1[2] = subscribe.get())));
-		Promise<Void> promise4 = subscribe.get()
-				.whenComplete(() -> nextPromise2[0] = subscribe.get()
-						.whenComplete(() -> nextPromise2[1] = subscribe.get()
-								.whenComplete(() -> nextPromise2[2] = subscribe.get())));
+		Promise<Void> promise3 = subscribe.get();
+		promise3.run(($, e) -> {
+			nextPromise1[0] = subscribe.get();
+			nextPromise1[0].run(($2, e2) -> {
+				nextPromise1[1] = subscribe.get();
+				nextPromise1[1].run(($3, e3) -> nextPromise1[2] = subscribe.get());
+			});
+		});
+		Promise<Void> promise4 = subscribe.get();
+		promise4.run(($, e) -> {
+			nextPromise2[0] = subscribe.get();
+			nextPromise2[0].run(($2, e2) -> {
+				nextPromise2[1] = subscribe.get();
+				nextPromise2[1].run(($3, e3) -> nextPromise2[2] = subscribe.get());
+			});
+		});
 
 		await(promise1);
 
 		assertNotSame(promise1, promise2);
 
-//		assertSame(promise2, promise3);
-//		assertSame(promise2, promise4);
+		assertSame(promise2, promise3);
+		assertSame(promise2, promise4);
 
 		// first recursions subscribed to new promise and are the same
 		assertNotSame(nextPromise1[0], promise1);

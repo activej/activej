@@ -326,18 +326,18 @@ public final class PromisesTest {
 					assertEquals(asList(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.of(2).async(), it ->
 					assertEquals(asList(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
-//			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.of(2), it ->
-//					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
-//			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.of(2).async(), it ->
-//					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
-//			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.<Integer>ofException(e), it ->
-//					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
-//			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.<Integer>ofException(e).async(), it ->
-//					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
-//			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.<Integer>ofException(e), it ->
-//					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
-//			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.<Integer>ofException(e).async(), it ->
-//					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.of(2), it ->
+					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.of(2).async(), it ->
+					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.<Integer>ofException(e), it ->
+					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.<Integer>ofException(e).async(), it ->
+					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.<Integer>ofException(e), it ->
+					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.<Integer>ofException(e).async(), it ->
+					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 		}
 	}
 
