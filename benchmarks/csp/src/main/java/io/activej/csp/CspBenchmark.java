@@ -1,5 +1,6 @@
 package io.activej.csp;
 
+import io.activej.common.function.FunctionEx;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.InstanceProvider;
@@ -10,8 +11,6 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.service.ServiceGraphModule;
-
-import java.util.function.Function;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 
@@ -134,7 +133,7 @@ public class CspBenchmark extends Launcher {
 		ChannelSupplier<Integer> input = inputProvider.get();
 		ChannelConsumer<Integer> output = outputProvider.get();
 		long start = System.currentTimeMillis();
-		return input.map(v -> v)
+		return input.map(FunctionEx.identity())
 				.streamTo(output)
 				.map($ -> System.currentTimeMillis() - start);
 	}
