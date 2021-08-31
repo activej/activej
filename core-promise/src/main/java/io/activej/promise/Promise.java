@@ -353,22 +353,56 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull <U> Promise<U> then(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
 	@NotNull
-	Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action);
+	default Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
+		return then((v, e) -> {
+			action.accept(v, e);
+			return Promise.of(v, e);
+		});
+	}
 
 	@NotNull
-	Promise<T> whenComplete(@NotNull RunnableEx action);
+	default Promise<T> whenComplete(@NotNull RunnableEx action) {
+		return then((v, e) -> {
+			action.run();
+			return Promise.of(v, e);
+		});
+	}
 
 	@NotNull
-	Promise<T> whenResult(ConsumerEx<? super T> action);
+	default Promise<T> whenResult(ConsumerEx<? super T> action) {
+		return then(v -> {
+			action.accept(v);
+			return Promise.of(v);
+		});
+	}
 
 	@NotNull
-	Promise<T> whenResult(@NotNull RunnableEx action);
+	default Promise<T> whenResult(@NotNull RunnableEx action) {
+		return then(v -> {
+			action.run();
+			return Promise.of(v);
+		});
+	}
 
 	@NotNull
-	Promise<T> whenException(@NotNull ConsumerEx<Exception> action);
+	default Promise<T> whenException(@NotNull ConsumerEx<Exception> action) {
+		return then((v, e) -> {
+			if (e != null) {
+				action.accept(e);
+			}
+			return Promise.of(v, e);
+		});
+	}
 
 	@NotNull
-	Promise<T> whenException(@NotNull RunnableEx action);
+	default Promise<T> whenException(@NotNull RunnableEx action) {
+		return then((v, e) -> {
+			if (e != null) {
+				action.run();
+			}
+			return Promise.of(v, e);
+		});
+	}
 
 	/**
 	 * Returns a new {@code Promise} that, when this and the other
