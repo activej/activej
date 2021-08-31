@@ -152,7 +152,9 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 						))) {
 							ps.setLong(1, lockTtlSeconds);
 							int deletedCount = ps.executeUpdate();
-							logger.info("Deleted {} expired chunk locks", deletedCount);
+							if (deletedCount != 0) {
+								logger.info("Deleted {} expired chunk locks", deletedCount);
+							}
 						}
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +

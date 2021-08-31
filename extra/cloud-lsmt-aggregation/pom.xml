@@ -89,7 +89,6 @@
             <configuration>
               <excludes>
                 <exclude>**/IdGeneratorSqlTest.java</exclude>
-                <exclude>**/ChunkLockerMySqlTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>
