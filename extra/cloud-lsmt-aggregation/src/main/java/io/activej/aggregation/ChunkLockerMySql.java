@@ -35,6 +35,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 
@@ -139,6 +140,8 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
 								"DELETE FROM {lock} " +
 								"WHERE `locked_at` <= NOW() - INTERVAL ? SECOND"
@@ -173,6 +176,8 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
 								"DELETE FROM {lock} " +
 								"WHERE `aggregation_id`=? AND `locked_by`=? AND `chunk_id` IN " +
@@ -197,6 +202,8 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return Promise.ofBlockingCallable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
 								"SELECT `chunk_id` " +
 								"FROM {lock} " +
