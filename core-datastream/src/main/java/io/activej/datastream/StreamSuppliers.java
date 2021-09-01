@@ -188,7 +188,7 @@ final class StreamSuppliers {
 		protected void onResumed() {
 			asyncBegin();
 			supplier.get()
-					.whenComplete((item, e) -> {
+					.run((item, e) -> {
 						if (e == null) {
 							if (item != null) {
 								send(item);

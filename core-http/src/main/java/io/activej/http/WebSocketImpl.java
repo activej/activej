@@ -192,7 +192,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 		SettablePromise<T> readPromise = new SettablePromise<>();
 		this.readPromise = readPromise;
 		supplier.get()
-				.whenComplete((result, e) -> {
+				.run((result, e) -> {
 					this.readPromise = null;
 					readPromise.trySet(result, e);
 				});
@@ -213,7 +213,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 		SettablePromise<Void> writePromise = new SettablePromise<>();
 		this.writePromise = writePromise;
 		supplier.get()
-				.whenComplete((result, e) -> {
+				.run((result, e) -> {
 					this.writePromise = null;
 					writePromise.trySet(result, e);
 				});

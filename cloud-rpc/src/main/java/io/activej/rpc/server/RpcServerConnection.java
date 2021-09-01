@@ -83,7 +83,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 
 		Object messageData = message.getData();
 		serve(messageData)
-				.whenComplete((result, e) -> {
+				.run((result, e) -> {
 					if (startTime != 0) {
 						int value = (int) (System.currentTimeMillis() - startTime);
 						requestHandlingTime.recordValue(value);

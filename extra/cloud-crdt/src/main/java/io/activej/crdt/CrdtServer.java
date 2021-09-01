@@ -107,10 +107,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 					}
 					throw new IllegalArgumentException("Message type was added, but no handling code for it");
 				})
-				.whenComplete(($, e) -> {
-					if (e == null) {
-						return;
-					}
+				.whenException(e -> {
 					logger.warn("got an error while handling message {}", this, e);
 					messaging.send(new ServerError(e.getClass().getSimpleName() + ": " + e.getMessage()))
 							.then(messaging::sendEndOfStream)

@@ -220,7 +220,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 				eventloop.startExternalTask();
 				anotherEventloop.execute(() ->
 						anotherEventloopConsumer.accept(value)
-								.whenComplete((v, e) -> {
+								.run((v, e) -> {
 									eventloop.execute(() -> promise.accept(v, e));
 									eventloop.completeExternalTask();
 								}));
@@ -435,7 +435,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 								return newAcknowledgement;
 							});
 				} else {
-					ChannelConsumer.this.accept(null).whenComplete(acknowledgement::trySet);
+					ChannelConsumer.this.accept(null).run(acknowledgement::trySet);
 					return newAcknowledgement;
 				}
 			}

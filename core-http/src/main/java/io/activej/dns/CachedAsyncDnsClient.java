@@ -110,7 +110,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 				return Promise.ofCallback(cb ->
 						eventloop.execute(() ->
 								CachedAsyncDnsClient.this.resolve(query)
-										.whenComplete((result, e) -> {
+										.run((result, e) -> {
 											anotherEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
 											anotherEventloop.completeExternalTask();
 										})));
@@ -139,7 +139,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		}
 		logger.trace("Refreshing {}", query);
 		client.resolve(query)
-				.whenComplete((response, e) -> {
+				.run((response, e) -> {
 					addToCache(query, response, e);
 					refreshingNow.remove(query);
 				});
@@ -168,14 +168,11 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		cache.performCleanup();
 		Promise<DnsResponse> promise = pending.get(query);
 		if (promise != null) return promise;
-		Promise<DnsResponse> resolve = client.resolve(query).whenComplete((response, e) ->
-				addToCache(query, response, e)
-		);
+		Promise<DnsResponse> resolve = client.resolve(query);
+		resolve.run((response, e) -> addToCache(query, response, e));
 		if (resolve.isComplete()) return resolve;
 		pending.put(query, resolve);
-		return resolve.whenComplete((response, e) ->
-				pending.remove(query)
-		);
+		return resolve.whenComplete((response, e) -> pending.remove(query));
 	}
 
 	@Override

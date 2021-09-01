@@ -69,24 +69,30 @@ public final class OTAlgorithms {
 			return;
 		}
 		reducer.onCommit(commit)
-				.whenResult(maybeResult -> {
+				.run((maybeResult, e) -> {
+					if (e != null) {
+						cb.setException(e);
+						return;
+					}
 					OTCommit<K, D> polledCommit = queue.poll();
 					assert polledCommit == commit;
 					if (maybeResult.isResume()) {
 						toList(commit.getParents().keySet().stream().filter(visited::add).map(repository::loadCommit))
 								.async()
-								.whenResult(parentCommits -> {
-									queue.addAll(parentCommits);
-									walkGraphImpl(repository, reducer, queue, visited, cb);
-								})
-								.whenException(cb::setException);
+								.run((parentCommits, e2) -> {
+									if (e2 == null) {
+										queue.addAll(parentCommits);
+										walkGraphImpl(repository, reducer, queue, visited, cb);
+									} else {
+										cb.setException(e2);
+									}
+								});
 					} else if (maybeResult.isSkip()) {
 						walkGraphImpl(repository, reducer, queue, visited, cb);
 					} else {
 						cb.set(maybeResult.get());
 					}
-				})
-				.whenException(cb::setException);
+				});
 	}
 
 	public static final class FindResult<K, A> {

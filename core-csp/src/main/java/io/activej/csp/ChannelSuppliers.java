@@ -147,7 +147,7 @@ public final class ChannelSuppliers {
 			}
 			break;
 		}
-		promise.whenComplete((value, e) -> {
+		promise.run((value, e) -> {
 			if (e == null) {
 				if (value != null) {
 					try {
@@ -222,7 +222,7 @@ public final class ChannelSuppliers {
 			if (item == null) break;
 			Promise<Void> consumerPromise = consumer.accept(item);
 			if (consumerPromise.isResult()) continue;
-			consumerPromise.whenComplete(($, e) -> {
+			consumerPromise.run(($, e) -> {
 				if (e == null) {
 					streamToImpl(supplier, consumer, cb);
 				} else {
@@ -233,10 +233,10 @@ public final class ChannelSuppliers {
 			return;
 		}
 		supplierPromise
-				.whenComplete((item, e1) -> {
+				.run((item, e1) -> {
 					if (e1 == null) {
 						consumer.accept(item)
-								.whenComplete(($, e2) -> {
+								.run(($, e2) -> {
 									if (e2 == null) {
 										if (item != null) {
 											streamToImpl(supplier, consumer, cb);
@@ -285,7 +285,7 @@ public final class ChannelSuppliers {
 			private void next(SettablePromise<V> cb) {
 				if (!endOfStream) {
 					supplier.get()
-							.whenComplete((item, e) -> {
+							.run((item, e) -> {
 								if (e == null) {
 									if (item == null) endOfStream = true;
 									iterator = fn.apply(item);

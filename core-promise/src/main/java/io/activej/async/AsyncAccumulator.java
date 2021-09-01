@@ -69,7 +69,7 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 			return;
 		}
 		activePromises++;
-		promise.whenComplete((v, e) -> {
+		promise.run((v, e) -> {
 			activePromises--;
 			if (resultPromise.isComplete()) {
 				Recyclers.recycle(v);

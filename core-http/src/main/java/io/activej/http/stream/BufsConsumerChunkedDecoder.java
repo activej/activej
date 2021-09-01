@@ -122,12 +122,15 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 					this.bufs.skip(bytes - 1);
 					return chunkLength;
 				})
-				.whenException(this::closeEx)
-				.whenResult(chunkLength -> {
-					if (chunkLength != 0) {
-						consumeCRLF(chunkLength);
+				.run((chunkLength, e) -> {
+					if (e == null) {
+						if (chunkLength != 0) {
+							consumeCRLF(chunkLength);
+						} else {
+							validateLastChunk();
+						}
 					} else {
-						validateLastChunk();
+						closeEx(e);
 					}
 				});
 	}
@@ -150,16 +153,21 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 
 	private void consumeCRLF(int chunkLength) {
 		input.decode(
-				bufs -> {
-					ByteBuf maybeResult = ofCrlfTerminatedBytes().tryDecode(bufs);
-					if (maybeResult == null) {
-						bufs.skip(bufs.remainingBytes() - 1);
+						bufs -> {
+							ByteBuf maybeResult = ofCrlfTerminatedBytes().tryDecode(bufs);
+							if (maybeResult == null) {
+								bufs.skip(bufs.remainingBytes() - 1);
+							}
+							return maybeResult;
+						})
+				.run((buf, e) -> {
+					if (e == null) {
+						buf.recycle();
+						processData(chunkLength);
+					} else {
+						closeEx(e);
 					}
-					return maybeResult;
-				})
-				.whenResult(ByteBuf::recycle)
-				.whenException(this::closeEx)
-				.whenResult(() -> processData(chunkLength));
+				});
 	}
 
 	private void validateLastChunk() {

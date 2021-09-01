@@ -223,7 +223,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 				eventloop.startExternalTask();
 				anotherEventloop.execute(() ->
 						anotherEventloopSupplier.get()
-								.whenComplete((item, e) -> {
+								.run((item, e) -> {
 									eventloop.execute(() -> promise.accept(item, e));
 									eventloop.completeExternalTask();
 								}));

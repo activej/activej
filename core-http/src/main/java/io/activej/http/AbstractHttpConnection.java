@@ -544,7 +544,7 @@ public abstract class AbstractHttpConnection {
 
 	protected void writeBuf(ByteBuf buf) {
 		socket.write(buf)
-				.whenComplete(($, e) -> {
+				.run(($, e) -> {
 					if (isClosed()) return;
 					if (e == null) {
 						onBodySent();

@@ -55,7 +55,7 @@ public class AsyncExecutors {
 				return Promise.ofCallback(cb -> {
 					currentEventloop.startExternalTask();
 					eventloop.execute(wrapContext(cb, () -> supplier.get()
-							.whenComplete((result, e) -> {
+							.run((result, e) -> {
 								currentEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
 								currentEventloop.completeExternalTask();
 							})));
@@ -104,7 +104,7 @@ public class AsyncExecutors {
 						continue;
 					}
 					promise
-							.whenComplete((result, e) -> {
+							.run((result, e) -> {
 								pendingCalls--;
 								processBuffer();
 								cb.accept(result, e);

@@ -188,11 +188,14 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 				Promise<Void> acceptPromise = output.accept(bufs.poll());
 				if (acceptPromise.isResult()) continue;
 				acceptPromise
-						.whenResult(() -> {
-							sending = false;
-							send();
-						})
-						.whenException(this::closeEx);
+						.run(($, e) -> {
+							if (e == null) {
+								sending = false;
+								send();
+							} else {
+								closeEx(e);
+							}
+						});
 				return;
 			}
 			sending = false;

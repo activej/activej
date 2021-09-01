@@ -67,7 +67,7 @@ public final class ChannelConsumers {
 		while (it.hasNext()) {
 			Promise<Void> accept = output.accept(it.next());
 			if (accept.isResult()) continue;
-			accept.whenComplete(($, e) -> {
+			accept.run(($, e) -> {
 				if (e == null) {
 					acceptAllImpl(output, it, ownership, cb);
 				} else {

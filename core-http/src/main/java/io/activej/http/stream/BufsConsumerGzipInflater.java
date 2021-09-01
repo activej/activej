@@ -146,7 +146,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 					// unsetting FTEXT bit
 					flag &= ~1;
 					buf.recycle();
-					runNext(flag).run();
+					runNext(flag);
 				})
 				.whenException(this::closeEx);
 	}
@@ -234,7 +234,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 		input.decode(ByteBufsDecoder.ofNullTerminatedBytes(MAX_HEADER_FIELD_LENGTH))
 				.whenException(e -> closeEx(new InvalidSizeException("FNAME or FEXTRA header is larger than maximum allowed length")))
 				.whenResult(ByteBuf::recycle)
-				.whenResult(() -> runNext(flag - part).run());
+				.whenResult(() -> runNext(flag - part));
 	}
 
 	private void skipExtra(int flag) {
@@ -254,21 +254,22 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 				})
 				.whenException(this::closeEx)
 				.whenResult(ByteBuf::recycle)
-				.whenResult(() -> runNext(flag - FEXTRA).run());
+				.whenResult(() -> runNext(flag - FEXTRA));
 	}
 
 	private void skipCRC16(int flag) {
 		input.decode(ofFixedSize(2))
 				.whenException(this::closeEx)
 				.whenResult(ByteBuf::recycle)
-				.whenResult(() -> runNext(flag - FHCRC).run());
+				.whenResult(() -> runNext(flag - FHCRC));
 	}
 
-	private Runnable runNext(int flag) {
+	private void runNext(int flag) {
 		if (flag != 0) {
-			return () -> skipHeaders(flag);
+			skipHeaders(flag);
+		} else {
+			processBody();
 		}
-		return this::processBody;
 	}
 	// endregion
 
