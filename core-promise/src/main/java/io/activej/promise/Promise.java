@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
@@ -342,16 +343,108 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract("_ -> param1")
 	@NotNull <U, P extends Callback<? super T> & Promise<U>> Promise<U> next(@NotNull P promise);
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a result of {@code this} promise to some other value.
+	 * If {@code this} promise is completed exceptionally, a mapping
+	 * function will not be applied.
+	 *
+	 * <p>
+	 * A mapping function may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param fn a function to map the result of this {@code Promise}
+	 *           to a new value
+	 * @return new {@code Promise} whose result is the result of function
+	 * applied to the result of {@code this} promise
+	 * @see CompletionStage#thenApply(Function)
+	 */
 	@NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn);
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a result and an exception of {@code this} promise to some other value.
+	 * If {@code this} promise is completed exceptionally, an exception
+	 * passed to a mapping bi function is guaranteed to be not null.
+	 *
+	 * <p>
+	 * A bi function may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param fn a bi function to map a result and
+	 *           an exception of {@code this} promise to some other value
+	 * @return new {@code Promise} whose result is the result of bi function
+	 * applied to the result and exception of {@code this} promise
+	 */
 	@NotNull <U> Promise<U> map(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by calling
+	 * a provided supplier of a new promise. If {@code this} promise
+	 * is completed exceptionally, a supplier will not be called.
+	 *
+	 * <p>
+	 * A supplier may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param fn a supplier of a new promise which will be called
+	 *           if {@code this} promise} completes successfully
+	 */
 	@NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn);
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a result of {@code this} promise to some other promise.
+	 * If {@code this} promise is completed exceptionally, a mapping
+	 * function will not be applied.
+	 *
+	 * <p>
+	 * A mapping function may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param fn a function to map the result of this {@code Promise}
+	 *           to a new promise
+	 * @return new {@code Promise} which is the result of function
+	 * applied to the result of {@code this} promise
+	 * @see CompletionStage#thenCompose(Function)
+	 */
 	@NotNull <U> Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn);
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a result and an exception of {@code this} promise to some other promise.
+	 * If {@code this} promise is completed exceptionally, an exception
+	 * passed to a mapping bi function is guaranteed to be not null.
+	 *
+	 * <p>
+	 * A bi function may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param fn a bi function to map a result and
+	 *           an exception of {@code this} promise to some other promise
+	 * @return new {@code Promise} which is the result of bi function
+	 * applied to the result and exception of {@code this} promise
+	 */
 	@NotNull <U> Promise<U> then(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
+	/**
+	 * Subscribes given bi consumer to be executed
+	 * after this {@code Promise} completes (either successfully or exceptionally).
+	 * Returns a new {@code Promise}.
+	 *
+	 * <p>
+	 * A bi consumer may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param action bi consumer that consumes a result
+	 *               and an exception of {@code this} promise
+	 */
 	@NotNull
 	default Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
 		return then((v, e) -> {
@@ -360,6 +453,18 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		});
 	}
 
+	/**
+	 * Subscribes given runable to be executed
+	 * after this {@code Promise} completes (either successfully or exceptionally).
+	 * Returns a new {@code Promise}.
+	 *
+	 * <p>
+	 * A runnable may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param action runnable to be executed after {@code this} promise completes
+	 */
 	@NotNull
 	default Promise<T> whenComplete(@NotNull RunnableEx action) {
 		return then((v, e) -> {
@@ -368,6 +473,18 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		});
 	}
 
+	/**
+	 * Subscribes given consumer to be executed
+	 * after this {@code Promise} completes successfully.
+	 * Returns a new {@code Promise}.
+	 *
+	 * <p>
+	 * A consumer may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param action consumer that consumes a result of {@code this} promise
+	 */
 	@NotNull
 	default Promise<T> whenResult(ConsumerEx<? super T> action) {
 		return then(v -> {
@@ -376,6 +493,19 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		});
 	}
 
+	/**
+	 * Subscribes given runnable to be executed
+	 * after this {@code Promise} completes successfully.
+	 * Returns a new {@code Promise}.
+	 *
+	 * <p>
+	 * A runnable may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param action runnable to be executed after {@code this} promise
+	 *               completes successfully
+	 */
 	@NotNull
 	default Promise<T> whenResult(@NotNull RunnableEx action) {
 		return then(v -> {
@@ -384,6 +514,18 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		});
 	}
 
+	/**
+	 * Subscribes given consumer to be executed
+	 * after this {@code Promise} completes exceptionally.
+	 * Returns a new {@code Promise}.
+	 *
+	 * <p>
+	 * A consumer may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param action consumer that consumes an exception of {@code this} promise
+	 */
 	@NotNull
 	default Promise<T> whenException(@NotNull ConsumerEx<Exception> action) {
 		return then((v, e) -> {
@@ -394,6 +536,19 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		});
 	}
 
+	/**
+	 * Subscribes given runnable to be executed
+	 * after this {@code Promise} completes exceptionally.
+	 * Returns a new {@code Promise}.
+	 *
+	 * <p>
+	 * A runnable may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param action runnable to be executed after {@code this} promise
+	 *               completes exceptionally
+	 */
 	@NotNull
 	default Promise<T> whenException(@NotNull RunnableEx action) {
 		return then((v, e) -> {
