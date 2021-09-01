@@ -16,10 +16,7 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.Aggregation;
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkLocker;
+import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.cube.Cube;
@@ -33,50 +30,44 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.ot.OTStateManager;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static io.activej.aggregation.util.Utils.collectChunkIds;
 import static io.activej.aggregation.util.Utils.wrapExceptionFn;
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.transformMap;
-import static io.activej.cube.service.ChunkLockerFactory.NOOP_CHUNK_LOCKER;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
-	public static final Supplier<BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>>> DEFAULT_LOCKER_STRATEGY = new Supplier<BiFunction<Aggregation,
-			ChunkLocker<Object>,
-			Promise<AggregationDiff>>>() {
+	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
+
+	public static final Supplier<BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>>> DEFAULT_LOCKER_STRATEGY = new Supplier<BiFunction<Aggregation,
+			Set<Object>,
+			Promise<List<AggregationChunk>>>>() {
 		private boolean hotSegment = false;
 
 		@Override
-		public BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>> get() {
-			//noinspection AssignmentUsedAsCondition
-			return (hotSegment = !hotSegment) ?
-					Aggregation::consolidateHotSegment :
-					Aggregation::consolidateMinKey;
+		public BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>> get() {
+			hotSegment = !hotSegment;
+			return (aggregation, chunkLocker) -> Promise.of(aggregation.getChunksForConsolidation(chunkLocker, hotSegment));
 		}
 	};
-
-	@Deprecated
-	public static final Supplier<Function<Aggregation, Promise<AggregationDiff>>> DEFAULT_STRATEGY = () ->
-			aggregation ->
-					DEFAULT_LOCKER_STRATEGY.get().apply(aggregation, NOOP_CHUNK_LOCKER);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
@@ -97,8 +88,11 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
 
-	private Supplier<BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>>> strategy = DEFAULT_LOCKER_STRATEGY;
-	private ChunkLockerFactory<C> chunkLockerFactory = new ChunkLockerFactory<>();
+	private final Map<String, ChunkLocker<Object>> lockers = new HashMap<>();
+
+	private Supplier<BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>>> strategy = DEFAULT_LOCKER_STRATEGY;
+	@SuppressWarnings("unchecked")
+	private Function<String, ChunkLocker<C>> chunkLockerFactory = $ -> (ChunkLocker<C>) NOOP_CHUNK_LOCKER;
 
 	private boolean consolidating;
 	private boolean cleaning;
@@ -128,18 +122,13 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		return new CubeConsolidationController<>(eventloop, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map);
 	}
 
-	@Deprecated
-	public CubeConsolidationController<K, D, C> withStrategy(Supplier<Function<Aggregation, Promise<AggregationDiff>>> strategy) {
-		return withLockerStrategy(() -> (aggregation, chunkLocker) -> strategy.get().apply(aggregation));
-	}
-
-	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<BiFunction<Aggregation, ChunkLocker<Object>, Promise<AggregationDiff>>> strategy) {
+	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>>> strategy) {
 		this.strategy = strategy;
 		return this;
 	}
 
 	public CubeConsolidationController<K, D, C> withChunkLockerFactory(Function<String, ChunkLocker<C>> factory) {
-		this.chunkLockerFactory = new ChunkLockerFactory<>(factory);
+		this.chunkLockerFactory = factory;
 		return this;
 	}
 
@@ -159,13 +148,23 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	Promise<Void> doConsolidate() {
 		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		consolidating = true;
+		BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>> chunksFn = strategy.get();
+		Map<String, List<AggregationChunk>> chunksForConsolidation = new HashMap<>();
 		return Promise.complete()
 				.then(stateManager::sync)
 				.then(wrapExceptionFn(e -> new CubeException("Failed to synchronize state prior to consolidation", e)))
+				.then(() -> Promises.all(cube.getAggregationIds().stream()
+						.map(aggregationId -> findAndLockChunksForConsolidation(aggregationId, chunksFn)
+								.whenResult(chunks -> {
+									if (!chunks.isEmpty()) {
+										chunksForConsolidation.put(aggregationId, chunks);
+									}
+								}))))
 				.then(() -> cube.consolidate(aggregation -> {
 							String aggregationId = aggregationsMapReversed.get(aggregation);
-							ChunkLocker<Object> locker = chunkLockerFactory.ensureLocker(aggregationId);
-							return strategy.get().apply(aggregation, locker);
+							List<AggregationChunk> chunks = chunksForConsolidation.get(aggregationId);
+							if (chunks == null) return Promise.of(AggregationDiff.empty());
+							return aggregation.consolidate(chunks);
 						})
 						.whenComplete(promiseConsolidateImpl.recordStats()))
 				.whenResult(this::cubeDiffJmx)
@@ -182,11 +181,46 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 							.whenException(e -> stateManager.reset())
 							.whenComplete(toLogger(logger, thisMethod(), cubeDiff));
 				})
-				.then((result, e) -> chunkLockerFactory.tryReleaseAll()
+				.then((result, e) -> releaseChunks(chunksForConsolidation)
 						.then(() -> Promise.of(result, e)))
 				.whenComplete(promiseConsolidate.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), stateManager))
 				.whenComplete(() -> consolidating = false);
+	}
+
+	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(String aggregationId,
+			BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>> chunksFn) {
+		ChunkLocker<Object> locker = ensureLocker(aggregationId);
+		Aggregation aggregation = cube.getAggregation(aggregationId);
+
+		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
+				() -> locker.getLockedChunks()
+						.then(lockedChunkIds -> chunksFn.apply(aggregation, lockedChunkIds))
+						.then(chunks -> {
+							if (chunks.isEmpty()) {
+								logger.info("Nothing to consolidate in aggregation '{}", this);
+
+								return Promise.of(chunks);
+							}
+							return locker.lockChunks(collectChunkIds(chunks))
+									.map($ -> chunks);
+						}));
+	}
+
+	private Promise<Void> releaseChunks(Map<String, List<AggregationChunk>> chunksForConsolidation) {
+		return Promises.all(chunksForConsolidation.entrySet().stream()
+				.map(entry -> {
+					String aggregationId = entry.getKey();
+					Set<Object> chunkIds = collectChunkIds(entry.getValue());
+					return ensureLocker(aggregationId).releaseChunks(chunkIds)
+							.then(($, e) -> {
+								if (e != null) {
+									logger.warn("Failed to release chunks: {} in aggregation {}",
+											chunkIds, aggregationId, e);
+								}
+								return Promise.complete();
+							});
+				}));
 	}
 
 	private Promise<Void> doCleanupIrrelevantChunks() {
@@ -250,6 +284,11 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		if (e != null) logger.warn("Consolidation failed", e);
 		else if (cubeDiff.isEmpty()) logger.info("Previous consolidation did not merge any chunks");
 		else logger.info("Consolidation finished. Launching consolidation task again.");
+	}
+
+	private ChunkLocker<Object> ensureLocker(String aggregationId) {
+		//noinspection unchecked
+		return lockers.computeIfAbsent(aggregationId, $ -> (ChunkLocker<Object>) chunkLockerFactory.apply(aggregationId));
 	}
 
 	@JmxAttribute

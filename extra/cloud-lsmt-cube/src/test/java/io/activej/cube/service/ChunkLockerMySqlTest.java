@@ -1,5 +1,7 @@
-package io.activej.aggregation;
+package io.activej.cube.service;
 
+import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -10,18 +12,20 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.LongStream;
 
-import static io.activej.aggregation.ChunkLockerMySql.DEFAULT_LOCK_TABLE;
-import static io.activej.aggregation.ChunkLockerMySql.DEFAULT_LOCK_TTL;
 import static io.activej.common.Utils.setOf;
+import static io.activej.cube.service.ChunkLockerMySql.CHUNK_TABLE;
+import static io.activej.cube.service.ChunkLockerMySql.DEFAULT_LOCK_TTL;
 import static io.activej.inject.util.Utils.union;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
+import static java.util.Collections.nCopies;
+import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -30,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 public class ChunkLockerMySqlTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
+	public static final String AGGREGATION_ID = "test_aggregation";
 
 	private DataSource dataSource;
 	private ChunkLockerMySql<Long> lockerA;
@@ -40,11 +45,31 @@ public class ChunkLockerMySqlTest {
 		dataSource = dataSource("test.properties");
 		Executor executor = Executors.newSingleThreadExecutor();
 
-		lockerA = ChunkLockerMySql.create(executor, dataSource, ChunkIdCodec.ofLong(), "test_aggregation");
-		lockerB = ChunkLockerMySql.create(executor, dataSource, ChunkIdCodec.ofLong(), "test_aggregation");
+		lockerA = ChunkLockerMySql.create(executor, dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID);
+		lockerB = ChunkLockerMySql.create(executor, dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID);
 
 		lockerA.initialize();
 		lockerA.truncateTables();
+
+		try (Connection connection = dataSource.getConnection()) {
+			Set<Long> chunkIds = LongStream.range(0, 100).boxed().collect(toSet());
+			try (PreparedStatement ps = connection.prepareStatement("" +
+					"INSERT INTO " + CHUNK_TABLE +
+					" (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
+					"VALUES " + String.join(",", nCopies(100, "(?,?,?,?,?,?,?)")))) {
+				int index = 1;
+				for (Long chunkId : chunkIds) {
+					ps.setLong(index++, chunkId);
+					ps.setString(index++, AGGREGATION_ID);
+					ps.setString(index++, "measures");
+					ps.setString(index++, "min key");
+					ps.setString(index++, "max key");
+					ps.setInt(index++, 100);
+					ps.setLong(index++, 1);
+				}
+				ps.executeUpdate();
+			}
+		}
 	}
 
 	@Test
@@ -101,7 +126,7 @@ public class ChunkLockerMySqlTest {
 		Set<Long> lockedByB = setOf(4L, 5L, 6L, 1L);
 
 		Exception exception = awaitException(lockerB.lockChunks(lockedByB));
-		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
+		assertThat(exception, instanceOf(ChunksAlreadyLockedException.class));
 
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
 		assertEquals(lockedByA, await(lockerB.getLockedChunks()));
@@ -152,7 +177,7 @@ public class ChunkLockerMySqlTest {
 
 		Set<Long> locked2 = setOf(1L, 4L);
 		Exception exception = awaitException(lockerA.lockChunks(locked2));
-		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
+		assertThat(exception, instanceOf(ChunksAlreadyLockedException.class));
 
 		expireLockedChunk(1L);
 
@@ -164,9 +189,9 @@ public class ChunkLockerMySqlTest {
 	private void expireLockedChunk(long chunkId) {
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement ps = connection.prepareStatement(
-					"UPDATE `" + DEFAULT_LOCK_TABLE + "` " +
+					"UPDATE `" + CHUNK_TABLE + "` " +
 							"SET `locked_at` = `locked_at` - INTERVAL ? SECOND " +
-							"WHERE `chunk_id` = ?"
+							"WHERE `id` = ?"
 			)) {
 				ps.setLong(1, DEFAULT_LOCK_TTL.getSeconds() + 1);
 				ps.setString(2, String.valueOf(chunkId));
