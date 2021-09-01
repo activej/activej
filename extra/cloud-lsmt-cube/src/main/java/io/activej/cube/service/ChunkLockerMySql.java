@@ -45,7 +45,7 @@ import static java.util.stream.Collectors.joining;
 public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	private static final Logger logger = LoggerFactory.getLogger(ChunkLockerMySql.class);
 
-	public static final String DEFAULT_LOCK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "lockTable", "cube_chunk_lock");
+	public static final String CHUNK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "chunkTable", "cube_chunk");
 	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(ChunkLockerMySql.class, "lockTtl", Duration.ofMinutes(5));
 	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(ChunkLockerMySql.class, "lockedBy", null);
 
@@ -57,7 +57,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	@NotNull
 	private String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
 
-	private String tableLock = DEFAULT_LOCK_TABLE;
+	private String tableChunk = CHUNK_TABLE;
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
 
 	private ChunkLockerMySql(
@@ -82,7 +82,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	}
 
 	public ChunkLockerMySql<C> withLockTableName(String tableLock) {
-		this.tableLock = tableLock;
+		this.tableChunk = tableLock;
 		return this;
 	}
 
@@ -101,7 +101,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	}
 
 	private String sql(String sql) {
-		return sql.replace("{lock}", tableLock);
+		return sql.replace("{chunk}", tableChunk);
 	}
 
 	public void initialize() throws IOException, SQLException {
@@ -115,7 +115,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 
 	private static byte[] loadInitScript() throws IOException {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		try (InputStream stream = classLoader.getResourceAsStream("sql/ddl/chunk_lock.sql")) {
+		try (InputStream stream = classLoader.getResourceAsStream("sql/ddl/uplink_chunk.sql")) {
 			assert stream != null;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			byte[] buffer = new byte[4096];
@@ -131,7 +131,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		logger.trace("Truncate tables");
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
-				statement.execute(sql("TRUNCATE TABLE {lock}"));
+				statement.execute(sql("TRUNCATE TABLE {chunk}"));
 			}
 		}
 	}
@@ -143,33 +143,31 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 		return Promise.ofBlockingRunnable(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						connection.setAutoCommit(true);
+						connection.setAutoCommit(false);
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"DELETE FROM {lock} " +
-								"WHERE `locked_at` <= NOW() - INTERVAL ? SECOND"
+								"UPDATE {chunk} " +
+								"SET `locked_at`=NOW(), `locked_by`=?" +
+								"WHERE" +
+								" `removed_revision` IS NULL AND" +
+								" (`locked_at` IS NULL OR" +
+								" `locked_at` <= NOW() - INTERVAL ? SECOND) AND" +
+								" `id` IN " +
+								nCopies(chunkIds.size(), "?").stream()
+										.collect(joining(",", "(", ")"))
 						))) {
-							ps.setLong(1, lockTtlSeconds);
-							int deletedCount = ps.executeUpdate();
-							if (deletedCount != 0) {
-								logger.info("Deleted {} expired chunk locks", deletedCount);
-							}
-						}
-
-						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"INSERT INTO {lock} (`aggregation_id`, `chunk_id`, `locked_by`) " +
-								"VALUES " + String.join(",", nCopies(chunkIds.size(), "(?,?,?)"))
-						))) {
-							int index = 1;
+							ps.setString(1, lockedBy);
+							ps.setLong(2, lockTtlSeconds);
+							int index = 3;
 							for (C chunkId : chunkIds) {
-								ps.setString(index++, aggregationId);
 								ps.setString(index++, idCodec.toFileName(chunkId));
-								ps.setString(index++, lockedBy);
 							}
-							ps.executeUpdate();
-						} catch (SQLIntegrityConstraintViolationException e) {
-							throw new ChunksAlreadyLockedException(e);
+							int updated = ps.executeUpdate();
+							if (updated != chunkIds.size()) {
+								throw new ChunksAlreadyLockedException();
+							}
+							connection.commit();
 						}
 					}
 				});
@@ -186,8 +184,13 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"DELETE FROM {lock} " +
-								"WHERE `aggregation_id`=? AND `locked_by`=? AND `chunk_id` IN " +
+								"UPDATE {chunk} " +
+								"SET `locked_at`=NULL, `locked_by`=NULL " +
+								"WHERE" +
+								" `aggregation` = ? AND" +
+								" `removed_revision` IS NULL AND" +
+								" `locked_by`=? AND" +
+								" `id` IN " +
 								nCopies(chunkIds.size(), "?").stream()
 										.collect(joining(",", "(", ")")))
 						)) {
@@ -212,9 +215,11 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"SELECT `chunk_id` " +
-								"FROM {lock} " +
-								"WHERE `aggregation_id` = ? AND `locked_at` > NOW() - INTERVAL ? SECOND"
+								"SELECT `id` " +
+								"FROM {chunk} " +
+								"WHERE" +
+								" `aggregation` = ? AND" +
+								" (`removed_revision` IS NOT NULL OR `locked_at` > NOW() - INTERVAL ? SECOND)"
 						))) {
 							ps.setString(1, aggregationId);
 							ps.setLong(2, lockTtlSeconds);

@@ -21,6 +21,10 @@ import io.activej.common.ApplicationSettings;
 public final class ChunksAlreadyLockedException extends Exception {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(ChunksAlreadyLockedException.class, "withStackTrace", false);
 
+	public ChunksAlreadyLockedException() {
+		super();
+	}
+
 	public ChunksAlreadyLockedException(Throwable cause) {
 		super(cause);
 	}
