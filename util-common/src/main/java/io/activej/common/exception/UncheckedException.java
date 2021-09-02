@@ -27,6 +27,9 @@ public final class UncheckedException extends RuntimeException {
 	}
 
 	public static UncheckedException of(@NotNull Exception cause) {
+		if (cause.getClass() == UncheckedException.class) {
+			return (UncheckedException) cause;
+		}
 		return new UncheckedException(cause);
 	}
 
