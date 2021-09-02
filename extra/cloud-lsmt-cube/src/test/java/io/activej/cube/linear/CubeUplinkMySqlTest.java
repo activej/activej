@@ -15,6 +15,7 @@ import io.activej.etl.LogPositionDiff;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTState;
+import io.activej.ot.exception.OTException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink.FetchData;
 import io.activej.test.rules.EventloopRule;
@@ -281,7 +282,7 @@ public class CubeUplinkMySqlTest {
 
 		Throwable exception = awaitException(uplink.push(protoCommit2));
 		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
-		assertEquals("Chunk is already removed", exception.getMessage());
+		assertEquals("Chunk 2 is already removed in revision 2", exception.getMessage());
 	}
 
 	@Test
@@ -550,6 +551,17 @@ public class CubeUplinkMySqlTest {
 				), diff3to4);
 			}
 		}
+	}
+
+	@Test
+	public void deleteAlreadyCleanedUpChunk() {
+		List<LogDiff<CubeDiff>> diffs = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggregation", AggregationDiff.of(emptySet(), set(chunk(100)))))
+		));
+		Throwable exception = awaitException(uplink.push(await(uplink.createProtoCommit(0L, diffs, 0))));
+
+		assertThat(exception, instanceOf(OTException.class));
+		assertEquals("Chunk is already removed", exception.getMessage());
 	}
 
 	private static void assertCubeDiff(Set<Long> added, Set<Long> removed, CubeDiff actual) {

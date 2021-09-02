@@ -49,6 +49,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.codec.json.JsonUtils.fromJson;
 import static io.activej.codec.json.JsonUtils.toJson;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.collection.CollectionUtils.intersection;
 import static io.activej.common.collection.CollectionUtils.transformMapValues;
 import static io.activej.cube.linear.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -197,8 +198,9 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 								Set<ChunkWithAggregationId> removed = collectChunks(diffsList, false);
 
 								// squash
-								added.removeAll(removed);
-								removed.removeAll(added);
+								Set<ChunkWithAggregationId> intersection = intersection(added, removed);
+								added.removeAll(intersection);
+								removed.removeAll(intersection);
 
 								if (!added.isEmpty()) {
 									addChunks(connection, revision, added);
@@ -374,7 +376,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		}
 	}
 
-	private void removeChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException {
+	private void removeChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException, OTException {
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
 				"UPDATE {chunk} " +
 				"SET `removed_revision`=? " +
@@ -389,7 +391,11 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 				ps.setLong(index++, (Long) chunk.getChunk().getChunkId());
 			}
 
-			ps.executeUpdate();
+			int removed = ps.executeUpdate();
+			if (removed != chunks.size()) {
+				connection.rollback();
+				throw new OTException("Chunk is already removed");
+			}
 		}
 	}
 
