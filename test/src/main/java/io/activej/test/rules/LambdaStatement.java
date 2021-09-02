@@ -16,6 +16,7 @@
 
 package io.activej.test.rules;
 
+import org.junit.function.ThrowingRunnable;
 import org.junit.runners.model.Statement;
 
 public final class LambdaStatement extends Statement {
@@ -30,10 +31,5 @@ public final class LambdaStatement extends Statement {
 	@Override
 	public void evaluate() throws Throwable {
 		body.run();
-	}
-
-	@FunctionalInterface
-	public interface ThrowingRunnable {
-		void run() throws Throwable;
 	}
 }

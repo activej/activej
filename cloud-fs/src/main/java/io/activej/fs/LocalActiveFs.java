@@ -22,6 +22,8 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.BiFunctionEx;
+import io.activej.common.function.SupplierEx;
+import io.activej.common.function.RunnableEx;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
@@ -34,8 +36,6 @@ import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.exception.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
-import io.activej.promise.Promise.BlockingCallable;
-import io.activej.promise.Promise.BlockingRunnable;
 import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -572,11 +572,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	private <T> Promise<T> execute(BlockingCallable<T> callable) {
+	private <T> Promise<T> execute(SupplierEx<T> callable) {
 		return Promise.ofBlocking(executor, callable);
 	}
 
-	private Promise<Void> execute(BlockingRunnable runnable) {
+	private Promise<Void> execute(RunnableEx runnable) {
 		return Promise.ofBlocking(executor, runnable);
 	}
 

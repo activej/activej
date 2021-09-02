@@ -214,35 +214,30 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		});
 	}
 
-	@FunctionalInterface
-	interface BlockingCallable<V> {
-		V call() throws Exception;
-	}
-
 	/**
 	 * Runs some task in another thread (executed by a given {@code Executor})
 	 * and returns a {@code Promise} for it. Also manages external task count
 	 * for current eventloop, so it won't shut down until the task is complete.
 	 *
 	 * @param executor executor to execute the task concurrently
-	 * @param callable the task itself
+	 * @param supplier the task itself
 	 * @return {@code Promise} for the given task
 	 */
-	static <T> Promise<T> ofBlocking(@NotNull Executor executor, @NotNull BlockingCallable<? extends T> callable) {
+	static <T> Promise<T> ofBlocking(@NotNull Executor executor, @NotNull SupplierEx<? extends T> supplier) {
 		return ofCallback(cb -> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
 			try {
 				executor.execute(() -> {
 					try {
-						T result = callable.call();
+						T result = supplier.get();
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
 					} catch (RuntimeException e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, callable));
+						eventloop.execute(() -> eventloop.recordFatalError(e, supplier));
 					} catch (Exception e) {
 						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
 					} catch (Throwable e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, callable));
+						eventloop.execute(() -> eventloop.recordFatalError(e, supplier));
 					} finally {
 						eventloop.completeExternalTask();
 					}
@@ -254,17 +249,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		});
 	}
 
-	@FunctionalInterface
-	interface BlockingRunnable {
-		void run() throws Exception;
-	}
-
 	/**
-	 * Same as {@link #ofBlocking(Executor, BlockingCallable)}, but without a result
+	 * Same as {@link #ofBlocking(Executor, SupplierEx)}, but without a result
 	 * (returned {@code Promise} is only a marker of completion).
 	 */
 	@NotNull
-	static Promise<Void> ofBlocking(@NotNull Executor executor, @NotNull BlockingRunnable runnable) {
+	static Promise<Void> ofBlocking(@NotNull Executor executor, @NotNull RunnableEx runnable) {
 		return ofCallback(cb -> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();

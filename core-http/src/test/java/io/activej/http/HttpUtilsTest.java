@@ -2,8 +2,8 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.test.rules.LambdaStatement.ThrowingRunnable;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 
 import java.util.Arrays;
 import java.util.Random;
