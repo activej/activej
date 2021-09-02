@@ -72,7 +72,7 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 
 	private Promise<Void> doReserveId() {
 		int finalStride = stride;
-		return Promise.ofBlockingCallable(executor, () -> getAndAdd(finalStride))
+		return Promise.ofBlocking(executor, () -> getAndAdd(finalStride))
 				.whenResult(id -> {
 					next = id;
 					limit = id + finalStride;

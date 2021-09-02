@@ -204,7 +204,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 		}
 
 		return finishedConsumer.finish()
-				.then(() -> Promise.ofBlockingRunnable(executor, () -> rename(finishedConsumer.walFile))
+				.then(() -> Promise.ofBlocking(executor, () -> rename(finishedConsumer.walFile))
 						.whenException(e -> scanLostFiles = true))
 				.then(this::scanLostFiles)
 				.then(this::flushFiles)
@@ -229,7 +229,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 
 		return getLostFiles()
 				.then(lostFiles ->
-						Promise.ofBlockingRunnable(executor, () -> {
+						Promise.ofBlocking(executor, () -> {
 							for (Path lostFile : lostFiles) {
 								rename(lostFile);
 							}
@@ -260,7 +260,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	}
 
 	private Promise<List<Path>> getLostFiles() {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Stream<Path> list = Files.list(path)) {
 						return list

@@ -72,7 +72,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 
 	public static Promise<ChannelFileWriter> open(Executor executor, Path path, OpenOption... openOptions) {
 		checkArgument(Arrays.asList(openOptions).contains(WRITE), "'WRITE' option is not present");
-		return Promise.ofBlockingCallable(executor, () -> FileChannel.open(path, openOptions))
+		return Promise.ofBlocking(executor, () -> FileChannel.open(path, openOptions))
 				.map(channel -> create(executor, channel));
 	}
 

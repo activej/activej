@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.Executor;
 
-import static io.activej.promise.Promise.ofBlockingCallable;
+import static io.activej.promise.Promise.ofBlocking;
 
 public final class ExecutorAsyncFileService implements AsyncFileService {
 	private final Executor executor;
@@ -34,7 +34,7 @@ public final class ExecutorAsyncFileService implements AsyncFileService {
 
 	@Override
 	public Promise<Integer> read(FileChannel channel, long position, byte[] array, int offset, int size) {
-		return ofBlockingCallable(executor, () -> {
+		return ofBlocking(executor, () -> {
 			ByteBuffer buffer = ByteBuffer.wrap(array, offset, size);
 			long pos = position;
 
@@ -51,7 +51,7 @@ public final class ExecutorAsyncFileService implements AsyncFileService {
 
 	@Override
 	public Promise<Integer> write(FileChannel channel, long position, byte[] array, int offset, int size) {
-		return ofBlockingCallable(executor, () -> {
+		return ofBlocking(executor, () -> {
 			ByteBuffer buffer = ByteBuffer.wrap(array, offset, size);
 			long pos = position;
 

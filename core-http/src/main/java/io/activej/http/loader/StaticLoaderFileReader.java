@@ -46,7 +46,7 @@ class StaticLoaderFileReader implements StaticLoader {
 			return Promise.ofException(new ResourceNotFoundException("Could not find '" + path + '\''));
 		}
 
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					if (Files.isRegularFile(file)) {
 						return null;

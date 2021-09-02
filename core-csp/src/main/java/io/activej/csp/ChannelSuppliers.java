@@ -313,7 +313,7 @@ public final class ChannelSuppliers {
 		return new AbstractChannelSupplier<ByteBuf>() {
 			@Override
 			protected Promise<ByteBuf> doGet() {
-				return Promise.ofBlockingCallable(executor, () -> {
+				return Promise.ofBlocking(executor, () -> {
 					ByteBuf buf = ByteBufPool.allocate(bufSize);
 					int readBytes;
 					try {

@@ -64,7 +64,7 @@ public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
 	}
 
 	public static Promise<ChannelFileBuffer> create(Executor executor, Path path, @Nullable MemSize limit) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					Files.createDirectories(path.getParent());
 					FileChannel writerChannel = FileChannel.open(path, CREATE, WRITE);

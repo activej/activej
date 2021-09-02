@@ -92,7 +92,7 @@ public final class ChannelConsumers {
 		return new AbstractChannelConsumer<ByteBuf>() {
 			@Override
 			protected Promise<Void> doAccept(@Nullable ByteBuf buf) {
-				return Promise.ofBlockingRunnable(executor, () -> {
+				return Promise.ofBlocking(executor, () -> {
 					if (buf != null) {
 						try {
 							outputStream.write(buf.array(), buf.head(), buf.readRemaining());

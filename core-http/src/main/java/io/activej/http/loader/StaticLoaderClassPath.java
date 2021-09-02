@@ -71,7 +71,7 @@ class StaticLoaderClassPath implements StaticLoader {
 
 		String finalPath = path;
 
-		return Promise.ofBlockingCallable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			URL resource = classLoader.getResource(finalPath);
 			if (resource == null) {
 				throw new ResourceNotFoundException("Could not find '" + name + "' in class path");

@@ -228,7 +228,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param callable the task itself
 	 * @return {@code Promise} for the given task
 	 */
-	static <T> Promise<T> ofBlockingCallable(@NotNull Executor executor, @NotNull BlockingCallable<? extends T> callable) {
+	static <T> Promise<T> ofBlocking(@NotNull Executor executor, @NotNull BlockingCallable<? extends T> callable) {
 		return ofCallback(cb -> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
@@ -260,11 +260,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	}
 
 	/**
-	 * Same as {@link #ofBlockingCallable(Executor, BlockingCallable)}, but without a result
+	 * Same as {@link #ofBlocking(Executor, BlockingCallable)}, but without a result
 	 * (returned {@code Promise} is only a marker of completion).
 	 */
 	@NotNull
-	static Promise<Void> ofBlockingRunnable(@NotNull Executor executor, @NotNull BlockingRunnable runnable) {
+	static Promise<Void> ofBlocking(@NotNull Executor executor, @NotNull BlockingRunnable runnable) {
 		return ofCallback(cb -> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();

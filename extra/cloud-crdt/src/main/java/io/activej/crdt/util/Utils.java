@@ -53,7 +53,7 @@ public final class Utils {
 	}
 
 	public static Promise<List<Path>> getWalFiles(Executor executor, Path walDir) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Stream<Path> list = Files.list(walDir)) {
 						return list
@@ -64,7 +64,7 @@ public final class Utils {
 	}
 
 	public static Promise<Void> deleteWalFiles(Executor executor, Collection<Path> walFiles) {
-		return Promise.ofBlockingRunnable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			for (Path walFile : walFiles) {
 				Files.deleteIfExists(walFile);
 			}

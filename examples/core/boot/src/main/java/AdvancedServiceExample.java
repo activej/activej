@@ -1,11 +1,11 @@
 import io.activej.async.service.EventloopService;
-import io.activej.service.Service;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.service.Service;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.NotNull;
 
@@ -69,13 +69,13 @@ public class AdvancedServiceExample extends Launcher {
 		@Override
 		public @NotNull Promise<?> start() {
 			System.out.println("AuthService starting");
-			return Promise.ofBlockingRunnable(executor,
+			return Promise.ofBlocking(executor,
 					() -> System.out.println("AuthService started"));
 		}
 
 		@Override
 		public @NotNull Promise<?> stop() {
-			return Promise.ofBlockingRunnable(executor,
+			return Promise.ofBlocking(executor,
 					() -> System.out.println("AuthService stopped"));
 		}
 	}

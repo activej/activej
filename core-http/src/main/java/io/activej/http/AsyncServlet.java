@@ -42,7 +42,7 @@ public interface AsyncServlet {
 	@NotNull
 	static AsyncServlet ofBlocking(@NotNull Executor executor, @NotNull BlockingServlet blockingServlet) {
 		return request -> request.loadBody()
-				.then(() -> Promise.ofBlockingCallable(executor,
+				.then(() -> Promise.ofBlocking(executor,
 						() -> blockingServlet.serve(request)));
 	}
 }

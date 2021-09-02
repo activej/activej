@@ -573,11 +573,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private <T> Promise<T> execute(BlockingCallable<T> callable) {
-		return Promise.ofBlockingCallable(executor, callable);
+		return Promise.ofBlocking(executor, callable);
 	}
 
 	private Promise<Void> execute(BlockingRunnable runnable) {
-		return Promise.ofBlockingRunnable(executor, runnable);
+		return Promise.ofBlocking(executor, runnable);
 	}
 
 	private <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> translateScalarErrorsFn() {

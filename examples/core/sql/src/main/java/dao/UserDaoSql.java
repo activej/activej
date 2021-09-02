@@ -25,7 +25,7 @@ public final class UserDaoSql implements UserDao {
 
 	@Override
 	public Promise<@Nullable User> get(long id) {
-		return Promise.ofBlockingCallable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
 						"SELECT first_name, last_name FROM user WHERE id=?")) {
@@ -46,7 +46,7 @@ public final class UserDaoSql implements UserDao {
 
 	@Override
 	public Promise<Map<Long, User>> getAll() {
-		return Promise.ofBlockingCallable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
 						"SELECT * FROM user")) {
@@ -69,7 +69,7 @@ public final class UserDaoSql implements UserDao {
 
 	@Override
 	public Promise<Void> addUser(User user) {
-		return Promise.ofBlockingRunnable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
 						"INSERT INTO user(first_name, last_name) VALUES(?, ?)")) {
@@ -85,7 +85,7 @@ public final class UserDaoSql implements UserDao {
 
 	@Override
 	public Promise<Boolean> updateUser(long id, User newUser) {
-		return Promise.ofBlockingCallable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
 						"UPDATE user SET first_name=?, last_name=? WHERE id=?")) {
@@ -102,7 +102,7 @@ public final class UserDaoSql implements UserDao {
 
 	@Override
 	public Promise<Boolean> deleteUser(long id) {
-		return Promise.ofBlockingCallable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
 						"DELETE FROM user WHERE id=?")) {

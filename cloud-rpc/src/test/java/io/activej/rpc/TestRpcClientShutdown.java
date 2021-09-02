@@ -55,7 +55,7 @@ public final class TestRpcClientShutdown {
 		RpcServer rpcServer = RpcServer.create(eventloop)
 				.withMessageTypes(messageTypes)
 				.withHandler(Request.class,
-						request -> Promise.ofBlockingCallable(executor, () -> {
+						request -> Promise.ofBlocking(executor, () -> {
 							Thread.sleep(100);
 							return new Response();
 						}))

@@ -140,7 +140,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	public Promise<Void> lockChunks(Set<C> chunkIds) {
 		checkArgument(!chunkIds.isEmpty(), "Nothing to lock");
 
-		return Promise.ofBlockingRunnable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(false);
@@ -177,7 +177,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	public Promise<Void> releaseChunks(Set<C> chunkIds) {
 		checkArgument(!chunkIds.isEmpty(), "Nothing to release");
 
-		return Promise.ofBlockingRunnable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(true);
@@ -209,7 +209,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 
 	@Override
 	public Promise<Set<C>> getLockedChunks() {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);

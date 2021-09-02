@@ -129,7 +129,7 @@ public class ChannelSupplierTest {
 				ByteBuf.wrapForReading("World".getBytes()));
 
 		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
-		await(Promise.ofBlockingCallable(Executors.newSingleThreadExecutor(),
+		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
 					try {
 						InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
@@ -151,7 +151,7 @@ public class ChannelSupplierTest {
 		ChannelSupplier<ByteBuf> channelSupplier = ChannelSupplier.of(ByteBuf.empty(), ByteBuf.empty());
 
 		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
-		await(Promise.ofBlockingCallable(Executors.newSingleThreadExecutor(),
+		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
 					try {
 						InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);

@@ -122,7 +122,7 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 	}
 
 	public Promise<Void> flush() {
-		return Promise.ofBlockingRunnable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			try {
 				db.flush(flushOptions);
 			} catch (RocksDBException e) {
@@ -177,21 +177,21 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return Promise.of(StreamConsumer.ofChannelConsumer(
-				ChannelConsumer.<CrdtData<K, S>>of(data -> Promise.ofBlockingRunnable(executor, () -> doPut(data.getKey(), data.getState())))
+				ChannelConsumer.<CrdtData<K, S>>of(data -> Promise.ofBlocking(executor, () -> doPut(data.getKey(), data.getState())))
 						.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 						.withAcknowledgement(ack -> ack.then(this::flush))));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					RocksIterator iterator = db.newIterator();
 					iterator.seekToFirst();
 					return iterator;
 				})
 				.map(iterator -> StreamSupplier.ofChannelSupplier(ChannelSupplier.of(
-						() -> Promise.ofBlockingCallable(executor, () -> {
+						() -> Promise.ofBlocking(executor, () -> {
 							while (iterator.isValid()) {
 								byte[] keyBytes = iterator.key();
 								byte[] stateBytes = iterator.value();
@@ -210,7 +210,7 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
 		return Promise.of(StreamConsumer.ofChannelConsumer(
-				ChannelConsumer.<K>of(key -> Promise.ofBlockingRunnable(executor, () -> doRemove(key)))
+				ChannelConsumer.<K>of(key -> Promise.ofBlocking(executor, () -> doRemove(key)))
 						.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 						.withAcknowledgement(ack -> ack.then(this::flush))));
 	}
@@ -233,7 +233,7 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 	}
 
 	public Promise<S> get(K key) {
-		return Promise.ofBlockingCallable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			ByteBuf buf = ByteBufPool.allocate(bufferSize);
 			keySerializer.encode(buf.array(), buf.head(), key);
 			byte[] state;
@@ -251,14 +251,14 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 	}
 
 	public Promise<Void> put(K key, S state) {
-		return Promise.ofBlockingRunnable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			doPut(key, state);
 			singlePuts.recordEvent();
 		});
 	}
 
 	public Promise<Void> remove(K key) {
-		return Promise.ofBlockingRunnable(executor, () -> {
+		return Promise.ofBlocking(executor, () -> {
 			doRemove(key);
 			singleRemoves.recordEvent();
 		});

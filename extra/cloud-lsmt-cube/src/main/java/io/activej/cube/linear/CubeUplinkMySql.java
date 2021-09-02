@@ -117,7 +117,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> checkout() {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
 								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
@@ -138,7 +138,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(@NotNull Long currentCommitId) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
 								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
@@ -167,7 +167,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> push(UplinkProtoCommit protoCommit) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
 								connection.setAutoCommit(false);

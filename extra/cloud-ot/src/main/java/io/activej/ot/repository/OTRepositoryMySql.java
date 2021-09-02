@@ -261,7 +261,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 
 	@NotNull
 	private Promise<Void> doPush(Collection<OTCommit<Long, D>> commits) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(false);
@@ -307,7 +307,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 
 	@NotNull
 	private Promise<Void> doUpdateHeads(Set<Long> newHeads, Set<Long> excludedHeads) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(false);
@@ -327,7 +327,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 	@NotNull
 	@Override
 	public Promise<Set<Long>> getAllHeads() {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						try (PreparedStatement ps = connection.prepareStatement(sql(
@@ -349,7 +349,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 
 	@Override
 	public @NotNull Promise<Boolean> hasCommit(@NotNull Long revisionId) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						try (PreparedStatement ps = connection.prepareStatement(sql("" +
@@ -371,7 +371,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 	@NotNull
 	@Override
 	public Promise<OTCommit<Long, D>> loadCommit(@NotNull Long revisionId) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						Map<Long, DiffsWithLevel<D>> parentDiffs = new HashMap<>();
@@ -421,7 +421,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 	@NotNull
 	@Override
 	public Promise<Boolean> hasSnapshot(@NotNull Long revisionId) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						try (PreparedStatement ps = connection.prepareStatement(sql(
@@ -441,7 +441,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 	@NotNull
 	@Override
 	public Promise<Optional<List<D>>> loadSnapshot(@NotNull Long revisionId) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						try (PreparedStatement ps = connection.prepareStatement(sql(
@@ -466,7 +466,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 	@NotNull
 	@Override
 	public Promise<Void> saveSnapshot(@NotNull Long revisionId, @NotNull List<D> diffs) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(true);
@@ -494,7 +494,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 
 	@NotNull
 	private Promise<Void> doCleanup(Long minId) {
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						connection.setAutoCommit(false);
@@ -527,7 +527,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 	@Override
 	public Promise<Void> backup(OTCommit<Long, D> commit, List<D> snapshot) {
 		checkNotNull(tableBackup, "Cannot backup when backup table is null");
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
 						try (PreparedStatement statement = connection.prepareStatement(sql(

@@ -76,7 +76,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 
 	public static Promise<ChannelFileReader> open(Executor executor, Path path, OpenOption... openOptions) {
 		checkArgument(Arrays.asList(openOptions).contains(READ), "'READ' option is not present");
-		return Promise.ofBlockingCallable(executor,
+		return Promise.ofBlocking(executor,
 				() -> {
 					if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
 					return FileChannel.open(path, openOptions);

@@ -97,7 +97,7 @@ public class ChannelConsumerTest {
 				});
 
 		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
-		await(Promise.ofBlockingCallable(newSingleThreadExecutor(),
+		await(Promise.ofBlocking(newSingleThreadExecutor(),
 				() -> {
 					OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
 					for (int i = 0; i < expectedSize; i++) {
@@ -123,7 +123,7 @@ public class ChannelConsumerTest {
 		});
 
 		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
-		await(Promise.ofBlockingCallable(newSingleThreadExecutor(), () -> {
+		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
 			try {
 				OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
 				outputStream.flush();
@@ -142,7 +142,7 @@ public class ChannelConsumerTest {
 		});
 
 		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
-		await(Promise.ofBlockingCallable(newSingleThreadExecutor(), () -> {
+		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
 			try {
 				OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
 				outputStream.flush();

@@ -57,7 +57,7 @@ public final class RpcTimeoutTest {
 		server = RpcServer.create(eventloop)
 				.withMessageTypes(messageTypes)
 				.withHandler(String.class,
-						request -> Promise.ofBlockingCallable(executor, () -> {
+						request -> Promise.ofBlocking(executor, () -> {
 							Thread.sleep(SERVER_DELAY);
 							return request;
 						}))
