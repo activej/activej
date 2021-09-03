@@ -59,11 +59,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 				.map(GET, "/get/all", request -> {
 					Map<Integer, Record> records = recordDAO.findAll();
 					JsonWriter writer = dslJson.newWriter();
-					try {
-						dslJson.serialize(writer, records);
-					} catch (IOException e) {
-						throw new AssertionError(e);
-					}
+					dslJson.serialize(writer, records);
 					return HttpResponse.ok200()
 							.withJson(writer.toString());
 				})
