@@ -211,9 +211,7 @@ public final class ActiveFsServlet {
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBodyStream(ChannelSupplier.ofPromise(request.getBodyStream()
 						.streamTo(consumer)
-						.map(($, e) -> e == null ?
-								UploadAcknowledgement.ok() :
-								UploadAcknowledgement.ofError(castError(e)))
+						.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
 						.map(ack -> ChannelSupplier.of(toJson(ack))))));
 	}
 

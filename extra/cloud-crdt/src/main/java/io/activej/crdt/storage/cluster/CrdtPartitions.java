@@ -234,14 +234,8 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 							P id = entry.getKey();
 							return entry.getValue()
 									.ping()
-									.map(($, e) -> {
-										if (e == null) {
-											markAlive(id);
-										} else {
-											markDead(id, e);
-										}
-										return null;
-									});
+									.whenResult(() -> markAlive(id))
+									.whenException(e -> markDead(id, e));
 						}));
 	}
 
@@ -250,12 +244,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 				deadPartitions.entrySet().stream()
 						.map(entry -> entry.getValue()
 								.ping()
-								.map(($, e) -> {
-									if (e == null) {
-										markAlive(entry.getKey());
-									}
-									return null;
-								})));
+								.whenResult(() -> markAlive(entry.getKey()))));
 	}
 
 	// region JMX

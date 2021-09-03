@@ -19,7 +19,6 @@ package io.activej.redis;
 import io.activej.common.ApplicationSettings;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.SocketSettings;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -122,20 +121,21 @@ public final class RedisClient {
 	 */
 	public Promise<RedisConnection> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
-				.map((AsyncTcpSocket socket, Exception e) -> {
-					if (e != null) {
-						throw new RedisException("Failed to connect to Redis server: " + address, e);
-					}
-
-					socket = sslContext != null ?
-							wrapClientSocket(socket,
-									address.getHostName(), address.getPort(),
-									sslContext, sslExecutor) :
-							socket;
-					RedisConnection connection = new RedisConnection(eventloop, this, socket, autoFlushInterval);
-					connection.start();
-					return connection;
-				})
+				.map(
+						socket -> {
+							RedisConnection connection = new RedisConnection(eventloop, this,
+									sslContext != null ?
+											wrapClientSocket(socket,
+													address.getHostName(), address.getPort(),
+													sslContext, sslExecutor) :
+											socket,
+									autoFlushInterval);
+							connection.start();
+							return connection;
+						},
+						e -> {
+							throw new RedisException("Failed to connect to Redis server: " + address, e);
+						})
 				.whenComplete(toLogger(logger, TRACE, "connect", this));
 	}
 

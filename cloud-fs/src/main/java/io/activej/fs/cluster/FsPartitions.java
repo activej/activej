@@ -272,14 +272,8 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 							Object id = entry.getKey();
 							return entry.getValue()
 									.ping()
-									.map(($, e) -> {
-										if (e == null) {
-											markAlive(id);
-										} else {
-											markDead(id, e);
-										}
-										return null;
-									});
+									.whenResult(() -> markAlive(id))
+									.whenException(e -> markDead(id, e));
 						}));
 	}
 
@@ -288,12 +282,8 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 				deadPartitions.entrySet().stream()
 						.map(entry -> entry.getValue()
 								.ping()
-								.map(($, e) -> {
-									if (e == null) {
-										markAlive(entry.getKey());
-									}
-									return null;
-								})));
+								.whenResult(() -> markAlive(entry.getKey()))
+						));
 	}
 
 	// region JMX

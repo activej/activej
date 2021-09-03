@@ -13,7 +13,7 @@ public class PromiseChainExample {
 				.whenResult(result -> System.out.printf("Result of some process is '%s'%n", result))
 				.whenException(e -> System.out.printf("Exception after some process is '%s'%n", e.getMessage()))
 				.map(s -> s.toLowerCase())
-				.map((result, e) -> e == null ? String.format("The mapped result is '%s'", result) : e.getMessage())
+				.map(result -> String.format("The mapped result is '%s'", result), e -> e.getMessage())
 				.whenResult(s -> System.out.println(s));
 		//[END REGION_1]
 		Promise.complete()

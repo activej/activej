@@ -370,7 +370,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@NotNull <U> Promise<U> map(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
 
-	default @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<Exception, ? extends U> exceptionFn) {
+	default @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
 		return map((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
 	}
 
@@ -521,7 +521,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action consumer that consumes an exception of {@code this} promise
 	 */
 	@NotNull
-	default Promise<T> whenException(@NotNull ConsumerEx<Exception> action) {
+	default Promise<T> whenException(@NotNull ConsumerEx<@NotNull Exception> action) {
 		return then((v, e) -> {
 			if (e != null) {
 				action.accept(e);

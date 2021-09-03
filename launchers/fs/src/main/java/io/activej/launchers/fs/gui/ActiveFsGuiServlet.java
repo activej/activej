@@ -76,25 +76,23 @@ public final class ActiveFsGuiServlet {
 				.map("/", request -> {
 					String dir = decodeDir(request);
 					return fs.list(dir + "**")
-							.map((files, e) -> {
-								if (e != null) {
-									if (e instanceof FsException) {
-										return HttpResponse.ofCode(500)
-												.withPlainText("Service unavailable");
-									} else {
-										throw e;
-									}
-								}
-								if (!dir.isEmpty() && files.isEmpty()) {
-									return redirect302("/");
-								}
-								return HttpResponse.ok200()
-										.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
-										.withBody(applyTemplate(mustache, mapOf(
-												"title", title,
-												"dirContents", filesToDirView(new HashMap<>(files), dir),
-												"breadcrumbs", dirToBreadcrumbs(dir))));
-							});
+							.map(
+									files -> !dir.isEmpty() && files.isEmpty() ?
+											redirect302("/") :
+											HttpResponse.ok200()
+													.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
+													.withBody(applyTemplate(mustache, mapOf(
+															"title", title,
+															"dirContents", filesToDirView(new HashMap<>(files), dir),
+															"breadcrumbs", dirToBreadcrumbs(dir)))),
+									e -> {
+										if (e instanceof FsException) {
+											return HttpResponse.ofCode(500)
+													.withPlainText("Service unavailable");
+										} else {
+											throw e;
+										}
+									});
 				})
 				.map("/*", $ -> HttpResponse.notFound404());
 	}

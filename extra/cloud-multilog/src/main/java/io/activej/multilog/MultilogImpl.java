@@ -118,17 +118,17 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 		validateLogPartition(logPartition);
 
 		return Promise.of(StreamConsumer.<T>ofSupplier(
-				supplier -> supplier
-						.transformWith(ChannelSerializer.create(serializer)
-								.withAutoFlushInterval(autoFlushInterval)
-								.withInitialBufferSize(bufferSize)
-								.withSkipSerializationErrors())
-						.transformWith(streamWrites.register(logPartition))
-						.transformWith(streamWriteStats)
-						.bindTo(new LogStreamChunker(eventloop, fs, namingScheme, logPartition,
-								consumer -> consumer.transformWith(
-										ChannelFrameEncoder.create(frameFormat)
-												.withEncoderResets()))))
+						supplier -> supplier
+								.transformWith(ChannelSerializer.create(serializer)
+										.withAutoFlushInterval(autoFlushInterval)
+										.withInitialBufferSize(bufferSize)
+										.withSkipSerializationErrors())
+								.transformWith(streamWrites.register(logPartition))
+								.transformWith(streamWriteStats)
+								.bindTo(new LogStreamChunker(eventloop, fs, namingScheme, logPartition,
+										consumer -> consumer.transformWith(
+												ChannelFrameEncoder.create(frameFormat)
+														.withEncoderResets()))))
 				.withAcknowledgement(ack -> ack
 						.then(wrapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e)))));
 	}
@@ -228,10 +228,9 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 															.withDecoderResets())
 											.transformWith(supplier ->
 													supplier.withEndOfStream(eos ->
-															eos.map(($, e) -> {
-																if (e == null ||
-																		e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
-																	return null;
+															eos.whenException(e -> {
+																if (e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
+																	return;
 																}
 																if (ignoreMalformedLogs && e instanceof MalformedDataException) {
 																	if (logger.isWarnEnabled()) {
@@ -239,9 +238,9 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
 																				sw, countingFormat.getCount(), e);
 																	}
-																	return null;
+																} else {
+																	throw e;
 																}
-																throw e;
 															})))
 											.transformWith(ChannelDeserializer.create(serializer))
 											.withEndOfStream(eos ->
@@ -274,7 +273,6 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 	public Eventloop getEventloop() {
 		return eventloop;
 	}
-
 
 	private static <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> wrapException(Function<Exception, Exception> wrapFn) {
 		return (v, e) -> e == null ?

@@ -3,6 +3,7 @@ package io.activej.dataflow.stream;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -274,11 +275,11 @@ public final class PartitionedStreamTest {
 		}
 
 		Set<String> sourceFiltered = await(Promises.toList(sourceFsServers.stream()
-				.map(server -> createClient(Eventloop.getCurrentEventloop(), server))
-				.map(client -> client.download(SOURCE_FILENAME)
-						.then(supplier -> supplier
-								.transformWith(new CSVDecoder())
-								.toList())))
+						.map(server -> createClient(Eventloop.getCurrentEventloop(), server))
+						.map(client -> client.download(SOURCE_FILENAME)
+								.then(supplier -> supplier
+										.transformWith(new CSVDecoder())
+										.toList())))
 				.map(lists -> lists.stream()
 						.flatMap(Collection::stream)
 						.filter(new IsEven())
@@ -510,7 +511,6 @@ public final class PartitionedStreamTest {
 		return servers;
 	}
 
-
 	private static void writeDataFile(Path serverFsPath, int serverIdx, boolean sorted) throws IOException {
 		int nItems = 100;
 		int nextNumber = RANDOM.nextInt(10);
@@ -574,24 +574,24 @@ public final class PartitionedStreamTest {
 			BinaryChannelSupplier binaryChannelSupplier = BinaryChannelSupplier.of(supplier);
 			return ofChannelSupplier(ChannelSupplier.of(
 					() -> binaryChannelSupplier.decode(
-							bufs -> {
-								for (int i = 0; i < bufs.remainingBytes(); i++) {
-									if (bufs.peekByte(i) == ',') {
-										ByteBuf buf = bufs.takeExactSize(i);
-										bufs.skip(1);
-										return buf.asString(UTF_8);
-									}
-								}
-								return null;
-							})
-							.map((value, e) -> {
-								if (e == null) return value;
-								if (e instanceof TruncatedDataException) {
-									ByteBufs bufs = binaryChannelSupplier.getBufs();
-									return bufs.isEmpty() ? null : bufs.takeRemaining().asString(UTF_8);
-								}
-								throw e;
-							}),
+									bufs -> {
+										for (int i = 0; i < bufs.remainingBytes(); i++) {
+											if (bufs.peekByte(i) == ',') {
+												ByteBuf buf = bufs.takeExactSize(i);
+												bufs.skip(1);
+												return buf.asString(UTF_8);
+											}
+										}
+										return null;
+									})
+							.map(FunctionEx.identity(),
+									e -> {
+										if (e instanceof TruncatedDataException) {
+											ByteBufs bufs = binaryChannelSupplier.getBufs();
+											return bufs.isEmpty() ? null : bufs.takeRemaining().asString(UTF_8);
+										}
+										throw e;
+									}),
 					binaryChannelSupplier));
 		}
 	}

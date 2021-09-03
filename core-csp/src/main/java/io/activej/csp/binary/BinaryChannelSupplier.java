@@ -31,6 +31,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Iterator;
 import java.util.List;
 
+import static io.activej.common.function.FunctionEx.identity;
+
 public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	protected final ByteBufs bufs;
 
@@ -167,11 +169,11 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
 							closeEx(e);
 						})
-						.map((value, e) -> {
-							if (e == null) return value;
-							if (e instanceof TruncatedDataException && bufs.isEmpty()) return null;
-							throw e;
-						}),
+						.map(identity(),
+								e -> {
+									if (e instanceof TruncatedDataException && bufs.isEmpty()) return null;
+									throw e;
+								}),
 				this);
 	}
 

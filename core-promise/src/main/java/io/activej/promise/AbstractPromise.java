@@ -254,7 +254,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<Exception, ? extends U> exceptionFn) {
+	public @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
 		if (isComplete()) {
 			try {
 				return Promise.of(exception == null ? fn.apply(result) : exceptionFn.apply(exception));
