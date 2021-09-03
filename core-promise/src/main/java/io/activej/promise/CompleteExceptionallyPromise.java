@@ -97,6 +97,17 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<Exception, ? extends U> exceptionFn) {
+		try {
+			return Promise.of(exceptionFn.apply(exception));
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
 	public @NotNull <U> Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}

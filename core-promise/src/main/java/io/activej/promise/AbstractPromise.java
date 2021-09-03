@@ -254,6 +254,41 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<Exception, ? extends U> exceptionFn) {
+		if (isComplete()) {
+			try {
+				return Promise.of(exception == null ? fn.apply(result) : exceptionFn.apply(exception));
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+			@Override
+			public void accept(T result, Exception e) {
+				U newResult;
+				try {
+					newResult = e == null ? fn.apply(result) : exceptionFn.apply(e);
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(newResult);
+			}
+
+			@Override
+			public String describe() {
+				return ".map(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
 	public @NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
 		if (isComplete()) {
 			try {

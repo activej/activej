@@ -370,6 +370,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@NotNull <U> Promise<U> map(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
 
+	default @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<Exception, ? extends U> exceptionFn) {
+		return map((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
+	}
+
 	/**
 	 * Returns a new {@code Promise} which is obtained by calling
 	 * a provided supplier of a new promise. If {@code this} promise
