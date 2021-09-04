@@ -24,11 +24,11 @@ public class MalformedDataException extends Exception {
 		super(message);
 	}
 
-	public MalformedDataException(String message, Exception cause) {
+	public MalformedDataException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public MalformedDataException(Exception cause) {
+	public MalformedDataException(Throwable cause) {
 		super(cause);
 	}
 }

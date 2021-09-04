@@ -21,7 +21,7 @@ public class CubeException extends Exception {
 		super(message);
 	}
 
-	public CubeException(String message, Exception cause) {
+	public CubeException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

@@ -25,7 +25,7 @@ public class RpcException extends Exception {
 		super(message);
 	}
 
-	public RpcException(String message, Exception cause) {
+	public RpcException(String message, Throwable cause) {
 		super(message, cause);
 	}
 

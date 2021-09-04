@@ -29,7 +29,7 @@ public class AsyncException extends Exception {
 		super(message);
 	}
 
-	public AsyncException(String message, Exception cause) {
+	public AsyncException(String message, Throwable cause) {
 		super(message, cause);
 	}
 

@@ -21,7 +21,7 @@ public final class AggregationException extends Exception {
 		super(message);
 	}
 
-	public AggregationException(String message, Exception cause) {
+	public AggregationException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

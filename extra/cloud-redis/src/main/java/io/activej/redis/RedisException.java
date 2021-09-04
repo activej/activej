@@ -16,21 +16,19 @@
 
 package io.activej.redis;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A base Redis exception
  */
 public class RedisException extends Exception {
-	public RedisException(@NotNull String message) {
+	public RedisException(String message) {
 		super(message);
 	}
 
-	public RedisException(@NotNull String message, @NotNull Exception cause) {
+	public RedisException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public RedisException(@NotNull Exception cause) {
+	public RedisException(Throwable cause) {
 		super(cause);
 	}
 }

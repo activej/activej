@@ -25,11 +25,11 @@ public final class MalformedHttpException extends HttpException {
 		super(message);
 	}
 
-	public MalformedHttpException(Exception cause) {
+	public MalformedHttpException(Throwable cause) {
 		super(cause);
 	}
 
-	public MalformedHttpException(String message, Exception cause) {
+	public MalformedHttpException(String message, Throwable cause) {
 		super(message, cause);
 	}
 

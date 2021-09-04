@@ -21,15 +21,15 @@ public class ToDoException extends RuntimeException {
 	public ToDoException() {
 	}
 
-	public ToDoException(String message, Exception cause) {
+	public ToDoException(String message) {
+		super(message);
+	}
+
+	public ToDoException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public ToDoException(String s) {
-		super(s);
-	}
-
-	public ToDoException(Exception cause) {
+	public ToDoException(Throwable cause) {
 		super(cause);
 	}
 }

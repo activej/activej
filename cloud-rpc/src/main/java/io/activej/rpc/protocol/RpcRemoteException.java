@@ -28,7 +28,7 @@ public final class RpcRemoteException extends RpcException implements RpcMandato
 	@Nullable
 	private final String causeClassName;
 
-	public RpcRemoteException(Exception cause) {
+	public RpcRemoteException(Throwable cause) {
 		super(cause.toString(), cause);
 		this.causeClassName = cause.getClass().getName();
 		this.causeMessage = cause.getMessage();

@@ -21,7 +21,7 @@ public class RpcOverloadException extends RpcException {
 		super(message);
 	}
 
-	public RpcOverloadException(String message, Exception cause) {
+	public RpcOverloadException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

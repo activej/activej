@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 public final class UncheckedException extends RuntimeException {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(UncheckedException.class, "withStackTrace", false);
 
-	private UncheckedException(@NotNull Exception cause) {
+	private UncheckedException(@NotNull Throwable cause) {
 		super(cause);
 	}
 

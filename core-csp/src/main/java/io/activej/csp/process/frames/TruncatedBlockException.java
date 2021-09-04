@@ -22,7 +22,7 @@ import io.activej.common.exception.TruncatedDataException;
  * Exception indicates a stream that ends with an incomplete Data Block
  */
 public final class TruncatedBlockException extends TruncatedDataException {
-	public TruncatedBlockException(Exception cause) {
+	public TruncatedBlockException(Throwable cause) {
 		super("Next block is truncated", cause);
 	}
 }
