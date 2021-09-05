@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.exception.Utils.propagateRuntimeException;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class AsyncAccumulator<A> implements AsyncCloseable {
@@ -78,9 +79,8 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 			if (e == null) {
 				try {
 					consumer.accept(accumulator, v);
-				} catch (RuntimeException ex) {
-					throw ex;
 				} catch (Exception ex) {
+					propagateRuntimeException(ex);
 					resultPromise.setException(ex);
 					Recyclers.recycle(accumulator);
 					return;

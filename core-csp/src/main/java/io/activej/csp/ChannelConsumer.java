@@ -40,6 +40,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static io.activej.common.exception.Utils.propagateRuntimeException;
+
 /**
  * This interface represents consumer of data items that should be used serially
  * (each consecutive {@link #accept(Object)} operation should be called only after
@@ -347,9 +349,8 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 					T newValue;
 					try {
 						newValue = fn.apply(value);
-					} catch (RuntimeException ex) {
-						throw ex;
 					} catch (Exception ex) {
+						propagateRuntimeException(ex);
 						ChannelConsumer.this.closeEx(ex);
 						return Promise.ofException(ex);
 					}

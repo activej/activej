@@ -221,10 +221,13 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					try {
 						T result = supplier.get();
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
-					} catch (RuntimeException e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, supplier));
 					} catch (Exception e) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
+						eventloop.execute(wrapContext(cb, () -> {
+							if (e instanceof RuntimeException) {
+								eventloop.recordFatalError(e, supplier);
+							}
+							cb.setException(e);
+						}));
 					} catch (Throwable e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, supplier));
 					} finally {
@@ -251,10 +254,13 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					try {
 						runnable.run();
 						eventloop.execute(wrapContext(cb, () -> cb.set(null)));
-					} catch (RuntimeException e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, runnable));
 					} catch (Exception e) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
+						eventloop.execute(wrapContext(cb, () -> {
+							if (e instanceof RuntimeException) {
+								eventloop.recordFatalError(e, runnable);
+							}
+							cb.setException(e);
+						}));
 					} catch (Throwable e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, runnable));
 					} finally {

@@ -46,6 +46,7 @@ import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.iteratorOf;
 import static io.activej.common.Utils.nullify;
+import static io.activej.common.exception.Utils.propagateRuntimeException;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
@@ -136,9 +137,8 @@ public final class ChannelSuppliers {
 			if (item != null) {
 				try {
 					accumulator.accept(accumulatedValue, item);
-				} catch (RuntimeException ex) {
-					throw ex;
 				} catch (Exception ex) {
+					propagateRuntimeException(ex);
 					supplier.closeEx(ex);
 					cb.setException(ex);
 					return;
@@ -152,9 +152,8 @@ public final class ChannelSuppliers {
 				if (value != null) {
 					try {
 						accumulator.accept(accumulatedValue, value);
-					} catch (RuntimeException ex) {
-						throw ex;
 					} catch (Exception ex) {
+						propagateRuntimeException(ex);
 						supplier.closeEx(ex);
 						cb.setException(ex);
 						return;
@@ -164,9 +163,8 @@ public final class ChannelSuppliers {
 					R result;
 					try {
 						result = finisher.apply(accumulatedValue);
-					} catch (RuntimeException ex) {
-						throw ex;
 					} catch (Exception ex) {
+						propagateRuntimeException(ex);
 						cb.setException(ex);
 						return;
 					}

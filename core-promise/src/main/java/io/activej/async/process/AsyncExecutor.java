@@ -23,6 +23,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.Callable;
 import java.util.concurrent.RejectedExecutionException;
 
+import static io.activej.common.exception.Utils.propagateRuntimeException;
+
 public interface AsyncExecutor {
 	@NotNull <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException;
 
@@ -38,9 +40,8 @@ public interface AsyncExecutor {
 			T result;
 			try {
 				result = callable.call();
-			} catch (RuntimeException e) {
-				throw e;
 			} catch (Exception e) {
+				propagateRuntimeException(e);
 				return Promise.ofException(e);
 			}
 			return Promise.of(result);

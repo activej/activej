@@ -20,6 +20,8 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.Supplier;
 
+import static io.activej.common.exception.Utils.propagateRuntimeException;
+
 @FunctionalInterface
 public interface SupplierEx<T> {
 	T get() throws Exception;
@@ -38,9 +40,8 @@ public interface SupplierEx<T> {
 		return () -> {
 			try {
 				return checkedFn.get();
-			} catch (RuntimeException ex) {
-				throw ex;
 			} catch (Exception ex) {
+				propagateRuntimeException(ex);
 				throw UncheckedException.of(ex);
 			}
 		};
