@@ -6,6 +6,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.codec.StructuredCodec;
 import io.activej.codec.StructuredCodecs;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.cube.exception.StateFarAheadException;
 import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
@@ -27,6 +28,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -562,6 +564,37 @@ public class CubeUplinkMySqlTest {
 
 		assertThat(exception, instanceOf(OTException.class));
 		assertEquals("Chunk is already removed", exception.getMessage());
+	}
+
+	@Test
+	public void fetchStateFarAhead() throws SQLException {
+		List<LogDiff<CubeDiff>> diffs1 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggregation", AggregationDiff.of(set(chunk(1), chunk(2)))))
+		));
+		await(uplink.push(await(uplink.createProtoCommit(0L, diffs1, 0))));
+
+		List<LogDiff<CubeDiff>> diffs2 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggregation", AggregationDiff.of(set(chunk(3), chunk(4)))))
+		));
+		await(uplink.push(await(uplink.createProtoCommit(1L, diffs2, 1))));
+
+		List<LogDiff<CubeDiff>> diffs3 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(map("aggregation", AggregationDiff.of(set(chunk(5), chunk(6)))))
+		));
+		await(uplink.push(await(uplink.createProtoCommit(2L, diffs3, 2))));
+
+		try (Connection connection = dataSource.getConnection()) {
+			try (Statement statement = connection.createStatement()) {
+				statement.execute("DELETE FROM " + CubeUplinkMySql.REVISION_TABLE +
+						" WHERE `revision` IN (0,1,2)");
+			}
+		}
+
+		Throwable exception = awaitException(uplink.fetch(1L));
+		assertThat(exception, instanceOf(StateFarAheadException.class));
+		StateFarAheadException e = (StateFarAheadException) exception;
+		assertEquals(1L, e.getStartingRevision());
+		assertEquals(set(1L, 2L), e.getMissingRevisions());
 	}
 
 	private static void assertCubeDiff(Set<Long> added, Set<Long> removed, CubeDiff actual) {
