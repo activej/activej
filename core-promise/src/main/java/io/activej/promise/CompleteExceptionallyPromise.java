@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 
-import static io.activej.common.exception.Utils.propagateRuntimeException;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
@@ -87,7 +86,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		try {
 			return Promise.of(fn.apply(null, exception));
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -97,7 +98,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		try {
 			return Promise.of(exceptionFn.apply(exception));
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -128,7 +131,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -164,7 +169,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 			exceptionFn.accept(exception);
 			return this;
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -175,7 +182,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 			action.run();
 			return this;
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -196,7 +205,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 			fn.accept(exception);
 			return this;
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -207,7 +218,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 			action.run();
 			return this;
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}

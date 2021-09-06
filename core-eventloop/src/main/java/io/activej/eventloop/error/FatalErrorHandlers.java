@@ -18,19 +18,45 @@ package io.activej.eventloop.error;
 
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOError;
 import java.util.List;
 import java.util.zip.ZipError;
 
+import static io.activej.eventloop.Eventloop.getCurrentEventloopOrNull;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 /**
- * Encapsulation of certain fatal error handlers that determine {@link Eventloop} behaviour in case of fatal error
+ * Encapsulation of certain fatal error handlers that determine behaviour in case of fatal error
  * occurrences.
  */
 public final class FatalErrorHandlers {
+
+	@NotNull
+	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
+
+	public static void setGlobalFatalErrorHandler(@NotNull FatalErrorHandler handler) {
+		globalFatalErrorHandler = handler;
+	}
+
+	public static @NotNull FatalErrorHandler getGlobalFatalErrorHandler() {
+		return globalFatalErrorHandler;
+	}
+
+	public static void handleFatalError(@NotNull Throwable e, @Nullable Object context) {
+		Eventloop eventloop = getCurrentEventloopOrNull();
+		if (eventloop == null) {
+			globalFatalErrorHandler.handle(e, context);
+		} else {
+			eventloop.recordFatalError(e, context);
+		}
+	}
+
+	public static void handleFatalError(@NotNull Throwable e) {
+		handleFatalError(e, null);
+	}
 
 	public static FatalErrorHandler ignoreAllErrors() {
 		return (e, context) -> {};

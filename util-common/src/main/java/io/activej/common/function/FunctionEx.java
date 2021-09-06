@@ -20,8 +20,6 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.Function;
 
-import static io.activej.common.exception.Utils.propagateRuntimeException;
-
 @FunctionalInterface
 public interface FunctionEx<T, R> {
 	R apply(T t) throws Exception;
@@ -40,8 +38,9 @@ public interface FunctionEx<T, R> {
 		return t -> {
 			try {
 				return checkedFn.apply(t);
+			} catch (RuntimeException ex) {
+				throw ex;
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
 				throw UncheckedException.of(ex);
 			}
 		};

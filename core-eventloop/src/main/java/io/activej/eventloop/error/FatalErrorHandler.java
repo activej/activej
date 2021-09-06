@@ -16,23 +16,26 @@
 
 package io.activej.eventloop.error;
 
-import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * An {@link Eventloop}-global callback for any fatal (unchecked) exceptions,
- * that bubbled up to the task call from the main loop.
- *
- * @see Eventloop#withFatalErrorHandler
+ * A callback for any fatal (unchecked) exceptions
  */
 @FunctionalInterface
 public interface FatalErrorHandler {
 	/**
-	 * Called when an unchecked exception is caught during some task is called from {@link Eventloop}.
+	 * Called when an unchecked exception is caught during execution of some task
 	 *
-	 * @param e       the catched exception
-	 * @param context the context in was catched in, commonly a {@link Runnable} or some callback
+	 * @param e       the caught exception
+	 * @param context the context in which exception was caught in, possibly {@code null}
 	 */
 	void handle(@NotNull Throwable e, @Nullable Object context);
+
+	/**
+	 * @see #handle(Throwable, Object)
+	 */
+	default void handle(@NotNull Throwable e) {
+		handle(e, null);
+	}
 }

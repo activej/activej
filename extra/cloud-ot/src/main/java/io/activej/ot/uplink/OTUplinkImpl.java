@@ -35,7 +35,7 @@ import java.util.Set;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Utils.*;
-import static io.activej.common.exception.Utils.propagateRuntimeException;
+import static io.activej.eventloop.error.FatalErrorHandlers.handleFatalError;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
 import static io.activej.promise.Promises.isResultOrError;
@@ -84,7 +84,9 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC> {
 		try {
 			commit = protoCommitDecoder.apply(protoCommit);
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				handleFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 		return repository.push(commit)

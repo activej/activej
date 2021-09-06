@@ -18,8 +18,6 @@ package io.activej.common.function;
 
 import io.activej.common.exception.UncheckedException;
 
-import static io.activej.common.exception.Utils.propagateRuntimeException;
-
 @FunctionalInterface
 public interface RunnableEx {
 	void run() throws Exception;
@@ -38,8 +36,9 @@ public interface RunnableEx {
 		return () -> {
 			try {
 				checkedFn.run();
+			} catch (RuntimeException ex) {
+				throw ex;
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
 				throw UncheckedException.of(ex);
 			}
 		};

@@ -42,7 +42,6 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.exception.Utils.propagateRuntimeException;
 import static java.util.Arrays.asList;
 
 /**
@@ -336,7 +335,9 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 								try {
 									return fn.apply(value);
 								} catch (Exception ex) {
-									propagateRuntimeException(ex);
+									if (ex instanceof RuntimeException) {
+										eventloop.recordFatalError(ex, fn);
+									}
 									ChannelSupplier.this.closeEx(ex);
 									throw ex;
 								}
