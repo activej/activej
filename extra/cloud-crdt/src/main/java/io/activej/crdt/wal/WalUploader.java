@@ -54,6 +54,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static io.activej.async.function.AsyncSuppliers.coalesce;
+import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.crdt.util.Utils.deleteWalFiles;
 import static io.activej.crdt.util.Utils.getWalFiles;
 import static io.activej.crdt.wal.FileWriteAheadLog.FRAME_FORMAT;
@@ -189,13 +190,14 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 			ChannelSupplier.ofPromise(ChannelFileReader.open(executor, file))
 					.transformWith(ChannelFrameDecoder.create(FRAME_FORMAT))
 					.withEndOfStream(eos -> eos
-							.whenException(e -> {
-								if (e instanceof TruncatedDataException) {
-									logger.warn("Write ahead log {} was truncated", file);
-								} else {
-									throw e;
-								}
-							}))
+							.map(identity(),
+									e -> {
+										if (e instanceof TruncatedDataException) {
+											logger.warn("Write ahead log {} was truncated", file);
+											return null;
+										}
+										throw e;
+									}))
 					.transformWith(ChannelDeserializer.create(serializer))
 					.streamTo(reducer.newInput(CrdtData::getKey, new WalReducer()));
 		}

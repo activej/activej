@@ -204,16 +204,16 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	@Override
 	public Promise<?> start() {
 		return Promise.ofCallback(cb ->
-				discoveryService.discover(null, (result, e) -> {
-					if (e == null) {
-						this.partitions.putAll(result);
-						this.alivePartitions.putAll(result);
-						checkAllPartitions()
-								.run(cb);
-					} else {
-						cb.setException(e);
-					}
-				}))
+						discoveryService.discover(null, (result, e) -> {
+							if (e == null) {
+								this.partitions.putAll(result);
+								this.alivePartitions.putAll(result);
+								checkAllPartitions()
+										.run(cb);
+							} else {
+								cb.setException(e);
+							}
+						}))
 				.whenResult(this::rediscover);
 	}
 
@@ -272,8 +272,14 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 							Object id = entry.getKey();
 							return entry.getValue()
 									.ping()
-									.whenResult(() -> markAlive(id))
-									.whenException(e -> markDead(id, e));
+									.map(($, e) -> {
+										if (e == null) {
+											markAlive(id);
+										} else {
+											markDead(id, e);
+										}
+										return null;
+									});
 						}));
 	}
 
@@ -282,7 +288,12 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 				deadPartitions.entrySet().stream()
 						.map(entry -> entry.getValue()
 								.ping()
-								.whenResult(() -> markAlive(entry.getKey()))
+								.map(($, e) -> {
+									if (e == null) {
+										markAlive(entry.getKey());
+									}
+									return null;
+								})
 						));
 	}
 

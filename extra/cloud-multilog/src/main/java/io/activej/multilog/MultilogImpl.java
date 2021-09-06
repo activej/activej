@@ -54,6 +54,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -228,20 +229,22 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 															.withDecoderResets())
 											.transformWith(supplier ->
 													supplier.withEndOfStream(eos ->
-															eos.whenException(e -> {
-																if (e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
-																	return;
-																}
-																if (ignoreMalformedLogs && e instanceof MalformedDataException) {
-																	if (logger.isWarnEnabled()) {
-																		logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
-																				fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
-																				sw, countingFormat.getCount(), e);
-																	}
-																} else {
-																	throw e;
-																}
-															})))
+															eos.map(identity(),
+																	e -> {
+																		if (e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
+																			return null;
+																		}
+																		if (ignoreMalformedLogs && e instanceof MalformedDataException) {
+																			if (logger.isWarnEnabled()) {
+																				logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
+																						fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+																						sw, countingFormat.getCount(), e);
+																			}
+																			return null;
+																		} else {
+																			throw e;
+																		}
+																	})))
 											.transformWith(ChannelDeserializer.create(serializer))
 											.withEndOfStream(eos ->
 													eos.whenComplete(($, e) -> log(e)));

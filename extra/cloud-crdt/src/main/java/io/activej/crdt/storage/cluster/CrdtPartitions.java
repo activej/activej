@@ -203,16 +203,16 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 	@Override
 	public Promise<?> start() {
 		return Promise.ofCallback(cb ->
-				discoveryService.discover(null, (result, e) -> {
-					if (e == null) {
-						this.partitions.putAll(result);
-						this.alivePartitions.putAll(result);
-						recompute();
-						checkAllPartitions().run(cb);
-					} else {
-						cb.setException(e);
-					}
-				}))
+						discoveryService.discover(null, (result, e) -> {
+							if (e == null) {
+								this.partitions.putAll(result);
+								this.alivePartitions.putAll(result);
+								recompute();
+								checkAllPartitions().run(cb);
+							} else {
+								cb.setException(e);
+							}
+						}))
 				.whenResult(this::rediscover);
 	}
 
@@ -234,8 +234,14 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 							P id = entry.getKey();
 							return entry.getValue()
 									.ping()
-									.whenResult(() -> markAlive(id))
-									.whenException(e -> markDead(id, e));
+									.map(($, e) -> {
+										if (e == null) {
+											markAlive(id);
+										} else {
+											markDead(id, e);
+										}
+										return null;
+									});
 						}));
 	}
 
@@ -244,7 +250,12 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 				deadPartitions.entrySet().stream()
 						.map(entry -> entry.getValue()
 								.ping()
-								.whenResult(() -> markAlive(entry.getKey()))));
+								.map(($, e) -> {
+									if (e == null) {
+										markAlive(entry.getKey());
+									}
+									return null;
+								})));
 	}
 
 	// region JMX
