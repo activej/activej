@@ -10,6 +10,9 @@ import java.util.Map;
 
 import static io.activej.types.Types.*;
 
+/**
+ * Various utility methods for type inference
+ */
 public class IsAssignableUtils {
 
 	public static boolean isAssignable(@NotNull Type to, @NotNull Type from) {

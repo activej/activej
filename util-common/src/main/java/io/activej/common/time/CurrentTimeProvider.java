@@ -27,10 +27,16 @@ public interface CurrentTimeProvider {
 	 */
 	long currentTimeMillis();
 
+	/**
+	 * @return current time as an {@link Instant}
+	 */
 	default Instant currentInstant() {
 		return Instant.ofEpochMilli(currentTimeMillis());
 	}
 
+	/**
+	 * @return a provider of current time that uses {@link System#currentTimeMillis()}
+	 */
 	static CurrentTimeProvider ofSystem() {
 		return System::currentTimeMillis;
 	}

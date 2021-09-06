@@ -16,8 +16,8 @@
 
 package io.activej.launchers.fs;
 
-import io.activej.common.initializer.Initializer;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;

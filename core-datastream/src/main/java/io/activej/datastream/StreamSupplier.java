@@ -17,7 +17,6 @@
 package io.activej.datastream;
 
 import io.activej.async.process.AsyncCloseable;
-import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.common.function.SupplierEx;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.StreamSuppliers.Closing;

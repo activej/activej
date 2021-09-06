@@ -16,16 +16,28 @@
 
 package io.activej.common.function;
 
+import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.UncheckedException;
 
 import java.util.function.BiFunction;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
+/**
+ * Represents a {@link BiFunction} capable of throwing exceptions
+ */
 @FunctionalInterface
 public interface BiFunctionEx<T, U, R> {
 	R apply(T t, U u) throws Exception;
 
+	/**
+	 * Creates a {@code BiFunctionEx} out of {@link BiFunction}
+	 * <p>
+	 * If given function throws {@link UncheckedException}, its cause will be propagated
+	 *
+	 * @param uncheckedFn original {@link BiFunction}
+	 * @return a function capable of throwing exceptions
+	 */
 	static <T, U, R> BiFunctionEx<T, U, R> of(BiFunction<T, U, R> uncheckedFn) {
 		return (t, u) -> {
 			try {
@@ -36,6 +48,17 @@ public interface BiFunctionEx<T, U, R> {
 		};
 	}
 
+	/**
+	 * Creates a {@link BiFunction} out of {@code BiFunctionEx}
+	 * <p>
+	 * If given function throws a checked exception, it will be wrapped into {@link UncheckedException}
+	 * and rethrown
+	 * <p>
+	 * Unchecked exceptions will be handled by thread's {@link FatalErrorHandler}
+	 *
+	 * @param checkedFn original {@code BiFunctionEx}
+	 * @return a function
+	 */
 	static <T, U, R> BiFunction<T, U, R> uncheckedOf(BiFunctionEx<T, U, R> checkedFn) {
 		return (t, u) -> {
 			try {

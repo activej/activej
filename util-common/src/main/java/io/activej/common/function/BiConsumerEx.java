@@ -16,16 +16,28 @@
 
 package io.activej.common.function;
 
+import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.UncheckedException;
 
 import java.util.function.BiConsumer;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
+/**
+ * Represents a {@link BiConsumer} capable of throwing exceptions
+ */
 @FunctionalInterface
 public interface BiConsumerEx<T, U> {
 	void accept(T t, U u) throws Exception;
 
+	/**
+	 * Creates a {@code BiConsumerEx} out of {@link BiConsumer}
+	 * <p>
+	 * If given consumer throws {@link UncheckedException}, its cause will be propagated
+	 *
+	 * @param uncheckedFn original {@link BiConsumer}
+	 * @return a consumer capable of throwing exceptions
+	 */
 	static <T, U> BiConsumerEx<T, U> of(BiConsumer<T, U> uncheckedFn) {
 		return (t, u) -> {
 			try {
@@ -36,6 +48,17 @@ public interface BiConsumerEx<T, U> {
 		};
 	}
 
+	/**
+	 * Creates a {@link BiConsumer} out of {@code BiConsumerEx}
+	 * <p>
+	 * If given consumer throws a checked exception, it will be wrapped into {@link UncheckedException}
+	 * and rethrown
+	 * <p>
+	 * Unchecked exceptions will be handled by thread's {@link FatalErrorHandler}
+	 *
+	 * @param checkedFn original {@code BiConsumerEx}
+	 * @return a consumer
+	 */
 	static <T, U> BiConsumer<T, U> uncheckedOf(BiConsumerEx<T, U> checkedFn) {
 		return (t, u) -> {
 			try {

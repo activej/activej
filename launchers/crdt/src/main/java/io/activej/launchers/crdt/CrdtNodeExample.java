@@ -16,7 +16,6 @@
 
 package io.activej.launchers.crdt;
 
-import io.activej.types.TypeT;
 import io.activej.config.Config;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
@@ -29,6 +28,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.types.TypeT;
 
 import java.util.concurrent.Executor;
 

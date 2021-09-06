@@ -16,6 +16,9 @@
 
 package io.activej.async.exception;
 
+/**
+ * This exception indicates that a component has been already closed asynchronously
+ */
 public class AsyncCloseException extends AsyncException {
 	public AsyncCloseException() {
 		super();

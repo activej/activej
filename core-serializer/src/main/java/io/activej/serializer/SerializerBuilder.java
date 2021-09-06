@@ -64,7 +64,6 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Scans fields of classes for serialization.
  */
-@SuppressWarnings("unused")
 public final class SerializerBuilder {
 	private final DefiningClassLoader classLoader;
 
@@ -89,10 +88,16 @@ public final class SerializerBuilder {
 		this.classLoader = classLoader;
 	}
 
+	/**
+	 * Creates a new instance of {@code SerializerBuilder} with newly created {@link DefiningClassLoader}
+	 */
 	public static SerializerBuilder create() {
 		return create(DefiningClassLoader.create());
 	}
 
+	/**
+	 * Creates a new instance of {@code SerializerBuilder} with external {@link DefiningClassLoader}
+	 */
 	public static SerializerBuilder create(DefiningClassLoader definingClassLoader) {
 		SerializerBuilder builder = new SerializerBuilder(definingClassLoader);
 
@@ -165,10 +170,22 @@ public final class SerializerBuilder {
 		return builder;
 	}
 
+	/**
+	 * Adds a mapping to resolve a {@link SerializerDef} for a given {@link TypeT}
+	 *
+	 * @param typeT a type token
+	 * @param fn    a mapping to resolve a serializer
+	 */
 	public SerializerBuilder with(TypeT<?> typeT, Mapping<SerializerDef> fn) {
 		return with(typeT.getType(), fn);
 	}
 
+	/**
+	 * Adds a mapping to resolve a {@link SerializerDef} for a given {@link Type}
+	 *
+	 * @param type a type
+	 * @param fn   a mapping to resolve a serializer
+	 */
 	@SuppressWarnings("PointlessBooleanExpression")
 	public SerializerBuilder with(Type type, Mapping<SerializerDef> fn) {
 		registry.with(type, ctx -> {
@@ -261,42 +278,103 @@ public final class SerializerBuilder {
 		return false;
 	}
 
+	/**
+	 * Adds an implementation class for the serializer
+	 *
+	 * @param implementationClass an implementation class
+	 */
 	public SerializerBuilder withImplementationClass(Class<?> implementationClass) {
 		this.implementationClass = implementationClass;
 		return this;
 	}
 
+	/**
+	 * Sets a given {@link CompatibilityLevel} for the serializer. This method should be used
+	 * to ensure backwards compatibility with previous versions of serializers
+	 *
+	 * @param compatibilityLevel a compatibility level
+	 */
 	public SerializerBuilder withCompatibilityLevel(CompatibilityLevel compatibilityLevel) {
 		this.compatibilityLevel = compatibilityLevel;
 		return this;
 	}
 
+	/**
+	 * Enables annotation compatibility mode
+	 *
+	 * @see #withAnnotationCompatibilityMode(boolean)
+	 */
 	public SerializerBuilder withAnnotationCompatibilityMode() {
 		return withAnnotationCompatibilityMode(true);
 	}
 
+	/**
+	 * Enables or disables annotation compatibility mode
+	 * <p>
+	 * In previous ActiveJ versions serializer annotations had to be placed directly on fields/getters.
+	 * To specify a concrete annotated type a {@code path} attribute was used. Now it is possible to
+	 * annotate types directly. However, for compatibility with classes annotated using a {@code path} attribute
+	 * or when using older versions of Java that may fail resolving type use annotations, this compatibility mode
+	 * can be enabled
+	 */
 	public SerializerBuilder withAnnotationCompatibilityMode(boolean annotationsCompatibilityMode) {
 		this.annotationsCompatibilityMode = annotationsCompatibilityMode;
 		return this;
 	}
 
+	/**
+	 * Adds alias annotation for a serializer annotation. Alias annotation acts as if it is a regular
+	 * serializer annotation
+	 *
+	 * @param annotation      a serializer annotation
+	 * @param annotationAlias an alias annotation
+	 * @param mapping         a function that transforms an alias annotation into a serializer annotation
+	 * @param <A>             a type of serializer annotation
+	 * @param <T>             a type of alias annotation
+	 */
 	public <A extends Annotation, T extends Annotation> SerializerBuilder withAnnotationAlias(Class<A> annotation, Class<T> annotationAlias,
 			Function<T, A> mapping) {
 		annotationAliases.computeIfAbsent(annotation, $ -> new HashMap<>()).put(annotationAlias, mapping);
 		return this;
 	}
 
+	/**
+	 * Sets maximal encode version
+	 * <p>
+	 * This method is used to ensure compatibility between different versions of serialized objects
+	 *
+	 * @param encodeVersionMax a maximal encode version
+	 */
 	public SerializerBuilder withEncodeVersion(int encodeVersionMax) {
 		this.encodeVersionMax = encodeVersionMax;
 		return this;
 	}
 
+	/**
+	 * Sets both minimal and maximal decode versions
+	 *
+	 * <p>
+	 * This method is used to ensure compatibility between different versions of serialized objects
+	 *
+	 * @param decodeVersionMin a minimal decode version
+	 * @param decodeVersionMax a maximal decode version
+	 */
 	public SerializerBuilder withDecodeVersions(int decodeVersionMin, int decodeVersionMax) {
 		this.decodeVersionMin = decodeVersionMin;
 		this.decodeVersionMax = decodeVersionMax;
 		return this;
 	}
 
+	/**
+	 * Sets maximal encode version as well as both minimal and maximal decode versions
+	 *
+	 * <p>
+	 * This method is used to ensure compatibility between different versions of serialized objects
+	 *
+	 * @param encodeVersionMax a maximal encode version
+	 * @param decodeVersionMin a minimal decode version
+	 * @param decodeVersionMax a maximal decode version
+	 */
 	public SerializerBuilder withVersions(int encodeVersionMax, int decodeVersionMin, int decodeVersionMax) {
 		this.encodeVersionMax = encodeVersionMax;
 		this.decodeVersionMin = decodeVersionMin;
@@ -304,23 +382,50 @@ public final class SerializerBuilder {
 		return this;
 	}
 
+	/**
+	 * Sets auto ordering parameters (used when no explicit ordering is set)
+	 *
+	 * @param autoOrderingStart  a value of initial order index
+	 * @param autoOrderingStride a step between indices
+	 */
 	public SerializerBuilder withAutoOrdering(int autoOrderingStart, int autoOrderingStride) {
 		this.autoOrderingStart = autoOrderingStart;
 		this.autoOrderingStride = autoOrderingStride;
 		return this;
 	}
 
+	/**
+	 * Sets a serializer profile
+	 *
+	 * @param profile a serializer profile
+	 */
 	public SerializerBuilder withProfile(String profile) {
 		this.profile = profile;
 		return this;
 	}
 
+	/**
+	 * Sets subclasses to be serialized.
+	 * Uses custom string id to identify subclasses
+	 *
+	 * @param subclassesId an id of subclasses
+	 * @param subclasses   actual subclasses classes
+	 * @param <T>          a parent of subclasses
+	 */
 	public <T> SerializerBuilder withSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
 		extraSubclassesMap.put(subclassesId, (List) subclasses);
 		return this;
 	}
 
+	/**
+	 * Sets subclasses to be serialized.
+	 * Uses parent class to identify subclasses
+	 *
+	 * @param type       a parent class  of subclasses
+	 * @param subclasses actual subclasses classes
+	 * @param <T>        a parent type of subclasses
+	 */
 	public <T> SerializerBuilder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
 		extraSubclassesMap.put(type, (List) subclasses);
@@ -421,6 +526,13 @@ public final class SerializerBuilder {
 		return (BinarySerializer<T>) toClassBuilder(serializer).defineClassAndCreateInstance(DefiningClassLoader.create());
 	}
 
+	/**
+	 * Converts a {@link SerializerDef} into a {@link ClassBuilder} of {@link BinarySerializer}
+	 *
+	 * @param serializer a serializer definition
+	 * @param <T>        a type of data to be serialized by a {@link BinarySerializer}
+	 * @return a {@link ClassBuilder} of {@link BinarySerializer}
+	 */
 	public <T> ClassBuilder<BinarySerializer<T>> toClassBuilder(SerializerDef serializer) {
 		//noinspection unchecked
 		ClassBuilder<BinarySerializer<T>> classBuilder = ClassBuilder.create((Class<BinarySerializer<T>>) implementationClass, BinarySerializer.class);
@@ -502,7 +614,7 @@ public final class SerializerBuilder {
 		StaticDecoders staticDecoders = staticDecoders(classBuilder);
 
 		Integer latestVersion = decodeVersions.isEmpty() ? null : decodeVersions.get(decodeVersions.size() - 1);
-		classBuilder.withMethod("decode", Object.class, asList(BinaryInput.class), methodBody(
+		classBuilder.withMethod("decode", Object.class, singletonList(BinaryInput.class), methodBody(
 				decoderInitializers, decoderFinalizers,
 				decodeImpl(serializer, latestVersion, staticDecoders, arg(0))));
 
@@ -532,7 +644,7 @@ public final class SerializerBuilder {
 
 		for (int i = decodeVersions.size() - 2; i >= 0; i--) {
 			int version = decodeVersions.get(i);
-			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), asList(BinaryInput.class),
+			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), singletonList(BinaryInput.class),
 					sequence(serializer.defineDecoder(staticDecoders,
 							arg(0), version, compatibilityLevel)));
 		}
@@ -606,7 +718,7 @@ public final class SerializerBuilder {
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, valueClazz, asList(BinaryInput.class),
+					classBuilder.withStaticMethod(methodName, valueClazz, singletonList(BinaryInput.class),
 							serializerDef.decoder(this, IN, version, compatibilityLevel));
 				}
 				return staticCallSelf(methodName, in);

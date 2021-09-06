@@ -16,16 +16,28 @@
 
 package io.activej.common.function;
 
+import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.UncheckedException;
 
 import java.util.function.Consumer;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
+/**
+ * Represents a {@link Consumer} capable of throwing exceptions
+ */
 @FunctionalInterface
 public interface ConsumerEx<T> {
 	void accept(T t) throws Exception;
 
+	/**
+	 * Creates a {@code ConsumerEx} out of {@link Consumer}
+	 * <p>
+	 * If given consumer throws {@link UncheckedException}, its cause will be propagated
+	 *
+	 * @param uncheckedFn original {@link Consumer}
+	 * @return a consumer capable of throwing exceptions
+	 */
 	static <T> ConsumerEx<T> of(Consumer<T> uncheckedFn) {
 		return t -> {
 			try {
@@ -36,6 +48,17 @@ public interface ConsumerEx<T> {
 		};
 	}
 
+	/**
+	 * Creates a {@link Consumer} out of {@code ConsumerEx}
+	 * <p>
+	 * If given consumer throws a checked exception, it will be wrapped into {@link UncheckedException}
+	 * and rethrown
+	 * <p>
+	 * Unchecked exceptions will be handled by thread's {@link FatalErrorHandler}
+	 *
+	 * @param checkedFn original {@code ConsumerEx}
+	 * @return a consumer
+	 */
 	static <T> Consumer<T> uncheckedOf(ConsumerEx<T> checkedFn) {
 		return t -> {
 			try {

@@ -25,13 +25,35 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
+/**
+ * An abstract {@link BytecodeStorage} that allows loading and saving bytecode
+ * using {@link InputStream} and {@link OutputStream}
+ */
 public abstract class AbstractBytecodeStorage implements BytecodeStorage {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static final int DEFAULT_BUFFER_SIZE = 8192;
 
+	/**
+	 * Returns an {@link Optional} of a {@link InputStream}
+	 * that will be used to load a bytecode for a given class name.
+	 * If optional is empty, that means there is no bytecode stored for a given class name
+	 *
+	 * @param className a class name for which bytecode will be loaded
+	 * @return an optional of a bytecode input stream
+	 * @throws IOException if an I/O error occurs
+	 */
 	protected abstract Optional<InputStream> getInputStream(String className) throws IOException;
 
+	/**
+	 * Returns an {@link Optional} of a {@link OutputStream}
+	 * that will be used to save a bytecode for a given class name.
+	 * If optional is empty, that means a bytecode for a given class name will not be saved
+	 *
+	 * @param className a class name for which bytecode will be saved
+	 * @return an optional of a bytecode output stream
+	 * @throws IOException if an I/O error occurs
+	 */
 	protected abstract Optional<OutputStream> getOutputStream(String className) throws IOException;
 
 	@Override
@@ -69,10 +91,22 @@ public abstract class AbstractBytecodeStorage implements BytecodeStorage {
 		}
 	}
 
+	/**
+	 * This method will be called when I/O error occurs when loading a bytecode
+	 *
+	 * @param className a class name for which a bytecode was loaded
+	 * @param e         I/O exception
+	 */
 	protected void onLoadError(String className, IOException e) {
 		logger.warn("Could not load bytecode for class: {}", className, e);
 	}
 
+	/**
+	 * This method will be called when I/O error occurs when saving a bytecode
+	 *
+	 * @param className a class name for which a bytecode was saved
+	 * @param e         I/O exception
+	 */
 	protected void onSaveError(String className, byte[] bytecode, IOException e) {
 		logger.warn("Could not save bytecode for class: " + className, e);
 	}

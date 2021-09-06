@@ -20,6 +20,9 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.Optional;
 
+/**
+ * A bytecode storage that uses file system to save/load bytecode
+ */
 public final class FileBytecodeStorage extends AbstractBytecodeStorage {
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
@@ -29,6 +32,11 @@ public final class FileBytecodeStorage extends AbstractBytecodeStorage {
 		this.storageDir = storageDir;
 	}
 
+	/**
+	 * Creates a new {@link BytecodeStorage} that saves/loads bytecode to/from a given directory
+	 * @param storageDir a directory to load/store bytecode
+	 * @return a new instance of a {@code FileBytecodeStorage}
+	 */
 	public static FileBytecodeStorage create(Path storageDir) {
 		return new FileBytecodeStorage(storageDir);
 	}

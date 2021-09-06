@@ -1,8 +1,8 @@
 package io.activej.net;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufStrings;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ref.RefLong;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;

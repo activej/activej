@@ -24,6 +24,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.function.*;
 
+/**
+ * A compound type that represents a disjoint union of two values (only one value is present, either left or right)
+ *
+ * @param <L> type of left value
+ * @param <R> type of right value
+ */
 public final class Either<L, R> {
 	static {
 		Recyclers.register(Either.class, either -> {

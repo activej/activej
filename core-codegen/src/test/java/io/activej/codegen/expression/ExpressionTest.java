@@ -320,7 +320,7 @@ public class ExpressionTest {
 		float f = Float.MAX_VALUE;
 		double d = Double.MAX_VALUE;
 
-		TestNeg testClass = ClassBuilder.create(TestNeg.class)
+		TestNeg testNeg = ClassBuilder.create(TestNeg.class)
 				.withMethod("negBoolean", neg(value(true)))
 				.withMethod("negShort", neg(value(s)))
 				.withMethod("negByte", neg(value(b)))
@@ -331,14 +331,14 @@ public class ExpressionTest {
 				.withMethod("negDouble", neg(value(d)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		assertFalse(testClass.negBoolean());
-		assertEquals(testClass.negShort(), -s);
-		assertEquals(testClass.negByte(), -b);
-		assertEquals(testClass.negChar(), -c);
-		assertEquals(testClass.negInt(), -i);
-		assertEquals(testClass.negLong(), -l);
-		assertEquals(testClass.negFloat(), -f, 0.0);
-		assertEquals(testClass.negDouble(), -d, 0.0);
+		assertFalse(testNeg.negBoolean());
+		assertEquals(testNeg.negShort(), -s);
+		assertEquals(testNeg.negByte(), -b);
+		assertEquals(testNeg.negChar(), -c);
+		assertEquals(testNeg.negInt(), -i);
+		assertEquals(testNeg.negLong(), -l);
+		assertEquals(testNeg.negFloat(), -f, 0.0);
+		assertEquals(testNeg.negDouble(), -d, 0.0);
 	}
 
 	public interface TestOperation {
@@ -367,7 +367,7 @@ public class ExpressionTest {
 		float f = Float.MAX_VALUE;
 		double d = Double.MAX_VALUE;
 
-		TestOperation testClass = ClassBuilder.create(TestOperation.class)
+		TestOperation testOp = ClassBuilder.create(TestOperation.class)
 				.withMethod("remB", arithmeticOp(ArithmeticOperation.REM, value(b), value(20)))
 				.withMethod("remS", arithmeticOp(ArithmeticOperation.REM, value(s), value(20)))
 				.withMethod("remC", arithmeticOp(ArithmeticOperation.REM, value(c), value(20)))
@@ -377,13 +377,13 @@ public class ExpressionTest {
 				.withMethod("remD", arithmeticOp(ArithmeticOperation.REM, value(d), value(20)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		assertEquals(testClass.remB(), b % 20);
-		assertEquals(testClass.remS(), s % 20);
-		assertEquals(testClass.remC(), c % 20);
-		assertEquals(testClass.remI(), i % 20);
-		assertEquals(testClass.remL(), l % 20);
-		assertEquals(testClass.remF(), f % 20, 0.0);
-		assertEquals(testClass.remD(), d % 20, 0.0);
+		assertEquals(testOp.remB(), b % 20);
+		assertEquals(testOp.remS(), s % 20);
+		assertEquals(testOp.remC(), c % 20);
+		assertEquals(testOp.remI(), i % 20);
+		assertEquals(testOp.remL(), l % 20);
+		assertEquals(testOp.remF(), f % 20, 0.0);
+		assertEquals(testOp.remD(), d % 20, 0.0);
 	}
 
 	public interface TestSH {
@@ -404,7 +404,7 @@ public class ExpressionTest {
 		int i = 2;
 		long l = 4;
 
-		TestSH testClass = ClassBuilder.create(TestSH.class)
+		TestSH testSh = ClassBuilder.create(TestSH.class)
 				.withMethod("shlInt", shl(value(b), value(i)))
 				.withMethod("shlLong", shl(value(l), value(b)))
 				.withMethod("shrInt", shr(value(b), value(i)))
@@ -412,11 +412,11 @@ public class ExpressionTest {
 				.withMethod("ushrInt", ushr(value(b), value(i)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		assertEquals(testClass.shlInt(), b << i);
-		assertEquals(testClass.shlLong(), l << b);
-		assertEquals(testClass.shrInt(), b >> i);
-		assertEquals(testClass.shrLong(), l >> i);
-		assertEquals(testClass.ushrInt(), b >>> i);
+		assertEquals(testSh.shlInt(), b << i);
+		assertEquals(testSh.shlLong(), l << b);
+		assertEquals(testSh.shrInt(), b >> i);
+		assertEquals(testSh.shrLong(), l >> i);
+		assertEquals(testSh.ushrInt(), b >>> i);
 	}
 
 	public interface TestBitMask {
@@ -435,7 +435,7 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testBitMask() {
-		TestBitMask testClass = ClassBuilder.create(TestBitMask.class)
+		TestBitMask testBitMask = ClassBuilder.create(TestBitMask.class)
 				.withMethod("andInt", bitAnd(value(2), value(4)))
 				.withMethod("orInt", bitOr(value(2), value(4)))
 				.withMethod("xorInt", bitXor(value(2), value(4)))
@@ -444,12 +444,12 @@ public class ExpressionTest {
 				.withMethod("xorLong", bitXor(value(2L), value(4L)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		assertEquals(testClass.andInt(), 2 & 4);
-		assertEquals(testClass.orInt(), 2 | 4);
-		assertEquals(testClass.xorInt(), 2 ^ 4);
-		assertEquals(testClass.andLong(), 2L & 4L);
-		assertEquals(testClass.orLong(), 2L | 4L);
-		assertEquals(testClass.xorLong(), 2L ^ 4L);
+		assertEquals(testBitMask.andInt(), 2 & 4);
+		assertEquals(testBitMask.orInt(), 2 | 4);
+		assertEquals(testBitMask.xorInt(), 2 ^ 4);
+		assertEquals(testBitMask.andLong(), 2L & 4L);
+		assertEquals(testBitMask.orLong(), 2L | 4L);
+		assertEquals(testBitMask.xorLong(), 2L ^ 4L);
 	}
 
 	public interface TestCall {
@@ -464,7 +464,7 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testCall() {
-		TestCall testClass = ClassBuilder.create(TestCall.class)
+		TestCall testCall = ClassBuilder.create(TestCall.class)
 				.withMethod("callOther1", call(self(), "method", arg(0)))
 				.withMethod("callOther2", call(self(), "method"))
 				.withMethod("method", int.class, asList(int.class), arg(0))
@@ -475,10 +475,10 @@ public class ExpressionTest {
 				.withStaticMethod("method", long.class, asList(long.class), arg(0))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		assertEquals(100, testClass.callOther1(100));
-		assertEquals(-1, testClass.callOther2());
-		assertEquals(2, testClass.callStatic1(1, 2));
-		assertEquals(3L, testClass.callStatic2(3L));
+		assertEquals(100, testCall.callOther1(100));
+		assertEquals(-1, testCall.callOther2());
+		assertEquals(2, testCall.callStatic1(1, 2));
+		assertEquals(3L, testCall.callStatic2(3L));
 	}
 
 	public interface TestArgument {
@@ -501,13 +501,13 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testArgument() {
-		TestArgument testClass = ClassBuilder.create(TestArgument.class)
+		TestArgument testArg = ClassBuilder.create(TestArgument.class)
 				.withMethod("array", call(arg(0), "writeFirst", arg(1)))
 				.withMethod("write", call(arg(0), "write", arg(1)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		assertEquals(1000, testClass.array(new WriteFirstElement(), new Object[]{1000, 2, 3, 4}));
-		assertEquals(1000, testClass.write(new WriteFirstElement(), 1000));
+		assertEquals(1000, testArg.array(new WriteFirstElement(), new Object[]{1000, 2, 3, 4}));
+		assertEquals(1000, testArg.write(new WriteFirstElement(), 1000));
 	}
 
 	public interface WriteAllListElement {
@@ -522,7 +522,7 @@ public class ExpressionTest {
 		List<Integer> listTo1 = new ArrayList<>();
 		List<Integer> listTo2 = new ArrayList<>();
 
-		WriteAllListElement testClass = ClassBuilder.create(WriteAllListElement.class)
+		WriteAllListElement writeAllListElement = ClassBuilder.create(WriteAllListElement.class)
 				.withMethod("write",
 						forEach(arg(0),
 								it -> sequence(call(arg(1), "add", it), voidExp())))
@@ -531,8 +531,8 @@ public class ExpressionTest {
 								it -> sequence(call(arg(1), "add", it), voidExp())))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		testClass.write(listFrom, listTo1);
-		testClass.writeIter(listFrom.iterator(), listTo2);
+		writeAllListElement.write(listFrom, listTo1);
+		writeAllListElement.writeIter(listFrom.iterator(), listTo2);
 
 		assertEquals(listFrom.size(), listTo1.size());
 		for (int i = 0; i < listFrom.size(); i++) {
@@ -554,12 +554,12 @@ public class ExpressionTest {
 		Long[] intsFrom = {1L, 1L, 2L, 3L, 5L, 8L};
 		List<Long> list = new ArrayList<>();
 
-		WriteArrayElements testClass = ClassBuilder.create(WriteArrayElements.class)
+		WriteArrayElements writeArrayElements = ClassBuilder.create(WriteArrayElements.class)
 				.withMethod("write", forEach(arg(0),
 						it -> sequence(call(arg(1), "add", cast(it, Object.class)), voidExp())))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		testClass.write(intsFrom, list);
+		writeArrayElements.write(intsFrom, list);
 		for (int i = 0; i < intsFrom.length; i++) {
 			assertEquals(intsFrom[i], list.get(i));
 		}
@@ -571,11 +571,11 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testCastPrimitive() {
-		CastPrimitive testClass = ClassBuilder.create(CastPrimitive.class)
+		CastPrimitive castPrimitive = ClassBuilder.create(CastPrimitive.class)
 				.withMethod("a", value(1))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		assertEquals(1, testClass.a());
+		assertEquals(1, castPrimitive.a());
 	}
 
 	public interface Initializable {

@@ -44,10 +44,10 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
-import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.launchers.dataflow.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;

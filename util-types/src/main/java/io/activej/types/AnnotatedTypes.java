@@ -10,6 +10,9 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
 
+/**
+ * Various utility methods to operate on annotated types
+ */
 public class AnnotatedTypes {
 	public static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	public static final AnnotatedType[] NO_ANNOTATED_TYPES = new AnnotatedType[0];

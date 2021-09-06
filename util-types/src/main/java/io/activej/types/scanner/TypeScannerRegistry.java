@@ -36,6 +36,13 @@ import static io.activej.types.AnnotatedTypes.annotatedTypeOf;
 import static io.activej.types.IsAssignableUtils.isAssignable;
 import static java.util.Collections.emptyList;
 
+/**
+ * A registry of {@link Mapping}s by type
+ * <p>
+ *
+ *
+ * @param <R> a type of mapping result
+ */
 public final class TypeScannerRegistry<R> {
 
 	public interface Mapping<R> extends Function<Context<R>, R> {

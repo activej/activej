@@ -21,6 +21,7 @@ import io.activej.codegen.operation.CompareOperation;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -39,7 +40,7 @@ import static org.objectweb.asm.Type.getType;
  */
 public class Expressions {
 	/**
-	 * Returns new constant for the value
+	 * Returns a new constant for the value
 	 *
 	 * @param value value which will be created as constant
 	 * @return new instance of the ExpressionConstant
@@ -48,20 +49,30 @@ public class Expressions {
 		return new ExpressionConstant(value);
 	}
 
+	/**
+	 * Returns a new constant for the value of a given type
+	 *
+	 * @param value value which will be created as constant
+	 * @param type  actual type of value
+	 * @return new instance of the ExpressionConstant
+	 */
 	public static Expression value(Object value, Class<?> type) {
 		return new ExpressionConstant(value, type);
 	}
 
 	/**
-	 * Returns sequence of operations which will be processed one after the other
-	 *
-	 * @param parts list of operations
-	 * @return new instance of the ExpressionSequence
+	 * @see #sequence(List)
 	 */
 	public static Expression sequence(Expression... parts) {
 		return new ExpressionSequence(asList(parts));
 	}
 
+	/**
+	 * Returns a sequence of operations which will be processed one after the other
+	 *
+	 * @param parts list of operations
+	 * @return new instance of the ExpressionSequence
+	 */
 	public static Expression sequence(List<Expression> parts) {
 		List<Expression> list = new ArrayList<>(parts.size());
 		for (Expression part : parts) {
@@ -74,12 +85,28 @@ public class Expressions {
 		return new ExpressionSequence(list);
 	}
 
+	/**
+	 * Returns a sequence of operations which will be processed one after the other.
+	 * Operations should be added to a list that is consumed by the given consumer
+	 *
+	 * @param consumer consumer of a list of operations. Operations added to the list
+	 *                 will be processed in a sequence
+	 * @return new instance of the ExpressionSequence
+	 */
 	public static Expression sequence(Consumer<List<Expression>> consumer) {
 		List<Expression> seq = new ArrayList<>();
 		consumer.accept(seq);
 		return new ExpressionSequence(seq);
 	}
 
+	/**
+	 * Returns a sequence of operations which will be processed one after the other.
+	 * Operations should be added to a list that is mapped by the given function. The last
+	 * operation should be returned as a result of a given function
+	 *
+	 * @param fn function that transforms a list of operations to an expression
+	 * @return new instance of the ExpressionSequence
+	 */
 	public static Expression sequence(Function<List<Expression>, Expression> fn) {
 		List<Expression> seq = new ArrayList<>();
 		Expression result = fn.apply(seq);
@@ -87,11 +114,25 @@ public class Expressions {
 		return new ExpressionSequence(seq);
 	}
 
+	/**
+	 * Returns an expression that represents a new local variables with some action applied to it
+	 *
+	 * @param expression new local variable
+	 * @param fn         function applied to a new local variable
+	 * @return an expression that represents a new local variable with some action applied to it
+	 */
 	public static Expression let(Expression expression, Function<Variable, Expression> fn) {
 		Variable variable = new ExpressionLet(expression);
 		return sequence(variable, fn.apply(variable));
 	}
 
+	/**
+	 * Returns an expression that represents new local variables with some action applied to them
+	 *
+	 * @param expressions list of new local variables
+	 * @param fn          function applied to a list of new local variables
+	 * @return an expression that represents new local variables with some action applied to them
+	 */
 	public static Expression let(List<Expression> expressions, Function<List<Variable>, Expression> fn) {
 		List<Variable> variables = expressions.stream().map(ExpressionLet::new).collect(toList());
 		List<Expression> sequence = new ArrayList<>(expressions.size() + 1);
@@ -100,6 +141,9 @@ public class Expressions {
 		return sequence(sequence);
 	}
 
+	/**
+	 * @see #let(List, Function)
+	 */
 	public static Expression let(Expression[] expressions, Function<Variable[], Expression> fn) {
 		return let(asList(expressions), variables -> fn.apply(variables.toArray(new Variable[0])));
 	}
@@ -126,6 +170,12 @@ public class Expressions {
 		return new ExpressionCast(expression, getType(type));
 	}
 
+	/**
+	 * Casts a given to a self type (a type that is being generated)
+	 *
+	 * @param expression an original expression
+	 * @return expression cast to a self type
+	 */
 	public static Expression castIntoSelf(Expression expression) {
 		return new ExpressionCast(expression, SELF_TYPE);
 	}
@@ -142,9 +192,9 @@ public class Expressions {
 	}
 
 	/**
-	 * Returns the static field from {@code owner}
+	 * Returns the static field from {@code owner} class
 	 *
-	 * @param owner owner of the field
+	 * @param owner a class that is the owner of the field
 	 * @param field name of the static field which will be returned
 	 * @return new instance of the ExpressionStaticField
 	 */
@@ -152,6 +202,12 @@ public class Expressions {
 		return new ExpressionStaticField(owner, field);
 	}
 
+	/**
+	 * Returns the static field from self type (type that is being generated)
+	 *
+	 * @param field name of the static field which will be returned
+	 * @return new instance of the ExpressionStaticField
+	 */
 	public static Variable staticField(String field) {
 		return new ExpressionStaticField(null, field);
 	}
@@ -175,120 +231,183 @@ public class Expressions {
 		return new VarArg(argument);
 	}
 
+	/**
+	 * An expression that represents boolean {@code false} value
+	 */
 	public static Expression alwaysFalse() {
 		return value(false);
 	}
 
+	/**
+	 * An expression that represents boolean {@code true} value
+	 */
 	public static Expression alwaysTrue() {
 		return value(true);
 	}
 
+	/**
+	 * An expression that represents boolean negation
+	 *
+	 * @param expression an expression that is being negated
+	 */
 	public static Expression not(Expression expression) {
 		return new ExpressionBooleanNot(expression);
 	}
 
 	/**
-	 * Compares arguments
+	 * Compares arguments using given compare operation
 	 *
-	 * @param eq    operation which will be used for the arguments
+	 * @param eq    campare operation which will be used for the arguments
 	 * @param left  first argument which will be compared
 	 * @param right second argument which will be compared
-	 * @return new instance of the PredicateDefCmp
+	 * @return an expression that represents comparison
 	 */
 	public static Expression cmp(CompareOperation eq, Expression left, Expression right) {
 		return new ExpressionCmp(eq, left, right);
 	}
 
 	/**
-	 * Verifies that the arguments are equal
+	 * Compares to arguments for equality
 	 *
 	 * @param left  first argument which will be compared
 	 * @param right second argument which will be compared
-	 * @return new instance of the PredicateDefCmp
+	 * @return an expression that represents comparison
 	 */
 	public static Expression cmpEq(Expression left, Expression right) {
 		return cmp(CompareOperation.EQ, left, right);
 	}
 
+	/**
+	 * Compares two arguments for whether the first argument is greater than  or equal to the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
 	public static Expression cmpGe(Expression left, Expression right) {
 		return cmp(CompareOperation.GE, left, right);
 	}
 
+	/**
+	 * Compares two arguments for whether the first argument is less than or equal to the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
 	public static Expression cmpLe(Expression left, Expression right) {
 		return cmp(CompareOperation.LE, left, right);
 	}
 
+	/**
+	 * Compares two arguments for whether the first argument is less than the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
 	public static Expression cmpLt(Expression left, Expression right) {
 		return cmp(CompareOperation.LT, left, right);
 	}
 
+	/**
+	 * Compares two arguments for whether the first argument is greater than the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
 	public static Expression cmpGt(Expression left, Expression right) {
 		return cmp(CompareOperation.GT, left, right);
 	}
 
+	/**
+	 * Compares two arguments for whether the first argument is not equal to the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
 	public static Expression cmpNe(Expression left, Expression right) {
 		return cmp(CompareOperation.NE, left, right);
 	}
 
 	/**
-	 * Returns result of logical 'and' for the list of predicates
+	 * Returns a result of logical 'AND' for the list of predicates
 	 *
-	 * @param predicateDefs list of the predicate
-	 * @return new instance of the PredicateDefAnd
+	 * @param predicates list of predicated
+	 * @return an expression that represents a result of logical 'AND'
 	 */
-	public static Expression and(List<Expression> predicateDefs) {
-		return new ExpressionBooleanAnd(predicateDefs);
+	public static Expression and(List<Expression> predicates) {
+		return new ExpressionBooleanAnd(predicates);
 	}
 
-	public static Expression and(Stream<Expression> predicateDefs) {
-		return and(predicateDefs.collect(toList()));
+	/**
+	 * @see #and(List)
+	 */
+	public static Expression and(Stream<Expression> predicates) {
+		return and(predicates.collect(toList()));
 	}
 
-	public static Expression and(Expression... predicateDefs) {
-		return and(asList(predicateDefs));
+	/**
+	 * @see #and(List)
+	 */
+	public static Expression and(Expression... predicates) {
+		return and(asList(predicates));
 	}
 
+	/**
+	 * Returns a result of logical 'AND' for two predicates
+	 *
+	 * @param predicate1 the first predicate
+	 * @param predicate2 the second predicate
+	 * @return an expression that represents a result of logical 'AND'
+	 */
 	public static Expression and(Expression predicate1, Expression predicate2) {
 		return and(asList(predicate1, predicate2));
 	}
 
 	/**
-	 * Returns result of logical 'or' for the list of predicates
+	 * Returns a result of logical 'OR' for the list of predicates
 	 *
-	 * @param predicateDefs list of the predicate
-	 * @return new instance of the PredicateDefOr
+	 * @param predicates list of predicates
+	 * @return an expression that represents a result of logical 'OR'
 	 */
-	public static ExpressionBooleanOr or(List<Expression> predicateDefs) {
-		return new ExpressionBooleanOr(predicateDefs);
+	public static ExpressionBooleanOr or(List<Expression> predicates) {
+		return new ExpressionBooleanOr(predicates);
 	}
 
-	public static ExpressionBooleanOr or(Stream<Expression> predicateDefs) {
-		return or(predicateDefs.collect(toList()));
+	/**
+	 * @see #or(List)
+	 */
+	public static ExpressionBooleanOr or(Stream<Expression> predicates) {
+		return or(predicates.collect(toList()));
 	}
 
-	public static ExpressionBooleanOr or(Expression... predicateDefs) {
-		return or(asList(predicateDefs));
+	/**
+	 * @see #or(List)
+	 */
+	public static ExpressionBooleanOr or(Expression... predicates) {
+		return or(asList(predicates));
 	}
 
+	/**
+	 * Returns a result of logical 'OR' for two predicates
+	 *
+	 * @param predicate1 the first predicate
+	 * @param predicate2 the second predicate
+	 * @return an expression that represents a result of logical 'OR'
+	 */
 	public static ExpressionBooleanOr or(Expression predicate1, Expression predicate2) {
 		return or(asList(predicate1, predicate2));
 	}
 
 	/**
-	 * Verifies that the properties are equal
+	 * An expression that represents implementation of {@link #equals(Object)} method that uses
+	 * given properties to check the equality
 	 *
-	 * @param properties list of the properties
-	 * @return new instance of the Expression
-	 */
-	public static Expression equalsImpl(String... properties) {
-		return equalsImpl(asList(properties));
-	}
-
-	/**
-	 * Verifies that the properties are equal
-	 *
-	 * @param properties list of the properties
-	 * @return new instance of the Expression
+	 * @param properties list of properties
+	 * @return an `equals()` implementation expression
 	 */
 	public static Expression equalsImpl(List<String> properties) {
 		return and(properties.stream()
@@ -298,20 +417,18 @@ public class Expressions {
 	}
 
 	/**
-	 * Returns the string which was constructed from properties
-	 *
-	 * @param properties varArg of properties
-	 * @return new instance of the ExpressionToString
+	 * @see #equalsImpl(List)
 	 */
-	public static Expression toStringImpl(String... properties) {
-		return toStringImpl(asList(properties));
+	public static Expression equalsImpl(String... properties) {
+		return equalsImpl(asList(properties));
 	}
 
 	/**
-	 * Returns the string which was constructed from properties
+	 * An expression that represents implementation of {@link #toString()} method that uses
+	 * given properties to build a `toString()` result
 	 *
 	 * @param properties list of properties
-	 * @return new instance of the ExpressionToString
+	 * @return a `toString()` implementation expression
 	 */
 	public static Expression toStringImpl(List<String> properties) {
 		ExpressionToString toString = ExpressionToString.create();
@@ -322,13 +439,10 @@ public class Expressions {
 	}
 
 	/**
-	 * Returns the string which was constructed by concatenation of all the arguments
-	 *
-	 * @param arguments varArg of arguments to be concatenated
-	 * @return new instance of the ExpressionConcat
+	 * @see #toStringImpl(List)
 	 */
-	public static Expression concat(Expression... arguments) {
-		return concat(asList(arguments));
+	public static Expression toStringImpl(String... properties) {
+		return toStringImpl(asList(properties));
 	}
 
 	/**
@@ -343,22 +457,18 @@ public class Expressions {
 	}
 
 	/**
-	 * Compares the properties
-	 *
-	 * @param type       type of the properties
-	 * @param properties properties which will be compared
-	 * @return new instance of the ExpressionComparator
+	 * @see #concat(List)
 	 */
-	public static Expression compare(Class<?> type, String... properties) {
-		return compare(type, asList(properties));
+	public static Expression concat(Expression... arguments) {
+		return concat(asList(arguments));
 	}
 
 	/**
-	 * Compares the properties
+	 * An expression that represents implementation of {@link Comparator#compare(Object, Object)} method
+	 * that uses given properties for comparison
 	 *
-	 * @param type       type of the properties
 	 * @param properties properties which will be compared
-	 * @return new instance of the ExpressionComparator
+	 * @return a `compare(Object, Object)` implementation expression
 	 */
 	public static Expression compare(Class<?> type, List<String> properties) {
 		ExpressionComparator comparator = ExpressionComparator.create();
@@ -369,20 +479,18 @@ public class Expressions {
 	}
 
 	/**
-	 * Compares the properties
-	 *
-	 * @param properties list of the properties with will be compared
-	 * @return new instance of the ExpressionComparator
+	 * @see #compare(Class, List)
 	 */
-	public static Expression compareToImpl(String... properties) {
-		return compareToImpl(asList(properties));
+	public static Expression compare(Class<?> type, String... properties) {
+		return compare(type, asList(properties));
 	}
 
 	/**
-	 * Compares the properties
+	 * An expression that represents implementation of {@link Comparable#compareTo(Object)} method
+	 * that uses given properties for comparison
 	 *
-	 * @param properties list of the properties with will be compared
-	 * @return new instance of the ExpressionComparator
+	 * @param properties properties which will be compared
+	 * @return a `compareTo(Object)` implementation expression
 	 */
 	public static Expression compareToImpl(List<String> properties) {
 		ExpressionComparator comparator = ExpressionComparator.create();
@@ -393,34 +501,38 @@ public class Expressions {
 	}
 
 	/**
-	 * Returns a hash code which was calculated from the {@code properties}
-	 *
-	 * @param properties list of the properties which will be hashed
-	 * @return new instance of the ExpressionHash
+	 * @see #compareToImpl(List)
 	 */
-	public static Expression hash(Expression... properties) {
-		return hash(asList(properties));
+	public static Expression compareToImpl(String... properties) {
+		return compareToImpl(asList(properties));
 	}
 
 	/**
-	 * Returns a hash code which was calculated from the {@code properties}
+	 * An exception that represents a hash code which was calculated using given {@code properties}
 	 *
-	 * @param properties list of the properties which will be hashed
+	 * @param properties list of properties which will be used to calculate hash code
 	 * @return new instance of the ExpressionHash
 	 */
 	public static Expression hash(List<Expression> properties) {
 		return new ExpressionHash(properties);
 	}
 
+	/**
+	 * @see #hash(List)
+	 */
+	public static Expression hash(Expression... properties) {
+		return hash(asList(properties));
+	}
+
+	/**
+	 * @see #hash(List)
+	 */
 	public static Expression hashCodeImpl(String... properties) {
 		return hashCodeImpl(asList(properties));
 	}
 
 	/**
-	 * Returns hash of the properties
-	 *
-	 * @param properties list of the properties which will be hashed
-	 * @return new instance of the ExpressionHash
+	 * @see #hash(List)
 	 */
 	public static Expression hashCodeImpl(List<String> properties) {
 		return new ExpressionHash(properties
@@ -429,77 +541,204 @@ public class Expressions {
 				.collect(toList()));
 	}
 
+	/**
+	 * Unifies passed arithmetic types as one. Arithmetic types are all primitive types, excluding {@code boolean.class}
+	 * A unified type represents a result type after applying arithmetic operations on given types
+	 * as per <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html">Java Language Specification</a>
+	 * <p>
+	 * Rules are:
+	 * <ul>
+	 *     <li>If there is {@code double.class} among types, unified type is  {@code double.class}</li>
+	 *     <li>Else, if there is {@code float.class} among types, unified type is  {@code float.class}</li>
+	 *     <li>Else, if there is {@code long.class} among types, unified type is  {@code long.class}</li>
+	 *     <li>Else, unified type is  {@code int.class}</li>
+	 * </ul>
+	 *
+	 * @param types arithmetic types to be unified
+	 * @return a unified arithmetic type
+	 * @throws IllegalArgumentException if a non-arithmetic type is passed to the method
+	 */
 	public static Class<?> unifyArithmeticTypes(Class<?>... types) {
 		return ExpressionArithmeticOp.unifyArithmeticTypes(types);
 	}
 
+	/**
+	 * @see #unifyArithmeticTypes(Class[])
+	 */
 	public static Class<?> unifyArithmeticTypes(List<Class<?>> types) {
 		return ExpressionArithmeticOp.unifyArithmeticTypes(types.toArray(new Class<?>[0]));
 	}
 
+	/**
+	 * An expression that represents a result of an arithmetic operation on two given operands
+	 *
+	 * @param op    an arithmetic operation
+	 * @param left  left operand
+	 * @param right right operand
+	 * @see ArithmeticOperation
+	 */
 	public static Expression arithmeticOp(ArithmeticOperation op, Expression left, Expression right) {
 		return new ExpressionArithmeticOp(op, left, right);
 	}
 
+	/**
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression arithmeticOp(String op, Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.operation(op), left, right);
 	}
 
 	/**
-	 * Returns sum of arguments
+	 * An expression that represents a sum of two arguments
 	 *
 	 * @param left  first argument which will be added
 	 * @param right second argument which will be added
 	 * @return new instance of the ExpressionArithmeticOp
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression add(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.ADD, left, right);
 	}
 
+	/**
+	 * An expression that represents an increment of an argument
+	 *
+	 * @param value value to be incremented
+	 * @return an expression that represents an incremented value
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression inc(Expression value) {
 		return add(value, value(1));
 	}
 
+	/**
+	 * An expression that represents a subtraction of one argument from the other
+	 *
+	 * @param left  first argument which represents a minuend
+	 * @param right second argument which represents a subtrahend
+	 * @return an expression that represents a difference between two arguments
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression sub(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.SUB, left, right);
 	}
 
+	/**
+	 * An expression that represents a decrement of an argument
+	 *
+	 * @param value value to be decremented
+	 * @return an expression that represents a decremented value
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression dec(Expression value) {
 		return sub(value, value(1));
 	}
 
+	/**
+	 * An expression that represents a multiplication of two arguments
+	 *
+	 * @param left  first argument which will be multiplied
+	 * @param right second argument which will be multiplied
+	 * @return new instance of the ExpressionArithmeticOp
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression mul(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.MUL, left, right);
 	}
 
+	/**
+	 * An expression that represents a division of one argument by the other
+	 *
+	 * @param left  first argument which represents a dividend
+	 * @param right second argument which represents a divisor
+	 * @return an expression that represents a division of two arguments
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression div(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.DIV, left, right);
 	}
 
+	/**
+	 * An expression that represents a remainder of division of first argument
+	 * by the other
+	 *
+	 * @param left  first argument which represents a dividend
+	 * @param right second argument which represents a divisor
+	 * @return an expression that represents a remainder of division
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression rem(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.REM, left, right);
 	}
 
+	/**
+	 * An expression that represents a bitwise AND operation
+	 *
+	 * @param left  expression that represents the first operand
+	 * @param right expression that represents the second operand
+	 * @return expression that represents a result of bitwise AND operation
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression bitAnd(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.AND, left, right);
 	}
 
+	/**
+	 * An expression that represents a bitwise OR operation
+	 *
+	 * @param left  expression that represents the first operand
+	 * @param right expression that represents the second operand
+	 * @return expression that represents a result of bitwise OR operation
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression bitOr(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.OR, left, right);
 	}
 
+	/**
+	 * An expression that represents a bitwise XOR operation
+	 *
+	 * @param left  expression that represents the first operand
+	 * @param right expression that represents the second operand
+	 * @return expression that represents a result of bitwise XOR operation
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression bitXor(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.XOR, left, right);
 	}
 
+	/**
+	 * An expression that represents an arithmetic left shift operation
+	 *
+	 * @param left  expression that represents a value that will be shifted
+	 * @param right expression that represents a number of bits to be shifted
+	 * @return expression that represents a left-shifted value
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression shl(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.SHL, left, right);
 	}
 
+	/**
+	 * An expression that represents an arithmetic right shift operation
+	 *
+	 * @param left  expression that represents a value that will be shifted
+	 * @param right expression that represents a number of bits to be shifted
+	 * @return expression that represents a right-shifted value
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression shr(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.SHR, left, right);
 	}
 
+	/**
+	 * An expression that represents a logical right shift operation
+	 *
+	 * @param left  expression that represents a value that will be shifted
+	 * @param right expression that represents a number of bits to be shifted
+	 * @return expression that represents a right-shifted value
+	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
+	 */
 	public static Expression ushr(Expression left, Expression right) {
 		return new ExpressionArithmeticOp(ArithmeticOperation.USHR, left, right);
 	}

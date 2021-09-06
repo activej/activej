@@ -27,6 +27,13 @@ import java.util.function.Predicate;
 
 import static io.activej.types.IsAssignableUtils.isAssignable;
 
+/**
+ * A pattern to match a dependency injection {@link Key}
+ * <p>
+ * A {@link Key} is matched if a {@link Key#getType() key's type} is assignable to
+ * this pattern's {@link #type} and this pattern's qualifier is {@code null} or matches
+ * a {@link Key#getQualifier()}  key's qualifier}
+ */
 public abstract class KeyPattern<T> {
 	private final @NotNull Type type;
 	private final Predicate<?> qualifier;

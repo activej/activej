@@ -18,6 +18,13 @@ package io.activej.async.exception;
 
 import io.activej.common.ApplicationSettings;
 
+/**
+ * This exception is a basic exception to be used in an asynchronous context
+ * <p>
+ * By default, a stack trace is not added to the exception as it is usually meaningless in an asynchronous
+ * context. However, a stack trace may be enabled by setting
+ * application setting {@link #WITH_STACK_TRACE} to {@code true}
+ */
 public class AsyncException extends Exception {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(AsyncException.class, "withStackTrace", false);
 

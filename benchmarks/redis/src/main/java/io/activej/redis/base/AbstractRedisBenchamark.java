@@ -18,9 +18,9 @@ import io.activej.redis.RedisResponse;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
-import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.inject.module.Modules.combine;
 
 public abstract class AbstractRedisBenchamark extends Launcher {

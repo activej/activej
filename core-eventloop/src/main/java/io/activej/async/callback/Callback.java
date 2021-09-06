@@ -27,7 +27,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 @FunctionalInterface
 public interface Callback<T> {
 	/**
-	 * Performs action upon of completion of Completable computation
+	 * Performs action upon completion of some computation
 	 */
 	void accept(T result, @Nullable Exception e);
 

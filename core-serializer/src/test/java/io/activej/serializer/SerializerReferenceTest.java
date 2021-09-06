@@ -1,6 +1,8 @@
 package io.activej.serializer;
 
-import io.activej.serializer.annotations.*;
+import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeNullable;
+import io.activej.serializer.annotations.SerializeReference;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;

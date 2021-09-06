@@ -15,11 +15,19 @@ import static io.activej.types.IsAssignableUtils.isAssignable;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 
+/**
+ * Various helper methods for type processing
+ */
 public class Types {
 	public static final Type[] NO_TYPES = new Type[0];
 	public static final WildcardType WILDCARD_TYPE_ANY = new WildcardTypeImpl(new Type[]{Object.class}, new Type[0]);
 	private static final Map<Type, Map<TypeVariable<?>, Type>> typeBindingsCache = new ConcurrentHashMap<>();
 
+	/**
+	 * Returns a raw {@link Class} for a given {@link Type}.
+	 * <p>
+	 * A type can be any of {@link Class}, {@link ParameterizedType}, {@link WildcardType} or {@link GenericArrayType}
+	 */
 	public static Class<?> getRawType(Type type) {
 		if (type instanceof Class) {
 			return (Class<?>) type;
@@ -41,6 +49,9 @@ public class Types {
 		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
 
+	/**
+	 * Returns the most common type among given types
+	 */
 	public static Type getUppermostType(Type[] types) {
 		Type result = types[0];
 		for (int i = 1; i < types.length; i++) {
@@ -56,6 +67,9 @@ public class Types {
 		return result;
 	}
 
+	/**
+	 * Returns an array of actual type parameters for a given type
+	 */
 	public static Type[] getActualTypeArguments(Type type) {
 		if (type instanceof Class) {
 			return ((Class<?>) type).isArray() ? new Type[]{((Class<?>) type).getComponentType()} : NO_TYPES;
@@ -68,6 +82,9 @@ public class Types {
 		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
 
+	/**
+	 * Returns a map of type bindings for a given type
+	 */
 	public static Map<TypeVariable<?>, Type> getTypeBindings(Type type) {
 		Type[] typeArguments = getActualTypeArguments(type);
 		if (typeArguments.length == 0) return emptyMap();
@@ -79,6 +96,10 @@ public class Types {
 		return map;
 	}
 
+	/**
+	 * Returns a map of all type bindings for a given type.
+	 * Includes type bindings from a whole class hierarchy
+	 */
 	public static Map<TypeVariable<?>, Type> getAllTypeBindings(Type type) {
 		return typeBindingsCache.computeIfAbsent(type,
 				t -> {
@@ -118,6 +139,12 @@ public class Types {
 		return bind(type, bindings::get);
 	}
 
+	/**
+	 * Binds a given type with actual type arguments
+	 *
+	 * @param type     a type to be bound
+	 * @param bindings a lookup function for actual types
+	 */
 	public static @NotNull Type bind(Type type, Function<TypeVariable<?>, @Nullable Type> bindings) {
 		if (type instanceof Class) return type;
 		if (type instanceof TypeVariable) {
@@ -160,10 +187,21 @@ public class Types {
 		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
 
+	/**
+	 * Creates an instance of {@link ParameterizedType}
+	 *
+	 * @param ownerType  an owner type
+	 * @param rawType    a type to be parameterized
+	 * @param parameters parameter types
+	 * @return an instance of {@link ParameterizedType}
+	 */
 	public static ParameterizedType parameterizedType(@Nullable Type ownerType, Type rawType, Type[] parameters) {
 		return new ParameterizedTypeImpl(ownerType, rawType, parameters);
 	}
 
+	/**
+	 * @see #parameterizedType(Type, Type, Type[])
+	 */
 	public static ParameterizedType parameterizedType(Class<?> rawType, Type... parameters) {
 		return new ParameterizedTypeImpl(null, rawType, parameters);
 	}
@@ -213,18 +251,50 @@ public class Types {
 		}
 	}
 
+	/**
+	 * Creates an instance of {@link WildcardType} bound by upper and lower bounds
+	 *
+	 * @param upperBounds a wildcard upper bound types
+	 * @param lowerBounds a wildcard lower bound types
+	 * @return an instance of {@link WildcardType}
+	 */
 	public static WildcardType wildcardType(Type[] upperBounds, Type[] lowerBounds) {
 		return new WildcardTypeImpl(upperBounds, lowerBounds);
 	}
 
+	/**
+	 * Returns an instance of {@link WildcardType} that matches any type
+	 * <p>
+	 * E.g. {@code <?>}
+	 *
+	 * @see #wildcardType(Type[], Type[])
+	 */
 	public static WildcardType wildcardTypeAny() {
 		return WILDCARD_TYPE_ANY;
 	}
 
+	/**
+	 * Creates an instance of {@link WildcardType} bound by a single upper bound
+	 * <p>
+	 * E.g. {@code <? extends UpperBound>}
+	 *
+	 * @param upperBound a wildcard upper bound type
+	 * @return an instance of {@link WildcardType}
+	 * @see #wildcardType(Type[], Type[])
+	 */
 	public static WildcardType wildcardTypeExtends(Type upperBound) {
 		return new WildcardTypeImpl(new Type[]{upperBound}, NO_TYPES);
 	}
 
+	/**
+	 * Creates an instance of {@link WildcardType} bound by a single lower bound
+	 * <p>
+	 * E.g. {@code <? super LowerBound>}
+	 *
+	 * @param lowerBound a wildcard lower bound type
+	 * @return an instance of {@link WildcardType}
+	 * @see #wildcardType(Type[], Type[])
+	 */
 	public static WildcardType wildcardTypeSuper(Type lowerBound) {
 		return new WildcardTypeImpl(NO_TYPES, new Type[]{lowerBound});
 	}
@@ -271,6 +341,16 @@ public class Types {
 		}
 	}
 
+
+	/**
+	 * Creates an instance of {@link GenericArrayType} with a given component type
+	 * <p>
+	 * Same as {@code T[]}
+	 *
+	 * @param componentType a component type of generic array
+	 * @return an instance of {@link GenericArrayType}
+	 * @see #wildcardType(Type[], Type[])
+	 */
 	public static GenericArrayType genericArrayType(Type componentType) {
 		return new GenericArrayTypeImpl(componentType);
 	}
@@ -309,6 +389,11 @@ public class Types {
 		return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
 	}
 
+	/**
+	 * Returns a simple name for a given {@link Type}
+	 *
+	 * @see Class#getSimpleName()
+	 */
 	public static String getSimpleName(Type type) {
 		if (type instanceof Class) {
 			return ((Class<?>) type).getSimpleName();

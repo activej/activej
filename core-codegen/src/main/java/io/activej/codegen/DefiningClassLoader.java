@@ -72,10 +72,23 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 		super(parent);
 	}
 
+	/**
+	 * Creates a new instance of {@code DefiningClassLoader}
+	 * with system class loader as a parent class loader
+	 *
+	 * @return a new instance of a {@code DefiningClassLoader}
+	 */
 	public static DefiningClassLoader create() {
 		return new DefiningClassLoader();
 	}
 
+	/**
+	 * Creates a new instance of {@code DefiningClassLoader}
+	 * with given class loader as a parent class loader
+	 *
+	 * @param parent parent class loader
+	 * @return a new instance of a {@code DefiningClassLoader}
+	 */
 	public static DefiningClassLoader create(ClassLoader parent) {
 		return new DefiningClassLoader(parent);
 	}
@@ -249,6 +262,12 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 		}
 	}
 
+	/**
+	 * Returns a cached class by a class key
+	 *
+	 * @param key a class key
+	 * @return a cached class
+	 */
 	public @Nullable Class<?> getCachedClass(@NotNull ClassKey<?> key) {
 		return Optional.ofNullable(cachedClasses.get(key)).map(AtomicReference::get).orElse(null);
 	}

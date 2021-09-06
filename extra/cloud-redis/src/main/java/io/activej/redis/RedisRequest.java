@@ -23,7 +23,7 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.listOf;
 import static io.activej.redis.RESPv2.ARRAY_MARKER;
 import static io.activej.redis.RESPv2.BYTES_MARKER;
 

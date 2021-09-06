@@ -20,7 +20,9 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.ExpressionConstant;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.codegen.util.WithInitializer;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -44,9 +46,9 @@ import static org.objectweb.asm.Type.*;
 import static org.objectweb.asm.commons.Method.getMethod;
 
 /**
- * Intends for dynamic description of the behaviour of the object in runtime
+ * Intends for dynamic description of the  object behaviour in runtime
  *
- * @param <T> type of item
+ * @param <T> type of class to be generated
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
@@ -77,11 +79,6 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 	// region builders
 
-	/**
-	 * Creates a new instance of ClassBuilder
-	 *
-	 * @param superclass type of dynamic class
-	 */
 	private ClassBuilder(Class<?> superclass, List<Class<?>> interfaces, @NotNull String className) {
 		this.superclass = superclass;
 		this.interfaces = interfaces;
@@ -89,10 +86,12 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		withStaticField(CLASS_BUILDER_MARKER, Void.class);
 	}
 
-	public static <T> ClassBuilder<T> create(Class<T> implementation, Class<?>... interfaces) {
-		return create(implementation, asList(interfaces));
-	}
-
+	/**
+	 * Creates a new instance of ClassBuilder
+	 *
+	 * @param implementation type of dynamic class
+	 * @param interfaces     additional interfaces for the class to implement
+	 */
 	public static <T> ClassBuilder<T> create(Class<?> implementation, List<Class<?>> interfaces) {
 		if (!interfaces.stream().allMatch(Class::isInterface))
 			throw new IllegalArgumentException();
@@ -109,43 +108,88 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		}
 	}
 
+	/**
+	 * @see #create(Class, List)
+	 */
+	public static <T> ClassBuilder<T> create(Class<T> implementation, Class<?>... interfaces) {
+		return create(implementation, asList(interfaces));
+	}
+
+	/**
+	 * Sets a class name for the generated class
+	 *
+	 * @param name a class name of the generated class
+	 */
 	public ClassBuilder<T> withClassName(String name) {
 		this.className = name;
 		return this;
 	}
 
+	/**
+	 * Adds static initializer for the generated class
+	 * (code that would be executed inside a static initialization block of the generated class)
+	 *
+	 * @param expression an expression that represents static initializer
+	 */
 	public ClassBuilder<T> withStaticInitializer(Expression expression) {
 		staticInitializers.add(expression);
 		return this;
 	}
 
-	public ClassBuilder<T> withConstructor(Expression expression) {
-		return withConstructor(emptyList(), expression);
-	}
-
+	/**
+	 * Adds a constructor for the given class with specified argument types and an {@link Exception}
+	 * that would be executed inside the constructor
+	 *
+	 * @param argumentTypes types of arguments to the constructor
+	 * @param expression    an expression that would be executed inside the constructor
+	 */
 	public ClassBuilder<T> withConstructor(List<? extends Class<?>> argumentTypes, Expression expression) {
 		constructors.put(new Method("<init>", VOID_TYPE, argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
 		return this;
 	}
 
 	/**
-	 * Creates a new field for a dynamic class
+	 * Adds a constructor for the given class with an {@link Exception}
+	 * that would be executed inside the constructor
 	 *
-	 * @param field name of field
-	 * @param type  type of field
-	 * @return changed AsmFunctionFactory
+	 * @param expression an expression that would be executed inside the constructor
+	 * @see #withConstructor(List, Expression)
+	 */
+	public ClassBuilder<T> withConstructor(Expression expression) {
+		return withConstructor(emptyList(), expression);
+	}
+
+	/**
+	 * Adds a new uninitialized field for a class
+	 *
+	 * @param field name of the field
+	 * @param type  type of the field
 	 */
 	public ClassBuilder<T> withField(String field, Class<?> type) {
 		fields.put(field, type);
 		return this;
 	}
 
+	/**
+	 * Adds a new initialized field for a class
+	 *
+	 * @param field name of the field
+	 * @param type  type of  the field
+	 * @param value an expression that represents how the new field will be initialized
+	 */
 	public ClassBuilder<T> withField(String field, Class<?> type, Expression value) {
 		fields.put(field, type);
 		fieldExpressions.put(field, value);
 		return this;
 	}
 
+	/**
+	 * Adds a new final initialized field for a class
+	 *
+	 * @param field name of the field
+	 * @param type  type of the field
+	 * @param value an expression that represents how the new final field will be initialized
+	 */
 	public ClassBuilder<T> withFinalField(String field, Class<?> type, Expression value) {
 		fields.put(field, type);
 		fieldsFinal.add(field);
@@ -154,13 +198,12 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 
 	/**
-	 * Creates a new method for a dynamic class
+	 * Adds a new method to a class
 	 *
-	 * @param methodName    name of method
-	 * @param returnType    type which returns this method
-	 * @param argumentTypes list of types of arguments
-	 * @param expression    function which will be processed
-	 * @return changed AsmFunctionFactory
+	 * @param methodName    name of the method
+	 * @param returnType    a return type of the method
+	 * @param argumentTypes list of the method's arguments
+	 * @param expression    an expression that represents the method's body
 	 */
 	public ClassBuilder<T> withMethod(String methodName, Class<?> returnType, List<? extends Class<?>> argumentTypes, Expression expression) {
 		methods.put(new Method(methodName, getType(returnType), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
@@ -168,11 +211,10 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 
 	/**
-	 * CCreates a new method for a dynamic class
+	 * Adds a new method to a class
 	 *
-	 * @param methodName name of method
-	 * @param expression function which will be processed
-	 * @return changed AsmFunctionFactory
+	 * @param methodName name of the method
+	 * @param expression an expression that represents the method's body
 	 */
 	public ClassBuilder<T> withMethod(String methodName, Expression expression) {
 		if (methodName.contains("(")) {
@@ -206,21 +248,45 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		return this;
 	}
 
+	/**
+	 * @see #setStaticMethod(String, Class, List, Expression)
+	 */
 	public ClassBuilder<T> withStaticMethod(String methodName, Class<?> returnClass, List<? extends Class<?>> argumentTypes, Expression expression) {
 		setStaticMethod(methodName, returnClass, argumentTypes, expression);
 		return this;
 	}
 
+	/**
+	 * Adds a static method to a class
+	 *
+	 * @param methodName    a name of the method
+	 * @param returnClass   the method's return type
+	 * @param argumentTypes types of the method's arguments
+	 * @param expression    an expression that represents the method's body
+	 */
 	public void setStaticMethod(String methodName, Class<?> returnClass, List<? extends Class<?>> argumentTypes, Expression expression) {
 		staticMethods.put(new Method(methodName, getType(returnClass), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
 	}
 
+	/**
+	 * Adds a new uninitialized static field for a class
+	 *
+	 * @param field name of the field
+	 * @param type  type of the field
+	 */
 	public ClassBuilder<T> withStaticField(String field, Class<?> type) {
 		this.fields.put(field, type);
 		this.fieldsStatic.add(field);
 		return this;
 	}
 
+	/**
+	 * Adds a new initialized static field for a class
+	 *
+	 * @param field name of the field
+	 * @param type  type of  the field
+	 * @param value an expression that represents how the new static field will be initialized
+	 */
 	public ClassBuilder<T> withStaticField(String field, Class<?> type, Expression value) {
 		this.fields.put(field, type);
 		this.fieldsStatic.add(field);
@@ -228,6 +294,13 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		return this;
 	}
 
+	/**
+	 * Adds a new static final initialized field for a class
+	 *
+	 * @param field name of the field
+	 * @param type  type of the field
+	 * @param value an expression that represents how the new static final field will be initialized
+	 */
 	public ClassBuilder<T> withStaticFinalField(String field, Class<?> type, Expression value) {
 		this.fields.put(field, type);
 		this.fieldsStatic.add(field);
@@ -239,15 +312,31 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		return this;
 	}
 
+	/**
+	 * Returns a static constant by an integer id
+	 * <p>
+	 * This method is used internally by generated classes for constant initialization
+	 *
+	 * @param id id of a static constant
+	 * @return static constant
+	 */
+	@Internal
 	public static Object getStaticConstant(int id) {
 		return STATIC_CONSTANTS.get(id);
 	}
 
+	/**
+	 * Returns a size of static constants
+	 */
+	@VisibleForTesting
 	public static int getStaticConstantsSize() {
 		return STATIC_CONSTANTS.size();
 	}
 
-	// For testing purposes
+	/**
+	 * Clears all static constants
+	 */
+	@VisibleForTesting
 	public static void clearStaticConstants() {
 		STATIC_CONSTANTS.clear();
 	}
@@ -278,10 +367,20 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		return createInstance(aClass, arguments);
 	}
 
+	/**
+	 * @see #toBytecode(ClassLoader, String)
+	 */
 	public GeneratedBytecode toBytecode(ClassLoader classLoader) {
 		return toBytecode(classLoader, className != null ? className : autoClassName + '_' + COUNTER.incrementAndGet());
 	}
 
+	/**
+	 * Uses a given class loader to generate a bytecode out of this class builder.
+	 *
+	 * @param classLoader a class loader for generating a bytecode
+	 * @return a generated bytecode which consists of actual bytecode as well as a class name
+	 * @see GeneratedBytecode
+	 */
 	public GeneratedBytecode toBytecode(ClassLoader classLoader, String className) {
 		byte[] bytecode = toBytecode(className, classLoader);
 		return new GeneratedBytecode(className, bytecode) {

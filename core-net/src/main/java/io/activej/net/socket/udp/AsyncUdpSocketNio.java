@@ -16,11 +16,11 @@
 
 package io.activej.net.socket.udp;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.recycle.Recyclers;

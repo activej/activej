@@ -32,6 +32,14 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
+/**
+ * A compound type that represents either a result or an exception
+ * <p>
+ * Semantically close to {@code Either<T, Exception>}
+ *
+ * @param <T> type of result
+ * @see Either
+ */
 public final class Try<T> {
 	static {
 		Recyclers.register(Try.class, aTry -> Recyclers.recycle(aTry.result));

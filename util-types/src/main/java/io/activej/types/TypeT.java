@@ -23,6 +23,15 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+/**
+ * A type token for defining complex types (annotated, parameterized)
+ * <p>
+ * Usage example:
+ * <p>
+ * {@code Type listOfStringsType = new TypeT<List<String>>(){}.getType()}
+ *
+ * @param <T> actual type
+ */
 public abstract class TypeT<T> {
 	private final @NotNull AnnotatedType annotatedType;
 

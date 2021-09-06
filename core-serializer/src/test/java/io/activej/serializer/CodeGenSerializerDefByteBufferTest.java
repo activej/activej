@@ -1,8 +1,8 @@
 package io.activej.serializer;
 
 import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.impl.SerializerDefByteBuffer;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;

@@ -24,15 +24,26 @@ import java.lang.reflect.Type;
 import static io.activej.types.AnnotatedTypes.annotatedTypeOf;
 
 /**
- * This is an interface for something that can create or retrieve a codec for a given type.
+ * An interface that defines how to map annotated types to {@link R} results
  */
 public interface TypeScanner<R> {
+	/**
+	 * Scans an annotated type and maps it to an {@link R} result
+	 * @param type an annotated type to be scanned
+	 * @return a result of scan
+	 */
 	R scan(AnnotatedType type);
 
+	/**
+	 * @see #scan(AnnotatedType)
+	 */
 	default R scan(Type type) {
 		return scan(annotatedTypeOf(type));
 	}
 
+	/**
+	 * @see #scan(AnnotatedType)
+	 */
 	default R scan(TypeT<?> type) {
 		return scan(type.getAnnotatedType());
 	}

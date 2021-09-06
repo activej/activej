@@ -16,8 +16,8 @@
 
 package io.activej.launchers.initializers;
 
-import io.activej.jmx.stats.MBeanFormat;
 import io.activej.jmx.stats.ExceptionStats;
+import io.activej.jmx.stats.MBeanFormat;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.trigger.TriggerResult;
 

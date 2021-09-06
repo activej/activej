@@ -20,6 +20,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 
+/**
+ * Various utility methods to operate on annotations
+ */
 @SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
 public final class AnnotationUtils {
 

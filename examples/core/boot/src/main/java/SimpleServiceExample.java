@@ -1,7 +1,7 @@
-import io.activej.service.Service;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.service.Service;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.CompletableFuture;

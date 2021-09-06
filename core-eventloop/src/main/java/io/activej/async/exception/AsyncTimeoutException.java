@@ -16,6 +16,9 @@
 
 package io.activej.async.exception;
 
+/**
+ * This exception indicates that some asynchronous operation has timed out
+ */
 public class AsyncTimeoutException extends AsyncException {
 	public AsyncTimeoutException(String message) {
 		super(message);

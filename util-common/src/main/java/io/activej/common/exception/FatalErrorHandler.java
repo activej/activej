@@ -39,6 +39,9 @@ public interface FatalErrorHandler {
 		handle(e, null);
 	}
 
+	/**
+	 * Combines handlers by chaining the next handler after the current one
+	 */
 	default FatalErrorHandler andThen(FatalErrorHandler nextHandler) {
 		return (e, context) -> {
 			handle(e, context);

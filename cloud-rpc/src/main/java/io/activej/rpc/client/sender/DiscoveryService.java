@@ -28,14 +28,18 @@ import java.util.Map;
 public interface DiscoveryService {
 
 	/**
-	 * Discovers current RPC server addresses. Callback is called when previously discovered addresses
-	 * do not match current addresses or when error occurs.
+	 * Discovers actual RPC server addresses
+	 * <p>
+	 * A previous addresses are supplied. Whenever a set of actual addresses changes
+	 * and is not the same as previous addresses, a callback will be completed
+	 * with new addresses as a result. A callback will also be completed if an error occurs.
 	 * <p>
 	 * If there are multiple {@code discover(...)} calls, the callbacks should be completed
 	 * in the order in which they were passed to the method
 	 *
-	 * @param previous previously discovered addresses
-	 * @param cb       callback to be called when new addresses are discovered or when error occurs
+	 * @param previous previous RPC addresses
+	 * @param cb       callback to be completed when a set of actual RPC addresses in changes
+	 *                 or an error occurs
 	 */
 	void discover(@Nullable Map<Object, InetSocketAddress> previous, Callback<Map<Object, InetSocketAddress>> cb);
 
@@ -43,6 +47,12 @@ public interface DiscoveryService {
 		return new CombinedDiscoveryService(discoveryServices);
 	}
 
+	/**
+	 * A {@code DiscoveryService} that consists of given RPC server addresses that never change
+	 *
+	 * @param addresses constant RPC server addresses
+	 * @return a constant discovery service
+	 */
 	static DiscoveryService constant(Map<Object, InetSocketAddress> addresses) {
 		Map<Object, InetSocketAddress> constantAddresses = Collections.unmodifiableMap(new HashMap<>(addresses));
 		return (previous, cb) -> {

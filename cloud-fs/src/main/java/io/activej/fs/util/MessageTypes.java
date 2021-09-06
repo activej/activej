@@ -16,8 +16,8 @@
 
 package io.activej.fs.util;
 
-import io.activej.types.TypeT;
 import io.activej.fs.FileMetadata;
+import io.activej.types.TypeT;
 
 import java.util.Map;
 import java.util.Set;

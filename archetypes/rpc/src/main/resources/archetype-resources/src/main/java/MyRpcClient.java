@@ -1,10 +1,9 @@
-package ${groupId};
+package $
 
 import io.activej.config.Config;
+import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
-import io.activej.inject.module.Module;
-import io.activej.eventloop.Eventloop;
 import io.activej.launcher.Launcher;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;

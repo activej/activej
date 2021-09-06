@@ -5,6 +5,16 @@ import io.activej.serializer.StringFormat;
 
 import java.lang.annotation.Annotation;
 
+/**
+ * A class that holds implementations of serializer annotations
+ *
+ * @see SerializeNullable
+ * @see SerializeClass
+ * @see SerializeFixedSize
+ * @see SerializeReference
+ * @see SerializeStringFormat
+ * @see SerializeVarLength
+ */
 @SuppressWarnings({"ClassExplicitlyAnnotation", "unused"})
 public final class CustomAnnotations {
 
@@ -53,7 +63,9 @@ public final class CustomAnnotations {
 	static final class SerializeFixedSizeImpl extends AbstractSerializeAnnotation implements SerializeFixedSize {
 		final int value;
 
-		SerializeFixedSizeImpl(int value) {this.value = value;}
+		SerializeFixedSizeImpl(int value) {
+			this.value = value;
+		}
 
 		@Override
 		public int value() {
@@ -108,7 +120,9 @@ public final class CustomAnnotations {
 	static final class SerializerStringFormatImpl extends AbstractSerializeAnnotation implements SerializeStringFormat {
 		final StringFormat stringFormat;
 
-		SerializerStringFormatImpl(StringFormat format) {stringFormat = format;}
+		SerializerStringFormatImpl(StringFormat format) {
+			stringFormat = format;
+		}
 
 		@Override
 		public StringFormat value() {

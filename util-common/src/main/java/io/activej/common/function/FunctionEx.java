@@ -16,16 +16,28 @@
 
 package io.activej.common.function;
 
+import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.UncheckedException;
 
 import java.util.function.Function;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
+/**
+ * Represents a {@link Function} capable of throwing exceptions
+ */
 @FunctionalInterface
 public interface FunctionEx<T, R> {
 	R apply(T t) throws Exception;
 
+	/**
+	 * Creates a {@code FunctionEx} out of {@link Function}
+	 * <p>
+	 * If given function throws {@link UncheckedException}, its cause will be propagated
+	 *
+	 * @param fn original {@link Function}
+	 * @return a function capable of throwing exceptions
+	 */
 	static <T, R> FunctionEx<T, R> of(Function<T, R> fn) {
 		return t -> {
 			try {
@@ -36,6 +48,17 @@ public interface FunctionEx<T, R> {
 		};
 	}
 
+	/**
+	 * Creates a {@link Function} out of {@code FunctionEx}
+	 * <p>
+	 * If given function throws a checked exception, it will be wrapped into {@link UncheckedException}
+	 * and rethrown
+	 * <p>
+	 * Unchecked exceptions will be handled by thread's {@link FatalErrorHandler}
+	 *
+	 * @param checkedFn original {@code FunctionEx}
+	 * @return a function
+	 */
 	static <T, R> Function<T, R> uncheckedOf(FunctionEx<T, R> checkedFn) {
 		return t -> {
 			try {
@@ -47,6 +70,9 @@ public interface FunctionEx<T, R> {
 		};
 	}
 
+	/**
+	 * A function that returns passed value as is. Does not throw any exception
+	 */
 	static <T> FunctionEx<T, T> identity() {
 		return t -> t;
 	}
