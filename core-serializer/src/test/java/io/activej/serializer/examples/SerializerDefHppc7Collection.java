@@ -1,7 +1,6 @@
 package io.activej.serializer.examples;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.AbstractSerializerDefCollection;
@@ -21,16 +20,6 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 		this(valueSerializer, collectionType, valueType, collectionImplType, false);
 	}
 	// endregion
-
-	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return super.encoder(staticEncoders, buf, pos, value, version, compatibilityLevel);
-	}
-
-	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return super.decoder(staticDecoders, in, version, compatibilityLevel);
-	}
 
 	@Override
 	protected Expression collectionForEach(Expression collection, Class<?> valueType, Function<Expression, Expression> value) {

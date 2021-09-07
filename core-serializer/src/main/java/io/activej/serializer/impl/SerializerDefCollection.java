@@ -16,8 +16,6 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
@@ -30,16 +28,6 @@ public final class SerializerDefCollection extends AbstractSerializerDefCollecti
 
 	private SerializerDefCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
 		super(valueSerializer, Collection.class, decodeType, Object.class, nullable);
-	}
-
-	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return super.encoder(staticEncoders, buf, pos, value, version, compatibilityLevel);
-	}
-
-	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return super.decoder(staticDecoders, in, version, compatibilityLevel);
 	}
 
 	@Override
