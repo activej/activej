@@ -63,6 +63,10 @@ public final class SerializerDefByteBuffer extends AbstractSerializerDef impleme
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			SerializerDefByteBuffer serializer = new SerializerDefByteBuffer(wrapped, false);
+			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
+		}
 		return let(
 				cast(value, ByteBuffer.class),
 				buffer -> {
@@ -84,6 +88,10 @@ public final class SerializerDefByteBuffer extends AbstractSerializerDef impleme
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			SerializerDefByteBuffer serializer = new SerializerDefByteBuffer(wrapped, false);
+			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
+		}
 		return !wrapped ?
 				let(readVarInt(in),
 						length -> {

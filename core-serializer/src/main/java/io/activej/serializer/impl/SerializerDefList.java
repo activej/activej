@@ -76,6 +76,10 @@ public final class SerializerDefList extends AbstractSerializerDef implements Se
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression list, int version, CompatibilityLevel compatibilityLevel) {
+		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			SerializerDefList serializer = new SerializerDefList(valueSerializer, false);
+			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, list, version, compatibilityLevel);
+		}
 		if (!nullable) {
 			return let(call(list, "size"),
 					len -> sequence(
@@ -100,6 +104,10 @@ public final class SerializerDefList extends AbstractSerializerDef implements Se
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			SerializerDefList serializer = new SerializerDefList(valueSerializer, false);
+			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
+		}
 		return let(readVarInt(in),
 				len -> !nullable ?
 						doDecode(staticDecoders, in, version, compatibilityLevel, len) :

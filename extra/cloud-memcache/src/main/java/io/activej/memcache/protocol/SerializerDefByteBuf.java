@@ -24,6 +24,7 @@ import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import io.activej.serializer.impl.SerializerDefNullable;
 import io.activej.serializer.impl.SerializerDefWithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
@@ -57,6 +58,10 @@ public class SerializerDefByteBuf extends AbstractSerializerDef implements Seria
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			SerializerDefByteBuf serializer = new SerializerDefByteBuf(writeWithRecycle, wrap, false);
+			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
+		}
 		return set(pos,
 				staticCall(SerializerDefByteBuf.class,
 						"write" + (writeWithRecycle ? "Recycle" : "") + (nullable ? "Nullable" : ""),
@@ -65,6 +70,10 @@ public class SerializerDefByteBuf extends AbstractSerializerDef implements Seria
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			SerializerDefByteBuf serializer = new SerializerDefByteBuf(writeWithRecycle, wrap, false);
+			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
+		}
 		return staticCall(SerializerDefByteBuf.class,
 				"read" + (wrap ? "Slice" : "") + (nullable ? "Nullable" : ""),
 				in);

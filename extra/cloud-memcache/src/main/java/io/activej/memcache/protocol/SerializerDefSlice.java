@@ -23,6 +23,7 @@ import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import io.activej.serializer.impl.SerializerDefNullable;
 import io.activej.serializer.impl.SerializerDefWithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
@@ -47,6 +48,10 @@ public class SerializerDefSlice extends AbstractSerializerDef implements Seriali
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			SerializerDefSlice serializer = new SerializerDefSlice(false);
+			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
+		}
 		return set(pos,
 				staticCall(SerializerDefSlice.class,
 						"write" + (nullable ? "Nullable" : ""),
@@ -55,6 +60,10 @@ public class SerializerDefSlice extends AbstractSerializerDef implements Seriali
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			SerializerDefSlice serializer = new SerializerDefSlice(false);
+			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
+		}
 		return staticCall(SerializerDefSlice.class,
 				"read" + (nullable ? "Nullable" : ""),
 				in);

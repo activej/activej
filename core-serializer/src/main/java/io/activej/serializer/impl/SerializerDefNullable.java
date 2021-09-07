@@ -46,6 +46,15 @@ public final class SerializerDefNullable extends AbstractSerializerDef implement
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		return encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
+	}
+
+	@Override
+	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		return decode(serializer, staticDecoders, in, version, compatibilityLevel);
+	}
+
+	public static Expression encode(SerializerDef serializer, StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return ifThenElse(isNotNull(value),
 				sequence(
 						writeByte(buf, pos, value((byte) 1)),
@@ -54,11 +63,11 @@ public final class SerializerDefNullable extends AbstractSerializerDef implement
 		);
 	}
 
-	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public static Expression decode(SerializerDef serializer, StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(readByte(in),
 				isNotNull -> ifThenElse(cmpNe(isNotNull, value((byte) 0)),
 						serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel),
 						nullRef(serializer.getDecodeType())));
 	}
+
 }
