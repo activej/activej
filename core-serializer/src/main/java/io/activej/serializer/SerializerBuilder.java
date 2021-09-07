@@ -221,7 +221,7 @@ public final class SerializerBuilder {
 
 			if (hasAnnotation(SerializeNullable.class, ctx.getAnnotations())) {
 				serializerDef = serializerDef instanceof SerializerDefWithNullable ?
-						((SerializerDefWithNullable) serializerDef).ensureNullable() : new SerializerDefNullable(serializerDef);
+						((SerializerDefWithNullable) serializerDef).ensureNullable(compatibilityLevel) : new SerializerDefNullable(serializerDef);
 			}
 
 			return serializerDef;

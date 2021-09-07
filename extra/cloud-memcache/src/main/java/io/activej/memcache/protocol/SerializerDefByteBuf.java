@@ -47,7 +47,10 @@ public class SerializerDefByteBuf extends AbstractSerializerDef implements Seria
 	}
 
 	@Override
-	public SerializerDef ensureNullable() {
+	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			return new SerializerDefNullable(this);
+		}
 		return new SerializerDefByteBuf(writeWithRecycle, wrap, true);
 	}
 
@@ -58,10 +61,6 @@ public class SerializerDefByteBuf extends AbstractSerializerDef implements Seria
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefByteBuf serializer = new SerializerDefByteBuf(writeWithRecycle, wrap, false);
-			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
-		}
 		return set(pos,
 				staticCall(SerializerDefByteBuf.class,
 						"write" + (writeWithRecycle ? "Recycle" : "") + (nullable ? "Nullable" : ""),
@@ -70,10 +69,6 @@ public class SerializerDefByteBuf extends AbstractSerializerDef implements Seria
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefByteBuf serializer = new SerializerDefByteBuf(writeWithRecycle, wrap, false);
-			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
-		}
 		return staticCall(SerializerDefByteBuf.class,
 				"read" + (wrap ? "Slice" : "") + (nullable ? "Nullable" : ""),
 				in);

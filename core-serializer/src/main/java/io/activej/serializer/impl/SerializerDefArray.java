@@ -52,7 +52,10 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 	}
 
 	@Override
-	public SerializerDef ensureNullable() {
+	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			return new SerializerDefNullable(this);
+		}
 		return new SerializerDefArray(valueSerializer, fixedSize, type, true);
 	}
 
@@ -73,10 +76,6 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefArray serializer = new SerializerDefArray(valueSerializer, fixedSize, type, false);
-			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
-		}
 		if (type.getComponentType() == Byte.TYPE) {
 			Expression castedValue = cast(value, type);
 			Expression length = fixedSize != -1 ? value(fixedSize) : length(castedValue);
@@ -115,10 +114,6 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefArray serializer = new SerializerDefArray(valueSerializer, fixedSize, type, false);
-			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
-		}
 		if (type.getComponentType() == Byte.TYPE) {
 			return let(readVarInt(in),
 					len -> !nullable ?

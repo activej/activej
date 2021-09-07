@@ -55,7 +55,10 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 	}
 
 	@Override
-	public SerializerDef ensureNullable() {
+	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			return new SerializerDefNullable(this);
+		}
 		return new SerializerDefSubclass(dataType, subclassSerializers, true, startIndex);
 	}
 
@@ -78,10 +81,6 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefSubclass serializer = new SerializerDefSubclass(dataType, subclassSerializers, false, startIndex);
-			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
-		}
 		int subClassIndex = (nullable && startIndex == 0 ? 1 : startIndex);
 
 		List<Expression> listKey = new ArrayList<>();
@@ -110,10 +109,6 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefSubclass serializer = new SerializerDefSubclass(dataType, subclassSerializers, false, startIndex);
-			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
-		}
 		return let(startIndex != 0 ? sub(readByte(in), value(startIndex)) : cast(readByte(in), int.class),
 				idx -> cast(
 						switchByIndex(idx,

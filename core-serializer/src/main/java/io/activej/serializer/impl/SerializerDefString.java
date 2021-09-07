@@ -48,7 +48,7 @@ public final class SerializerDefString extends AbstractSerializerDef implements 
 	}
 
 	@Override
-	public SerializerDefString ensureNullable() {
+	public SerializerDefString ensureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefString(format, true);
 	}
 

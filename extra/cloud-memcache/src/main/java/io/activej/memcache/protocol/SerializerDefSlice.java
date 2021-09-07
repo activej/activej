@@ -48,10 +48,6 @@ public class SerializerDefSlice extends AbstractSerializerDef implements Seriali
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefSlice serializer = new SerializerDefSlice(false);
-			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
-		}
 		return set(pos,
 				staticCall(SerializerDefSlice.class,
 						"write" + (nullable ? "Nullable" : ""),
@@ -60,10 +56,6 @@ public class SerializerDefSlice extends AbstractSerializerDef implements Seriali
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefSlice serializer = new SerializerDefSlice(false);
-			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
-		}
 		return staticCall(SerializerDefSlice.class,
 				"read" + (nullable ? "Nullable" : ""),
 				in);
@@ -103,7 +95,10 @@ public class SerializerDefSlice extends AbstractSerializerDef implements Seriali
 	}
 
 	@Override
-	public SerializerDef ensureNullable() {
+	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			return new SerializerDefNullable(this);
+		}
 		return new SerializerDefSlice(true);
 	}
 }

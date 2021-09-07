@@ -45,10 +45,6 @@ public final class SerializerDefEnum extends AbstractSerializerDef implements Se
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefEnum serializer = new SerializerDefEnum(enumType, false);
-			return SerializerDefNullable.encode(serializer, staticEncoders, buf, pos, value, version, compatibilityLevel);
-		}
 		Expression ordinal = call(cast(value, Enum.class), "ordinal");
 		if (isSmallEnum()) {
 			return !nullable ?
@@ -67,10 +63,6 @@ public final class SerializerDefEnum extends AbstractSerializerDef implements Se
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		if (nullable && compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
-			SerializerDefEnum serializer = new SerializerDefEnum(enumType, false);
-			return SerializerDefNullable.decode(serializer, staticDecoders, in, version, compatibilityLevel);
-		}
 		return isSmallEnum() ?
 				let(readByte(in), b ->
 						!nullable ?
@@ -93,7 +85,10 @@ public final class SerializerDefEnum extends AbstractSerializerDef implements Se
 	}
 
 	@Override
-	public SerializerDef ensureNullable() {
+	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+			return new SerializerDefNullable(this);
+		}
 		return new SerializerDefEnum(enumType, true);
 	}
 }
