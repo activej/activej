@@ -21,6 +21,8 @@ import io.activej.serializer.SerializerDef;
 
 import java.util.Collection;
 
+import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
+
 public final class SerializerDefCollection extends AbstractSerializerDefCollection {
 	public SerializerDefCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
 		this(valueSerializer, encodeType, decodeType, false);
@@ -32,7 +34,7 @@ public final class SerializerDefCollection extends AbstractSerializerDefCollecti
 
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return new SerializerDefCollection(valueSerializer, encodeType, decodeType, true);

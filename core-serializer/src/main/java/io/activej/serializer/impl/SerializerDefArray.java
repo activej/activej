@@ -24,6 +24,7 @@ import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
 public final class SerializerDefArray extends AbstractSerializerDef implements SerializerDefWithNullable, SerializerDefWithFixedSize {
@@ -53,7 +54,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return new SerializerDefArray(valueSerializer, fixedSize, type, true);

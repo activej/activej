@@ -22,7 +22,6 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
 import static io.activej.codegen.expression.Expressions.cast;
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
 public final class SerializerDefInt extends SerializerDefPrimitive implements SerializerDefWithVarLength {
@@ -50,14 +49,14 @@ public final class SerializerDefInt extends SerializerDefPrimitive implements Se
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
 		return varLength ?
 				writeVarInt(byteArray, off, cast(value, int.class)) :
-				writeInt(byteArray, off, cast(value, int.class), compatibilityLevel.compareTo(LEVEL_3_LE) < 0);
+				writeInt(byteArray, off, cast(value, int.class), !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
 		return varLength ?
 				readVarInt(in) :
-				readInt(in, compatibilityLevel.compareTo(LEVEL_3_LE) < 0);
+				readInt(in, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override

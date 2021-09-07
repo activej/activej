@@ -8,6 +8,7 @@ import io.activej.serializer.impl.SerializerDefNullable;
 
 import java.util.function.Function;
 
+import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
 
 public final class SerializerDefHppc7Collection extends AbstractSerializerDefCollection {
@@ -34,7 +35,7 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return new SerializerDefHppc7Collection(valueSerializer, encodeType, elementType, decodeType, true);

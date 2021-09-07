@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static org.objectweb.asm.Type.getType;
 
 public final class SerializerDefMap extends AbstractSerializerDefMap {
@@ -61,7 +62,7 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return new SerializerDefMap(keySerializer, valueSerializer, encodeType, decodeType, true);

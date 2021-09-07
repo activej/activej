@@ -28,6 +28,7 @@ import io.activej.serializer.impl.SerializerDefWithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 @SuppressWarnings("unused")
 public class SerializerDefSlice extends AbstractSerializerDef implements SerializerDefWithNullable {
@@ -96,7 +97,7 @@ public class SerializerDefSlice extends AbstractSerializerDef implements Seriali
 
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return new SerializerDefSlice(true);

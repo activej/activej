@@ -21,7 +21,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.impl.SerializerExpressions.readDouble;
 import static io.activej.serializer.impl.SerializerExpressions.writeDouble;
 
@@ -41,12 +40,12 @@ public final class SerializerDefDouble extends SerializerDefPrimitive {
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeDouble(byteArray, off, value, compatibilityLevel.compareTo(LEVEL_3_LE) < 0);
+		return writeDouble(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readDouble(in, compatibilityLevel.compareTo(LEVEL_3_LE) < 0);
+		return readDouble(in, !compatibilityLevel.isLittleEndian());
 	}
 }
 

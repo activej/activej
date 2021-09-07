@@ -25,7 +25,6 @@ import io.activej.serializer.util.BinaryOutputUtils;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_1;
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.StringFormat.ISO_8859_1;
 import static io.activej.serializer.StringFormat.UTF8;
 import static io.activej.serializer.util.Utils.get;
@@ -81,7 +80,7 @@ public final class SerializerDefString extends AbstractSerializerDef implements 
 							staticCall(BinaryOutputUtils.class, "writeUTF8Nullable", buf, pos, string) :
 							staticCall(BinaryOutputUtils.class, "writeUTF8", buf, pos, string);
 				case UTF16:
-					String LE = compatibilityLevel.compareTo(LEVEL_3_LE) < 0 ? "" : "LE";
+					String LE = compatibilityLevel.isLittleEndian() ? "LE" : "";
 					return nullable ?
 							staticCall(BinaryOutputUtils.class, "writeUTF16Nullable" + LE, buf, pos, string) :
 							staticCall(BinaryOutputUtils.class, "writeUTF16" + LE, buf, pos, string);
@@ -114,7 +113,7 @@ public final class SerializerDefString extends AbstractSerializerDef implements 
 						call(in, "readUTF8Nullable") :
 						call(in, "readUTF8");
 			case UTF16:
-				String LE = compatibilityLevel.compareTo(LEVEL_3_LE) < 0 ? "" : "LE";
+				String LE = compatibilityLevel.isLittleEndian() ? "LE" : "";
 				return nullable ?
 						call(in, "readUTF16Nullable" + LE) :
 						call(in, "readUTF16" + LE);

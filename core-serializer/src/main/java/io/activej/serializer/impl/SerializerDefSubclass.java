@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.get;
@@ -56,7 +57,7 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return new SerializerDefSubclass(dataType, subclassSerializers, true, startIndex);

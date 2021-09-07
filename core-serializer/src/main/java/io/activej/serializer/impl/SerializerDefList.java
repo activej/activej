@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
 public final class SerializerDefList extends AbstractSerializerDef implements SerializerDefWithNullable {
@@ -51,7 +52,7 @@ public final class SerializerDefList extends AbstractSerializerDef implements Se
 
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.compareTo(CompatibilityLevel.LEVEL_3) < 0) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return new SerializerDefList(valueSerializer, true);

@@ -21,20 +21,38 @@ public enum CompatibilityLevel {
 	/**
 	 * Provides basic version of serializer
 	 */
-	@Deprecated LEVEL_1,
+	@Deprecated LEVEL_1(1, false),
 
 	/**
 	 * Provides string optimizations for ISO8859-1 and UTF8
 	 */
-	@Deprecated LEVEL_2,
+	@Deprecated LEVEL_2(2, false),
 
 	/**
 	 * Includes previous optimizations and provides nullable optimization for enum, subclass, array, map and list
 	 */
-	LEVEL_3,
+	LEVEL_3(3, false),
 
 	/**
-	 * Includes previous optimizations and provides little endian format for JVM intrinsics
+	 * Same as {@link #LEVEL_3} but provides little endian format for JVM intrinsics
+	 *
+	 * @see #LEVEL_3
 	 */
-	LEVEL_3_LE
+	LEVEL_3_LE(3, true);
+
+	private final int level;
+	private final boolean littleEndian;
+
+	CompatibilityLevel(int level, boolean littleEndian) {
+		this.level = level;
+		this.littleEndian = littleEndian;
+	}
+
+	public int getLevel() {
+		return level;
+	}
+
+	public boolean isLittleEndian() {
+		return littleEndian;
+	}
 }

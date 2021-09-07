@@ -21,7 +21,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.impl.SerializerExpressions.readFloat;
 import static io.activej.serializer.impl.SerializerExpressions.writeFloat;
 
@@ -41,12 +40,12 @@ public final class SerializerDefFloat extends SerializerDefPrimitive {
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeFloat(byteArray, off, value, compatibilityLevel.compareTo(LEVEL_3_LE) < 0);
+		return writeFloat(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readFloat(in, compatibilityLevel.compareTo(LEVEL_3_LE) < 0);
+		return readFloat(in, !compatibilityLevel.isLittleEndian());
 	}
 }
 

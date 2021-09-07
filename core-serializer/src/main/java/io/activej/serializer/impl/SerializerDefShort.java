@@ -21,7 +21,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
 import static io.activej.serializer.impl.SerializerExpressions.readShort;
 import static io.activej.serializer.impl.SerializerExpressions.writeShort;
 
@@ -41,11 +40,11 @@ public final class SerializerDefShort extends SerializerDefPrimitive {
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeShort(byteArray, off, value, compatibilityLevel.compareTo(LEVEL_3_LE) < 0);
+		return writeShort(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readShort(in, compatibilityLevel.compareTo(LEVEL_3_LE) < 0);
+		return readShort(in, !compatibilityLevel.isLittleEndian());
 	}
 }
