@@ -53,9 +53,13 @@ public abstract class SerializerDefPrimitive extends AbstractSerializerDef imple
 
 	protected abstract Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel);
 
+	protected boolean castToPrimitive() {
+		return true;
+	}
+
 	@Override
 	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return doSerialize(buf, pos, cast(value, primitiveType), compatibilityLevel);
+		return doSerialize(buf, pos, castToPrimitive() ? cast(value, primitiveType) : value, compatibilityLevel);
 	}
 
 	@Override

@@ -38,7 +38,19 @@ public enum CompatibilityLevel {
 	 *
 	 * @see #LEVEL_3
 	 */
-	LEVEL_3_LE(3, true);
+	LEVEL_3_LE(3, true),
+
+	/**
+	 * Includes previous optimizations and provides nullable optimization for boolean
+	 */
+	LEVEL_4(4, false),
+
+	/**
+	 * Same as {@link #LEVEL_4} but provides little endian format for JVM intrinsics
+	 *
+	 * @see #LEVEL_4
+	 */
+	LEVEL_4_LE(4, true);
 
 	private final int level;
 	private final boolean littleEndian;

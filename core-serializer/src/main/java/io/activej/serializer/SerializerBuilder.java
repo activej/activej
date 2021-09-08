@@ -77,7 +77,7 @@ public final class SerializerBuilder {
 	private int encodeVersionMax = Integer.MAX_VALUE;
 	private int decodeVersionMin = 0;
 	private int decodeVersionMax = Integer.MAX_VALUE;
-	private CompatibilityLevel compatibilityLevel = CompatibilityLevel.LEVEL_3;
+	private CompatibilityLevel compatibilityLevel = CompatibilityLevel.LEVEL_4;
 	private int autoOrderingStart = 1;
 	private int autoOrderingStride = 1;
 	private boolean annotationsCompatibilityMode;

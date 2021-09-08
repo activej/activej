@@ -3,6 +3,7 @@ package io.activej.serializer;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.test.rules.ClassBuilderConstantsRule;
+import io.activej.types.TypeT;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Rule;
 import org.junit.Test;
@@ -2107,6 +2108,41 @@ public class BinarySerializerTest {
 
 		assertEquals(linked, deserialized.linked);
 		assertSame(LinkedHashMap.class, deserialized.linked.getClass());
+	}
+
+	@Test
+	public void booleanTest() {
+		BinarySerializer<Boolean> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+				.build(boolean.class);
+
+		doTestBoolean(serializer, false, (byte) 0);
+		doTestBoolean(serializer, true, (byte) 1);
+	}
+
+	@Test
+	public void nullableBooleanTest() {
+		BinarySerializer<@SerializeNullable Boolean> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+				.build(new TypeT<@SerializeNullable Boolean>() {});
+
+		doTestNullableBoolean(serializer, null, SerializerDefBoolean.NULLABLE_NULL);
+		doTestNullableBoolean(serializer, false, SerializerDefBoolean.NULLABLE_FALSE);
+		doTestNullableBoolean(serializer, true, SerializerDefBoolean.NULLABLE_TRUE);
+	}
+
+	private void doTestBoolean(BinarySerializer<Boolean> serializer, boolean value, byte expectedByte) {
+		byte[] array = new byte[1];
+		serializer.encode(array, 0, value);
+		boolean decoded = serializer.decode(array, 0);
+		assertEquals(value, decoded);
+		assertEquals(expectedByte, array[0]);
+	}
+
+	private void doTestNullableBoolean(BinarySerializer<Boolean> serializer, Boolean value, byte expectedByte) {
+		byte[] array = new byte[1];
+		serializer.encode(array, 0, value);
+		Boolean decoded = serializer.decode(array, 0);
+		assertEquals(value, decoded);
+		assertEquals(expectedByte, array[0]);
 	}
 
 	public interface LinkedListHolder {
