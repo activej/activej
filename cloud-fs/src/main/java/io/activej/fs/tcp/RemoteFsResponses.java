@@ -26,11 +26,9 @@ import java.util.Map;
 
 public final class RemoteFsResponses {
 
-	@CompiledJson(discriminator = "Type")
 	public abstract static class FsResponse {
 	}
 
-	@CompiledJson(name = "UploadAck")
 	public static final class UploadAck extends FsResponse {
 		@Override
 		public String toString() {
@@ -38,7 +36,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "UploadFinished")
 	public static final class UploadFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -46,7 +43,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "AppendAck")
 	public static final class AppendAck extends FsResponse {
 		@Override
 		public String toString() {
@@ -54,7 +50,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "AppendFinished")
 	public static final class AppendFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -62,7 +57,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "DownloadSize")
+	@CompiledJson
 	public static final class DownloadSize extends FsResponse {
 		private final long size;
 
@@ -80,7 +75,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "CopyFinished")
 	public static final class CopyFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -88,7 +82,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "CopyAllFinished")
 	public static final class CopyAllFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -96,7 +89,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "MoveFinished")
 	public static final class MoveFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -104,7 +96,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "MoveAllFinished")
 	public static final class MoveAllFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -112,7 +103,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "ListFinished")
+	@CompiledJson
 	public static final class ListFinished extends FsResponse {
 		private final Map<String, FileMetadata> files;
 
@@ -130,7 +121,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "DeleteFinished")
 	public static final class DeleteFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -138,7 +128,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "DeleteAllFinished")
 	public static final class DeleteAllFinished extends FsResponse {
 		@Override
 		public String toString() {
@@ -146,7 +135,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "ServerError")
+	@CompiledJson
 	public static final class ServerError extends FsResponse {
 		private final FsException error;
 
@@ -164,7 +153,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "InfoFinished")
+	@CompiledJson
 	public static final class InfoFinished extends FsResponse {
 		@Nullable
 		private final FileMetadata metadata;
@@ -184,7 +173,7 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "InfoAllFinished")
+	@CompiledJson
 	public static final class InfoAllFinished extends FsResponse {
 		private final Map<String, FileMetadata> metadataMap;
 
@@ -202,7 +191,6 @@ public final class RemoteFsResponses {
 		}
 	}
 
-	@CompiledJson(name = "PingFinished")
 	public static final class PingFinished extends FsResponse {
 		@Override
 		public String toString() {

@@ -26,11 +26,10 @@ import java.util.Set;
 @SuppressWarnings("WeakerAccess")
 public final class RemoteFsCommands {
 
-	@CompiledJson(discriminator = "Type")
 	public abstract static class FsCommand {
 	}
 
-	@CompiledJson(name = "Upload")
+	@CompiledJson
 	public static final class Upload extends FsCommand {
 		private final String name;
 		@Nullable
@@ -55,7 +54,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "Append")
+	@CompiledJson
 	public static final class Append extends FsCommand {
 		private final String name;
 		private final long offset;
@@ -79,7 +78,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "Download")
+	@CompiledJson
 	public static final class Download extends FsCommand {
 		private final String name;
 		private final long offset;
@@ -109,7 +108,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "Copy")
+	@CompiledJson
 	public static final class Copy extends FsCommand {
 		private final String name;
 		private final String target;
@@ -133,7 +132,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "CopyAll")
+	@CompiledJson
 	public static final class CopyAll extends FsCommand {
 		private final Map<String, String> sourceToTarget;
 
@@ -151,7 +150,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "Move")
+	@CompiledJson
 	public static final class Move extends FsCommand {
 		private final String name;
 		private final String target;
@@ -175,7 +174,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "MoveAll")
+	@CompiledJson
 	public static final class MoveAll extends FsCommand {
 		private final Map<String, String> sourceToTarget;
 
@@ -193,7 +192,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "Delete")
+	@CompiledJson
 	public static final class Delete extends FsCommand {
 		private final String name;
 
@@ -211,7 +210,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "DeleteAll")
+	@CompiledJson
 	public static final class DeleteAll extends FsCommand {
 		private final Set<String> toDelete;
 
@@ -230,7 +229,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "List")
+	@CompiledJson
 	public static final class List extends FsCommand {
 		private final String glob;
 
@@ -248,7 +247,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "Info")
+	@CompiledJson
 	public static final class Info extends FsCommand {
 		private final String name;
 
@@ -266,7 +265,7 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "InfoAll")
+	@CompiledJson
 	public static final class InfoAll extends FsCommand {
 		private final Set<String> names;
 
@@ -284,7 +283,6 @@ public final class RemoteFsCommands {
 		}
 	}
 
-	@CompiledJson(name = "Ping")
 	public static final class Ping extends FsCommand {
 		@Override
 		public String toString() {
