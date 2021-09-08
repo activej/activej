@@ -31,14 +31,14 @@ public enum CompatibilityLevel {
 	/**
 	 * Includes previous optimizations and provides nullable optimization for enum, subclass, array, map and list
 	 */
-	LEVEL_3(3, false),
+	@Deprecated LEVEL_3(3, false),
 
 	/**
 	 * Same as {@link #LEVEL_3} but provides little endian format for JVM intrinsics
 	 *
 	 * @see #LEVEL_3
 	 */
-	LEVEL_3_LE(3, true),
+	@Deprecated LEVEL_3_LE(3, true),
 
 	/**
 	 * Includes previous optimizations and provides nullable optimization for boolean
