@@ -22,8 +22,9 @@ CREATE TRIGGER `{chunk}_remove_check`
    FOR EACH ROW
 BEGIN
    IF OLD.`removed_revision` IS NOT NULL THEN
+       SET @message_text = CONCAT('Chunk ', OLD.id, ' is already removed in revision ', OLD.removed_revision);
        SIGNAL SQLSTATE '23513'
-           SET MESSAGE_TEXT = 'Chunk is already removed';
+           SET MESSAGE_TEXT = @message_text;
    END IF;
    IF NEW.`removed_revision` IS NOT NULL THEN
         SET NEW.`locked_at` = NULL, NEW.`locked_by` = NULL;

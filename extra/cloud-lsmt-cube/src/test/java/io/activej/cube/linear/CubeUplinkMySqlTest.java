@@ -6,6 +6,7 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.cube.exception.StateFarAheadException;
 import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
@@ -15,6 +16,7 @@ import io.activej.etl.LogPositionDiff;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTState;
+import io.activej.ot.exception.OTException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink.FetchData;
 import io.activej.test.rules.EventloopRule;
@@ -26,6 +28,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -281,7 +284,7 @@ public class CubeUplinkMySqlTest {
 
 		Exception exception = awaitException(uplink.push(protoCommit2));
 		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));
-		assertEquals("Chunk is already removed", exception.getMessage());
+		assertEquals("Chunk 2 is already removed in revision 2", exception.getMessage());
 	}
 
 	@Test
@@ -550,6 +553,48 @@ public class CubeUplinkMySqlTest {
 				), diff3to4);
 			}
 		}
+	}
+
+	@Test
+	public void deleteAlreadyCleanedUpChunk() {
+		List<LogDiff<CubeDiff>> diffs = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(mapOf("aggregation", AggregationDiff.of(emptySet(), setOf(chunk(100)))))
+		));
+		Throwable exception = awaitException(uplink.push(await(uplink.createProtoCommit(0L, diffs, 0))));
+
+		assertThat(exception, instanceOf(OTException.class));
+		assertEquals("Chunk is already removed", exception.getMessage());
+	}
+
+	@Test
+	public void fetchStateFarAhead() throws SQLException {
+		List<LogDiff<CubeDiff>> diffs1 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(mapOf("aggregation", AggregationDiff.of(setOf(chunk(1), chunk(2)))))
+		));
+		await(uplink.push(await(uplink.createProtoCommit(0L, diffs1, 0))));
+
+		List<LogDiff<CubeDiff>> diffs2 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(mapOf("aggregation", AggregationDiff.of(setOf(chunk(3), chunk(4)))))
+		));
+		await(uplink.push(await(uplink.createProtoCommit(1L, diffs2, 1))));
+
+		List<LogDiff<CubeDiff>> diffs3 = singletonList(LogDiff.forCurrentPosition(
+				CubeDiff.of(mapOf("aggregation", AggregationDiff.of(setOf(chunk(5), chunk(6)))))
+		));
+		await(uplink.push(await(uplink.createProtoCommit(2L, diffs3, 2))));
+
+		try (Connection connection = dataSource.getConnection()) {
+			try (Statement statement = connection.createStatement()) {
+				statement.execute("DELETE FROM " + CubeUplinkMySql.REVISION_TABLE +
+						" WHERE `revision` IN (0,1,2)");
+			}
+		}
+
+		Throwable exception = awaitException(uplink.fetch(1L));
+		assertThat(exception, instanceOf(StateFarAheadException.class));
+		StateFarAheadException e = (StateFarAheadException) exception;
+		assertEquals(1L, e.getStartingRevision());
+		assertEquals(setOf(1L, 2L), e.getMissingRevisions());
 	}
 
 	private static void assertCubeDiff(Set<Long> added, Set<Long> removed, CubeDiff actual) {

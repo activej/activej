@@ -4,6 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
+import io.activej.common.function.FunctionEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -17,6 +18,7 @@ import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.jetbrains.annotations.NotNull;
 import org.junit.*;
 
 import java.io.IOException;
@@ -31,11 +33,11 @@ import java.util.stream.Stream;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
-import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
+import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -55,6 +57,7 @@ public final class AbstractHttpConnectionTest {
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
+	private static final byte[] HELLO_WORLD = encodeAscii("Hello, World!");
 	private static final Random RANDOM = ThreadLocalRandom.current();
 
 	private AsyncHttpClient client;
@@ -307,6 +310,107 @@ public final class AbstractHttpConnectionTest {
 		assertThat(lastException.getMessage(), containsString("Header line exceeds max header size"));
 	}
 
+	@Test
+	public void testKeepAliveWithStreamingResponse() throws Exception {
+		AsyncHttpClient.JmxInspector clientInspector = new AsyncHttpClient.JmxInspector();
+		AsyncHttpServer.JmxInspector serverInspector = new AsyncHttpServer.JmxInspector();
+
+		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
+						request -> HttpResponse.ok200()
+								.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD))))
+				.withInspector(serverInspector)
+				.withListenPort(port);
+
+		server.listen();
+
+		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.withKeepAliveTimeout(Duration.ofSeconds(10))
+				.withInspector(clientInspector);
+
+		assertEquals(0, client.getConnectionsKeepAliveCount());
+		assertEquals(0, clientInspector.getConnected().getTotalCount());
+
+		assertEquals(0, server.getConnectionsKeepAliveCount());
+		assertEquals(0, serverInspector.getTotalConnections().getTotalCount());
+
+		String url = "http://127.0.0.1:" + port;
+		await(client.request(HttpRequest.get(url))
+				.then(ensureHelloWorldAsyncFn())
+				.whenResult(() -> {
+					assertEquals(1, client.getConnectionsKeepAliveCount());
+					assertEquals(1, clientInspector.getConnected().getTotalCount());
+
+					assertEquals(1, server.getConnectionsKeepAliveCount());
+					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
+				})
+				.then(() -> client.request(HttpRequest.get(url)))
+				.then(ensureHelloWorldAsyncFn())
+				.whenResult(() -> {
+					assertEquals(1, client.getConnectionsKeepAliveCount());
+					assertEquals(1, clientInspector.getConnected().getTotalCount());
+
+					assertEquals(1, server.getConnectionsKeepAliveCount());
+					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
+				})
+				.whenComplete(server::close));
+	}
+
+	@Test
+	public void testKeepAliveWithStreamingRequest() throws Exception {
+		AsyncHttpClient.JmxInspector clientInspector = new AsyncHttpClient.JmxInspector();
+		AsyncHttpServer.JmxInspector serverInspector = new AsyncHttpServer.JmxInspector();
+
+		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
+						request -> request.loadBody()
+								.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
+								.map($ -> HttpResponse.ok200()
+										.withBody(ByteBuf.wrapForReading(HELLO_WORLD))))
+				.withInspector(serverInspector)
+				.withListenPort(port);
+
+		server.listen();
+
+		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+				.withKeepAliveTimeout(Duration.ofSeconds(10))
+				.withInspector(clientInspector);
+
+		assertEquals(0, client.getConnectionsKeepAliveCount());
+		assertEquals(0, clientInspector.getConnected().getTotalCount());
+
+		assertEquals(0, server.getConnectionsKeepAliveCount());
+		assertEquals(0, serverInspector.getTotalConnections().getTotalCount());
+
+		String url = "http://127.0.0.1:" + port;
+		await(client.request(HttpRequest.get(url)
+						.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD))))
+				.then(ensureHelloWorldAsyncFn())
+				.whenResult(() -> {
+					assertEquals(1, client.getConnectionsKeepAliveCount());
+					assertEquals(1, clientInspector.getConnected().getTotalCount());
+
+					assertEquals(1, server.getConnectionsKeepAliveCount());
+					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
+				})
+				.then(() -> client.request(HttpRequest.get(url)
+						.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD)))))
+				.then(ensureHelloWorldAsyncFn())
+				.whenResult(() -> {
+					assertEquals(1, client.getConnectionsKeepAliveCount());
+					assertEquals(1, clientInspector.getConnected().getTotalCount());
+
+					assertEquals(1, server.getConnectionsKeepAliveCount());
+					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
+				})
+				.whenComplete(server::close));
+	}
+
+	@NotNull
+	private FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
+		return response -> response.loadBody()
+				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
+				.post();
+	}
+
 	private void doTestEmptyRequestResponsePermutations(List<Consumer<HttpMessage>> messageDecorators) {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		for (int i = 0; i < messageDecorators.size(); i++) {
@@ -314,11 +418,11 @@ public final class AbstractHttpConnectionTest {
 				try {
 					Consumer<HttpMessage> responseDecorator = messageDecorators.get(j);
 					AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-							$ -> {
-								HttpResponse response = HttpResponse.ok200();
-								responseDecorator.accept(response);
-								return response;
-							})
+									$ -> {
+										HttpResponse response = HttpResponse.ok200();
+										responseDecorator.accept(response);
+										return response;
+									})
 							.withListenPort(port)
 							.withAcceptOnce(true);
 

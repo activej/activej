@@ -23,6 +23,7 @@ import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.tuple.Tuple2;
+import io.activej.cube.exception.StateFarAheadException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
@@ -44,10 +45,11 @@ import java.sql.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.stream.LongStream;
 
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.transformMap;
+import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.linear.Utils.*;
@@ -55,6 +57,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 
 public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, CubeUplinkMySql.UplinkProtoCommit> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeUplinkMySql.class);
@@ -122,14 +125,27 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 							try (Connection connection = dataSource.getConnection()) {
 								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-								long revision;
-								revision = getMaxRevision(connection);
+								long revision = getMaxRevision(connection);
 
 								if (revision == ROOT_REVISION) {
 									return new FetchData<>(revision, revision, Collections.<LogDiff<CubeDiff>>emptyList());
 								}
 
-								return new FetchData<>(revision, revision, doFetch(connection, ROOT_REVISION, revision));
+								List<LogDiff<CubeDiff>> diffs = doFetch(connection, ROOT_REVISION, revision);
+
+								try (PreparedStatement ps = connection.prepareStatement(sql("" +
+										"SELECT EXISTS " +
+										"(SELECT * FROM {revision} WHERE `revision`=?)")
+								)) {
+									ps.setLong(1, revision);
+									ResultSet resultSet = ps.executeQuery();
+									resultSet.next();
+									if (!resultSet.getBoolean(1)) {
+										throw new StateFarAheadException(0L, singleton(revision));
+									}
+								}
+
+								return new FetchData<>(revision, revision, diffs);
 							}
 						})
 				.whenComplete(toLogger(logger, "checkout"))
@@ -151,7 +167,9 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 									throw new IllegalArgumentException("Passed revision is higher than uplink revision");
 								}
 
-								return new FetchData<>(revision, revision, doFetch(connection, currentCommitId, revision));
+								List<LogDiff<CubeDiff>> diffs = doFetch(connection, currentCommitId, revision);
+								checkRevisions(connection, currentCommitId, revision);
+								return new FetchData<>(revision, revision, diffs);
 							}
 						})
 				.whenComplete(toLogger(logger, "fetch", currentCommitId))
@@ -197,8 +215,9 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 								Set<ChunkWithAggregationId> removed = collectChunks(diffsList, false);
 
 								// squash
-								added.removeAll(removed);
-								removed.removeAll(added);
+								Set<ChunkWithAggregationId> intersection = intersection(added, removed);
+								added.removeAll(intersection);
+								removed.removeAll(intersection);
 
 								if (!added.isEmpty()) {
 									addChunks(connection, revision, added);
@@ -213,15 +232,17 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 									updatePositions(connection, revision, positions);
 								}
 
-								connection.commit();
-
 								if (revision == protoCommit.parentRevision + 1) {
 									logger.trace("Nothing to fetch after diffs are pushed");
+									connection.commit();
 									return new FetchData<>(revision, revision, Collections.<LogDiff<CubeDiff>>emptyList());
 								}
 
 								logger.trace("Fetching diffs from finished concurrent pushes");
-								return new FetchData<>(revision, revision, doFetch(connection, protoCommit.parentRevision, revision - 1));
+								List<LogDiff<CubeDiff>> diffs = doFetch(connection, protoCommit.parentRevision, revision - 1);
+								checkRevisions(connection, protoCommit.parentRevision, revision - 1);
+								connection.commit();
+								return new FetchData<>(revision, revision, diffs);
 							}
 						})
 				.whenComplete(toLogger(logger, "push", protoCommit))
@@ -343,6 +364,30 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		);
 	}
 
+	private void checkRevisions(Connection connection, long from, long to) throws SQLException, StateFarAheadException {
+		try (PreparedStatement ps = connection.prepareStatement(sql("" +
+				"SELECT `revision` " +
+				"FROM {revision} " +
+				"WHERE `revision` BETWEEN ? AND ?"))
+		) {
+			ps.setLong(1, from);
+			ps.setLong(2, to);
+
+			ResultSet resultSet = ps.executeQuery();
+			Set<Long> retrieved = new LinkedHashSet<>();
+			while (resultSet.next()) {
+				retrieved.add(resultSet.getLong(1));
+			}
+			if (retrieved.size() == to - from + 1) return;
+
+			Set<Long> expected = LongStream.range(from, to + 1)
+					.boxed()
+					.collect(toSet());
+
+			throw new StateFarAheadException(from, difference(expected, retrieved));
+		}
+	}
+
 	private void addChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException {
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
 				"INSERT INTO {chunk} (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
@@ -374,7 +419,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		}
 	}
 
-	private void removeChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException {
+	private void removeChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException, OTException {
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
 				"UPDATE {chunk} " +
 				"SET `removed_revision`=? " +
@@ -389,7 +434,11 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 				ps.setLong(index++, (Long) chunk.getChunk().getChunkId());
 			}
 
-			ps.executeUpdate();
+			int removed = ps.executeUpdate();
+			if (removed != chunks.size()) {
+				connection.rollback();
+				throw new OTException("Chunk is already removed");
+			}
 		}
 	}
 
