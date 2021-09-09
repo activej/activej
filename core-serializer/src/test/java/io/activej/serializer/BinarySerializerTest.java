@@ -3,7 +3,6 @@ package io.activej.serializer;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.test.rules.ClassBuilderConstantsRule;
-import io.activej.types.TypeT;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Rule;
 import org.junit.Test;
@@ -2121,12 +2120,12 @@ public class BinarySerializerTest {
 
 	@Test
 	public void nullableBooleanTest() {
-		BinarySerializer<@SerializeNullable Boolean> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.build(new TypeT<@SerializeNullable Boolean>() {});
+		BinarySerializer<BooleanHolder> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+				.build(BooleanHolder.class);
 
-		doTestNullableBoolean(serializer, null, SerializerDefBoolean.NULLABLE_NULL);
-		doTestNullableBoolean(serializer, false, SerializerDefBoolean.NULLABLE_FALSE);
-		doTestNullableBoolean(serializer, true, SerializerDefBoolean.NULLABLE_TRUE);
+		doTestNullableBoolean(serializer, new BooleanHolder(null), SerializerDefBoolean.NULLABLE_NULL);
+		doTestNullableBoolean(serializer, new BooleanHolder(false), SerializerDefBoolean.NULLABLE_FALSE);
+		doTestNullableBoolean(serializer, new BooleanHolder(true), SerializerDefBoolean.NULLABLE_TRUE);
 	}
 
 	private void doTestBoolean(BinarySerializer<Boolean> serializer, boolean value, byte expectedByte) {
@@ -2137,12 +2136,22 @@ public class BinarySerializerTest {
 		assertEquals(expectedByte, array[0]);
 	}
 
-	private void doTestNullableBoolean(BinarySerializer<Boolean> serializer, Boolean value, byte expectedByte) {
+	private void doTestNullableBoolean(BinarySerializer<BooleanHolder> serializer, BooleanHolder value, byte expectedByte) {
 		byte[] array = new byte[1];
 		serializer.encode(array, 0, value);
-		Boolean decoded = serializer.decode(array, 0);
-		assertEquals(value, decoded);
+		BooleanHolder decoded = serializer.decode(array, 0);
+		assertEquals(value.value, decoded.value);
 		assertEquals(expectedByte, array[0]);
+	}
+
+	public static final class BooleanHolder {
+		@Serialize
+		@SerializeNullable
+		public final Boolean value;
+
+		public BooleanHolder(@Deserialize("value") Boolean value) {
+			this.value = value;
+		}
 	}
 
 	public interface LinkedListHolder {
