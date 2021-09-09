@@ -144,7 +144,20 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		}
 	}
 
-	@Override
+    @Override
+    public @NotNull <U> Promise<U> then(
+			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn,
+			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
+		try {
+			return (Promise<U>) fn.apply(getResult());
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+    @Override
 	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
 		try {
 			action.accept(getResult(), null);

@@ -426,6 +426,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@NotNull <U> Promise<U> then(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
 
+	default @NotNull <U> Promise<U> then(
+			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn,
+			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
+		return then((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
+	}
+
 	/**
 	 * Subscribes given bi consumer to be executed
 	 * after this {@code Promise} completes (either successfully or exceptionally).

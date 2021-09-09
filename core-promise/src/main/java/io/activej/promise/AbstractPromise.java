@@ -417,6 +417,54 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull <U> Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn, @NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
+		if (isComplete()) {
+			try {
+				return (Promise<U>) (exception == null ? fn.apply(result) : exceptionFn.apply(exception));
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					Promise<? extends U> promise;
+					try {
+						promise = fn.apply(result);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
+						return;
+					}
+					promise.run(this::complete);
+				} else {
+					Promise<? extends U> promise;
+					try {
+						promise = exceptionFn.apply(e);
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
+						return;
+					}
+					promise.run(this::complete);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".then(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
 	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
 		if (isComplete()) {
 			try {
