@@ -374,6 +374,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return map((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
 	}
 
+	default @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, Exception> exceptionFn) {
+		return then(Promise::of, e -> Promise.ofException(exceptionFn.apply(e)));
+	}
+
 	/**
 	 * Returns a new {@code Promise} which is obtained by calling
 	 * a provided supplier of a new promise. If {@code this} promise

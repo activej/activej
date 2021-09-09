@@ -107,6 +107,17 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		}
 	}
 
+	@Override
+	public @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, Exception> exceptionFn) {
+		try {
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	@NotNull
 	@Override
