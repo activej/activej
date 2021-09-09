@@ -435,7 +435,8 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		return new AbstractChannelSupplier<T>(this) {
 			@Override
 			protected Promise<T> doGet() {
-				return ChannelSupplier.this.get().then((value, e) -> Promise.of(value));
+				return ChannelSupplier.this.get()
+						.map((value, e) -> value);
 			}
 		};
 	}

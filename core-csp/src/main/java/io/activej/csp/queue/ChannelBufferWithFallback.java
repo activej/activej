@@ -104,10 +104,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 	private Promise<Void> secondaryPut(@Nullable T item) {
 		assert buffer != null;
 		return buffer.put(item)
-				.then(($, e) -> {
-					if (e == null) {
-						return Promise.complete();
-					}
+				.then(Promise::of, e -> {
 					if (!(e instanceof AsyncCloseException)) {
 						return Promise.ofException(e);
 					}

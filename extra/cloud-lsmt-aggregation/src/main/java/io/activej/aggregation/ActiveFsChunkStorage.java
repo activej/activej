@@ -188,19 +188,19 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 				.then(wrapExceptionFn(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e)))
 				.whenComplete(promiseOpenW.recordStats())
 				.map(consumer -> StreamConsumer.<T>ofSupplier(
-						supplier -> supplier
-								.transformWith((StreamStats<T>) (detailed ? writeSerializeDetailed : writeSerialize))
-								.transformWith(ChannelSerializer.create(
-										createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader))
-										.withInitialBufferSize(bufferSize))
-								.transformWith(writeCompress)
-								.transformWith(ChannelFrameEncoder.create(frameFormat))
-								.transformWith(writeChunker)
-								.transformWith(ChannelByteChunker.create(
-										bufferSize.map(bytes -> bytes / 2),
-										bufferSize.map(bytes -> bytes * 2)))
-								.transformWith(writeFile)
-								.streamTo(consumer))
+								supplier -> supplier
+										.transformWith((StreamStats<T>) (detailed ? writeSerializeDetailed : writeSerialize))
+										.transformWith(ChannelSerializer.create(
+														createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader))
+												.withInitialBufferSize(bufferSize))
+										.transformWith(writeCompress)
+										.transformWith(ChannelFrameEncoder.create(frameFormat))
+										.transformWith(writeChunker)
+										.transformWith(ChannelByteChunker.create(
+												bufferSize.map(bytes -> bytes / 2),
+												bufferSize.map(bytes -> bytes * 2)))
+										.transformWith(writeFile)
+										.streamTo(consumer))
 						.withAcknowledgement(ack -> ack.then(wrapExceptionFn(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e)))));
 	}
 
@@ -224,9 +224,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 				.then(() -> ChannelSupplier.<ByteBuf>of().streamTo(
 						fs.upload(toBackupPath(backupId, null), 0)))
 				.then(wrapExceptionFn(e ->
-						new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e
-						)
-				))
+						new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e)))
 				.whenComplete(promiseBackup.recordStats())
 				.toVoid();
 	}

@@ -77,10 +77,10 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	public static Promise<ChannelFileReader> open(Executor executor, Path path, OpenOption... openOptions) {
 		checkArgument(Arrays.asList(openOptions).contains(READ), "'READ' option is not present");
 		return Promise.ofBlocking(executor,
-				() -> {
-					if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
-					return FileChannel.open(path, openOptions);
-				})
+						() -> {
+							if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
+							return FileChannel.open(path, openOptions);
+						})
 				.map(channel -> create(executor, channel));
 	}
 
@@ -129,12 +129,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 		}
 		ByteBuf buf = ByteBufPool.allocateExact((int) Math.min(bufferSize, limit));
 		return fileService.read(channel, position, buf.array(), buf.head(), buf.writeRemaining()) // reads are synchronized at least on asyncFile, so if produce() is called twice, position wont be broken (i hope)
-				.then((bytesRead, e) -> {
-					if (e != null) {
-						buf.recycle();
-						closeEx(e);
-						return Promise.ofException(getException());
-					}
+				.then(bytesRead -> {
 					if (bytesRead == 0) { // no data read, assuming end of file
 						buf.recycle();
 						close();
@@ -147,6 +142,10 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 						limit -= bytesRead; // bytesRead is always <= the limit (^ see the min call)
 					}
 					return Promise.of(buf);
+				}, e -> {
+					buf.recycle();
+					closeEx(e);
+					return Promise.ofException(getException());
 				});
 	}
 

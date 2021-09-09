@@ -130,12 +130,12 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 
 		byte[] array = buf.getArray();
 		return fileService.write(channel, p, array, 0, array.length)
-				.then(($, e2) -> {
+				.then((n, e2) -> {
 					if (isClosed()) return Promise.ofException(getException());
 					if (e2 != null) {
 						closeEx(e2);
 					}
-					return Promise.of($, e2);
+					return Promise.of(n, e2);
 				})
 				.then(() -> {
 					buf.recycle();

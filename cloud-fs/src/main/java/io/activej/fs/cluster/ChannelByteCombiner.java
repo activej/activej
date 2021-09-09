@@ -89,15 +89,10 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		RefLong inputOffset = new RefLong(0);
 		return Promises.repeat(
 				() -> input.get()
-						.then((buf, e) -> {
-							if (e == null) {
-								return Promise.of(buf);
-							}
-							if (++errorCount == inputs.size()) {
-								return Promise.ofException(e);
-							}
-							return Promise.of(null);
-						})
+						.then(Promise::of, e ->
+								++errorCount == inputs.size() ?
+										Promise.ofException(e) :
+										Promise.of(null))
 						.then(buf -> {
 							if (buf == null) return Promise.of(false);
 							int toSkip = (int) Math.min(outputOffset - inputOffset.value, buf.readRemaining());

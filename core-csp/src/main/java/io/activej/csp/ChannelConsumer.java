@@ -189,15 +189,15 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 			@Override
 			protected Promise<Void> doAccept(T value) {
 				if (consumer != null) return consumer.accept(value);
-				return promise.then((consumer, e) -> {
-					if (e == null) {
-						this.consumer = consumer;
-						return consumer.accept(value);
-					} else {
-						Recyclers.recycle(value);
-						return Promise.ofException(e);
-					}
-				});
+				return promise.then(
+						consumer -> {
+							this.consumer = consumer;
+							return consumer.accept(value);
+						},
+						e -> {
+							Recyclers.recycle(value);
+							return Promise.ofException(e);
+						});
 			}
 
 			@Override
@@ -427,10 +427,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 			protected Promise<Void> doAccept(@Nullable T value) {
 				if (value != null) {
 					return ChannelConsumer.this.accept(value)
-							.then(($, e) -> {
-								if (e == null) {
-									return Promise.complete();
-								}
+							.then(Promise::of, e -> {
 								acknowledgement.trySetException(e);
 								return newAcknowledgement;
 							});

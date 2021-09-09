@@ -213,13 +213,9 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 					String aggregationId = entry.getKey();
 					Set<Object> chunkIds = collectChunkIds(entry.getValue());
 					return ensureLocker(aggregationId).releaseChunks(chunkIds)
-							.then(($, e) -> {
-								if (e != null) {
+							.whenException(e ->
 									logger.warn("Failed to release chunks: {} in aggregation {}",
-											chunkIds, aggregationId, e);
-								}
-								return Promise.complete();
-							});
+											chunkIds, aggregationId, e));
 				}));
 	}
 

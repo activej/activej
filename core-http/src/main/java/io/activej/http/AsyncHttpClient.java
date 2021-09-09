@@ -451,21 +451,19 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		assert host != null;
 
 		return asyncDnsClient.resolve4(host)
-				.then((dnsResponse, e) -> {
-					if (e == null) {
-						if (inspector != null) inspector.onResolve(request, dnsResponse);
-						if (dnsResponse.isSuccessful()) {
-							//noinspection ConstantConditions - dnsResponse is successful (not null)
-							return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
-						} else {
-							request.recycleBody();
-							return Promise.ofException(new HttpException(new DnsQueryException(dnsResponse)));
-						}
+				.then(dnsResponse -> {
+					if (inspector != null) inspector.onResolve(request, dnsResponse);
+					if (dnsResponse.isSuccessful()) {
+						//noinspection ConstantConditions - dnsResponse is successful (not null)
+						return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
 					} else {
-						if (inspector != null) inspector.onResolveError(request, e);
 						request.recycleBody();
-						return Promise.ofException(translateToHttpException(e));
+						return Promise.ofException(new HttpException(new DnsQueryException(dnsResponse)));
 					}
+				}, e -> {
+					if (inspector != null) inspector.onResolveError(request, e);
+					request.recycleBody();
+					return Promise.ofException(translateToHttpException(e));
 				});
 	}
 
@@ -491,40 +489,38 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		if (inspector != null) inspector.onConnecting(request, address);
 
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
-				.then((asyncTcpSocketImpl, e) -> {
-					if (e == null) {
-						AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
-						if (socketInspector != null) {
-							socketInspector.onConnect(asyncTcpSocketImpl);
-							asyncTcpSocketImpl.setInspector(socketInspector);
-						}
-
-						String host = request.getUrl().getHost();
-						assert host != null;
-
-						AsyncTcpSocket asyncTcpSocket = isSecure ?
-								wrapClientSocket(asyncTcpSocketImpl,
-										host, request.getUrl().getPort(),
-										sslContext, sslExecutor) :
-								asyncTcpSocketImpl;
-
-						HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
-
-						if (inspector != null) inspector.onConnect(request, connection);
-
-						if (expiredConnectionsCheck == null)
-							scheduleExpiredConnectionsCheck();
-
-						if (isWebSocket) {
-							return connection.sendWebSocketRequest(request);
-						} else {
-							return connection.send(request);
-						}
-					} else {
-						if (inspector != null) inspector.onConnectError(request, address, e);
-						request.recycleBody();
-						return Promise.ofException(translateToHttpException(e));
+				.then(asyncTcpSocketImpl -> {
+					AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
+					if (socketInspector != null) {
+						socketInspector.onConnect(asyncTcpSocketImpl);
+						asyncTcpSocketImpl.setInspector(socketInspector);
 					}
+
+					String host = request.getUrl().getHost();
+					assert host != null;
+
+					AsyncTcpSocket asyncTcpSocket = isSecure ?
+							wrapClientSocket(asyncTcpSocketImpl,
+									host, request.getUrl().getPort(),
+									sslContext, sslExecutor) :
+							asyncTcpSocketImpl;
+
+					HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
+
+					if (inspector != null) inspector.onConnect(request, connection);
+
+					if (expiredConnectionsCheck == null)
+						scheduleExpiredConnectionsCheck();
+
+					if (isWebSocket) {
+						return connection.sendWebSocketRequest(request);
+					} else {
+						return connection.send(request);
+					}
+				}, e -> {
+					if (inspector != null) inspector.onConnectError(request, address, e);
+					request.recycleBody();
+					return Promise.ofException(translateToHttpException(e));
 				});
 	}
 

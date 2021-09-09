@@ -210,14 +210,13 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 							});
 
 					return timeout(timeout, promise)
-							.then((queryResult, e) -> {
-								if (e == null) {
-									if (inspector != null) {
-										inspector.onDnsQueryResult(query, queryResult);
-									}
-									logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
-									return Promise.of(queryResult);
+							.then(queryResult -> {
+								if (inspector != null) {
+									inspector.onDnsQueryResult(query, queryResult);
 								}
+								logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
+								return Promise.of(queryResult);
+							}, e -> {
 								if (e instanceof AsyncTimeoutException) {
 									if (inspector != null) {
 										inspector.onDnsQueryExpiration(query);

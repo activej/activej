@@ -164,28 +164,21 @@ public final class StaticServlet implements AsyncServlet {
 										return Promise.of(value, e);
 									}
 								}))
-				.then((response, e) -> {
-					if (e == null) {
-						return Promise.of(response);
-					} else if (e instanceof ResourceNotFoundException) {
-						return tryLoadDefaultResource();
-					} else {
-						return Promise.ofException(HttpError.ofCode(400, e));
-					}
-				});
+				.then(Promise::of, e ->
+						e instanceof ResourceNotFoundException ?
+								tryLoadDefaultResource() :
+								Promise.ofException(HttpError.ofCode(400, e)));
 	}
 
 	@NotNull
 	private Promise<HttpResponse> tryLoadIndexResource(String mappedPath) {
 		String dirPath = mappedPath.endsWith("/") || mappedPath.isEmpty() ? mappedPath : (mappedPath + '/');
 		return Promises.first(
-				indexResources.stream()
-						.map(indexResource -> AsyncSupplier.of(() ->
-								resourceLoader.load(dirPath + indexResource)
-										.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource))))))
-				.then(((response, e) -> e == null ?
-						Promise.of(response) :
-						Promise.ofException(new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e))));
+						indexResources.stream()
+								.map(indexResource -> AsyncSupplier.of(() ->
+										resourceLoader.load(dirPath + indexResource)
+												.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource))))))
+				.then(Promise::of, e -> Promise.ofException(new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e)));
 	}
 
 	@NotNull

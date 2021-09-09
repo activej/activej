@@ -181,12 +181,11 @@ public final class RedisClient {
 		return connect()
 				.then(connection ->
 						connection.cmd(RedisRequest.of(args), RedisResponse.OK)
-								.then(($, e) -> {
-									if (e == null) return Promise.of(connection);
-
-									connection.close();
-									return Promise.ofException(e);
-								}));
+								.then($ -> Promise.of(connection),
+										e -> {
+											connection.close();
+											return Promise.ofException(e);
+										}));
 	}
 
 	@Override
