@@ -1435,10 +1435,9 @@ public class BinarySerializerTest {
 		@Serialize
 		public Set<TestEnum> set;
 
-		@Nullable
 		@Serialize
 		@SerializeNullable
-		public Set<TestEnum> setNullable;
+		public @Nullable Set<TestEnum> setNullable;
 	}
 
 	@Test

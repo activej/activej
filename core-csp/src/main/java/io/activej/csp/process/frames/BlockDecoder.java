@@ -45,10 +45,9 @@ public interface BlockDecoder {
 	 * If this method returns {@link #END_OF_STREAM} it indicates that end of stream has been reached
 	 * and no more data is expected.
 	 * @throws UnknownFormatException if data is encoded using unknown format
-	 * @throws MalformedDataException         if data is malformed
+	 * @throws MalformedDataException if data is malformed
 	 */
-	@Nullable
-	ByteBuf decode(ByteBufs bufs) throws MalformedDataException;
+	@Nullable ByteBuf decode(ByteBufs bufs) throws MalformedDataException;
 
 	/**
 	 * Attempts to reset some internal state of decoder.

@@ -37,8 +37,7 @@ final class ByteBufConcurrentQueue {
 
 	final AtomicInteger realMin = new AtomicInteger(0);
 
-	@Nullable
-	public ByteBuf poll() {
+	public @Nullable ByteBuf poll() {
 		long pos1, pos2;
 		int head, tail;
 		do {

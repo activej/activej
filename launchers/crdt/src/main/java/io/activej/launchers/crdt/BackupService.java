@@ -32,8 +32,7 @@ public final class BackupService<K extends Comparable<K>, S> implements Eventloo
 
 	private long lastTimestamp = 0;
 
-	@Nullable
-	private Promise<Void> backupPromise = null;
+	private @Nullable Promise<Void> backupPromise = null;
 
 	public BackupService(CrdtStorageMap<K, S> inMemory, CrdtStorageFs<K, S> localFiles) {
 		this.inMemory = inMemory;

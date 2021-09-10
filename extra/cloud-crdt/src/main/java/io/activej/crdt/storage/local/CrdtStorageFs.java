@@ -292,8 +292,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	static class CrdtReducingData<K extends Comparable<K>, S> {
 		final K key;
-		@Nullable
-		final S state;
+		final @Nullable S state;
 		final long timestamp;
 
 		CrdtReducingData(K key, @Nullable S state, long timestamp) {
@@ -304,8 +303,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	}
 
 	static class CrdtAccumulator<S> {
-		@Nullable
-		S state;
+		@Nullable S state;
 		long maxAppendTimestamp;
 		long maxRemoveTimestamp;
 

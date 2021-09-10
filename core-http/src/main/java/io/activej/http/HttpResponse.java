@@ -117,8 +117,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	private final int code;
 	private final HttpClientConnection connection;
 
-	@Nullable
-	private Map<String, HttpCookie> parsedCookies;
+	private @Nullable Map<String, HttpCookie> parsedCookies;
 
 	// region creators
 	HttpResponse(HttpVersion version, int code, @Nullable HttpClientConnection connection) {
@@ -393,8 +392,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		return parsedCookies = cookies;
 	}
 
-	@Nullable
-	public HttpCookie getCookie(@NotNull String cookie) {
+	public @Nullable HttpCookie getCookie(@NotNull String cookie) {
 		if (CHECK) checkState(!isRecycled());
 		return getCookies().get(cookie);
 	}

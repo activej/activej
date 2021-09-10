@@ -61,8 +61,7 @@ public final class LWWSet<E> implements Set<E>, CrdtType<LWWSet<E>> {
 	}
 
 	@Override
-	@Nullable
-	public LWWSet<E> extract(long timestamp) {
+	public @Nullable LWWSet<E> extract(long timestamp) {
 		Map<E, Timestamps> newSet = set.entrySet().stream()
 				.filter(entry -> entry.getValue().added > timestamp || entry.getValue().removed > timestamp)
 				.collect(toMap(Entry::getKey, Entry::getValue));

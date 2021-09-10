@@ -22,8 +22,8 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.BiFunctionEx;
-import io.activej.common.function.SupplierEx;
 import io.activej.common.function.RunnableEx;
+import io.activej.common.function.SupplierEx;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
@@ -562,8 +562,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		});
 	}
 
-	@Nullable
-	private FileMetadata toFileMetadata(Path path) throws FsIOException {
+	private @Nullable FileMetadata toFileMetadata(Path path) throws FsIOException {
 		try {
 			return LocalFileUtils.toFileMetadata(path);
 		} catch (IOException e) {

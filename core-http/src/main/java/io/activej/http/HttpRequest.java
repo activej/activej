@@ -219,8 +219,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return url;
 	}
 
-	@Nullable
-	public String getHostAndPort() {
+	public @Nullable String getHostAndPort() {
 		if (CHECK) checkState(!isRecycled());
 		return url.getHostAndPort();
 	}
@@ -237,8 +236,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return url.getPathAndQuery();
 	}
 
-	@Nullable
-	private Map<String, String> parsedCookies;
+	private @Nullable Map<String, String> parsedCookies;
 
 	@NotNull
 	public Map<String, String> getCookies() {
@@ -257,8 +255,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return connection;
 	}
 
-	@Nullable
-	public String getCookie(@NotNull String cookie) {
+	public @Nullable String getCookie(@NotNull String cookie) {
 		if (CHECK) checkState(!isRecycled());
 		return getCookies().get(cookie);
 	}
@@ -285,8 +282,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return queryParameters;
 	}
 
-	@Nullable
-	public String getQueryParameter(@NotNull String key) {
+	public @Nullable String getQueryParameter(@NotNull String key) {
 		if (CHECK) checkState(!isRecycled());
 		return url.getQueryParameter(key);
 	}
@@ -303,8 +299,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return url.getQueryParametersIterable();
 	}
 
-	@Nullable
-	public String getPostParameter(String name) {
+	public @Nullable String getPostParameter(String name) {
 		if (CHECK) checkState(!isRecycled());
 		return getPostParameters().get(name);
 	}

@@ -297,8 +297,7 @@ public final class Utils {
 						(v1, v2) -> {throw new AssertionError();}, LinkedHashMap::new));
 	}
 
-	@Nullable
-	public static Type match(Type type, Collection<Type> patterns) {
+	public static @Nullable Type match(Type type, Collection<Type> patterns) {
 		Type best = null;
 		for (Type found : patterns) {
 			if (isAssignable(found, type)) {

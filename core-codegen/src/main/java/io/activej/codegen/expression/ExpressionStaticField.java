@@ -30,8 +30,7 @@ import static java.lang.String.format;
 import static org.objectweb.asm.Type.getType;
 
 final class ExpressionStaticField implements Variable {
-	@Nullable
-	private final Class<?> owner;
+	private final @Nullable Class<?> owner;
 	private final String name;
 
 	ExpressionStaticField(@Nullable Class<?> owner, String name) {

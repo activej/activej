@@ -39,9 +39,8 @@ public interface DiffsReducer<A, D> {
 
 	static <A, D> DiffsReducer<A, D> of(@Nullable A initialValue, BiFunction<A, List<? extends D>, A> reduceFunction, BinaryOperator<A> combiner) {
 		return new DiffsReducer<A, D>() {
-			@Nullable
 			@Override
-			public A initialValue() {
+			public @Nullable A initialValue() {
 				return initialValue;
 			}
 

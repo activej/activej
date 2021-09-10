@@ -19,8 +19,7 @@ import static io.activej.dataflow.dataset.DatasetUtils.generateIndexes;
 public final class DatasetRepartition<T, K> extends Dataset<T> {
 	private final Dataset<T> input;
 	private final Function<T, K> keyFunction;
-	@Nullable
-	private final List<Partition> partitions;
+	private final @Nullable List<Partition> partitions;
 
 	public DatasetRepartition(Dataset<T> input, Function<T, K> keyFunction, @Nullable List<Partition> partitions) {
 		super(input.valueType());

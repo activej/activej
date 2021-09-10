@@ -91,8 +91,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 			private final K uplinkCommitId;
 			private final long uplinkLevel;
 			private final List<D> uplinkDiffs;
-			@Nullable
-			private final Object protoCommit;
+			private final @Nullable Object protoCommit;
 
 			public SyncData(long id, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs, @Nullable Object protoCommit) {
 				this.commitId = id;
@@ -118,8 +117,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 				return uplinkDiffs;
 			}
 
-			@Nullable
-			public Object getProtoCommit() {
+			public @Nullable Object getProtoCommit() {
 				return protoCommit;
 			}
 

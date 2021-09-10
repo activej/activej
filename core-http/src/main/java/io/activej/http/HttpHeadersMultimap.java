@@ -63,10 +63,9 @@ final class HttpHeadersMultimap<K, V> {
 		}
 	}
 
-	@Nullable
 	@Contract(pure = true)
 	@SuppressWarnings("unchecked")
-	public V get(@NotNull K key) {
+	public @Nullable V get(@NotNull K key) {
 		for (int i = key.hashCode() & (kvPairs.length - 2); ; i = (i + 2) & (kvPairs.length - 2)) {
 			K k = (K) kvPairs[i];
 			if (k == null) {

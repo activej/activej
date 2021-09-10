@@ -32,8 +32,7 @@ import static io.activej.csp.binary.Utils.decodeUntilTerminatorByte;
 @FunctionalInterface
 public interface ByteBufsDecoder<T> {
 
-	@Nullable
-	T tryDecode(ByteBufs bufs) throws MalformedDataException;
+	@Nullable T tryDecode(ByteBufs bufs) throws MalformedDataException;
 
 	default <V> ByteBufsDecoder<V> andThen(DecoderFunction<? super T, ? extends V> after) {
 		return bufs -> {

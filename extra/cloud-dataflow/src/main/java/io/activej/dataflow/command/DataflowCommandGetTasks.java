@@ -19,15 +19,13 @@ package io.activej.dataflow.command;
 import org.jetbrains.annotations.Nullable;
 
 public final class DataflowCommandGetTasks extends DataflowCommand {
-	@Nullable
-	private final Long taskId;
+	private final @Nullable Long taskId;
 
 	public DataflowCommandGetTasks(@Nullable Long taskId) {
 		this.taskId = taskId;
 	}
 
-	@Nullable
-	public Long getTaskId() {
+	public @Nullable Long getTaskId() {
 		return taskId;
 	}
 

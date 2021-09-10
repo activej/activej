@@ -227,8 +227,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 
 	private static class PickedChunks {
 		private final PickingStrategy strategy;
-		@Nullable
-		private final RangeTree<PrimaryKey, AggregationChunk> partitionTree;
+		private final @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree;
 		private final List<AggregationChunk> chunks;
 
 		public PickedChunks(PickingStrategy strategy, @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree,

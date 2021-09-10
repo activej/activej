@@ -180,10 +180,8 @@ public interface WebSocket extends AsyncCloseable {
 	 */
 	final class Message implements Recyclable {
 		private final MessageType type;
-		@Nullable
-		private final ByteBuf binaryPayload;
-		@Nullable
-		private final String textPayload;
+		private final @Nullable ByteBuf binaryPayload;
+		private final @Nullable String textPayload;
 
 		Message(MessageType type, @Nullable ByteBuf binaryPayload, @Nullable String textPayload) {
 			this.type = type;

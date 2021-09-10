@@ -395,38 +395,32 @@ public abstract class Launcher {
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Instant getInstantOfLaunch() {
+	public final @Nullable Instant getInstantOfLaunch() {
 		return instantOfLaunch;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Instant getInstantOfStart() {
+	public final @Nullable Instant getInstantOfStart() {
 		return instantOfStart;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Instant getInstantOfRun() {
+	public final @Nullable Instant getInstantOfRun() {
 		return instantOfRun;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Instant getInstantOfStop() {
+	public final @Nullable Instant getInstantOfStop() {
 		return instantOfStop;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Instant getInstantOfComplete() {
+	public final @Nullable Instant getInstantOfComplete() {
 		return instantOfComplete;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Duration getDurationOfStart() {
+	public final @Nullable Duration getDurationOfStart() {
 		if (instantOfLaunch == null) {
 			return null;
 		}
@@ -434,8 +428,7 @@ public abstract class Launcher {
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Duration getDurationOfRun() {
+	public final @Nullable Duration getDurationOfRun() {
 		if (instantOfRun == null) {
 			return null;
 		}
@@ -443,8 +436,7 @@ public abstract class Launcher {
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Duration getDurationOfStop() {
+	public final @Nullable Duration getDurationOfStop() {
 		if (instantOfStop == null) {
 			return null;
 		}
@@ -452,8 +444,7 @@ public abstract class Launcher {
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Duration getDuration() {
+	public final @Nullable Duration getDuration() {
 		if (instantOfLaunch == null) {
 			return null;
 		}
@@ -461,8 +452,7 @@ public abstract class Launcher {
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final Throwable getApplicationError() {
+	public final @Nullable Throwable getApplicationError() {
 		return applicationError;
 	}
 }

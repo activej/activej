@@ -26,8 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 
 public final class StreamStatsDetailed<T> extends StreamStatsBasic<T> implements JmxStatsWithReset {
-	@Nullable
-	private final StreamStatsSizeCounter<Object> sizeCounter;
+	private final @Nullable StreamStatsSizeCounter<Object> sizeCounter;
 
 	private long count;
 	private long totalSize;
@@ -63,14 +62,12 @@ public final class StreamStatsDetailed<T> extends StreamStatsBasic<T> implements
 	}
 
 	@JmxAttribute(reducer = JmxReducerSum.class)
-	@Nullable
-	public Long getTotalSize() {
+	public @Nullable Long getTotalSize() {
 		return sizeCounter != null ? totalSize : null;
 	}
 
 	@JmxAttribute(reducer = JmxReducerSum.class)
-	@Nullable
-	public Long getTotalSizeAvg() {
+	public @Nullable Long getTotalSizeAvg() {
 		return sizeCounter != null && getStarted().getTotalCount() != 0 ?
 				totalSize / getStarted().getTotalCount() :
 				null;

@@ -52,8 +52,7 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 	private int addedStats;
 
 	// formatting
-	@Nullable
-	private String rateUnit;
+	private @Nullable String rateUnit;
 	private int precision = 1000;
 
 	// region builders

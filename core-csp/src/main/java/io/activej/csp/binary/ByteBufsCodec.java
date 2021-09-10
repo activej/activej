@@ -27,8 +27,7 @@ import java.util.function.Function;
 public interface ByteBufsCodec<I, O> {
 	ByteBuf encode(O item);
 
-	@Nullable
-	I tryDecode(ByteBufs bufs) throws MalformedDataException;
+	@Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException;
 
 	@NotNull
 	default <I1, O1> ByteBufsCodec<I1, O1> andThen(DecoderFunction<? super I, ? extends I1> decoder, Function<? super O1, ? extends O> encoder) {
@@ -38,9 +37,8 @@ public interface ByteBufsCodec<I, O> {
 				return ByteBufsCodec.this.encode(encoder.apply(item));
 			}
 
-			@Nullable
 			@Override
-			public I1 tryDecode(ByteBufs bufs) throws MalformedDataException {
+			public @Nullable I1 tryDecode(ByteBufs bufs) throws MalformedDataException {
 				I maybeResult = ByteBufsCodec.this.tryDecode(bufs);
 				if (maybeResult == null) return null;
 				return decoder.decode(maybeResult);
@@ -56,9 +54,8 @@ public interface ByteBufsCodec<I, O> {
 				return delimiterOut.apply(buf);
 			}
 
-			@Nullable
 			@Override
-			public ByteBuf tryDecode(ByteBufs bufs) throws MalformedDataException {
+			public @Nullable ByteBuf tryDecode(ByteBufs bufs) throws MalformedDataException {
 				return delimiterIn.tryDecode(bufs);
 			}
 		};

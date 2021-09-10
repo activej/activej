@@ -719,8 +719,7 @@ public final class Specializer {
 			g.mark(labelExit);
 		}
 
-		@Nullable
-		String lookupField(Class<?> owner, String field) {
+		@Nullable String lookupField(Class<?> owner, String field) {
 			java.lang.reflect.Field result = null;
 			for (java.lang.reflect.Field originalField : specializedFields.keySet()) {
 				if (true &&
@@ -734,8 +733,7 @@ public final class Specializer {
 			return specializedFields.get(result);
 		}
 
-		@Nullable
-		String lookupMethod(Class<?> owner, Method method) {
+		@Nullable String lookupMethod(Class<?> owner, Method method) {
 			java.lang.reflect.Method result = null;
 			for (java.lang.reflect.Method originalMethod : specializedMethods.keySet()) {
 				if (true &&

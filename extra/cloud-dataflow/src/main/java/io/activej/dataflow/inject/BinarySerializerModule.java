@@ -65,8 +65,7 @@ public final class BinarySerializerModule extends AbstractModule {
 
 	public static final class BinarySerializerLocator {
 		private final Map<Class<?>, BinarySerializer<?>> serializers = new HashMap<>();
-		@Nullable
-		private SerializerBuilder builder = null;
+		private @Nullable SerializerBuilder builder = null;
 
 		@SuppressWarnings("unchecked")
 		public <T> BinarySerializer<T> get(Class<T> cls) {

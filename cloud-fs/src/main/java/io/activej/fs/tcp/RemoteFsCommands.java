@@ -32,8 +32,7 @@ public final class RemoteFsCommands {
 	@CompiledJson
 	public static final class Upload extends FsCommand {
 		private final String name;
-		@Nullable
-		private final Long size;
+		private final @Nullable Long size;
 
 		public Upload(String name, @Nullable Long size) {
 			this.name = name;

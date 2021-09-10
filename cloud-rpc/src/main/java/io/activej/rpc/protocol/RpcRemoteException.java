@@ -23,10 +23,8 @@ import org.jetbrains.annotations.Nullable;
 
 public final class RpcRemoteException extends RpcException implements RpcMandatoryData {
 	private static final long serialVersionUID = 769022174067373741L;
-	@Nullable
-	private final String causeMessage;
-	@Nullable
-	private final String causeClassName;
+	private final @Nullable String causeMessage;
+	private final @Nullable String causeClassName;
 
 	public RpcRemoteException(Throwable cause) {
 		super(cause.toString(), cause);
@@ -50,17 +48,15 @@ public final class RpcRemoteException extends RpcException implements RpcMandato
 		this.causeMessage = causeMessage;
 	}
 
-	@Nullable
 	@Serialize(order = 1)
 	@SerializeNullable
-	public String getCauseClassName() {
+	public @Nullable String getCauseClassName() {
 		return causeClassName;
 	}
 
-	@Nullable
 	@Serialize(order = 2)
 	@SerializeNullable
-	public String getCauseMessage() {
+	public @Nullable String getCauseMessage() {
 		return causeMessage;
 	}
 

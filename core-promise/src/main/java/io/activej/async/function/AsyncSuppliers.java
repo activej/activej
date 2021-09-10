@@ -32,8 +32,7 @@ public final class AsyncSuppliers {
 	@NotNull
 	public static <T> AsyncSupplier<T> reuse(@NotNull AsyncSupplier<? extends T> actual) {
 		return new AsyncSupplier<T>() {
-			@Nullable
-			Promise<T> runningPromise;
+			@Nullable Promise<T> runningPromise;
 
 			@NotNull
 			@SuppressWarnings("unchecked")

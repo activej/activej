@@ -44,13 +44,11 @@ public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
 	private final Executor executor;
 	private final Path path;
 
-	@Nullable
-	private SettablePromise<ByteBuf> take;
+	private @Nullable SettablePromise<ByteBuf> take;
 
 	private boolean finished = false;
 
-	@Nullable
-	private Exception exception;
+	private @Nullable Exception exception;
 
 	private ChannelFileBuffer(ChannelFileReader reader, ChannelFileWriter writer, Executor executor, Path path) {
 		this.reader = reader;
@@ -151,8 +149,7 @@ public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
 		});
 	}
 
-	@Nullable
-	public Exception getException() {
+	public @Nullable Exception getException() {
 		return exception;
 	}
 }

@@ -50,9 +50,8 @@ public final class RpcStrategySharding implements RpcStrategy {
 		return list.getDiscoveryService();
 	}
 
-	@Nullable
 	@Override
-	public RpcSender createSender(RpcClientConnectionPool pool) {
+	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
 		List<RpcSender> subSenders = list.listOfNullableSenders(pool);
 		int activeSenders = 0;
 		for (RpcSender subSender : subSenders) {

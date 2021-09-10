@@ -32,8 +32,7 @@ public final class UdpPacket {
 	/**
 	 * The data buffer to send
 	 */
-	@Nullable
-	private ByteBuf buf;
+	private @Nullable ByteBuf buf;
 	/**
 	 * The address to which the packet should be sent or from which it
 	 * was received.

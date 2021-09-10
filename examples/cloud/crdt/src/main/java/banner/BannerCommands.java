@@ -46,8 +46,7 @@ public class BannerCommands {
 	}
 
 	public static final class GetResponse {
-		@Nullable
-		private final Set<Integer> bannerIds;
+		private final @Nullable Set<Integer> bannerIds;
 
 		public GetResponse(@Deserialize("bannerIds") @Nullable Set<Integer> bannerIds) {
 			this.bannerIds = bannerIds;
@@ -55,8 +54,7 @@ public class BannerCommands {
 
 		@Serialize
 		@SerializeNullable
-		@Nullable
-		public Set<Integer> getBannerIds() {
+		public @Nullable Set<Integer> getBannerIds() {
 			return bannerIds;
 		}
 	}

@@ -25,8 +25,7 @@ import java.util.Objects;
 public final class KeyWithWorkerData {
 	private final Key<?> key;
 
-	@Nullable
-	private final WorkerPool pool;
+	private final @Nullable WorkerPool pool;
 	private final int workerId;
 
 	public KeyWithWorkerData(Key<?> key) {
@@ -43,8 +42,7 @@ public final class KeyWithWorkerData {
 		return key;
 	}
 
-	@Nullable
-	public WorkerPool getPool() {
+	public @Nullable WorkerPool getPool() {
 		return pool;
 	}
 

@@ -31,11 +31,9 @@ public final class Either<L, R> {
 		});
 	}
 
-	@Nullable
-	private final L left;
+	private final @Nullable L left;
 
-	@Nullable
-	private final R right;
+	private final @Nullable R right;
 
 	private final boolean isRight; // so that this either supports nulls
 
@@ -64,14 +62,12 @@ public final class Either<L, R> {
 	}
 
 	@Contract(pure = true)
-	@Nullable
-	public L getLeft() {
+	public @Nullable L getLeft() {
 		return left;
 	}
 
 	@Contract(pure = true)
-	@Nullable
-	public R getRight() {
+	public @Nullable R getRight() {
 		return right;
 	}
 

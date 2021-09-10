@@ -51,9 +51,8 @@ public interface Config {
 	 * Empty config with no values, children, etc...
 	 */
 	Config EMPTY = new Config() {
-		@Nullable
 		@Override
-		public String getValue(@Nullable String defaultValue) {
+		public @Nullable String getValue(@Nullable String defaultValue) {
 			return defaultValue;
 		}
 
@@ -462,9 +461,8 @@ public interface Config {
 			}
 			Map<String, Config> map = singletonMap(key, config);
 			config = new Config() {
-				@Nullable
 				@Override
-				public String getValue(@Nullable String defaultValue) {
+				public @Nullable String getValue(@Nullable String defaultValue) {
 					return defaultValue;
 				}
 
@@ -498,9 +496,8 @@ public interface Config {
 		otherChildren.forEach((key, otherChild) -> children.merge(key, otherChild, Config::overrideWith));
 		Map<String, Config> finalChildren = unmodifiableMap(children);
 		return new Config() {
-			@Nullable
 			@Override
-			public String getValue(@Nullable String defaultValue) {
+			public @Nullable String getValue(@Nullable String defaultValue) {
 				return nonNullElse(value, defaultValue);
 			}
 

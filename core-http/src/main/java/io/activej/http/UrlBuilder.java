@@ -30,20 +30,15 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class UrlBuilder {
 
-	@Nullable
-	private final String scheme;
+	private final @Nullable String scheme;
 
 	private final List<String> path = new LinkedList<>();
 	private final Map<String, String> query = new LinkedHashMap<>();
 
-	@Nullable
-	private String userInfo;
-	@Nullable
-	private String host;
-	@Nullable
-	private String port;
-	@Nullable
-	private String fragment;
+	private @Nullable String userInfo;
+	private @Nullable String host;
+	private @Nullable String port;
+	private @Nullable String fragment;
 
 	private UrlBuilder(@Nullable String scheme) {
 		this.scheme = scheme;

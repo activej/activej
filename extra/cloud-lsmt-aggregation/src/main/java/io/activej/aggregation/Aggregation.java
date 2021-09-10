@@ -648,15 +648,13 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		this.maxChunksToConsolidate = maxChunksToConsolidate;
 	}
 
-	@Nullable
 	@JmxAttribute
-	public Integer getConsolidationSeconds() {
+	public @Nullable Integer getConsolidationSeconds() {
 		return consolidationStarted == 0 ? null : (int) ((eventloop.currentTimeMillis() - consolidationStarted) / 1000);
 	}
 
-	@Nullable
 	@JmxAttribute
-	public Integer getConsolidationLastTimeSeconds() {
+	public @Nullable Integer getConsolidationLastTimeSeconds() {
 		return consolidationLastTimeMillis == 0 ? null : (int) (consolidationLastTimeMillis / 1000);
 	}
 

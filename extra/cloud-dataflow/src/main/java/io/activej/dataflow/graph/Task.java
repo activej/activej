@@ -62,15 +62,11 @@ public final class Task {
 
 	private TaskStatus status = TaskStatus.RUNNING;
 
-	@Nullable
-	private Instant started;
-	@Nullable
-	private Instant finished;
-	@Nullable
-	private Exception error;
+	private @Nullable Instant started;
+	private @Nullable Instant finished;
+	private @Nullable Exception error;
 
-	@Nullable
-	private List<Promise<Void>> currentNodeAcks;
+	private @Nullable List<Promise<Void>> currentNodeAcks;
 
 	public Task(long taskId, ResourceLocator environment, List<Node> nodes) {
 		this.taskId = taskId;
@@ -121,21 +117,21 @@ public final class Task {
 	public Promise<Void> execute() {
 		started = Instant.now();
 		return Promises.all(suppliers.entrySet().stream().map(supplierEntry -> {
-			StreamId streamId = supplierEntry.getKey();
-			try {
-				StreamSupplier<Object> supplier = (StreamSupplier<Object>) supplierEntry.getValue();
-				StreamConsumer<Object> consumer = (StreamConsumer<Object>) consumers.get(streamId);
-				checkNotNull(supplier, "Supplier not found for %s, consumer %s", streamId, consumer);
-				checkNotNull(consumer, "Consumer not found for %s, supplier %s", streamId, supplier);
+					StreamId streamId = supplierEntry.getKey();
+					try {
+						StreamSupplier<Object> supplier = (StreamSupplier<Object>) supplierEntry.getValue();
+						StreamConsumer<Object> consumer = (StreamConsumer<Object>) consumers.get(streamId);
+						checkNotNull(supplier, "Supplier not found for %s, consumer %s", streamId, consumer);
+						checkNotNull(consumer, "Consumer not found for %s, supplier %s", streamId, supplier);
 
-				return supplier.streamTo(consumer);
-			} catch (Exception e) {
-				return Promise.ofException(new DataflowException(e));
-			}
-		}).collect(toList()))
+						return supplier.streamTo(consumer);
+					} catch (Exception e) {
+						return Promise.ofException(new DataflowException(e));
+					}
+				}).collect(toList()))
 				.whenComplete(($, e) -> {
 					finished = Instant.now();
-					if (e != null && !(e instanceof DataflowException)){
+					if (e != null && !(e instanceof DataflowException)) {
 						error = new DataflowException(e);
 					} else {
 						error = e;
@@ -166,18 +162,15 @@ public final class Task {
 		return status;
 	}
 
-	@Nullable
-	public Instant getStartTime() {
+	public @Nullable Instant getStartTime() {
 		return started;
 	}
 
-	@Nullable
-	public Instant getFinishTime() {
+	public @Nullable Instant getFinishTime() {
 		return finished;
 	}
 
-	@Nullable
-	public Exception getError() {
+	public @Nullable Exception getError() {
 		return error;
 	}
 

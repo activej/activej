@@ -31,8 +31,7 @@ public class FieldType<T> {
 	private final Class<?> internalDataType;
 	private final Type dataType;
 	private final SerializerDef serializer;
-	@Nullable
-	private final JsonCodec<?> internalCodec;
+	private final @Nullable JsonCodec<?> internalCodec;
 	private final JsonCodec<T> codec;
 
 	protected FieldType(Class<T> dataType, SerializerDef serializer, JsonCodec<T> codec) {
@@ -63,8 +62,7 @@ public class FieldType<T> {
 		return internalValue;
 	}
 
-	@Nullable
-	public JsonCodec<?> getInternalCodec() {
+	public @Nullable JsonCodec<?> getInternalCodec() {
 		return internalCodec;
 	}
 

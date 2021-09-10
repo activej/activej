@@ -95,13 +95,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("upgrade"));
 	static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.ofBytes(encodeAscii("websocket"));
 
-	@Nullable
-	private SettablePromise<HttpResponse> promise;
-	@Nullable
-	private HttpResponse response;
+	private @Nullable SettablePromise<HttpResponse> promise;
+	private @Nullable HttpResponse response;
 	private final AsyncHttpClient client;
-	@Nullable
-	private final Inspector inspector;
+	private final @Nullable Inspector inspector;
 
 	final InetSocketAddress remoteAddress;
 	@Nullable HttpClientConnection addressPrev;

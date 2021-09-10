@@ -46,10 +46,8 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 	private final int bufferMinSize;
 	private final int bufferMaxSize;
 
-	@Nullable
-	private SettablePromise<Void> put;
-	@Nullable
-	private SettablePromise<T> take;
+	private @Nullable SettablePromise<Void> put;
+	private @Nullable SettablePromise<T> take;
 
 	/**
 	 * @see #ChannelBuffer(int, int)
@@ -183,8 +181,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 	 * @throws Exception if current {@code exception}
 	 *                   is not {@code null}
 	 */
-	@Nullable
-	public T poll() throws Exception {
+	public @Nullable T poll() throws Exception {
 		if (exception != null) throw exception;
 
 		if (put != null && willBeExhausted()) {
@@ -314,8 +311,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 		elements = null;
 	}
 
-	@Nullable
-	public Exception getException() {
+	public @Nullable Exception getException() {
 		return exception;
 	}
 }

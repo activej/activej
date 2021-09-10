@@ -37,6 +37,7 @@ public interface Node {
 	 * When the graph is spread over the cluster, nodes with the
 	 * same index on multiple partitions are the ones that were
 	 * compiled from the same dataset.
+	 *
 	 * @return index of the node that is unique in the partition scope
 	 */
 	int getIndex();
@@ -75,18 +76,15 @@ public interface Node {
 	 * Returns a point in time when this node instance finished processing data.
 	 * Must return null if node did not finish processing yet.
 	 */
-	@Nullable
-	Instant getFinished();
+	@Nullable Instant getFinished();
 
 	/**
 	 * If this node caused the task to fail, returns the exception that caused it.
 	 */
-	@Nullable
-	Exception getError();
+	@Nullable Exception getError();
 
 	/**
 	 * Optionally return some custom node statistics for debugging.
 	 */
-	@Nullable
-	NodeStat getStats();
+	@Nullable NodeStat getStats();
 }

@@ -131,8 +131,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		parameters.forEach((route, subtree) -> subtree.visit(prefix + ":" + route + "/", visitor));
 	}
 
-	@Nullable
-	public RoutingServlet getSubtree(String path) {
+	public @Nullable RoutingServlet getSubtree(String path) {
 		return getOrCreateSubtree(path, (servlet, name) ->
 				name.startsWith(":") ?
 						servlet.parameters.get(name.substring(1)) :
@@ -176,8 +175,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		servlets[ordinal] = servlet;
 	}
 
-	@Nullable
-	private Promise<HttpResponse> tryServe(HttpRequest request) throws Exception {
+	private @Nullable Promise<HttpResponse> tryServe(HttpRequest request) throws Exception {
 		int introPosition = request.getPos();
 		String urlPart = request.pollUrlPart();
 		Protocol protocol = request.getProtocol();
@@ -288,8 +286,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 				}));
 	}
 
-	@Nullable
-	private static AsyncServlet getOrDefault(AsyncServlet[] servlets, int ordinal) {
+	private static @Nullable AsyncServlet getOrDefault(AsyncServlet[] servlets, int ordinal) {
 		AsyncServlet maybeResult = servlets[ordinal];
 		if (maybeResult != null || ordinal == WS_ORDINAL) {
 			return maybeResult;

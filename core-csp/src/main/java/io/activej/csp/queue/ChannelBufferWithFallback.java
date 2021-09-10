@@ -29,11 +29,9 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 	private final ChannelQueue<T> queue;
 	private final Supplier<Promise<? extends ChannelQueue<T>>> bufferFactory;
 
-	@Nullable
-	private ChannelQueue<T> buffer;
+	private @Nullable ChannelQueue<T> buffer;
 
-	@Nullable
-	private Exception exception;
+	private @Nullable Exception exception;
 
 	private SettablePromise<Void> waitingForBuffer;
 	private boolean finished = false;
@@ -164,8 +162,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 		}
 	}
 
-	@Nullable
-	public Exception getException() {
+	public @Nullable Exception getException() {
 		return exception;
 	}
 }

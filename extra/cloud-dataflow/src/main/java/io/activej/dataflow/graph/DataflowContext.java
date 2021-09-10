@@ -26,8 +26,7 @@ public final class DataflowContext {
 
 	private final RefInt nextNodeIndex;
 
-	@Nullable
-	private final Integer nonce;
+	private final @Nullable Integer nonce;
 
 	private DataflowContext(DataflowGraph graph, @Nullable Integer nonce, RefInt nextNodeIndex) {
 		this.nonce = nonce;

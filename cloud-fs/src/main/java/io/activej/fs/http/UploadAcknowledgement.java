@@ -22,8 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class UploadAcknowledgement {
-	@Nullable
-	private final FsException error;
+	private final @Nullable FsException error;
 
 	@CompiledJson
 	public UploadAcknowledgement(@Nullable FsException error) {
@@ -42,8 +41,7 @@ public final class UploadAcknowledgement {
 		return error == null;
 	}
 
-	@Nullable
-	public FsException getError() {
+	public @Nullable FsException getError() {
 		return error;
 	}
 

@@ -64,14 +64,10 @@ public class TestUtils {
 
 		public boolean executed = false;
 		private byte @Nullable [] expectedByteArray;
-		@Nullable
-		private String expectedString;
-		@Nullable
-		private ByteBuf expectedBuf;
-		@Nullable
-		private Class<? extends Exception> expectedExceptionType;
-		@Nullable
-		private Consumer<Exception> exceptionValidator;
+		private @Nullable String expectedString;
+		private @Nullable ByteBuf expectedBuf;
+		private @Nullable Class<? extends Exception> expectedExceptionType;
+		private @Nullable Consumer<Exception> exceptionValidator;
 
 		public void setExpectedByteArray(byte @Nullable [] expectedByteArray) {
 			this.expectedByteArray = expectedByteArray;
@@ -157,7 +153,7 @@ public class TestUtils {
 
 	private static final Random RANDOM = ThreadLocalRandom.current();
 
-	public static <T> Consumer<T> failOnItem(){
+	public static <T> Consumer<T> failOnItem() {
 		return $ -> fail();
 	}
 
@@ -166,7 +162,7 @@ public class TestUtils {
 		return ChannelByteChunker.create(min, min.map(length -> length * 2));
 	}
 
-	public static byte[] randomBytes(int size){
+	public static byte[] randomBytes(int size) {
 		byte[] bytes = new byte[size];
 		RANDOM.nextBytes(bytes);
 		return bytes;
@@ -180,7 +176,7 @@ public class TestUtils {
 		return ByteBuf.wrapForReading(new byte[]{(byte) 0x88, (byte) 0x82, 0x12, 0x34, 0x56, 0x78, 0x11, (byte) 0xdc});
 	}
 
-	public static ChannelSupplier<ByteBuf> chunkedByByte(ChannelSupplier<ByteBuf> supplier){
+	public static ChannelSupplier<ByteBuf> chunkedByByte(ChannelSupplier<ByteBuf> supplier) {
 		return supplier.transformWith(ChannelByteChunker.create(MemSize.bytes(1), MemSize.bytes(1)));
 	}
 }

@@ -35,9 +35,8 @@ public final class RpcStrategyFirstAvailable implements RpcStrategy {
 		return list.getDiscoveryService();
 	}
 
-	@Nullable
 	@Override
-	public RpcSender createSender(RpcClientConnectionPool pool) {
+	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
 		List<RpcSender> senders = list.listOfSenders(pool);
 		if (senders.isEmpty())
 			return null;

@@ -50,8 +50,7 @@ public interface CrdtFunction<S> {
 	 * serialize and transfer only those and then CRDT-combine those with 'old', achieving the
 	 * same result with much less resources spent.
 	 */
-	@Nullable
-	S extract(S state, long timestamp);
+	@Nullable S extract(S state, long timestamp);
 
 	static <S extends CrdtType<S>> CrdtFunction<S> ofCrdtType() {
 		return new CrdtFunction<S>() {
@@ -60,9 +59,8 @@ public interface CrdtFunction<S> {
 				return first.merge(second);
 			}
 
-			@Nullable
 			@Override
-			public S extract(S state, long timestamp) {
+			public @Nullable S extract(S state, long timestamp) {
 				return state.extract(timestamp);
 			}
 		};

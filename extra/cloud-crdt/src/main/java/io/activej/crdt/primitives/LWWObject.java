@@ -47,8 +47,7 @@ public class LWWObject<T> implements CrdtType<LWWObject<T>> {
 	}
 
 	@Override
-	@Nullable
-	public LWWObject<T> extract(long timestamp) {
+	public @Nullable LWWObject<T> extract(long timestamp) {
 		if (timestamp >= this.timestamp) {
 			return null;
 		}

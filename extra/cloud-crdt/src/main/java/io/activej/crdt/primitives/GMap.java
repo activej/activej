@@ -68,9 +68,8 @@ public final class GMap<K, V extends CrdtMergable<V>> implements Map<K, V>, Crdt
 		return map.get(key);
 	}
 
-	@Nullable
 	@Override
-	public V put(K key, V value) {
+	public @Nullable V put(K key, V value) {
 		return map.merge(key, value, CrdtMergable::merge);
 	}
 

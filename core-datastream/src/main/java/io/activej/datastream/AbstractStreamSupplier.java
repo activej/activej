@@ -36,8 +36,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	public static final StreamDataAcceptor<?> NO_ACCEPTOR = item -> {};
 
-	@Nullable
-	private StreamDataAcceptor<T> dataAcceptor;
+	private @Nullable StreamDataAcceptor<T> dataAcceptor;
 	private StreamDataAcceptor<T> dataAcceptorBuffered;
 	private final ArrayDeque<T> buffer = new ArrayDeque<>();
 
@@ -52,14 +51,13 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	private final SettablePromise<Void> endOfStream = new SettablePromise<>();
 	private final SettablePromise<Void> acknowledgement = new SettablePromise<>();
 
-	@Nullable
-	private SettablePromise<Void> flushPromise;
+	private @Nullable SettablePromise<Void> flushPromise;
 
 	protected final Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 	{
 		dataAcceptorBuffered = buffer::addLast;
-		if (eventloop.inEventloopThread()){
+		if (eventloop.inEventloopThread()) {
 			eventloop.post(this::ensureInitialized);
 		} else {
 			eventloop.execute(this::ensureInitialized);
@@ -260,8 +258,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	 * Returns current data acceptor (the last one set with the {@link #updateDataAcceptor()} method)
 	 * or <code>null</code> when this supplier is in a suspended state.
 	 */
-	@Nullable
-	public final StreamDataAcceptor<T> getDataAcceptor() {
+	public final @Nullable StreamDataAcceptor<T> getDataAcceptor() {
 		return dataAcceptor;
 	}
 

@@ -130,8 +130,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 						}));
 	}
 
-	@Nullable
-	private static NodeStat reduce(List<NodeStat> stats, ResourceLocator env) {
+	private static @Nullable NodeStat reduce(List<NodeStat> stats, ResourceLocator env) {
 		Optional<NodeStat> firstNonNull = stats.stream().filter(Objects::nonNull).findAny();
 		if (!firstNonNull.isPresent()) {
 			return null; // reduce all-null or empty lists to null

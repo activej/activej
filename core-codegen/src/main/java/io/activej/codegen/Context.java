@@ -420,8 +420,7 @@ public final class Context {
 	}
 
 	@SuppressWarnings("StatementWithEmptyBody")
-	@Nullable
-	private Method findMethod(Stream<Method> methods, String name, Class<?>[] arguments) {
+	private @Nullable Method findMethod(Stream<Method> methods, String name, Class<?>[] arguments) {
 		Set<Method> methodSet = methods.collect(toSet());
 
 		methodSet.addAll(Arrays.stream(Object.class.getMethods())

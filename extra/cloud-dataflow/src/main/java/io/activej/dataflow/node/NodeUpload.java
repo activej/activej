@@ -63,8 +63,7 @@ public final class NodeUpload<T> extends AbstractNode {
 	}
 
 	@Override
-	@Nullable
-	public NodeStat getStats() {
+	public @Nullable NodeStat getStats() {
 		return stats;
 	}
 

@@ -68,8 +68,7 @@ public interface AsyncDnsClient {
 	 * @param query query which might contain an IP
 	 * @return fake query response if is does and <code>null</code> if it does not
 	 */
-	@Nullable
-	static DnsResponse resolveFromQuery(DnsQuery query) {
+	static @Nullable DnsResponse resolveFromQuery(DnsQuery query) {
 		if ("localhost".equals(query.getDomainName())) {
 			InetAddress[] ips = {InetAddress.getLoopbackAddress()};
 			return DnsResponse.of(DnsTransaction.of((short) 0, query), DnsResourceRecord.of(ips, 0));

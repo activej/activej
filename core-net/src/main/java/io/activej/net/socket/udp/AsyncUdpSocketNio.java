@@ -54,8 +54,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	private final Eventloop eventloop;
 
-	@Nullable
-	private SelectionKey key;
+	private @Nullable SelectionKey key;
 
 	private int receiveBufferSize = DEFAULT_UDP_BUFFER_SIZE.toInt();
 
@@ -69,8 +68,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	private int ops = 0;
 
 	// region JMX
-	@Nullable
-	private Inspector inspector;
+	private @Nullable Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onCreate(AsyncUdpSocketNio socket);

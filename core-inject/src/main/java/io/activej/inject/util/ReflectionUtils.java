@@ -83,8 +83,7 @@ public final class ReflectionUtils {
 		return PACKAGE.matcher(ARRAY_SIGNATURE.matcher(type.getTypeName()).replaceAll("$1[]")).replaceAll("");
 	}
 
-	@Nullable
-	public static Object getOuterClassInstance(Object innerClassInstance) {
+	public static @Nullable Object getOuterClassInstance(Object innerClassInstance) {
 		if (innerClassInstance == null) {
 			return null;
 		}
@@ -106,8 +105,7 @@ public final class ReflectionUtils {
 		return null;
 	}
 
-	@Nullable
-	public static Object qualifierOf(AnnotatedElement annotatedElement) {
+	public static @Nullable Object qualifierOf(AnnotatedElement annotatedElement) {
 		List<Annotation> names = new ArrayList<>();
 		for (Annotation annotation : annotatedElement.getDeclaredAnnotations()) {
 			if (annotation.annotationType().isAnnotationPresent(QualifierAnnotation.class)) {
@@ -190,8 +188,7 @@ public final class ReflectionUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	public static <T> Binding<T> generateConstructorBinding(Key<T> key) {
+	public static <T> @Nullable Binding<T> generateConstructorBinding(Key<T> key) {
 		Class<?> cls = key.getRawType();
 
 		Inject classInjectAnnotation = cls.getAnnotation(Inject.class);
@@ -469,8 +466,7 @@ public final class ReflectionUtils {
 
 	private static class TemplatedProviderGenerator implements BindingGenerator<Object> {
 		private final Scope[] methodScope;
-		@Nullable
-		private final Object qualifier;
+		private final @Nullable Object qualifier;
 		private final Method method;
 
 		private final Object module;

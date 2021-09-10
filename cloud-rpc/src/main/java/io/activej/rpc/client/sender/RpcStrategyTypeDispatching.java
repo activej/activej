@@ -60,9 +60,8 @@ public final class RpcStrategyTypeDispatching implements RpcStrategy {
 		return DiscoveryService.combined(discoveryServices);
 	}
 
-	@Nullable
 	@Override
-	public RpcSender createSender(RpcClientConnectionPool pool) {
+	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
 		HashMap<Class<?>, RpcSender> typeToSender = new HashMap<>();
 		for (Map.Entry<Class<?>, RpcStrategy> entry : dataTypeToStrategy.entrySet()) {
 			RpcSender sender = entry.getValue().createSender(pool);

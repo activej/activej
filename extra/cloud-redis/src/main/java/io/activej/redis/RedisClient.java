@@ -55,10 +55,8 @@ public final class RedisClient {
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
 	private Duration autoFlushInterval = Duration.ZERO;
 
-	@Nullable
-	private SSLContext sslContext;
-	@Nullable
-	private Executor sslExecutor;
+	private @Nullable SSLContext sslContext;
+	private @Nullable Executor sslExecutor;
 
 	// region creators
 	private RedisClient(Eventloop eventloop, InetSocketAddress address) {

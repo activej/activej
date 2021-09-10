@@ -187,20 +187,17 @@ public final class TriggerResult {
 		return timestamp;
 	}
 
-	@Nullable
-	public Instant getInstant() {
+	public @Nullable Instant getInstant() {
 		checkState(isPresent(), "Trigger is not present");
 		return hasTimestamp() ? Instant.ofEpochMilli(timestamp) : null;
 	}
 
-	@Nullable
-	public Throwable getThrowable() {
+	public @Nullable Throwable getThrowable() {
 		checkState(isPresent(), "Trigger is not present");
 		return throwable;
 	}
 
-	@Nullable
-	public Object getValue() {
+	public @Nullable Object getValue() {
 		checkState(isPresent(), "Trigger is not present");
 		return value;
 	}

@@ -22,8 +22,7 @@ import java.lang.annotation.Annotation;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
 public final class UniqueQualifierImpl implements UniqueQualifier {
-	@Nullable
-	private final Object originalQualifier;
+	private final @Nullable Object originalQualifier;
 
 	public UniqueQualifierImpl() {
 		this.originalQualifier = null;
@@ -33,8 +32,7 @@ public final class UniqueQualifierImpl implements UniqueQualifier {
 		this.originalQualifier = originalQualifier;
 	}
 
-	@Nullable
-	public Object getOriginalQualifier() {
+	public @Nullable Object getOriginalQualifier() {
 		return originalQualifier;
 	}
 

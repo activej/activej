@@ -35,8 +35,7 @@ public final class ExpressionConstant implements Expression {
 
 	@NotNull
 	private final Object value;
-	@Nullable
-	private final Type type;
+	private final @Nullable Type type;
 
 	private final int id = COUNTER.incrementAndGet();
 

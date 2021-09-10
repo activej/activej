@@ -82,13 +82,10 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private final AsyncHttpServer server;
 	private final AsyncServlet servlet;
-	@Nullable
-	private HttpRequest request;
-	@Nullable
-	private final Inspector inspector;
+	private @Nullable HttpRequest request;
+	private final @Nullable Inspector inspector;
 
-	@Nullable
-	private ByteBuf writeBuf;
+	private @Nullable ByteBuf writeBuf;
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
 	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");

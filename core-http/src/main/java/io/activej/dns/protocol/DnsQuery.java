@@ -26,8 +26,7 @@ public final class DnsQuery {
 	private final String domainName;
 	private final DnsProtocol.RecordType recordType;
 
-	@Nullable
-	private Object userData;
+	private @Nullable Object userData;
 
 	private DnsQuery(@NotNull String domainName, @NotNull DnsProtocol.RecordType recordType) {
 		this.domainName = domainName;
@@ -60,8 +59,7 @@ public final class DnsQuery {
 		return recordType;
 	}
 
-	@Nullable
-	public Object getUserData() {
+	public @Nullable Object getUserData() {
 		return userData;
 	}
 

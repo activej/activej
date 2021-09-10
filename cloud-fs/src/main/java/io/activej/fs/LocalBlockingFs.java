@@ -292,8 +292,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	@Override
-	@Nullable
-	public FileMetadata info(@NotNull String name) throws IOException {
+	public @Nullable FileMetadata info(@NotNull String name) throws IOException {
 		return toFileMetadata(resolve(name));
 	}
 

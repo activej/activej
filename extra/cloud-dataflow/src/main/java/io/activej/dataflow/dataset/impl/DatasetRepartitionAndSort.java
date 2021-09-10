@@ -32,8 +32,7 @@ import static java.util.Collections.singletonList;
 
 public final class DatasetRepartitionAndSort<K, T> extends SortedDataset<K, T> {
 	private final LocallySortedDataset<K, T> input;
-	@Nullable
-	private final List<Partition> partitions;
+	private final @Nullable List<Partition> partitions;
 
 	public DatasetRepartitionAndSort(LocallySortedDataset<K, T> input) {
 		this(input, null);

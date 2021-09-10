@@ -32,12 +32,11 @@ import static java.util.stream.Collectors.toList;
 public final class DecodeErrors {
 	private static final String DEFAULT_SEPARATOR = ".";
 
-	@Nullable
-	private List<DecodeError> errors;
-	@Nullable
-	private Map<String, DecodeErrors> children;
+	private @Nullable List<DecodeError> errors;
+	private @Nullable Map<String, DecodeErrors> children;
 
-	private DecodeErrors() {}
+	private DecodeErrors() {
+	}
 
 	public static DecodeErrors create() {
 		return new DecodeErrors();

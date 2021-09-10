@@ -230,8 +230,7 @@ public final class SerializerBuilder {
 	}
 
 	@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
-	@Nullable
-	private <A extends Annotation> A getAnnotation(Class<A> type, Annotation[] annotations) {
+	private <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
 		for (int i = 0; i < annotations.length; i++) {
 			Annotation annotation = annotations[i];
 			if (annotation.annotationType() == type) {
@@ -868,8 +867,7 @@ public final class SerializerBuilder {
 		return result;
 	}
 
-	@Nullable
-	private FoundSerializer tryAddGetter(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
+	private @Nullable FoundSerializer tryAddGetter(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			Method getter) {
 		if (getter.isBridge()) {
 			return null;
@@ -940,8 +938,7 @@ public final class SerializerBuilder {
 		});
 	}
 
-	@Nullable
-	private FoundSerializer findAnnotations(Context<SerializerDef> ctx,
+	private @Nullable FoundSerializer findAnnotations(Context<SerializerDef> ctx,
 			Object methodOrField, Annotation[] annotations) {
 		int added = Serialize.DEFAULT_VERSION;
 		int removed = Serialize.DEFAULT_VERSION;

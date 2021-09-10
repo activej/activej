@@ -76,11 +76,9 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	private int poolKeepAliveExpired;
 	private int poolReadWriteExpired;
 
-	@Nullable
-	private ScheduledRunnable expiredConnectionsCheck;
+	private @Nullable ScheduledRunnable expiredConnectionsCheck;
 
-	@Nullable
-	Inspector inspector;
+	@Nullable Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onAccept(HttpServerConnection connection);
@@ -291,8 +289,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 
 	private final SettablePromise<@Nullable Void> closeNotification = new SettablePromise<>();
 
-	@Nullable
-	private SettablePromise<Void> closeCallback;
+	private @Nullable SettablePromise<Void> closeCallback;
 
 	void onConnectionClosed() {
 		if (getConnectionsCount() == 0 && closeCallback != null) {
@@ -374,8 +371,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	}
 
 	@JmxAttribute(name = "")
-	@Nullable
-	public JmxInspector getStats() {
+	public @Nullable JmxInspector getStats() {
 		return BaseInspector.lookup(inspector, JmxInspector.class);
 	}
 

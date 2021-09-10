@@ -202,8 +202,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	private static final class ServiceKey implements ServiceGraph.Key {
 		@NotNull
 		private final Key<?> key;
-		@Nullable
-		private final WorkerPool workerPool;
+		private final @Nullable WorkerPool workerPool;
 
 		private ServiceKey(@NotNull Key<?> key) {
 			this.key = key;
@@ -236,9 +235,8 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			return workerPool == null || workerPool.getId() == 0 ? null : "" + (workerPool.getId() + 1);
 		}
 
-		@Nullable
 		@Override
-		public Object getQualifier() {
+		public @Nullable Object getQualifier() {
 			return key.getQualifier();
 		}
 
@@ -479,8 +477,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	private Service getCombinedServiceOrNull(IdentityHashMap<Object, CachedService> cache, ServiceKey key, List<?> instances) {
+	private @Nullable Service getCombinedServiceOrNull(IdentityHashMap<Object, CachedService> cache, ServiceKey key, List<?> instances) {
 		List<Service> services = new ArrayList<>();
 		for (Object instance : instances) {
 			Service service = getServiceOrNull(cache, (Key<Object>) key.getKey(), instance);
@@ -534,9 +531,8 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		}
 	}
 
-	@Nullable
 	@SuppressWarnings("unchecked")
-	private <T> Service getServiceOrNull(IdentityHashMap<Object, CachedService> cache, Key<T> key, @NotNull T instance) {
+	private <T> @Nullable Service getServiceOrNull(IdentityHashMap<Object, CachedService> cache, Key<T> key, @NotNull T instance) {
 		CachedService service = cache.get(instance);
 		if (service != null) {
 			return service;
@@ -564,8 +560,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	private <T> ServiceAdapter<T> lookupAdapter(Key<T> key, Class<T> instanceClass) {
+	private <T> @Nullable ServiceAdapter<T> lookupAdapter(Key<T> key, Class<T> instanceClass) {
 		ServiceAdapter<T> serviceAdapter = (ServiceAdapter<T>) keys.get(key);
 		if (serviceAdapter == null) {
 			List<Class<?>> foundRegisteredClasses = new ArrayList<>();

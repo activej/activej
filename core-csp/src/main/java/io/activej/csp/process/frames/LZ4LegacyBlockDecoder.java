@@ -58,9 +58,8 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		endOfStream = false;
 	}
 
-	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
+	public @Nullable ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
 		if (readingHeader) {
 			if (!readHeader(bufs)) return null;
 			readingHeader = false;

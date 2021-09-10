@@ -130,8 +130,7 @@ final class Property implements Variable {
 		);
 	}
 
-	@Nullable
-	private static Method tryFindSetter(Class<?> argumentClass, String property, Class<?> valueClass) {
+	private static @Nullable Method tryFindSetter(Class<?> argumentClass, String property, Class<?> valueClass) {
 		Method m = null;
 		try {
 			m = argumentClass.getDeclaredMethod(property, valueClass);
@@ -147,8 +146,7 @@ final class Property implements Variable {
 		return m;
 	}
 
-	@Nullable
-	private static Method tryFindSetter(Class<?> argumentClass, String property) {
+	private static @Nullable Method tryFindSetter(Class<?> argumentClass, String property) {
 		String setterName = "set" + toUpperCase(property.charAt(0)) + property.substring(1);
 
 		for (Method method : argumentClass.getDeclaredMethods()) {

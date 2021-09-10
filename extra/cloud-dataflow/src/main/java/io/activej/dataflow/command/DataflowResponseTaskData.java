@@ -25,12 +25,9 @@ import java.util.Map;
 
 public class DataflowResponseTaskData extends DataflowResponse {
 	private final TaskStatus status;
-	@Nullable
-	private final Instant startTime;
-	@Nullable
-	private final Instant finishTime;
-	@Nullable
-	private final String err;
+	private final @Nullable Instant startTime;
+	private final @Nullable Instant finishTime;
+	private final @Nullable String err;
 	private final Map<Integer, NodeStat> nodes;
 	private final String graphViz;
 
@@ -47,18 +44,15 @@ public class DataflowResponseTaskData extends DataflowResponse {
 		return status;
 	}
 
-	@Nullable
-	public Instant getStartTime() {
+	public @Nullable Instant getStartTime() {
 		return startTime;
 	}
 
-	@Nullable
-	public Instant getFinishTime() {
+	public @Nullable Instant getFinishTime() {
 		return finishTime;
 	}
 
-	@Nullable
-	public String getErrorString() {
+	public @Nullable String getErrorString() {
 		return err;
 	}
 

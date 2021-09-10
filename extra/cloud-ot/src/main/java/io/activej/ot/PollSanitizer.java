@@ -33,8 +33,7 @@ public final class PollSanitizer<T> implements AsyncSupplier<T> {
 
 	private final AsyncSupplier<T> poll;
 
-	@Nullable
-	private T lastValue;
+	private @Nullable T lastValue;
 
 	private PollSanitizer(AsyncSupplier<T> poll) {
 		this.poll = poll;

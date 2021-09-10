@@ -98,8 +98,7 @@ public abstract class RedisResponse<T> {
 	 */
 	public static final RedisResponse<Object> OBJECT = new RedisResponse<Object>() {
 		@Override
-		@Nullable
-		public Object parse(RESPv2 data) throws MalformedDataException {
+		public @Nullable Object parse(RESPv2 data) throws MalformedDataException {
 			return data.readObject();
 		}
 	};
@@ -129,8 +128,7 @@ public abstract class RedisResponse<T> {
 	 */
 	public static final RedisResponse<String> BYTES_UTF8 = new RedisResponse<String>() {
 		@Override
-		@Nullable
-		public String parse(RESPv2 data) throws MalformedDataException {
+		public @Nullable String parse(RESPv2 data) throws MalformedDataException {
 			return data.readBytes(UTF_8);
 		}
 	};
@@ -181,8 +179,7 @@ public abstract class RedisResponse<T> {
 	 */
 	public static final RedisResponse<Object[]> ARRAY = new RedisResponse<Object[]>() {
 		@Override
-		@Nullable
-		public Object @Nullable [] parse(RESPv2 data) throws MalformedDataException {
+		public @Nullable Object @Nullable [] parse(RESPv2 data) throws MalformedDataException {
 			return data.readObjectArray();
 		}
 	};

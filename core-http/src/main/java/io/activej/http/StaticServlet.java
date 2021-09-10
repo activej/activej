@@ -51,8 +51,7 @@ public final class StaticServlet implements AsyncServlet {
 	private Supplier<HttpResponse> responseSupplier = HttpResponse::ok200;
 	private final Set<String> indexResources = new LinkedHashSet<>();
 
-	@Nullable
-	private String defaultResource;
+	private @Nullable String defaultResource;
 
 	private StaticServlet(StaticLoader resourceLoader) {
 		this.resourceLoader = resourceLoader;

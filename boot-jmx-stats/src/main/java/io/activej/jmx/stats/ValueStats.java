@@ -88,10 +88,8 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	private int addedStats;
 
 	// formatting
-	@Nullable
-	private String unit;
-	@Nullable
-	private String rateUnit;
+	private @Nullable String unit;
+	private @Nullable String rateUnit;
 	private boolean useAvgAndDeviaton = true;
 	private boolean useMinMax = true;
 	private boolean useLastValue = true;
@@ -501,9 +499,8 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	}
 
 	@SuppressWarnings({"OptionalGetWithoutIsPresent", "ConstantConditions"})
-	@Nullable
 	@JmxAttribute(optional = true)
-	public List<String> getHistogram() {
+	public @Nullable List<String> getHistogram() {
 		if (histogram == null) {
 			return null;
 		}

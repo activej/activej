@@ -23,20 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class ProtoObjectName {
-	@Nullable
-	private final String className;
+	private final @Nullable String className;
 	@NotNull
 	private final String packageName;
-	@Nullable
-	private final Object qualifier;
-	@Nullable
-	private final String scope;
-	@Nullable
-	private final String workerPoolQualifier;
-	@Nullable
-	private final String workerId;
-	@Nullable
-	private final List<String> genericParameters;
+	private final @Nullable Object qualifier;
+	private final @Nullable String scope;
+	private final @Nullable String workerPoolQualifier;
+	private final @Nullable String workerId;
+	private final @Nullable List<String> genericParameters;
 
 	public ProtoObjectName(@Nullable String className, @NotNull String packageName, @Nullable Object qualifier,
 			@Nullable String scope, @Nullable String workerPoolQualifier, @Nullable String workerId,

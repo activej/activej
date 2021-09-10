@@ -30,8 +30,7 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 
 	protected final Eventloop eventloop = Eventloop.getCurrentEventloop();
 
-	@Nullable
-	private AsyncCloseable closeable;
+	private @Nullable AsyncCloseable closeable;
 
 	private Exception exception;
 

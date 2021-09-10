@@ -7,8 +7,7 @@ public interface FileNamingScheme {
 
 	String encodeSnapshot(long revision);
 
-	@Nullable
-	Long decodeSnapshot(String filename);
+	@Nullable Long decodeSnapshot(String filename);
 
 	String diffGlob();
 
@@ -16,8 +15,7 @@ public interface FileNamingScheme {
 
 	String encodeDiff(long from, long to);
 
-	@Nullable
-	Diff decodeDiff(String filename);
+	@Nullable Diff decodeDiff(String filename);
 
 	final class Diff {
 		private final long from;

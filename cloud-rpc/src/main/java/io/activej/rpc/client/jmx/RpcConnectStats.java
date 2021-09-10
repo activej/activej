@@ -73,16 +73,14 @@ public final class RpcConnectStats {
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getConnectionLostFor() {
+	public @Nullable Duration getConnectionLostFor() {
 		if (connectionLostAt == -1) return null;
 
 		return Duration.ofMillis(now.currentTimeMillis() - connectionLostAt);
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getConnectionLostAt() {
+	public @Nullable Instant getConnectionLostAt() {
 		if (connectionLostAt == -1) return null;
 
 		return Instant.ofEpochMilli(connectionLostAt);

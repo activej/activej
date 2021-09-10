@@ -56,12 +56,9 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	private ByteBuf app2engine = ByteBuf.empty();
 	private boolean shouldReturnEndOfStream;
 
-	@Nullable
-	private SettablePromise<ByteBuf> read;
-	@Nullable
-	private SettablePromise<Void> write;
-	@Nullable
-	private Promise<Void> pendingUpstreamWrite;
+	private @Nullable SettablePromise<ByteBuf> read;
+	private @Nullable SettablePromise<Void> write;
+	private @Nullable Promise<Void> pendingUpstreamWrite;
 
 	public static AsyncTcpSocketSsl wrapClientSocket(AsyncTcpSocket asyncTcpSocket,
 			String host, int port,

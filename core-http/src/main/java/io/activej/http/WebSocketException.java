@@ -35,8 +35,7 @@ import static io.activej.http.HttpUtils.isReservedCloseCode;
 public class WebSocketException extends HttpException {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(WebSocketException.class, "withStackTrace", false);
 
-	@Nullable
-	private final Integer code;
+	private final @Nullable Integer code;
 
 	/**
 	 * An empty exception with no close code and no close reason.
@@ -63,8 +62,7 @@ public class WebSocketException extends HttpException {
 		this.code = code;
 	}
 
-	@Nullable
-	public Integer getCode() {
+	public @Nullable Integer getCode() {
 		return code;
 	}
 

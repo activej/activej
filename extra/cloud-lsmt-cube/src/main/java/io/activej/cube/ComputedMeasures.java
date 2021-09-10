@@ -37,9 +37,8 @@ public class ComputedMeasures {
 			this.dependencies = new LinkedHashSet<>(Arrays.asList(dependencies));
 		}
 
-		@Nullable
 		@Override
-		public Class<?> getType(Map<String, Measure> storedMeasures) {
+		public @Nullable Class<?> getType(Map<String, Measure> storedMeasures) {
 			return null;
 		}
 

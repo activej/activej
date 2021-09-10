@@ -39,8 +39,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	private long timestamp;
 	private long reloadPeriod;
 	private long retryPeriod = 1000L;
-	@Nullable
-	private ScheduledRunnable scheduledRunnable;
+	private @Nullable ScheduledRunnable scheduledRunnable;
 	private final Map<K, A> cache = new HashMap<>();
 	private int reloads;
 	private int reloadErrors;
@@ -52,9 +51,8 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 		this.eventloop = eventloop;
 	}
 
-	@Nullable
 	@Override
-	protected final A resolveAttributes(K key) {
+	protected final @Nullable A resolveAttributes(K key) {
 		A result = cache.get(key);
 		if (result == null) {
 			resolveErrors++;
@@ -154,9 +152,8 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 		return resolveErrors;
 	}
 
-	@Nullable
 	@JmxAttribute
-	public String getLastResolveErrorKey() {
+	public @Nullable String getLastResolveErrorKey() {
 		return lastResolveErrorKey == null ? null : lastResolveErrorKey.toString();
 	}
 

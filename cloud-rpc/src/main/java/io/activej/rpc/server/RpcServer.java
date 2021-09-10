@@ -83,8 +83,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
-	@Nullable
-	private FrameFormat frameFormat;
+	private @Nullable FrameFormat frameFormat;
 	private Duration autoFlushInterval = Duration.ZERO;
 
 	private final Map<Class<?>, RpcRequestHandler<?, ?>> handlers = new LinkedHashMap<>();

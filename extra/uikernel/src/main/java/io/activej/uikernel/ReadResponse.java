@@ -29,8 +29,7 @@ public final class ReadResponse<K, R extends AbstractRecord<K>> {
 	private final List<R> records;
 	private final int count;
 	private final List<R> extra;
-	@Nullable
-	private final R totals;
+	private final @Nullable R totals;
 
 	private ReadResponse(@NotNull List<R> records, int count, @NotNull List<R> extra, @Nullable R totals) {
 		this.records = records;

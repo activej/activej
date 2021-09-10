@@ -53,10 +53,9 @@ public final class ConfigConverters {
 						.withMaxTtl(maxTtl);
 			}
 
-			@Nullable
 			@Override
 			@Contract("_, !null -> !null")
-			public DnsCache get(Config config, @Nullable DnsCache defaultValue) {
+			public @Nullable DnsCache get(Config config, @Nullable DnsCache defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {

@@ -80,8 +80,7 @@ public final class NodeDownload<T> extends AbstractNode {
 	}
 
 	@Override
-	@Nullable
-	public NodeStat getStats() {
+	public @Nullable NodeStat getStats() {
 		return stats;
 	}
 

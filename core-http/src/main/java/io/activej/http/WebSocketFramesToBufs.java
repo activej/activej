@@ -54,8 +54,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	private ChannelSupplier<Frame> input;
 	private ChannelConsumer<ByteBuf> output;
 
-	@Nullable
-	private Promise<Void> pendingPromise;
+	private @Nullable Promise<Void> pendingPromise;
 	private boolean closing;
 	private boolean waitingForFin;
 

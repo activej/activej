@@ -111,8 +111,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private Map<Object, InetSocketAddress> previouslyDiscovered;
 
 	private MemSize defaultPacketSize = DEFAULT_PACKET_SIZE;
-	@Nullable
-	private FrameFormat frameFormat;
+	private @Nullable FrameFormat frameFormat;
 	private Duration autoFlushInterval = Duration.ZERO;
 	private Duration keepAliveInterval = Duration.ZERO;
 
@@ -128,8 +127,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	private RpcSender requestSender = new NoSenderAvailable();
 
-	@Nullable
-	private SettablePromise<Void> stopPromise;
+	private @Nullable SettablePromise<Void> stopPromise;
 
 	private final RpcClientConnectionPool pool = connections::get;
 

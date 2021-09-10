@@ -97,8 +97,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	private int poolKeepAliveExpired;
 	private int poolReadWriteExpired;
 
-	@Nullable
-	private ScheduledRunnable expiredConnectionsCheck;
+	private @Nullable ScheduledRunnable expiredConnectionsCheck;
 
 	// timeouts
 	int connectTimeoutMillis = (int) CONNECT_TIMEOUT.toMillis();
@@ -113,12 +112,9 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	private SSLContext sslContext;
 	private Executor sslExecutor;
 
-	@Nullable
-	private AsyncTcpSocketNio.Inspector socketInspector;
-	@Nullable
-	private AsyncTcpSocketNio.Inspector socketSslInspector;
-	@Nullable
-	Inspector inspector;
+	private @Nullable AsyncTcpSocketNio.Inspector socketInspector;
+	private @Nullable AsyncTcpSocketNio.Inspector socketSslInspector;
+	@Nullable Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onRequest(HttpRequest request);
@@ -382,8 +378,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		});
 	}
 
-	@Nullable
-	private HttpClientConnection takeKeepAliveConnection(InetSocketAddress address) {
+	private @Nullable HttpClientConnection takeKeepAliveConnection(InetSocketAddress address) {
 		AddressLinkedList addresses = this.addresses.get(address);
 		if (addresses == null)
 			return null;
@@ -537,8 +532,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		return Promise.complete();
 	}
 
-	@Nullable
-	private SettablePromise<Void> closePromise;
+	private @Nullable SettablePromise<Void> closePromise;
 
 	public void onConnectionClosed() {
 		if (getConnectionsCount() == 0 && closePromise != null) {
@@ -608,20 +602,17 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	}
 
 	@JmxAttribute
-	@Nullable
-	public AsyncTcpSocketNio.JmxInspector getSocketStats() {
+	public @Nullable AsyncTcpSocketNio.JmxInspector getSocketStats() {
 		return BaseInspector.lookup(socketInspector, AsyncTcpSocketNio.JmxInspector.class);
 	}
 
 	@JmxAttribute
-	@Nullable
-	public AsyncTcpSocketNio.JmxInspector getSocketStatsSsl() {
+	public @Nullable AsyncTcpSocketNio.JmxInspector getSocketStatsSsl() {
 		return BaseInspector.lookup(socketSslInspector, AsyncTcpSocketNio.JmxInspector.class);
 	}
 
 	@JmxAttribute(name = "")
-	@Nullable
-	public JmxInspector getStats() {
+	public @Nullable JmxInspector getStats() {
 		return BaseInspector.lookup(inspector, JmxInspector.class);
 	}
 	// endregion

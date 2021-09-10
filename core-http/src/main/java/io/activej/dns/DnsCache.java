@@ -119,8 +119,7 @@ public final class DnsCache {
 	 * @param query DNS query
 	 * @return DnsQueryCacheResult for this query
 	 */
-	@Nullable
-	public DnsCache.DnsQueryCacheResult tryToResolve(DnsQuery query) {
+	public @Nullable DnsCache.DnsQueryCacheResult tryToResolve(DnsQuery query) {
 		CachedDnsQueryResult cachedResult = cache.get(query);
 
 		if (cachedResult == null) {
@@ -382,8 +381,7 @@ public final class DnsCache {
 		private final DnsResponse response;
 		private final boolean needsRefreshing;
 
-		@Nullable
-		private DnsQueryException exception;
+		private @Nullable DnsQueryException exception;
 
 		public DnsQueryCacheResult(DnsResponse response, boolean needsRefreshing) {
 			this.response = response;
@@ -406,8 +404,7 @@ public final class DnsCache {
 	}
 
 	static final class CachedDnsQueryResult implements Comparable<CachedDnsQueryResult> {
-		@Nullable
-		DnsResponse response;
+		@Nullable DnsResponse response;
 		final long expirationTime;
 
 		CachedDnsQueryResult(@Nullable DnsResponse response, long expirationTime) {

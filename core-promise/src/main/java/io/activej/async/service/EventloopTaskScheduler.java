@@ -53,14 +53,11 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 	private long lastStartTime;
 	private long lastCompleteTime;
-	@Nullable
-	private Exception lastException;
+	private @Nullable Exception lastException;
 	private int errorCount;
 
-	@Nullable
-	private Duration period;
-	@Nullable
-	private Duration interval;
+	private @Nullable Duration period;
+	private @Nullable Duration interval;
 	private boolean enabled = true;
 
 	@FunctionalInterface
@@ -117,11 +114,9 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 		}
 	}
 
-	@Nullable
-	private ScheduledRunnable scheduledTask;
+	private @Nullable ScheduledRunnable scheduledTask;
 
-	@Nullable
-	private Promise<Void> currentPromise;
+	private @Nullable Promise<Void> currentPromise;
 
 	private EventloopTaskScheduler(Eventloop eventloop, AsyncSupplier<?> task) {
 		this.eventloop = eventloop;
@@ -284,8 +279,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Exception getLastException() {
+	public @Nullable Exception getLastException() {
 		return lastException;
 	}
 
@@ -295,8 +289,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getPeriod() {
+	public @Nullable Duration getPeriod() {
 		return period;
 	}
 
@@ -310,8 +303,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getInterval() {
+	public @Nullable Duration getInterval() {
 		return interval;
 	}
 

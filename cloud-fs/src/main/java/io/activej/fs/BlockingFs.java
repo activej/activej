@@ -84,8 +84,7 @@ public interface BlockingFs {
 
 	Map<String, FileMetadata> list(@NotNull String glob) throws IOException;
 
-	@Nullable
-	default FileMetadata info(@NotNull String name) throws IOException {
+	default @Nullable FileMetadata info(@NotNull String name) throws IOException {
 		return list(escapeGlob(name)).get(name);
 	}
 

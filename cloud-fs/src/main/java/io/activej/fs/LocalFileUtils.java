@@ -138,8 +138,7 @@ public final class LocalFileUtils {
 		}
 	}
 
-	@Nullable
-	static FileMetadata toFileMetadata(Path path) throws IOException {
+	static @Nullable FileMetadata toFileMetadata(Path path) throws IOException {
 		if (!Files.isRegularFile(path)) return null;
 
 		long size = Files.size(path);

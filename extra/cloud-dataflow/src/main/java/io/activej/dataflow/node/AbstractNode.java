@@ -9,11 +9,9 @@ import java.time.Instant;
 public abstract class AbstractNode implements Node {
 	private final int index;
 
-	@Nullable
-	protected Instant finished = null;
+	protected @Nullable Instant finished = null;
 
-	@Nullable
-	protected Exception error = null;
+	protected @Nullable Exception error = null;
 
 	public AbstractNode(int index) {
 		this.index = index;
@@ -21,26 +19,23 @@ public abstract class AbstractNode implements Node {
 
 	@Override
 	public void finish(@Nullable Exception e) {
-		if (e != null && !(e instanceof DataflowException)){
+		if (e != null && !(e instanceof DataflowException)) {
 			e = new DataflowException(e);
 		}
 		error = e;
 		finished = Instant.now();
 	}
 
-	@Nullable
-	public Instant getFinished() {
+	public @Nullable Instant getFinished() {
 		return finished;
 	}
 
-	@Nullable
-	public Exception getError() {
+	public @Nullable Exception getError() {
 		return error;
 	}
 
 	@Override
-	@Nullable
-	public NodeStat getStats() {
+	public @Nullable NodeStat getStats() {
 		return null;
 	}
 

@@ -288,8 +288,7 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 	}
 
 	@JmxAttribute
-	@Nullable
-	public synchronized Severity getMaxSeverity() {
+	public synchronized @Nullable Severity getMaxSeverity() {
 		refresh();
 		return maxSeverityResults.values().stream()
 				.filter(isNotSuppressed)
@@ -299,8 +298,7 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 	}
 
 	@JmxAttribute
-	@Nullable
-	public synchronized String getMaxSeverityResult() {
+	public synchronized @Nullable String getMaxSeverityResult() {
 		refresh();
 		return maxSeverityResults.values().stream()
 				.filter(isNotSuppressed)

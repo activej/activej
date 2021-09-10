@@ -234,8 +234,7 @@ public final class SocketSettings {
 		return lingerTimeout != -1;
 	}
 
-	@Nullable
-	public Duration getLingerTimeout() {
+	public @Nullable Duration getLingerTimeout() {
 		return lingerTimeout == -1 ? null : Duration.ofSeconds(lingerTimeout);
 	}
 

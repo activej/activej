@@ -55,10 +55,8 @@ public final class OTStateManager<K, D> implements EventloopService {
 
 	private OTState<D> state;
 
-	@Nullable
-	private K commitId;
-	@Nullable
-	private K originCommitId;
+	private @Nullable K commitId;
+	private @Nullable K originCommitId;
 
 	private long level;
 	private long originLevel;
@@ -66,16 +64,13 @@ public final class OTStateManager<K, D> implements EventloopService {
 	private List<D> workingDiffs = new ArrayList<>();
 	private List<D> originDiffs = new ArrayList<>();
 
-	@Nullable
-	private Object pendingProtoCommit;
-	@Nullable
-	private List<D> pendingProtoCommitDiffs;
+	private @Nullable Object pendingProtoCommit;
+	private @Nullable List<D> pendingProtoCommitDiffs;
 
 	private final AsyncSupplier<Void> sync = reuse(this::doSync);
 	private boolean isSyncing;
 
-	@Nullable
-	private AsyncSupplier<Void> poll;
+	private @Nullable AsyncSupplier<Void> poll;
 	private boolean isPolling;
 
 	@SuppressWarnings("unchecked")

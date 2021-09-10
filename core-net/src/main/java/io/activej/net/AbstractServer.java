@@ -100,10 +100,8 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 
 	AbstractServer<?> acceptServer = this;
 
-	@Nullable
-	private Inspector socketInspector;
-	@Nullable
-	private Inspector socketSslInspector;
+	private @Nullable Inspector socketInspector;
+	private @Nullable Inspector socketSslInspector;
 	private final EventStats accepts = EventStats.create(SMOOTHING_WINDOW);
 	private final EventStats acceptsSsl = EventStats.create(SMOOTHING_WINDOW);
 	private final EventStats filteredAccepts = EventStats.create(SMOOTHING_WINDOW);
@@ -382,33 +380,28 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 	@JmxAttribute(extraSubAttributes = "totalCount")
-	@Nullable
-	public final EventStats getAccepts() {
+	public final @Nullable EventStats getAccepts() {
 		return acceptServer.listenAddresses.isEmpty() ? null : accepts;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final EventStats getAcceptsSsl() {
+	public final @Nullable EventStats getAcceptsSsl() {
 		return acceptServer.sslListenAddresses.isEmpty() ? null : acceptsSsl;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final EventStats getFilteredAccepts() {
+	public final @Nullable EventStats getFilteredAccepts() {
 		return acceptFilter == null ? null : filteredAccepts;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final AsyncTcpSocketNio.JmxInspector getSocketStats() {
+	public final @Nullable AsyncTcpSocketNio.JmxInspector getSocketStats() {
 		return this instanceof PrimaryServer || acceptServer.listenAddresses.isEmpty() ? null :
 				BaseInspector.lookup(socketInspector, AsyncTcpSocketNio.JmxInspector.class);
 	}
 
 	@JmxAttribute
-	@Nullable
-	public final AsyncTcpSocketNio.JmxInspector getSocketStatsSsl() {
+	public final @Nullable AsyncTcpSocketNio.JmxInspector getSocketStatsSsl() {
 		return this instanceof PrimaryServer || acceptServer.sslListenAddresses.isEmpty() ? null :
 				BaseInspector.lookup(socketSslInspector, AsyncTcpSocketNio.JmxInspector.class);
 	}

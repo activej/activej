@@ -91,8 +91,7 @@ public final class FileMetadata {
 		return result;
 	}
 
-	@Nullable
-	public static FileMetadata getMoreCompleteFile(@Nullable FileMetadata first, @Nullable FileMetadata second) {
+	public static @Nullable FileMetadata getMoreCompleteFile(@Nullable FileMetadata first, @Nullable FileMetadata second) {
 		return first == null ? second : second == null ? first : COMPARATOR.compare(first, second) > 0 ? first : second;
 	}
 

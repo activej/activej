@@ -87,8 +87,7 @@ public final class JsonModule extends AbstractModule {
 
 	@FunctionalInterface
 	public interface SubtypeNameFactory {
-		@Nullable
-		String getName(Class<?> subtype);
+		@Nullable String getName(Class<?> subtype);
 	}
 
 	@Override

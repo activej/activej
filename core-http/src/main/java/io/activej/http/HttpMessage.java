@@ -126,8 +126,7 @@ public abstract class HttpMessage {
 		return list;
 	}
 
-	@Nullable
-	public <T> T getHeader(HttpHeader header, HttpDecoderFunction<T> decoder) {
+	public <T> @Nullable T getHeader(HttpHeader header, HttpDecoderFunction<T> decoder) {
 		if (CHECK) checkState(!isRecycled());
 		try {
 			ByteBuf buf = getHeaderBuf(header);
@@ -140,15 +139,13 @@ public abstract class HttpMessage {
 		return null;
 	}
 
-	@Nullable
-	public final String getHeader(@NotNull HttpHeader header) {
+	public final @Nullable String getHeader(@NotNull HttpHeader header) {
 		if (CHECK) checkState(!isRecycled());
 		HttpHeaderValue headerValue = headers.get(header);
 		return headerValue != null ? headerValue.toString() : null;
 	}
 
-	@Nullable
-	public final ByteBuf getHeaderBuf(@NotNull HttpHeader header) {
+	public final @Nullable ByteBuf getHeaderBuf(@NotNull HttpHeader header) {
 		if (CHECK) checkState(!isRecycled());
 		HttpHeaderValue headerBuf = headers.get(header);
 		return headerBuf != null ? headerBuf.getBuf() : null;

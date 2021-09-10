@@ -289,20 +289,17 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	// region JMX getters
 	@JmxAttribute
-	@Nullable
-	public Instant getBackupLastStartTime() {
+	public @Nullable Instant getBackupLastStartTime() {
 		return backupLastStartTimestamp != 0L ? Instant.ofEpochMilli(backupLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getBackupLastCompleteTime() {
+	public @Nullable Instant getBackupLastCompleteTime() {
 		return backupLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(backupLastCompleteTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getBackupCurrentDuration() {
+	public @Nullable Duration getBackupCurrentDuration() {
 		return backupLastStartTimestamp - backupLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(System.currentTimeMillis() - backupLastStartTimestamp) :
 				null;
@@ -314,26 +311,22 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getBackupLastException() {
+	public @Nullable Exception getBackupLastException() {
 		return backupException;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getBackupDbLastStartTime() {
+	public @Nullable Instant getBackupDbLastStartTime() {
 		return backupDbLastStartTimestamp != 0L ? Instant.ofEpochMilli(backupDbLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getBackupDbLastCompleteTime() {
+	public @Nullable Instant getBackupDbLastCompleteTime() {
 		return backupDbLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(backupDbLastCompleteTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getBackupDbCurrentDuration() {
+	public @Nullable Duration getBackupDbCurrentDuration() {
 		return backupDbLastStartTimestamp - backupDbLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(System.currentTimeMillis() - backupDbLastStartTimestamp) :
 				null;
@@ -345,26 +338,22 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getBackupDbLastException() {
+	public @Nullable Exception getBackupDbLastException() {
 		return backupDbException;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getGetChunksToBackupLastStartTime() {
+	public @Nullable Instant getGetChunksToBackupLastStartTime() {
 		return getChunksToBackupLastStartTimestamp != 0L ? Instant.ofEpochMilli(getChunksToBackupLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getGetChunksToBackupLastCompleteTime() {
+	public @Nullable Instant getGetChunksToBackupLastCompleteTime() {
 		return getChunksToBackupLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(getChunksToBackupLastCompleteTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getGetChunksToBackupCurrentDuration() {
+	public @Nullable Duration getGetChunksToBackupCurrentDuration() {
 		return getChunksToBackupLastStartTimestamp - getChunksToBackupLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(System.currentTimeMillis() - getChunksToBackupLastStartTimestamp) :
 				null;
@@ -376,26 +365,22 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getGetChunksToBackupLastException() {
+	public @Nullable Exception getGetChunksToBackupLastException() {
 		return getChunksToBackupException;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getBackupChunksLastStartTime() {
+	public @Nullable Instant getBackupChunksLastStartTime() {
 		return backupChunksLastStartTimestamp != 0L ? Instant.ofEpochMilli(backupChunksLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getBackupChunksLastCompleteTime() {
+	public @Nullable Instant getBackupChunksLastCompleteTime() {
 		return backupChunksLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(backupChunksLastCompleteTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getBackupChunksCurrentDuration() {
+	public @Nullable Duration getBackupChunksCurrentDuration() {
 		return backupChunksLastStartTimestamp - backupChunksLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(System.currentTimeMillis() - backupChunksLastStartTimestamp) :
 				null;
@@ -407,8 +392,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getBackupChunksLastException() {
+	public @Nullable Exception getBackupChunksLastException() {
 		return backupChunksException;
 	}
 	// endregion

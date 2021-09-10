@@ -80,23 +80,18 @@ public abstract class AbstractHttpConnection {
 
 	protected ByteBuf readBuf;
 
-	@Nullable
-	protected ConnectionsLinkedList pool;
-	@Nullable
-	protected AbstractHttpConnection prev;
-	@Nullable
-	protected AbstractHttpConnection next;
+	protected @Nullable ConnectionsLinkedList pool;
+	protected @Nullable AbstractHttpConnection prev;
+	protected @Nullable AbstractHttpConnection next;
 	protected long poolTimestamp;
 
 	protected int numberOfRequests;
 
 	protected long contentLength;
 
-	@Nullable
-	protected Exception closeException;
+	protected @Nullable Exception closeException;
 
-	@Nullable
-	private Object userData;
+	private @Nullable Object userData;
 
 	protected Recyclable stashedBufs;
 
@@ -183,8 +178,7 @@ public abstract class AbstractHttpConnection {
 		return Duration.ofMillis(poolTimestamp);
 	}
 
-	@Nullable
-	public Object getUserData() {
+	public @Nullable Object getUserData() {
 		return userData;
 	}
 

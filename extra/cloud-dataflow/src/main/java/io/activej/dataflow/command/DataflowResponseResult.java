@@ -25,8 +25,7 @@ public class DataflowResponseResult extends DataflowResponse {
 		this.error = error;
 	}
 
-	@Nullable
-	public String getError() {
+	public @Nullable String getError() {
 		return error;
 	}
 

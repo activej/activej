@@ -60,14 +60,11 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		@NotNull
 		Type getType();
 
-		@Nullable
-		Object getQualifier();
+		@Nullable Object getQualifier();
 
-		@Nullable
-		String getSuffix();
+		@Nullable String getSuffix();
 
-		@Nullable
-		String getIndex();
+		@Nullable String getIndex();
 	}
 
 	private Runnable startCallback;
@@ -435,8 +432,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		}
 	}
 
-	@Nullable
-	private List<Key> findCircularDependencies() {
+	private @Nullable List<Key> findCircularDependencies() {
 		Set<Key> visited = new LinkedHashSet<>();
 		List<Key> path = new ArrayList<>();
 		next:
@@ -582,10 +578,10 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		}
 
 		sb.append("\n\t{ rank=same; " +
-				difference(union(services.keySet(), backwards.keySet()), forwards.keySet())
-						.stream()
-						.map(this::keyToNode)
-						.collect(joining(" ")))
+						difference(union(services.keySet(), backwards.keySet()), forwards.keySet())
+								.stream()
+								.map(this::keyToNode)
+								.collect(joining(" ")))
 				.append(" }\n");
 
 		sb.append("}\n");
@@ -615,8 +611,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	@JmxAttribute
-	@Nullable
-	public String getSlowestNode() {
+	public @Nullable String getSlowestNode() {
 		return union(services.keySet(), union(backwards.keySet(), forwards.keySet())).stream()
 				.filter(key -> {
 					NodeStatus nodeStatus = nodeStatuses.get(key);
@@ -630,8 +625,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	@JmxAttribute
-	@Nullable
-	public String getSlowestChain() {
+	public @Nullable String getSlowestChain() {
 		if (slowestChain == null) {
 			return null;
 		}
@@ -643,8 +637,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getStartDuration() {
+	public @Nullable Duration getStartDuration() {
 		if (startBegin == 0) {
 			return null;
 		}
@@ -657,8 +650,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getStopDuration() {
+	public @Nullable Duration getStopDuration() {
 		if (stopBegin == 0) {
 			return null;
 		}

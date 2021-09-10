@@ -175,8 +175,7 @@ public final class ByteBufs implements Recyclable {
 	 * empty, returns null
 	 * @see #take()
 	 */
-	@Nullable
-	public ByteBuf poll() {
+	public @Nullable ByteBuf poll() {
 		if (hasRemaining()) {
 			return take();
 		}

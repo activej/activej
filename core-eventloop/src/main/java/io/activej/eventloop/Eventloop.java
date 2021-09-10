@@ -145,28 +145,23 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * The NIO selector which selects a set of keys whose
 	 * corresponding channels are ready for I/O operations.
 	 */
-	@Nullable
-	private Selector selector;
+	private @Nullable Selector selector;
 
-	@Nullable
-	private SelectorProvider selectorProvider;
+	private @Nullable SelectorProvider selectorProvider;
 
 	/**
 	 * The thread in which eventloop is running.
 	 */
-	@Nullable
-	private Thread eventloopThread;
+	private @Nullable Thread eventloopThread;
 
 	private static final ThreadLocal<Eventloop> CURRENT_EVENTLOOP = new ThreadLocal<>();
 	/**
 	 * The desired name of the thread.
 	 */
-	@Nullable
-	private String threadName;
+	private @Nullable String threadName;
 	private int threadPriority;
 
-	@Nullable
-	private FatalErrorHandler fatalErrorHandler;
+	private @Nullable FatalErrorHandler fatalErrorHandler;
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -182,8 +177,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	// JMX
 
-	@Nullable
-	private EventloopInspector inspector;
+	private @Nullable EventloopInspector inspector;
 
 	private boolean monitoring = false;
 
@@ -246,8 +240,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	// endregion
 
-	@Nullable
-	public Selector getSelector() {
+	public @Nullable Selector getSelector() {
 		return selector;
 	}
 
@@ -311,8 +304,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		}
 	}
 
-	@Nullable
-	public Selector ensureSelector() {
+	public @Nullable Selector ensureSelector() {
 		if (selector == null) {
 			openSelector();
 		}
@@ -368,8 +360,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 				|| keepAlive || (selector != null && selector.isOpen() && selector.keys().size() - cancelledKeys > 0);
 	}
 
-	@Nullable
-	public Thread getEventloopThread() {
+	public @Nullable Thread getEventloopThread() {
 		return eventloopThread;
 	}
 
@@ -1205,8 +1196,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return tick;
 	}
 
-	@Nullable
-	public FatalErrorHandler getFatalErrorHandler() {
+	public @Nullable FatalErrorHandler getFatalErrorHandler() {
 		return fatalErrorHandler;
 	}
 
@@ -1219,9 +1209,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return keepAlive;
 	}
 
-	@Nullable
 	@JmxAttribute(name = "")
-	public EventloopStats getStats() {
+	public @Nullable EventloopStats getStats() {
 		return BaseInspector.lookup(inspector, EventloopStats.class);
 	}
 

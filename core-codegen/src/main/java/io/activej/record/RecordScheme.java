@@ -43,8 +43,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	private RecordGetter<?>[] recordGetters;
 	private RecordSetter<?>[] recordSetters;
 
-	@Nullable
-	private Comparator<Record> comparator;
+	private @Nullable Comparator<Record> comparator;
 
 	private final HashMap<String, RecordGetter<?>> recordGettersMap = new HashMap<>();
 	private final HashMap<String, RecordSetter<?>> recordSettersMap = new HashMap<>();
@@ -56,11 +55,9 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 
 	String[] fields = {};
 
-	@Nullable
-	private List<String> hashCodeEqualsFields;
+	private @Nullable List<String> hashCodeEqualsFields;
 
-	@Nullable
-	private List<String> comparedFields;
+	private @Nullable List<String> comparedFields;
 
 	@NotNull
 	private final DefiningClassLoader classLoader;

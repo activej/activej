@@ -346,14 +346,18 @@ public final class TestDI {
 		private final RecursiveY y;
 
 		@Inject
-		RecursiveX(RecursiveY y) {this.y = y;}
+		RecursiveX(RecursiveY y) {
+			this.y = y;
+		}
 	}
 
 	static class RecursiveY {
 		private final InstanceProvider<RecursiveX> xProvider;
 
 		@Inject
-		RecursiveY(InstanceProvider<RecursiveX> provider) {xProvider = provider;}
+		RecursiveY(InstanceProvider<RecursiveX> provider) {
+			xProvider = provider;
+		}
 	}
 
 	@Test
@@ -373,8 +377,7 @@ public final class TestDI {
 
 			@Inject
 			@Optional
-			@Nullable
-			String string;
+			@Nullable String string;
 
 			@Inject
 			Integer integer;

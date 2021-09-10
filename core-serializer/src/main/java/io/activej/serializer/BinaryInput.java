@@ -244,8 +244,7 @@ public final class BinaryInput {
 		return s;
 	}
 
-	@Nullable
-	public String readUTF8Nullable() {
+	public @Nullable String readUTF8Nullable() {
 		int length = readVarInt();
 		if (length == 0) return null;
 		length--;
@@ -262,8 +261,7 @@ public final class BinaryInput {
 		return s;
 	}
 
-	@Nullable
-	public String readIso88591Nullable() {
+	public @Nullable String readIso88591Nullable() {
 		int length = readVarInt();
 		if (length == 0) return null;
 		length--;
@@ -298,8 +296,7 @@ public final class BinaryInput {
 		return new String(chars, 0, length);
 	}
 
-	@Nullable
-	public String readUTF16Nullable() {
+	public @Nullable String readUTF16Nullable() {
 		int length = readVarInt();
 		if (length == 0) return null;
 		length--;
@@ -313,8 +310,7 @@ public final class BinaryInput {
 		return new String(chars, 0, length);
 	}
 
-	@Nullable
-	public String readUTF16NullableLE() {
+	public @Nullable String readUTF16NullableLE() {
 		int length = readVarInt();
 		if (length == 0) return null;
 		length--;
@@ -371,8 +367,7 @@ public final class BinaryInput {
 	}
 
 	@Deprecated
-	@Nullable
-	public String readUTF8mb3Nullable() {
+	public @Nullable String readUTF8mb3Nullable() {
 		int length = readVarInt();
 		if (length == 0) return null;
 		length--;

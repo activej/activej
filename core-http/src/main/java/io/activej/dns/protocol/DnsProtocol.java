@@ -238,8 +238,7 @@ public final class DnsProtocol {
 		/**
 		 * Returns record type based on its code or <code>null</code> if code is invalid.
 		 */
-		@Nullable
-		static RecordType fromCode(short code) {
+		static @Nullable RecordType fromCode(short code) {
 			switch (code) {
 				case 0x0001:
 					return A;
@@ -267,8 +266,7 @@ public final class DnsProtocol {
 		/**
 		 * Returns query class based on its code or <code>null</code> if code is invalid.
 		 */
-		@Nullable
-		public static QueryClass fromCode(short code) {
+		public static @Nullable QueryClass fromCode(short code) {
 			if (code == 0x0001) return INTERNET;
 			return null;
 		}

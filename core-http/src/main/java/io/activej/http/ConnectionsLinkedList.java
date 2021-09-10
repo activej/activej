@@ -22,10 +22,8 @@ import org.jetbrains.annotations.Nullable;
 final class ConnectionsLinkedList {
 	private int size;
 
-	@Nullable
-	private AbstractHttpConnection first;
-	@Nullable
-	private AbstractHttpConnection last;
+	private @Nullable AbstractHttpConnection first;
+	private @Nullable AbstractHttpConnection last;
 
 	public boolean isEmpty() {
 		return first == null;

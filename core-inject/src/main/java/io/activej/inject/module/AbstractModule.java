@@ -47,11 +47,9 @@ public abstract class AbstractModule implements Module {
 	private Map<KeyPattern<?>, Set<BindingTransformer<?>>> bindingTransformers;
 	private Map<Key<?>, Multibinder<?>> multibinders;
 
-	@Nullable
-	private ModuleBuilder builder;
+	private @Nullable ModuleBuilder builder;
 
-	@Nullable
-	private final StackTraceElement location;
+	private final @Nullable StackTraceElement location;
 
 	public AbstractModule() {
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();

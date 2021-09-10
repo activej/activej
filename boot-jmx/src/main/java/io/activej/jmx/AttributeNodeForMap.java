@@ -105,9 +105,8 @@ final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 		return Collections.singletonMap(name, tabularType);
 	}
 
-	@Nullable
 	@Override
-	public Object aggregateAttribute(String attrName, List<?> sources) {
+	public @Nullable Object aggregateAttribute(String attrName, List<?> sources) {
 		Map<Object, List<Object>> groupedByKey = fetchMapsAndGroupEntriesByKey(sources);
 
 		if (groupedByKey.size() == 0) {

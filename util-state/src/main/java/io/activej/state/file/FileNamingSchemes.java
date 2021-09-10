@@ -32,8 +32,7 @@ public class FileNamingSchemes {
 		}
 
 		@Override
-		@Nullable
-		public Long decodeSnapshot(String filename) {
+		public @Nullable Long decodeSnapshot(String filename) {
 			if (!filename.startsWith(prefix)) return null;
 			if (!filename.endsWith(suffix)) return null;
 			String substring = filename.substring(prefix.length(), filename.length() - suffix.length());
@@ -93,8 +92,7 @@ public class FileNamingSchemes {
 		}
 
 		@Override
-		@Nullable
-		public Diff decodeDiff(String filename) {
+		public @Nullable Diff decodeDiff(String filename) {
 			if (!filename.startsWith(diffPrefix)) return null;
 			if (!filename.endsWith(diffSuffix)) return null;
 			String substring = filename.substring(diffPrefix.length(), filename.length() - diffSuffix.length());

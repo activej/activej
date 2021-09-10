@@ -30,8 +30,7 @@ final class IntrusiveLinkedList<T> implements Iterable<T> {
 	@Override
 	public @NotNull Iterator<T> iterator() {
 		return new Iterator<T>() {
-			@Nullable
-			Node<T> node = getFirstNode();
+			@Nullable Node<T> node = getFirstNode();
 
 			@Override
 			public boolean hasNext() {
@@ -50,18 +49,14 @@ final class IntrusiveLinkedList<T> implements Iterable<T> {
 
 	public static final class Node<T> {
 		final T value;
-		@Nullable
-		Node<T> prev;
-		@Nullable
-		Node<T> next;
+		@Nullable Node<T> prev;
+		@Nullable Node<T> next;
 
-		@Nullable
-		public Node<T> getPrev() {
+		public @Nullable Node<T> getPrev() {
 			return prev;
 		}
 
-		@Nullable
-		public Node<T> getNext() {
+		public @Nullable Node<T> getNext() {
 			return next;
 		}
 
@@ -75,28 +70,22 @@ final class IntrusiveLinkedList<T> implements Iterable<T> {
 	}
 
 	private int size;
-	@Nullable
-	private Node<T> first;
-	@Nullable
-	private Node<T> last;
+	private @Nullable Node<T> first;
+	private @Nullable Node<T> last;
 
-	@Nullable
-	public Node<T> getFirstNode() {
+	public @Nullable Node<T> getFirstNode() {
 		return first;
 	}
 
-	@Nullable
-	public Node<T> getLastNode() {
+	public @Nullable Node<T> getLastNode() {
 		return last;
 	}
 
-	@Nullable
-	public T getFirstValue() {
+	public @Nullable T getFirstValue() {
 		return first != null ? first.value : null;
 	}
 
-	@Nullable
-	public T getLastValue() {
+	public @Nullable T getLastValue() {
 		return last != null ? last.value : null;
 	}
 
@@ -113,8 +102,7 @@ final class IntrusiveLinkedList<T> implements Iterable<T> {
 		return size;
 	}
 
-	@Nullable
-	public Node<T> removeFirstNode() {
+	public @Nullable Node<T> removeFirstNode() {
 		if (first == null)
 			return null;
 		Node<T> node = first;
@@ -130,8 +118,7 @@ final class IntrusiveLinkedList<T> implements Iterable<T> {
 		return node;
 	}
 
-	@Nullable
-	public Node<T> removeLastNode() {
+	public @Nullable Node<T> removeLastNode() {
 		if (last == null)
 			return null;
 		Node<T> node = last;
@@ -147,8 +134,7 @@ final class IntrusiveLinkedList<T> implements Iterable<T> {
 		return node;
 	}
 
-	@Nullable
-	public T removeFirstValue() {
+	public @Nullable T removeFirstValue() {
 		Node<T> node = removeFirstNode();
 		if (node == null) {
 			return null;
@@ -156,8 +142,7 @@ final class IntrusiveLinkedList<T> implements Iterable<T> {
 		return node.getValue();
 	}
 
-	@Nullable
-	public T removeLastValue() {
+	public @Nullable T removeLastValue() {
 		Node<T> node = removeLastNode();
 		if (node == null) {
 			return null;

@@ -177,8 +177,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 		return deleteWalFiles(executor, singleton(consumer.walFile));
 	}
 
-	@Nullable
-	private WalConsumer createConsumer() {
+	private @Nullable WalConsumer createConsumer() {
 		return stopping ? null : new WalConsumer(path.resolve(UUID.randomUUID() + EXT_CURRENT));
 	}
 

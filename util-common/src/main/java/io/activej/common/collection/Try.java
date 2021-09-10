@@ -38,8 +38,7 @@ public final class Try<T> {
 
 	private final T result;
 
-	@Nullable
-	private final Exception exception;
+	private final @Nullable Exception exception;
 
 	private Try(@Nullable T result, @Nullable Exception e) {
 		this.result = result;
@@ -102,8 +101,7 @@ public final class Try<T> {
 	}
 
 	@Contract(pure = true)
-	@Nullable
-	public T get() {
+	public @Nullable T get() {
 		return result;
 	}
 
@@ -118,8 +116,7 @@ public final class Try<T> {
 	}
 
 	@Contract(pure = true)
-	@Nullable
-	public Exception getException() {
+	public @Nullable Exception getException() {
 		return exception;
 	}
 

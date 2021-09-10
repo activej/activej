@@ -255,8 +255,7 @@ public final class UrlParser {
 		this.protocol = protocol;
 	}
 
-	@Nullable
-	public String getHostAndPort() {
+	public @Nullable String getHostAndPort() {
 		if (host == -1) {
 			return null;
 		}
@@ -264,8 +263,7 @@ public final class UrlParser {
 		return new String(raw, host, end - host, CHARSET);
 	}
 
-	@Nullable
-	public String getHost() {
+	public @Nullable String getHost() {
 		if (host == -1) {
 			return null;
 		}
@@ -342,8 +340,7 @@ public final class UrlParser {
 	}
 
 	// work with parameters
-	@Nullable
-	public String getQueryParameter(@NotNull String key) {
+	public @Nullable String getQueryParameter(@NotNull String key) {
 		if (query == -1) {
 			return null;
 		}
@@ -450,8 +447,7 @@ public final class UrlParser {
 		return result;
 	}
 
-	@Nullable
-	String findParameter(@NotNull String key) {
+	@Nullable String findParameter(@NotNull String key) {
 		for (int record : queryPositions) {
 			if (record == 0) break;
 			int keyStart = record & 0xFFFF;
@@ -538,8 +534,7 @@ public final class UrlParser {
 		return result;
 	}
 
-	@Nullable
-	private static String keyValueDecode(byte[] url, int keyEnd, int limit) {
+	private static @Nullable String keyValueDecode(byte[] url, int keyEnd, int limit) {
 		return urlParse(url, keyEnd < limit && url[keyEnd] == '=' ? keyEnd + 1 : keyEnd, limit);
 	}
 
@@ -551,13 +546,11 @@ public final class UrlParser {
 	 * @param s string for decoding
 	 * @return the newly parsed String
 	 */
-	@Nullable
-	public static String urlParse(@NotNull String s) {
+	public static @Nullable String urlParse(@NotNull String s) {
 		return urlParse(encodeAscii(s), 0, s.length());
 	}
 
-	@Nullable
-	private static String urlParse(byte[] url, int pos, int limit) {
+	private static @Nullable String urlParse(byte[] url, int pos, int limit) {
 		for (int i = pos; i < limit; i++) {
 			byte c = url[i];
 			if (c == '+' || c == '%')
@@ -568,8 +561,7 @@ public final class UrlParser {
 		return new String(url, pos, limit - pos, CHARSET);
 	}
 
-	@Nullable
-	private static String urlParse(byte[] url, int pos, int limit, int encodedSuffixPos) {
+	private static @Nullable String urlParse(byte[] url, int pos, int limit, int encodedSuffixPos) {
 		byte[] bytes = CACHED_BUFFERS.get();
 		if (bytes == null || bytes.length < limit - pos) {
 			int newCount = limit - pos + (limit - pos << 1);

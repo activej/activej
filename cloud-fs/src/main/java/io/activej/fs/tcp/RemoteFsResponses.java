@@ -155,15 +155,13 @@ public final class RemoteFsResponses {
 
 	@CompiledJson
 	public static final class InfoFinished extends FsResponse {
-		@Nullable
-		private final FileMetadata metadata;
+		private final @Nullable FileMetadata metadata;
 
 		public InfoFinished(@Nullable FileMetadata metadata) {
 			this.metadata = metadata;
 		}
 
-		@Nullable
-		public FileMetadata getMetadata() {
+		public @Nullable FileMetadata getMetadata() {
 			return metadata;
 		}
 

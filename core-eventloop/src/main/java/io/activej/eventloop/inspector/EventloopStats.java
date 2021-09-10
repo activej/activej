@@ -411,8 +411,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 	public static final class DurationRunnable implements JmxStats<DurationRunnable>, JmxStatsWithReset {
 		private long duration;
-		@Nullable
-		private Runnable runnable;
+		private @Nullable Runnable runnable;
 
 		@Override
 		public void resetStats() {

@@ -22,6 +22,5 @@ import org.jetbrains.annotations.Nullable;
 public interface RpcStrategy {
 	DiscoveryService getDiscoveryService();
 
-	@Nullable
-	RpcSender createSender(RpcClientConnectionPool pool);
+	@Nullable RpcSender createSender(RpcClientConnectionPool pool);
 }

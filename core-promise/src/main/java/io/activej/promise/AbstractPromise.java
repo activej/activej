@@ -48,11 +48,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 	protected T result = (T) PROMISE_NOT_SET;
 
-	@Nullable
-	protected Exception exception;
+	protected @Nullable Exception exception;
 
-	@Nullable
-	protected Callback<? super T> next;
+	protected @Nullable Callback<? super T> next;
 
 	public void reset() {
 		this.result = (T) PROMISE_NOT_SET;
@@ -783,10 +781,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	private static class PromiseCombine<T, V, U> extends NextPromise<T, V> {
 		final BiFunction<? super T, ? super U, ? extends V> fn;
-		@Nullable
-		T thisResult = (T) NO_RESULT;
-		@Nullable
-		U otherResult = (U) NO_RESULT;
+		@Nullable T thisResult = (T) NO_RESULT;
+		@Nullable U otherResult = (U) NO_RESULT;
 
 		PromiseCombine(BiFunction<? super T, ? super U, ? extends V> fn) {
 			this.fn = fn;
@@ -859,8 +855,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		return resultPromise;
 	}
 
-	@Nullable
-	protected static Void recycleToVoid(Object item) {
+	protected static @Nullable Void recycleToVoid(Object item) {
 		Recyclers.recycle(item);
 		return null;
 	}

@@ -30,8 +30,7 @@ public abstract class SimpleConfigConverter<T> implements ConfigConverter<T> {
 	}
 
 	@Override
-	@Nullable
-	public final T get(Config config, @Nullable T defaultValue) {
+	public final @Nullable T get(Config config, @Nullable T defaultValue) {
 		String value = config.getValue(defaultValue == null ? "" : toString(defaultValue));
 		return value == null || value.trim().isEmpty() ? defaultValue : fromString(value);
 	}

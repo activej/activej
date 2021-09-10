@@ -65,8 +65,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
 	private byte @Nullable [] explicitEndOfStream;
 
-	@Nullable
-	private Duration autoFlushInterval;
+	private @Nullable Duration autoFlushInterval;
 	private BiConsumer<T, Exception> serializationErrorHandler = ($, e) -> closeEx(e);
 
 	private Input input;

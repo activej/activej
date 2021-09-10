@@ -30,8 +30,7 @@ import java.util.Map;
 public final class SessionStoreInMemory<T> implements SessionStore<T> {
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
-	@Nullable
-	private Duration sessionLifetime;
+	private @Nullable Duration sessionLifetime;
 
 	CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -75,8 +74,7 @@ public final class SessionStoreInMemory<T> implements SessionStore<T> {
 	}
 
 	@Override
-	@Nullable
-	public Duration getSessionLifetimeHint() {
+	public @Nullable Duration getSessionLifetimeHint() {
 		return sessionLifetime;
 	}
 

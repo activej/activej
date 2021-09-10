@@ -36,8 +36,7 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 	private final UnaryOperator<ChannelConsumer<ByteBuf>> consumerTransformer;
 
 	private ChannelSupplier<ByteBuf> input;
-	@Nullable
-	private ChannelConsumer<ByteBuf> currentConsumer;
+	private @Nullable ChannelConsumer<ByteBuf> currentConsumer;
 
 	private LogFile currentChunk;
 

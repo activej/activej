@@ -82,8 +82,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 
 	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 
-	@Nullable
-	private String createdBy = null;
+	private @Nullable String createdBy = null;
 
 	// region JMX
 	private final PromiseStats promiseCheckout = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);

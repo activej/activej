@@ -124,9 +124,8 @@ public final class ReportingTest extends CubeTestBase {
 			return new Object[]{attributes};
 		}
 
-		@Nullable
 		@Override
-		public String resolveAttributes(Integer key) {
+		public @Nullable String resolveAttributes(Integer key) {
 			switch (key) {
 				case 1:
 					return "first";

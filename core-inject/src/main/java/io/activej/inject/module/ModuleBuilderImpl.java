@@ -41,12 +41,10 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	private final Map<KeyPattern<?>, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
 	private final Map<Key<?>, Multibinder<?>> multibinders = new HashMap<>();
 
-	@Nullable
-	private BindingDesc current = null;
+	private @Nullable BindingDesc current = null;
 
 	private final String name;
-	@Nullable
-	private final StackTraceElement location;
+	private final @Nullable StackTraceElement location;
 
 	ModuleBuilderImpl() {
 		// builder module is (and should be) never instantiated directly,

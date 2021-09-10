@@ -154,8 +154,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 		doPut(data);
 	}
 
-	@Nullable
-	public S get(K key) {
+	public @Nullable S get(K key) {
 		singleGets.recordEvent();
 		CrdtData<K, S> data = map.get(key);
 		return data != null ? data.getState() : null;

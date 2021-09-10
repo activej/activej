@@ -37,8 +37,7 @@ import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes")
 final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
-	@Nullable
-	private final Method setter;
+	private final @Nullable Method setter;
 	private final Class<?> type;
 	private final JmxReducer reducer;
 

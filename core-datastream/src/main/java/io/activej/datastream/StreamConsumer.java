@@ -48,8 +48,7 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 	 */
 	void consume(@NotNull StreamSupplier<T> streamSupplier);
 
-	@Nullable
-	StreamDataAcceptor<T> getDataAcceptor();
+	@Nullable StreamDataAcceptor<T> getDataAcceptor();
 
 	/**
 	 * A signal promise of the <i>acknowledgement</i> state of this consumer - its completion means that

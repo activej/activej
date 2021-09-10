@@ -25,8 +25,7 @@ import java.time.format.DateTimeFormatter;
 public interface LogNamingScheme {
 	String path(String logPartition, LogFile logFile);
 
-	@Nullable
-	PartitionAndFile parse(String name);
+	@Nullable PartitionAndFile parse(String name);
 
 	LogFile format(long currentTimeMillis);
 

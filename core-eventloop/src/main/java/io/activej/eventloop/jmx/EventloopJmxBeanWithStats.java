@@ -31,8 +31,7 @@ public interface EventloopJmxBeanWithStats extends EventloopJmxBean {
 	}
 
 	@JmxAttribute
-	@Nullable
-	default Duration getSmoothingWindow() {
+	default @Nullable Duration getSmoothingWindow() {
 		return StatsUtils.getSmoothingWindow(this);
 	}
 

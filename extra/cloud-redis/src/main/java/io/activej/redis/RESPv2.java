@@ -144,8 +144,7 @@ public final class RESPv2 {
 	 *     <li><b>{@code Object[]}</b> - Redis Array that may contain any type listed here</li>
 	 * </ul>
 	 */
-	@Nullable
-	public Object readObject() throws MalformedDataException {
+	public @Nullable Object readObject() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
 		switch (array[head++]) {
@@ -277,8 +276,7 @@ public final class RESPv2 {
 	 *
 	 * @param charset charset for encoding a string
 	 */
-	@Nullable
-	public String readBytes(Charset charset) throws MalformedDataException {
+	public @Nullable String readBytes(Charset charset) throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
 		if (!ASSERT_PROTOCOL || array[head] == BYTES_MARKER) {
@@ -288,8 +286,7 @@ public final class RESPv2 {
 		throw new MalformedDataException("Expected Bulk String, got " + getDataType(array[head]));
 	}
 
-	@Nullable
-	private String decodeBytes(Charset charset) throws MalformedDataException {
+	private @Nullable String decodeBytes(Charset charset) throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) {
 			return null;

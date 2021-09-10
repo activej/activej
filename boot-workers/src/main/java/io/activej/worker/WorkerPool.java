@@ -108,13 +108,11 @@ public final class WorkerPool {
 		return new Instances<>(instances);
 	}
 
-	@Nullable
-	public <T> Instances<T> peekInstances(Class<T> type) {
+	public <T> @Nullable Instances<T> peekInstances(Class<T> type) {
 		return peekInstances(Key.of(type));
 	}
 
-	@Nullable
-	public <T> Instances<T> peekInstances(Key<T> key) {
+	public <T> @Nullable Instances<T> peekInstances(Key<T> key) {
 		Binding<?> binding = scopeBindings.get(key);
 		if (binding == null || binding.getType() == TRANSIENT) {
 			return null;

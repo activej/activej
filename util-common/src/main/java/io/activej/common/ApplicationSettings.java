@@ -120,8 +120,7 @@ public final class ApplicationSettings {
 		return get(val -> Enum.valueOf(enumClass, val), type, name, defValue);
 	}
 
-	@Nullable
-	private static String getProperty(Class<?> type, String name) {
+	private static @Nullable String getProperty(Class<?> type, String name) {
 		String property;
 		property = properties.getProperty(type.getName() + "." + name);
 		if (property != null) return property;

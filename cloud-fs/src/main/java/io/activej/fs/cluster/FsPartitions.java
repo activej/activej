@@ -110,8 +110,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * @param partitionId id of {@link ActiveFs}
 	 * @return alive {@link ActiveFs}
 	 */
-	@Nullable
-	public ActiveFs get(Object partitionId) {
+	public @Nullable ActiveFs get(Object partitionId) {
 		return alivePartitions.get(partitionId);
 	}
 

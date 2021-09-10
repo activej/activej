@@ -36,9 +36,8 @@ final class VarArg implements Variable {
 		return ctx.getGeneratorAdapter().getArgumentTypes()[argument];
 	}
 
-	@Nullable
 	@Override
-	public Object beginStore(Context ctx) {
+	public @Nullable Object beginStore(Context ctx) {
 		return null;
 	}
 

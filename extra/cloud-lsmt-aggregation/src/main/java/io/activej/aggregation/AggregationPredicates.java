@@ -28,7 +28,8 @@ import java.util.regex.Pattern;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class AggregationPredicates {
@@ -1273,9 +1274,8 @@ public class AggregationPredicates {
 							and(new ArrayList<>(simplifiedPredicates));
 		}
 
-		@Nullable
 		@SuppressWarnings("unchecked")
-		private static AggregationPredicate simplifyAnd(AggregationPredicate left, AggregationPredicate right) {
+		private static @Nullable AggregationPredicate simplifyAnd(AggregationPredicate left, AggregationPredicate right) {
 			if (left.equals(right))
 				return left;
 			PredicateSimplifierKey key = new PredicateSimplifierKey(left.getClass(), right.getClass());

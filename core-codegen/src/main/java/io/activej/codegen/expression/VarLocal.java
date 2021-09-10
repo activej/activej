@@ -42,9 +42,8 @@ public final class VarLocal implements Variable {
 		return g.getLocalType(local);
 	}
 
-	@Nullable
 	@Override
-	public Object beginStore(Context ctx) {
+	public @Nullable Object beginStore(Context ctx) {
 		return null;
 	}
 

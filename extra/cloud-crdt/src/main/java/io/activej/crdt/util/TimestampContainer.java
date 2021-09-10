@@ -77,9 +77,8 @@ public final class TimestampContainer<S> {
 				return new TimestampContainer<>(Math.max(first.getTimestamp(), second.getTimestamp()), combiner.apply(first.getState(), second.getState()));
 			}
 
-			@Nullable
 			@Override
-			public TimestampContainer<S> extract(TimestampContainer<S> state, long timestamp) {
+			public @Nullable TimestampContainer<S> extract(TimestampContainer<S> state, long timestamp) {
 				if (state.getTimestamp() > timestamp) {
 					return state;
 				}

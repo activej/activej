@@ -91,8 +91,7 @@ public final class Injector implements ResourceLocator {
 		}
 	}
 
-	@Nullable
-	final Injector parent;
+	final @Nullable Injector parent;
 	final Trie<Scope, ScopeLocalData> scopeDataTree;
 
 	final Map<Key<?>, Integer> localSlotMapping;
@@ -400,8 +399,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	@Nullable
-	public <T> T getInstanceOrNull(@NotNull Key<T> key) {
+	public <T> @Nullable T getInstanceOrNull(@NotNull Key<T> key) {
 		CompiledBinding<?> binding = localCompiledBindings.get(key);
 		return binding != null ? (T) binding.getInstance(scopeCaches, -1) : null;
 	}
@@ -410,8 +408,7 @@ public final class Injector implements ResourceLocator {
 	 * @see #getInstanceOrNull(Key)
 	 */
 	@Override
-	@Nullable
-	public <T> T getInstanceOrNull(@NotNull Class<T> type) {
+	public <T> @Nullable T getInstanceOrNull(@NotNull Class<T> type) {
 		return getInstanceOrNull(Key.of(type));
 	}
 
@@ -474,9 +471,8 @@ public final class Injector implements ResourceLocator {
 	 * This method returns an instance only if it already was created by a {@link #getInstance} call before,
 	 * it does not trigger instance creation.
 	 */
-	@Nullable
 	@SuppressWarnings("unchecked")
-	public <T> T peekInstance(@NotNull Key<T> key) {
+	public <T> @Nullable T peekInstance(@NotNull Key<T> key) {
 		Integer index = localSlotMapping.get(key);
 		return index != null ? (T) scopeCaches[scopeCaches.length - 1].get(index) : null;
 	}
@@ -484,8 +480,7 @@ public final class Injector implements ResourceLocator {
 	/**
 	 * @see #peekInstance(Key)
 	 */
-	@Nullable
-	public <T> T peekInstance(@NotNull Class<T> type) {
+	public <T> @Nullable T peekInstance(@NotNull Class<T> type) {
 		return peekInstance(Key.of(type));
 	}
 
@@ -540,13 +535,11 @@ public final class Injector implements ResourceLocator {
 		putInstance(Key.of(key), instance);
 	}
 
-	@Nullable
-	public Binding<?> getBinding(Class<?> type) {
+	public @Nullable Binding<?> getBinding(Class<?> type) {
 		return getBinding(Key.of(type));
 	}
 
-	@Nullable
-	public Binding<?> getBinding(Key<?> key) {
+	public @Nullable Binding<?> getBinding(Key<?> key) {
 		return scopeDataTree.get().bindings.get(key);
 	}
 
@@ -571,8 +564,7 @@ public final class Injector implements ResourceLocator {
 		return new Injector(this, scopeDataTree.get(scope));
 	}
 
-	@Nullable
-	public Injector getParent() {
+	public @Nullable Injector getParent() {
 		return parent;
 	}
 

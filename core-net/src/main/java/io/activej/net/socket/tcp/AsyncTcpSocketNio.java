@@ -65,19 +65,14 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private final Eventloop eventloop;
 	private final InetSocketAddress remoteAddress;
 
-	@Nullable
-	private SocketChannel channel;
-	@Nullable
-	private ByteBuf readBuf;
+	private @Nullable SocketChannel channel;
+	private @Nullable ByteBuf readBuf;
 	private boolean readEndOfStream;
-	@Nullable
-	private ByteBuf writeBuf;
+	private @Nullable ByteBuf writeBuf;
 	private boolean writeEndOfStream;
 
-	@Nullable
-	private SettablePromise<ByteBuf> read;
-	@Nullable
-	private SettablePromise<Void> write;
+	private @Nullable SettablePromise<ByteBuf> read;
+	private @Nullable SettablePromise<Void> write;
 
 	private SelectionKey key;
 	private byte ops;
@@ -86,16 +81,12 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	private int writeTimeout = NO_TIMEOUT;
 	private int readBufferSize = DEFAULT_READ_BUFFER_SIZE;
 
-	@Nullable
-	private ScheduledRunnable scheduledReadTimeout;
-	@Nullable
-	private ScheduledRunnable scheduledWriteTimeout;
+	private @Nullable ScheduledRunnable scheduledReadTimeout;
+	private @Nullable ScheduledRunnable scheduledWriteTimeout;
 
-	@Nullable
-	private Inspector inspector;
+	private @Nullable Inspector inspector;
 
-	@Nullable
-	private Object userData;
+	private @Nullable Object userData;
 
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onConnect(AsyncTcpSocketNio socket);
@@ -294,8 +285,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		return remoteAddress;
 	}
 
-	@Nullable
-	public Object getUserData() {
+	public @Nullable Object getUserData() {
 		return userData;
 	}
 
@@ -579,8 +569,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		return channel == null;
 	}
 
-	@Nullable
-	public SocketChannel getSocketChannel() {
+	public @Nullable SocketChannel getSocketChannel() {
 		return channel;
 	}
 

@@ -57,10 +57,8 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	private final ChannelConsumer<Frame> frameOutput;
 	private final int maxMessageSize;
 
-	@Nullable
-	private SettablePromise<?> readPromise;
-	@Nullable
-	private SettablePromise<Void> writePromise;
+	private @Nullable SettablePromise<?> readPromise;
+	private @Nullable SettablePromise<Void> writePromise;
 
 	WebSocketImpl(
 			HttpRequest request,

@@ -11,12 +11,9 @@ public final class LocalTaskData {
 	private final TaskStatus status;
 	private final String graph;
 	private final Map<Integer, NodeStat> nodeStats;
-	@Nullable
-	private final Instant started;
-	@Nullable
-	private final Instant finished;
-	@Nullable
-	private final String error;
+	private final @Nullable Instant started;
+	private final @Nullable Instant finished;
+	private final @Nullable String error;
 
 	public LocalTaskData(TaskStatus status, String graph, Map<Integer, NodeStat> nodeStats, @Nullable Instant started, @Nullable Instant finished, @Nullable String error) {
 		this.status = status;
@@ -39,18 +36,15 @@ public final class LocalTaskData {
 		return nodeStats;
 	}
 
-	@Nullable
-	public Instant getStarted() {
+	public @Nullable Instant getStarted() {
 		return started;
 	}
 
-	@Nullable
-	public Instant getFinished() {
+	public @Nullable Instant getFinished() {
 		return finished;
 	}
 
-	@Nullable
-	public String getError() {
+	public @Nullable String getError() {
 		return error;
 	}
 

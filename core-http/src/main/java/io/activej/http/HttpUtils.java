@@ -294,8 +294,7 @@ public final class HttpUtils {
 	/**
 	 * (RFC3986) scheme://authority/path/?query#fragment
 	 */
-	@Nullable
-	public static String getFullUri(HttpRequest request, int builderCapacity) {
+	public static @Nullable String getFullUri(HttpRequest request, int builderCapacity) {
 		String host = request.getHeader(HOST);
 		if (host == null) {
 			return null;
@@ -316,8 +315,7 @@ public final class HttpUtils {
 		return fullUriBuilder.toString();
 	}
 
-	@Nullable
-	public static String getFullUri(HttpRequest request) {
+	public static @Nullable String getFullUri(HttpRequest request) {
 		return getFullUri(request, URI_DEFAULT_CAPACITY);
 	}
 

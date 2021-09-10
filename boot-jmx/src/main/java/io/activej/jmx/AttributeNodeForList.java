@@ -92,9 +92,8 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 		return Collections.singletonMap(name, arrayType);
 	}
 
-	@Nullable
 	@Override
-	public Object aggregateAttribute(String attrName, List<?> sources) {
+	public @Nullable Object aggregateAttribute(String attrName, List<?> sources) {
 		List<Map<String, Object>> attributesFromAllElements = new ArrayList<>();
 		Set<String> visibleSubAttrs = subNode.getVisibleAttributes();
 		for (Object source : sources) {

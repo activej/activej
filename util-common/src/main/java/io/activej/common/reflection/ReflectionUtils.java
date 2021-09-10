@@ -123,8 +123,7 @@ public final class ReflectionUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	private static <T> Supplier<T> getConstructorOrFactory(Class<T> cls, String... factoryMethodNames) {
+	private static <T> @Nullable Supplier<T> getConstructorOrFactory(Class<T> cls, String... factoryMethodNames) {
 		for (String methodName : factoryMethodNames) {
 			Method method;
 			try {
@@ -160,8 +159,7 @@ public final class ReflectionUtils {
 		return getConstructorOrFactory(cls, factoryMethodNames) != null;
 	}
 
-	@Nullable
-	public static <T> T tryToCreateInstanceWithFactoryMethods(Class<T> cls, String... factoryMethodNames) {
+	public static <T> @Nullable T tryToCreateInstanceWithFactoryMethods(Class<T> cls, String... factoryMethodNames) {
 		try {
 			Supplier<T> supplier = getConstructorOrFactory(cls, factoryMethodNames);
 			return supplier != null ? supplier.get() : null;

@@ -54,8 +54,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
 	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(MultipartDecoder.class, "maxMetaBuffer", kilobytes(4)).toInt();
 	private static final ByteBufsDecoder<ByteBuf> OF_CRLF_DECODER = ByteBufsDecoder.ofCrlfTerminatedBytes();
 
-	@Nullable
-	private List<String> readingHeaders = null;
+	private @Nullable List<String> readingHeaders = null;
 
 	private final byte[] boundary;
 	private final byte[] lastBoundary;
@@ -154,9 +153,8 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
 	private boolean sawCrlf = true;
 	private boolean finished = false;
 
-	@Nullable
 	@Override
-	public MultipartFrame tryDecode(ByteBufs bufs) throws MalformedDataException {
+	public @Nullable MultipartFrame tryDecode(ByteBufs bufs) throws MalformedDataException {
 		if (finished) {
 			return null;
 		}
@@ -244,10 +242,8 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
 	}
 
 	public static final class MultipartFrame implements Recyclable {
-		@Nullable
-		private ByteBuf data;
-		@Nullable
-		private final Map<String, String> headers;
+		private @Nullable ByteBuf data;
+		private final @Nullable Map<String, String> headers;
 
 		private MultipartFrame(@Nullable ByteBuf data, @Nullable Map<String, String> headers) {
 			this.data = data;

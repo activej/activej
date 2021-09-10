@@ -36,8 +36,7 @@ public interface Decoder<T> {
 	 */
 	Either<T, DecodeErrors> decode(@NotNull HttpRequest request);
 
-	@Nullable
-	default T decodeOrNull(@NotNull HttpRequest request) {
+	default @Nullable T decodeOrNull(@NotNull HttpRequest request) {
 		return decode(request).getLeft();
 	}
 

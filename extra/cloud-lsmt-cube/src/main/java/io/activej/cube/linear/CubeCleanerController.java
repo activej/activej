@@ -259,20 +259,17 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	// region JMX getters
 	@JmxAttribute
-	@Nullable
-	public Instant getCleanupLastStartTime() {
+	public @Nullable Instant getCleanupLastStartTime() {
 		return cleanupLastStartTimestamp != 0L ? Instant.ofEpochMilli(cleanupLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getCleanupLastCompleteTime() {
+	public @Nullable Instant getCleanupLastCompleteTime() {
 		return cleanupLastCompleteTimestamp != 0L ? Instant.ofEpochMilli(cleanupLastCompleteTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getCleanupCurrentDuration() {
+	public @Nullable Duration getCleanupCurrentDuration() {
 		return cleanupLastStartTimestamp - cleanupLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(now.currentTimeMillis() - cleanupLastStartTimestamp) :
 				null;
@@ -284,28 +281,24 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getCleanupLastException() {
+	public @Nullable Exception getCleanupLastException() {
 		return cleanupException;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getCleanupConsolidatedChunksLastStartTime() {
+	public @Nullable Instant getCleanupConsolidatedChunksLastStartTime() {
 		return cleanupConsolidatedChunksLastStartTimestamp != 0L ? Instant.ofEpochMilli(cleanupConsolidatedChunksLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getCleanupConsolidatedChunksLastCompleteTime() {
+	public @Nullable Instant getCleanupConsolidatedChunksLastCompleteTime() {
 		return cleanupConsolidatedChunksLastCompleteTimestamp != 0L ?
 				Instant.ofEpochMilli(cleanupConsolidatedChunksLastCompleteTimestamp) :
 				null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getCleanupConsolidatedChunksCurrentDuration() {
+	public @Nullable Duration getCleanupConsolidatedChunksCurrentDuration() {
 		return cleanupConsolidatedChunksLastStartTimestamp - cleanupConsolidatedChunksLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(now.currentTimeMillis() - cleanupConsolidatedChunksLastStartTimestamp) :
 				null;
@@ -317,28 +310,24 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getCleanupConsolidatedChunksLastException() {
+	public @Nullable Exception getCleanupConsolidatedChunksLastException() {
 		return cleanupConsolidatedChunksException;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getGetRequiredChunksLastStartTime() {
+	public @Nullable Instant getGetRequiredChunksLastStartTime() {
 		return getRequiredChunksLastStartTimestamp != 0L ? Instant.ofEpochMilli(getRequiredChunksLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getGetRequiredChunksLastCompleteTime() {
+	public @Nullable Instant getGetRequiredChunksLastCompleteTime() {
 		return getRequiredChunksLastCompleteTimestamp != 0L ?
 				Instant.ofEpochMilli(getRequiredChunksLastCompleteTimestamp) :
 				null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getGetRequiredChunksCurrentDuration() {
+	public @Nullable Duration getGetRequiredChunksCurrentDuration() {
 		return getRequiredChunksLastStartTimestamp - getRequiredChunksLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(now.currentTimeMillis() - getRequiredChunksLastStartTimestamp) :
 				null;
@@ -350,28 +339,24 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getGetRequiredChunksLastException() {
+	public @Nullable Exception getGetRequiredChunksLastException() {
 		return getRequiredChunksException;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getCheckRequiredChunksLastStartTime() {
+	public @Nullable Instant getCheckRequiredChunksLastStartTime() {
 		return checkRequiredChunksLastStartTimestamp != 0L ? Instant.ofEpochMilli(checkRequiredChunksLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getCheckRequiredChunksLastCompleteTime() {
+	public @Nullable Instant getCheckRequiredChunksLastCompleteTime() {
 		return checkRequiredChunksLastCompleteTimestamp != 0L ?
 				Instant.ofEpochMilli(checkRequiredChunksLastCompleteTimestamp) :
 				null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getCheckRequiredChunksCurrentDuration() {
+	public @Nullable Duration getCheckRequiredChunksCurrentDuration() {
 		return checkRequiredChunksLastStartTimestamp - checkRequiredChunksLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(now.currentTimeMillis() - checkRequiredChunksLastStartTimestamp) :
 				null;
@@ -383,28 +368,24 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getCheckRequiredChunksLastException() {
+	public @Nullable Exception getCheckRequiredChunksLastException() {
 		return checkRequiredChunksException;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getCleanupChunksLastStartTime() {
+	public @Nullable Instant getCleanupChunksLastStartTime() {
 		return cleanupChunksLastStartTimestamp != 0L ? Instant.ofEpochMilli(cleanupChunksLastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getCleanupChunksLastCompleteTime() {
+	public @Nullable Instant getCleanupChunksLastCompleteTime() {
 		return cleanupChunksLastCompleteTimestamp != 0L ?
 				Instant.ofEpochMilli(cleanupChunksLastCompleteTimestamp) :
 				null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getCleanupChunksCurrentDuration() {
+	public @Nullable Duration getCleanupChunksCurrentDuration() {
 		return cleanupChunksLastStartTimestamp - cleanupChunksLastCompleteTimestamp > 0 ?
 				Duration.ofMillis(now.currentTimeMillis() - cleanupChunksLastStartTimestamp) :
 				null;
@@ -416,8 +397,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Exception getCleanupChunksLastException() {
+	public @Nullable Exception getCleanupChunksLastException() {
 		return cleanupChunksException;
 	}
 	// endregion

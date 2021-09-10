@@ -27,14 +27,11 @@ import static java.lang.System.currentTimeMillis;
 public final class ExceptionStats implements JmxStats<ExceptionStats>, JmxStatsWithReset {
 	private static final long DETAILS_REFRESH_TIMEOUT = 1000L;
 
-	@Nullable
-	private Class<? extends Throwable> exceptionClass;
+	private @Nullable Class<? extends Throwable> exceptionClass;
 	private int count;
 	private long lastExceptionTimestamp;
-	@Nullable
-	private Throwable throwable;
-	@Nullable
-	private Object context;
+	private @Nullable Throwable throwable;
+	private @Nullable Object context;
 
 	private ExceptionStats() {
 	}
@@ -87,26 +84,22 @@ public final class ExceptionStats implements JmxStats<ExceptionStats>, JmxStatsW
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public String getLastType() {
+	public @Nullable String getLastType() {
 		return exceptionClass != null ? exceptionClass.toString() : null;
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Instant getLastTime() {
+	public @Nullable Instant getLastTime() {
 		return lastExceptionTimestamp != 0L ? Instant.ofEpochMilli(lastExceptionTimestamp) : null;
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public Throwable getLastException() {
+	public @Nullable Throwable getLastException() {
 		return throwable;
 	}
 
 	@JmxAttribute(optional = true)
-	@Nullable
-	public String getLastMessage() {
+	public @Nullable String getLastMessage() {
 		return throwable != null ? throwable.getMessage() : null;
 	}
 
@@ -130,8 +123,7 @@ public final class ExceptionStats implements JmxStats<ExceptionStats>, JmxStatsW
 	}
 
 	@JmxAttribute
-	@Nullable
-	public List<String> getError() {
+	public @Nullable List<String> getError() {
 		return MBeanFormat.formatMultilineStringAsList(getMultilineError());
 	}
 
@@ -145,8 +137,7 @@ public final class ExceptionStats implements JmxStats<ExceptionStats>, JmxStatsW
 		return count + last;
 	}
 
-	@Nullable
-	public Object getContext() {
+	public @Nullable Object getContext() {
 		return context;
 	}
 }

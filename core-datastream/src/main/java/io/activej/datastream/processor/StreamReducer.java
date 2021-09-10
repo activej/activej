@@ -45,12 +45,9 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 
 	private int bufferSize = DEFAULT_BUFFER_SIZE;
 
-	@Nullable
-	private Input<?> lastInput;
-	@Nullable
-	private K key = null;
-	@Nullable
-	private A accumulator;
+	private @Nullable Input<?> lastInput;
+	private @Nullable K key = null;
+	private @Nullable A accumulator;
 
 	private final PriorityQueue<Input<?>> priorityQueue;
 	private int streamsAwaiting;
@@ -178,11 +175,11 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 			return --streamsAwaiting;
 		}
 
-		protected void closeInput(){
+		protected void closeInput() {
 			streamsOpen--;
 		}
 
-		protected void continueReduce(){
+		protected void continueReduce() {
 			output.reduce();
 		}
 	}

@@ -729,13 +729,11 @@ public final class DynamicMBeanFactory {
 			return type;
 		}
 
-		@Nullable
-		public Method getGetter() {
+		public @Nullable Method getGetter() {
 			return getter;
 		}
 
-		@Nullable
-		public Method getSetter() {
+		public @Nullable Method getSetter() {
 			return setter;
 		}
 	}
@@ -879,10 +877,8 @@ public final class DynamicMBeanFactory {
 			return resultList;
 		}
 
-		@Nullable
 		@Override
-		public Object invoke(String actionName, Object[] params, String[] signature) throws MBeanException {
-
+		public @Nullable Object invoke(String actionName, Object[] params, String[] signature) throws MBeanException {
 			Object[] args = nonNullElse(params, new Object[0]);
 			String[] argTypes = nonNullElse(signature, new String[0]);
 			OperationKey opkey = new OperationKey(actionName, argTypes);
@@ -994,8 +990,7 @@ public final class DynamicMBeanFactory {
 	}
 
 	static class JmxCustomTypeAdapter<T> {
-		@Nullable
-		public final Function<String, T> from;
+		public final @Nullable Function<String, T> from;
 		public final Function<T, String> to;
 
 		public JmxCustomTypeAdapter(Function<T, String> to, @Nullable Function<String, T> from) {

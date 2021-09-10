@@ -42,8 +42,7 @@ import java.util.Objects;
 public abstract class Key<T> {
 	@NotNull
 	private final Type type;
-	@Nullable
-	private final Object qualifier;
+	private final @Nullable Object qualifier;
 
 	public Key() {
 		this.type = getTypeParameter();
@@ -129,8 +128,7 @@ public abstract class Key<T> {
 		throw new IllegalStateException("Expected type from key " + getDisplayString() + " to be parameterized");
 	}
 
-	@Nullable
-	public Object getQualifier() {
+	public @Nullable Object getQualifier() {
 		return qualifier;
 	}
 

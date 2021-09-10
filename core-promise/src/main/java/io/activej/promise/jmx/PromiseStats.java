@@ -36,8 +36,7 @@ import static io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
  * Allows to track stats of {@link Promise}s.
  */
 public class PromiseStats {
-	@Nullable
-	private Eventloop eventloop;
+	private @Nullable Eventloop eventloop;
 
 	private int activePromises = 0;
 	private long lastStartTimestamp = 0;
@@ -114,20 +113,17 @@ public class PromiseStats {
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getLastStartTime() {
+	public @Nullable Instant getLastStartTime() {
 		return lastStartTimestamp != 0L ? Instant.ofEpochMilli(lastStartTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Instant getLastCompleteTime() {
+	public @Nullable Instant getLastCompleteTime() {
 		return lastCompleteTimestamp != 0L ? Instant.ofEpochMilli(lastCompleteTimestamp) : null;
 	}
 
 	@JmxAttribute
-	@Nullable
-	public Duration getCurrentDuration() {
+	public @Nullable Duration getCurrentDuration() {
 		return activePromises != 0 ? Duration.ofMillis(currentTimeMillis() - lastStartTimestamp) : null;
 	}
 

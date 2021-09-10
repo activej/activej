@@ -320,8 +320,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 		return path.isEmpty() || path.endsWith(ActiveFs.SEPARATOR) ? path : path + ActiveFs.SEPARATOR;
 	}
 
-	@Nullable
-	private C fromPath(String path) {
+	private @Nullable C fromPath(String path) {
 		String chunksDir = toDir(chunksPath);
 		checkArgument(path.startsWith(chunksDir));
 		try {

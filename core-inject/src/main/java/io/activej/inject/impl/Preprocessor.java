@@ -82,8 +82,7 @@ public final class Preprocessor {
 	}
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	private static Binding<?> resolve(
+	private static @Nullable Binding<?> resolve(
 			Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings,
 			Scope[] scope, Key<?> key, @Nullable Set<Binding<?>> bindingSet,
 			Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
@@ -96,8 +95,7 @@ public final class Preprocessor {
 
 		BindingLocator recursiveLocator = new BindingLocator() {
 			@Override
-			@Nullable
-			public <T> Binding<T> get(Key<T> key) {
+			public <T> @Nullable Binding<T> get(Key<T> key) {
 				return (Binding<T>) resolve(upper, localBindings, resolvedBindings, scope, key, localBindings.get(key), multibinder, transformer, generator);
 			}
 		};
@@ -307,15 +305,13 @@ public final class Preprocessor {
 	@FunctionalInterface
 	interface MissingKeyHint {
 
-		@Nullable
-		String getHintFor(Key<?> missing, Set<Key<?>> upperKnown, Trie<Scope, Map<Key<?>, Binding<?>>> bindings);
+		@Nullable String getHintFor(Key<?> missing, Set<Key<?>> upperKnown, Trie<Scope, Map<Key<?>, Binding<?>>> bindings);
 	}
 
 	@FunctionalInterface
 	interface ErrorHint {
 
-		@Nullable
-		String getHintFor(Entry<Key<?>, Binding<?>> keybind, Key<?> missing, Set<Key<?>> upperKnown, Trie<Scope, Map<Key<?>, Binding<?>>> bindings);
+		@Nullable String getHintFor(Entry<Key<?>, Binding<?>> keybind, Key<?> missing, Set<Key<?>> upperKnown, Trie<Scope, Map<Key<?>, Binding<?>>> bindings);
 	}
 
 	private static final List<MissingKeyHint> missingKeyHints = singletonList(

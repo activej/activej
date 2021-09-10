@@ -52,10 +52,9 @@ public class LogItem {
 	public double revenue;
 
 	@Measures
-	@Nullable
 	@Serialize
 	@SerializeNullable
-	public String testString;
+	public @Nullable String testString;
 
 	public LogItem() {
 	}

@@ -86,8 +86,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	private Set<Object> lastAlivePartitionIds = emptySet();
 	private long lastPlanRecalculation;
 
-	@Nullable
-	private SettablePromise<Void> closeCallback;
+	private @Nullable SettablePromise<Void> closeCallback;
 
 	private final PromiseStats repartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats singleFileRepartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));

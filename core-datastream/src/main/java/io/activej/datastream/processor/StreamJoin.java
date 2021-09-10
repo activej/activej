@@ -79,8 +79,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 		/**
 		 * Method which contains realization left join
 		 */
-		@Nullable
-		public V doLeftJoin(K key, L left) {
+		public @Nullable V doLeftJoin(K key, L left) {
 			return null;
 		}
 

@@ -60,8 +60,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	private final Map<String, Class<?>> definedClasses = new ConcurrentHashMap<>();
 	private final Map<ClassKey<?>, AtomicReference<Class<?>>> cachedClasses = new ConcurrentHashMap<>();
 
-	@Nullable
-	private BytecodeStorage bytecodeStorage;
+	private @Nullable BytecodeStorage bytecodeStorage;
 
 	private Path debugOutputDir = DEFAULT_DEBUG_OUTPUT_DIR;
 
@@ -258,8 +257,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 		}
 	}
 
-	@Nullable
-	public Class<?> getCachedClass(@NotNull ClassKey<?> key) {
+	public @Nullable Class<?> getCachedClass(@NotNull ClassKey<?> key) {
 		return Optional.ofNullable(cachedClasses.get(key)).map(AtomicReference::get).orElse(null);
 	}
 

@@ -36,8 +36,7 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 
 	@FunctionalInterface
 	public interface SquashFunction<OP, OP1 extends OP, OP2 extends OP> {
-		@Nullable
-		OP trySquash(OP1 op1, OP2 op2);
+		@Nullable OP trySquash(OP1 op1, OP2 op2);
 	}
 
 	@FunctionalInterface

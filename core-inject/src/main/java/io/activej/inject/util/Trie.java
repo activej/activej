@@ -71,8 +71,7 @@ public final class Trie<K, V> {
 		return children.computeIfAbsent(key, k -> leaf(f.apply(k)));
 	}
 
-	@Nullable
-	public Trie<K, V> get(K[] path) {
+	public @Nullable Trie<K, V> get(K[] path) {
 		Trie<K, V> subtree = this;
 		for (K key : path) {
 			subtree = subtree.get(key);

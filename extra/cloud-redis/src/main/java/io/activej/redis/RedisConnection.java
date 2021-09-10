@@ -56,8 +56,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 	private int estimatedSize;
 	private int requiredRemainingSize;
-	@Nullable
-	private ByteBuf writeBuf = null;
+	private @Nullable ByteBuf writeBuf = null;
 
 	private boolean readDone;
 	private boolean writeDone;
@@ -203,8 +202,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 						return results;
 					}
 
-					@Nullable
-					private Object @Nullable [] parseResponses(RESPv2 data) throws MalformedDataException {
+					private @Nullable Object @Nullable [] parseResponses(RESPv2 data) throws MalformedDataException {
 						long len = data.readArraySize();
 						if (len == -1) return null;
 

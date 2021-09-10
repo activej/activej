@@ -47,9 +47,8 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		readHeader = true;
 	}
 
-	@Nullable
 	@Override
-	public ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
+	public @Nullable ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
 		if (readHeader) {
 			if (!readHeader(bufs)) return null;
 			readHeader = false;
@@ -88,8 +87,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 		}) != 0;
 	}
 
-	@Nullable
-	private ByteBuf decompress(ByteBufs bufs, int compressedSize) throws MalformedDataException {
+	private @Nullable ByteBuf decompress(ByteBufs bufs, int compressedSize) throws MalformedDataException {
 		if (!bufs.hasRemainingBytes(4 + 4 + compressedSize + 1)) return null;
 
 		bufs.consumeBytes(4, intScanner);

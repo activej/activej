@@ -28,8 +28,7 @@ import static io.activej.dns.protocol.DnsProtocol.ResponseErrorCode.NO_ERROR;
  */
 public final class DnsResponse {
 	private final DnsTransaction transaction;
-	@Nullable
-	private final DnsResourceRecord record;
+	private final @Nullable DnsResourceRecord record;
 	private final DnsProtocol.ResponseErrorCode errorCode;
 
 	private DnsResponse(DnsTransaction transaction, @Nullable DnsResourceRecord record, DnsProtocol.ResponseErrorCode errorCode) {
@@ -59,8 +58,7 @@ public final class DnsResponse {
 		return errorCode;
 	}
 
-	@Nullable
-	public DnsResourceRecord getRecord() {
+	public @Nullable DnsResourceRecord getRecord() {
 		return record;
 	}
 

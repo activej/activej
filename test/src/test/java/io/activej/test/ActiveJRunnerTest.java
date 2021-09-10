@@ -112,8 +112,7 @@ public class ActiveJRunnerTest {
 		}
 
 		public static class Dependant {
-			@Nullable
-			final String info;
+			final @Nullable String info;
 
 			@Inject
 			Dependant(Setupable setupable) {

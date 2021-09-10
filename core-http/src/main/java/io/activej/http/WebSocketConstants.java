@@ -68,8 +68,7 @@ public final class WebSocketConstants {
 			return (code >> 2) != 0;
 		}
 
-		@Nullable
-		static WebSocketConstants.OpCode fromOpCodeByte(byte b) {
+		static @Nullable WebSocketConstants.OpCode fromOpCodeByte(byte b) {
 			for (OpCode value : OpCode.values()) {
 				if (value.code == b) {
 					return value;

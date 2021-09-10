@@ -39,13 +39,10 @@ public final class ChannelZeroBuffer<T> implements ChannelQueue<T> {
 
 	private Exception exception;
 
-	@Nullable
-	private T value;
+	private @Nullable T value;
 
-	@Nullable
-	private SettablePromise<Void> put;
-	@Nullable
-	private SettablePromise<T> take;
+	private @Nullable SettablePromise<Void> put;
+	private @Nullable SettablePromise<T> take;
 
 	@Override
 	public boolean isSaturated() {
@@ -156,8 +153,7 @@ public final class ChannelZeroBuffer<T> implements ChannelQueue<T> {
 		value = null;
 	}
 
-	@Nullable
-	public Exception getException() {
+	public @Nullable Exception getException() {
 		return exception;
 	}
 }

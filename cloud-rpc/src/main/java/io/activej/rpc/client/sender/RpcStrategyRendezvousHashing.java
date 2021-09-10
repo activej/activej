@@ -95,8 +95,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 	}
 
 	@Override
-	@Nullable
-	public RpcSender createSender(RpcClientConnectionPool pool) {
+	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
 		Map<Object, RpcSender> shardsSenders = new HashMap<>();
 		for (Map.Entry<Object, RpcStrategy> entry : shards.entrySet()) {
 			Object shardId = entry.getKey();

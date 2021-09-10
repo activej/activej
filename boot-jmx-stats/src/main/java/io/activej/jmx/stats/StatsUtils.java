@@ -62,8 +62,7 @@ public final class StatsUtils {
 		});
 	}
 
-	@Nullable
-	public static Duration getSmoothingWindow(Object instance) {
+	public static @Nullable Duration getSmoothingWindow(Object instance) {
 		Set<Duration> result = new HashSet<>();
 		visitFields(instance, item -> {
 			if (item instanceof JmxStatsWithSmoothingWindow) {

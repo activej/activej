@@ -32,9 +32,8 @@ final class CompleteNullPromise<T> extends CompletePromise<T> {
 
 	private CompleteNullPromise() {}
 
-	@Nullable
 	@Override
-	public T getResult() {
+	public @Nullable T getResult() {
 		return null;
 	}
 }

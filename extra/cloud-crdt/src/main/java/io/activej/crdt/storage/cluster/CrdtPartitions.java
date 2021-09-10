@@ -110,8 +110,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 	 * @param partitionId id of {@link CrdtStorage}
 	 * @return alive {@link CrdtStorage}
 	 */
-	@Nullable
-	public CrdtStorage<K, S> get(P partitionId) {
+	public @Nullable CrdtStorage<K, S> get(P partitionId) {
 		return alivePartitions.get(partitionId);
 	}
 

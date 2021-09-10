@@ -27,8 +27,7 @@ import java.lang.reflect.Method;
  */
 public final class LocationInfo {
 	private final Object module;
-	@Nullable
-	private final Method provider;
+	private final @Nullable Method provider;
 
 	private LocationInfo(Object module, @Nullable Method provider) {
 		this.module = module;
@@ -48,8 +47,7 @@ public final class LocationInfo {
 		return module;
 	}
 
-	@Nullable
-	public Method getProvider() {
+	public @Nullable Method getProvider() {
 		return provider;
 	}
 

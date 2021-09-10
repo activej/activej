@@ -70,13 +70,10 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	private InetSocketAddress dnsServerAddress = GOOGLE_PUBLIC_DNS;
 	private Duration timeout = DEFAULT_TIMEOUT;
 
-	@Nullable
-	private AsyncUdpSocket socket;
+	private @Nullable AsyncUdpSocket socket;
 
-	@Nullable
-	private AsyncUdpSocketNio.Inspector socketInspector;
-	@Nullable
-	private Inspector inspector;
+	private @Nullable AsyncUdpSocketNio.Inspector socketInspector;
+	private @Nullable Inspector inspector;
 
 	// region creators
 	private RemoteAsyncDnsClient(Eventloop eventloop) {
@@ -299,14 +296,12 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	// endregion
 
 	@JmxAttribute
-	@Nullable
-	public AsyncUdpSocketNio.JmxInspector getSocketStats() {
+	public @Nullable AsyncUdpSocketNio.JmxInspector getSocketStats() {
 		return BaseInspector.lookup(socketInspector, AsyncUdpSocketNio.JmxInspector.class);
 	}
 
 	@JmxAttribute(name = "")
-	@Nullable
-	public JmxInspector getStats() {
+	public @Nullable JmxInspector getStats() {
 		return BaseInspector.lookup(inspector, JmxInspector.class);
 	}
 }

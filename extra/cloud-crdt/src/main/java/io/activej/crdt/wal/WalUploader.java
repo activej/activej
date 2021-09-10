@@ -81,8 +81,7 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 	private final ValueStats totalFilesUploadedSize = ValueStats.create(SMOOTHING_WINDOW).withUnit("bytes");
 	private boolean detailedMonitoring;
 
-	@Nullable
-	private Path sortDir;
+	private @Nullable Path sortDir;
 	private int sortItemsInMemory = DEFAULT_SORT_ITEMS_IN_MEMORY;
 
 	private WalUploader(Eventloop eventloop, Executor executor, Path path, CrdtFunction<S> function, CrdtDataSerializer<K, S> serializer, CrdtStorage<K, S> storage) {

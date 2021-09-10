@@ -35,11 +35,9 @@ import java.util.function.Function;
 public class AttributeNodeForConverterType<T> extends AbstractAttributeNodeForLeaf {
 	private static final Logger logger = LoggerFactory.getLogger(AttributeNodeForConverterType.class);
 
-	@Nullable
-	private final Method setter;
+	private final @Nullable Method setter;
 	private final Function<T, String> to;
-	@Nullable
-	private final Function<String, T> from;
+	private final @Nullable Function<String, T> from;
 
 	public AttributeNodeForConverterType(String name, @Nullable String description, ValueFetcher fetcher,
 			boolean visible, @Nullable Method setter,
@@ -63,8 +61,7 @@ public class AttributeNodeForConverterType<T> extends AbstractAttributeNodeForLe
 	}
 
 	@Override
-	@Nullable
-	protected Object aggregateAttribute(String attrName, List<?> sources) {
+	protected @Nullable Object aggregateAttribute(String attrName, List<?> sources) {
 		Object firstPojo = sources.get(0);
 		Object firstValue = fetcher.fetchFrom(firstPojo);
 		if (firstValue == null) {

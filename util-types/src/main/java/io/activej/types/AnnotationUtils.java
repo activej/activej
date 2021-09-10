@@ -27,8 +27,7 @@ public final class AnnotationUtils {
 		return getAnnotation(type, annotations) != null;
 	}
 
-	@Nullable
-	public static <A extends Annotation> A getAnnotation(Class<A> type, Annotation[] annotations) {
+	public static <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
 		for (int i = 0; i < annotations.length; i++) {
 			if (annotations[i].annotationType() == type) {
 				return (A) annotations[i];

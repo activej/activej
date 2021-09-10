@@ -34,8 +34,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 	private final RpcStrategyList list;
 
 	private final ResultValidator<?> resultValidator;
-	@Nullable
-	private final Exception noValidResultException;
+	private final @Nullable Exception noValidResultException;
 
 	private RpcStrategyFirstValidResult(RpcStrategyList list, ResultValidator<?> resultValidator,
 			@Nullable Exception noValidResultException) {
@@ -61,9 +60,8 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		return list.getDiscoveryService();
 	}
 
-	@Nullable
 	@Override
-	public RpcSender createSender(RpcClientConnectionPool pool) {
+	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
 		List<RpcSender> senders = list.listOfSenders(pool);
 		if (senders.isEmpty())
 			return null;
@@ -73,8 +71,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 	static final class Sender implements RpcSender {
 		private final RpcSender[] subSenders;
 		private final ResultValidator<?> resultValidator;
-		@Nullable
-		private final Exception noValidResultException;
+		private final @Nullable Exception noValidResultException;
 
 		Sender(@NotNull List<RpcSender> senders, @NotNull ResultValidator<?> resultValidator,
 				@Nullable Exception noValidResultException) {
@@ -99,8 +96,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		private final ResultValidator<T> resultValidator;
 		private final Callback<T> resultCallback;
 		private Exception lastException;
-		@Nullable
-		private final Exception noValidResultException;
+		private final @Nullable Exception noValidResultException;
 
 		FirstResultCallback(int expectedCalls, @NotNull ResultValidator<T> resultValidator, @NotNull Callback<T> resultCallback,
 				@Nullable Exception noValidResultException) {

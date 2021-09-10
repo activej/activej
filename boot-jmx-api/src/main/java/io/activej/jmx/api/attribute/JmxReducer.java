@@ -29,6 +29,5 @@ import java.util.List;
  * @param <T>
  */
 public interface JmxReducer<T> {
-	@Nullable
-	T reduce(List<? extends T> list);
+	@Nullable T reduce(List<? extends T> list);
 }

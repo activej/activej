@@ -31,8 +31,7 @@ public interface SessionStore<T> {
 
 	Promise<Void> remove(String sessionId);
 
-	@Nullable
-	default Duration getSessionLifetimeHint() {
+	default @Nullable Duration getSessionLifetimeHint() {
 		return null;
 	}
 }

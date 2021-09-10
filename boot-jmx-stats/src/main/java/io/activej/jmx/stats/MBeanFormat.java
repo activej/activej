@@ -56,8 +56,7 @@ public final class MBeanFormat {
 				.collect(joining("\n")).trim();
 	}
 
-	@Nullable
-	public static List<String> formatMultilineStringAsList(@Nullable String multiline) {
+	public static @Nullable List<String> formatMultilineStringAsList(@Nullable String multiline) {
 		if (multiline == null) return null;
 		return multiline.isEmpty() ?
 				null :

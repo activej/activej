@@ -85,27 +85,24 @@ public class Utils {
 		throw exceptionSupplier.get();
 	}
 
-	@Nullable
 	@Contract("_, _ -> null")
-	public static <V> V nullify(@Nullable V value, @NotNull Runnable action) {
+	public static <V> @Nullable V nullify(@Nullable V value, @NotNull Runnable action) {
 		if (value != null) {
 			action.run();
 		}
 		return null;
 	}
 
-	@Nullable
 	@Contract("_, _ -> null")
-	public static <V> V nullify(@Nullable V value, @NotNull Consumer<? super V> action) {
+	public static <V> @Nullable V nullify(@Nullable V value, @NotNull Consumer<? super V> action) {
 		if (value != null) {
 			action.accept(value);
 		}
 		return null;
 	}
 
-	@Nullable
 	@Contract("_, _, _ -> null")
-	public static <V, A> V nullify(@Nullable V value, @NotNull BiConsumer<? super V, A> action, A actionArg) {
+	public static <V, A> @Nullable V nullify(@Nullable V value, @NotNull BiConsumer<? super V, A> action, A actionArg) {
 		if (value != null) {
 			action.accept(value, actionArg);
 		}

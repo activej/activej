@@ -36,8 +36,7 @@ public final class QueryParameter {
 		return key;
 	}
 
-	@Nullable
-	public String getValue() {
+	public @Nullable String getValue() {
 		return value;
 	}
 

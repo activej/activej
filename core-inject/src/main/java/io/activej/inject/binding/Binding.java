@@ -50,8 +50,7 @@ public abstract class Binding<T> {
 	private final Set<Dependency> dependencies;
 	private BindingType type;
 
-	@Nullable
-	private LocationInfo location;
+	private @Nullable LocationInfo location;
 
 	protected Binding(@NotNull Set<Dependency> dependencies) {
 		this(dependencies, BindingType.REGULAR, null);
@@ -211,10 +210,8 @@ public abstract class Binding<T> {
 							}
 						} :
 						new AbstractCompiledBinding<R>(scope, slot) {
-							@Nullable
 							@Override
-							protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								return constructor.create();
+							protected @Nullable R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {return constructor.create();
 							}
 						} :
 						new AbstractUnsyncCompiledBinding<R>(scope, slot) {
@@ -603,8 +600,7 @@ public abstract class Binding<T> {
 						slot != null ?
 								new AbstractCompiledBinding<R>(scope, slot) {
 									@Override
-									@Nullable
-									protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									protected @Nullable R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										Object[] args = new Object[bindings.length];
 										for (int i = 0; i < bindings.length; i++) {
 											args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
@@ -615,8 +611,7 @@ public abstract class Binding<T> {
 								} :
 								new CompiledBinding<R>() {
 									@Override
-									@Nullable
-									public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									public @Nullable R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										Object[] args = new Object[bindings.length];
 										for (int i = 0; i < bindings.length; i++) {
 											args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
@@ -628,16 +623,14 @@ public abstract class Binding<T> {
 						slot != null ?
 								new AbstractCompiledBinding<R>(scope, slot) {
 									@Override
-									@Nullable
-									protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									protected @Nullable R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
 										return instance != null ? fn.apply(null, instance) : null;
 									}
 								} :
 								new CompiledBinding<R>() {
 									@Override
-									@Nullable
-									public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									public @Nullable R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
 										return instance != null ? fn.apply(null, instance) : null;
 									}
@@ -672,9 +665,8 @@ public abstract class Binding<T> {
 						CompiledBinding<Q> originalBinding = compiledBindings.get(key);
 						if (!key.equals(dependency)) return originalBinding;
 						return new CompiledBinding<Q>() {
-							@Nullable
 							@Override
-							public Q getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public @Nullable Q getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Q instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
 								return (Q) fn.apply((K) instance);
 							}
@@ -768,8 +760,7 @@ public abstract class Binding<T> {
 		return type;
 	}
 
-	@Nullable
-	public LocationInfo getLocation() {
+	public @Nullable LocationInfo getLocation() {
 		return location;
 	}
 

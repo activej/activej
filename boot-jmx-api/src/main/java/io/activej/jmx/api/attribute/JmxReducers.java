@@ -59,8 +59,7 @@ public final class JmxReducers {
 		}
 	}
 
-	@Nullable
-	private static Number reduceNumbers(List<? extends Number> list,
+	private static @Nullable Number reduceNumbers(List<? extends Number> list,
 			Function<DoubleStream, Double> opDouble, Function<LongStream, Long> opLong) {
 		list = list.stream().filter(Objects::nonNull).collect(toList());
 

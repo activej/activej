@@ -37,9 +37,8 @@ final class ExpressionLet implements Variable {
 		return var.load(ctx);
 	}
 
-	@Nullable
 	@Override
-	public Object beginStore(Context ctx) {
+	public @Nullable Object beginStore(Context ctx) {
 		return null;
 	}
 

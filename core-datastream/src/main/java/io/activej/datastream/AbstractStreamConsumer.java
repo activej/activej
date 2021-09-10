@@ -63,9 +63,8 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 				.whenException(this::closeEx);
 	}
 
-	@Nullable
 	@Override
-	public final StreamDataAcceptor<T> getDataAcceptor() {
+	public final @Nullable StreamDataAcceptor<T> getDataAcceptor() {
 		return dataAcceptor;
 	}
 

@@ -171,8 +171,7 @@ public class Types {
 	}
 
 	static final class ParameterizedTypeImpl implements ParameterizedType {
-		@Nullable
-		private final Type ownerType;
+		private final @Nullable Type ownerType;
 		private final Type rawType;
 		private final Type[] actualTypeArguments;
 
@@ -193,9 +192,8 @@ public class Types {
 			return actualTypeArguments;
 		}
 
-		@Nullable
 		@Override
-		public Type getOwnerType() {
+		public @Nullable Type getOwnerType() {
 			return ownerType;
 		}
 

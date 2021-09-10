@@ -159,8 +159,7 @@ public final class TypeScannerRegistry<R> {
 		}
 	}
 
-	@Nullable
-	private Mapping<R> mappingFn = null;
+	private @Nullable Mapping<R> mappingFn = null;
 	private final List<MappingEntry<R>> entries = new ArrayList<>();
 
 	private static final class MappingEntry<R> {
