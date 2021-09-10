@@ -18,7 +18,7 @@ package io.activej.config;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Key;
-import io.activej.inject.binding.Binding;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.annotation.OnStart;
 import org.slf4j.Logger;
@@ -126,9 +126,9 @@ public final class ConfigModule extends AbstractModule implements WithInitialize
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void configure() {
-		transform(Config.class, (bindings, scope, key, binding) -> {
+		transform(KeyPattern.of(Config.class, null), (bindings, scope, key, binding) -> {
 			Key<CompletionStage<Void>> completionStageKey = new Key<CompletionStage<Void>>(OnStart.class) {};
-			return ((Binding<Config>) (Binding<?>) binding)
+			return binding
 					.addDependencies(completionStageKey)
 					.mapInstance(singletonList(completionStageKey), (args, config) -> {
 						CompletionStage<Void> onStart = (CompletionStage<Void>) args[0];
