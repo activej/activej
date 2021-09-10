@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.inject.util.Utils.getScopeDisplayString;
 
 /**
- * A runtime exception that is thrown on startup when some of the static conditions fail
+ * A runtime exception that is thrown on startup when some static conditions fail
  * (missing or cyclic dependencies, incorrect annotations etc.) or in runtime when
  * you ask an {@link Injector} for an instance it does not have a {@link Binding binding} for.
  */

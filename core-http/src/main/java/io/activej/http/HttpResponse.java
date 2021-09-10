@@ -42,7 +42,7 @@ import static io.activej.http.MediaTypes.OCTET_STREAM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Represents HTTP response for {@link HttpRequest}. After handling {@code HttpResponse} will be recycled so you cannot
+ * Represents HTTP response for {@link HttpRequest}. After handling {@code HttpResponse} will be recycled, so you cannot
  * usi it afterwards.
  */
 public final class HttpResponse extends HttpMessage implements Promisable<HttpResponse>, WithInitializer<HttpResponse> {

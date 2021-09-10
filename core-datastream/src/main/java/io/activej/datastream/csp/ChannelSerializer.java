@@ -49,11 +49,11 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T> implem
 	private static final boolean CHECK = Checks.isEnabled(ChannelSerializer.class);
 
 	/**
-	 * Maximum allowed data size (256MB).
-	 * Messages with data whose size exceeds 256MB are not supported
+	 * Maximum allowed data size (256 MB).
+	 * Messages with data whose size exceeds 256 MB are not supported
 	 * <p>
 	 * Because varlen encoding of data size is fully backward and forward compatible,
-	 * even for smaller data it is possible to start with smallest max data size (128 bytes),
+	 * even for smaller data it is possible to start with the smallest max data size (128 bytes),
 	 * and fine-tune performance by switching to up to 4-byte encoding at later time.
 	 */
 	private static final int MAX_SIZE_INT = 1 << 28;

@@ -25,7 +25,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.http.HttpUtils.*;
 
 /**
- * This is a value class for the Accept header value.
+ * This is a value class for the 'Accept' header value.
  */
 public final class AcceptMediaType {
 	public static final int DEFAULT_Q = 100;

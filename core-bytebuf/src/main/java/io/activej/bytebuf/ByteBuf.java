@@ -50,7 +50,7 @@ public class ByteBuf implements Recyclable {
 	static final boolean CHECK_RECYCLE = ByteBufPool.REGISTRY || CHECK;
 
 	/**
-	 * Allows to create slices of {@link ByteBuf}, helper class.
+	 * Allows creating slices of {@link ByteBuf}, helper class.
 	 * <p>
 	 * A slice is a wrapper over an original {@code ByteBuf}. A slice links to the same byte array as the original
 	 * {@code ByteBuf}.

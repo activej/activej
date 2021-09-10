@@ -45,7 +45,7 @@ import static io.activej.common.exception.FatalErrorHandlers.handleError;
 /**
  * This interface represents consumer of data items that should be used serially
  * (each consecutive {@link #accept(Object)} operation should be called only after
- * previous {@link #accept(Object)} operation finishes.
+ * previous {@link #accept(Object)} operation finishes)
  * <p>
  * After consumer is closed, all subsequent calls to {@link #accept(Object)} will
  * return a completed exceptionally promise.

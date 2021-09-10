@@ -167,7 +167,7 @@ public abstract class HttpMessage {
 	/**
 	 * This method transfers the "rust-like ownership" from this message object
 	 * to the caller.
-	 * Thus it can be called only once and it it the caller responsibility
+	 * Thus, it can be called only once, and it is the caller's responsibility
 	 * to recycle the byte buffers received.
 	 */
 	public ChannelSupplier<ByteBuf> getBodyStream() {
@@ -205,7 +205,7 @@ public abstract class HttpMessage {
 
 	/**
 	 * Similarly to {@link #getBodyStream}, this method transfers ownership and can be called only once.
-	 * It returns successfully only when this message in in {@link #MUST_LOAD_BODY non-streaming mode}
+	 * It returns successfully only when this message is in {@link #MUST_LOAD_BODY non-streaming mode}
 	 */
 	public final ByteBuf takeBody() {
 		if (CHECK) checkState(!isRecycled());

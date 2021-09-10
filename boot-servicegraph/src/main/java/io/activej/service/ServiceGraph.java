@@ -72,7 +72,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 
 	/**
 	 * This set used to represent edges between vertices. If N1 and N2 - nodes
-	 * and between them exists edge from N1 to N2, it can be represent as
+	 * and between them exists edge from N1 to N2, it can be represented as
 	 * adding to this SetMultimap element <N1,N2>. This collection consist of
 	 * nodes in which there are edges and their keys - previous nodes.
 	 */
@@ -80,7 +80,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 
 	/**
 	 * This set used to represent edges between vertices. If N1 and N2 - nodes
-	 * and between them exists edge from N1 to N2, it can be represent as
+	 * and between them exists edge from N1 to N2, it can be represented as
 	 * adding to this SetMultimap element <N2,N1>. This collection consist of
 	 * nodes in which there are edges and their keys - previous nodes.
 	 */

@@ -39,7 +39,7 @@ import static java.util.stream.Collectors.*;
 /**
  * A file system that can be configured to forbid certain paths and filenames.
  * <p>
- * Inherits all of the limitations of parent {@link ActiveFs}
+ * Inherits all the limitations of parent {@link ActiveFs}
  */
 final class FilterActiveFs implements ActiveFs {
 

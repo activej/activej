@@ -86,7 +86,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 							if (typeRef.get() == null) {
 								return Promise.of(false);
 							}
-							// hence all other exceptions would fail get() promise
+							// hence, all other exceptions would fail get() promise
 							return Promise.ofException(REGULAR_CLOSE);
 						}
 						if (typeRef.get() == null) {

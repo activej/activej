@@ -51,7 +51,7 @@ public interface Validator<T> {
 	/**
 	 * Combines this validator with some other one.
 	 * This calls the validators in order and if the first fails
-	 * the the second is never called and errors of the first one are returned.
+	 * the second is never called and errors of the first one are returned.
 	 */
 	default Validator<T> then(Validator<T> next) {
 		if (this == alwaysOk()) return next;

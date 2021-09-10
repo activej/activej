@@ -19,7 +19,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Example of creating a simple TCP console client.
- * By default this client connects to the same address as the server in the previous example.
+ * By default, this client connects to the same address as the server in the previous example.
  */
 public final class TcpClientExample {
 	private final Eventloop eventloop = Eventloop.create();

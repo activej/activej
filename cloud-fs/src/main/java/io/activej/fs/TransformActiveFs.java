@@ -42,7 +42,7 @@ import static java.util.stream.Collectors.toSet;
 /**
  * A file system that can be configured to transform paths and filename via mapping functions.
  * <p>
- * Inherits all of the limitations of parent {@link ActiveFs}
+ * Inherits all the limitations of parent {@link ActiveFs}
  */
 final class TransformActiveFs implements ActiveFs {
 	private final ActiveFs parent;

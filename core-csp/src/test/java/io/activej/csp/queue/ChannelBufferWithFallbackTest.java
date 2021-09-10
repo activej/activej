@@ -82,7 +82,7 @@ public final class ChannelBufferWithFallbackTest {
 		assertEquals("hello world, this is a byte buffer\nsecond: hello world, this is a byte buffer", taken);
 		assertEquals("another input\nsecond buffer and a third one", taken2);
 
-		// should be 1 and not 2, because we've exhausted the secondary buffer
+		// should be 1 and not 2, because we've exhausted the secondary buffer,
 		// but then we are putting items in - primary queue were full and still is full at this point
 		assertEquals(1, counter.value);
 

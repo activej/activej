@@ -31,7 +31,7 @@ import java.util.Objects;
  * with some optional tag to distinguish between bindings which make objects of the same type.
  * <p>
  * In ActiveJ Inject, a key is also a type token - special abstract class that can store type information
- * with shortest syntax possible in Java.
+ * with the shortest syntax possible in Java.
  * <p>
  * For example, to create a key of type Map&lt;String, List&lt;Integer&gt;&gt;, you can just use
  * this syntax: <code>new Key&lt;Map&lt;String, List&lt;Integer&gt;&gt;&gt;(){}</code>.

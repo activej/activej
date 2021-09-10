@@ -430,7 +430,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		}
 
 		// pool will be null if socket was closed by the value just before connection.send() invocation
-		// (eg. if connection was in open(null) or taken(null) states)
+		// (e.g. if connection was in open(null) or taken(null) states)
 		//noinspection ConstantConditions
 		pool.removeNode(this);
 

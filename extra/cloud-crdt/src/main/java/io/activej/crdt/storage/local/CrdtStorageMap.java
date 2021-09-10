@@ -165,7 +165,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	public Iterator<CrdtData<K, S>> iterator(long timestamp) {
 		Iterator<CrdtData<K, S>> iterator = extract(timestamp).iterator();
 
-		// had to hook the remove so it would be reflected in the storage
+		// had to hook the remove, so it would be reflected in the storage
 		return new Iterator<CrdtData<K, S>>() {
 			private CrdtData<K, S> current;
 

@@ -80,7 +80,7 @@ abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 	}
 
 	/**
-	 * It's guaranteed that list of sources is not empty and it doesn't contain null values
+	 * It's guaranteed that list of sources is not empty, and it doesn't contain null values
 	 *
 	 * @param attrName name of attribute whose value return
 	 * @param sources  attributes

@@ -40,7 +40,7 @@ public interface AsyncTcpSocket extends AsyncCloseable {
 	 * from network.
 	 * <p>
 	 * It is allowed to call read before previous read was completed.
-	 * However, each consecutive call will cancel all of the previous calls (they will not be completed).
+	 * However, each consecutive call will cancel all the previous calls (they will not be completed).
 	 *
 	 * @return promise of ByteBuf that represents data received from network
 	 */
@@ -49,7 +49,7 @@ public interface AsyncTcpSocket extends AsyncCloseable {
 	/**
 	 * Operation to write some data to network. Returns a promise of void that represents successful write.
 	 * <p>
-	 * Many write operations may be called. However, when some write is successful, all of the promises received from write calls before it will be completed at once.
+	 * Many write operations may be called. However, when some write is successful, all the promises received from write calls before it will be completed at once.
 	 *
 	 * @param buf data to be sent to network
 	 * @return promise that represents successful write operation

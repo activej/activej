@@ -30,7 +30,7 @@ ActiveJ consists of several modules that can be logically grouped into following
   [Triggers](https://github.com/activej/activej/tree/master/boot-triggers))
 * **Bytecode manipulation**
     * **ActiveJ Codegen** - Dynamic class and method bytecode generator on top of [ObjectWeb ASM](https://asm.ow2.io/)
-      library. Abstracts the complexity of direct bytecode manipulation and allows to create custom classes on the fly
+      library. Abstracts the complexity of direct bytecode manipulation and allows creating custom classes on the fly
       using Lisp-like AST expressions. ([ActiveJ Codegen](https://activej.io/codegen))
     * **ActiveJ Serializer** - Extremely fast and space-efficient serializers created with bytecode engineering.
       Introduces schema-less approach for the best performance. ([ActiveJ Serializer](https://activej.io/serializer))
@@ -43,7 +43,7 @@ ActiveJ consists of several modules that can be logically grouped into following
     * **ActiveJ FS** - Asynchronous abstraction over file system for building efficient, scalable local or remote file
       storages, supporting data redundancy, rebalancing, and resharding.
       ([ActiveJ FS](https://activej.io/fs))
-    * **ActiveJ RPC** - Ultra high-performance binary client-server protocol. Allows to build distributed, sharded and
+    * **ActiveJ RPC** - Ultra high-performance binary client-server protocol. Allows building distributed, sharded and
       fault-tolerant microservices applications. ([ActiveJ RPC](https://activej.io/rpc))
     * Various extra services:
       [ActiveJ CRDT](https://github.com/activej/activej/tree/master/extra/cloud-crdt),

@@ -57,7 +57,7 @@ public interface BlockDecoder {
 	void reset();
 
 	/**
-	 * Whether or not this decoder allows stream to end without End-Of-Stream Block.
+	 * Whether this decoder allows stream to end without End-Of-Stream Block.
 	 * <p>
 	 * <b>Stream still has to end with a valid complete Data Block (or be empty)
 	 * and should not have any trailing data after the last block</b>

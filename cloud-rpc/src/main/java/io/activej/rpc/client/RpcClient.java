@@ -76,7 +76,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * <p>
  * Example. Consider a client which sends a {@code Request} and receives a
  * {@code Response} from some {@link RpcServer}. To implement such kind of
- * client its necessary to proceed with following steps:
+ * client it's necessary to proceed with following steps:
  * <ul>
  * <li>Create request-response classes for the client</li>
  * <li>Create a request handler for specified types</li>

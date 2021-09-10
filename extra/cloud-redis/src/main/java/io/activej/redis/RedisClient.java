@@ -37,7 +37,7 @@ import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 
 /**
  * A client for Redis.
- * Allows to connect to Redis server, supports SSL.
+ * Allows connecting to Redis server, supports SSL.
  */
 public final class RedisClient {
 	private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);

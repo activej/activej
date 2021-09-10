@@ -20,7 +20,7 @@ import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 
 /**
- * Defines method which allow to take current instance
+ * Defines method which allow taking current instance
  */
 final class VarThis implements Expression {
 	@Override

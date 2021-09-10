@@ -24,7 +24,7 @@ public class OptionalGeneratorModuleTest {
 						.bind(key)
 						.build());
 
-		// OptionalGeneratorModule calls mapInstance on provider binding and it causes it to compile
+		// OptionalGeneratorModule calls mapInstance on provider binding, and it causes it to compile
 		// an intermediate transient binding for the InstanceProvider
 		// and that means that we cannot just ban transient InstanceProviders sadly
 

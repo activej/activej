@@ -36,7 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Note that provider methods are called using reflection, so if you need the best performance
  * for some frequently-entered scopes consider using less declarative but reflection-free
- * {@link ModuleBuilder#bind(Key)}  binding DSL}
+ * {@link ModuleBuilder#bind(Key)}  binding DSL
  *
  * @see AbstractModule
  */

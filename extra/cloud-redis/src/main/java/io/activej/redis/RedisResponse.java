@@ -124,7 +124,7 @@ public abstract class RedisResponse<T> {
 	};
 
 	/**
-	 * Parses a Redis Bulk String as an UTF-8 string (may parse {@code null} indicating Redis Nil)
+	 * Parses a Redis Bulk String as a UTF-8 string (may parse {@code null} indicating Redis Nil)
 	 */
 	public static final RedisResponse<String> BYTES_UTF8 = new RedisResponse<String>() {
 		@Override

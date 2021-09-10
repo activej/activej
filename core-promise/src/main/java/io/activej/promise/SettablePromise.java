@@ -83,7 +83,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	/**
 	 * Tries to set provided {@code result} for this
 	 * {@code SettablePromise} if it is not completed yet.
-	 * Otherwise does nothing.
+	 * Otherwise, does nothing.
 	 */
 	@Async.Execute
 	public boolean trySet(T result) {
@@ -97,7 +97,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	/**
 	 * Tries to set provided {@code e} exception for this
 	 * {@code SettablePromise} if it is not completed yet.
-	 * Otherwise does nothing.
+	 * Otherwise, does nothing.
 	 */
 	@Async.Execute
 	public boolean trySetException(@NotNull Exception e) {
@@ -110,7 +110,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 
 	/**
 	 * Tries to set result or exception for this {@code SettablePromise}
-	 * if it not completed yet. Otherwise does nothing.
+	 * if it is not completed yet. Otherwise, does nothing.
 	 */
 	@Async.Execute
 	public boolean trySet(T result, @Nullable Exception e) {

@@ -46,7 +46,7 @@ import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
  * A client to the remote server with {@link ActiveFsServlet}.
  * This client can be used to connect to publicly available servers.
  * <p>
- * Inherits all of the limitations of {@link ActiveFs} implementation located on server.
+ * Inherits all the limitations of {@link ActiveFs} implementation located on server.
  */
 public final class HttpActiveFs implements ActiveFs {
 	private final IAsyncHttpClient client;

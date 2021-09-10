@@ -322,7 +322,7 @@ public final class ByteBufs implements Recyclable {
 
 	/**
 	 * Returns the first ByteBuf of this queue if the queue is not empty.
-	 * Otherwise returns null.
+	 * Otherwise, returns null.
 	 *
 	 * @return the first ByteBuf of the queue or {@code null}
 	 */
@@ -507,7 +507,7 @@ public final class ByteBufs implements Recyclable {
 
 	/**
 	 * Adds {@code maxSize} bytes from this bufs to {@code dest} if queue
-	 * contains more than {@code maxSize} bytes. Otherwise adds all
+	 * contains more than {@code maxSize} bytes. Otherwise, adds all
 	 * bytes from queue to {@code dest}. In both cases increases queue's
 	 * position to the number of drained bytes.
 	 *
@@ -544,7 +544,7 @@ public final class ByteBufs implements Recyclable {
 
 	/**
 	 * Adds {@code maxSize} bytes from this queue to ByteBuf {@code dest} if
-	 * queue contains more than {@code maxSize} bytes. Otherwise adds all
+	 * queue contains more than {@code maxSize} bytes. Otherwise, adds all
 	 * bytes from queue to dest. In both cases increases queue's position to
 	 * number of drained bytes.
 	 *
@@ -559,7 +559,7 @@ public final class ByteBufs implements Recyclable {
 	}
 
 	/**
-	 * Adds as much bytes to {@code dest} as it can store. If queue doesn't
+	 * Adds as many bytes to {@code dest} as it can store. If queue doesn't
 	 * contain enough bytes - adds all byte from queue.
 	 * Increases queue's position to number of drained bytes.
 	 *

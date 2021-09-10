@@ -48,7 +48,7 @@ public final class UdpPacket {
 	 * Creates a new instance of UDP packet
 	 *
 	 * @param buf               the data buffer to send or which was received
-	 * @param inetSocketAddress the address to which the packet should be send or from which it
+	 * @param inetSocketAddress the address to which the packet should be sent or from which it
 	 *                          was received
 	 */
 	public static UdpPacket of(ByteBuf buf, InetSocketAddress inetSocketAddress) {

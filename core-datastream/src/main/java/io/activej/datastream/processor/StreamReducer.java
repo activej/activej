@@ -122,7 +122,7 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 		}
 
 		/**
-		 * Processes received item. Adds item to deque, if deque size is buffer size or it is last
+		 * Processes received item. Adds item to deque, if deque size is buffer size, or it is last
 		 * input begins to reduce streams
 		 *
 		 * @param item item to receive

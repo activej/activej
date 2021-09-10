@@ -21,7 +21,8 @@ import io.activej.inject.Key;
 import java.util.Objects;
 
 /**
- * A simple POJO that combines a {@link Key} with a boolean of is it required or not.
+ * A simple POJO that combines a {@link Key} with booleans that indicate where
+ * a key is required and whether it is implicit
  *
  * @see Binding
  */

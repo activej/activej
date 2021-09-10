@@ -324,8 +324,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	/**
 	 * Sets the flag which (if set {@code true})
 	 * means that working of this Eventloop will
-	 * be continued even if all of the tasks
-	 * have been executed and it doesn't have
+	 * be continued even if all the tasks
+	 * have been executed, and it doesn't have
 	 * any selected keys.
 	 *
 	 * @param keepAlive flag for setting
@@ -887,7 +887,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	/**
 	 * Connects to given socket address asynchronously with a specified timeout value.
-	 * A timeout of zero is interpreted as an default system timeout
+	 * A timeout of zero is interpreted as a default system timeout
 	 *
 	 * @param address socketChannel's address
 	 * @param timeout the timeout value to be used in milliseconds, 0 as default system connection timeout
@@ -987,7 +987,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	/**
 	 * Schedules new task. Returns {@link ScheduledRunnable} with this runnable.
 	 *
-	 * @param timestamp timestamp after which task will be ran
+	 * @param timestamp timestamp after which task will be run
 	 * @param runnable  runnable of this task
 	 * @return scheduledRunnable, which could used for cancelling the task
 	 */
@@ -1002,7 +1002,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * <p>
 	 * If eventloop contains only background tasks, it will be closed
 	 *
-	 * @param timestamp timestamp after which task will be ran
+	 * @param timestamp timestamp after which task will be run
 	 * @param runnable  runnable of this task
 	 * @return scheduledRunnable, which could used for cancelling the task
 	 */

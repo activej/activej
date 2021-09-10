@@ -164,7 +164,7 @@ public final class RingBuffer implements RingBufferMBean {
 	}
 
 	/**
-	 * The method is used to try to get the from the {@see Buffer}
+	 * The method is used to try to get the slice from the {@see Buffer}
 	 * It will return the latest actual data for the {@param key}
 	 *
 	 * @param key of your item

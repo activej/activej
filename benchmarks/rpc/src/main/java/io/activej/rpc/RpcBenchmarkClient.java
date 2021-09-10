@@ -94,7 +94,7 @@ public class RpcBenchmarkClient extends Launcher {
 
 	/**
 	 * First counter represents amount of sent requests, so we know when to stop sending them
-	 * Second counter represents amount of completed requests(in another words completed will be incremented when
+	 * Second counter represents amount of completed requests(in other words completed will be incremented when
 	 * request fails or completes successfully) so we know when to stop round of benchmark
 	 */
 	int sent;

@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 import static io.activej.common.Checks.checkState;
 
 /**
- * Represents a cache for storing resolved domains during its time to live.
+ * Represents a cache for storing resolved domains during it's time to live.
  */
 public final class DnsCache {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
@@ -161,7 +161,7 @@ public final class DnsCache {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Concurrent cache adds are not allowed");
 		long expirationTime = now.currentTimeMillis();
 		if (response.isSuccessful()) {
-			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assert?
+			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assertion?
 			long minTtl = response.getRecord().getMinTtl() * 1000L;
 			if (minTtl == 0) {
 				return;

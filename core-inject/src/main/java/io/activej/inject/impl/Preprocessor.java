@@ -155,7 +155,7 @@ public final class Preprocessor {
 	 * A method that checks binding graph trie completeness, meaning that no binding references a key that is not present
 	 * at same or lower level of the trie, and that there is no cycles in each scope (cycles between scopes are not possible).
 	 * <p>
-	 * It doesn't throw an error if and only if this graph is complete and being complete means that each bindings dependencies should
+	 * It doesn't throw an error if and only if this graph is complete and being complete means that each binding dependencies should
 	 * have a respective binding in the local or upper scope, and that there is no cyclic dependencies.
 	 */
 	public static void check(Set<Key<?>> known, Trie<Scope, Map<Key<?>, Binding<?>>> bindings) {
@@ -264,7 +264,7 @@ public final class Preprocessor {
 		Binding<?> binding = bindings.get(key);
 		if (binding == null) {
 			// just ignore unsatisfied dependencies as if they never existed
-			// (they may be unsatisfied and be checked later by unsatisfied dependency check or they may just reference some upper scope)
+			// (they may be unsatisfied and be checked later by unsatisfied dependency check, or they may just reference some upper scope)
 			visited.add(key); // add to visited as a tiny optimization
 			return;
 		}
@@ -286,7 +286,7 @@ public final class Preprocessor {
 		Iterator<Key<?>> backtracked = visiting.iterator();
 		int skipped = 0;
 
-		// no .hasNext check since the the set must contain the key because above .add call returned false
+		// no .hasNext check since the set must contain the key because above .add call returned false
 		while (!backtracked.next().equals(key)) {
 			skipped++;
 		}
@@ -296,7 +296,7 @@ public final class Preprocessor {
 			cycle[i] = backtracked.next();
 		}
 		// no key was added to the set because it already was there
-		// and that one was consumed by the skipping while loop above
+		// and that one was consumed by the skipping while loop above,
 		// so we just add it manually at the end
 		cycle[cycle.length - 1] = key;
 		cycles.add(cycle);

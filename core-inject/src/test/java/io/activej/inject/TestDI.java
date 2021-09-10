@@ -795,7 +795,7 @@ public final class TestDI {
 					@Provides
 					@Scope2
 					Float second(Double first, Integer top) {
-						// static check runs on injector creation so it wont fail
+						// static check runs on injector creation, so it won't fail
 						// (unsatisfied Double from other scope)
 						return 34f;
 					}

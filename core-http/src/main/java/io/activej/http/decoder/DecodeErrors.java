@@ -27,7 +27,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 
 /**
- * A tree of https errors. It structure matches the structure of the decoder is was received from
+ * A tree of https errors. A tree structure matches the structure of the decoder it was received from
  */
 public final class DecodeErrors {
 	private static final String DEFAULT_SEPARATOR = ".";

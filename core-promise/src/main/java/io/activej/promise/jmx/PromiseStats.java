@@ -33,7 +33,7 @@ import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 
 /**
- * Allows to track stats of {@link Promise}s.
+ * Allows tracking stats of {@link Promise}s.
  */
 public class PromiseStats {
 	private @Nullable Eventloop eventloop;

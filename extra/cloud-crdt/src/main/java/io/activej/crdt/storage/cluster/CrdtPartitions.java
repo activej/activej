@@ -137,7 +137,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 	}
 
 	/**
-	 * Mark partition as dead. It means that no operations will use it and it would not be given to the server selector.
+	 * Mark a partition as dead. It means that no operations will use it, and it would not be given to the server selector.
 	 * Next call to {@link #checkDeadPartitions()} or {@link #checkAllPartitions()} will ping this partition and possibly
 	 * mark it as alive again.
 	 *

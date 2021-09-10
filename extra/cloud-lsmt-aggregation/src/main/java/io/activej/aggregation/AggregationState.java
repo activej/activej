@@ -37,7 +37,7 @@ import static io.activej.common.Utils.intersection;
 import static java.util.Collections.*;
 
 /**
- * Represents aggregation metadata. Stores chunks in an index (represented by an array of {@link RangeTree}) for efficient search.
+ * Represents aggregation metadata. Chunks are stored in an index (represented by an array of {@link RangeTree}) for efficient search.
  * Provides methods for managing index, querying for chunks by key, searching for chunks that are available for consolidation.
  */
 public final class AggregationState implements OTState<AggregationDiff> {

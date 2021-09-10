@@ -117,7 +117,7 @@ public class ReducerDeadlockTest {
 					server2.close();
 				})));
 
-		// the sharder nonce is random, so with an *effectively zero* chance these asserts may fail
+		// the sharder nonce is random, so with an *effectively zero* chance these assertions may fail
 		assertNotEquals(result1.getList(), list1);
 		assertNotEquals(result2.getList(), list2);
 	}

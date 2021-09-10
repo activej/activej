@@ -20,7 +20,7 @@ import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 
 /**
- * Defines methods which allow to set fields
+ * Defines methods which allow setting fields
  */
 final class ExpressionSet implements Expression {
 	private final StoreDef to;

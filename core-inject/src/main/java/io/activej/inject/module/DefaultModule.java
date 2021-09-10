@@ -82,9 +82,9 @@ public final class DefaultModule implements Module {
 
 											// transient bindings for instance provider are useless and nobody should make ones
 											// however, things like mapInstance create an intermediate transient compiled bindings of their peers
-											// usually they call getInstance just once and then cache the result of their computation (eg. the result of mapping function)
+											// usually they call getInstance just once and then cache the result of their computation (e.g. the result of mapping function)
 											//
-											// anyway all of the above means that its ok here to just get the compiled binding and to not care about caching it
+											// anyway all the above means that it's ok here to just get the compiled binding and to not care about caching it
 
 											CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
 											return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);

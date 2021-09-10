@@ -492,7 +492,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 					remoteMetadata.stream().anyMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
 		}
 
-		// (local) file should be deleted in case all of the remote partitions have a better
+		// (local) file should be deleted in case all the remote partitions have a better
 		// version of a file
 		boolean shouldBeDeleted() {
 			return remoteMetadata.size() == replicationCount &&

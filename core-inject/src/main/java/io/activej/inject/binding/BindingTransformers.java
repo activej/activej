@@ -23,7 +23,7 @@ public final class BindingTransformers {
 	 * This transformer aggregates such map into one big generator to be used by {@link Injector#compile} method.
 	 * The map is converted to a sorted list of sets.
 	 * Then for each of those sets, similar to {@link BindingGenerators#combinedGenerator generators},
-	 * only zero or one transformer from that set are allowed to return anything but the binding is was given (being an identity transformer).
+	 * only zero or one transformer from that set are allowed to return anything but the binding it was given (being an identity transformer).
 	 * <p>
 	 * So if two transformers differ in priority then they can be applied both in order of their priority.
 	 */

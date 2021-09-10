@@ -1,7 +1,9 @@
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.AbstractModule;
+import io.activej.types.Types;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 import static io.activej.types.Types.parameterizedType;
@@ -9,7 +11,7 @@ import static java.util.Arrays.asList;
 
 /**
  * A Key class is a type token by itself, so you can construct complex keys with long generics nicely.
- * If you don't like the excess subclassing, you can use Types.parameterized (or even Types.arrayOf),
+ * If you don't like the excess subclassing, you can use {@link Types#parameterizedType(Class, Type...)},
  * as shown in getInstance call.
  */
 //[START EXAMPLE]

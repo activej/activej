@@ -84,7 +84,7 @@ public final class ChannelSuppliers {
 	 * Creates a new ChannelSupplier which on {@code get()} call returns
 	 * the result wrapped in {@code promise} of the first ChannelSuppliers'
 	 * {@code promise} that was successfully completed with a non-null result.
-	 * If all of the ChannelSuppliers of the iterator have a {@code null}
+	 * If all the ChannelSuppliers of the iterator have a {@code null}
 	 * {@code promise} result, a {@code promise} of {@code null} will be returned.
 	 * <p>
 	 * If one of the ChannelSuppliers' {@code promises} completes with an exception,

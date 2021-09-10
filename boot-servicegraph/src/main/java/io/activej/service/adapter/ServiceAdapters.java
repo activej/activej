@@ -117,7 +117,7 @@ public final class ServiceAdapters {
 	}
 
 	/**
-	 * Returns factory which transforms Timer to CompletableFuture. On starting it doing nothing, on stop it cancel timer.
+	 * Returns factory which transforms Timer to CompletableFuture. On start it does nothing, on stop it cancel timer.
 	 */
 	public static ServiceAdapter<Timer> forTimer() {
 		return new SimpleServiceAdapter<Timer>(false, false) {
@@ -171,7 +171,7 @@ public final class ServiceAdapters {
 	}
 
 	/**
-	 * Returns factory which transforms DataSource object to CompletableFuture. On starting it checks connecting , on stopping it close DataSource.
+	 * Returns factory which transforms DataSource object to CompletableFuture. On start it checks connecting , on stop it closes DataSource.
 	 */
 	public static ServiceAdapter<DataSource> forDataSource() {
 		return new SimpleServiceAdapter<DataSource>(true, false) {

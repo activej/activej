@@ -25,7 +25,7 @@ import io.activej.inject.annotation.Transient;
  * The main reason for its existence is that it has a {@link io.activej.inject.module.DefaultModule default generator}
  * for its binding, so it can be fluently requested by {@link io.activej.inject.annotation.Provides provider methods} etc.
  * <p>
- * Also it can be used for lazy dependency cycle resolution.
+ * Also, it can be used for lazy dependency cycle resolution.
  */
 public interface InstanceProvider<T> {
 	Key<T> key();

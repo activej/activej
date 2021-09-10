@@ -137,7 +137,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		}
 		StatReducer<NodeStat> reducer = env.getInstanceOrNull(Key.ofType(parameterizedType(StatReducer.class, firstNonNull.get().getClass())));
 		if (reducer == null) {
-			return null; // if no reducer is provided then return null, idk some stat type might not be reducible
+			return null; // if no reducer is provided then return null, IDK some stat type might not be reducible
 		}
 		return reducer.reduce(stats);
 	}

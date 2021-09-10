@@ -164,7 +164,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 			return Promise.of(fromQuery);
 		}
 		// ignore the result because sooner or later it will be sent and just completed
-		// here we use that transactions map because it easily could go completely out of order and we should be ok with that
+		// here we use that transactions map because it easily could go completely out of order, and we should be ok with that
 		return getSocket()
 				.then(socket -> {
 					logger.trace("Resolving {} with DNS server {}", query, dnsServerAddress);
@@ -179,10 +179,10 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 						inspector.onDnsQuery(query, payload);
 					}
 
-					// ignore the result because soon or later it will be sent and just completed
+					// ignore the result because soon, or later it will be sent and just completed
 					socket.send(UdpPacket.of(payload, dnsServerAddress));
 
-					// here we use that transactions map because it easily could go completely out of order and we should be ok with that
+					// here we use that transactions map because it easily could go completely out of order, and we should be ok with that
 					socket.receive()
 							.whenResult(packet -> {
 								try {
@@ -236,7 +236,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 			return;
 		}
 		logger.trace("All queries are completed, closing UDP socket");
-		close(); // transactions is empty so no loops here
+		close(); // transactions are empty so no loops here
 	}
 
 	// region JMX

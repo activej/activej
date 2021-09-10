@@ -96,7 +96,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 	}
 
 	/**
-	 * Checks if this buffer has less
+	 * Checks if this buffer has fewer
 	 * elements than {@code bufferMinSize}.
 	 *
 	 * @return {@code true} if this buffer size is
@@ -109,7 +109,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 	}
 
 	/**
-	 * Checks if this buffer will have less elements
+	 * Checks if this buffer will have fewer elements
 	 * than {@code bufferMinSize}, if at least one
 	 * more element will be taken, by comparing its
 	 * current size with {@code bufferMinSize}.
@@ -169,7 +169,7 @@ public final class ChannelBuffer<T> implements ChannelQueue<T> {
 	 * Returns the head of the buffer if it is not empty,
 	 * otherwise returns {@code null}. Increases the value of {@code head}.
 	 * <p>
-	 * If the buffer will have less elements than {@code bufferMinSize}
+	 * If the buffer will have fewer elements than {@code bufferMinSize}
 	 * after this poll and {@code put} promise is not {@code null},
 	 * {@code put} will be set {@code null} after the poll.
 	 * <p>

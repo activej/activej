@@ -528,7 +528,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 	/**
 	 * Provides a {@link StreamConsumer} for streaming data to this cube.
-	 * The returned {@link StreamConsumer} writes to {@link Aggregation}'s chosen using the specified dimensions, measures and input class.
+	 * The returned {@link StreamConsumer} writes to chosen {@link Aggregation}s using the specified dimensions, measures and input class.
 	 *
 	 * @param inputClass class of input records
 	 * @param <T>        data records type

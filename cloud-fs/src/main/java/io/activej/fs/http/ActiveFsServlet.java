@@ -41,7 +41,7 @@ import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 
 /**
- * An HTTP servlet that exposes exposes some given {@link ActiveFs}.
+ * An HTTP servlet that exposes some given {@link ActiveFs}.
  * <p>
  * Servlet is fully compatible with {@link HttpActiveFs} client.
  * <p>

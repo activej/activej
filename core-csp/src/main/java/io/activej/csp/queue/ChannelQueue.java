@@ -34,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface ChannelQueue<T> extends ChannelTransformer<T, T>, AsyncCloseable {
 	/**
-	 * Puts a item in the queue and returns a
+	 * Puts an item in the queue and returns a
 	 * {@code promise} of {@code null} as a marker of completion.
 	 *
 	 * @param item a item passed to the queue

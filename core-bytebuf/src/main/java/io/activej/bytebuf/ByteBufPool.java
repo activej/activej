@@ -61,25 +61,25 @@ public final class ByteBufPool {
 	private static final boolean MIN_MAX_CHECKS = MIN_SIZE != 0 || MAX_SIZE != 0;
 
 	/**
-	 * Allows to get trace stack about {@code ByteBufs} of this {@code ByteBufPool}
+	 * Allows getting trace stack about {@code ByteBufs} of this {@code ByteBufPool}
 	 * while debugging if set at value {@code true} (note that this is resource intensive).
-	 * By default set at value {@code false}. If changed, significantly
+	 * By default, set at value {@code false}. If changed, significantly
 	 * influences the performance and workflow of {@link #allocate(int)} operation.
 	 */
 	static final boolean REGISTRY = ApplicationSettings.getBoolean(ByteBufPool.class, "registry", false);
 
 	/**
-	 * Allows to get statistics about this ByteBufPool while debugging
+	 * Allows getting statistics about this ByteBufPool while debugging
 	 * if set at value {@code true} (note that this is resource intensive).
-	 * By default set at value {@code false}. If changed, significantly
+	 * By default, set at value {@code false}. If changed, significantly
 	 * influences the performance and workflow of {@link #allocate(int)} operation.
 	 */
 	static final boolean STATS = ApplicationSettings.getBoolean(ByteBufPool.class, "stats", false);
 
 	/**
-	 * Allows to clear byte bufs when being returned to the pool
+	 * Allows clearing byte bufs when being returned to the pool
 	 * if set at value {@code true} (note that this is resource intensive).
-	 * By default set at value {@code false}. If changed,
+	 * By default, set at value {@code false}. If changed,
 	 * influences the performance of {@link #recycle(ByteBuf)} operation.
 	 * <strong>Should only be used for testing to catch bugs with premature {@link ByteBuf} recycling,
 	 * should not be used in production code</strong>
@@ -93,13 +93,13 @@ public final class ByteBufPool {
 	private static final double SMOOTHING_COEFF = 1.0 - Math.pow(0.5, (double) WATCHDOG_INTERVAL.toMillis() / WATCHDOG_SMOOTHING_WINDOW.toMillis());
 
 	/**
-	 * {@code ByteBufConcurrentStack} allows to work with slabs and their ByteBufs.
+	 * {@code ByteBufConcurrentStack} allows working with slabs and their ByteBufs.
 	 * Basically, it is a singly linked list with basic stack operations:
 	 * {@code push, pop, peek, clear, isEmpty, size}.
 	 * <p>
 	 * The implementation of {@code ByteBufConcurrentStack} is highly efficient
 	 * due to utilizing {@link java.util.concurrent.atomic.AtomicReference}.
-	 * Moreover, such approach allows to work with slabs concurrently safely.
+	 * Moreover, such approach allows working with slabs concurrently safely.
 	 */
 	static final ByteBufConcurrentQueue[] slabs;
 	static final SlabStats[] slabStats;
@@ -395,7 +395,7 @@ public final class ByteBufPool {
 	}
 
 	/**
-	 * Clears all of the slabs and stats.
+	 * Clears all the slabs and stats.
 	 */
 	public static void clear() {
 		for (int i = 0; i < ByteBufPool.NUMBER_OF_SLABS; i++) {

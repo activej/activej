@@ -39,7 +39,7 @@ import java.lang.annotation.Target;
  * Instead, we override the instance.
  * An injector has a mapping of instances that it already created, so that it could return the one that was already made instead of making it again.
  * And into that mapping we are pre-making the instance, so the injector would return it when requested.
- * The only left thing is the static dependency check so we have to have a dummy binding that will never be actually called, but that will satisfy
+ * The only left thing is the static dependency check, so we have to have a dummy binding that will never be actually called, but that will satisfy
  * the checker, and so we add one.
  * <p>
  * No additional configurations or registrations are needed, we just added a binding deeper into the prefix tree of bindings and used that deeper tree leaf

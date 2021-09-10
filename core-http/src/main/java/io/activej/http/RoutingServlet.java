@@ -33,7 +33,7 @@ import static io.activej.http.Protocol.WS;
 import static io.activej.http.Protocol.WSS;
 
 /**
- * This servlet allows to build complex servlet trees, routing requests between them by the HTTP paths.
+ * This servlet allows building complex servlet trees, routing requests between them by the HTTP paths.
  */
 public final class RoutingServlet implements AsyncServlet, WithInitializer<RoutingServlet> {
 	private static final String ROOT = "/";

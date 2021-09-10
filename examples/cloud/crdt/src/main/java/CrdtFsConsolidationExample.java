@@ -101,7 +101,7 @@ public final class CrdtFsConsolidationExample {
 					);
 				});
 
-		// all of the above will not run until we actually start the eventloop
+		// all the above will not run until we actually start the eventloop
 		eventloop.run();
 		// shutdown the executor after the eventloop finishes (meaning there is no more work to do)
 		// because executor waits for 60 seconds of being idle until it shuts down on its own

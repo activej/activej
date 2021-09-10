@@ -33,7 +33,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * This annotation can be put on the class itself - its default constructor is used for binding generation and must exist,
  * on class constructor that will be used, or on factory method (static method with return type of that class).
  * <p>
- * When a binding is generated, class methods and fields are scanned for the inject annotation and added as the binding dependencies -
+ * When a binding is generated, class methods and fields are scanned for the {@link Inject} annotations and added as the binding dependencies -
  * on instance creation fields will be <i>injected</i> and methods will be called with their parameters <i>injected</i> and return ignored.
  * Name annotations on fields and method parameters will be considered.
  *

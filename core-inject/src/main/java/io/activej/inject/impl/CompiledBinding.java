@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * This is defined as an abstract class and not a functional interface so that
- * any anonymous class usage is compiled as a inner class and not a method with invokedynamic instruction.
+ * any anonymous class usage is compiled as an inner class and not a method with invokedynamic instruction.
  * This is needed for compiled bindings to be applicable for later specialization.
  */
 @SuppressWarnings("rawtypes")

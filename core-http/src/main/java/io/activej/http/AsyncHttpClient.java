@@ -68,7 +68,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * to real HTTP servers and gets responses from them.
  * <p>
  * It is also an {@link EventloopService} that needs its close method to be called
- * to cleanup the keep-alive connections etc.
+ * to clean up the keep-alive connections etc.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketClient, EventloopService, EventloopJmxBeanWithStats {

@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 /**
  * - First binding is a simple binding where we even used a shortcut and didn't use a lambda since we already made an instance.
  * - Next, we bind a message sender to its implementation. Note the .annotatedWith DSL call - we specify what key exactly we are binding.
- * Note that we did not describe how to create ConsoleMessageSenderImpl instance - it has an inject annotation on it which means that
+ * Note that we did not describe how to create ConsoleMessageSenderImpl instance - it has {@link Inject} annotation on it which means that
  * a binding that will actually make the instance will be generated automatically and call its default constructor via reflection.
  * - Same as above, but with another syntax and a custom annotation - we make a concrete Key instance and bind it to the implementation.
  * The implementation is using an inject constructor - constructor from which a binding will be made automatically

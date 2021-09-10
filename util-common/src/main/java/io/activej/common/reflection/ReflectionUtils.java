@@ -237,7 +237,7 @@ public final class ReflectionUtils {
 			return annotationString.toString();
 		}
 		if (annotationElements.length == 1 && annotationElements[0].getName().equals("value")) {
-			// annotation with single element which has name "value"
+			// annotation with a single element which has a name "value"
 			annotationString.append(annotationType.getSimpleName());
 			Object value = fetchAnnotationElementValue(annotation, annotationElements[0]);
 			annotationString.append('(').append(value).append(')');

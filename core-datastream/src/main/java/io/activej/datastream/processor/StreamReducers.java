@@ -124,7 +124,7 @@ public final class StreamReducers {
 		}
 
 		/**
-		 * Calls after completing receiving results for some key. It processed
+		 * Calls after completing receiving results for some key. It processes
 		 * obtained accumulator and returns stream of output type from generic
 		 *
 		 * @param accumulator obtained accumulator after end receiving
@@ -293,7 +293,7 @@ public final class StreamReducers {
 
 		/**
 		 * Represents a reducer which contains ReducerToResult where identified methods for processing
-		 * items . Each received item is accumulator and it combines with previous value.  After
+		 * items . Each received item is accumulator, and it combines with previous value.  After
 		 * searching accumulator performs some action with it with method produceResult from
 		 * ReducerToResult.
 		 *
@@ -361,7 +361,7 @@ public final class StreamReducers {
 
 		/**
 		 * Represents  a reducer which contains ReducerToResult where identified methods for processing
-		 * items . Each received item is accumulator and it combines with previous value. Streams
+		 * items . Each received item is accumulator, and it combines with previous value. Streams
 		 * obtained accumulator on complete.
 		 *
 		 * @param <K> type of keys

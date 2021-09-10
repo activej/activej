@@ -162,9 +162,9 @@ public class Expressions {
 	/**
 	 * Casts expression to the type
 	 *
-	 * @param expression expressions which will be casted
-	 * @param type       expression will be casted to the 'type'
-	 * @return new instance of the Expression which is casted to the type
+	 * @param expression expressions which will be cast
+	 * @param type       expression will be cast to the 'type'
+	 * @return new instance of the Expression which is cast to the type
 	 */
 	public static Expression cast(Expression expression, Class<?> type) {
 		return new ExpressionCast(expression, getType(type));
@@ -764,7 +764,7 @@ public class Expressions {
 
 	/**
 	 * Returns a new {@link ExpressionCall expression call}
-	 * which allows to use static methods from other classes
+	 * which allows using static methods from other classes
 	 *
 	 * @param owner      owner of the method
 	 * @param methodName name of the method in the class

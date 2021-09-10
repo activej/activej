@@ -130,7 +130,7 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 						// here item was null and we had no exception
 						buffer.close();
 					}
-					// here either we had a close exception or item was null
+					// here either we had a close exception or item was null,
 					// so we retry the whole thing (same as in secondaryPut)
 					buffer = null;
 					return doTake();

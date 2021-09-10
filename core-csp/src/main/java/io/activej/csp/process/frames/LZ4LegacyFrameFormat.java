@@ -93,7 +93,7 @@ public final class LZ4LegacyFrameFormat implements FrameFormat {
 	}
 
 	/**
-	 * Whether or not streaming hash will be used as a {@link Checksum}, same as in LZ4 library stream encoder/decoder
+	 * Whether streaming hash will be used as a {@link Checksum}, same as in LZ4 library stream encoder/decoder
 	 * <p>
 	 * Useful for interoperation with {@link net.jpountz.lz4.LZ4BlockOutputStream} and {@link net.jpountz.lz4.LZ4BlockInputStream}
 	 */

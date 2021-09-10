@@ -87,7 +87,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * An ability to use {@link ServiceAdapter} objects allows to create a service
  * from any object by providing it's {@link ServiceAdapter} and registering
  * it in {@code ServiceGraphModule}. Take a look at {@link ServiceAdapters},
- * which has a lot of implemented adapters. Its necessarily to annotate your
+ * which has a lot of implemented adapters. It's necessarily to annotate your
  * object provider with {@link Worker @Worker} or Singleton
  * annotation.
  * <p>

@@ -128,7 +128,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 			return Promise.of(null);
 		}
 		ByteBuf buf = ByteBufPool.allocateExact((int) Math.min(bufferSize, limit));
-		return fileService.read(channel, position, buf.array(), buf.head(), buf.writeRemaining()) // reads are synchronized at least on asyncFile, so if produce() is called twice, position wont be broken (i hope)
+		return fileService.read(channel, position, buf.array(), buf.head(), buf.writeRemaining())
 				.then(
 						bytesRead -> {
 							if (bytesRead == 0) { // no data read, assuming end of file

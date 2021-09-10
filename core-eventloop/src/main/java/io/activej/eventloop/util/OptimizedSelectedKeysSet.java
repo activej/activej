@@ -25,7 +25,7 @@ import java.util.Iterator;
 /**
  * The class is used to avoid the overhead in {@link sun.nio.ch.SelectorImpl}
  * This implementation is set instead of {@link java.util.HashSet}
- * It allows to avoid redundant work of GC
+ * It allows avoiding redundant work of GC
  * Should use it as a simple array instead of a set
  */
 public final class OptimizedSelectedKeysSet extends AbstractSet<SelectionKey> {

@@ -36,7 +36,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Replacement of default Java {@link CompletionStage} interface with
- * optimized design, which allows to handle different scenarios more
+ * optimized design, which allows handling different scenarios more
  * efficiently.
  * <p>
  * Each promise represents some sort of operations executed
@@ -379,7 +379,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * the resulting promise is completed exceptionally with a
 	 * thrown exception.
 	 *
-	 * @param predicate   a predicate that tests whether or not to map a received exception
+	 * @param predicate   a predicate that tests whether to map a received exception
 	 * @param exceptionFn a function to map an exception of {@code this} promise to some other value
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
@@ -422,7 +422,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * thrown exception.
 	 *
 	 * @param fn a supplier of a new promise which will be called
-	 *           if {@code this} promise} completes successfully
+	 *           if {@code this} promise completes successfully
 	 */
 	@NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn);
 

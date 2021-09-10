@@ -18,9 +18,9 @@ import static io.activej.http.HttpMethod.POST;
  * An example of combining {@link RoutingServlet}s provided in multiple DI modules.
  * <p>
  * Servlets are provided via the same {@link Key} ({@link RoutingServlet}).
- * So, to resolve DI conflicts we may use {@link Multibinder} which combines all of the
- * conflicting {@link RoutingServlet}s into a single {@link RoutingServlet} which contains all
- * of the routes mapped by other servlets.
+ * So, to resolve DI conflicts we may use {@link Multibinder} which combines all the
+ * conflicting {@link RoutingServlet}s into a single {@link RoutingServlet} which contains all the routes
+ * mapped by other servlets.
  * If there are conflicting routes mapped in different modules, a runtime exception would be thrown
  * <p>
  * You may test routes either by accessing mapped routes via browser or by issuing {@code curl} commands:

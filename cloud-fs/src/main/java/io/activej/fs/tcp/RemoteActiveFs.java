@@ -66,7 +66,7 @@ import static java.util.Collections.emptyMap;
  * <p>
  * <b>This client should only be used on private networks.</b>
  * <p>
- * Inherits all of the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
+ * Inherits all the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
  */
 public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);

@@ -28,7 +28,7 @@ import java.util.function.Function;
  * This is a simple abstract reference implementation of a concept known as HTTP sessions.
  * It operates over some session storage, session ids that are somehow (usually through cookies)
  * encoded in the requests and two other servlets one for when the session object is present
- * and one when its not - the latter one usually redirects to the main or login pages or something.
+ * and one when it's not - the latter one usually redirects to the main or login pages or something.
  * <p>
  * The session object is {@link HttpRequest#attach attached} to the request so that the first servlet
  * could then receive and use it.

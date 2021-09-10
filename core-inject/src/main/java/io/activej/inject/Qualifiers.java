@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * This class holds utility methods used for validating and creating objects used as qualifiers.
- * Qualifiers serve as additional tags to distinguish different {@link Key keys} that have same type.
+ * Qualifiers serve as additional tags to distinguish different {@link Key keys} that have the same type.
  * <p>
  */
 public final class Qualifiers {

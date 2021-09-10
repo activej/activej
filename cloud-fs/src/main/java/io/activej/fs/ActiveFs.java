@@ -64,7 +64,7 @@ public interface ActiveFs {
 	 * e.g. {@code null} has been consumed.
 	 * If an error occurs during upload, no file will be created.
 	 * <p>
-	 * So, the uploaded file either exists and is complete or does not exists due to some error.
+	 * So, the uploaded file either exists and is complete or does not exist due to some error.
 	 * <p>
 	 * Concurrent uploads to the same filename are allowed. If there are multiple concurrent uploads in progress, the last
 	 * to successfully complete would win, e.g. would overwrite results of other uploads.
@@ -87,7 +87,7 @@ public interface ActiveFs {
 	 * and such file would not be created.
 	 * If an error occurs during upload, no file will be created.
 	 * <p>
-	 * So, the uploaded file either exists and its size is equal to {@code size} parameter or does not exists due to some error.
+	 * So, the uploaded file either exists and its size is equal to {@code size} parameter or does not exist due to some error.
 	 * <p>
 	 * Concurrent uploads to the same filename are allowed. If there are multiple concurrent uploads in progress, the last
 	 * to successfully complete would win, e.g. would overwrite results of other uploads.
@@ -113,7 +113,7 @@ public interface ActiveFs {
 	 * Appends modify file upon each received bytebuf, hence it is possible to download still-appending file.
 	 * <p>
 	 * Concurrent appends to the same filename are allowed. If there are multiple concurrent appends in progress,
-	 * they may overwrite each others changes.
+	 * they may overwrite each other changes.
 	 *
 	 * @param name name of the file to upload
 	 * @return promise for stream consumer of byte buffers
@@ -130,7 +130,7 @@ public interface ActiveFs {
 	 *
 	 * @param name   name of the file to be downloaded
 	 * @param offset from which byte to download the file
-	 * @param limit  how much bytes of the file to download at most
+	 * @param limit  how many bytes of the file to download at most
 	 * @return promise for stream supplier of byte buffers
 	 * @see #download(String)
 	 */

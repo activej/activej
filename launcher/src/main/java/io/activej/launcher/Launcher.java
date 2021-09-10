@@ -107,7 +107,7 @@ public abstract class Launcher {
 
 	/**
 	 * Creates an injector with modules and overrides from this launcher.
-	 * On creation it does all the binding checks so calling this method
+	 * On creation, it does all the binding checks so calling this method
 	 * triggers a static check which causes an exception to be thrown on
 	 * any incorrect bindings (unsatisfied or cyclic dependencies)
 	 * which is highly useful for testing.

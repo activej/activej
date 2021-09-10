@@ -50,7 +50,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 /**
- * Allows to manage multiple {@link Promise}s.
+ * Allows managing multiple {@link Promise}s.
  */
 @SuppressWarnings({"WeakerAccess", "unchecked"})
 public final class Promises {
@@ -772,7 +772,7 @@ public final class Promises {
 
 	/**
 	 * Gets {@code Promise} from provided {@code AsyncSupplier},
-	 * waits until it completes and than returns a {@code Promise<Void>}
+	 * waits until it completes and then returns a {@code Promise<Void>}
 	 */
 	public static @NotNull Promise<Void> sequence(@NotNull AsyncSupplier<Void> promise) {
 		return promise.get().toVoid();
@@ -1091,7 +1091,7 @@ public final class Promises {
 	 * into a {@code Promise} with the help of {@link Collector}. You can
 	 * control the amount of concurrently running {@code Promise}.
 	 * <p>
-	 * This method is universal and allows to implement app-specific logic.
+	 * This method is universal and allows implementing app-specific logic.
 	 *
 	 * @param collector mutable reduction operation that accumulates input
 	 *                  elements into a mutable result container

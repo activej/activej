@@ -163,13 +163,13 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	/**
 	 * Executes all commands sent as part of an active transaction.
 	 * <p>
-	 * Once commands are executed and server sends a response, all of the promises waiting for
+	 * Once commands are executed and server sends a response, all the promises waiting for
 	 * the result of the transaction will be completed with a corresponding result.
-	 * If there are watched keys that have changed during this transaction, all of the promises
+	 * If there are watched keys that have changed during this transaction, all the promises
 	 * waiting for the result of the transaction will be completed exceptionally
 	 * with {@link TransactionFailedException}.
 	 *
-	 * @return promise of an array containing all of the results of commands
+	 * @return promise of an array containing all the results of commands
 	 * issued during this transaction
 	 * @throws IllegalStateException if there is no active transaction
 	 * @see <a href="https://redis.io/commands/exec">EXEC</a>

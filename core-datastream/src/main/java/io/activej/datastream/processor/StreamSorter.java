@@ -139,7 +139,7 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T> {
 	/**
 	 * Creates a new instance of StreamSorter
 	 *
-	 * @param storage           storage for storing elements which was no placed
+	 * @param storage           storage for storing elements which were not placed
 	 *                          to RAM
 	 * @param keyFunction       function for searching key
 	 * @param keyComparator     comparator for comparing key

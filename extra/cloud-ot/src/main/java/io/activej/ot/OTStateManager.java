@@ -149,7 +149,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	 * Fetches changes from {@link #uplink}, but does not apply them. Moves <b>origin</b> commit ID forward.
 	 * Always returns a promise of {@code false} if there is a pending commit.
 	 *
-	 * @return a {@link Boolean} promise which indicates whether or not changes have been fetched and stored,
+	 * @return a {@link Boolean} promise which indicates whether changes have been fetched and stored,
 	 * and <b>origin</b> commit ID has been moved forward
 	 */
 	public Promise<Boolean> fetch() {

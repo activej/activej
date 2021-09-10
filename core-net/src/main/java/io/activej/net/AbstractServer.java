@@ -58,7 +58,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 /**
  * This is an implementation of {@link EventloopServer}.
  * It is a non-blocking server which works on top of the eventloop.
- * Thus it runs in the eventloop thread, and all events are fired on that thread.
+ * Thus, it runs in the eventloop thread, and all events are fired on that thread.
  * <p>
  * This is simply a higher-level wrapper around eventloop {@link Eventloop#listen} call.
  */
