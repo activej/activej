@@ -44,7 +44,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-import static io.activej.aggregation.util.Utils.wrapExceptionFn;
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
@@ -124,7 +123,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 	private Promise<Void> doCleanup() {
 		return repository.getHeads()
 				.then(heads -> excludeParents(repository, otSystem, heads))
-				.then(wrapExceptionFn(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to get heads", e)))
+				.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to get heads", e))
 				.then(heads -> findFrozenCut(heads, eventloop.currentInstant().minus(freezeTimeout)))
 				.then(this::cleanupFrozenCut)
 				.then((v, e) -> {
@@ -138,9 +137,9 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 	private Promise<Set<K>> findFrozenCut(Set<K> heads, Instant freezeTimestamp) {
 		return findCut(repository, otSystem, heads,
 				commits -> commits.stream().allMatch(commit -> commit.getInstant().compareTo(freezeTimestamp) < 0))
-				.then(wrapExceptionFn(e -> e instanceof GraphExhaustedException ?
+				.mapException(e -> e instanceof GraphExhaustedException ?
 						e :
-						new CubeException("Failed to find frozen cut, freeze timestamp: " + freezeTimestamp, e)))
+						new CubeException("Failed to find frozen cut, freeze timestamp: " + freezeTimestamp, e))
 				.whenComplete(toLogger(logger, thisMethod(), heads, freezeTimestamp));
 	}
 
@@ -156,9 +155,9 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 								return trySaveSnapshotAndCleanupChunks(checkpointNode);
 							}
 						}))
-				.then(wrapExceptionFn(e -> e instanceof GraphExhaustedException ?
+				.mapException(e -> e instanceof GraphExhaustedException ?
 						e :
-						new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e)))
+						new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e))
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
 	}
 

@@ -51,7 +51,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.crdt.util.Utils.wrapException;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes") // JMX
@@ -145,12 +144,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 
 	private <T extends AsyncCloseable> Promise<List<Container<T>>> connect(Function<CrdtStorage<K, S>, Promise<T>> method) {
 		return Promises.toList(
-				partitions.getAlivePartitions().entrySet().stream()
-						.map(entry ->
-								method.apply(entry.getValue())
-										.map(t -> new Container<>(entry.getKey(), t))
-										.whenException(err -> partitions.markDead(entry.getKey(), err))
-										.toTry()))
+						partitions.getAlivePartitions().entrySet().stream()
+								.map(entry ->
+										method.apply(entry.getValue())
+												.map(t -> new Container<>(entry.getKey(), t))
+												.whenException(err -> partitions.markDead(entry.getKey(), err))
+												.toTry()))
 				.map(this::checkStillNotDead)
 				.map(tries -> {
 					List<Container<T>> successes = tries.stream()
@@ -185,7 +184,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 										}
 									})
 									.toVoid()
-									.then(wrapException(() -> "Cluster 'upload' failed"))));
+									.mapException(e -> new CrdtException("Cluster 'upload' failed", e))));
 				});
 	}
 
@@ -204,7 +203,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 											throw new CrdtException("Failed to download from the required number of partitions");
 										}
 									})
-									.then(wrapException(() -> "Cluster 'download' failed")));
+									.mapException(e -> new CrdtException("Cluster 'download' failed", e)));
 				});
 	}
 
@@ -229,7 +228,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 											throw new CrdtException("Failed to remove items from all partitions");
 										}
 									})
-									.then(wrapException(() -> "Cluster 'remove' failed")));
+									.mapException(e -> new CrdtException("Cluster 'remove' failed", e)));
 				});
 	}
 

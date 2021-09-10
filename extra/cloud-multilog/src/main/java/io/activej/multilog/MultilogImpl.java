@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
-import io.activej.common.function.BiFunctionEx;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.Stopwatch;
 import io.activej.csp.ChannelSupplier;
@@ -51,7 +50,6 @@ import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.function.FunctionEx.identity;
@@ -131,7 +129,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 												ChannelFrameEncoder.create(frameFormat)
 														.withEncoderResets()))))
 				.withAcknowledgement(ack -> ack
-						.then(wrapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e)))));
+						.mapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e))));
 	}
 
 	@Override
@@ -168,7 +166,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 							.sorted()
 							.collect(toList()), lastFileRef.get());
 				})
-				.then(wrapException(e -> new MultilogException("Failed to read logs from partition '" + logPartition + '\'', e)));
+				.mapException(e -> new MultilogException("Failed to read logs from partition '" + logPartition + '\'', e));
 	}
 
 	private StreamSupplierWithResult<T, LogPosition> readLogFiles(@NotNull String logPartition, @NotNull LogPosition startPosition, @NotNull List<LogPosition> logFiles, boolean lastFile) {
@@ -273,11 +271,5 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 	@Override
 	public Eventloop getEventloop() {
 		return eventloop;
-	}
-
-	private static <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> wrapException(Function<Exception, Exception> wrapFn) {
-		return (v, e) -> e == null ?
-				Promise.of(v) :
-				Promise.ofException(wrapFn.apply(e));
 	}
 }

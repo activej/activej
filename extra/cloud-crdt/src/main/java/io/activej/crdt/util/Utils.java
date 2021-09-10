@@ -23,8 +23,6 @@ import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.function.BiFunctionEx;
-import io.activej.crdt.CrdtException;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,21 +34,12 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
 import static java.util.stream.Collectors.toList;
 
 public final class Utils {
-
-	public static <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> wrapException(Supplier<String> errorMessageSupplier) {
-		return (v, e) -> e == null ?
-				Promise.of(v) :
-				e instanceof CrdtException ?
-						Promise.ofException(e) :
-						Promise.ofException(new CrdtException(errorMessageSupplier.get(), e));
-	}
 
 	public static Promise<List<Path>> getWalFiles(Executor executor, Path walDir) {
 		return Promise.ofBlocking(executor,

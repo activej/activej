@@ -48,7 +48,8 @@ import java.time.Duration;
 import static io.activej.crdt.CrdtMessaging.*;
 import static io.activej.crdt.CrdtMessaging.CrdtMessages.PING;
 import static io.activej.crdt.CrdtMessaging.CrdtResponses.*;
-import static io.activej.crdt.util.Utils.*;
+import static io.activej.crdt.util.Utils.fromJson;
+import static io.activej.crdt.util.Utils.toJson;
 import static io.activej.csp.binary.Utils.nullTerminated;
 
 @SuppressWarnings("rawtypes")
@@ -124,31 +125,30 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return connect()
-				.then(messaging ->
-						messaging.send(CrdtMessages.UPLOAD)
-								.then(wrapException(() -> "Failed to send 'Upload' message"))
-								.map($ -> {
-									ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
-											.withAcknowledgement(ack -> ack
-													.then(messaging::receive)
-													.whenResult(simpleHandlerFn(UPLOAD_FINISHED))
-													.toVoid());
-									return StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
+				.then(messaging -> messaging.send(CrdtMessages.UPLOAD)
+						.mapException(e -> new CrdtException("Failed to send 'Upload' message", e))
+						.map($ -> {
+							ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
+									.withAcknowledgement(ack -> ack
+											.then(messaging::receive)
+											.whenResult(simpleHandlerFn(UPLOAD_FINISHED))
+											.toVoid());
+							return StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 													.transformWith(ChannelSerializer.create(serializer))
 													.streamTo(consumer))
-											.withAcknowledgement(ack -> ack
-													.then(wrapException(() -> "Upload failed")));
-								}));
+									.withAcknowledgement(ack -> ack
+											.mapException(e -> new CrdtException("Upload failed", e)));
+						}));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return connect()
 				.then(messaging -> messaging.send(new Download(timestamp))
-						.then(wrapException(() -> "Failed to send 'Download' message"))
+						.mapException(e -> new CrdtException("Failed to send 'Download' message", e))
 						.then(() -> messaging.receive()
-								.then(wrapException(() -> "Failed to receive response")))
+								.mapException(e -> new CrdtException("Failed to receive response", e)))
 						.whenResult(response -> {
 							if (response == DOWNLOAD_STARTED) {
 								return;
@@ -164,7 +164,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 										.withEndOfStream(eos -> eos
 												.then(messaging::sendEndOfStream)
-												.then(wrapException(() -> "Download failed"))
+												.mapException(e -> new CrdtException("Download failed", e))
 												.whenComplete(($2, e) -> {
 													if (e == null) {
 														messaging.close();
@@ -177,31 +177,30 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
 		return connect()
-				.then(messaging ->
-						messaging.send(CrdtMessages.REMOVE)
-								.then(wrapException(() -> "Failed to send 'Remove' message"))
-								.map($ -> {
-									ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
-											.withAcknowledgement(ack -> ack
-													.then(messaging::receive)
-													.whenResult(simpleHandlerFn(REMOVE_FINISHED))
-													.toVoid());
-									return StreamConsumer.<K>ofSupplier(supplier ->
+				.then(messaging -> messaging.send(CrdtMessages.REMOVE)
+						.mapException(e -> new CrdtException("Failed to send 'Remove' message", e))
+						.map($ -> {
+							ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
+									.withAcknowledgement(ack -> ack
+											.then(messaging::receive)
+											.whenResult(simpleHandlerFn(REMOVE_FINISHED))
+											.toVoid());
+							return StreamConsumer.<K>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 													.transformWith(ChannelSerializer.create(keySerializer))
 													.streamTo(consumer))
-											.withAcknowledgement(ack -> ack
-													.then(wrapException(() -> "Remove operation failed")));
-								}));
+									.withAcknowledgement(ack -> ack
+											.mapException(e -> new CrdtException("Remove operation failed", e)));
+						}));
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		return connect()
 				.then(messaging -> messaging.send(PING)
-						.then(wrapException(() -> "Failed to send 'Ping'"))
+						.mapException(e1 -> new CrdtException("Failed to send 'Ping'", e1))
 						.then(() -> messaging.receive()
-								.then(wrapException(() -> "Failed to receive 'Pong'")))
+								.mapException(e -> new CrdtException("Failed to receive 'Pong'", e)))
 						.whenResult(simpleHandlerFn(PONG))
 						.toVoid()
 						.whenResult(messaging::close)
@@ -235,7 +234,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtMessage>> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
-				.then(wrapException(() -> "Failed to connect to " + address));
+				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}
 
 	// region JMX

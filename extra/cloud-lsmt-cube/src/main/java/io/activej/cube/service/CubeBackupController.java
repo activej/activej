@@ -39,7 +39,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
-import static io.activej.aggregation.util.Utils.wrapExceptionFn;
 import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
@@ -93,7 +92,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 
 	public Promise<Void> backupHead() {
 		return repository.getHeads()
-				.then(wrapExceptionFn(e -> new CubeException("Failed to get heads", e)))
+				.mapException(e -> new CubeException("Failed to get heads", e))
 				.then(heads -> {
 					if (heads.isEmpty()) {
 						throw new CubeException("Heads are empty");
@@ -106,7 +105,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 
 	public Promise<Void> backup(K commitId) {
 		return Promises.toTuple(repository.loadCommit(commitId), checkout(repository, otSystem, commitId))
-				.then(wrapExceptionFn(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e)))
+				.mapException(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e))
 				.then(tuple -> Promises.sequence(
 						() -> backupChunks(commitId, chunksInDiffs(cubeDiffScheme, tuple.getValue2())),
 						() -> backupDb(tuple.getValue1(), tuple.getValue2())))
@@ -115,7 +114,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 
 	private Promise<Void> backupChunks(K commitId, Set<C> chunkIds) {
 		return storage.backup(String.valueOf(commitId), chunkIds)
-				.then(wrapExceptionFn(e -> new CubeException("Failed to backup chunks on storage: " + storage, e)))
+				.mapException(e -> new CubeException("Failed to backup chunks on storage: " + storage, e))
 				.whenComplete(promiseBackupChunks.recordStats())
 				.whenComplete(logger.isTraceEnabled() ?
 						toLogger(logger, TRACE, thisMethod(), chunkIds) :
@@ -124,7 +123,7 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 
 	private Promise<Void> backupDb(OTCommit<K, D> commit, List<D> snapshot) {
 		return repository.backup(commit, snapshot)
-				.then(wrapExceptionFn(e -> new CubeException("Failed to backup chunks in repository: " + repository, e)))
+				.mapException(e -> new CubeException("Failed to backup chunks in repository: " + repository, e))
 				.whenComplete(promiseBackupDb.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), commit, snapshot));
 	}

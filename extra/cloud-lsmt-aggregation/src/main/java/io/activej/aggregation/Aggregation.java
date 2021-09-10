@@ -266,7 +266,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		return StreamConsumerWithResult.of(groupReducer,
 				groupReducer.getResult()
 						.map(chunks -> AggregationDiff.of(new HashSet<>(chunks)))
-						.then(wrapExceptionFn(e -> new AggregationException("Failed to consume data", e))));
+						.mapException(e -> new AggregationException("Failed to consume data", e)));
 	}
 
 	public <T> StreamConsumerWithResult<T, AggregationDiff> consume(Class<T> inputClass) {
@@ -300,7 +300,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		return consolidatedSupplier(query.getKeys(),
 				fields, outputClass, query.getPredicate(), allChunks, queryClassLoader)
 				.withEndOfStream(eos -> eos
-						.then(wrapExceptionFn(e -> new AggregationException("Query " + query + " failed", e))));
+						.mapException(e -> new AggregationException("Query " + query + " failed", e)));
 	}
 
 	private <T> StreamSupplier<T> sortStream(StreamSupplier<T> unsortedStream, Class<T> resultClass,

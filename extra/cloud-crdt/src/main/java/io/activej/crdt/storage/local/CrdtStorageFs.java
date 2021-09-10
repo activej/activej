@@ -21,6 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtException;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -57,10 +58,14 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static io.activej.crdt.util.Utils.wrapException;
+import static io.activej.csp.ChannelSupplier.ofPromise;
+import static io.activej.datastream.processor.StreamFilter.mapper;
 import static io.activej.fs.ActiveFsAdapters.subdirectory;
+import static io.activej.promise.Promises.all;
+import static io.activej.promise.Promises.toTuple;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
@@ -168,26 +173,26 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return fs.upload(namingStrategy.apply("bin"))
 				.map(consumer -> StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier -> supplier
-						.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
-						.transformWith(ChannelSerializer.create(serializer))
-						.streamTo(consumer))
+								.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+								.transformWith(ChannelSerializer.create(serializer))
+								.streamTo(consumer))
 						.withAcknowledgement(ack -> ack
-								.then(wrapException(() -> "Error while uploading CRDT data to file"))))
-				.then(wrapException(() -> "Failed to upload CRDT data to file"));
+								.mapException(e -> new CrdtException("Error while uploading CRDT data to file", e))))
+				.mapException(e -> new CrdtException("Failed to upload CRDT data to file", e));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		return Promises.toTuple(fs.list("*"), tombstoneFolderFs.list("*"))
+		return toTuple(fs.list("*"), tombstoneFolderFs.list("*"))
 				.map(f -> {
 					StreamReducer<K, CrdtData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
 
 					Stream<Promise<Void>> files = f.getValue1().entrySet()
 							.stream()
 							.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
-							.map(entry -> ChannelSupplier.ofPromise(fs.download(entry.getKey()))
+							.map(entry -> ofPromise(fs.download(entry.getKey()))
 									.transformWith(ChannelDeserializer.create(serializer))
-									.transformWith(StreamFilter.mapper(data -> {
+									.transformWith(mapper(data -> {
 										S partial = function.extract(data.getState(), timestamp);
 										return partial != null ? new CrdtReducingData<>(data.getKey(), partial, entry.getValue().getTimestamp()) : null;
 									}))
@@ -197,38 +202,38 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 					Stream<Promise<Void>> tombstones = f.getValue2().entrySet()
 							.stream()
 							.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
-							.map(entry -> ChannelSupplier.ofPromise(tombstoneFolderFs.download(entry.getKey()))
+							.map(entry -> ofPromise(tombstoneFolderFs.download(entry.getKey()))
 									.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
-									.transformWith(StreamFilter.mapper(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
+									.transformWith(mapper(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
 									.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
 
 					//noinspection ResultOfMethodCallIgnored
-					Promises.all(Stream.concat(files, tombstones));
+					all(concat(files, tombstones));
 
 					return reducer.getOutput()
 							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 							.withEndOfStream(eos -> eos
-									.then(wrapException(() -> "Error while downloading CRDT data")));
+									.mapException(e -> new CrdtException("Error while downloading CRDT data", e)));
 				})
-				.then(wrapException(() -> "Failed to download CRDT data"));
+				.mapException(e -> new CrdtException("Failed to download CRDT data", e));
 	}
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
 		return tombstoneFolderFs.upload(namingStrategy.apply("tomb"))
 				.map(consumer -> StreamConsumer.<K>ofSupplier(supplier -> supplier
-						.transformWith(detailedStats ? removeStatsDetailed : removeStats)
-						.transformWith(ChannelSerializer.create(serializer.getKeySerializer()))
-						.streamTo(consumer))
+								.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+								.transformWith(ChannelSerializer.create(serializer.getKeySerializer()))
+								.streamTo(consumer))
 						.withAcknowledgement(ack -> ack
-								.then(wrapException(() -> "Error while removing CRDT data"))))
-				.then(wrapException(() -> "Failed to remove CRDT data"));
+								.mapException(e -> new CrdtException("Error while removing CRDT data", e))))
+				.mapException(e -> new CrdtException("Failed to remove CRDT data", e));
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		return fs.ping()
-				.then(wrapException(() -> "Failed to PING file system"));
+				.mapException(e -> new CrdtException("Failed to PING file system", e));
 	}
 
 	@NotNull
@@ -281,7 +286,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 							.then(() -> consolidationFolderFs.delete(metafile))
 							.then(() -> fs.deleteAll(new HashSet<>(files)));
 				})
-				.then(wrapException(() -> "Consolidation failed"))
+				.mapException(e -> new CrdtException("Consolidation failed", e))
 				.whenComplete(consolidationStats.recordStats());
 	}
 

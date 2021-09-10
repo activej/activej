@@ -18,7 +18,6 @@ package io.activej.dataflow;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.function.BiFunctionEx;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.Messaging;
@@ -38,7 +37,6 @@ import io.activej.eventloop.net.SocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -48,7 +46,6 @@ import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -86,11 +83,11 @@ public final class DataflowClient {
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, Class<T> type, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
 		return StreamSupplier.ofPromise(AsyncTcpSocketNio.connect(address, 0, socketSettings)
-				.then(wrapExceptionFn(e -> new DataflowException("Failed to connect to " + address, e)))
+				.mapException(e -> new DataflowException("Failed to connect to " + address, e))
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return messaging.send(new DataflowCommandDownload(streamId))
-							.then(wrapExceptionFn(e -> new DataflowException("Failed to download from " + address, e)))
+							.mapException(e -> new DataflowException("Failed to download from " + address, e))
 							.map($ -> {
 								ChannelQueue<ByteBuf> primaryBuffer =
 										bufferMinSize == 0 && bufferMaxSize == 0 ?
@@ -108,7 +105,7 @@ public final class DataflowClient {
 												.withExplicitEndOfStream())
 										.transformWith(new StreamTraceCounter<>(streamId, address))
 										.withEndOfStream(eos -> eos
-												.then(wrapExceptionFn(e -> new DataflowException("Error when downloading from " + address, e)))
+												.mapException(e -> new DataflowException("Error when downloading from " + address, e))
 												.whenComplete(messaging::close));
 							});
 				}));
@@ -187,9 +184,9 @@ public final class DataflowClient {
 
 		public Promise<Void> execute(long taskId, Collection<Node> nodes) {
 			return messaging.send(new DataflowCommandExecute(taskId, new ArrayList<>(nodes)))
-					.then(wrapExceptionFn(e -> new DataflowException("Failed to send command to " + address, e)))
+					.mapException(e -> new DataflowException("Failed to send command to " + address, e))
 					.then(() -> messaging.receive()
-							.then(wrapExceptionFn(e -> new DataflowException("Failed to receive response from " + address, e))))
+							.mapException(e -> new DataflowException("Failed to receive response from " + address, e)))
 					.whenResult(response -> {
 						messaging.close();
 						if (!(response instanceof DataflowResponseResult)) {
@@ -212,12 +209,6 @@ public final class DataflowClient {
 	public Promise<Session> connect(InetSocketAddress address) {
 		return AsyncTcpSocketNio.connect(address, 0, socketSettings)
 				.map(socket -> new Session(address, socket))
-				.then(wrapExceptionFn(e -> new DataflowException("Could not connect to " + address, e)));
-	}
-
-	private static <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> wrapExceptionFn(Function<Exception, Exception> wrapFn) {
-		return (v, e) -> e == null ?
-				Promise.of(v) :
-				Promise.ofException(wrapFn.apply(e));
+				.mapException(e -> new DataflowException("Could not connect to " + address, e));
 	}
 }

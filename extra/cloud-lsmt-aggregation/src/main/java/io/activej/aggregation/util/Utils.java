@@ -18,7 +18,6 @@ package io.activej.aggregation.util;
 
 import io.activej.aggregation.Aggregate;
 import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.annotation.Key;
 import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
@@ -27,13 +26,10 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.function.BiFunctionEx;
 import io.activej.datastream.processor.StreamReducers.Reducer;
-import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.impl.SerializerDefClass;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -326,12 +322,6 @@ public class Utils {
 		}
 		checkArgument(!measureFields.isEmpty(), "Missing @Measure(s) annotations in %s", inputClass);
 		return measureFields;
-	}
-
-	public static <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> wrapExceptionFn(Function<Exception, Exception> wrapFn) {
-		return (v, e) -> e == null ?
-				Promise.of(v) :
-				Promise.ofException(wrapFn.apply(e));
 	}
 
 	public static <C> Set<C> collectChunkIds(Collection<AggregationChunk> chunks) {

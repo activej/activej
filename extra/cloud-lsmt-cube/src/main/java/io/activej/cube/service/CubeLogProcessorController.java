@@ -44,7 +44,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
-import static io.activej.aggregation.util.Utils.wrapExceptionFn;
 import static io.activej.async.function.AsyncSuppliers.coalesce;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -118,10 +117,10 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanW
 	Promise<Boolean> process() {
 		return Promise.complete()
 				.then(stateManager::sync)
-				.then(wrapExceptionFn(e -> new CubeException("Failed to synchronize state prior to log processing", e)))
+				.mapException(e -> new CubeException("Failed to synchronize state prior to log processing", e))
 				.map($ -> stateManager.getCommitId())
 				.then(commitId -> predicate.test(commitId)
-						.then(wrapExceptionFn(e -> new CubeException("Failed to test commit '" + commitId + "' with predicate", e))))
+						.mapException(e -> new CubeException("Failed to test commit '" + commitId + "' with predicate", e)))
 				.then(ok -> {
 					if (!ok) return Promise.of(false);
 
@@ -136,16 +135,15 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanW
 							Promises.reduce(toList(), 1, asPromises(tasks));
 
 					return promise
-							.then(wrapExceptionFn(e -> new CubeException("Failed to process logs", e)))
+							.mapException(e -> new CubeException("Failed to process logs", e))
 							.whenComplete(promiseProcessLogsImpl.recordStats())
 							.whenResult(this::cubeDiffJmx)
 							.then(diffs -> Promise.complete()
 									.then(() -> chunkStorage.finish(addedChunks(diffs)))
-									.then(wrapExceptionFn(e -> new CubeException("Failed to finalize chunks in storage", e)))
+									.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
 									.whenResult(() -> stateManager.addAll(diffs))
 									.then(() -> stateManager.sync()
-											.then(wrapExceptionFn(e -> new CubeException(
-													"Failed to synchronize state after log processing, resetting", e))))
+											.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
 									.whenException(e -> stateManager.reset())
 									.map($ -> true));
 				})
