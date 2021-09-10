@@ -37,13 +37,6 @@
       <artifactId>activej-triggers</artifactId>
       <version>${project.version}</version>
     </dependency>
-
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-test</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>

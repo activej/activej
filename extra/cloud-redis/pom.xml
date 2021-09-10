@@ -20,7 +20,7 @@
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-csp</artifactId>
+      <artifactId>activej-net</artifactId>
       <version>${project.version}</version>
     </dependency>
 

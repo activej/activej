@@ -15,7 +15,7 @@
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-launchers-rpc</artifactId>
+      <artifactId>activej-boot</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
