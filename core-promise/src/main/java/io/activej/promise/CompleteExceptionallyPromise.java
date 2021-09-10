@@ -149,9 +149,21 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
+	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> fn) {
 		try {
-			action.accept(null, exception);
+			fn.accept(null, exception);
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> whenComplete(@NotNull ConsumerEx<? super T> fn, @NotNull ConsumerEx<@NotNull Exception> exceptionFn) {
+		try {
+			exceptionFn.accept(exception);
 			return this;
 		} catch (RuntimeException ex) {
 			throw ex;
@@ -173,7 +185,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResult(ConsumerEx<? super T> action) {
+	public @NotNull Promise<T> whenResult(ConsumerEx<? super T> fn) {
 		return this;
 	}
 
@@ -183,9 +195,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull ConsumerEx<Exception> action) {
+	public @NotNull Promise<T> whenException(@NotNull ConsumerEx<Exception> fn) {
 		try {
-			action.accept(exception);
+			fn.accept(exception);
 			return this;
 		} catch (RuntimeException ex) {
 			throw ex;
@@ -241,8 +253,8 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(@NotNull Callback<? super T> action) {
-		action.accept(null, exception);
+	public void run(@NotNull Callback<? super T> callback) {
+		callback.accept(null, exception);
 	}
 
 	@Override

@@ -496,10 +496,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
+	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> fn) {
 		if (isComplete()) {
 			try {
-				action.accept(result, exception);
+				fn.accept(result, exception);
 			} catch (RuntimeException ex) {
 				throw ex;
 			} catch (Exception ex) {
@@ -511,7 +511,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
-					action.accept(result, e);
+					fn.accept(result, e);
 				} catch (RuntimeException ex) {
 					throw ex;
 				} catch (Exception ex) {
@@ -523,7 +523,50 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenComplete(" + formatToString(action) + ')';
+				return ".whenComplete(" + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenComplete(@NotNull ConsumerEx<? super T> fn, @NotNull ConsumerEx<@NotNull Exception> exceptionFn) {
+		if (isComplete()) {
+			try {
+				if (exception == null) {
+					fn.accept(result);
+				} else {
+					exceptionFn.accept(exception);
+				}
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+			return this;
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (e == null) {
+						fn.accept(result);
+					} else {
+						exceptionFn.accept(e);
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenComplete(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -566,11 +609,11 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResult(ConsumerEx<? super T> action) {
+	public @NotNull Promise<T> whenResult(ConsumerEx<? super T> fn) {
 		if (isComplete()) {
 			if (isResult()) {
 				try {
-					action.accept(result);
+					fn.accept(result);
 				} catch (RuntimeException ex) {
 					throw ex;
 				} catch (Exception ex) {
@@ -584,7 +627,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
 					try {
-						action.accept(result);
+						fn.accept(result);
 					} catch (RuntimeException ex) {
 						throw ex;
 					} catch (Exception ex) {
@@ -599,7 +642,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenResult(" + formatToString(action) + ')';
+				return ".whenResult(" + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -648,11 +691,11 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull ConsumerEx<Exception> action) {
+	public @NotNull Promise<T> whenException(@NotNull ConsumerEx<Exception> fn) {
 		if (isComplete()) {
 			if (isException()) {
 				try {
-					action.accept(exception);
+					fn.accept(exception);
 				} catch (RuntimeException ex) {
 					throw ex;
 				} catch (Exception ex) {
@@ -668,7 +711,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					complete(result);
 				} else {
 					try {
-						action.accept(e);
+						fn.accept(e);
 					} catch (RuntimeException ex) {
 						throw ex;
 					} catch (Exception ex) {
@@ -681,7 +724,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".whenException(" + formatToString(action) + ')';
+				return ".whenException(" + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -965,12 +1008,12 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(@NotNull Callback<? super T> action) {
+	public void run(@NotNull Callback<? super T> callback) {
 		if (isComplete()) {
-			action.accept(result, exception);
+			callback.accept(result, exception);
 			return;
 		}
-		subscribe(action);
+		subscribe(callback);
 	}
 
 	@Override

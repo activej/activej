@@ -433,13 +433,23 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * the resulting promise is completed exceptionally with a
 	 * thrown exception.
 	 *
-	 * @param action bi consumer that consumes a result
+	 * @param fn bi consumer that consumes a result
 	 *               and an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
+	default @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> fn) {
 		return then((v, e) -> {
-			action.accept(v, e);
+			fn.accept(v, e);
 			return Promise.of(v, e);
+		});
+	}
+
+	default @NotNull Promise<T> whenComplete(@NotNull ConsumerEx<? super T> fn, @NotNull ConsumerEx<@NotNull Exception> exceptionFn) {
+		return whenComplete((v, e) -> {
+			if (e == null) {
+				fn.accept(v);
+			} else {
+				exceptionFn.accept(e);
+			}
 		});
 	}
 
@@ -472,11 +482,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * the resulting promise is completed exceptionally with a
 	 * thrown exception.
 	 *
-	 * @param action consumer that consumes a result of {@code this} promise
+	 * @param fn consumer that consumes a result of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenResult(ConsumerEx<? super T> action) {
+	default @NotNull Promise<T> whenResult(ConsumerEx<? super T> fn) {
 		return then(v -> {
-			action.accept(v);
+			fn.accept(v);
 			return Promise.of(v);
 		});
 	}
@@ -511,12 +521,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * the resulting promise is completed exceptionally with a
 	 * thrown exception.
 	 *
-	 * @param action consumer that consumes an exception of {@code this} promise
+	 * @param fn consumer that consumes an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenException(@NotNull ConsumerEx<@NotNull Exception> action) {
+	default @NotNull Promise<T> whenException(@NotNull ConsumerEx<@NotNull Exception> fn) {
 		return then((v, e) -> {
 			if (e != null) {
-				action.accept(e);
+				fn.accept(e);
 			}
 			return Promise.of(v, e);
 		});
@@ -594,7 +604,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull Promise<Void> toVoid();
 
 	@Override
-	void run(@NotNull Callback<? super T> action);
+	void run(@NotNull Callback<? super T> callback);
 
 	/**
 	 * Wraps {@code Promise} into {@link CompletableFuture}.

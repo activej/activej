@@ -164,9 +164,21 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
+	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> fn) {
 		try {
-			action.accept(getResult(), null);
+			fn.accept(getResult(), null);
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> whenComplete(@NotNull ConsumerEx<? super T> fn, @NotNull ConsumerEx<@NotNull Exception> exceptionFn) {
+		try {
+			fn.accept(getResult());
 			return this;
 		} catch (RuntimeException ex) {
 			throw ex;
@@ -188,9 +200,9 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResult(ConsumerEx<? super T> action) {
+	public @NotNull Promise<T> whenResult(ConsumerEx<? super T> fn) {
 		try {
-			action.accept(getResult());
+			fn.accept(getResult());
 			return this;
 		} catch (RuntimeException ex) {
 			throw ex;
@@ -212,7 +224,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull ConsumerEx<Exception> action) {
+	public @NotNull Promise<T> whenException(@NotNull ConsumerEx<Exception> fn) {
 		return this;
 	}
 
@@ -258,8 +270,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(@NotNull Callback<? super T> action) {
-		action.accept(getResult(), null);
+	public void run(@NotNull Callback<? super T> callback) {
+		callback.accept(getResult(), null);
 	}
 
 	@Override
