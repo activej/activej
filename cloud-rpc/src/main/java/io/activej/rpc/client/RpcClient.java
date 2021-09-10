@@ -53,6 +53,7 @@ import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 
 import javax.net.ssl.SSLContext;
@@ -487,7 +488,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		};
 	}
 
-	// visible for testing
+	@VisibleForTesting
 	public RpcSender getRequestSender() {
 		return requestSender;
 	}

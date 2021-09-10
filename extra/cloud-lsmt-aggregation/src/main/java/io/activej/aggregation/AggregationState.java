@@ -23,6 +23,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.common.Utils;
 import io.activej.ot.OTState;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,7 +249,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		}
 	}
 
-	// visibleForTest
+	@VisibleForTesting
 	SortedMap<PrimaryKey, RangeTree<PrimaryKey, AggregationChunk>> groupByPartition(int partitioningKeyLength) {
 		SortedMap<PrimaryKey, RangeTree<PrimaryKey, AggregationChunk>> partitioningKeyToTree = new TreeMap<>();
 
@@ -446,7 +447,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		}
 	}
 
-	// visibleForTesting
+	@VisibleForTesting
 	public static boolean chunkMightContainQueryValues(PrimaryKey minQueryKey, PrimaryKey maxQueryKey,
 			PrimaryKey minChunkKey, PrimaryKey maxChunkKey) {
 		return chunkMightContainQueryValues(minQueryKey.values(), maxQueryKey.values(),

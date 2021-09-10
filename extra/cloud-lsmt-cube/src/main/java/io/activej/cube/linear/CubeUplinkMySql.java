@@ -36,6 +36,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,7 +249,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 				.whenComplete(promisePush.recordStats());
 	}
 
-	// VisibleForTesting
+	@VisibleForTesting
 	CubeDiff fetchChunkDiffs(Connection connection, long from, long to) throws SQLException, MalformedDataException {
 		CubeDiff cubeDiff;
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
@@ -302,7 +303,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		return cubeDiff;
 	}
 
-	// VisibleForTesting
+	@VisibleForTesting
 	Map<String, LogPositionDiff> fetchPositionDiffs(Connection connection, long from, long to) throws SQLException {
 		Map<String, LogPositionDiff> positions = new HashMap<>();
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +

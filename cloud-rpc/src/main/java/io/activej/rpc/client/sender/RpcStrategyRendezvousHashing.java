@@ -23,6 +23,7 @@ import io.activej.rpc.hash.HashBucketFunction;
 import io.activej.rpc.hash.HashFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -159,7 +160,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 		this.shards.putAll(shards);
 	}
 
-	// visible for testing
+	@VisibleForTesting
 	static final class DefaultHashBucketFunction implements HashBucketFunction {
 		@Override
 		public int hash(Object shardId, int bucket) {

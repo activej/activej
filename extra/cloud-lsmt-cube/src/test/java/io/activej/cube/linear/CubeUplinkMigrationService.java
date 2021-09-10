@@ -22,6 +22,7 @@ import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ final class CubeUplinkMigrationService {
 	private final Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrowOnAnyError());
 	private final Executor executor = newSingleThreadExecutor();
 
-	// visible for testing
+	@VisibleForTesting
 	Cube cube = createEmptyCube(eventloop, executor)
 			// .withAggregation(...) - CONFIGURE CUBE STRUCTURE!
 			;
