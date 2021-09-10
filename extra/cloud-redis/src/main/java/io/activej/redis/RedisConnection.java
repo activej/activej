@@ -260,7 +260,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	// endregion
 	// endregion
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	private <T> Promise<T> receive(RedisResponse<T> response) {
 		SettablePromise<T> promise = new SettablePromise<>();
 		if (transactionQueue == null) {
@@ -388,6 +388,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		}
 	}
 
+	@Override
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
 	protected void onClosed(@NotNull Exception e) {
 		socket.closeEx(e);

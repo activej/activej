@@ -257,7 +257,7 @@ public class ActiveJDirectScopebindBenchmark {
 	int arg;
 
 	@Benchmark
-	@OutputTimeUnit(value = TimeUnit.NANOSECONDS)
+	@OutputTimeUnit(TimeUnit.NANOSECONDS)
 	public void measure(Blackhole blackhole) {
 		Kitchen kitchen = injector.getInstance(Kitchen.class);
 		for (int i = 0; i < arg; ++i) {

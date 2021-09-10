@@ -88,6 +88,7 @@ final class LZ4LegacyBlockEncoder implements BlockEncoder {
 		return outputBuf;
 	}
 
+	@Override
 	public ByteBuf encodeEndOfStreamBlock() {
 		return ByteBuf.wrapForReading(MAGIC_AND_LAST_BYTES);
 	}

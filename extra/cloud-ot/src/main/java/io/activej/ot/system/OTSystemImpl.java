@@ -218,7 +218,7 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 		return result;
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	@Override
 	public <O extends D> List<D> invert(List<O> ops) {
 		int size = ops.size();

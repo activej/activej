@@ -65,7 +65,7 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Scans fields of classes for serialization.
  */
-@SuppressWarnings({"unused"})
+@SuppressWarnings("unused")
 public final class SerializerBuilder {
 	private final DefiningClassLoader classLoader;
 
@@ -250,7 +250,7 @@ public final class SerializerBuilder {
 		return null;
 	}
 
-	@SuppressWarnings({"ForLoopReplaceableByForEach"})
+	@SuppressWarnings("ForLoopReplaceableByForEach")
 	private <A extends Annotation> boolean hasAnnotation(Class<A> type, Annotation[] annotations) {
 		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, emptyMap());
 		for (int i = 0; i < annotations.length; i++) {

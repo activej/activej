@@ -115,5 +115,6 @@ public abstract class RecordProjection implements Function<Record, Record>, BiCo
 		return recordTo;
 	}
 
+	@Override
 	public abstract void accept(Record recordFrom, Record recordTo);
 }

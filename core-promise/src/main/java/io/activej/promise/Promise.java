@@ -114,7 +114,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * {@link CompleteExceptionallyPromise} with
 	 * {@code errorSupplier} exception.
 	 */
-	@SuppressWarnings({"OptionalUsedAsFieldOrParameterType"})
+	@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "OptionalIsPresent"})
 	static <T> @NotNull Promise<T> ofOptional(@NotNull Optional<T> optional, @NotNull Supplier<? extends Exception> errorSupplier) {
 		if (optional.isPresent()) return Promise.of(optional.get());
 		return Promise.ofException(errorSupplier.get());

@@ -78,7 +78,7 @@ public class SimpleScope implements com.google.inject.Scope {
 	 *
 	 * @return typed provider
 	 */
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public static <T> Provider<T> seededKeyProvider() {
 		return (Provider<T>) SEEDED_KEY_PROVIDER;
 	}

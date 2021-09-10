@@ -121,6 +121,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		return remoteAddress;
 	}
 
+	@Override
 	protected void readMessage() throws MalformedHttpException {
 		readStartLine();
 	}

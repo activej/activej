@@ -29,7 +29,7 @@ import java.util.Map;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-@SuppressWarnings({"unused"})
+@SuppressWarnings("unused")
 @JsonConverter(target = FsException.class)
 public abstract class FsExceptionConverter {
 	private static final String MESSAGE = "message";

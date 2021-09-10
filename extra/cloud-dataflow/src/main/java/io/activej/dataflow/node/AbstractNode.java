@@ -26,10 +26,12 @@ public abstract class AbstractNode implements Node {
 		finished = Instant.now();
 	}
 
+	@Override
 	public @Nullable Instant getFinished() {
 		return finished;
 	}
 
+	@Override
 	public @Nullable Exception getError() {
 		return error;
 	}

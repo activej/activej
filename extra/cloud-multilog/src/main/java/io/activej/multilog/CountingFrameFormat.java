@@ -57,6 +57,7 @@ final class CountingFrameFormat implements FrameFormat {
 				decoder.reset();
 			}
 
+			@Override
 			public @Nullable ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
 				int before = bufs.remainingBytes();
 				ByteBuf buf = decoder.decode(bufs);

@@ -38,6 +38,7 @@ public final class UncheckedException extends RuntimeException {
 		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
 	}
 
+	@Override
 	public Exception getCause() {
 		Throwable cause = super.getCause();
 		if (cause instanceof Exception) {
