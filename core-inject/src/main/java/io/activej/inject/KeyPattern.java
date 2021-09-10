@@ -60,16 +60,16 @@ public abstract class KeyPattern<T> {
 		}
 	}
 
+	public static @NotNull <T> KeyPattern<T> create(@NotNull Type type, Predicate<?> qualifier) {
+		return new KeyImpl<>(type, qualifier);
+	}
+
 	public static @NotNull <T> KeyPattern<T> of(@NotNull Class<T> type) {
 		return new KeyImpl<>(type, null);
 	}
 
 	public static @NotNull <T> KeyPattern<T> of(@NotNull Class<T> type, Object qualifier) {
 		return new KeyImpl<>(type, predicateOf(qualifier));
-	}
-
-	public static @NotNull <T> KeyPattern<T> of(@NotNull Class<T> type, Predicate<?> qualifier) {
-		return new KeyImpl<>(type, qualifier);
 	}
 
 	public static @NotNull <T> KeyPattern<T> ofType(@NotNull Type type) {
@@ -80,34 +80,12 @@ public abstract class KeyPattern<T> {
 		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 
-	public static @NotNull <T> KeyPattern<T> ofType(@NotNull Type type, Predicate<?> qualifier) {
-		return new KeyImpl<>(type, qualifier);
-	}
-
 	private static @NotNull Predicate<Object> predicateOf(Object qualifier) {
 		return q -> Objects.equals(q, qualifier);
 	}
 
-	/**
-	 * Returns a new key with same type but the qualifier replaced with a given one
-	 */
-	public KeyPattern<T> qualified(Object qualifier) {
-		return new KeyImpl<>(type, predicateOf(qualifier));
-	}
-
-	/**
-	 * Returns a new key with same type but the qualifier replaced with a given one
-	 */
-	public KeyPattern<T> qualified(Predicate<?> qualifier) {
-		return new KeyImpl<>(type, qualifier);
-	}
-
 	public @NotNull Type getType() {
 		return type;
-	}
-
-	public Predicate<?> getQualifier() {
-		return qualifier;
 	}
 
 	public boolean hasQualifier() {
