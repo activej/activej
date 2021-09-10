@@ -60,8 +60,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@NotNull
 	@SuppressWarnings("unchecked")
-	static CompleteNullPromise<Void> complete() {
-		return (CompleteNullPromise<Void>) CompleteNullPromise.INSTANCE;
+	static Promise<Void> complete() {
+		return (Promise<Void>) CompleteNullPromise.INSTANCE;
 	}
 
 	/**
@@ -72,7 +72,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *              {@link CompleteResultPromise}
 	 */
 	@NotNull
-	static <T> CompletePromise<T> of(@Nullable T value) {
+	static <T> Promise<T> of(@Nullable T value) {
 		return value != null ? new CompleteResultPromise<>(value) : CompleteNullPromise.instance();
 	}
 
@@ -82,7 +82,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param e Exception
 	 */
 	@NotNull
-	static <T> CompleteExceptionallyPromise<T> ofException(@NotNull Exception e) {
+	static <T> Promise<T> ofException(@NotNull Exception e) {
 		return new CompleteExceptionallyPromise<>(e);
 	}
 

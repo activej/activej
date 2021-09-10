@@ -32,7 +32,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
  * Represents a completed {@code Promise} with a result of unspecified type.
  */
 @SuppressWarnings("unchecked")
-public abstract class CompletePromise<T> implements Promise<T> {
+abstract class CompletePromise<T> implements Promise<T> {
 	static {
 		Recyclers.register(CompletePromise.class, promise -> Recyclers.recycle(promise.getResult()));
 	}

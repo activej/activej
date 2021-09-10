@@ -32,7 +32,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
  * Represents a {@code Promise} which is completed with an exception.
  */
 @SuppressWarnings("unchecked")
-public final class CompleteExceptionallyPromise<T> implements Promise<T> {
+final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@NotNull
 	private final Exception exception;
 
