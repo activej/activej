@@ -22,7 +22,6 @@ import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.Checks;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
-import io.activej.common.function.SupplierEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.reflection.ReflectionUtils;
@@ -1108,11 +1107,11 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	@NotNull
 	@Override
-	public <T> CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<T>> computation) {
+	public <T> CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		execute(() -> {
 			try {
-				computation.get().run((result, e) -> {
+				computation.run((result, e) -> {
 					if (e == null) {
 						future.complete(result);
 					} else {

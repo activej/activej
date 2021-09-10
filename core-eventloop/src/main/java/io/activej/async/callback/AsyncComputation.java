@@ -16,6 +16,53 @@
 
 package io.activej.async.callback;
 
+import io.activej.common.function.RunnableEx;
+import io.activej.common.function.SupplierEx;
+
 public interface AsyncComputation<T> {
 	void run(Callback<? super T> callback);
+
+	static AsyncComputation<Void> of(RunnableEx runnable) {
+		return callback -> {
+			try {
+				runnable.run();
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				callback.accept(null, ex);
+				return;
+			}
+			callback.accept(null, null);
+		};
+	}
+
+	static <T> AsyncComputation<T> of(SupplierEx<? extends T> runnable) {
+		return callback -> {
+			T result;
+			try {
+				result = runnable.get();
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				callback.accept(null, ex);
+				return;
+			}
+			callback.accept(result, null);
+		};
+	}
+
+	static <T> AsyncComputation<T> ofDeferred(SupplierEx<? extends AsyncComputation<? extends T>> computationSupplier) {
+		return callback -> {
+			AsyncComputation<? extends T> computation;
+			try {
+				computation = computationSupplier.get();
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				callback.accept(null, ex);
+				return;
+			}
+			computation.run(callback);
+		};
+	}
 }
