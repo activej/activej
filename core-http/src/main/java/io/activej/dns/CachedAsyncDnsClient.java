@@ -172,7 +172,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		resolve.run((response, e) -> addToCache(query, response, e));
 		if (resolve.isComplete()) return resolve;
 		pending.put(query, resolve);
-		return resolve.whenComplete((response, e) -> pending.remove(query));
+		return resolve.whenComplete(() -> pending.remove(query));
 	}
 
 	@Override

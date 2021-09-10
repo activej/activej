@@ -254,13 +254,9 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		running = false;
 		closeServerSockets();
 		return Promise.ofCallback(this::onClose)
-				.whenComplete(($, e) -> {
-					if (e == null) {
-						logger.info("Server closed: {}", this);
-					} else {
-						logger.error("Server closed exceptionally: " + this, e);
-					}
-				});
+				.whenComplete(
+						$ -> logger.info("Server closed: {}", this),
+						e -> logger.error("Server closed exceptionally: " + this, e));
 	}
 
 	public final Future<?> closeFuture() {

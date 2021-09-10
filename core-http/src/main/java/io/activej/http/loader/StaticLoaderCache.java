@@ -50,13 +50,14 @@ class StaticLoaderCache implements StaticLoader {
 	}
 
 	private Promise<ByteBuf> doLoad(String path) {
-		return resourceLoader.load(path)
-				.whenComplete((buf, e) -> {
-					if (e == null) {
-						put.accept(path, buf.getArray());
-					} else if (e instanceof ResourceNotFoundException) {
-						put.accept(path, NOT_FOUND);
-					}
-				});
-	}
+        return resourceLoader.load(path)
+				.whenComplete(
+						buf ->
+								put.accept(path, buf.getArray()),
+						e -> {
+                            if (e instanceof ResourceNotFoundException) {
+                                put.accept(path, NOT_FOUND);
+                            }
+                        });
+    }
 }

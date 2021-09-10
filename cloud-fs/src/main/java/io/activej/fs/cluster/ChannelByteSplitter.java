@@ -90,35 +90,32 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		}
 		List<ChannelConsumer<ByteBuf>> failed = new ArrayList<>();
 		input.get()
-				.whenComplete((buf, e) -> {
-					if (e == null) {
-						if (buf != null) {
-							Promises.all(outputs.stream()
-											.map(output -> output.accept(buf.slice())
-													.then(Promise::of, e1 -> {
-														failed.add(output);
-														if (outputs.size() - failed.size() < requiredSuccesses) {
-															return Promise.ofException(e1);
-														}
-														return Promise.complete();
-													})))
-									.whenComplete(($, e1) -> {
-										outputs.removeAll(failed);
-										if (e1 == null) {
-											doProcess();
-										} else {
-											closeEx(new FsException("Not enough successes"));
-										}
-									});
-							buf.recycle();
-						} else {
-							Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
-									.whenComplete(($, e1) -> completeProcessEx(e1));
-						}
+				.whenResult(buf -> {
+					if (buf != null) {
+						Promises.all(outputs.stream()
+										.map(output -> output.accept(buf.slice())
+												.then(Promise::of, e1 -> {
+													failed.add(output);
+													if (outputs.size() - failed.size() < requiredSuccesses) {
+														return Promise.ofException(e1);
+													}
+													return Promise.complete();
+												})))
+								.whenComplete(($, e) -> {
+									outputs.removeAll(failed);
+									if (e == null) {
+										doProcess();
+									} else {
+										closeEx(new FsException("Not enough successes"));
+									}
+								});
+						buf.recycle();
 					} else {
-						closeEx(e);
+						Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
+								.whenComplete(($, e) -> completeProcessEx(e));
 					}
-				});
+				})
+				.whenException(this::closeEx);
 	}
 
 	@Override

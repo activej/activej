@@ -248,7 +248,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		ChannelSupplier.of(socket::read, socket)
 				.streamTo(buffer.getConsumer())
 				.both(inflaterFinished)
-				.whenComplete(($, e) -> {
+				.run(($, e) -> {
 					if (isClosed()) return;
 					if (e == null) {
 						onBodyReceived();
@@ -314,7 +314,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 				.whenResult(this::closeWebSocketConnection);
 
 		decoder.getProcessCompletion()
-				.whenComplete(($, e) -> {
+				.run(($, e) -> {
 					if (isClosed()) return;
 					if (e == null) {
 						encoder.sendCloseFrame(REGULAR_CLOSE);

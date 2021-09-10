@@ -177,13 +177,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return Promise.of(splitter.getInput()
 							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 							.withAcknowledgement(ack -> ack
-									.then($ -> {
+									.mapException(e -> new CrdtException("Cluster 'upload' failed", e))
+									.whenResult(() -> {
 												if (containers.size() - failedRef.value < replicationCount) {
-													return Promise.ofException(new CrdtException("Failed to upload data to the required number of partitions"));
+													throw new CrdtException("Failed to upload data to the required number of partitions");
 												}
-												return Promise.complete();
-											},
-											e -> Promise.ofException(new CrdtException("Cluster 'upload' failed", e))
+											}
 									)));
 				});
 	}

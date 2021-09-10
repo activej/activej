@@ -109,13 +109,10 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 			}
 			ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream();
 			forwarder.getSupplier().streamTo(consumer);
-			consumer.withAcknowledgement(ack ->
-					ack.whenComplete(($, e) -> {
-						if (e != null) {
-							logger.warn("Exception occurred while trying to send data", e);
-						}
-						messaging.close();
-					}));
+			consumer.withAcknowledgement(ack -> ack
+					.whenComplete(messaging::close)
+					.whenException(e -> logger.warn("Exception occurred while trying to send data", e))
+			);
 		});
 		handleCommand(DataflowCommandExecute.class, (messaging, command) -> {
 			long taskId = command.getTaskId();
@@ -178,13 +175,13 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 				err = null;
 			}
 			messaging.send(new DataflowResponseTaskData(
-					task.getStatus(),
-					task.getStartTime(),
-					task.getFinishTime(),
-					err,
-					task.getNodes().stream()
-							.filter(n -> n.getStats() != null)
-							.collect(toMap(Node::getIndex, Node::getStats)), task.getGraphViz()))
+							task.getStatus(),
+							task.getStartTime(),
+							task.getFinishTime(),
+							err,
+							task.getNodes().stream()
+									.filter(n -> n.getStats() != null)
+									.collect(toMap(Node::getIndex, Node::getStats)), task.getGraphViz()))
 					.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
 		});
 	}

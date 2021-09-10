@@ -360,14 +360,12 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 		return Promises.toList(selected.stream()
 						.map(partitionId -> partitions.get(partitionId)
 								.info(name) // checking file existence and size on particular partition
-								.whenComplete((meta, e) -> {
-									if (e != null) {
-										logger.warn("failed connecting to partition {}", partitionId, e);
-										partitions.markIfDead(partitionId, e);
-										return;
-									}
-									infoResults.remoteMetadata.add(meta);
-								})
+								.whenComplete(
+										infoResults.remoteMetadata::add,
+										e -> {
+											logger.warn("failed connecting to partition {}", partitionId, e);
+											partitions.markIfDead(partitionId, e);
+										})
 								.toTry()))
 				.map(tries -> {
 					if (!tries.stream().allMatch(Try::isSuccess)) { // any of info calls failed

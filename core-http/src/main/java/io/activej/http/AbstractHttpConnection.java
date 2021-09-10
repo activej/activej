@@ -460,7 +460,7 @@ public abstract class AbstractHttpConnection {
 		onHeadersReceived(null, supplier);
 
 		process.getProcessCompletion()
-				.whenComplete(($, e) -> {
+				.run(($, e) -> {
 					if (isClosed()) return;
 					if (e == null) {
 						assert this.readBuf == null;

@@ -106,18 +106,13 @@ public abstract class WebSocketServlet implements AsyncServlet {
 	private static void bindWebSocketTransformers(ChannelSupplier<ByteBuf> rawStream, WebSocketFramesToBufs encoder, WebSocketBufsToFrames decoder) {
 		encoder.getCloseSentPromise()
 				.then(decoder::getCloseReceivedPromise)
-				.whenException(rawStream::closeEx)
-				.whenResult(rawStream::closeEx);
+				.whenResult(rawStream::closeEx)
+				.whenException(rawStream::closeEx);
 
-		decoder.getProcessCompletion()
-				.whenComplete(($, e) -> {
-					if (e == null) {
-						encoder.sendCloseFrame(REGULAR_CLOSE);
-					} else {
-						encoder.closeEx(e);
-					}
-				});
-	}
+        decoder.getProcessCompletion()
+                .whenResult(() -> encoder.sendCloseFrame(REGULAR_CLOSE))
+                .whenException(encoder::closeEx);
+    }
 
 	private static boolean isUpgradeHeaderMissing(HttpMessage message) {
 		String headerValue = message.getHeader(HttpHeaders.CONNECTION);
