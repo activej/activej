@@ -178,7 +178,7 @@ public final class StaticServlet implements AsyncServlet {
 								.map(indexResource -> AsyncSupplier.of(() ->
 										resourceLoader.load(dirPath + indexResource)
 												.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource))))))
-				.then(Promise::of, e -> Promise.ofException(new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e)));
+				.mapException(e -> new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e));
 	}
 
 	@NotNull

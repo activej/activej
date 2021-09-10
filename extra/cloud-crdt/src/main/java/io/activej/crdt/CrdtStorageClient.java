@@ -198,7 +198,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public Promise<Void> ping() {
 		return connect()
 				.then(messaging -> messaging.send(PING)
-						.mapException(e1 -> new CrdtException("Failed to send 'Ping'", e1))
+						.mapException(e -> new CrdtException("Failed to send 'Ping'", e))
 						.then(() -> messaging.receive()
 								.mapException(e -> new CrdtException("Failed to receive 'Pong'", e)))
 						.whenResult(simpleHandlerFn(PONG))

@@ -178,13 +178,14 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return Promise.of(splitter.getInput()
 							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 							.withAcknowledgement(ack -> ack
-									.whenResult(() -> {
-										if (containers.size() - failedRef.value < replicationCount) {
-											throw new CrdtException("Failed to upload data to the required number of partitions");
-										}
-									})
-									.toVoid()
-									.mapException(e -> new CrdtException("Cluster 'upload' failed", e))));
+									.then($ -> {
+												if (containers.size() - failedRef.value < replicationCount) {
+													return Promise.ofException(new CrdtException("Failed to upload data to the required number of partitions"));
+												}
+												return Promise.complete();
+											},
+											e -> Promise.ofException(new CrdtException("Cluster 'upload' failed", e))
+									)));
 				});
 	}
 
@@ -197,13 +198,13 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return streamReducer.getOutput()
 							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 							.withEndOfStream(eos -> eos
+									.mapException(e -> new CrdtException("Cluster 'download' failed", e))
 									.whenResult(() -> {
 										int deadBeforeDownload = partitions.getPartitions().size() - containers.size();
 										if (deadBeforeDownload + failedRef.get() >= replicationCount) {
 											throw new CrdtException("Failed to download from the required number of partitions");
 										}
-									})
-									.mapException(e -> new CrdtException("Cluster 'download' failed", e)));
+									}));
 				});
 	}
 
@@ -223,12 +224,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 					return splitter.getInput()
 							.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 							.withAcknowledgement(ack -> ack
+									.mapException(e -> new CrdtException("Cluster 'remove' failed", e))
 									.whenResult(() -> {
 										if (partitions.getPartitions().size() - containers.size() + failedRef.get() != 0) {
 											throw new CrdtException("Failed to remove items from all partitions");
 										}
-									})
-									.mapException(e -> new CrdtException("Cluster 'remove' failed", e)));
+									}));
 				});
 	}
 

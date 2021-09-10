@@ -100,7 +100,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 														if (outputs.size() - failed.size() < requiredSuccesses) {
 															return Promise.ofException(e1);
 														}
-														return Promise.of(null);
+														return Promise.complete();
 													})))
 									.whenComplete(($, e1) -> {
 										outputs.removeAll(failed);
