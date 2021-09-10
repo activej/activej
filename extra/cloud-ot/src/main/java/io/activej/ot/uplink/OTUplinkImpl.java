@@ -19,7 +19,6 @@ package io.activej.ot.uplink;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.Ref;
-import io.activej.common.ref.RefInt;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTCommitFactory.DiffsWithLevel;
 import io.activej.ot.PollSanitizer;
@@ -102,7 +101,6 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC> {
 
 	@Override
 	public Promise<FetchData<K, D>> checkout() {
-		RefInt epoch = new RefInt(0);
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
 				.then(heads -> findParent(
@@ -112,7 +110,6 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC> {
 						DiffsReducer.toList(),
 						commit -> repository.loadSnapshot(commit.getId())
 								.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null)))
-				.whenResult(findResult -> epoch.set(findResult.getEpoch()))
 				.then(findResult -> Promise.of(
 						new FetchData<>(
 								findResult.getChild(),

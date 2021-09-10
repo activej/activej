@@ -343,7 +343,7 @@ public interface Config {
 			if (optional) {
 				logger.warn("Can't load properties file: {}", file);
 			} else {
-				throw new IllegalArgumentException("Failed to load required properties: " + file.toString(), e);
+				throw new IllegalArgumentException("Failed to load required properties: " + file, e);
 			}
 		}
 		return ofProperties(props);
@@ -391,7 +391,7 @@ public interface Config {
 
 	static Config lazyConfig(Supplier<Config> configSupplier) {
 		return new Config() {
-			private Config actualConfig;
+			private volatile Config actualConfig;
 
 			private Config ensureConfig() {
 				if (actualConfig == null) {

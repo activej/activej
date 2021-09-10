@@ -232,7 +232,7 @@ public final class RpcHelloWorldTest {
 				}
 				latch.await();
 				System.out.printf("%2d: Elapsed %8s rps: %18s (%d/%d [%d])%n",
-						t + 1, stopwatch.stop().toString(), count * 1000000.0 / stopwatch.elapsed(MICROSECONDS), success.get(), count, error.get());
+						t + 1, stopwatch.stop(), count * 1000000.0 / stopwatch.elapsed(MICROSECONDS), success.get(), count, error.get());
 			}
 		} finally {
 			server.closeFuture().get();

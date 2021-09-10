@@ -249,6 +249,7 @@ public final class ByteBufStrings {
 			if (isLowSurrogate(low)) {
 				int cp = toCodePoint(high, low);
 				if (cp >= 0x10000 && cp <= 0x10FFFF) {
+					//noinspection PointlessArithmeticExpression
 					buf[pos + 0] = (byte) (0b11110000 | cp >>> 18);
 					buf[pos + 1] = (byte) (0b10000000 | cp >>> 12 & 0b00111111);
 					buf[pos + 2] = (byte) (0b10000000 | cp >>> 6 & 0b00111111);

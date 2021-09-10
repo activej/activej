@@ -27,7 +27,7 @@ public final class ChunkLockerNoOp<C> implements ChunkLocker<C> {
 	}
 
 	public static <C> ChunkLockerNoOp<C> create() {
-		return new ChunkLockerNoOp<C>();
+		return new ChunkLockerNoOp<>();
 	}
 
 	@Override

@@ -26,7 +26,6 @@ import java.nio.channels.Selector;
  * Is used to replace the inefficient {@link java.util.HashSet} in {@link sun.nio.ch.SelectorImpl}
  * into {@link OptimizedSelectedKeysSet}. Replace fields to advance performance for the {@link Selector}
  */
-@SuppressWarnings("JavadocReference")
 public final class Utils {
 	private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 

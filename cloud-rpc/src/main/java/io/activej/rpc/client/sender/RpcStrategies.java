@@ -37,7 +37,7 @@ import static java.util.Arrays.asList;
  * </ul>
  */
 public final class RpcStrategies {
-	static RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
+	static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
 
 	public static RpcStrategySingleServer server(@NotNull InetSocketAddress address) {
 		return RpcStrategySingleServer.create(address);

@@ -171,8 +171,6 @@ public final class RESPv2 {
 
 		switch (array[head++]) {
 			case STRING_MARKER:
-				skipString();
-				break;
 			case ERROR_MARKER:
 				skipString();
 				break;

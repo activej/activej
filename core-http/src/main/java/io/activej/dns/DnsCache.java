@@ -162,7 +162,7 @@ public final class DnsCache {
 		long expirationTime = now.currentTimeMillis();
 		if (response.isSuccessful()) {
 			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assert?
-			long minTtl = response.getRecord().getMinTtl() * 1000;
+			long minTtl = response.getRecord().getMinTtl() * 1000L;
 			if (minTtl == 0) {
 				return;
 			}
@@ -336,10 +336,11 @@ public final class DnsCache {
 
 	@JmxOperation
 	public List<String> getDomainRecord(String domain) {
-		Optional<Entry<DnsQuery, CachedDnsQueryResult>> first = cache.entrySet().stream().filter(e -> e.getKey().getDomainName().equalsIgnoreCase(domain)).findFirst();
-		if (!first.isPresent())
-			return Collections.emptyList();
-		return new RecordFormatter(first.get().getKey().getDomainName(), first.get().getValue()).formatMultiline();
+		return cache.entrySet().stream()
+				.filter(e -> e.getKey().getDomainName().equalsIgnoreCase(domain))
+				.findFirst()
+				.map(e -> new RecordFormatter(e.getKey().getDomainName(), e.getValue()).formatMultiline())
+				.orElse(Collections.emptyList());
 	}
 
 	@JmxOperation

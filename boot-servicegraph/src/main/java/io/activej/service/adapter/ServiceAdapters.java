@@ -147,6 +147,7 @@ public final class ServiceAdapters {
 				instance.shutdown();
 				if (!instance.isTerminated()) {
 					logger.warn("Awaiting termination of {} ...", instance);
+					//noinspection ResultOfMethodCallIgnored
 					instance.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 					logger.info("Instance {} has been terminated", instance);
 				}

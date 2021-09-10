@@ -77,7 +77,6 @@ public class IsAssignableUtils {
 			}
 			return true;
 		}
-		assert !strict;
 		Map<TypeVariable<?>, Type> typeBindings = getTypeBindings(from);
 		for (Type anInterface : fromRawClazz.getGenericInterfaces()) {
 			if (isAssignable(toRawClazz, toTypeArguments, bind(anInterface, key -> typeBindings.getOrDefault(key, Types.wildcardTypeAny())), false)) {

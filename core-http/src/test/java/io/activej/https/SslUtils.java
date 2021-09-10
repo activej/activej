@@ -52,14 +52,14 @@ public class SslUtils {
 
 			KeyStore keyStore = KeyStore.getInstance("JKS");
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			try (InputStream input = new FileInputStream(new File(KEYSTORE_PATH))) {
+			try (InputStream input = new FileInputStream(KEYSTORE_PATH)) {
 				keyStore.load(input, KEYSTORE_PASS.toCharArray());
 			}
 			kmf.init(keyStore, KEY_PASS.toCharArray());
 
 			KeyStore trustStore = KeyStore.getInstance("JKS");
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-			try (InputStream input = new FileInputStream(new File(TRUSTSTORE_PATH))) {
+			try (InputStream input = new FileInputStream(TRUSTSTORE_PATH)) {
 				trustStore.load(input, TRUSTSTORE_PASS.toCharArray());
 			}
 			tmf.init(trustStore);

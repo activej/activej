@@ -6,7 +6,6 @@ import io.activej.http.session.SessionStoreInMemory;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
-import io.activej.promise.Promise;
 
 import java.time.Duration;
 import java.util.Map;
@@ -70,9 +69,9 @@ public final class AuthLauncher extends HttpServerLauncher {
 							if (authService.authorize(username, password)) {
 								String sessionId = UUID.randomUUID().toString();
 
-								store.save(sessionId, "My object saved in session");
-								return Promise.of(HttpResponse.redirect302("/members")
-										.withCookie(HttpCookie.of(SESSION_ID, sessionId)));
+								return store.save(sessionId, "My object saved in session")
+										.map($ -> HttpResponse.redirect302("/members")
+												.withCookie(HttpCookie.of(SESSION_ID, sessionId)));
 							}
 							return staticServlet.serve(request);
 						}))

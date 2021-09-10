@@ -159,7 +159,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		public int value;
 
 		@Override
-		public boolean consume(int index, byte b) throws MalformedDataException {
+		public boolean consume(int index, byte b) {
 			value = (index == 0 ? 0 : value >>> 8) | (b & 0xFF) << 24;
 			return index == 3;
 		}

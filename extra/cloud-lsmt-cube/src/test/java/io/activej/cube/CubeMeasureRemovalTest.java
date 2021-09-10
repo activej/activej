@@ -26,7 +26,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	private Path logsDir;
 
 	@Before
-	public void before() throws IOException, SQLException {
+	public void before() throws IOException {
 		aggregationsDir = temporaryFolder.newFolder().toPath();
 		logsDir = temporaryFolder.newFolder().toPath();
 
@@ -74,7 +73,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	}
 
 	@Test
-	public void test() throws Exception {
+	public void test() {
 		LocalActiveFs fs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(EVENTLOOP, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);

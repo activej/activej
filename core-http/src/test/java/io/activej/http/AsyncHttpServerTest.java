@@ -311,6 +311,7 @@ public final class AsyncHttpServerTest {
 		server.closeFuture().get();
 		thread.join();
 //		assertEquals(1, server.getStats().getHttpErrors().getTotal());
+//		System.out.println(server.getStats().getHttpErrors().getLastException());
 //		assertEquals(AbstractHttpConnection.TOO_BIG_HTTP_MESSAGE,
 //				server.getStats().getHttpErrors().getLastException());
 	}

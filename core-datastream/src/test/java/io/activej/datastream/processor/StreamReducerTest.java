@@ -32,7 +32,7 @@ public class StreamReducerTest {
 	public void testEmpty() {
 		StreamSupplier<Integer> source = StreamSupplier.of();
 
-		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>create();
+		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.create();
 		streamReducer.withBufferSize(1);
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
@@ -61,7 +61,7 @@ public class StreamReducerTest {
 		StreamSupplier<Integer> source6 = StreamSupplier.of(1, 3);
 		StreamSupplier<Integer> source7 = StreamSupplier.of();
 
-		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>create();
+		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.create();
 		streamReducer.withBufferSize(1);
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();

@@ -116,7 +116,7 @@ public final class ExceptionStats implements JmxStats<ExceptionStats>, JmxStatsW
 
 		if (context != null) {
 			summary.append("\nContext: ");
-			summary.append(context.toString());
+			summary.append(context);
 		}
 
 		return summary.toString();

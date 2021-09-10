@@ -137,7 +137,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 
 		} catch (NotCompliantMBeanException | InstanceAlreadyExistsException | MBeanRegistrationException e) {
 			String msg = format("Cannot register MBean for instance with key %s and ObjectName \"%s\"",
-					key.toString(), objectName.toString());
+					key, objectName);
 			logger.error(msg, e);
 		}
 	}
@@ -152,7 +152,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 				registeredObjectNames.remove(objectName);
 			} catch (ReflectiveOperationException | JMException e) {
 				String msg =
-						format("Error during attempt to unregister MBean for instance with key %s.", key.toString());
+						format("Error during attempt to unregister MBean for instance with key %s.", key);
 				logger.error(msg, e);
 			}
 		}
@@ -197,7 +197,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			mbean = mbeanFactory.createDynamicMBean(poolInstances, settings, true);
 		} catch (Exception e) {
 			String msg = format("Cannot create DynamicMBean for aggregated MBean of pool of workers with key %s",
-					key.toString());
+					key);
 			logger.error(msg, e);
 			return;
 		}
@@ -209,7 +209,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			objectName = createObjectName(mappedName);
 		} catch (MalformedObjectNameException | ReflectiveOperationException e) {
 			String msg = format("Cannot create ObjectName for aggregated MBean of pool of workers with key %s. " +
-					"Proposed String name was \"%s\".", key.toString(), mappedName);
+					"Proposed String name was \"%s\".", key, mappedName);
 			logger.error(msg, e);
 			return;
 		}
@@ -224,7 +224,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 
 		} catch (NotCompliantMBeanException | InstanceAlreadyExistsException | MBeanRegistrationException e) {
 			String msg = format("Cannot register aggregated MBean of pool of workers with key %s " +
-					"and ObjectName \"%s\"", key.toString(), objectName.toString());
+					"and ObjectName \"%s\"", key, objectName);
 			logger.error(msg, e);
 		}
 	}
@@ -246,7 +246,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		try {
 			commonName = createProtoObjectNameForKey(key, pool);
 		} catch (ReflectiveOperationException e) {
-			String msg = format("Error during generation name for pool of instances with key %s", key.toString());
+			String msg = format("Error during generation name for pool of instances with key %s", key);
 			logger.error(msg, e);
 			return;
 		}
@@ -262,7 +262,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			} catch (JMException | ReflectiveOperationException e) {
 				String msg = format("Error during attempt to unregister mbean for worker" +
 								" of pool of instances with key %s. Worker id is \"%d\"",
-						key.toString(), i);
+						key, i);
 				logger.error(msg, e);
 			}
 		}
@@ -276,7 +276,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			registeredObjectNames.remove(objectName);
 		} catch (JMException | ReflectiveOperationException e) {
 			String msg = format("Error during attempt to unregister aggregated mbean for pool of instances " +
-					"with key %s.", key.toString());
+					"with key %s.", key);
 			logger.error(msg, e);
 		}
 	}
@@ -328,7 +328,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 
 		} catch (NotCompliantMBeanException | InstanceAlreadyExistsException | MBeanRegistrationException e) {
 			String msg = format("Cannot register MBean for worker of pool of instances with key %s. " +
-					"ObjectName for worker is \"%s\"", key.toString(), objectName.toString());
+					"ObjectName for worker is \"%s\"", key.toString(), objectName);
 			logger.error(msg, e);
 		}
 	}

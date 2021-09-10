@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TypeScannerRegistryTest {
 	@Test
+	@SuppressWarnings("rawtypes")
 	public void test1() {
 		TypeScannerRegistry<String> registry = TypeScannerRegistry.<String>create()
 				.with(int.class, ctx -> "int")

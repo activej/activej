@@ -251,6 +251,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 		if (deadPartitions.size() > deadPartitionsThreshold) {
 			CrdtException exception = new CrdtException("There are more dead partitions than allowed(" +
 					deadPartitions.size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting");
+			//noinspection ConstantConditions - a Try is successful
 			value.stream()
 					.filter(Try::isSuccess)
 					.map(Try::get)

@@ -283,7 +283,7 @@ public final class ApiTest {
 				for (int i = 0; i < names.size(); i++) {
 					String name = iterator.next();
 					if (i % 2 != 0) {
-						result.put(name, FileMetadata.of(i, i * 10));
+						result.put(name, FileMetadata.of(i, i * 10L));
 					}
 				}
 				return resultOf(result, names);

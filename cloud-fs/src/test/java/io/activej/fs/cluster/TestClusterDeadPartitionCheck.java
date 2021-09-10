@@ -317,6 +317,7 @@ public final class TestClusterDeadPartitionCheck {
 				}
 			}
 			executor.shutdown();
+			//noinspection ResultOfMethodCallIgnored
 			executor.awaitTermination(1, TimeUnit.SECONDS);
 		} catch (InterruptedException | ExecutionException e) {
 			throw new AssertionError(e);

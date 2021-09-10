@@ -115,9 +115,7 @@ public class StreamInput implements Closeable {
 	}
 
 	public final boolean isEndOfStream() throws IOException {
-		if (limit != in.pos()) {
-			return false;
-		} else {
+		if (limit == in.pos()) {
 			ensureWriteRemaining(1);
 			int bytesRead = inputStream.read(in.array(), limit, remaining());
 			if (bytesRead == -1) {
@@ -125,8 +123,8 @@ public class StreamInput implements Closeable {
 				return true;
 			}
 			limit += bytesRead;
-			return false;
 		}
+		return false;
 	}
 
 	public final <T> T deserialize(BinarySerializer<T> serializer) throws IOException {

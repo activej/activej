@@ -703,9 +703,9 @@ public final class ByteBufs implements Recyclable {
 	}
 
 	public static class ByteBufIterator implements Iterator<ByteBuf> {
-		ByteBuf[] bufs;
-		int first;
-		final int last;
+		private final ByteBuf[] bufs;
+		private int first;
+		private final int last;
 
 		private ByteBufIterator(@NotNull ByteBufs bufs) {
 			this.bufs = bufs.bufs;

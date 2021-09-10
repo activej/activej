@@ -22,7 +22,7 @@ public class RendezvousHashSharderTest {
 				.stream()
 				.sorted(), s -> index.value++);
 		Set<String> partitions = new HashSet<>(partitionsWithIndexes.keySet());
-		RendezvousHashSharder sharder = RendezvousHashSharder.create(partitions, 3);
+		RendezvousHashSharder<String> sharder = RendezvousHashSharder.create(partitions, 3);
 
 		Map<Integer, Set<Integer>> sharded = new HashMap<>();
 		for (int i = 0; i < 10; i++) {

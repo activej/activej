@@ -229,7 +229,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	}
 
 	private static final class BindingDesc {
-		private Key<?> key;
+		private final Key<?> key;
 		private Binding<?> binding;
 		private Scope[] scope;
 		private BindingType type;

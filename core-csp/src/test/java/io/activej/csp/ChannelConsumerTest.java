@@ -25,6 +25,8 @@ import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class ChannelConsumerTest {
@@ -145,11 +147,11 @@ public class ChannelConsumerTest {
 		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
 			try {
 				OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
-				outputStream.flush();
+				outputStream.write(0);
+				fail();
 			} catch (Exception e) {
-				assertTrue(e instanceof RuntimeException);
+				assertThat(e, instanceOf(RuntimeException.class));
 			}
-			return null;
 		}));
 	}
 
@@ -184,7 +186,7 @@ public class ChannelConsumerTest {
 		stopAnotherEventloop(anotherEventloop);
 
 		assertSame(expectedException, exception);
-		assertEquals(asList(1,2), list);
+		assertEquals(asList(1, 2), list);
 	}
 
 

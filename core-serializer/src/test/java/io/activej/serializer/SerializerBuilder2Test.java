@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import static io.activej.serializer.Utils.AT_LEAST_JAVA_9;
@@ -208,9 +209,7 @@ public class SerializerBuilder2Test {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 			TestNode node = (TestNode) o;
-			if (left != null ? !left.equals(node.left) : node.left != null) return false;
-			if (right != null ? !right.equals(node.right) : node.right != null) return false;
-			return true;
+			return Objects.equals(left, node.left) && Objects.equals(right, node.right);
 		}
 
 		@Override

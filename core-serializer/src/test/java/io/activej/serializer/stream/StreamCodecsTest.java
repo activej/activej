@@ -85,10 +85,11 @@ public class StreamCodecsTest {
 	@Test
 	public void ofSubtypeBuilder() {
 		SubtypeBuilder<Number> subtypeBuilder = new SubtypeBuilder<>();
-		subtypeBuilder.add(Integer.class, StreamCodecs.ofInt());
-		subtypeBuilder.add(Long.class, StreamCodecs.ofLong());
-		subtypeBuilder.add(Float.class, StreamCodecs.ofFloat());
-		subtypeBuilder.add(Byte.class, StreamCodecs.ofByte());
+		subtypeBuilder
+				.add(Integer.class, StreamCodecs.ofInt())
+				.add(Long.class, StreamCodecs.ofLong())
+				.add(Float.class, StreamCodecs.ofFloat())
+				.add(Byte.class, StreamCodecs.ofByte());
 
 		StreamCodec<Number> codec = subtypeBuilder.build();
 

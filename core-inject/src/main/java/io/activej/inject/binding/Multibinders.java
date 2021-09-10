@@ -60,6 +60,7 @@ public final class Multibinders {
 								.map(binding -> binding.compile(compiledBindingsLocator, true, scope, null))
 								.toArray(CompiledBinding[]::new);
 
+						//noinspection Convert2Lambda
 						return slot == null || bindings.stream().anyMatch(b -> b.getType() == TRANSIENT) ?
 								new CompiledBinding<T>() {
 									@SuppressWarnings("unchecked")

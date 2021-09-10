@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -50,7 +51,7 @@ public class SqlUtils {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			byte[] buffer = new byte[4096];
 			int size;
-			while ((size = stream.read(buffer)) != -1) {
+			while ((size = Objects.requireNonNull(stream).read(buffer)) != -1) {
 				baos.write(buffer, 0, size);
 			}
 			return baos.toByteArray();

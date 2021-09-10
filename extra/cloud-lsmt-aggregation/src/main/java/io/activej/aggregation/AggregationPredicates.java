@@ -1147,7 +1147,7 @@ public class AggregationPredicates {
 		public String toString() {
 			StringJoiner joiner = new StringJoiner(", ");
 			for (Object value : values) joiner.add(value != null ? value.toString() : null);
-			return "" + key + " IN " + joiner.toString();
+			return "" + key + " IN " + joiner;
 		}
 	}
 
@@ -1334,7 +1334,7 @@ public class AggregationPredicates {
 			for (AggregationPredicate predicate : predicates)
 				joiner.add(predicate != null ? predicate.toString() : null);
 
-			return "(" + joiner.toString() + ")";
+			return "(" + joiner + ")";
 		}
 	}
 
@@ -1411,7 +1411,7 @@ public class AggregationPredicates {
 			StringJoiner joiner = new StringJoiner(" OR ");
 			for (AggregationPredicate predicate : predicates)
 				joiner.add(predicate != null ? predicate.toString() : null);
-			return "(" + joiner.toString() + ")";
+			return "(" + joiner + ")";
 		}
 	}
 

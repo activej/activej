@@ -11,6 +11,7 @@ import static io.activej.types.IsAssignableUtils.isAssignable;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("All") // too many 'redundant'-warnings
 public class IsAssignableTest {
 
 	@Test

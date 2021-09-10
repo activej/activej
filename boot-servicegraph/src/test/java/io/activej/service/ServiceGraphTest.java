@@ -54,12 +54,14 @@ public class ServiceGraphTest {
 
 		try {
 			graph.startFuture().get();
+			fail();
 		} catch (Exception e) {
 			assertSame(FailingEventloopModule.ERROR, e.getCause());
 		}
 
 		try {
 			graph.stopFuture().get();
+			fail();
 		} catch (Exception e) {
 			assertSame(FailingEventloopModule.ERROR, e.getCause());
 		}

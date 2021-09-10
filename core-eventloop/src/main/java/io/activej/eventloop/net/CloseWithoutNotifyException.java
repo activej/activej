@@ -19,7 +19,7 @@ package io.activej.eventloop.net;
 import io.activej.common.ApplicationSettings;
 
 public class CloseWithoutNotifyException extends Exception {
-	public static boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(CloseWithoutNotifyException.class, "withStackTrace", false);
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(CloseWithoutNotifyException.class, "withStackTrace", false);
 
 	public CloseWithoutNotifyException(String message, Throwable cause) {
 		super(message, cause);

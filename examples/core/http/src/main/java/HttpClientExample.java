@@ -4,7 +4,6 @@ import io.activej.dns.AsyncDnsClient;
 import io.activej.dns.RemoteAsyncDnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpMessage;
 import io.activej.http.HttpRequest;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;

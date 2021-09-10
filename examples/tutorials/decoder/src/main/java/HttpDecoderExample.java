@@ -72,6 +72,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 							}
 							Map<String, Object> scopes = mapOf("contacts", contactDAO.list());
 							if (decodedUser.isRight()) {
+								//noinspection ConstantConditions - is 'right', hence not 'null'
 								scopes.put("errors", decodedUser.getRight().toMap(SEPARATOR));
 							}
 							return HttpResponse.ok200()

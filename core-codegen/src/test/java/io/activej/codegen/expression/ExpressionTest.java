@@ -822,6 +822,7 @@ public class ExpressionTest {
 								.with(call(self(), "b")))
 				.defineClassAndCreateInstance(DefiningClassLoader.create()
 						.withDebugOutputDir(dir.toPath()));
+		//noinspection ConstantConditions
 		assertEquals(1, dir.list().length);
 		assertNull(instance.b());
 		assertEquals("{null}", instance.toString());

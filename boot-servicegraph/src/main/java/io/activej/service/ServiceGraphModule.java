@@ -257,7 +257,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 		@Override
 		public String toString() {
-			return key.toString() + (workerPool == null ? "" : ":" + workerPool.getId());
+			return key + (workerPool == null ? "" : ":" + workerPool.getId());
 		}
 	}
 

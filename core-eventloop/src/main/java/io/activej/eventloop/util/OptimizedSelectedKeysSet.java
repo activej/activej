@@ -28,7 +28,6 @@ import java.util.Iterator;
  * It allows to avoid redundant work of GC
  * Should use it as a simple array instead of a set
  */
-@SuppressWarnings("JavadocReference")
 public final class OptimizedSelectedKeysSet extends AbstractSet<SelectionKey> {
 	private static final int INITIAL_SIZE = 1 << 4;
 	private int size;

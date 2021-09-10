@@ -18,10 +18,7 @@ package io.activej.inject.util;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -181,8 +178,7 @@ public final class Trie<K, V> {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		Trie<?, ?> trie = (Trie<?, ?>) o;
-		if (payload != null ? !payload.equals(trie.payload) : trie.payload != null) return false;
-		return children.equals(trie.children);
+		return Objects.equals(payload, trie.payload) && children.equals(trie.children);
 	}
 
 	@Override

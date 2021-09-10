@@ -23,7 +23,7 @@ public final class IdSequentialExecutor<K> {
 			if (result.isComplete()) return result;
 
 			finalTuple = new Tuple(executor);
-			seqExecutors.put(id, tuple);
+			seqExecutors.put(id, finalTuple);
 		} else {
 			result = tuple.executor.execute(supplier);
 			if (result.isComplete()) return result;

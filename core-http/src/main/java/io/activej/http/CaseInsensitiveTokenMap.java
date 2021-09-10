@@ -119,6 +119,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 			int i = 0;
 			for (; i < length; i++) {
 				if (array[offset + i] != bytes[i]) {
+					assert t.lowerCase != null;
 					if (equalsLowerCase(i, t.lowerCase, array, offset, length)) return t;
 					return probeNext(hashCodeCI, array, offset, length);
 				}
@@ -139,6 +140,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 				int i = 0;
 				for (; i < length; i++) {
 					if (array[offset + i] != bytes[i]) {
+						assert t.lowerCase != null;
 						if (equalsLowerCase(i, t.lowerCase, array, offset, length)) return t;
 						continue probe;
 					}

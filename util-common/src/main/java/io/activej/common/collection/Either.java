@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.function.*;
 
 public final class Either<L, R> {
@@ -170,15 +171,12 @@ public final class Either<L, R> {
 				(Either<L, T>) this;
 	}
 
-	@SuppressWarnings("RedundantIfStatement")
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		Either<?, ?> either = (Either<?, ?>) o;
-		if (left != null ? !left.equals(either.left) : either.left != null) return false;
-		if (right != null ? !right.equals(either.right) : either.right != null) return false;
-		return true;
+		return Objects.equals(left, either.left) && Objects.equals(right, either.right);
 	}
 
 	@Override
@@ -191,6 +189,6 @@ public final class Either<L, R> {
 
 	@Override
 	public String toString() {
-		return "{" + (isLeft() ? "left=" + left : "left=" + left) + "}";
+		return "{" + (isLeft() ? "left=" + left : "right=" + right) + "}";
 	}
 }

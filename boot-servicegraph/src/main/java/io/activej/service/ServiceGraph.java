@@ -495,7 +495,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		Object qualifier = key.getQualifier();
 		String keySuffix = key.getSuffix();
 		String keyIndex = key.getIndex();
-		return (qualifier != null ? qualifier.toString() + " " : "") +
+		return (qualifier != null ? qualifier + " " : "") +
 				key.getType().getTypeName() +
 				(keySuffix == null ? "" :
 						"[" + keySuffix + "]") +

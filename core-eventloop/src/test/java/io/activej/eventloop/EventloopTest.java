@@ -18,7 +18,7 @@ public final class EventloopTest {
 		Eventloop eventloop = Eventloop.create().withCurrentThread()
 				.withFatalErrorHandler((e, context) -> {
 					errorRef.set(e);
-					sb.append(requireNonNull(context).toString());
+					sb.append(requireNonNull(context));
 				});
 		RuntimeException error = new RuntimeException("error");
 		String contextString = "Failed component";

@@ -240,7 +240,7 @@ public final class ReflectionUtils {
 			// annotation with single element which has name "value"
 			annotationString.append(annotationType.getSimpleName());
 			Object value = fetchAnnotationElementValue(annotation, annotationElements[0]);
-			annotationString.append('(').append(value.toString()).append(')');
+			annotationString.append('(').append(value).append(')');
 			return annotationString.toString();
 		}
 		// annotation with one or more custom elements

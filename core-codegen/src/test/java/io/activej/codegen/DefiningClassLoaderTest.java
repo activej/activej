@@ -49,7 +49,7 @@ public class DefiningClassLoaderTest {
 	}
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 		classLoader = classLoaderFactory.get();
 	}
 

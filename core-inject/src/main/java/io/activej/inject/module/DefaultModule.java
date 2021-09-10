@@ -71,7 +71,7 @@ public final class DefaultModule implements Module {
 									new AbstractCompiledBinding<InstanceProvider>(scope, slot) {
 										@Override
 										protected InstanceProvider doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-											CompiledBinding<Object> compiledBinding = (CompiledBinding<Object>) compiledBindings.get(instanceKey);
+											CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
 											// ^ this only gets already compiled binding, that's not a binding compilation after injector is compiled
 											return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
 										}
@@ -86,7 +86,7 @@ public final class DefaultModule implements Module {
 											//
 											// anyway all of the above means that its ok here to just get the compiled binding and to not care about caching it
 
-											CompiledBinding<Object> compiledBinding = (CompiledBinding<Object>) compiledBindings.get(instanceKey);
+											CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
 											return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
 										}
 									};

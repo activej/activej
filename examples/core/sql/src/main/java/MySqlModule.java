@@ -51,14 +51,19 @@ public class MySqlModule extends AbstractModule {
 	private void initialize(MysqlDataSource dataSource) throws SQLException, IOException {
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
-				statement.execute(new String(loadResource(INIT_SCRIPT), UTF_8));
+				statement.execute(new String(loadResource(), UTF_8));
 				statement.execute("TRUNCATE TABLE user");
 			}
 		}
 	}
 
-	private static byte[] loadResource(String name) throws IOException {
-		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name)) {
+	private static byte[] loadResource() throws IOException {
+		try (InputStream stream = Thread.currentThread()
+				.getContextClassLoader()
+				.getResourceAsStream(MySqlModule.INIT_SCRIPT)
+		) {
+			assert stream != null;
+
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			byte[] buffer = new byte[4096];
 			int size;

@@ -139,6 +139,7 @@ public final class RemoteFsUtils {
 			if (exception instanceof FsScalarException) {
 				scalarExceptions.put(source, ((FsScalarException) exception));
 			} else {
+				//noinspection ConstantConditions - a Try is not successfull, hence exception is not 'null'
 				throw exception;
 			}
 		}

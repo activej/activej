@@ -705,8 +705,8 @@ public class CubeUplinkMySqlTest {
 	}
 
 	private static final class StubState implements OTState<LogDiff<CubeDiff>> {
-		Map<String, LogPosition> positions = new HashMap<>();
-		Map<String, Set<AggregationChunk>> chunks = new HashMap<>();
+		final Map<String, LogPosition> positions = new HashMap<>();
+		final Map<String, Set<AggregationChunk>> chunks = new HashMap<>();
 
 		@Override
 		public void init() {

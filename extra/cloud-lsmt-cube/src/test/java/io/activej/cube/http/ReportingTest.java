@@ -373,7 +373,7 @@ public final class ReportingTest extends CubeTestBase {
 	@After
 	public void after() {
 		if (cubeHttpServer != null) cubeHttpServer.closeFuture();
-		if (EVENTLOOP != null) EVENTLOOP.run();
+		EVENTLOOP.run();
 	}
 
 	@Test

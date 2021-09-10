@@ -81,6 +81,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P exten
 		return repartition.get();
 	}
 
+	@SuppressWarnings("ConstantConditions")
 	private @NotNull Promise<Void> doRepartition() {
 		return Promises.toTuple(cluster.upload().toTry(), localClient.remove().toTry(), localClient.download().toTry())
 				.then(all -> {

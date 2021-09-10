@@ -100,14 +100,14 @@ final class HttpDate {
 			}
 
 			for (int i = 0; i < month; i++) {
-				timestamp += DAY_SECONDS * days[i];
+				timestamp += (long) DAY_SECONDS * days[i];
 			}
 
 			for (int i = 1; i < day; i++) {
 				timestamp += DAY_SECONDS;
 			}
 
-			timestamp += ((60 * hour + minutes) * 60) + seconds;
+			timestamp += ((60L * hour + minutes) * 60) + seconds;
 
 			return timestamp;
 		} catch (RuntimeException ignored) {
