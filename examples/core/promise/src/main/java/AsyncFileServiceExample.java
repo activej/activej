@@ -34,8 +34,7 @@ public final class AsyncFileServiceExample {
 	}
 
 	//[START REGION_1]
-	@NotNull
-	private static Promise<Void> writeToFile() {
+	private static @NotNull Promise<Void> writeToFile() {
 		try {
 			FileChannel channel = FileChannel.open(PATH, setOf(WRITE, APPEND));
 
@@ -52,8 +51,7 @@ public final class AsyncFileServiceExample {
 		}
 	}
 
-	@NotNull
-	private static Promise<ByteBuf> readFromFile() {
+	private static @NotNull Promise<ByteBuf> readFromFile() {
 		byte[] array = new byte[1024];
 		FileChannel channel;
 		try {

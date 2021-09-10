@@ -88,21 +88,18 @@ public final class GMap<K, V extends CrdtMergable<V>> implements Map<K, V>, Crdt
 		throw new UnsupportedOperationException("GMap is a grow-only map");
 	}
 
-	@NotNull
 	@Override
-	public Set<K> keySet() {
+	public @NotNull Set<K> keySet() {
 		throw new UnsupportedOperationException("GMap#keySet is not implemented yet");
 	}
 
-	@NotNull
 	@Override
-	public Collection<V> values() {
+	public @NotNull Collection<V> values() {
 		throw new UnsupportedOperationException("GMap#values is not implemented yet");
 	}
 
-	@NotNull
 	@Override
-	public Set<Entry<K, V>> entrySet() {
+	public @NotNull Set<Entry<K, V>> entrySet() {
 		throw new UnsupportedOperationException("GMap#entrySet is not implemented yet");
 	}
 

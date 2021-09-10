@@ -56,8 +56,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @return a complete web socket message or {@code null}
 	 * @see Message
 	 */
-	@NotNull
-	Promise<Message> readMessage();
+	@NotNull Promise<Message> readMessage();
 
 	/**
 	 * Returns a promise of aweb socket data frame. It may contain the whole web socket message or just some
@@ -72,8 +71,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @return a web socket data frame or {@code null}
 	 * @see Frame
 	 */
-	@NotNull
-	Promise<Frame> readFrame();
+	@NotNull Promise<Frame> readFrame();
 
 	/**
 	 * A shortcut that allows to obtain a channel supplier of {@link Frame}s.
@@ -82,8 +80,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @see #readFrame()
 	 * @see Frame
 	 */
-	@NotNull
-	default ChannelSupplier<Frame> frameReadChannel() {
+	default @NotNull ChannelSupplier<Frame> frameReadChannel() {
 		return ChannelSupplier.of(this::readFrame, this);
 	}
 
@@ -94,8 +91,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @see #readMessage()
 	 * @see Message
 	 */
-	@NotNull
-	default ChannelSupplier<Message> messageReadChannel() {
+	default @NotNull ChannelSupplier<Message> messageReadChannel() {
 		return ChannelSupplier.of(this::readMessage, this);
 	}
 
@@ -111,8 +107,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @param msg a web socket message to be sent
 	 * @return a promise that indicates whether web socket message was successfully sent
 	 */
-	@NotNull
-	Promise<Void> writeMessage(@Nullable Message msg);
+	@NotNull Promise<Void> writeMessage(@Nullable Message msg);
 
 	/**
 	 * A method for sending web socket data frames.
@@ -126,8 +121,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @param frame a web socket data frame to be sent
 	 * @return a promise that indicates whether data frame was successfully sent
 	 */
-	@NotNull
-	Promise<Void> writeFrame(@Nullable Frame frame);
+	@NotNull Promise<Void> writeFrame(@Nullable Frame frame);
 
 	/**
 	 * A shortcut that allows to obtain a channel consumer of {@link Frame}s.
@@ -136,8 +130,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @see #writeFrame(Frame)
 	 * @see Frame
 	 */
-	@NotNull
-	default ChannelConsumer<Frame> frameWriteChannel() {
+	default @NotNull ChannelConsumer<Frame> frameWriteChannel() {
 		return ChannelConsumer.of(this::writeFrame, this)
 				.withAcknowledgement(ack -> ack.then(() -> writeFrame(null)));
 	}
@@ -149,8 +142,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @see #writeMessage(Message)
 	 * @see Message
 	 */
-	@NotNull
-	default ChannelConsumer<Message> messageWriteChannel() {
+	default @NotNull ChannelConsumer<Message> messageWriteChannel() {
 		return ChannelConsumer.of(this::writeMessage, this)
 				.withAcknowledgement(ack -> ack
 						.then(() -> writeMessage(null)));

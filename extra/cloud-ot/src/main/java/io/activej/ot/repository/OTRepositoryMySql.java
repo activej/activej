@@ -258,8 +258,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 		return retryRollbacks(() -> doPush(commits));
 	}
 
-	@NotNull
-	private Promise<Void> doPush(Collection<OTCommit<Long, D>> commits) {
+	private @NotNull Promise<Void> doPush(Collection<OTCommit<Long, D>> commits) {
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -298,14 +297,12 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 				.whenComplete(toLogger(logger, thisMethod(), commits));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> updateHeads(Set<Long> newHeads, Set<Long> excludedHeads) {
+	public @NotNull Promise<Void> updateHeads(Set<Long> newHeads, Set<Long> excludedHeads) {
 		return retryRollbacks(() -> doUpdateHeads(newHeads, excludedHeads));
 	}
 
-	@NotNull
-	private Promise<Void> doUpdateHeads(Set<Long> newHeads, Set<Long> excludedHeads) {
+	private @NotNull Promise<Void> doUpdateHeads(Set<Long> newHeads, Set<Long> excludedHeads) {
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -323,9 +320,8 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 				.whenComplete(toLogger(logger, thisMethod(), newHeads, excludedHeads));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Set<Long>> getAllHeads() {
+	public @NotNull Promise<Set<Long>> getAllHeads() {
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -367,9 +363,8 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 				.whenComplete(toLogger(logger, thisMethod(), revisionId));
 	}
 
-	@NotNull
 	@Override
-	public Promise<OTCommit<Long, D>> loadCommit(@NotNull Long revisionId) {
+	public @NotNull Promise<OTCommit<Long, D>> loadCommit(@NotNull Long revisionId) {
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -417,9 +412,8 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 				.whenComplete(toLogger(logger, thisMethod(), revisionId));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Boolean> hasSnapshot(@NotNull Long revisionId) {
+	public @NotNull Promise<Boolean> hasSnapshot(@NotNull Long revisionId) {
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -437,9 +431,8 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 				.whenComplete(toLogger(logger, thisMethod(), revisionId));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Optional<List<D>>> loadSnapshot(@NotNull Long revisionId) {
+	public @NotNull Promise<Optional<List<D>>> loadSnapshot(@NotNull Long revisionId) {
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -462,9 +455,8 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 				.whenComplete(toLogger(logger, thisMethod(), revisionId));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> saveSnapshot(@NotNull Long revisionId, @NotNull List<D> diffs) {
+	public @NotNull Promise<Void> saveSnapshot(@NotNull Long revisionId, @NotNull List<D> diffs) {
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -491,8 +483,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 		return retryRollbacks(() -> doCleanup(minId));
 	}
 
-	@NotNull
-	private Promise<Void> doCleanup(Long minId) {
+	private @NotNull Promise<Void> doCleanup(Long minId) {
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
@@ -544,9 +535,8 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 				.whenComplete(toLogger(logger, thisMethod(), commit.getId(), snapshot));
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

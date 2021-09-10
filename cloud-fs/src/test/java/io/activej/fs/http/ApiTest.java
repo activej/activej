@@ -187,8 +187,7 @@ public final class ApiTest {
 		assertTrue(params.isEmpty());
 	}
 
-	@NotNull
-	private RoutingServlet getServlet() {
+	private @NotNull RoutingServlet getServlet() {
 		return ActiveFsServlet.create(new ActiveFs() {
 			<T> Promise<T> resultOf(@Nullable T result, Object... args) {
 				params.clear();

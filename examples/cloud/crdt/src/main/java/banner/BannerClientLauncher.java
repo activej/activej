@@ -71,8 +71,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 		System.out.println("Banners are uploaded\n");
 	}
 
-	@NotNull
-	private Set<Integer> fetchBannerIds(long randomUserId) throws Exception {
+	private @NotNull Set<Integer> fetchBannerIds(long randomUserId) throws Exception {
 		Set<Integer> fetchedBanners = eventloop.submit(() ->
 				client.<GetRequest, GetResponse>sendRequest(new GetRequest(randomUserId))
 						.map(GetResponse::getBannerIds)

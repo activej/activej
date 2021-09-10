@@ -51,8 +51,7 @@ public interface HttpExceptionFormatter {
 			.replace("{title}", "Internal Server Error")
 			.replace("<p style=\"text-align: center\">{message}</p><hr>", "");
 
-	@NotNull
-	HttpResponse formatException(@NotNull Exception e);
+	@NotNull HttpResponse formatException(@NotNull Exception e);
 
 	/**
 	 * Standard formatter maps all exceptions except HttpException to an empty response with 500 status code.

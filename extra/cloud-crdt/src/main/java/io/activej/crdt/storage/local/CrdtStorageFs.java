@@ -163,9 +163,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	}
 	// endregion
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
@@ -236,15 +235,13 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 				.mapException(e -> new CrdtException("Failed to PING file system", e));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 

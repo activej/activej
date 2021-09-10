@@ -86,8 +86,7 @@ public final class DatagramSocketSettings {
 		return receiveBufferSize != 0;
 	}
 
-	@NotNull
-	public MemSize getReceiveBufferSize() {
+	public @NotNull MemSize getReceiveBufferSize() {
 		return MemSize.of(getReceiveBufferSizeBytes());
 	}
 
@@ -109,8 +108,7 @@ public final class DatagramSocketSettings {
 		return sendBufferSize != 0;
 	}
 
-	@NotNull
-	public MemSize getSendBufferSize() {
+	public @NotNull MemSize getSendBufferSize() {
 		return MemSize.of(getSendBufferSizeBytes());
 	}
 

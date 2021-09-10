@@ -28,19 +28,16 @@ import java.util.concurrent.Executor;
  */
 @FunctionalInterface
 public interface AsyncServlet {
-	@NotNull
-	Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws Exception;
+	@NotNull Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws Exception;
 
-	@NotNull
-	default Promise<HttpResponse> serveAsync(@NotNull HttpRequest request) throws Exception {
+	default @NotNull Promise<HttpResponse> serveAsync(@NotNull HttpRequest request) throws Exception {
 		return serve(request).promise();
 	}
 
 	/**
 	 * Wraps given {@link BlockingServlet} into async one using given {@link Executor}.
 	 */
-	@NotNull
-	static AsyncServlet ofBlocking(@NotNull Executor executor, @NotNull BlockingServlet blockingServlet) {
+	static @NotNull AsyncServlet ofBlocking(@NotNull Executor executor, @NotNull BlockingServlet blockingServlet) {
 		return request -> request.loadBody()
 				.then(() -> Promise.ofBlocking(executor,
 						() -> blockingServlet.serve(request)));

@@ -81,8 +81,7 @@ public final class ServerSocketSettings {
 		return receiveBufferSize != 0;
 	}
 
-	@NotNull
-	public MemSize getReceiveBufferSize() {
+	public @NotNull MemSize getReceiveBufferSize() {
 		return MemSize.of(getReceiveBufferSizeBytes());
 	}
 

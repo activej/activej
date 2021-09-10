@@ -333,9 +333,8 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		cleanupIrrelevantChunks();
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 }

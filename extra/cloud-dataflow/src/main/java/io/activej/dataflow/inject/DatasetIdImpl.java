@@ -23,8 +23,7 @@ import java.lang.annotation.Annotation;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
 public final class DatasetIdImpl implements DatasetId {
-	@NotNull
-	private final String value;
+	private final @NotNull String value;
 
 	private DatasetIdImpl(@NotNull String value) {
 		this.value = value;
@@ -34,9 +33,8 @@ public final class DatasetIdImpl implements DatasetId {
 		return Key.of(Object.class, new DatasetIdImpl(id));
 	}
 
-	@NotNull
 	@Override
-	public String value() {
+	public @NotNull String value() {
 		return value;
 	}
 
@@ -54,15 +52,13 @@ public final class DatasetIdImpl implements DatasetId {
 		return value.equals(other.value());
 	}
 
-	@NotNull
 	@Override
-	public String toString() {
+	public @NotNull String toString() {
 		return "@" + DatasetId.class.getName() + "(" + value + ")";
 	}
 
-	@NotNull
 	@Override
-	public Class<? extends Annotation> annotationType() {
+	public @NotNull Class<? extends Annotation> annotationType() {
 		return DatasetId.class;
 	}
 }

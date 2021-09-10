@@ -267,9 +267,8 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 		checkArgument(!logPartition.contains("-"), "Using dash (-) in log partition name is not allowed");
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 }

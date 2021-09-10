@@ -175,8 +175,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	 * Returns a promise that will be completed when all data items are propagated
 	 * to the actual data acceptor
 	 */
-	@NotNull
-	public final Promise<Void> getFlushPromise() {
+	public final @NotNull Promise<Void> getFlushPromise() {
 		if (isEndOfStream()) {
 			return endOfStream;
 		} else if (flushPromise != null) {
@@ -262,8 +261,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 		return dataAcceptor;
 	}
 
-	@NotNull
-	public final StreamDataAcceptor<T> getBufferedDataAcceptor() {
+	public final @NotNull StreamDataAcceptor<T> getBufferedDataAcceptor() {
 		return dataAcceptorBuffered;
 	}
 

@@ -64,14 +64,12 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 		return exception != null;
 	}
 
-	@NotNull
-	public final <T> Promise<T> sanitize(Promise<T> promise) {
+	public final @NotNull <T> Promise<T> sanitize(Promise<T> promise) {
 		return promise.async()
 				.then(this::doSanitize);
 	}
 
-	@NotNull
-	protected final <T> Promise<T> doSanitize(T value, @Nullable Exception e) {
+	protected final @NotNull <T> Promise<T> doSanitize(T value, @Nullable Exception e) {
 		if (exception != null) {
 			Recyclers.recycle(value);
 			if (value instanceof AsyncCloseable) {

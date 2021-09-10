@@ -41,9 +41,8 @@ public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable 
 
 	protected abstract Promise<Void> doAccept(@Nullable T value);
 
-	@NotNull
 	@Override
-	public final Promise<Void> accept(@Nullable T value) {
+	public final @NotNull Promise<Void> accept(@Nullable T value) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (isClosed()) {
 			Recyclers.recycle(value);

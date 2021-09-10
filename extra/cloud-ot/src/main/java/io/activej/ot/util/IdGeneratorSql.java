@@ -99,9 +99,8 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 						.map($ -> next < limit ? next++ : null));
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

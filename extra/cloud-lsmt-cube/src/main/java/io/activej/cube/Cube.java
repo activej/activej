@@ -390,8 +390,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		logger.info("Added aggregation {} for id '{}'", aggregation, config.id);
 	}
 
-	@NotNull
-	public Class<?> getAttributeInternalType(String attribute) {
+	public @NotNull Class<?> getAttributeInternalType(String attribute) {
 		if (dimensionTypes.containsKey(attribute))
 			return dimensionTypes.get(attribute).getInternalDataType();
 		if (attributeTypes.containsKey(attribute))
@@ -399,8 +398,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		throw new IllegalArgumentException("No attribute: " + attribute);
 	}
 
-	@NotNull
-	public Class<?> getMeasureInternalType(String field) {
+	public @NotNull Class<?> getMeasureInternalType(String field) {
 		if (measures.containsKey(field))
 			return measures.get(field).getFieldType().getInternalDataType();
 		if (computedMeasures.containsKey(field))
@@ -408,8 +406,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		throw new IllegalArgumentException("No measure: " + field);
 	}
 
-	@NotNull
-	public Type getAttributeType(String attribute) {
+	public @NotNull Type getAttributeType(String attribute) {
 		if (dimensionTypes.containsKey(attribute))
 			return dimensionTypes.get(attribute).getDataType();
 		if (attributeTypes.containsKey(attribute))
@@ -417,8 +414,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		throw new IllegalArgumentException("No attribute: " + attribute);
 	}
 
-	@NotNull
-	public Type getMeasureType(String field) {
+	public @NotNull Type getMeasureType(String field) {
 		if (measures.containsKey(field))
 			return measures.get(field).getFieldType().getDataType();
 		if (computedMeasures.containsKey(field))
@@ -1400,9 +1396,8 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				.collect(Collectors.joining(", ")));
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

@@ -42,8 +42,7 @@ public final class LocationInfo {
 		return new LocationInfo(module, null);
 	}
 
-	@NotNull
-	public Object getModule() {
+	public @NotNull Object getModule() {
 		return module;
 	}
 

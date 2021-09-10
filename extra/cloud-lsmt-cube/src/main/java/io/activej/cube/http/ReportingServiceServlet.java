@@ -91,9 +91,8 @@ public final class ReportingServiceServlet extends AsyncServletWithStats {
 		return queryResultCodec;
 	}
 
-	@NotNull
 	@Override
-	public Promise<HttpResponse> doServe(@NotNull HttpRequest httpRequest) {
+	public @NotNull Promise<HttpResponse> doServe(@NotNull HttpRequest httpRequest) {
 		logger.info("Received request: {}", httpRequest);
 		try {
 			Stopwatch totalTimeStopwatch = Stopwatch.createStarted();

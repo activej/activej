@@ -35,61 +35,49 @@ public abstract class HttpHeaderValue {
 	abstract int writeTo(byte[] array, int offset);
 
 	@Override
-	@NotNull
-	public abstract String toString();
+	public abstract @NotNull String toString();
 
-	@NotNull
-	public static HttpHeaderValue of(@NotNull String string) {
+	public static @NotNull HttpHeaderValue of(@NotNull String string) {
 		return new HttpHeaderValueOfString(string);
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofBytes(byte[] array, int offset, int size) {
+	public static @NotNull HttpHeaderValue ofBytes(byte[] array, int offset, int size) {
 		return new HttpHeaderValueOfBytes(array, offset, size);
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofBytes(byte[] array) {
+	public static @NotNull HttpHeaderValue ofBytes(byte[] array) {
 		return ofBytes(array, 0, array.length);
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofDecimal(int value) {
+	public static @NotNull HttpHeaderValue ofDecimal(int value) {
 		return new HttpHeaderValueOfUnsignedDecimal(value);
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofAcceptCharsets(@NotNull List<AcceptCharset> charsets) {
+	public static @NotNull HttpHeaderValue ofAcceptCharsets(@NotNull List<AcceptCharset> charsets) {
 		return new HttpHeaderValueOfCharsets(charsets);
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofAcceptCharsets(AcceptCharset... charsets) {
+	public static @NotNull HttpHeaderValue ofAcceptCharsets(AcceptCharset... charsets) {
 		return ofAcceptCharsets(asList(charsets));
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofInstant(@NotNull Instant date) {
+	public static @NotNull HttpHeaderValue ofInstant(@NotNull Instant date) {
 		return new HttpHeaderValueOfDate(date.getEpochSecond());
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofTimestamp(long timestamp) {
+	public static @NotNull HttpHeaderValue ofTimestamp(long timestamp) {
 		return new HttpHeaderValueOfDate(timestamp / 1000L);
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofAcceptMediaTypes(@NotNull List<AcceptMediaType> type) {
+	public static @NotNull HttpHeaderValue ofAcceptMediaTypes(@NotNull List<AcceptMediaType> type) {
 		return new HttpHeaderValueOfAcceptMediaTypes(type);
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofAcceptMediaTypes(AcceptMediaType... types) {
+	public static @NotNull HttpHeaderValue ofAcceptMediaTypes(AcceptMediaType... types) {
 		return ofAcceptMediaTypes(asList(types));
 	}
 
-	@NotNull
-	public static HttpHeaderValue ofContentType(@NotNull ContentType type) {
+	public static @NotNull HttpHeaderValue ofContentType(@NotNull ContentType type) {
 		return new HttpHeaderValueOfContentType(type);
 	}
 
@@ -97,18 +85,15 @@ public abstract class HttpHeaderValue {
 		return trimAndDecodePositiveInt(buf.array(), buf.head(), buf.readRemaining());
 	}
 
-	@NotNull
-	public static ContentType toContentType(@NotNull ByteBuf buf) throws MalformedHttpException {
+	public static @NotNull ContentType toContentType(@NotNull ByteBuf buf) throws MalformedHttpException {
 		return ContentType.decode(buf.array(), buf.head(), buf.readRemaining());
 	}
 
-	@NotNull
-	public static Instant toInstant(@NotNull ByteBuf buf) throws MalformedHttpException {
+	public static @NotNull Instant toInstant(@NotNull ByteBuf buf) throws MalformedHttpException {
 		return Instant.ofEpochSecond(HttpDate.decode(buf.array(), buf.head()));
 	}
 
-	@NotNull
-	public ByteBuf getBuf() {
+	public @NotNull ByteBuf getBuf() {
 		int estimatedSize = estimateSize();
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[estimatedSize]);
 		int pos = writeTo(buf.array(), 0);
@@ -138,8 +123,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	static final class HttpHeaderValueOfContentType extends HttpHeaderValue {
-		@NotNull
-		private final ContentType type;
+		private final @NotNull ContentType type;
 
 		HttpHeaderValueOfContentType(@NotNull ContentType type) {
 			this.type = type;
@@ -155,9 +139,8 @@ public abstract class HttpHeaderValue {
 			return ContentType.render(type, array, offset);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			ByteBuf buf = ByteBufPool.allocate(estimateSize());
 			ContentType.render(type, buf);
 			return ByteBufStrings.asAscii(buf);
@@ -165,8 +148,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	static final class HttpHeaderValueOfAcceptMediaTypes extends HttpHeaderValue {
-		@NotNull
-		private final List<AcceptMediaType> types;
+		private final @NotNull List<AcceptMediaType> types;
 
 		HttpHeaderValueOfAcceptMediaTypes(@NotNull List<AcceptMediaType> types) {
 			this.types = types;
@@ -186,9 +168,8 @@ public abstract class HttpHeaderValue {
 			return AcceptMediaType.render(types, array, offset);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			ByteBuf buf = ByteBufPool.allocate(estimateSize());
 			AcceptMediaType.render(types, buf);
 			return ByteBufStrings.asAscii(buf);
@@ -196,8 +177,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	static final class HttpHeaderValueOfSimpleCookies extends HttpHeaderValue {
-		@NotNull
-		final List<HttpCookie> cookies;
+		final @NotNull List<HttpCookie> cookies;
 
 		HttpHeaderValueOfSimpleCookies(@NotNull List<HttpCookie> cookies) {
 			this.cookies = cookies;
@@ -219,9 +199,8 @@ public abstract class HttpHeaderValue {
 			return HttpCookie.renderSimple(cookies, array, offset);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			ByteBuf buf = ByteBufPool.allocate(estimateSize());
 			HttpCookie.renderSimple(cookies, buf);
 			return ByteBufStrings.asAscii(buf);
@@ -229,8 +208,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	static final class HttpHeaderValueOfSetCookies extends HttpHeaderValue {
-		@NotNull
-		final HttpCookie cookie;
+		final @NotNull HttpCookie cookie;
 
 		HttpHeaderValueOfSetCookies(@NotNull HttpCookie cookie) {
 			this.cookie = cookie;
@@ -253,9 +231,8 @@ public abstract class HttpHeaderValue {
 			return cookie.renderFull(array, offset);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			ByteBuf buf = ByteBufPool.allocate(estimateSize());
 			cookie.renderFull(buf);
 			return ByteBufStrings.asAscii(buf);
@@ -263,8 +240,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	static final class HttpHeaderValueOfCharsets extends HttpHeaderValue {
-		@NotNull
-		private final List<AcceptCharset> charsets;
+		private final @NotNull List<AcceptCharset> charsets;
 
 		HttpHeaderValueOfCharsets(@NotNull List<AcceptCharset> charsets) {
 			this.charsets = charsets;
@@ -284,9 +260,8 @@ public abstract class HttpHeaderValue {
 			return AcceptCharset.render(charsets, array, offset);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			ByteBuf buf = ByteBufPool.allocate(estimateSize());
 			AcceptCharset.render(charsets, buf);
 			return ByteBufStrings.asAscii(buf);
@@ -310,9 +285,8 @@ public abstract class HttpHeaderValue {
 			return HttpDate.render(epochSeconds, array, offset);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			ByteBuf buf = ByteBufPool.allocate(estimateSize());
 			HttpDate.render(epochSeconds, buf);
 			return ByteBufStrings.asAscii(buf);
@@ -336,16 +310,14 @@ public abstract class HttpHeaderValue {
 			return offset + encodePositiveInt(array, offset, value);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			return Integer.toString(value);
 		}
 	}
 
 	static final class HttpHeaderValueOfString extends HttpHeaderValue {
-		@NotNull
-		private final String string;
+		private final @NotNull String string;
 
 		HttpHeaderValueOfString(@NotNull String string) {
 			this.string = string;
@@ -361,9 +333,8 @@ public abstract class HttpHeaderValue {
 			return offset + encodeAscii(array, offset, string);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			return string;
 		}
 	}
@@ -397,15 +368,13 @@ public abstract class HttpHeaderValue {
 			}
 		}
 
-		@NotNull
 		@Override
-		public ByteBuf getBuf() {
+		public @NotNull ByteBuf getBuf() {
 			return ByteBuf.wrap(array, offset, offset + size);
 		}
 
-		@NotNull
 		@Override
-		public String toString() {
+		public @NotNull String toString() {
 			return decodeAscii(array, offset, size);
 		}
 	}

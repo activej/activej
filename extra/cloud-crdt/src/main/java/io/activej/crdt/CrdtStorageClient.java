@@ -116,9 +116,8 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	}
 	//endregion
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
@@ -207,15 +206,13 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.whenException(messaging::closeEx));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return ping();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 

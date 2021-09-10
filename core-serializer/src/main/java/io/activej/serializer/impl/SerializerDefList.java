@@ -95,8 +95,7 @@ public final class SerializerDefList extends AbstractSerializerDef implements Se
 		}
 	}
 
-	@NotNull
-	private Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Expression len) {
+	private @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Expression len) {
 		return loop(value(0), len,
 				i -> let(call(value, "get", i),
 						item -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(item, valueSerializer.getEncodeType()), version, compatibilityLevel)));

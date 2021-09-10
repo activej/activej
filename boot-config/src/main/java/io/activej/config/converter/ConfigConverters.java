@@ -169,9 +169,8 @@ public final class ConfigConverters {
 				return config.getValue(defaultValue);
 			}
 
-			@NotNull
 			@Override
-			public String get(Config config) {
+			public @NotNull String get(Config config) {
 				return config.getValue();
 			}
 		};
@@ -505,9 +504,8 @@ public final class ConfigConverters {
 
 	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler() {
 		return new ConfigConverter<FatalErrorHandler>() {
-			@NotNull
 			@Override
-			public FatalErrorHandler get(Config config) {
+			public @NotNull FatalErrorHandler get(Config config) {
 				switch (config.getValue()) {
 					case "rethrowOnAnyError":
 						return rethrowOnAnyError();
@@ -542,9 +540,8 @@ public final class ConfigConverters {
 
 	public static ConfigConverter<Schedule> ofEventloopTaskSchedule() {
 		return new ConfigConverter<Schedule>() {
-			@NotNull
 			@Override
-			public Schedule get(Config config) {
+			public @NotNull Schedule get(Config config) {
 				switch (config.get("type")) {
 					case "immediate":
 						return Schedule.immediate();
@@ -572,9 +569,8 @@ public final class ConfigConverters {
 	@SuppressWarnings("rawtypes")
 	public static ConfigConverter<RetryPolicy> ofRetryPolicy() {
 		return new ConfigConverter<RetryPolicy>() {
-			@NotNull
 			@Override
-			public RetryPolicy get(Config config) {
+			public @NotNull RetryPolicy get(Config config) {
 				if (!config.hasValue() || config.getValue().equals("no")) {
 					return RetryPolicy.noRetry();
 				}
@@ -663,9 +659,8 @@ public final class ConfigConverters {
 
 	public static ConfigConverter<ExecutorService> ofExecutor() {
 		return new ConfigConverter<ExecutorService>() {
-			@NotNull
 			@Override
-			public ExecutorService get(Config config) {
+			public @NotNull ExecutorService get(Config config) {
 				return getExecutor(config);
 			}
 

@@ -32,16 +32,14 @@ public final class ChannelFileExample {
 	}
 
 	//[START REGION_1]
-	@NotNull
-	private static Promise<Void> writeToFile() {
+	private static @NotNull Promise<Void> writeToFile() {
 		return ChannelSupplier.of(
 				ByteBufStrings.wrapAscii("Hello, this is example file\n"),
 				ByteBufStrings.wrapAscii("This is the second line of file\n"))
 				.streamTo(ChannelFileWriter.open(executor, PATH, WRITE));
 	}
 
-	@NotNull
-	private static Promise<Void> readFile() {
+	private static @NotNull Promise<Void> readFile() {
 		return ChannelFileReader.open(executor, PATH)
 				.then(cfr -> cfr.streamTo(ChannelConsumer.ofConsumer(buf -> System.out.print(buf.asString(UTF_8)))));
 

@@ -83,8 +83,7 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 	private ThrottlingController() {
 	}
 
-	@NotNull
-	public static ThrottlingController create() {
+	public static @NotNull ThrottlingController create() {
 		return new ThrottlingController()
 				.withTargetTime(TARGET_TIME)
 				.withGcTime(GC_TIME)
@@ -94,8 +93,7 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 				.withInitialThrottling(INITIAL_THROTTLING);
 	}
 
-	@NotNull
-	private ThrottlingController withEventloop(@NotNull Eventloop eventloop) {
+	private @NotNull ThrottlingController withEventloop(@NotNull Eventloop eventloop) {
 		setEventloop(eventloop);
 		return this;
 	}
@@ -104,39 +102,33 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 		this.eventloop = eventloop;
 	}
 
-	@NotNull
-	public ThrottlingController withTargetTime(@NotNull Duration targetTime) {
+	public @NotNull ThrottlingController withTargetTime(@NotNull Duration targetTime) {
 		setTargetTime(targetTime);
 		return this;
 	}
 
-	@NotNull
-	public ThrottlingController withGcTime(@NotNull Duration gcTime) {
+	public @NotNull ThrottlingController withGcTime(@NotNull Duration gcTime) {
 		setGcTime(gcTime);
 		return this;
 	}
 
-	@NotNull
-	public ThrottlingController withSmoothingWindow(@NotNull Duration smoothingWindow) {
+	public @NotNull ThrottlingController withSmoothingWindow(@NotNull Duration smoothingWindow) {
 		setSmoothingWindow(smoothingWindow);
 		return this;
 	}
 
-	@NotNull
-	public ThrottlingController withThrottlingDecrease(double throttlingDecrease) {
+	public @NotNull ThrottlingController withThrottlingDecrease(double throttlingDecrease) {
 		setThrottlingDecrease(throttlingDecrease);
 		return this;
 	}
 
-	@NotNull
-	public ThrottlingController withInitialKeysPerSecond(double initialKeysPerSecond) {
+	public @NotNull ThrottlingController withInitialKeysPerSecond(double initialKeysPerSecond) {
 		checkArgument(initialKeysPerSecond > 0, "Initial keys per second should not be zero or less");
 		this.smoothedTimePerKeyMillis = 1000.0 / initialKeysPerSecond;
 		return this;
 	}
 
-	@NotNull
-	public ThrottlingController withInitialThrottling(double initialThrottling) {
+	public @NotNull ThrottlingController withInitialThrottling(double initialThrottling) {
 		checkArgument(initialThrottling >= 0, "Initial throttling should not be zero or less");
 		this.smoothedThrottling = initialThrottling;
 		return this;
@@ -398,9 +390,8 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 		infoRoundsExceededTargetTime = 0;
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

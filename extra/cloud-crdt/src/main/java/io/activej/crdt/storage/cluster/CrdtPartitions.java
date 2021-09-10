@@ -192,15 +192,13 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 		deadPartitions.clear();
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
-	@NotNull
 	@Override
-	public Promise<?> start() {
+	public @NotNull Promise<?> start() {
 		return Promise.ofCallback(cb ->
 						discoveryService.discover(null, (result, e) -> {
 							if (e == null) {
@@ -215,9 +213,8 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 				.whenResult(this::rediscover);
 	}
 
-	@NotNull
 	@Override
-	public Promise<?> stop() {
+	public @NotNull Promise<?> stop() {
 		return Promise.complete();
 	}
 

@@ -84,9 +84,8 @@ final class HttpHeadersMultimap<K, V> {
 				return size;
 			}
 
-			@NotNull
 			@Override
-			public Iterator<Map.Entry<K, V>> iterator() {
+			public @NotNull Iterator<Map.Entry<K, V>> iterator() {
 				return new Iterator<Map.Entry<K, V>>() {
 					int i = 0;
 					@Nullable K k;

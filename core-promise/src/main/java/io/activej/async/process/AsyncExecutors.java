@@ -35,9 +35,8 @@ public class AsyncExecutors {
 
 	public static AsyncExecutor direct() {
 		return new AsyncExecutor() {
-			@NotNull
 			@Override
-			public <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
 				return supplier.get();
 			}
 		};
@@ -45,9 +44,8 @@ public class AsyncExecutors {
 
 	public static AsyncExecutor ofEventloop(@NotNull Eventloop eventloop) {
 		return new AsyncExecutor() {
-			@NotNull
 			@Override
-			public <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
 				Eventloop currentEventloop = Eventloop.getCurrentEventloop();
 				if (eventloop == currentEventloop) {
 					return supplier.get();
@@ -68,9 +66,8 @@ public class AsyncExecutors {
 		return new AsyncExecutor() {
 			int index;
 
-			@NotNull
 			@Override
-			public <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
 				AsyncExecutor executor = executors.get(index);
 				index = (index + 1) % executors.size();
 				return executor.execute(supplier);
@@ -112,9 +109,8 @@ public class AsyncExecutors {
 				}
 			}
 
-			@NotNull
 			@Override
-			public <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException {
+			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException {
 				if (pendingCalls < maxParallelCalls) {
 					pendingCalls++;
 					return supplier.get().whenComplete(() -> {
@@ -135,9 +131,8 @@ public class AsyncExecutors {
 
 	public static AsyncExecutor retry(@NotNull RetryPolicy<?> retryPolicy) {
 		return new AsyncExecutor() {
-			@NotNull
 			@Override
-			public <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
 				return Promises.retry(supplier, retryPolicy);
 			}
 		};
@@ -149,9 +144,8 @@ public class AsyncExecutors {
 			private final int maxCalls = maxRecursiveCalls + 1;
 			private int counter = 0;
 
-			@NotNull
 			@Override
-			public <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
 				Promise<T> promise = supplier.get();
 				if (promise.isComplete()) {
 					if (++counter % maxCalls == 0) {

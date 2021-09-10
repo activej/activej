@@ -67,8 +67,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	protected Logger logger = getLogger(getClass());
 	private static final boolean CHECK = Checks.isEnabled(AbstractServer.class);
 
-	@NotNull
-	protected final Eventloop eventloop;
+	protected final @NotNull Eventloop eventloop;
 
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(DEFAULT_BACKLOG);
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -373,9 +372,8 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		return socketSettings;
 	}
 
-	@NotNull
 	@Override
-	public final Eventloop getEventloop() {
+	public final @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

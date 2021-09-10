@@ -85,21 +85,18 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 		return new LogOTProcessor<>(eventloop, multilog, logStreamConsumer, log, partitions, state);
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 
@@ -109,8 +106,7 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 		return processLog.get();
 	}
 
-	@NotNull
-	private Promise<LogDiff<D>> doProcessLog() {
+	private @NotNull Promise<LogDiff<D>> doProcessLog() {
 		if (!enabled) return Promise.of(LogDiff.of(emptyMap(), emptyList()));
 		logger.trace("processLog_gotPositions called. Positions: {}", state.getPositions());
 

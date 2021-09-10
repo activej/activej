@@ -30,8 +30,7 @@ public abstract class TypeT<T> {
 		this.annotatedType = getSuperclassTypeParameter(this.getClass());
 	}
 
-	@NotNull
-	private static AnnotatedType getSuperclassTypeParameter(@NotNull Class<?> subclass) {
+	private static @NotNull AnnotatedType getSuperclassTypeParameter(@NotNull Class<?> subclass) {
 		AnnotatedType superclass = subclass.getAnnotatedSuperclass();
 		if (superclass instanceof AnnotatedParameterizedType) {
 			return ((AnnotatedParameterizedType) superclass).getAnnotatedActualTypeArguments()[0];
@@ -39,13 +38,11 @@ public abstract class TypeT<T> {
 		throw new AssertionError();
 	}
 
-	@NotNull
-	public AnnotatedType getAnnotatedType() {
+	public @NotNull AnnotatedType getAnnotatedType() {
 		return annotatedType;
 	}
 
-	@NotNull
-	public Type getType() {
+	public @NotNull Type getType() {
 		return annotatedType.getType();
 	}
 

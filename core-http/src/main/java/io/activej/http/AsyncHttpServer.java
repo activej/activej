@@ -56,10 +56,8 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(AsyncHttpServer.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(AsyncHttpServer.class, "maxKeepAliveRequests", 0);
 
-	@NotNull
-	private final AsyncServlet servlet;
-	@NotNull
-	private HttpExceptionFormatter errorFormatter = HttpExceptionFormatter.COMMON_FORMATTER;
+	private final @NotNull AsyncServlet servlet;
+	private @NotNull HttpExceptionFormatter errorFormatter = HttpExceptionFormatter.COMMON_FORMATTER;
 
 	int readWriteTimeoutMillis = (int) READ_WRITE_TIMEOUT.toMillis();
 	int readWriteTimeoutMillisShutdown = (int) READ_WRITE_TIMEOUT_SHUTDOWN.toMillis();

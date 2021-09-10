@@ -75,9 +75,8 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 		}
 	}
 
-	@NotNull
 	@Override
-	public final Promise<Void> getProcessCompletion() {
+	public final @NotNull Promise<Void> getProcessCompletion() {
 		return processCompletion;
 	}
 
@@ -89,9 +88,8 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	 * @return {@code promise} with null result as the marker
 	 * of completion of the process
 	 */
-	@NotNull
 	@Override
-	public final Promise<Void> startProcess() {
+	public final @NotNull Promise<Void> startProcess() {
 		if (!processStarted) {
 			processStarted = true;
 			beforeProcess();

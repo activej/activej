@@ -332,22 +332,19 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 		}
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return fs.ping()
 				.mapException(e -> new AggregationException("Failed to start storage", e));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 

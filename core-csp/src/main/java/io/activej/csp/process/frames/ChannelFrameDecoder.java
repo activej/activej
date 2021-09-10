@@ -35,8 +35,7 @@ import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {
 
-	@NotNull
-	private final BlockDecoder decoder;
+	private final @NotNull BlockDecoder decoder;
 	private boolean decoderResets;
 
 	private ByteBufs bufs;
@@ -116,8 +115,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 				});
 	}
 
-	@NotNull
-	private Promise<ByteBuf> decode() {
+	private @NotNull Promise<ByteBuf> decode() {
 		while (true) {
 			if (!bufs.isEmpty()) {
 				try {

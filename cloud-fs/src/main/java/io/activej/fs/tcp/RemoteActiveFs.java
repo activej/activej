@@ -132,9 +132,8 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	}
 	// endregion
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
@@ -154,8 +153,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.whenComplete(toLogger(logger, "upload", name, size, this));
 	}
 
-	@NotNull
-	private Promise<ChannelConsumer<ByteBuf>> doUpload(MessagingWithBinaryStreaming<FsResponse, FsCommand> messaging, @NotNull String name, @Nullable Long size) {
+	private @NotNull Promise<ChannelConsumer<ByteBuf>> doUpload(MessagingWithBinaryStreaming<FsResponse, FsCommand> messaging, @NotNull String name, @Nullable Long size) {
 		return messaging.send(new Upload(name, size))
 				.then(messaging::receive)
 				.map(castFn(UploadAck.class))
@@ -368,15 +366,13 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 								}));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return ping();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 

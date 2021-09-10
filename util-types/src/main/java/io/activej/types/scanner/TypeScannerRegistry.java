@@ -199,8 +199,7 @@ public final class TypeScannerRegistry<R> {
 		return this;
 	}
 
-	@NotNull
-	private Mapping<R> match(Type type) {
+	private @NotNull Mapping<R> match(Type type) {
 		MappingEntry<R> best = null;
 		for (MappingEntry<R> found : entries) {
 			if (isAssignable(found.type, type)) {

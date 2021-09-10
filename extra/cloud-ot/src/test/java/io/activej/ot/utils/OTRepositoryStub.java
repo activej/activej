@@ -85,17 +85,15 @@ public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> updateHeads(Set<K> newHeads, Set<K> excludedHeads) {
+	public @NotNull Promise<Void> updateHeads(Set<K> newHeads, Set<K> excludedHeads) {
 		heads.addAll(newHeads);
 		heads.removeAll(excludedHeads);
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Set<K>> getAllHeads() {
+	public @NotNull Promise<Set<K>> getAllHeads() {
 		return Promise.of(new HashSet<>(heads));
 	}
 
@@ -108,22 +106,19 @@ public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
 		return Promise.of(commits.containsKey(revisionId));
 	}
 
-	@NotNull
 	@Override
-	public Promise<OTCommit<K, D>> loadCommit(@NotNull K revisionId) {
+	public @NotNull Promise<OTCommit<K, D>> loadCommit(@NotNull K revisionId) {
 		return Promise.of(doLoadCommit(revisionId));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> saveSnapshot(@NotNull K revisionId, @NotNull List<D> diffs) {
+	public @NotNull Promise<Void> saveSnapshot(@NotNull K revisionId, @NotNull List<D> diffs) {
 		doSaveSnapshot(revisionId, diffs);
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Optional<List<D>>> loadSnapshot(@NotNull K revisionId) {
+	public @NotNull Promise<Optional<List<D>>> loadSnapshot(@NotNull K revisionId) {
 		return Promise.of(Optional.ofNullable(snapshots.get(revisionId)));
 	}
 

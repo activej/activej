@@ -107,8 +107,7 @@ public abstract class HttpMessage {
 		return headers.getEntries();
 	}
 
-	@NotNull
-	public final <T> List<T> getHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue.DecoderIntoList<T> decoder) {
+	public final @NotNull <T> List<T> getHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue.DecoderIntoList<T> decoder) {
 		if (CHECK) checkState(!isRecycled());
 		List<T> list = new ArrayList<>();
 		for (int i = header.hashCode() & (headers.kvPairs.length - 2); ; i = (i + 2) & (headers.kvPairs.length - 2)) {

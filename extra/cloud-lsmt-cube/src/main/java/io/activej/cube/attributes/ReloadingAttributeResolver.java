@@ -84,15 +84,13 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 		scheduledRunnable = eventloop.delayBackground(period, this::doReload);
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		if (reloadPeriod == 0) return Promise.complete();
 		long reloadTimestamp = eventloop.currentTimeMillis();
 		return reload(timestamp)
@@ -105,9 +103,8 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 				.toVoid();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
 		return Promise.complete();
 	}

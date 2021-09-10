@@ -257,8 +257,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 				});
 	}
 
-	@NotNull
-	Promise<WebSocket> sendWebSocketRequest(HttpRequest request) {
+	@NotNull Promise<WebSocket> sendWebSocketRequest(HttpRequest request) {
 		assert !isClosed();
 		SettablePromise<HttpResponse> promise = new SettablePromise<>();
 		this.promise = promise;

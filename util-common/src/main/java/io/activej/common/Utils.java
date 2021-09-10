@@ -77,8 +77,7 @@ public class Utils {
 		return nonNullElse(map, emptyMap());
 	}
 
-	@NotNull
-	public static <T, E extends Throwable> T nonNullOrException(@Nullable T value, Supplier<@NotNull E> exceptionSupplier) throws E {
+	public static @NotNull <T, E extends Throwable> T nonNullOrException(@Nullable T value, Supplier<@NotNull E> exceptionSupplier) throws E {
 		if (value != null) {
 			return value;
 		}

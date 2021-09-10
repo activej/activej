@@ -132,9 +132,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 	}
 	// endregion
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return partitions.getEventloop();
 	}
 
@@ -238,15 +237,13 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 		return Promise.complete();  // Promises.all(aliveClients.values().stream().map(CrdtClient::ping));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 

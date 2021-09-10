@@ -35,8 +35,7 @@ public interface AsyncConsumer<T> {
 	 * @param value value to be consumed
 	 * @return {@link Promise} of {@link Void} that represents successful consumption of data
 	 */
-	@NotNull
-	Promise<Void> accept(T value);
+	@NotNull Promise<Void> accept(T value);
 
 	/**
 	 * Wraps standard Java's {@link Consumer} interface.
@@ -44,8 +43,7 @@ public interface AsyncConsumer<T> {
 	 * @param consumer - Java's {@link Consumer} of Promises
 	 * @return {@link AsyncConsumer} that works on top of standard Java's {@link Consumer} interface
 	 */
-	@NotNull
-	static <T> AsyncConsumer<T> of(@NotNull Consumer<? super T> consumer) {
+	static @NotNull <T> AsyncConsumer<T> of(@NotNull Consumer<? super T> consumer) {
 		return value -> {
 			consumer.accept(value);
 			return Promise.complete();
@@ -53,26 +51,22 @@ public interface AsyncConsumer<T> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default <R> R transformWith(@NotNull Function<AsyncConsumer<T>, R> fn) {
+	default @NotNull <R> R transformWith(@NotNull Function<AsyncConsumer<T>, R> fn) {
 		return fn.apply(this);
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default AsyncConsumer<T> async() {
+	default @NotNull AsyncConsumer<T> async() {
 		return value -> accept(value).async();
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default AsyncConsumer<T> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
+	default @NotNull AsyncConsumer<T> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
 		return value -> asyncExecutor.execute(() -> accept(value));
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default AsyncConsumer<T> peek(@NotNull Consumer<T> action) {
+	default @NotNull AsyncConsumer<T> peek(@NotNull Consumer<T> action) {
 		return value -> {
 			action.accept(value);
 			return accept(value);
@@ -80,14 +74,12 @@ public interface AsyncConsumer<T> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default <V> AsyncConsumer<V> map(@NotNull Function<? super V, ? extends T> fn) {
+	default @NotNull <V> AsyncConsumer<V> map(@NotNull Function<? super V, ? extends T> fn) {
 		return value -> accept(fn.apply(value));
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default <V> AsyncConsumer<V> mapAsync(@NotNull Function<? super V, ? extends Promise<T>> fn) {
+	default @NotNull <V> AsyncConsumer<V> mapAsync(@NotNull Function<? super V, ? extends Promise<T>> fn) {
 		return value -> fn.apply(value).then(this::accept);
 	}
 }

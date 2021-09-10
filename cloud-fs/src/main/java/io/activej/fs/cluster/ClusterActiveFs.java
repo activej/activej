@@ -149,13 +149,10 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	}
 	// endregion
 
-	// region getters
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return partitions.getEventloop();
 	}
-	// endregion
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
@@ -267,9 +264,8 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 				.then(this::ensureIsAlive);
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		checkArgument(deadPartitionsThreshold < partitions.getPartitions().size(),
 				"Dead partitions threshold should be less than number of partitions");
 		checkArgument(uploadTargetsMax <= partitions.getPartitions().size(),
@@ -278,9 +274,8 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		return ping();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 

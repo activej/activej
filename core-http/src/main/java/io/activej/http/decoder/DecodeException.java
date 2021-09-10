@@ -24,16 +24,14 @@ import org.jetbrains.annotations.NotNull;
  * to map it on needed type.
  */
 public class DecodeException extends HttpException {
-	@NotNull
-	private final DecodeErrors errors;
+	private final @NotNull DecodeErrors errors;
 
 	public DecodeException(@NotNull DecodeErrors errors) {
 		super();
 		this.errors = errors;
 	}
 
-	@NotNull
-	public DecodeErrors getErrors() {
+	public @NotNull DecodeErrors getErrors() {
 		return errors;
 	}
 }

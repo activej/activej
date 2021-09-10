@@ -28,8 +28,7 @@ import static io.activej.inject.util.Utils.isMarker;
 public final class Scope {
 	public static final Scope[] UNSCOPED = new Scope[0];
 
-	@NotNull
-	private final Class<? extends Annotation> annotationType;
+	private final @NotNull Class<? extends Annotation> annotationType;
 	private final boolean threadsafe;
 
 	private Scope(@NotNull Class<? extends Annotation> annotationType, boolean threadsafe) {
@@ -54,8 +53,7 @@ public final class Scope {
 		return of(annotation.annotationType());
 	}
 
-	@NotNull
-	public Class<? extends Annotation> getAnnotationType() {
+	public @NotNull Class<? extends Annotation> getAnnotationType() {
 		return annotationType;
 	}
 

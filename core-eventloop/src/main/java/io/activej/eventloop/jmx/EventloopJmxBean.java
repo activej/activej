@@ -22,6 +22,5 @@ import org.jetbrains.annotations.NotNull;
 
 @JmxBean(EventloopJmxBeanAdapter.class)
 public interface EventloopJmxBean {
-	@NotNull
-	Eventloop getEventloop();
+	@NotNull Eventloop getEventloop();
 }

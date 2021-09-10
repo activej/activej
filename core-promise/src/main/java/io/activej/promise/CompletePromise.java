@@ -65,16 +65,14 @@ abstract class CompletePromise<T> implements Promise<T> {
 		return Try.of(getResult());
 	}
 
-	@NotNull
 	@Override
-	public final <U, S extends Callback<? super T> & Promise<U>> Promise<U> next(@NotNull S promise) {
+	public final <U, S extends Callback<? super T> & Promise<U>> @NotNull Promise<U> next(@NotNull S promise) {
 		promise.accept(getResult(), null);
 		return promise;
 	}
 
-	@NotNull
 	@Override
-	public final <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn) {
+	public final <U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult()));
 		} catch (RuntimeException ex) {
@@ -84,9 +82,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		}
 	}
 
-	@NotNull
 	@Override
-	public final <U> Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
+	public final <U> @NotNull Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult(), null));
 		} catch (RuntimeException ex) {
@@ -119,9 +116,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
 	@Override
-	public final <U> Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
+	public final <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
 		} catch (RuntimeException ex) {
@@ -143,9 +139,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
 	@Override
-	public final <U> Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
+	public final <U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
 		} catch (RuntimeException ex) {
@@ -226,45 +221,39 @@ abstract class CompletePromise<T> implements Promise<T> {
 		return this;
 	}
 
-	@NotNull
 	@Override
-	public final <U, V> Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
+	public final <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
 		return (Promise<V>) other
 				.map(otherResult -> fn.apply(this.getResult(), otherResult))
 				.whenException(() -> Recyclers.recycle(this.getResult()));
 	}
 
-	@NotNull
 	@Override
-	public final Promise<Void> both(@NotNull Promise<?> other) {
+	public final @NotNull Promise<Void> both(@NotNull Promise<?> other) {
 		Recyclers.recycle(getResult());
 		return other.map(AbstractPromise::recycleToVoid);
 	}
 
-	@NotNull
 	@Override
-	public final Promise<T> either(@NotNull Promise<? extends T> other) {
+	public final @NotNull Promise<T> either(@NotNull Promise<? extends T> other) {
 		other.whenResult(Recyclers::recycle);
 		return this;
 	}
 
-	@NotNull
 	@Override
-	public final Promise<T> async() {
+	public final @NotNull Promise<T> async() {
 		SettablePromise<T> result = new SettablePromise<>();
 		getCurrentEventloop().post(wrapContext(result, () -> result.set(getResult())));
 		return result;
 	}
 
-	@NotNull
 	@Override
-	public final Promise<Try<T>> toTry() {
+	public final @NotNull Promise<Try<T>> toTry() {
 		return Promise.of(Try.of(getResult()));
 	}
 
-	@NotNull
 	@Override
-	public final Promise<Void> toVoid() {
+	public final @NotNull Promise<Void> toVoid() {
 		return Promise.complete();
 	}
 
@@ -273,9 +262,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		action.accept(getResult(), null);
 	}
 
-	@NotNull
 	@Override
-	public final CompletableFuture<T> toCompletableFuture() {
+	public final @NotNull CompletableFuture<T> toCompletableFuture() {
 		return CompletableFuture.completedFuture(getResult());
 	}
 }

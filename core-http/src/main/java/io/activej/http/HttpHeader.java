@@ -66,8 +66,7 @@ public final class HttpHeader extends Token {
 	}
 
 	@Override
-	@NotNull
-	public String toString() {
+	public @NotNull String toString() {
 		return decodeAscii(bytes, offset, length);
 	}
 }

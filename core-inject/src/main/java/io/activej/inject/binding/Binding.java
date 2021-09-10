@@ -742,13 +742,11 @@ public abstract class Binding<T> {
 
 	public abstract CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot);
 
-	@NotNull
-	public Set<Dependency> getDependencies() {
+	public @NotNull Set<Dependency> getDependencies() {
 		return dependencies;
 	}
 
-	@NotNull
-	public Set<Key<?>> getDependencyKeys() {
+	public @NotNull Set<Key<?>> getDependencyKeys() {
 		return dependencies.stream().map(Dependency::getKey).collect(toSet());
 	}
 

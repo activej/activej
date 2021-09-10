@@ -336,9 +336,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 	}
 
-	@NotNull
 	@Override
-	public Promise<ByteBuf> read() {
+	public @NotNull Promise<ByteBuf> read() {
 		if (CHECK) checkState(eventloop.inEventloopThread());
 		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 		read = null;
@@ -433,9 +432,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	}
 
 	// write cycle
-	@NotNull
 	@Override
-	public Promise<Void> write(@Nullable ByteBuf buf) {
+	public @NotNull Promise<Void> write(@Nullable ByteBuf buf) {
 		if (CHECK) {
 			checkState(eventloop.inEventloopThread());
 			checkState(!writeEndOfStream, "End of stream has already been sent");

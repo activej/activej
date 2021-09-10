@@ -101,8 +101,7 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 		return resultPromise;
 	}
 
-	@NotNull
-	public Promise<A> get() {
+	public @NotNull Promise<A> get() {
 		return resultPromise;
 	}
 

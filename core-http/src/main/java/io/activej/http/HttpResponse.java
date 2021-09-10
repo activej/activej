@@ -130,79 +130,67 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		this(version, code, null);
 	}
 
-	@NotNull
-	public static HttpResponse ofCode(int code) {
+	public static @NotNull HttpResponse ofCode(int code) {
 		if (CHECK) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
 		return new HttpResponse(HTTP_1_1, code);
 	}
 
-	@NotNull
-	public static HttpResponse ok200() {
+	public static @NotNull HttpResponse ok200() {
 		return new HttpResponse(HTTP_1_1, 200);
 	}
 
-	@NotNull
-	public static HttpResponse ok201() {
+	public static @NotNull HttpResponse ok201() {
 		return new HttpResponse(HTTP_1_1, 201);
 	}
 
-	@NotNull
-	public static HttpResponse ok206() {
+	public static @NotNull HttpResponse ok206() {
 		return new HttpResponse(HTTP_1_1, 206);
 	}
 
-	@NotNull
-	public static HttpResponse redirect301(@NotNull String url) {
+	public static @NotNull HttpResponse redirect301(@NotNull String url) {
 		HttpResponse response = new HttpResponse(HTTP_1_1, 301);
 		// RFC-7231, section 6.4.2 (https://tools.ietf.org/html/rfc7231#section-6.4.2)
 		response.addHeader(LOCATION, url);
 		return response;
 	}
 
-	@NotNull
-	public static HttpResponse redirect302(@NotNull String url) {
+	public static @NotNull HttpResponse redirect302(@NotNull String url) {
 		HttpResponse response = new HttpResponse(HTTP_1_1, 302);
 		// RFC-7231, section 6.4.3 (https://tools.ietf.org/html/rfc7231#section-6.4.3)
 		response.addHeader(LOCATION, url);
 		return response;
 	}
 
-	@NotNull
-	public static HttpResponse redirect307(@NotNull String url) {
+	public static @NotNull HttpResponse redirect307(@NotNull String url) {
 		HttpResponse response = new HttpResponse(HTTP_1_1, 307);
 		// RFC-7231, section 6.4.7 (https://tools.ietf.org/html/rfc7231#section-6.4.7)
 		response.addHeader(LOCATION, url);
 		return response;
 	}
 
-	@NotNull
-	public static HttpResponse redirect308(@NotNull String url) {
+	public static @NotNull HttpResponse redirect308(@NotNull String url) {
 		HttpResponse response = new HttpResponse(HTTP_1_1, 308);
 		// RFC-7238, section 3 (https://tools.ietf.org/html/rfc7238#section-3)
 		response.addHeader(LOCATION, url);
 		return response;
 	}
 
-	@NotNull
-	public static HttpResponse unauthorized401(@NotNull String challenge) {
+	public static @NotNull HttpResponse unauthorized401(@NotNull String challenge) {
 		HttpResponse response = new HttpResponse(HTTP_1_1, 401);
 		// RFC-7235, section 3.1 (https://tools.ietf.org/html/rfc7235#section-3.1)
 		response.addHeader(WWW_AUTHENTICATE, challenge);
 		return response;
 	}
 
-	@NotNull
-	public static HttpResponse notFound404() {
+	public static @NotNull HttpResponse notFound404() {
 		return new HttpResponse(HTTP_1_1, 404);
 	}
 
-	@NotNull
-	public static Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader) {
+	public static @NotNull Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader) {
 		return file(downloader, name, size, rangeHeader, false);
 	}
 
-	@NotNull
-	public static Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader, boolean inline) {
+	public static @NotNull Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader, boolean inline) {
 		HttpResponse response = new HttpResponse(HTTP_1_1, rangeHeader == null ? 200 : 206);
 
 		String localName = name.substring(name.lastIndexOf('/') + 1);
@@ -255,87 +243,73 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		return Promise.of(response);
 	}
 
-	@NotNull
-	public static Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size) {
+	public static @NotNull Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size) {
 		return file(downloader, name, size, null);
 	}
 	// endregion
 
 	// region common builder methods
-	@NotNull
-	public HttpResponse withHeader(@NotNull HttpHeader header, @NotNull String value) {
+	public @NotNull HttpResponse withHeader(@NotNull HttpHeader header, @NotNull String value) {
 		addHeader(header, value);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withHeader(@NotNull HttpHeader header, byte[] bytes) {
+	public @NotNull HttpResponse withHeader(@NotNull HttpHeader header, byte[] bytes) {
 		addHeader(header, bytes);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue value) {
+	public @NotNull HttpResponse withHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue value) {
 		addHeader(header, value);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withCookies(@NotNull List<HttpCookie> cookies) {
+	public @NotNull HttpResponse withCookies(@NotNull List<HttpCookie> cookies) {
 		addCookies(cookies);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withCookies(HttpCookie... cookies) {
+	public @NotNull HttpResponse withCookies(HttpCookie... cookies) {
 		addCookies(cookies);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withCookie(@NotNull HttpCookie cookie) {
+	public @NotNull HttpResponse withCookie(@NotNull HttpCookie cookie) {
 		addCookie(cookie);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withBodyGzipCompression() {
+	public @NotNull HttpResponse withBodyGzipCompression() {
 		setBodyGzipCompression();
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withBody(@NotNull ByteBuf body) {
+	public @NotNull HttpResponse withBody(@NotNull ByteBuf body) {
 		setBody(body);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withBody(byte[] array) {
+	public @NotNull HttpResponse withBody(byte[] array) {
 		setBody(array);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withBodyStream(@NotNull ChannelSupplier<ByteBuf> stream) {
+	public @NotNull HttpResponse withBodyStream(@NotNull ChannelSupplier<ByteBuf> stream) {
 		setBodyStream(stream);
 		return this;
 	}
 
-	@NotNull
-	public HttpResponse withPlainText(@NotNull String text) {
+	public @NotNull HttpResponse withPlainText(@NotNull String text) {
 		return withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
 				.withBody(text.getBytes(UTF_8));
 	}
 
-	@NotNull
-	public HttpResponse withHtml(@NotNull String text) {
+	public @NotNull HttpResponse withHtml(@NotNull String text) {
 		return withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
 				.withBody(text.getBytes(UTF_8));
 	}
 
-	@NotNull
-	public HttpResponse withJson(@NotNull String text) {
+	public @NotNull HttpResponse withJson(@NotNull String text) {
 		return withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBody(text.getBytes(UTF_8));
 	}
@@ -379,8 +353,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		return code;
 	}
 
-	@NotNull
-	public Map<String, HttpCookie> getCookies() {
+	public @NotNull Map<String, HttpCookie> getCookies() {
 		if (CHECK) checkState(!isRecycled());
 		if (parsedCookies != null) {
 			return parsedCookies;

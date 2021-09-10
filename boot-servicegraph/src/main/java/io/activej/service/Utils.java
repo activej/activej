@@ -48,8 +48,7 @@ public class Utils {
 		return result;
 	}
 
-	@NotNull
-	public static <T> CompletableFuture<T> completedExceptionallyFuture(Throwable e) {
+	public static @NotNull <T> CompletableFuture<T> completedExceptionallyFuture(Throwable e) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		future.completeExceptionally(e);
 		return future;

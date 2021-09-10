@@ -28,8 +28,7 @@ import org.jetbrains.annotations.NotNull;
 public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf> {
 
-	@NotNull
-	private final BlockEncoder encoder;
+	private final @NotNull BlockEncoder encoder;
 	private boolean encoderResets;
 
 	private ChannelSupplier<ByteBuf> input;

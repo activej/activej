@@ -23,8 +23,7 @@ import java.util.Objects;
 public final class LogPosition implements Comparable<LogPosition> {
 	private static final LogPosition INITIAL_LOG_POSITION = new LogPosition(new LogFile("", 0), 0);
 
-	@NotNull
-	private final LogFile logFile;
+	private final @NotNull LogFile logFile;
 	private final long position;
 
 	private LogPosition(@NotNull LogFile logFile, long position) {
@@ -48,8 +47,7 @@ public final class LogPosition implements Comparable<LogPosition> {
 		return INITIAL_LOG_POSITION.equals(this);
 	}
 
-	@NotNull
-	public LogFile getLogFile() {
+	public @NotNull LogFile getLogFile() {
 		return logFile;
 	}
 

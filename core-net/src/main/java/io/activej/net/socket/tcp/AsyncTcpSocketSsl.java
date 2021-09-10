@@ -94,8 +94,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 		return new AsyncTcpSocketSsl(asyncTcpSocket, engine, executor);
 	}
 
-	@NotNull
-	private <T> Promise<T> sanitize(T value, @Nullable Exception e) {
+	private @NotNull <T> Promise<T> sanitize(T value, @Nullable Exception e) {
 		if (e == null) {
 			return Promise.of(value);
 		} else {
@@ -104,9 +103,8 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 		}
 	}
 
-	@NotNull
 	@Override
-	public Promise<ByteBuf> read() {
+	public @NotNull Promise<ByteBuf> read() {
 		read = null;
 		if (shouldReturnEndOfStream) {
 			shouldReturnEndOfStream = false;
@@ -124,9 +122,8 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 		return read;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> write(@Nullable ByteBuf buf) {
+	public @NotNull Promise<Void> write(@Nullable ByteBuf buf) {
 		if (isClosed()) {
 			if (buf != null) {
 				buf.recycle();

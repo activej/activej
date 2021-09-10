@@ -107,8 +107,7 @@ public interface Decoder<T> {
 	 * Plainly combines given decoders (they are called on the same request) into one, mapping the result
 	 * with the supplied mapper.
 	 */
-	@NotNull
-	static <V> Decoder<V> create(Mapper<Object[], V> fn, Decoder<?>... decoders) {
+	static @NotNull <V> Decoder<V> create(Mapper<Object[], V> fn, Decoder<?>... decoders) {
 		return new AbstractDecoder<V>("") {
 			@Override
 			public Either<V, DecodeErrors> decode(@NotNull HttpRequest request) {
@@ -133,15 +132,13 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
-	static <R, T1> Decoder<R> of(TupleConstructor1<T1, R> constructor, Decoder<T1> decoder1) {
+	static @NotNull <R, T1> Decoder<R> of(TupleConstructor1<T1, R> constructor, Decoder<T1> decoder1) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0])),
 				decoder1);
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
-	static <R, T1, T2> Decoder<R> of(TupleConstructor2<T1, T2, R> constructor,
+	static @NotNull <R, T1, T2> Decoder<R> of(TupleConstructor2<T1, T2, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1])),
@@ -150,8 +147,7 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
-	static <R, T1, T2, T3> Decoder<R> of(TupleConstructor3<T1, T2, T3, R> constructor,
+	static @NotNull <R, T1, T2, T3> Decoder<R> of(TupleConstructor3<T1, T2, T3, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2,
 			Decoder<T3> decoder3) {
@@ -162,8 +158,7 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
-	static <R, T1, T2, T3, T4> Decoder<R> of(TupleConstructor4<T1, T2, T3, T4, R> constructor,
+	static @NotNull <R, T1, T2, T3, T4> Decoder<R> of(TupleConstructor4<T1, T2, T3, T4, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2,
 			Decoder<T3> decoder3,
@@ -176,8 +171,7 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
-	static <R, T1, T2, T3, T4, T5> Decoder<R> of(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+	static @NotNull <R, T1, T2, T3, T4, T5> Decoder<R> of(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2,
 			Decoder<T3> decoder3,
@@ -192,8 +186,7 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
-	static <R, T1, T2, T3, T4, T5, T6> Decoder<R> of(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+	static @NotNull <R, T1, T2, T3, T4, T5, T6> Decoder<R> of(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2,
 			Decoder<T3> decoder3,

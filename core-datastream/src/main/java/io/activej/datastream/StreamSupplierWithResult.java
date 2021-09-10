@@ -36,10 +36,8 @@ public final class StreamSupplierWithResult<T, X> {
 		});
 	}
 
-	@NotNull
-	private final StreamSupplier<T> supplier;
-	@NotNull
-	private final Promise<X> result;
+	private final @NotNull StreamSupplier<T> supplier;
+	private final @NotNull Promise<X> result;
 
 	private StreamSupplierWithResult(@NotNull StreamSupplier<T> supplier, @NotNull Promise<X> result) {
 		this.supplier = supplier;
@@ -88,13 +86,11 @@ public final class StreamSupplierWithResult<T, X> {
 				promise.then(StreamSupplierWithResult::getResult));
 	}
 
-	@NotNull
-	public StreamSupplier<T> getSupplier() {
+	public @NotNull StreamSupplier<T> getSupplier() {
 		return supplier;
 	}
 
-	@NotNull
-	public Promise<X> getResult() {
+	public @NotNull Promise<X> getResult() {
 		return result;
 	}
 }

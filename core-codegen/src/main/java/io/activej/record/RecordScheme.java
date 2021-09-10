@@ -59,8 +59,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 
 	private @Nullable List<String> comparedFields;
 
-	@NotNull
-	private final DefiningClassLoader classLoader;
+	private final @NotNull DefiningClassLoader classLoader;
 	private Class<? extends Record> generatedClass;
 
 	private RecordScheme(@NotNull DefiningClassLoader classLoader) {

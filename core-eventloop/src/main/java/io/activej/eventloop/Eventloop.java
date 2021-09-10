@@ -95,8 +95,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		JIGSAW_DETECTED = ReflectionUtils.isClassPresent("java.lang.Module");
 	}
 
-	@NotNull
-	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
+	private static volatile @NotNull FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
 
 	/**
 	 * Collection of local tasks which were added from this thread.
@@ -138,8 +137,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 */
 	private long timestamp;
 
-	@NotNull
-	private final CurrentTimeProvider timeProvider;
+	private final @NotNull CurrentTimeProvider timeProvider;
 
 	/**
 	 * The NIO selector which selects a set of keys whose
@@ -195,45 +193,38 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return new Eventloop(currentTimeProvider);
 	}
 
-	@NotNull
-	public Eventloop withThreadName(@Nullable String threadName) {
+	public @NotNull Eventloop withThreadName(@Nullable String threadName) {
 		this.threadName = threadName;
 		return this;
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
-	@NotNull
-	public Eventloop withThreadPriority(int threadPriority) {
+	public @NotNull Eventloop withThreadPriority(int threadPriority) {
 		this.threadPriority = threadPriority;
 		return this;
 	}
 
-	@NotNull
-	public Eventloop withInspector(@Nullable EventloopInspector inspector) {
+	public @NotNull Eventloop withInspector(@Nullable EventloopInspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}
 
-	@NotNull
-	public Eventloop withFatalErrorHandler(@Nullable FatalErrorHandler fatalErrorHandler) {
+	public @NotNull Eventloop withFatalErrorHandler(@Nullable FatalErrorHandler fatalErrorHandler) {
 		this.fatalErrorHandler = fatalErrorHandler;
 		return this;
 	}
 
-	@NotNull
-	public Eventloop withSelectorProvider(@Nullable SelectorProvider selectorProvider) {
+	public @NotNull Eventloop withSelectorProvider(@Nullable SelectorProvider selectorProvider) {
 		this.selectorProvider = selectorProvider;
 		return this;
 	}
 
-	@NotNull
-	public Eventloop withIdleInterval(@NotNull Duration idleInterval) {
+	public @NotNull Eventloop withIdleInterval(@NotNull Duration idleInterval) {
 		this.idleInterval = idleInterval;
 		return this;
 	}
 
-	@NotNull
-	public Eventloop withCurrentThread() {
+	public @NotNull Eventloop withCurrentThread() {
 		CURRENT_EVENTLOOP.set(this);
 		return this;
 	}
@@ -251,8 +242,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			"3) refactor application so it starts async operations within eventloop.run(), \n" +
 			"   i.e. by implementing EventloopService::start() {your code block} and using ServiceGraphModule";
 
-	@NotNull
-	public static Eventloop getCurrentEventloop() {
+	public static @NotNull Eventloop getCurrentEventloop() {
 		Eventloop eventloop = CURRENT_EVENTLOOP.get();
 		if (eventloop != null) return eventloop;
 		throw new IllegalStateException(NO_CURRENT_EVENTLOOP_ERROR);
@@ -825,8 +815,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @return server channel
 	 * @throws IOException If some I/O error occurs
 	 */
-	@NotNull
-	public ServerSocketChannel listen(@Nullable InetSocketAddress address, @NotNull ServerSocketSettings serverSocketSettings, @NotNull Consumer<SocketChannel> acceptCallback) throws IOException {
+	public @NotNull ServerSocketChannel listen(@Nullable InetSocketAddress address, @NotNull ServerSocketSettings serverSocketSettings, @NotNull Consumer<SocketChannel> acceptCallback) throws IOException {
 		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
 		ServerSocketChannel serverSocketChannel = null;
 		try {
@@ -854,8 +843,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @return DatagramSocket of this connection
 	 * @throws IOException if an I/O error occurs on opening DatagramChannel
 	 */
-	@NotNull
-	public static DatagramChannel createDatagramChannel(DatagramSocketSettings datagramSocketSettings,
+	public static @NotNull DatagramChannel createDatagramChannel(DatagramSocketSettings datagramSocketSettings,
 			@Nullable InetSocketAddress bindAddress,
 			@Nullable InetSocketAddress connectAddress) throws IOException {
 		DatagramChannel datagramChannel = null;
@@ -1000,9 +988,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param runnable  runnable of this task
 	 * @return scheduledRunnable, which could used for cancelling the task
 	 */
-	@NotNull
 	@Override
-	public ScheduledRunnable schedule(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
+	public @NotNull ScheduledRunnable schedule(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
 		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
 		return addScheduledTask(timestamp, runnable, false);
 	}
@@ -1016,16 +1003,14 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param runnable  runnable of this task
 	 * @return scheduledRunnable, which could used for cancelling the task
 	 */
-	@NotNull
 	@Override
-	public ScheduledRunnable scheduleBackground(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
+	public @NotNull ScheduledRunnable scheduleBackground(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
 		if (CHECK)
 			checkState(inEventloopThread(), "Not in eventloop thread");
 		return addScheduledTask(timestamp, runnable, true);
 	}
 
-	@NotNull
-	private ScheduledRunnable addScheduledTask(long timestamp, Runnable runnable, boolean background) {
+	private @NotNull ScheduledRunnable addScheduledTask(long timestamp, Runnable runnable, boolean background) {
 		ScheduledRunnable scheduledTask = ScheduledRunnable.create(timestamp, runnable);
 		PriorityQueue<ScheduledRunnable> taskQueue = background ? backgroundTasks : scheduledTasks;
 		taskQueue.offer(scheduledTask);
@@ -1065,9 +1050,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return timestamp;
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return this;
 	}
 
@@ -1078,9 +1062,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param computation to be executed
 	 * @return {@code CompletableFuture} that completes when runnable completes
 	 */
-	@NotNull
 	@Override
-	public CompletableFuture<Void> submit(@NotNull RunnableEx computation) {
+	public @NotNull CompletableFuture<Void> submit(@NotNull RunnableEx computation) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		execute(() -> {
 			try {
@@ -1096,9 +1079,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return future;
 	}
 
-	@NotNull
 	@Override
-	public <T> CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
+	public <T> @NotNull CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		execute(() -> {
 			try {

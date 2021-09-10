@@ -60,8 +60,7 @@ import static java.util.Arrays.asList;
  * and means that no additional data should be queried.
  */
 public interface ChannelSupplier<T> extends AsyncCloseable {
-	@NotNull
-	Promise<T> get();
+	@NotNull Promise<T> get();
 
 	/**
 	 * @see #of(AsyncSupplier, AsyncCloseable)

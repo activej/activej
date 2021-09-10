@@ -404,8 +404,7 @@ public final class AbstractHttpConnectionTest {
 				.whenComplete(server::close));
 	}
 
-	@NotNull
-	private FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
+	private @NotNull FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
 		return response -> response.loadBody()
 				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
 				.post();

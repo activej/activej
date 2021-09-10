@@ -76,8 +76,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	@Override
-	@NotNull
-	public Promise<Message> readMessage() {
+	public @NotNull Promise<Message> readMessage() {
 		return doRead(() -> {
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
@@ -122,14 +121,12 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	@Override
-	@NotNull
-	public Promise<Frame> readFrame() {
+	public @NotNull Promise<Frame> readFrame() {
 		return doRead(frameInput::get);
 	}
 
 	@Override
-	@NotNull
-	public Promise<Void> writeMessage(@Nullable Message msg) {
+	public @NotNull Promise<Void> writeMessage(@Nullable Message msg) {
 		return doWrite(() -> {
 			if (msg == null) {
 				return frameOutput.accept(null);
@@ -143,8 +140,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	@Override
-	@NotNull
-	public Promise<Void> writeFrame(@Nullable Frame frame) {
+	public @NotNull Promise<Void> writeFrame(@Nullable Frame frame) {
 		return doWrite(() -> frameOutput.accept(frame), frame);
 	}
 

@@ -411,21 +411,18 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				.whenComplete(infoAllPromise.recordStats());
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 

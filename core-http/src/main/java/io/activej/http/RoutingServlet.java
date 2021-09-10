@@ -92,8 +92,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	@Contract("_, _ -> this")
-	@NotNull
-	public RoutingServlet mapWebSocket(@NotNull String path, WebSocketServlet servlet) {
+	public @NotNull RoutingServlet mapWebSocket(@NotNull String path, WebSocketServlet servlet) {
 		return doMap(WS_ORDINAL, path, servlet);
 	}
 
@@ -151,9 +150,8 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		return merged;
 	}
 
-	@NotNull
 	@Override
-	public Promise<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
+	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
 		Promise<HttpResponse> processed = tryServe(request);
 		return processed != null ?
 				processed :

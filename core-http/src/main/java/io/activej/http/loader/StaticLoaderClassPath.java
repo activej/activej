@@ -34,8 +34,7 @@ import java.util.concurrent.Executor;
 class StaticLoaderClassPath implements StaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
-	@NotNull
-	private final Executor executor;
+	private final @NotNull Executor executor;
 	private final ClassLoader classLoader;
 	private final String root;
 

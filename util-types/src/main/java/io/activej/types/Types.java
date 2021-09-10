@@ -114,13 +114,11 @@ public class Types {
 		}
 	}
 
-	@NotNull
-	public static Type bind(Type type, Map<TypeVariable<?>, Type> bindings) {
+	public static @NotNull Type bind(Type type, Map<TypeVariable<?>, Type> bindings) {
 		return bind(type, bindings::get);
 	}
 
-	@NotNull
-	public static Type bind(Type type, Function<TypeVariable<?>, @Nullable Type> bindings) {
+	public static @NotNull Type bind(Type type, Function<TypeVariable<?>, @Nullable Type> bindings) {
 		if (type instanceof Class) return type;
 		if (type instanceof TypeVariable) {
 			TypeVariable<?> typeVariable = (TypeVariable<?>) type;
@@ -181,9 +179,8 @@ public class Types {
 			this.actualTypeArguments = actualTypeArguments;
 		}
 
-		@NotNull
 		@Override
-		public Type getRawType() {
+		public @NotNull Type getRawType() {
 			return rawType;
 		}
 

@@ -189,9 +189,8 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 		return serverSelector.selectFrom(filename, alivePartitions.keySet());
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
@@ -199,9 +198,8 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 		return serverSelector;
 	}
 
-	@NotNull
 	@Override
-	public Promise<?> start() {
+	public @NotNull Promise<?> start() {
 		return Promise.ofCallback(cb ->
 						discoveryService.discover(null, (result, e) -> {
 							if (e == null) {
@@ -216,9 +214,8 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 				.whenResult(this::rediscover);
 	}
 
-	@NotNull
 	@Override
-	public Promise<?> stop() {
+	public @NotNull Promise<?> stop() {
 		return Promise.complete();
 	}
 

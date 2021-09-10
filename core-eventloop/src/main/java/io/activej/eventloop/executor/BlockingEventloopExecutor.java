@@ -101,9 +101,8 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 		}
 	}
 
-	@NotNull
 	@Override
-	public CompletableFuture<Void> submit(@NotNull RunnableEx computation) {
+	public @NotNull CompletableFuture<Void> submit(@NotNull RunnableEx computation) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		post(() -> {
 			try {
@@ -121,9 +120,8 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 		return future;
 	}
 
-	@NotNull
 	@Override
-	public <T> CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
+	public <T> @NotNull CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		post(() -> {
 			try {

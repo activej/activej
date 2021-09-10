@@ -44,8 +44,7 @@ public interface AsyncTcpSocket extends AsyncCloseable {
 	 *
 	 * @return promise of ByteBuf that represents data received from network
 	 */
-	@NotNull
-	Promise<ByteBuf> read();
+	@NotNull Promise<ByteBuf> read();
 
 	/**
 	 * Operation to write some data to network. Returns a promise of void that represents successful write.
@@ -55,8 +54,7 @@ public interface AsyncTcpSocket extends AsyncCloseable {
 	 * @param buf data to be sent to network
 	 * @return promise that represents successful write operation
 	 */
-	@NotNull
-	Promise<Void> write(@Nullable ByteBuf buf);
+	@NotNull Promise<Void> write(@Nullable ByteBuf buf);
 
 	boolean isReadAvailable();
 

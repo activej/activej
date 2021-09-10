@@ -26,8 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
 
 public abstract class AsyncServletWithStats implements AsyncServlet, EventloopJmxBeanWithStats {
-	@NotNull
-	protected final Eventloop eventloop;
+	protected final @NotNull Eventloop eventloop;
 
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
 
@@ -35,19 +34,16 @@ public abstract class AsyncServletWithStats implements AsyncServlet, EventloopJm
 		this.eventloop = eventloop;
 	}
 
-	@NotNull
-	protected abstract Promise<HttpResponse> doServe(@NotNull HttpRequest request);
+	protected abstract @NotNull Promise<HttpResponse> doServe(@NotNull HttpRequest request);
 
-	@NotNull
 	@Override
-	public final Promise<HttpResponse> serve(@NotNull HttpRequest request) {
+	public final @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) {
 		return doServe(request)
 				.whenComplete(stats.recordStats());
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

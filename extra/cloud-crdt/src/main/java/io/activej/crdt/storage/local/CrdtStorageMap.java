@@ -83,9 +83,8 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 		return new CrdtStorageMap<>(eventloop, CrdtFunction.<S>ofCrdtType());
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
@@ -112,15 +111,13 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return Promise.complete();
 	}
 

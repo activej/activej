@@ -57,8 +57,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	private static final Logger logger = LoggerFactory.getLogger(ServiceGraph.class);
 
 	public interface Key {
-		@NotNull
-		Type getType();
+		@NotNull Type getType();
 
 		@Nullable Object getQualifier();
 

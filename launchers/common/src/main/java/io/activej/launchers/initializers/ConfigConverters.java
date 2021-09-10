@@ -39,9 +39,8 @@ public final class ConfigConverters {
 
 	public static ConfigConverter<DnsCache> ofDnsCache(Eventloop eventloop) {
 		return new ConfigConverter<DnsCache>() {
-			@NotNull
 			@Override
-			public DnsCache get(Config config) {
+			public @NotNull DnsCache get(Config config) {
 				Duration errorCacheExpiration = config.get(ofDuration(), "errorCacheExpiration", DEFAULT_ERROR_CACHE_EXPIRATION);
 				Duration timedOutExceptionTtl = config.get(ofDuration(), "timedOutExpiration", DEFAULT_TIMED_OUT_EXPIRATION);
 				Duration hardExpirationDelta = config.get(ofDuration(), "hardExpirationDelta", DEFAULT_HARD_EXPIRATION_DELTA);
@@ -67,9 +66,8 @@ public final class ConfigConverters {
 
 	public static ConfigConverter<FrameFormat> ofFrameFormat() {
 		return new ConfigConverter<FrameFormat>() {
-			@NotNull
 			@Override
-			public FrameFormat get(Config config) {
+			public @NotNull FrameFormat get(Config config) {
 				return doGet(config, config.getValue());
 			}
 

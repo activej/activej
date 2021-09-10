@@ -36,37 +36,31 @@ public final class MemSize implements Comparable<MemSize> {
 		this.bytes = bytes;
 	}
 
-	@NotNull
-	public static MemSize of(long bytes) {
+	public static @NotNull MemSize of(long bytes) {
 		checkArgument(bytes >= 0, "Cannot create MemSize of negative value");
 		return new MemSize(bytes);
 	}
 
-	@NotNull
-	public static MemSize bytes(long bytes) {
+	public static @NotNull MemSize bytes(long bytes) {
 		return MemSize.of(bytes);
 	}
 
-	@NotNull
-	public static MemSize kilobytes(long kilobytes) {
+	public static @NotNull MemSize kilobytes(long kilobytes) {
 		checkArgument(kilobytes <= Long.MAX_VALUE / KB, "Resulting number of bytes exceeds Long.MAX_VALUE");
 		return of(kilobytes * KB);
 	}
 
-	@NotNull
-	public static MemSize megabytes(long megabytes) {
+	public static @NotNull MemSize megabytes(long megabytes) {
 		checkArgument(megabytes <= Long.MAX_VALUE / MB, "Resulting number of bytes exceeds Long.MAX_VALUE");
 		return of(megabytes * MB);
 	}
 
-	@NotNull
-	public static MemSize gigabytes(long gigabytes) {
+	public static @NotNull MemSize gigabytes(long gigabytes) {
 		checkArgument(gigabytes <= Long.MAX_VALUE / GB, "Resulting number of bytes exceeds Long.MAX_VALUE");
 		return of(gigabytes * GB);
 	}
 
-	@NotNull
-	public static MemSize terabytes(long terabytes) {
+	public static @NotNull MemSize terabytes(long terabytes) {
 		checkArgument(terabytes <= Long.MAX_VALUE / TB, "Resulting number of bytes exceeds Long.MAX_VALUE");
 		return of(terabytes * TB);
 	}
@@ -80,18 +74,15 @@ public final class MemSize implements Comparable<MemSize> {
 		return (int) bytes;
 	}
 
-	@NotNull
-	public MemSize map(@NotNull Function<Long, Long> fn) {
+	public @NotNull MemSize map(@NotNull Function<Long, Long> fn) {
 		return MemSize.of(fn.apply(bytes));
 	}
 
-	@NotNull
-	public static MemSize valueOf(@NotNull String string) {
+	public static @NotNull MemSize valueOf(@NotNull String string) {
 		return StringFormatUtils.parseMemSize(string);
 	}
 
-	@NotNull
-	public String format() {
+	public @NotNull String format() {
 		return StringFormatUtils.formatMemSize(this);
 	}
 
@@ -115,9 +106,8 @@ public final class MemSize implements Comparable<MemSize> {
 		return Long.hashCode(bytes);
 	}
 
-	@NotNull
 	@Override
-	public String toString() {
+	public @NotNull String toString() {
 		return "" + toLong();
 	}
 }

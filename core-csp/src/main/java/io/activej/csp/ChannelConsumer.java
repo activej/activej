@@ -61,8 +61,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * Consumes a provided value and returns a
 	 * {@link Promise} as a marker of success.
 	 */
-	@NotNull
-	Promise<Void> accept(@Nullable T value);
+	@NotNull Promise<Void> accept(@Nullable T value);
 
 	default Promise<Void> acceptEndOfStream() {
 		return accept(null);
@@ -74,17 +73,15 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * with an error, subsequent items will be recycled and a
 	 * {@code Promise} of exception will be returned.
 	 */
-	@NotNull
 	@SuppressWarnings("unchecked")
-	default Promise<Void> acceptAll(T... items) {
+	default @NotNull Promise<Void> acceptAll(T... items) {
 		return acceptAll(Arrays.asList(items));
 	}
 
 	/**
 	 * @see ChannelConsumers#acceptAll(ChannelConsumer, Iterator)
 	 */
-	@NotNull
-	default Promise<Void> acceptAll(@NotNull Iterator<? extends T> it) {
+	default @NotNull Promise<Void> acceptAll(@NotNull Iterator<? extends T> it) {
 		return ChannelConsumers.acceptAll(this, it);
 	}
 

@@ -67,8 +67,7 @@ public final class DnsCache {
 	private final AtomicBoolean cleaningUpNow = new AtomicBoolean(false);
 	private final PriorityQueue<CachedDnsQueryResult> expirations = new PriorityQueue<>();
 
-	@NotNull
-	CurrentTimeProvider now;
+	@NotNull CurrentTimeProvider now;
 
 	/**
 	 * Creates a new DNS cache.

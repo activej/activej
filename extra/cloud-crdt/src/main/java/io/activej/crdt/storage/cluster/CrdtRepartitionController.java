@@ -61,9 +61,8 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P exten
 		return new CrdtRepartitionController<>(localPartitionId, localStorage, cluster);
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return cluster.getEventloop();
 	}
 
@@ -82,8 +81,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P exten
 		return repartition.get();
 	}
 
-	@NotNull
-	private Promise<Void> doRepartition() {
+	private @NotNull Promise<Void> doRepartition() {
 		return Promises.toTuple(cluster.upload().toTry(), localClient.remove().toTry(), localClient.download().toTry())
 				.then(all -> {
 					if (!all.getValue1().isSuccess() || !all.getValue2().isSuccess() || !all.getValue3().isSuccess()) {

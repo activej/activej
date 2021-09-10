@@ -27,9 +27,8 @@ public abstract class ComplexConfigConverter<T> implements ConfigConverter<T> {
 		this.defaultValue = defaultValue;
 	}
 
-	@NotNull
 	@Override
-	public final T get(Config config) {
+	public final @NotNull T get(Config config) {
 		return provide(config, defaultValue);
 	}
 

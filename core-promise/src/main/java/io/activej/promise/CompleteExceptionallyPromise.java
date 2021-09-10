@@ -33,8 +33,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
  */
 @SuppressWarnings("unchecked")
 final class CompleteExceptionallyPromise<T> implements Promise<T> {
-	@NotNull
-	private final Exception exception;
+	private final @NotNull Exception exception;
 
 	public CompleteExceptionallyPromise(@NotNull Exception e) {
 		this.exception = e;
@@ -70,23 +69,20 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		return Try.ofException(exception);
 	}
 
-	@NotNull
 	@Override
-	public <U, S extends Callback<? super T> & Promise<U>> Promise<U> next(@NotNull S promise) {
+	public <U, S extends Callback<? super T> & Promise<U>> @NotNull Promise<U> next(@NotNull S promise) {
 		promise.accept(null, exception);
 		return promise;
 	}
 
-	@NotNull
 	@SuppressWarnings("unchecked")
 	@Override
-	public <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn) {
+	public <U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn) {
 		return (Promise<U>) this;
 	}
 
-	@NotNull
 	@Override
-	public <U> Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
+	public <U> @NotNull Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
 		} catch (RuntimeException ex) {
@@ -128,9 +124,8 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		return (Promise<U>) this;
 	}
 
-	@NotNull
 	@Override
-	public <U> Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
+	public <U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
 		} catch (RuntimeException ex) {
@@ -211,43 +206,37 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		}
 	}
 
-	@NotNull
 	@Override
-	public <U, V> Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
+	public <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
 		other.whenResult(Recyclers::recycle);
 		return (Promise<V>) this;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> both(@NotNull Promise<?> other) {
+	public @NotNull Promise<Void> both(@NotNull Promise<?> other) {
 		other.whenResult(Recyclers::recycle);
 		return (Promise<Void>) this;
 	}
 
-	@NotNull
 	@Override
-	public Promise<T> either(@NotNull Promise<? extends T> other) {
+	public @NotNull Promise<T> either(@NotNull Promise<? extends T> other) {
 		return (Promise<T>) other;
 	}
 
-	@NotNull
 	@Override
-	public Promise<T> async() {
+	public @NotNull Promise<T> async() {
 		SettablePromise<T> result = new SettablePromise<>();
 		getCurrentEventloop().post(wrapContext(result, () -> result.setException(exception)));
 		return result;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Try<T>> toTry() {
+	public @NotNull Promise<Try<T>> toTry() {
 		return Promise.of(Try.ofException(exception));
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> toVoid() {
+	public @NotNull Promise<Void> toVoid() {
 		return (Promise<Void>) this;
 	}
 
@@ -256,9 +245,8 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		action.accept(null, exception);
 	}
 
-	@NotNull
 	@Override
-	public CompletableFuture<T> toCompletableFuture() {
+	public @NotNull CompletableFuture<T> toCompletableFuture() {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		future.completeExceptionally(exception);
 		return future;

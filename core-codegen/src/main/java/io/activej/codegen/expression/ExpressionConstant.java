@@ -33,8 +33,7 @@ import static org.objectweb.asm.Type.getType;
 public final class ExpressionConstant implements Expression {
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 
-	@NotNull
-	private final Object value;
+	private final @NotNull Object value;
 	private final @Nullable Type type;
 
 	private final int id = COUNTER.incrementAndGet();

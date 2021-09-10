@@ -40,9 +40,8 @@ public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable 
 
 	protected abstract Promise<T> doGet();
 
-	@NotNull
 	@Override
-	public final Promise<T> get() {
+	public final @NotNull Promise<T> get() {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		return isClosed() ? Promise.ofException(getException()) : doGet();
 	}

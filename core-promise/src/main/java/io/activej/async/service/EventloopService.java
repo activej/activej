@@ -27,18 +27,15 @@ import java.util.concurrent.CompletableFuture;
  * in the context of eventloop, so it works with {@link Promise}
  */
 public interface EventloopService {
-	@NotNull
-	Eventloop getEventloop();
+	@NotNull Eventloop getEventloop();
 
 	/**
 	 * Starts this component asynchronously.
 	 * Callback completes immediately if the component is already running.
 	 */
-	@NotNull
-	Promise<?> start();
+	@NotNull Promise<?> start();
 
-	@NotNull
-	default CompletableFuture<?> startFuture() {
+	default @NotNull CompletableFuture<?> startFuture() {
 		return getEventloop().submit(this::start);
 	}
 
@@ -46,11 +43,9 @@ public interface EventloopService {
 	 * Stops this component asynchronously.
 	 * Callback completes immediately if the component is not running / already stopped.
 	 */
-	@NotNull
-	Promise<?> stop();
+	@NotNull Promise<?> stop();
 
-	@NotNull
-	default CompletableFuture<?> stopFuture() {
+	default @NotNull CompletableFuture<?> stopFuture() {
 		return getEventloop().submit(this::stop);
 	}
 }

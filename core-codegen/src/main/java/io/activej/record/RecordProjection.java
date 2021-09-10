@@ -60,8 +60,7 @@ public abstract class RecordProjection implements Function<Record, Record>, BiCo
 		return projection(DefiningClassLoader.create(classLoaderChild), null, schemeFrom, schemeTo, mapping);
 	}
 
-	@NotNull
-	public static RecordProjection projection(DefiningClassLoader classLoader, @Nullable Object classKey,
+	public static @NotNull RecordProjection projection(DefiningClassLoader classLoader, @Nullable Object classKey,
 			RecordScheme schemeFrom, RecordScheme schemeTo,
 			Map<String, Function<Expression, Expression>> mapping) {
 		schemeFrom.build();

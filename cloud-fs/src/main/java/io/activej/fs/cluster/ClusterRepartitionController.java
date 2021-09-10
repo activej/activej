@@ -128,9 +128,8 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 		return this;
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return partitions.getEventloop();
 	}
 
@@ -142,13 +141,11 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 		return localFs;
 	}
 
-	@NotNull
-	public Promise<Void> repartition() {
+	public @NotNull Promise<Void> repartition() {
 		return repartition.get();
 	}
 
-	@NotNull
-	private Promise<Void> doRepartition() {
+	private @NotNull Promise<Void> doRepartition() {
 		if (CHECK)
 			checkState(partitions.getEventloop().inEventloopThread(), "Should be called from eventloop thread");
 
@@ -400,16 +397,14 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 		}
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		this.localFs = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return isRepartitioning() ?
 				Promise.ofCallback(cb -> this.closeCallback = cb) :
 				Promise.complete();

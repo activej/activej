@@ -278,15 +278,13 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		return socketSettings;
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
 
@@ -322,9 +320,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 				.whenResult(this::rediscover);
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (stopPromise != null) return stopPromise;
 

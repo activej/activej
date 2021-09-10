@@ -24,8 +24,7 @@ import java.util.function.Predicate;
 public class AsyncPredicates {
 
 	public static class AsyncPredicateWrapper<T> implements AsyncPredicate<T> {
-		@NotNull
-		private final Predicate<T> predicate;
+		private final @NotNull Predicate<T> predicate;
 
 		public AsyncPredicateWrapper(@NotNull Predicate<T> predicate) {this.predicate = predicate;}
 
@@ -34,8 +33,7 @@ public class AsyncPredicates {
 			return Promise.of(predicate.test(t));
 		}
 
-		@NotNull
-		public Predicate<T> getPredicate() {
+		public @NotNull Predicate<T> getPredicate() {
 			return predicate;
 		}
 	}

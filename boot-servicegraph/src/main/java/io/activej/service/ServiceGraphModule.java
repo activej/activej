@@ -200,8 +200,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	private static final class ServiceKey implements ServiceGraph.Key {
-		@NotNull
-		private final Key<?> key;
+		private final @NotNull Key<?> key;
 		private final @Nullable WorkerPool workerPool;
 
 		private ServiceKey(@NotNull Key<?> key) {
@@ -214,14 +213,12 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			this.workerPool = workerPool;
 		}
 
-		@NotNull
-		public Key<?> getKey() {
+		public @NotNull Key<?> getKey() {
 			return key;
 		}
 
-		@NotNull
 		@Override
-		public Type getType() {
+		public @NotNull Type getType() {
 			return key.getType();
 		}
 

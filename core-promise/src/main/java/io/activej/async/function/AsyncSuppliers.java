@@ -29,15 +29,13 @@ import java.util.function.Function;
 public final class AsyncSuppliers {
 
 	@Contract(pure = true)
-	@NotNull
-	public static <T> AsyncSupplier<T> reuse(@NotNull AsyncSupplier<? extends T> actual) {
+	public static @NotNull <T> AsyncSupplier<T> reuse(@NotNull AsyncSupplier<? extends T> actual) {
 		return new AsyncSupplier<T>() {
 			@Nullable Promise<T> runningPromise;
 
-			@NotNull
 			@SuppressWarnings("unchecked")
 			@Override
-			public Promise<T> get() {
+			public @NotNull Promise<T> get() {
 				if (runningPromise != null) return runningPromise;
 				runningPromise = (Promise<T>) actual.get();
 				Promise<T> runningPromise = this.runningPromise;
@@ -48,21 +46,18 @@ public final class AsyncSuppliers {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public static <T> AsyncSupplier<T> coalesce(@NotNull AsyncSupplier<T> actual) {
+	public static @NotNull <T> AsyncSupplier<T> coalesce(@NotNull AsyncSupplier<T> actual) {
 		Function<Void, Promise<T>> fn = Promises.coalesce(() -> null, (a, v) -> {}, a -> actual.get());
 		return () -> fn.apply(null);
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public static <T> AsyncSupplier<T> buffer(@NotNull AsyncSupplier<T> actual) {
+	public static @NotNull <T> AsyncSupplier<T> buffer(@NotNull AsyncSupplier<T> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public static <T> AsyncSupplier<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncSupplier<T> actual) {
+	public static @NotNull <T> AsyncSupplier<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncSupplier<T> actual) {
 		return actual.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
 	}
 
@@ -81,10 +76,9 @@ public final class AsyncSuppliers {
 			final ArrayDeque<T> prefetched = new ArrayDeque<>();
 			int prefetchCalls;
 
-			@NotNull
 			@SuppressWarnings("unchecked")
 			@Override
-			public Promise<T> get() {
+			public @NotNull Promise<T> get() {
 				Promise<? extends T> result = prefetched.isEmpty() ? actualSupplier.get() : Promise.of(prefetched.pollFirst());
 				prefetch();
 				return (Promise<T>) result;

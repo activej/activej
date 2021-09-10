@@ -34,11 +34,9 @@ public final class StreamConsumerWithResult<T, X> {
 		});
 	}
 
-	@NotNull
-	private final StreamConsumer<T> consumer;
+	private final @NotNull StreamConsumer<T> consumer;
 
-	@NotNull
-	private final Promise<X> result;
+	private final @NotNull Promise<X> result;
 
 	private StreamConsumerWithResult(@NotNull StreamConsumer<T> consumer, @NotNull Promise<X> result) {
 		this.consumer = consumer;
@@ -76,13 +74,11 @@ public final class StreamConsumerWithResult<T, X> {
 				promise.then(StreamConsumerWithResult::getResult));
 	}
 
-	@NotNull
-	public StreamConsumer<T> getConsumer() {
+	public @NotNull StreamConsumer<T> getConsumer() {
 		return consumer;
 	}
 
-	@NotNull
-	public Promise<X> getResult() {
+	public @NotNull Promise<X> getResult() {
 		return result;
 	}
 }

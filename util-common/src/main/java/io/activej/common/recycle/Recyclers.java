@@ -56,8 +56,7 @@ public class Recyclers {
 		return doCache(type);
 	}
 
-	@NotNull
-	synchronized private static Recycler<?> doCache(@NotNull Class<?> type) {
+	synchronized private static @NotNull Recycler<?> doCache(@NotNull Class<?> type) {
 		Recycler<?> recycler = lookup(type);
 		CACHED_RECYCLERS.put(type, recycler);
 		return recycler;

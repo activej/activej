@@ -89,8 +89,7 @@ public interface AsyncSupplier<T> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default <R> R transformWith(@NotNull Function<AsyncSupplier<T>, R> fn) {
+	default @NotNull <R> R transformWith(@NotNull Function<AsyncSupplier<T>, R> fn) {
 		return fn.apply(this);
 	}
 
@@ -102,32 +101,27 @@ public interface AsyncSupplier<T> {
 	 * @see Promise#async()
 	 */
 	@Contract(pure = true)
-	@NotNull
-	default AsyncSupplier<T> async() {
+	default @NotNull AsyncSupplier<T> async() {
 		return () -> get().async();
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default AsyncSupplier<Void> toVoid() {
+	default @NotNull AsyncSupplier<Void> toVoid() {
 		return () -> get().toVoid();
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default AsyncSupplier<Try<T>> toTry() {
+	default @NotNull AsyncSupplier<Try<T>> toTry() {
 		return () -> get().toTry();
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default AsyncSupplier<T> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
+	default @NotNull AsyncSupplier<T> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
 		return () -> asyncExecutor.execute(this);
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	default AsyncSupplier<T> peek(@NotNull ConsumerEx<? super T> action) {
+	default @NotNull AsyncSupplier<T> peek(@NotNull ConsumerEx<? super T> action) {
 		return () -> get().whenResult(action);
 	}
 
@@ -138,8 +132,7 @@ public interface AsyncSupplier<T> {
 	 * @return {@link AsyncSupplier} of {@code Promise}s after transformation
 	 */
 	@Contract(pure = true)
-	@NotNull
-	default <V> AsyncSupplier<V> map(@NotNull FunctionEx<? super T, ? extends V> fn) {
+	default @NotNull <V> AsyncSupplier<V> map(@NotNull FunctionEx<? super T, ? extends V> fn) {
 		return () -> get().map(fn);
 	}
 
@@ -149,8 +142,7 @@ public interface AsyncSupplier<T> {
 	 * @param fn function to be applied to the result of {@code Promise}
 	 */
 	@Contract(pure = true)
-	@NotNull
-	default <V> AsyncSupplier<V> mapAsync(@NotNull FunctionEx<? super T, ? extends Promise<V>> fn) {
+	default @NotNull <V> AsyncSupplier<V> mapAsync(@NotNull FunctionEx<? super T, ? extends Promise<V>> fn) {
 		return () -> get().then(fn);
 	}
 }

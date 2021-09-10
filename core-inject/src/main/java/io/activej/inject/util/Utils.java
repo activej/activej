@@ -243,8 +243,7 @@ public final class Utils {
 		return nameOffset + (key.getDisplayString().length() - nameOffset) / 2;
 	}
 
-	@NotNull
-	public static String getDisplayString(@NotNull Class<? extends Annotation> annotationType, @Nullable Annotation annotation) {
+	public static @NotNull String getDisplayString(@NotNull Class<? extends Annotation> annotationType, @Nullable Annotation annotation) {
 		if (annotation == null) {
 			return "@" + ReflectionUtils.getDisplayName(annotationType);
 		}

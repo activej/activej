@@ -50,9 +50,8 @@ public final class ChannelByteRanger extends AbstractChannelTransformer<ChannelB
 		return range(0, limit);
 	}
 
-	@NotNull
 	@Override
-	protected Promise<Void> onItem(ByteBuf item) {
+	protected @NotNull Promise<Void> onItem(ByteBuf item) {
 		int size = item.readRemaining();
 		long oldPos = position;
 		position += size;

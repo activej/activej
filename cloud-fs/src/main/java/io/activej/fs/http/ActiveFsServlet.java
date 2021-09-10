@@ -143,8 +143,7 @@ public final class ActiveFsServlet {
 						.map(errorHandlerFn()));
 	}
 
-	@NotNull
-	private static Promise<HttpResponse> rangeDownload(ActiveFs fs, boolean inline, String name, String rangeHeader) {
+	private static @NotNull Promise<HttpResponse> rangeDownload(ActiveFs fs, boolean inline, String name, String rangeHeader) {
 		return fs.info(name)
 				.then(meta -> {
 					if (meta == null) {

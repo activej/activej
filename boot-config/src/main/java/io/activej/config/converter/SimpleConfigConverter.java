@@ -23,9 +23,8 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.common.Checks.checkNotNull;
 
 public abstract class SimpleConfigConverter<T> implements ConfigConverter<T> {
-	@NotNull
 	@Override
-	public final T get(Config config) {
+	public final @NotNull T get(Config config) {
 		return fromString(checkNotNull(config.getValue()));
 	}
 

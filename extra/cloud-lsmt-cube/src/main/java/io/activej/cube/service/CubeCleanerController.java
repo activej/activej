@@ -293,9 +293,8 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 		cleanup();
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

@@ -84,12 +84,9 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(AsyncHttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(AsyncHttpClient.class, "maxKeepAliveRequests", 0);
 
-	@NotNull
-	private final Eventloop eventloop;
-	@NotNull
-	private AsyncDnsClient asyncDnsClient;
-	@NotNull
-	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
+	private final @NotNull Eventloop eventloop;
+	private @NotNull AsyncDnsClient asyncDnsClient;
+	private @NotNull SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
 	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList();
@@ -437,8 +434,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		return (Promise<WebSocket>) doRequest(request, true);
 	}
 
-	@NotNull
-	private Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
+	private @NotNull Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (inspector != null) inspector.onRequest(request);
 		String host = request.getUrl().getHost();
@@ -519,15 +515,13 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 				});
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		return Promise.complete();
 	}
@@ -541,9 +535,8 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 
 		SettablePromise<Void> promise = new SettablePromise<>();

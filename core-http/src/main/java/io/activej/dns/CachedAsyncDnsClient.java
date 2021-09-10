@@ -180,9 +180,8 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		client.close();
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

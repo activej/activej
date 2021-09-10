@@ -24,8 +24,7 @@ import java.util.List;
 
 public final class ProtoObjectName {
 	private final @Nullable String className;
-	@NotNull
-	private final String packageName;
+	private final @NotNull String packageName;
 	private final @Nullable Object qualifier;
 	private final @Nullable String scope;
 	private final @Nullable String workerPoolQualifier;

@@ -58,9 +58,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * Creates successfully completed {@code Promise}
 	 */
-	@NotNull
 	@SuppressWarnings("unchecked")
-	static Promise<Void> complete() {
+	static @NotNull Promise<Void> complete() {
 		return (Promise<Void>) CompleteNullPromise.INSTANCE;
 	}
 
@@ -71,8 +70,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *              returns {@link CompleteNullPromise}, otherwise
 	 *              {@link CompleteResultPromise}
 	 */
-	@NotNull
-	static <T> Promise<T> of(@Nullable T value) {
+	static @NotNull <T> Promise<T> of(@Nullable T value) {
 		return value != null ? new CompleteResultPromise<>(value) : CompleteNullPromise.instance();
 	}
 
@@ -81,8 +79,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param e Exception
 	 */
-	@NotNull
-	static <T> Promise<T> ofException(@NotNull Exception e) {
+	static @NotNull <T> Promise<T> ofException(@NotNull Exception e) {
 		return new CompleteExceptionallyPromise<>(e);
 	}
 
@@ -91,8 +88,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * that is accepted by the provided {@link Consumer} of
 	 * {@link SettablePromise}
 	 */
-	@NotNull
-	static <T> Promise<T> ofCallback(@NotNull Consumer<@NotNull SettablePromise<T>> callbackConsumer) {
+	static @NotNull <T> Promise<T> ofCallback(@NotNull Consumer<@NotNull SettablePromise<T>> callbackConsumer) {
 		SettablePromise<T> cb = new SettablePromise<>();
 		callbackConsumer.accept(cb);
 		return cb;
@@ -101,9 +97,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * @see #ofOptional(Optional, Supplier)
 	 */
-	@NotNull
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	static <T> Promise<T> ofOptional(@NotNull Optional<T> optional) {
+	static <T> @NotNull Promise<T> ofOptional(@NotNull Optional<T> optional) {
 		return ofOptional(optional, NoSuchElementException::new);
 	}
 
@@ -119,9 +114,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * {@link CompleteExceptionallyPromise} with
 	 * {@code errorSupplier} exception.
 	 */
-	@NotNull
 	@SuppressWarnings({"OptionalUsedAsFieldOrParameterType"})
-	static <T> Promise<T> ofOptional(@NotNull Optional<T> optional, @NotNull Supplier<? extends Exception> errorSupplier) {
+	static <T> @NotNull Promise<T> ofOptional(@NotNull Optional<T> optional, @NotNull Supplier<? extends Exception> errorSupplier) {
 		if (optional.isPresent()) return Promise.of(optional.get());
 		return Promise.ofException(errorSupplier.get());
 	}
@@ -135,8 +129,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param value value to wrap when exception is null
 	 * @param e     possibly-null exception, determines type of promise completion
 	 */
-	@NotNull
-	static <T> Promise<T> of(@Nullable T value, @Nullable Exception e) {
+	static @NotNull <T> Promise<T> of(@Nullable T value, @Nullable Exception e) {
 		checkArgument(!(value != null && e != null), "Either value or exception should be 'null'");
 		return e == null ? of(value) : ofException(e);
 	}
@@ -145,8 +138,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Returns a new {@link CompletePromise} or {@link CompleteExceptionallyPromise}
 	 * based on the provided {@link Try}.
 	 */
-	@NotNull
-	static <T> Promise<T> ofTry(@NotNull Try<T> t) {
+	static @NotNull <T> Promise<T> ofTry(@NotNull Try<T> t) {
 		return t.reduce(Promise::of, Promise::ofException);
 	}
 
@@ -156,8 +148,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @return a new {@code Promise} with a result of the given future
 	 */
-	@NotNull
-	static <T> Promise<T> ofFuture(@NotNull CompletableFuture<? extends T> future) {
+	static @NotNull <T> Promise<T> ofFuture(@NotNull CompletableFuture<? extends T> future) {
 		return ofCompletionStage(future);
 	}
 
@@ -167,8 +158,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param completionStage completion stage itself
 	 * @return result of the given completionStage wrapped in a {@code Promise}
 	 */
-	@NotNull
-	static <T> Promise<T> ofCompletionStage(CompletionStage<? extends T> completionStage) {
+	static @NotNull <T> Promise<T> ofCompletionStage(CompletionStage<? extends T> completionStage) {
 		return ofCallback(cb -> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
@@ -187,8 +177,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param future   the future itself
 	 * @return a new {@code Promise} of the future result
 	 */
-	@NotNull
-	static <T> Promise<T> ofFuture(@NotNull Executor executor, @NotNull Future<? extends T> future) {
+	static @NotNull <T> Promise<T> ofFuture(@NotNull Executor executor, @NotNull Future<? extends T> future) {
 		return ofCallback(cb -> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
@@ -253,8 +242,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Same as {@link #ofBlocking(Executor, SupplierEx)}, but without a result
 	 * (returned {@code Promise} is only a marker of completion).
 	 */
-	@NotNull
-	static Promise<Void> ofBlocking(@NotNull Executor executor, @NotNull RunnableEx runnable) {
+	static @NotNull Promise<Void> ofBlocking(@NotNull Executor executor, @NotNull RunnableEx runnable) {
 		return ofCallback(cb -> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
@@ -315,8 +303,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@NotNull Promise<T> async();
 
 	@Contract(pure = true)
-	@NotNull
-	default Promise<T> post() {
+	default @NotNull Promise<T> post() {
 		SettablePromise<T> result = new SettablePromise<>();
 		this.run(result::post);
 		return result;
@@ -449,8 +436,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action bi consumer that consumes a result
 	 *               and an exception of {@code this} promise
 	 */
-	@NotNull
-	default Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
+	default @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
 		return then((v, e) -> {
 			action.accept(v, e);
 			return Promise.of(v, e);
@@ -469,8 +455,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param action runnable to be executed after {@code this} promise completes
 	 */
-	@NotNull
-	default Promise<T> whenComplete(@NotNull RunnableEx action) {
+	default @NotNull Promise<T> whenComplete(@NotNull RunnableEx action) {
 		return then((v, e) -> {
 			action.run();
 			return Promise.of(v, e);
@@ -489,8 +474,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param action consumer that consumes a result of {@code this} promise
 	 */
-	@NotNull
-	default Promise<T> whenResult(ConsumerEx<? super T> action) {
+	default @NotNull Promise<T> whenResult(ConsumerEx<? super T> action) {
 		return then(v -> {
 			action.accept(v);
 			return Promise.of(v);
@@ -510,8 +494,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise
 	 *               completes successfully
 	 */
-	@NotNull
-	default Promise<T> whenResult(@NotNull RunnableEx action) {
+	default @NotNull Promise<T> whenResult(@NotNull RunnableEx action) {
 		return then(v -> {
 			action.run();
 			return Promise.of(v);
@@ -530,8 +513,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param action consumer that consumes an exception of {@code this} promise
 	 */
-	@NotNull
-	default Promise<T> whenException(@NotNull ConsumerEx<@NotNull Exception> action) {
+	default @NotNull Promise<T> whenException(@NotNull ConsumerEx<@NotNull Exception> action) {
 		return then((v, e) -> {
 			if (e != null) {
 				action.accept(e);
@@ -553,8 +535,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise
 	 *               completes exceptionally
 	 */
-	@NotNull
-	default Promise<T> whenException(@NotNull RunnableEx action) {
+	default @NotNull Promise<T> whenException(@NotNull RunnableEx action) {
 		return then((v, e) -> {
 			if (e != null) {
 				action.run();
@@ -588,8 +569,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * {@code Promise} complete
 	 */
 	@Contract(pure = true)
-	@NotNull
-	Promise<Void> both(@NotNull Promise<?> other);
+	@NotNull Promise<Void> both(@NotNull Promise<?> other);
 
 	/**
 	 * Returns the {@code Promise} which was completed first.
@@ -598,23 +578,20 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return the first completed {@code Promise}
 	 */
 	@Contract(pure = true)
-	@NotNull
-	Promise<T> either(@NotNull Promise<? extends T> other);
+	@NotNull Promise<T> either(@NotNull Promise<? extends T> other);
 
 	/**
 	 * Returns {@code Promise} that always completes successfully
 	 * with result or exception wrapped in {@link Try}.
 	 */
 	@Contract(pure = true)
-	@NotNull
-	Promise<Try<T>> toTry();
+	@NotNull Promise<Try<T>> toTry();
 
 	/**
 	 * Waits for result and discards it.
 	 */
 	@Contract(pure = true)
-	@NotNull
-	Promise<Void> toVoid();
+	@NotNull Promise<Void> toVoid();
 
 	@Override
 	void run(@NotNull Callback<? super T> action);
@@ -623,7 +600,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Wraps {@code Promise} into {@link CompletableFuture}.
 	 */
 	@Contract(pure = true)
-	@NotNull
-	CompletableFuture<T> toCompletableFuture();
+	@NotNull CompletableFuture<T> toCompletableFuture();
 
 }

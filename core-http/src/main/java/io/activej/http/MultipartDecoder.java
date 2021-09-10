@@ -216,8 +216,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
 		return MultipartFrame.of(data);
 	}
 
-	@NotNull
-	private MultipartFrame getFalseTermFrame(ByteBuf term) {
+	private @NotNull MultipartFrame getFalseTermFrame(ByteBuf term) {
 		ByteBuf buf = ByteBufPool.allocate(term.readRemaining() + 2);
 		buf.writeByte((byte) '\r');
 		buf.writeByte((byte) '\n');

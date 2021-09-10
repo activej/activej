@@ -120,30 +120,26 @@ public final class Try<T> {
 		return exception;
 	}
 
-	@NotNull
-	public Try<T> ifSuccess(@NotNull Consumer<? super T> resultConsumer) {
+	public @NotNull Try<T> ifSuccess(@NotNull Consumer<? super T> resultConsumer) {
 		if (isSuccess()) {
 			resultConsumer.accept(result);
 		}
 		return this;
 	}
 
-	@NotNull
-	public Try<T> ifException(@NotNull Consumer<Exception> exceptionConsumer) {
+	public @NotNull Try<T> ifException(@NotNull Consumer<Exception> exceptionConsumer) {
 		if (isException()) {
 			exceptionConsumer.accept(exception);
 		}
 		return this;
 	}
 
-	@NotNull
-	public Try<T> consume(@NotNull BiConsumer<? super T, Exception> consumer) {
+	public @NotNull Try<T> consume(@NotNull BiConsumer<? super T, Exception> consumer) {
 		consumer.accept(result, exception);
 		return this;
 	}
 
-	@NotNull
-	public Try<T> consume(@NotNull Consumer<? super T> resultConsumer, @NotNull Consumer<Exception> exceptionConsumer) {
+	public @NotNull Try<T> consume(@NotNull Consumer<? super T> resultConsumer, @NotNull Consumer<Exception> exceptionConsumer) {
 		if (isSuccess()) {
 			resultConsumer.accept(result);
 		} else {
@@ -154,8 +150,7 @@ public final class Try<T> {
 
 	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
-	@NotNull
-	private <U> Try<U> mold() {
+	private @NotNull <U> Try<U> mold() {
 		checkState(isException());
 		return (Try<U>) this;
 	}
@@ -171,8 +166,7 @@ public final class Try<T> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public <U> Try<U> map(@NotNull FunctionEx<T, U> function) {
+	public @NotNull <U> Try<U> map(@NotNull FunctionEx<T, U> function) {
 		if (exception == null) {
 			try {
 				return new Try<>(function.apply(result), null);
@@ -186,14 +180,12 @@ public final class Try<T> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public <U> Try<U> flatMap(@NotNull Function<T, Try<U>> function) {
+	public @NotNull <U> Try<U> flatMap(@NotNull Function<T, Try<U>> function) {
 		return exception == null ? function.apply(result) : mold();
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public Either<T, Exception> toEither() {
+	public @NotNull Either<T, Exception> toEither() {
 		return exception == null ? Either.left(result) : Either.right(exception);
 	}
 

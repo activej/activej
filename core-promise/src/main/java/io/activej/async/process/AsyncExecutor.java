@@ -26,16 +26,14 @@ import java.util.concurrent.RejectedExecutionException;
 public interface AsyncExecutor {
 	@NotNull <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException;
 
-	@NotNull
-	default Promise<Void> run(@NotNull Runnable runnable) throws RejectedExecutionException {
+	default @NotNull Promise<Void> run(@NotNull Runnable runnable) throws RejectedExecutionException {
 		return execute(() -> {
 			runnable.run();
 			return Promise.complete();
 		});
 	}
 
-	@NotNull
-	default <T> Promise<T> call(@NotNull Callable<T> callable) throws RejectedExecutionException {
+	default @NotNull <T> Promise<T> call(@NotNull Callable<T> callable) throws RejectedExecutionException {
 		return execute(() -> {
 			T result;
 			try {

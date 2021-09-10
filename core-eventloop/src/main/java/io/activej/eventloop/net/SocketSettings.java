@@ -137,8 +137,7 @@ public final class SocketSettings {
 		return sendBufferSize != 0;
 	}
 
-	@NotNull
-	public MemSize getSendBufferSize() {
+	public @NotNull MemSize getSendBufferSize() {
 		return MemSize.of(getSendBufferSizeBytes());
 	}
 
@@ -151,8 +150,7 @@ public final class SocketSettings {
 		return receiveBufferSize != 0;
 	}
 
-	@NotNull
-	public MemSize getReceiveBufferSize() {
+	public @NotNull MemSize getReceiveBufferSize() {
 		return MemSize.of(getReceiveBufferSizeBytes());
 	}
 
@@ -192,8 +190,7 @@ public final class SocketSettings {
 		return implReadTimeout != 0;
 	}
 
-	@NotNull
-	public Duration getImplReadTimeout() {
+	public @NotNull Duration getImplReadTimeout() {
 		return Duration.ofMillis(getImplReadTimeoutMillis());
 	}
 
@@ -206,8 +203,7 @@ public final class SocketSettings {
 		return implWriteTimeout != 0;
 	}
 
-	@NotNull
-	public Duration getImplWriteTimeout() {
+	public @NotNull Duration getImplWriteTimeout() {
 		return Duration.ofMillis(getImplWriteTimeoutMillis());
 	}
 
@@ -220,8 +216,7 @@ public final class SocketSettings {
 		return implReadBufferSize != 0;
 	}
 
-	@NotNull
-	public MemSize getImplReadBufferSize() {
+	public @NotNull MemSize getImplReadBufferSize() {
 		return MemSize.of(getImplReadBufferSizeBytes());
 	}
 

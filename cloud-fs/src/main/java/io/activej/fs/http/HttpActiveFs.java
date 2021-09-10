@@ -255,8 +255,7 @@ public final class HttpActiveFs implements ActiveFs {
 		}
 	}
 
-	@NotNull
-	private Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String filename, @Nullable Long size) {
+	private @NotNull Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String filename, @Nullable Long size) {
 		UrlBuilder urlBuilder = UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename);
 		HttpRequest request = HttpRequest.post(url + urlBuilder.build());
 

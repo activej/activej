@@ -111,8 +111,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	}
 
 	//[START UPLOAD]
-	@NotNull
-	private Promise<ChannelConsumer<ByteBuf>> upload(String filename) {
+	private @NotNull Promise<ChannelConsumer<ByteBuf>> upload(String filename) {
 		logger.info("Uploading file '{}' to {}", filename, path);
 		return ChannelFileWriter.open(executor, path.resolve(filename))
 				.map(writer -> writer.withAcknowledgement(ack ->

@@ -116,9 +116,8 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 
 	// endregion
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

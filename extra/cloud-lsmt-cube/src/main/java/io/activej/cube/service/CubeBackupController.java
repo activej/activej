@@ -128,9 +128,8 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 				.whenComplete(toLogger(logger, thisMethod(), commit, snapshot));
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

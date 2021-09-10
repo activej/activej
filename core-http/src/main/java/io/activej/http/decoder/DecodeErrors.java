@@ -102,13 +102,11 @@ public final class DecodeErrors {
 		return errors != null || children != null;
 	}
 
-	@NotNull
-	public List<DecodeError> getErrors() {
+	public @NotNull List<DecodeError> getErrors() {
 		return errors != null ? errors : emptyList();
 	}
 
-	@NotNull
-	public Set<String> getChildren() {
+	public @NotNull Set<String> getChildren() {
 		return children != null ? children.keySet() : emptySet();
 	}
 

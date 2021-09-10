@@ -40,9 +40,8 @@ public final class BackupService<K extends Comparable<K>, S> implements Eventloo
 		this.eventloop = localFiles.getEventloop();
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
@@ -68,15 +67,13 @@ public final class BackupService<K extends Comparable<K>, S> implements Eventloo
 		return backupPromise != null;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return restore().then(localFiles::consolidate);
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		return backup();
 	}
 }

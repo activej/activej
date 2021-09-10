@@ -97,8 +97,7 @@ public final class OTAlgorithms {
 
 	public static final class FindResult<K, A> {
 		private final int epoch;
-		@NotNull
-		private final K commit;
+		private final @NotNull K commit;
 		private final Set<K> commitParents;
 		private final long commitLevel;
 		private final K child;
@@ -119,8 +118,7 @@ public final class OTAlgorithms {
 			return epoch;
 		}
 
-		@NotNull
-		public K getCommit() {
+		public @NotNull K getCommit() {
 			return commit;
 		}
 
@@ -167,9 +165,8 @@ public final class OTAlgorithms {
 						super.onStart(queue);
 					}
 
-					@NotNull
 					@Override
-					protected Promise<Optional<FindResult<K, A>>> tryGetResult(OTCommit<K, D> commit,
+					protected @NotNull Promise<Optional<FindResult<K, A>>> tryGetResult(OTCommit<K, D> commit,
 							Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 						return matchPredicate.test(commit)
 								.map(matched -> {
@@ -211,8 +208,7 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
 
-	@NotNull
-	public static <K, D> Promise<OTCommit<K, D>> merge(OTRepository<K, D> repository, OTSystem<D> system, @NotNull Set<K> heads) {
+	public static @NotNull <K, D> Promise<OTCommit<K, D>> merge(OTRepository<K, D> repository, OTSystem<D> system, @NotNull Set<K> heads) {
 		checkArgument(heads.size() >= 2, "Cannot merge less than 2 heads");
 		return repository.getLevels(heads)
 				.then(levels ->
@@ -310,9 +306,8 @@ public final class OTAlgorithms {
 			super(diffsReducer);
 		}
 
-		@NotNull
 		@Override
-		protected Promise<Optional<Map.Entry<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit,
+		protected @NotNull Promise<Optional<Map.Entry<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit,
 				Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 			return Promise.of(accumulators.entrySet()
 					.stream()
@@ -327,9 +322,8 @@ public final class OTAlgorithms {
 			super(diffsReducer);
 		}
 
-		@NotNull
 		@Override
-		protected Promise<Optional<Map<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
+		protected @NotNull Promise<Optional<Map<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
 				Map<K, OTCommit<K, D>> headCommits) {
 			return Promise.of(
 					accumulators.values()
@@ -343,9 +337,8 @@ public final class OTAlgorithms {
 	public static <K, D, A> Promise<Map<K, A>> reduceEdges(OTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, K parentNode,
 			DiffsReducer<A, D> diffAccumulator) {
 		return reduce(repository, system, heads, new AbstractGraphReducer<K, D, A, Map<K, A>>(diffAccumulator) {
-			@NotNull
 			@Override
-			protected Promise<Optional<Map<K, A>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
+			protected @NotNull Promise<Optional<Map<K, A>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 				if (accumulators.containsKey(parentNode)) {
 					Map<K, A> toHeads = accumulators.get(parentNode);
 					if (Objects.equals(heads, toHeads.keySet())) {

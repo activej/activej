@@ -55,8 +55,7 @@ public final class ScopedValue<T> {
 		return scope;
 	}
 
-	@NotNull
-	public T get() {
+	public @NotNull T get() {
 		return value;
 	}
 

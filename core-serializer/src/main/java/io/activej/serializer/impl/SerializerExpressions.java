@@ -53,8 +53,7 @@ public final class SerializerExpressions {
 		BIG_ENDIAN = bigEndian;
 	}
 
-	@NotNull
-	private static Expression getUnsafe() {
+	private static @NotNull Expression getUnsafe() {
 		return staticCall(JDK_UNSAFE, "getUnsafe");
 	}
 

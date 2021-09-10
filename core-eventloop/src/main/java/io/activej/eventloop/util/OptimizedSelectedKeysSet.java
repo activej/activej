@@ -71,9 +71,8 @@ public final class OptimizedSelectedKeysSet extends AbstractSet<SelectionKey> {
 		return selectionKeys[index];
 	}
 
-	@NotNull
 	@Override
-	public Iterator<SelectionKey> iterator() {
+	public @NotNull Iterator<SelectionKey> iterator() {
 		return new Iterator<SelectionKey>() {
 			int step;
 

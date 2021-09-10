@@ -46,13 +46,11 @@ public abstract class AbstractGraphReducer<K, D, A, R> implements GraphReducer<K
 		}
 	}
 
-	@NotNull
-	protected abstract Promise<Optional<R>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
+	protected abstract @NotNull Promise<Optional<R>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
 			Map<K, OTCommit<K, D>> headCommits);
 
-	@NotNull
 	@Override
-	public final Promise<Result<R>> onCommit(@NotNull OTCommit<K, D> commit) {
+	public final @NotNull Promise<Result<R>> onCommit(@NotNull OTCommit<K, D> commit) {
 		return tryGetResult(commit, accumulators, headCommits)
 				.then(maybeResult -> {
 					if (maybeResult.isPresent()) {

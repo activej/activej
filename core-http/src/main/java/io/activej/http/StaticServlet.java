@@ -145,9 +145,8 @@ public final class StaticServlet implements AsyncServlet {
 				.withHeader(CONTENT_TYPE, ofContentType(contentType));
 	}
 
-	@NotNull
 	@Override
-	public Promise<HttpResponse> serve(@NotNull HttpRequest request) {
+	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) {
 		String mappedPath = pathMapper.apply(request);
 		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);
@@ -169,8 +168,7 @@ public final class StaticServlet implements AsyncServlet {
 								Promise.ofException(HttpError.ofCode(400, e)));
 	}
 
-	@NotNull
-	private Promise<HttpResponse> tryLoadIndexResource(String mappedPath) {
+	private @NotNull Promise<HttpResponse> tryLoadIndexResource(String mappedPath) {
 		String dirPath = mappedPath.endsWith("/") || mappedPath.isEmpty() ? mappedPath : (mappedPath + '/');
 		return Promises.first(
 						indexResources.stream()
@@ -180,8 +178,7 @@ public final class StaticServlet implements AsyncServlet {
 				.mapException(e -> new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e));
 	}
 
-	@NotNull
-	private Promise<? extends HttpResponse> tryLoadDefaultResource() {
+	private @NotNull Promise<? extends HttpResponse> tryLoadDefaultResource() {
 		return defaultResource != null ?
 				resourceLoader.load(defaultResource)
 						.map(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :

@@ -45,8 +45,7 @@ public class AnnotatedTypes {
 		return bind(annotatedType, bindings, (annotation1, annotation2) -> annotation2);
 	}
 
-	@NotNull
-	public static AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
+	public static @NotNull AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
 			BiFunction<Annotation[], Annotation[], Annotation[]> annotationCombinerFn) {
 		if (annotatedType.getType() instanceof Class) return annotatedType;
 		Annotation[] annotations = annotatedType.getAnnotations();
@@ -107,23 +106,19 @@ public class AnnotatedTypes {
 		throw new IllegalArgumentException("Unsupported type: " + annotatedType);
 	}
 
-	@NotNull
-	public static AnnotatedType annotatedTypeOf(Type type) {
+	public static @NotNull AnnotatedType annotatedTypeOf(Type type) {
 		return annotatedTypeOf(type, NO_ANNOTATIONS);
 	}
 
-	@NotNull
-	public static AnnotatedType annotatedTypeOf(Type type, Annotation[] annotations) {
+	public static @NotNull AnnotatedType annotatedTypeOf(Type type, Annotation[] annotations) {
 		return annotatedTypeOf(type, ($, ints) -> ints.length == 0 ? annotations : NO_ANNOTATIONS);
 	}
 
-	@NotNull
-	public static AnnotatedType annotatedTypeOf(Type type, BiFunction<Type, int[], Annotation[]> annotationsFn) {
+	public static @NotNull AnnotatedType annotatedTypeOf(Type type, BiFunction<Type, int[], Annotation[]> annotationsFn) {
 		return annotatedTypeOf(type, new int[]{}, annotationsFn);
 	}
 
-	@NotNull
-	private static AnnotatedType annotatedTypeOf(Type type, int[] path, BiFunction<Type, int[], Annotation[]> annotationsFn) {
+	private static @NotNull AnnotatedType annotatedTypeOf(Type type, int[] path, BiFunction<Type, int[], Annotation[]> annotationsFn) {
 		Annotation[] annotations = annotationsFn.apply(type, path);
 		if (type instanceof Class) {
 			if (((Class<?>) type).isArray()) {

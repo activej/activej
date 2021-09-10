@@ -179,9 +179,8 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanW
 				.collect(toSet());
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

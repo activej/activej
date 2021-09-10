@@ -28,8 +28,7 @@ import java.util.function.Predicate;
 import static io.activej.types.IsAssignableUtils.isAssignable;
 
 public abstract class KeyPattern<T> {
-	@NotNull
-	private final Type type;
+	private final @NotNull Type type;
 	private final Predicate<?> qualifier;
 
 	public KeyPattern() {
@@ -61,38 +60,31 @@ public abstract class KeyPattern<T> {
 		}
 	}
 
-	@NotNull
-	public static <T> KeyPattern<T> of(@NotNull Class<T> type) {
+	public static @NotNull <T> KeyPattern<T> of(@NotNull Class<T> type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	@NotNull
-	public static <T> KeyPattern<T> of(@NotNull Class<T> type, Object qualifier) {
+	public static @NotNull <T> KeyPattern<T> of(@NotNull Class<T> type, Object qualifier) {
 		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 
-	@NotNull
-	public static <T> KeyPattern<T> of(@NotNull Class<T> type, Predicate<?> qualifier) {
+	public static @NotNull <T> KeyPattern<T> of(@NotNull Class<T> type, Predicate<?> qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	@NotNull
-	public static <T> KeyPattern<T> ofType(@NotNull Type type) {
+	public static @NotNull <T> KeyPattern<T> ofType(@NotNull Type type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	@NotNull
-	public static <T> KeyPattern<T> ofType(@NotNull Type type, Object qualifier) {
+	public static @NotNull <T> KeyPattern<T> ofType(@NotNull Type type, Object qualifier) {
 		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 
-	@NotNull
-	public static <T> KeyPattern<T> ofType(@NotNull Type type, Predicate<?> qualifier) {
+	public static @NotNull <T> KeyPattern<T> ofType(@NotNull Type type, Predicate<?> qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	@NotNull
-	private static Predicate<Object> predicateOf(Object qualifier) {
+	private static @NotNull Predicate<Object> predicateOf(Object qualifier) {
 		return q -> Objects.equals(q, qualifier);
 	}
 
@@ -128,8 +120,7 @@ public abstract class KeyPattern<T> {
 				(this.qualifier == null || ((Predicate<Object>) this.qualifier).test(key.getQualifier()));
 	}
 
-	@NotNull
-	private Type getTypeParameter() {
+	private @NotNull Type getTypeParameter() {
 		// this cannot possibly fail so not even a check here
 		Type typeArgument = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		Object outerInstance = ReflectionUtils.getOuterClassInstance(this);

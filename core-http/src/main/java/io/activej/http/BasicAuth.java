@@ -77,9 +77,8 @@ public final class BasicAuth implements AsyncServlet {
 				.withFailureResponse(failureResponse);
 	}
 
-	@NotNull
 	@Override
-	public Promise<HttpResponse> serve(@NotNull HttpRequest request) throws HttpError {
+	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws HttpError {
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
 			return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));

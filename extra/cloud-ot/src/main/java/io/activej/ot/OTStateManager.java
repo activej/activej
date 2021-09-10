@@ -81,52 +81,44 @@ public final class OTStateManager<K, D> implements EventloopService {
 		this.state = state;
 	}
 
-	@NotNull
-	public static <K, D> OTStateManager<K, D> create(@NotNull Eventloop eventloop, @NotNull OTSystem<D> otSystem,
+	public static @NotNull <K, D> OTStateManager<K, D> create(@NotNull Eventloop eventloop, @NotNull OTSystem<D> otSystem,
 			@NotNull OTUplink<K, D, ?> repository, @NotNull OTState<D> state) {
 		return new OTStateManager<>(eventloop, otSystem, repository, state);
 	}
 
-	@NotNull
-	public OTStateManager<K, D> withPoll() {
+	public @NotNull OTStateManager<K, D> withPoll() {
 		return withPoll(Function.identity());
 	}
 
-	@NotNull
-	public OTStateManager<K, D> withPoll(@NotNull RetryPolicy<?> pollRetryPolicy) {
+	public @NotNull OTStateManager<K, D> withPoll(@NotNull RetryPolicy<?> pollRetryPolicy) {
 		return withPoll(poll -> poll.withExecutor(AsyncExecutors.retry(pollRetryPolicy)));
 	}
 
-	@NotNull
-	public OTStateManager<K, D> withPoll(@NotNull Function<AsyncSupplier<Void>, AsyncSupplier<Void>> pollPolicy) {
+	public @NotNull OTStateManager<K, D> withPoll(@NotNull Function<AsyncSupplier<Void>, AsyncSupplier<Void>> pollPolicy) {
 		this.poll = pollPolicy.apply(this::doPoll);
 		return this;
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		return checkout()
 				.whenResult(this::poll);
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		poll = null;
 		return isValid() ?
 				sync().whenComplete(this::invalidateInternalState) :
 				Promise.complete();
 	}
 
-	@NotNull
-	public Promise<Void> checkout() {
+	public @NotNull Promise<Void> checkout() {
 		checkState(commitId == null);
 		return uplink.checkout()
 				.whenResult(checkoutData -> {
@@ -149,8 +141,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 		return isPolling;
 	}
 
-	@NotNull
-	public Promise<Void> sync() {
+	public @NotNull Promise<Void> sync() {
 		return sync.get();
 	}
 
@@ -173,8 +164,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 		originDiffs = otSystem.squash(concat(originDiffs, fetchData.getDiffs()));
 	}
 
-	@NotNull
-	private Promise<Void> doSync() {
+	private @NotNull Promise<Void> doSync() {
 		checkState(isValid());
 		isSyncing = true;
 		return sequence(
@@ -201,16 +191,14 @@ public final class OTStateManager<K, D> implements EventloopService {
 		}
 	}
 
-	@NotNull
-	private Promise<Void> pull() {
+	private @NotNull Promise<Void> pull() {
 		return fetch()
 				.whenResult(this::rebase)
 				.toVoid()
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
-	@NotNull
-	private Promise<Void> doPoll() {
+	private @NotNull Promise<Void> doPoll() {
 		if (!isValid()) return Promise.complete();
 		K pollCommitId = this.originCommitId;
 		return uplink.poll(pollCommitId)
@@ -267,8 +255,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 		originDiffs.clear();
 	}
 
-	@NotNull
-	private Promise<Void> commit() {
+	private @NotNull Promise<Void> commit() {
 		assert pendingProtoCommit == null;
 		if (workingDiffs.isEmpty()) return Promise.complete();
 		int originalSize = workingDiffs.size();
@@ -285,8 +272,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
-	@NotNull
-	private Promise<Void> push() {
+	private @NotNull Promise<Void> push() {
 		if (pendingProtoCommit == null) return Promise.complete();
 		return uplink.push(pendingProtoCommit)
 				.whenResult(fetchData -> {

@@ -40,8 +40,7 @@ import java.util.Objects;
  * parameterized type and give it to a {@link #ofType Key.ofType} constructor.
  */
 public abstract class Key<T> {
-	@NotNull
-	private final Type type;
+	private final @NotNull Type type;
 	private final @Nullable Object qualifier;
 
 	public Key() {
@@ -65,23 +64,19 @@ public abstract class Key<T> {
 		}
 	}
 
-	@NotNull
-	public static <T> Key<T> of(@NotNull Class<T> type) {
+	public static @NotNull <T> Key<T> of(@NotNull Class<T> type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	@NotNull
-	public static <T> Key<T> of(@NotNull Class<T> type, @Nullable Object qualifier) {
+	public static @NotNull <T> Key<T> of(@NotNull Class<T> type, @Nullable Object qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	@NotNull
-	public static <T> Key<T> ofType(@NotNull Type type) {
+	public static @NotNull <T> Key<T> ofType(@NotNull Type type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	@NotNull
-	public static <T> Key<T> ofType(@NotNull Type type, @Nullable Object qualifier) {
+	public static @NotNull <T> Key<T> ofType(@NotNull Type type, @Nullable Object qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
@@ -92,8 +87,7 @@ public abstract class Key<T> {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	@NotNull
-	private Type getTypeParameter() {
+	private @NotNull Type getTypeParameter() {
 		// this cannot possibly fail so not even a check here
 		Type typeArgument = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		Object outerInstance = ReflectionUtils.getOuterClassInstance(this);
@@ -101,8 +95,7 @@ public abstract class Key<T> {
 		return outerInstance != null ? Types.bind(typeArgument, Types.getAllTypeBindings(outerInstance.getClass())) : typeArgument;
 	}
 
-	@NotNull
-	public Type getType() {
+	public @NotNull Type getType() {
 		return type;
 	}
 
@@ -111,8 +104,7 @@ public abstract class Key<T> {
 	 * Also casts the result to a properly parameterized class.
 	 */
 	@SuppressWarnings("unchecked")
-	@NotNull
-	public Class<T> getRawType() {
+	public @NotNull Class<T> getRawType() {
 		return (Class<T>) Types.getRawType(type);
 	}
 

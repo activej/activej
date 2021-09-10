@@ -825,8 +825,7 @@ public final class TestDI {
 				.collect(toSet()), flattened.get().keySet());
 	}
 
-	@NotNull
-	private static Trie<Scope, Map<Key<?>, Binding<?>>> reduceModuleBindings(Module module) {
+	private static @NotNull Trie<Scope, Map<Key<?>, Binding<?>>> reduceModuleBindings(Module module) {
 		return Preprocessor.reduce(
 				module.getBindings(),
 				combinedMultibinder(module.getMultibinders()),

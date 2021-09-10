@@ -92,8 +92,7 @@ public final class Either<L, R> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public Either<L, R> ifLeft(@NotNull Consumer<? super L> leftConsumer) {
+	public @NotNull Either<L, R> ifLeft(@NotNull Consumer<? super L> leftConsumer) {
 		if (isLeft()) {
 			leftConsumer.accept(left);
 		}
@@ -101,8 +100,7 @@ public final class Either<L, R> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public Either<L, R> ifRight(@NotNull Consumer<? super R> rightConsumer) {
+	public @NotNull Either<L, R> ifRight(@NotNull Consumer<? super R> rightConsumer) {
 		if (isRight()) {
 			rightConsumer.accept(right);
 		}
@@ -110,15 +108,13 @@ public final class Either<L, R> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public Either<L, R> consume(@NotNull BiConsumer<? super L, ? super R> consumer) {
+	public @NotNull Either<L, R> consume(@NotNull BiConsumer<? super L, ? super R> consumer) {
 		consumer.accept(left, right);
 		return this;
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public Either<L, R> consume(@NotNull Consumer<? super L> leftConsumer, @NotNull Consumer<? super R> rightConsumer) {
+	public @NotNull Either<L, R> consume(@NotNull Consumer<? super L> leftConsumer, @NotNull Consumer<? super R> rightConsumer) {
 		if (isLeft()) {
 			leftConsumer.accept(left);
 		} else {
@@ -138,15 +134,13 @@ public final class Either<L, R> {
 	}
 
 	@Contract(pure = true)
-	@NotNull
-	public Either<R, L> swap() {
+	public @NotNull Either<R, L> swap() {
 		return new Either<>(right, left, !isRight);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
-	@NotNull
-	public <T> Either<T, R> mapLeft(@NotNull Function<? super L, ? extends T> fn) {
+	public @NotNull <T> Either<T, R> mapLeft(@NotNull Function<? super L, ? extends T> fn) {
 		return isLeft() ?
 				new Either<>(fn.apply(left), null, false) :
 				(Either<T, R>) this;
@@ -154,8 +148,7 @@ public final class Either<L, R> {
 
 	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
-	@NotNull
-	public <T> Either<L, T> mapRight(@NotNull Function<? super R, ? extends T> fn) {
+	public @NotNull <T> Either<L, T> mapRight(@NotNull Function<? super R, ? extends T> fn) {
 		return isRight() ?
 				new Either<>(null, fn.apply(right), true) :
 				(Either<L, T>) this;
@@ -163,8 +156,7 @@ public final class Either<L, R> {
 
 	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
-	@NotNull
-	public <T> Either<T, R> flatMapLeft(@NotNull Function<? super L, Either<T, R>> fn) {
+	public @NotNull <T> Either<T, R> flatMapLeft(@NotNull Function<? super L, Either<T, R>> fn) {
 		return isLeft() ?
 				fn.apply(left) :
 				(Either<T, R>) this;
@@ -172,8 +164,7 @@ public final class Either<L, R> {
 
 	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
-	@NotNull
-	public <T> Either<L, T> flatMapRight(@NotNull Function<? super R, Either<L, T>> fn) {
+	public @NotNull <T> Either<L, T> flatMapRight(@NotNull Function<? super R, Either<L, T>> fn) {
 		return isRight() ?
 				fn.apply(right) :
 				(Either<L, T>) this;

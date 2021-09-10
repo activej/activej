@@ -46,9 +46,8 @@ public final class UrlParser {
 			return i < queryPositions.length && queryPositions[i] != 0;
 		}
 
-		@NotNull
 		@Override
-		public QueryParameter next() {
+		public @NotNull QueryParameter next() {
 			if (!hasNext())
 				throw new NoSuchElementException();
 			int record = queryPositions[i++];
@@ -96,13 +95,11 @@ public final class UrlParser {
 		this.limit = limit;
 	}
 
-	@NotNull
-	public static UrlParser of(@NotNull String url) {
+	public static @NotNull UrlParser of(@NotNull String url) {
 		return of(url.getBytes(ISO_8859_1), 0, url.length());
 	}
 
-	@NotNull
-	public static UrlParser of(byte[] url, int offset, int limit) {
+	public static @NotNull UrlParser of(byte[] url, int offset, int limit) {
 		try {
 			UrlParser httpUrl = createParser(url, offset, limit);
 			httpUrl.parse(false);
@@ -112,13 +109,11 @@ public final class UrlParser {
 		}
 	}
 
-	@NotNull
-	public static UrlParser parse(@NotNull String url) throws MalformedHttpException {
+	public static @NotNull UrlParser parse(@NotNull String url) throws MalformedHttpException {
 		return parse(url.getBytes(ISO_8859_1), 0, url.length());
 	}
 
-	@NotNull
-	public static UrlParser parse(byte[] url, int offset, int limit) throws MalformedHttpException {
+	public static @NotNull UrlParser parse(byte[] url, int offset, int limit) throws MalformedHttpException {
 		UrlParser httpUrl = createParser(url, offset, limit);
 		httpUrl.parse(true);
 		return httpUrl;
@@ -275,8 +270,7 @@ public final class UrlParser {
 		return portValue;
 	}
 
-	@NotNull
-	public String getPathAndQuery() {
+	public @NotNull String getPathAndQuery() {
 		if (path == -1) {
 			if (query == -1)
 				return "/";
@@ -290,16 +284,14 @@ public final class UrlParser {
 		}
 	}
 
-	@NotNull
-	public String getPath() {
+	public @NotNull String getPath() {
 		if (path == -1) {
 			return "/";
 		}
 		return new String(raw, path, pathEnd - path, CHARSET);
 	}
 
-	@NotNull
-	public String getQuery() {
+	public @NotNull String getQuery() {
 		if (query == -1) {
 			return "";
 		}
@@ -307,8 +299,7 @@ public final class UrlParser {
 		return new String(raw, query, queryEnd - query, CHARSET);
 	}
 
-	@NotNull
-	public String getFragment() {
+	public @NotNull String getFragment() {
 		if (fragment == -1) {
 			return "";
 		}
@@ -350,8 +341,7 @@ public final class UrlParser {
 		return findParameter(key);
 	}
 
-	@NotNull
-	public List<String> getQueryParameters(@NotNull String key) {
+	public @NotNull List<String> getQueryParameters(@NotNull String key) {
 		if (query == -1) {
 			return emptyList();
 		}
@@ -361,8 +351,7 @@ public final class UrlParser {
 		return findParameters(key);
 	}
 
-	@NotNull
-	public Iterable<QueryParameter> getQueryParametersIterable() {
+	public @NotNull Iterable<QueryParameter> getQueryParametersIterable() {
 		if (query == -1) {
 			return emptyList();
 		}
@@ -372,8 +361,7 @@ public final class UrlParser {
 		return QueryParamIterator::new;
 	}
 
-	@NotNull
-	public Map<String, String> getQueryParameters() {
+	public @NotNull Map<String, String> getQueryParameters() {
 		HashMap<String, String> map = new HashMap<>();
 		for (QueryParameter queryParameter : getQueryParametersIterable()) {
 			map.put(queryParameter.getKey(), queryParameter.getValue());
@@ -419,13 +407,11 @@ public final class UrlParser {
 		return positions;
 	}
 
-	@NotNull
-	public static Map<String, String> parseQueryIntoMap(@NotNull String query) {
+	public static @NotNull Map<String, String> parseQueryIntoMap(@NotNull String query) {
 		return parseQueryIntoMap(query.getBytes(ISO_8859_1), 0, query.length());
 	}
 
-	@NotNull
-	static Map<String, String> parseQueryIntoMap(byte[] query, int offset, int limit) {
+	static @NotNull Map<String, String> parseQueryIntoMap(byte[] query, int offset, int limit) {
 		Map<String, String> result = new LinkedHashMap<>();
 
 		int keyStart = offset;
@@ -459,8 +445,7 @@ public final class UrlParser {
 		return null;
 	}
 
-	@NotNull
-	List<String> findParameters(@NotNull String key) {
+	@NotNull List<String> findParameters(@NotNull String key) {
 		List<String> container = new ArrayList<>();
 		for (int record : queryPositions) {
 			if (record == 0) break;
@@ -474,8 +459,7 @@ public final class UrlParser {
 	}
 
 	// work with path
-	@NotNull
-	String getPartialPath() {
+	@NotNull String getPartialPath() {
 		if (pos == -1 || pos > pathEnd) {
 			return "/";
 		}

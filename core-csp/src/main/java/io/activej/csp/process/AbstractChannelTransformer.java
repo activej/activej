@@ -41,8 +41,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 		return output.acceptEndOfStream();
 	}
 
-	@NotNull
-	protected abstract Promise<Void> onItem(I item);
+	protected abstract @NotNull Promise<Void> onItem(I item);
 
 	protected Promise<Void> onProcessFinish() {
 		return sendEndOfStream();

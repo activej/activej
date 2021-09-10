@@ -678,9 +678,8 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		return stats;
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 

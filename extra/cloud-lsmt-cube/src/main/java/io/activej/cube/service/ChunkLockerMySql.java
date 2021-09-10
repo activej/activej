@@ -54,8 +54,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
 	private final ChunkIdCodec<C> idCodec;
 	private final String aggregationId;
 
-	@NotNull
-	private String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
+	private @NotNull String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
 
 	private String tableChunk = CHUNK_TABLE;
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();

@@ -267,14 +267,12 @@ public abstract class Launcher {
 		latch.await();
 	}
 
-	@NotNull
-	public final Injector createInjector(String[] args) {
+	public final @NotNull Injector createInjector(String[] args) {
 		this.args = args;
 		return createInjector();
 	}
 
-	@NotNull
-	public final Injector createInjector() {
+	public final @NotNull Injector createInjector() {
 		return Injector.of(getInternalModule().combineWith(getModule()).overrideWith(getOverrideModule()));
 	}
 
@@ -373,8 +371,7 @@ public abstract class Launcher {
 		shutdownLatch.countDown();
 	}
 
-	@NotNull
-	public final Thread getMainThread() {
+	public final @NotNull Thread getMainThread() {
 		return mainThread;
 	}
 

@@ -158,8 +158,7 @@ public final class ByteBufs implements Recyclable {
 	 *
 	 * @return the first ByteBuf of this {@code ByteBufs}
 	 */
-	@NotNull
-	public ByteBuf take() {
+	public @NotNull ByteBuf take() {
 		if (CHECK) checkState(hasRemaining(), "No bufs to take");
 		ByteBuf buf = bufs[first];
 		if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
@@ -195,8 +194,7 @@ public final class ByteBufs implements Recyclable {
 	 * @param size number of bytes to be returned
 	 * @return ByteBuf with result bytes
 	 */
-	@NotNull
-	public ByteBuf takeAtMost(int size) {
+	public @NotNull ByteBuf takeAtMost(int size) {
 		if (isEmpty() || size == 0) return ByteBuf.empty();
 		ByteBuf buf = bufs[first];
 		if (size >= buf.readRemaining()) {
@@ -221,13 +219,11 @@ public final class ByteBufs implements Recyclable {
 	 * @param size the minimum size of returned ByteBuf
 	 * @return a ByteBuf which contains at least {@code size} bytes
 	 */
-	@NotNull
-	public ByteBuf takeAtLeast(int size) {
+	public @NotNull ByteBuf takeAtLeast(int size) {
 		return takeAtLeast(size, $ -> {});
 	}
 
-	@NotNull
-	public ByteBuf takeAtLeast(int size, @NotNull Consumer<ByteBuf> recycledBufs) {
+	public @NotNull ByteBuf takeAtLeast(int size, @NotNull Consumer<ByteBuf> recycledBufs) {
 		if (CHECK) checkArgument(hasRemainingBytes(size), () -> "There are less than " + size + " bufs");
 		if (size == 0) return ByteBuf.empty();
 		ByteBuf buf = bufs[first];
@@ -254,13 +250,11 @@ public final class ByteBufs implements Recyclable {
 	 * @param exactSize the size of returned ByteBuf
 	 * @return ByteBuf with {@code exactSize} bytes
 	 */
-	@NotNull
-	public ByteBuf takeExactSize(int exactSize) {
+	public @NotNull ByteBuf takeExactSize(int exactSize) {
 		return takeExactSize(exactSize, $ -> {});
 	}
 
-	@NotNull
-	public ByteBuf takeExactSize(int exactSize, @NotNull Consumer<ByteBuf> recycledBufs) {
+	public @NotNull ByteBuf takeExactSize(int exactSize, @NotNull Consumer<ByteBuf> recycledBufs) {
 		if (CHECK) checkArgument(hasRemainingBytes(exactSize), () -> "There are less than " + exactSize + " bufs");
 		if (exactSize == 0) return ByteBuf.empty();
 		ByteBuf buf = bufs[first];
@@ -322,8 +316,7 @@ public final class ByteBufs implements Recyclable {
 	 *
 	 * @return ByteBuf with all remaining bytes
 	 */
-	@NotNull
-	public ByteBuf takeRemaining() {
+	public @NotNull ByteBuf takeRemaining() {
 		return takeExactSize(remainingBytes());
 	}
 
@@ -345,9 +338,8 @@ public final class ByteBufs implements Recyclable {
 	 * @param n index of the ByteBuf to return (relatively to the head of the queue)
 	 * @return a ByteBuf of the given index
 	 */
-	@NotNull
 	@Contract(pure = true)
-	public ByteBuf peekBuf(int n) {
+	public @NotNull ByteBuf peekBuf(int n) {
 		if (CHECK) checkArgument(n <= remainingBufs(), "Index exceeds bufs size");
 		return bufs[(first + n) % bufs.length];
 	}
@@ -702,8 +694,7 @@ public final class ByteBufs implements Recyclable {
 		return 0;
 	}
 
-	@NotNull
-	public Iterator<ByteBuf> asIterator() {
+	public @NotNull Iterator<ByteBuf> asIterator() {
 		if (!hasRemaining()) return iteratorOf();
 		ByteBufIterator iterator = new ByteBufIterator(this);
 		first = last = 0;
@@ -728,8 +719,7 @@ public final class ByteBufs implements Recyclable {
 		}
 
 		@Override
-		@NotNull
-		public ByteBuf next() {
+		public @NotNull ByteBuf next() {
 			ByteBuf buf = bufs[first];
 			if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
 			first = (first + 1) % bufs.length;

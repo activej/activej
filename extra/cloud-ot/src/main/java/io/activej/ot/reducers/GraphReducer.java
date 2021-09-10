@@ -82,6 +82,5 @@ public interface GraphReducer<K, D, R> {
 		}
 	}
 
-	@NotNull
-	Promise<Result<R>> onCommit(@NotNull OTCommit<K, D> commit);
+	@NotNull Promise<Result<R>> onCommit(@NotNull OTCommit<K, D> commit);
 }

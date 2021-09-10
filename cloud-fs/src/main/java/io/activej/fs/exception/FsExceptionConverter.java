@@ -155,8 +155,7 @@ public abstract class FsExceptionConverter {
 		writer.writeByte(OBJECT_END);
 	}
 
-	@NotNull
-	private static FsScalarException readScalarException(JsonReader<?> reader) throws IOException {
+	private static @NotNull FsScalarException readScalarException(JsonReader<?> reader) throws IOException {
 		FsException exception = readFsException(reader);
 		if (exception instanceof FsScalarException) return (FsScalarException) exception;
 		throw ParsingException.create("Expected exception to be instance of FsScalarException", true);

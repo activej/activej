@@ -41,9 +41,8 @@ public final class ChannelByteChunker extends AbstractChannelTransformer<Channel
 		return new ChannelByteChunker(minChunkSize.toInt(), maxChunkSize.toInt());
 	}
 
-	@NotNull
 	@Override
-	protected Promise<Void> onItem(ByteBuf item) {
+	protected @NotNull Promise<Void> onItem(ByteBuf item) {
 		bufs.add(item);
 		return Promises.repeat(
 				() -> {

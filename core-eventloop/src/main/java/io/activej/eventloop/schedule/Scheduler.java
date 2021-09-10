@@ -24,39 +24,31 @@ import java.time.Instant;
 
 @SuppressWarnings("unused")
 public interface Scheduler extends CurrentTimeProvider {
-	@NotNull
-	default ScheduledRunnable schedule(@NotNull Instant instant, @NotNull Runnable runnable) {
+	default @NotNull ScheduledRunnable schedule(@NotNull Instant instant, @NotNull Runnable runnable) {
 		return schedule(instant.toEpochMilli(), runnable);
 	}
 
-	@NotNull
-	ScheduledRunnable schedule(long timestamp, @NotNull Runnable runnable);
+	@NotNull ScheduledRunnable schedule(long timestamp, @NotNull Runnable runnable);
 
-	@NotNull
-	default ScheduledRunnable delay(@NotNull Duration delay, @NotNull Runnable runnable) {
+	default @NotNull ScheduledRunnable delay(@NotNull Duration delay, @NotNull Runnable runnable) {
 		return delay(delay.toMillis(), runnable);
 	}
 
-	@NotNull
-	default ScheduledRunnable delay(long delayMillis, @NotNull Runnable runnable) {
+	default @NotNull ScheduledRunnable delay(long delayMillis, @NotNull Runnable runnable) {
 		return schedule(currentTimeMillis() + delayMillis, runnable);
 	}
 
-	@NotNull
-	default ScheduledRunnable scheduleBackground(@NotNull Instant instant, @NotNull Runnable runnable) {
+	default @NotNull ScheduledRunnable scheduleBackground(@NotNull Instant instant, @NotNull Runnable runnable) {
 		return scheduleBackground(instant.toEpochMilli(), runnable);
 	}
 
-	@NotNull
-	ScheduledRunnable scheduleBackground(long timestamp, @NotNull Runnable runnable);
+	@NotNull ScheduledRunnable scheduleBackground(long timestamp, @NotNull Runnable runnable);
 
-	@NotNull
-	default ScheduledRunnable delayBackground(@NotNull Duration delay, @NotNull Runnable runnable) {
+	default @NotNull ScheduledRunnable delayBackground(@NotNull Duration delay, @NotNull Runnable runnable) {
 		return delayBackground(delay.toMillis(), runnable);
 	}
 
-	@NotNull
-	default ScheduledRunnable delayBackground(long delayMillis, @NotNull Runnable runnable) {
+	default @NotNull ScheduledRunnable delayBackground(long delayMillis, @NotNull Runnable runnable) {
 		return scheduleBackground(currentTimeMillis() + delayMillis, runnable);
 	}
 }

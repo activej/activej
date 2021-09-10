@@ -167,9 +167,8 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 		return this;
 	}
 
-	@NotNull
 	@Override
-	public Eventloop getEventloop() {
+	public @NotNull Eventloop getEventloop() {
 		return eventloop;
 	}
 
@@ -220,16 +219,14 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 				.toVoid();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> start() {
+	public @NotNull Promise<Void> start() {
 		scheduleTask();
 		return Promise.complete();
 	}
 
-	@NotNull
 	@Override
-	public Promise<Void> stop() {
+	public @NotNull Promise<Void> stop() {
 		enabled = false;
 		scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 		if (currentPromise == null) {

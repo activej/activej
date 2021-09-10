@@ -58,8 +58,7 @@ public class ByteBuf implements Recyclable {
 	 * You still have to recycle original {@code ByteBuf} as well as all of its slices.
 	 */
 	static final class ByteBufSlice extends ByteBuf {
-		@NotNull
-		private final ByteBuf root;
+		private final @NotNull ByteBuf root;
 
 		private ByteBufSlice(@NotNull ByteBuf buf, int head, int tail) {
 			super(buf.array, head, tail);
@@ -77,8 +76,7 @@ public class ByteBuf implements Recyclable {
 		}
 
 		@Override
-		@NotNull
-		public ByteBuf slice(int offset, int length) {
+		public @NotNull ByteBuf slice(int offset, int length) {
 			return root.slice(offset, length);
 		}
 
@@ -164,9 +162,8 @@ public class ByteBuf implements Recyclable {
 	 * @param bytes byte array to be wrapped into {@code ByteBuf}
 	 * @return {@code ByteBuf} over underlying byte array that is ready for writing
 	 */
-	@NotNull
 	@Contract("_ -> new")
-	public static ByteBuf wrapForWriting(byte[] bytes) {
+	public static @NotNull ByteBuf wrapForWriting(byte[] bytes) {
 		return wrap(bytes, 0, 0);
 	}
 
@@ -176,9 +173,8 @@ public class ByteBuf implements Recyclable {
 	 * @param bytes byte array to be wrapped into {@code ByteBuf}
 	 * @return {@code ByteBuf} over underlying byte array that is ready for reading
 	 */
-	@NotNull
 	@Contract("_ -> new")
-	public static ByteBuf wrapForReading(byte[] bytes) {
+	public static @NotNull ByteBuf wrapForReading(byte[] bytes) {
 		return wrap(bytes, 0, bytes.length);
 	}
 
@@ -191,9 +187,8 @@ public class ByteBuf implements Recyclable {
 	 * @param tail  {@link #tail} of {@code ByteBuf}
 	 * @return {@code ByteBuf} over underlying byte array with given {@link #tail} and {@link #head}
 	 */
-	@NotNull
 	@Contract("_, _, _ -> new")
-	public static ByteBuf wrap(byte[] bytes, int head, int tail) {
+	public static @NotNull ByteBuf wrap(byte[] bytes, int head, int tail) {
 		return new ByteBuf(bytes, head, tail);
 	}
 
@@ -207,9 +202,8 @@ public class ByteBuf implements Recyclable {
 	 *
 	 * @return a {@link ByteBufSlice} of this {@code ByteBuf}
 	 */
-	@NotNull
 	@Contract("-> new")
-	public ByteBuf slice() {
+	public @NotNull ByteBuf slice() {
 		return slice(head, readRemaining());
 	}
 
@@ -222,9 +216,8 @@ public class ByteBuf implements Recyclable {
 	 *               It is added to the current {@link #head}.
 	 * @return a {@code ByteBufSlice} of this {@code ByteBuf}.
 	 */
-	@NotNull
 	@Contract("_ -> new")
-	public ByteBuf slice(int length) {
+	public @NotNull ByteBuf slice(int length) {
 		return slice(head, length);
 	}
 
@@ -235,9 +228,8 @@ public class ByteBuf implements Recyclable {
 	 * @param length length of the slice.
 	 * @return a {@code ByteBufSlice} of this {@code ByteBuf} with the given offset and length.
 	 */
-	@NotNull
 	@Contract("_, _ -> new")
-	public ByteBuf slice(int offset, int length) {
+	public @NotNull ByteBuf slice(int offset, int length) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		if (!isRecycleNeeded()) {
 			return ByteBuf.wrap(array, offset, offset + length);
