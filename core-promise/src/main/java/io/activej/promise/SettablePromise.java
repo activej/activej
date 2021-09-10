@@ -152,5 +152,5 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	@Override
 	public String describe() {
 		return "SettablePromise";
- 	}
+	}
 }

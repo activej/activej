@@ -36,9 +36,9 @@ import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 public class DatasetUtils {
 
 	public static <K, I, O, A> List<StreamId> repartitionAndReduce(DataflowContext context,
-	                                                               LocallySortedDataset<K, I> input,
-	                                                               Reducer<K, I, O, A> reducer,
-	                                                               List<Partition> partitions) {
+			LocallySortedDataset<K, I> input,
+			Reducer<K, I, O, A> reducer,
+			List<Partition> partitions) {
 		DataflowGraph graph = context.getGraph();
 		int nonce = context.getNonce();
 		Function<I, K> keyFunction = input.keyFunction();
@@ -75,7 +75,7 @@ public class DatasetUtils {
 	}
 
 	public static <K, T> List<StreamId> repartitionAndSort(DataflowContext context, LocallySortedDataset<K, T> input,
-	                                                       List<Partition> partitions) {
+			List<Partition> partitions) {
 		return repartitionAndReduce(context, input, mergeReducer(), partitions);
 	}
 

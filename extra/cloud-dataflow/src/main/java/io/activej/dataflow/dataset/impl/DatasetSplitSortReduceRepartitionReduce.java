@@ -47,13 +47,13 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 	private final int sortBufferSize;
 
 	public DatasetSplitSortReduceRepartitionReduce(Dataset<I> input,
-	                                               Function<I, K> inputKeyFunction,
-	                                               Function<A, K> accumulatorKeyFunction,
-	                                               Comparator<K> keyComparator,
-	                                               ReducerToResult<K, I, O, A> reducer,
-	                                               Class<O> resultType,
-	                                               Class<A> accumulatorType,
-												   int sortBufferSize) {
+			Function<I, K> inputKeyFunction,
+			Function<A, K> accumulatorKeyFunction,
+			Comparator<K> keyComparator,
+			ReducerToResult<K, I, O, A> reducer,
+			Class<O> resultType,
+			Class<A> accumulatorType,
+			int sortBufferSize) {
 		super(resultType);
 		this.input = input;
 		this.inputKeyFunction = inputKeyFunction;

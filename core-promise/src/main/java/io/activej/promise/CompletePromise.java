@@ -150,8 +150,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		}
 	}
 
-    @Override
-    public @NotNull <U> Promise<U> then(
+	@Override
+	public @NotNull <U> Promise<U> then(
 			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn,
 			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
 		try {
@@ -163,7 +163,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 		}
 	}
 
-    @Override
+	@Override
 	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> action) {
 		try {
 			action.accept(getResult(), null);

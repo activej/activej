@@ -30,7 +30,7 @@ import java.util.function.Predicate;
 public final class Datasets {
 
 	public static <K, T> SortedDataset<K, T> castToSorted(Dataset<T> dataset, Class<K> keyType,
-	                                                      Function<T, K> keyFunction, Comparator<K> keyComparator) {
+			Function<T, K> keyFunction, Comparator<K> keyComparator) {
 		return new DatasetAlreadySorted<>(dataset, keyComparator, keyType, keyFunction);
 	}
 
@@ -39,8 +39,8 @@ public final class Datasets {
 	}
 
 	public static <K, L, R, V> SortedDataset<K, V> join(SortedDataset<K, L> left, SortedDataset<K, R> right,
-	                                                    Joiner<K, L, R, V> joiner,
-	                                                    Class<V> resultType, Function<V, K> keyFunction) {
+			Joiner<K, L, R, V> joiner,
+			Class<V> resultType, Function<V, K> keyFunction) {
 		return new DatasetJoin<>(left, right, joiner, resultType, keyFunction);
 	}
 
@@ -62,14 +62,14 @@ public final class Datasets {
 	}
 
 	public static <K, I> LocallySortedDataset<K, I> localSort(Dataset<I> dataset, Class<K> keyType,
-	                                                          Function<I, K> keyFunction, Comparator<K> keyComparator) {
+			Function<I, K> keyFunction, Comparator<K> keyComparator) {
 		return localSort(dataset, keyType, keyFunction, keyComparator, 1_000_000);
 	}
 
 	public static <K, I, O> LocallySortedDataset<K, O> localReduce(LocallySortedDataset<K, I> stream,
-	                                                               Reducer<K, I, O, ?> reducer,
-	                                                               Class<O> resultType,
-	                                                               Function<O, K> resultKeyFunction) {
+			Reducer<K, I, O, ?> reducer,
+			Class<O> resultType,
+			Function<O, K> resultKeyFunction) {
 		return new DatasetLocalSortReduce<>(stream, reducer, resultType, resultKeyFunction);
 	}
 
@@ -77,19 +77,19 @@ public final class Datasets {
 		return new DatasetRepartition<>(dataset, keyFunction, partitions);
 	}
 
-	public static <T, K> Dataset<T> repartition(Dataset<T> dataset, Function<T, K> keyFunction){
+	public static <T, K> Dataset<T> repartition(Dataset<T> dataset, Function<T, K> keyFunction) {
 		return new DatasetRepartition<>(dataset, keyFunction, null);
 	}
 
 	public static <K, I, O> Dataset<O> repartitionReduce(LocallySortedDataset<K, I> dataset,
-	                                                      Reducer<K, I, O, ?> reducer,
-	                                                      Class<O> resultType) {
+			Reducer<K, I, O, ?> reducer,
+			Class<O> resultType) {
 		return new DatasetRepartitionReduce<>(dataset, reducer, resultType);
 	}
 
 	public static <K, I, O> Dataset<O> repartitionReduce(LocallySortedDataset<K, I> dataset,
-	                                                      Reducer<K, I, O, ?> reducer,
-	                                                      Class<O> resultType, List<Partition> partitions) {
+			Reducer<K, I, O, ?> reducer,
+			Class<O> resultType, List<Partition> partitions) {
 		return new DatasetRepartitionReduce<>(dataset, reducer, resultType, partitions);
 	}
 
@@ -98,19 +98,19 @@ public final class Datasets {
 	}
 
 	public static <K, T> SortedDataset<K, T> repartitionSort(LocallySortedDataset<K, T> dataset,
-	                                                          List<Partition> partitions) {
+			List<Partition> partitions) {
 		return new DatasetRepartitionAndSort<>(dataset, partitions);
 	}
 
 	public static <K, I, O, A> Dataset<O> sortReduceRepartitionReduce(Dataset<I> dataset,
-	                                                                     ReducerToResult<K, I, O, A> reducer,
-	                                                                     Class<K> keyType,
-	                                                                     Function<I, K> inputKeyFunction,
-	                                                                     Comparator<K> keyComparator,
-	                                                                     Class<A> accumulatorType,
-	                                                                     Function<A, K> accumulatorKeyFunction,
-	                                                                     Class<O> outputType,
-																		 int sortBufferSize) {
+			ReducerToResult<K, I, O, A> reducer,
+			Class<K> keyType,
+			Function<I, K> inputKeyFunction,
+			Comparator<K> keyComparator,
+			Class<A> accumulatorType,
+			Function<A, K> accumulatorKeyFunction,
+			Class<O> outputType,
+			int sortBufferSize) {
 		LocallySortedDataset<K, I> partiallySorted = localSort(dataset, keyType, inputKeyFunction, keyComparator, sortBufferSize);
 		LocallySortedDataset<K, A> partiallyReduced = localReduce(partiallySorted, reducer.inputToAccumulator(),
 				accumulatorType, accumulatorKeyFunction);
@@ -118,23 +118,23 @@ public final class Datasets {
 	}
 
 	public static <K, I, O, A> Dataset<O> sortReduceRepartitionReduce(Dataset<I> dataset,
-																		ReducerToResult<K, I, O, A> reducer,
-																		Class<K> keyType,
-																		Function<I, K> inputKeyFunction,
-																		Comparator<K> keyComparator,
-																		Class<A> accumulatorType,
-																		Function<A, K> accumulatorKeyFunction,
-																		Class<O> outputType) {
+			ReducerToResult<K, I, O, A> reducer,
+			Class<K> keyType,
+			Function<I, K> inputKeyFunction,
+			Comparator<K> keyComparator,
+			Class<A> accumulatorType,
+			Function<A, K> accumulatorKeyFunction,
+			Class<O> outputType) {
 		return sortReduceRepartitionReduce(dataset, reducer, keyType, inputKeyFunction, keyComparator, accumulatorType, accumulatorKeyFunction, outputType, 1_000_000);
 	}
 
 	public static <K, I, A> Dataset<A> sortReduceRepartitionReduce(Dataset<I> dataset,
-	                                                                  ReducerToResult<K, I, A, A> reducer,
-	                                                                  Class<K> keyType,
-	                                                                  Function<I, K> inputKeyFunction,
-	                                                                  Comparator<K> keyComparator,
-	                                                                  Class<A> accumulatorType,
-	                                                                  Function<A, K> accumulatorKeyFunction) {
+			ReducerToResult<K, I, A, A> reducer,
+			Class<K> keyType,
+			Function<I, K> inputKeyFunction,
+			Comparator<K> keyComparator,
+			Class<A> accumulatorType,
+			Function<A, K> accumulatorKeyFunction) {
 		return sortReduceRepartitionReduce(dataset, reducer,
 				keyType, inputKeyFunction, keyComparator,
 				accumulatorType, accumulatorKeyFunction, accumulatorType
@@ -142,9 +142,9 @@ public final class Datasets {
 	}
 
 	public static <K, T> Dataset<T> sortReduceRepartitionReduce(Dataset<T> dataset,
-	                                                               ReducerToResult<K, T, T, T> reducer,
-	                                                               Class<K> keyType, Function<T, K> keyFunction,
-	                                                               Comparator<K> keyComparator) {
+			ReducerToResult<K, T, T, T> reducer,
+			Class<K> keyType, Function<T, K> keyFunction,
+			Comparator<K> keyComparator) {
 		return sortReduceRepartitionReduce(dataset, reducer,
 				keyType, keyFunction, keyComparator,
 				dataset.valueType(), keyFunction, dataset.valueType()
@@ -152,24 +152,24 @@ public final class Datasets {
 	}
 
 	public static <K, I, O, A> Dataset<O> splitSortReduceRepartitionReduce(Dataset<I> dataset,
-	                                                                         ReducerToResult<K, I, O, A> reducer,
-	                                                                         Function<I, K> inputKeyFunction,
-	                                                                         Comparator<K> keyComparator,
-	                                                                         Class<A> accumulatorType,
-	                                                                         Function<A, K> accumulatorKeyFunction,
-	                                                                         Class<O> outputType,
-																			 int sortBufferSize) {
+			ReducerToResult<K, I, O, A> reducer,
+			Function<I, K> inputKeyFunction,
+			Comparator<K> keyComparator,
+			Class<A> accumulatorType,
+			Function<A, K> accumulatorKeyFunction,
+			Class<O> outputType,
+			int sortBufferSize) {
 		return new DatasetSplitSortReduceRepartitionReduce<>(dataset, inputKeyFunction, accumulatorKeyFunction, keyComparator,
 				reducer, outputType, accumulatorType, sortBufferSize);
 
 	}
 
 	public static <K, I, A> Dataset<A> splitSortReduceRepartitionReduce(Dataset<I> dataset,
-	                                                                      ReducerToResult<K, I, A, A> reducer,
-	                                                                      Function<I, K> inputKeyFunction,
-	                                                                      Comparator<K> keyComparator,
-	                                                                      Class<A> accumulatorType,
-	                                                                      Function<A, K> accumulatorKeyFunction) {
+			ReducerToResult<K, I, A, A> reducer,
+			Function<I, K> inputKeyFunction,
+			Comparator<K> keyComparator,
+			Class<A> accumulatorType,
+			Function<A, K> accumulatorKeyFunction) {
 		return splitSortReduceRepartitionReduce(dataset, reducer,
 				inputKeyFunction, keyComparator,
 				accumulatorType, accumulatorKeyFunction, accumulatorType, 1_000_000

@@ -46,7 +46,7 @@ public class MergeCollector<K, T> {
 	}
 
 	public MergeCollector(Dataset<T> input, DataflowClient client,
-	                      Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
+			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
 		this.input = input;
 		this.client = client;
 		this.keyFunction = keyFunction;
