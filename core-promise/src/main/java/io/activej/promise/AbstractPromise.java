@@ -153,7 +153,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U, P extends Callback<? super T> & Promise<U>> @NotNull Promise<U> next(@Async.Schedule @NotNull P promise) {
+	public <U> @NotNull Promise<U> next(@Async.Schedule @NotNull NextPromise<T, U> promise) {
 		if (isComplete()) {
 			promise.accept(result, exception);
 			return promise;

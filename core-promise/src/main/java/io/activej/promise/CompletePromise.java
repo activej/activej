@@ -66,7 +66,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public final <U, S extends Callback<? super T> & Promise<U>> @NotNull Promise<U> next(@NotNull S promise) {
+	public final <U> @NotNull Promise<U> next(@NotNull NextPromise<T, U> promise) {
 		promise.accept(getResult(), null);
 		return promise;
 	}

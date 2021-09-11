@@ -318,7 +318,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return subscribed {@code Promise}
 	 */
 	@Contract("_ -> param1")
-	@NotNull <U, P extends Callback<? super T> & Promise<U>> Promise<U> next(@NotNull P promise);
+	@NotNull <U> Promise<U> next(@NotNull NextPromise<T, U> promise);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping

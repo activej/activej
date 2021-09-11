@@ -70,7 +70,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U, S extends Callback<? super T> & Promise<U>> @NotNull Promise<U> next(@NotNull S promise) {
+	public <U> @NotNull Promise<U> next(@NotNull NextPromise<T, U> promise) {
 		promise.accept(null, exception);
 		return promise;
 	}
