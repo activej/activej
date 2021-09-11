@@ -442,20 +442,22 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		assert host != null;
 
 		return asyncDnsClient.resolve4(host)
-				.then(dnsResponse -> {
-					if (inspector != null) inspector.onResolve(request, dnsResponse);
-					if (dnsResponse.isSuccessful()) {
-						//noinspection ConstantConditions - dnsResponse is successful (not null)
-						return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
-					} else {
-						request.recycleBody();
-						return Promise.ofException(new HttpException(new DnsQueryException(dnsResponse)));
-					}
-				}, e -> {
-					if (inspector != null) inspector.onResolveError(request, e);
-					request.recycleBody();
-					return Promise.ofException(translateToHttpException(e));
-				});
+				.then(
+						dnsResponse -> {
+							if (inspector != null) inspector.onResolve(request, dnsResponse);
+							if (dnsResponse.isSuccessful()) {
+								//noinspection ConstantConditions - dnsResponse is successful (not null)
+								return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
+							} else {
+								request.recycleBody();
+								return Promise.ofException(new HttpException(new DnsQueryException(dnsResponse)));
+							}
+						},
+						e -> {
+							if (inspector != null) inspector.onResolveError(request, e);
+							request.recycleBody();
+							return Promise.ofException(translateToHttpException(e));
+						});
 	}
 
 	private Promise<?> doSend(HttpRequest request, InetAddress[] inetAddresses, boolean isWebSocket) {
@@ -480,39 +482,41 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		if (inspector != null) inspector.onConnecting(request, address);
 
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
-				.then(asyncTcpSocketImpl -> {
-					AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
-					if (socketInspector != null) {
-						socketInspector.onConnect(asyncTcpSocketImpl);
-						asyncTcpSocketImpl.setInspector(socketInspector);
-					}
+				.then(
+						asyncTcpSocketImpl -> {
+							AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
+							if (socketInspector != null) {
+								socketInspector.onConnect(asyncTcpSocketImpl);
+								asyncTcpSocketImpl.setInspector(socketInspector);
+							}
 
-					String host = request.getUrl().getHost();
-					assert host != null;
+							String host = request.getUrl().getHost();
+							assert host != null;
 
-					AsyncTcpSocket asyncTcpSocket = isSecure ?
-							wrapClientSocket(asyncTcpSocketImpl,
-									host, request.getUrl().getPort(),
-									sslContext, sslExecutor) :
-							asyncTcpSocketImpl;
+							AsyncTcpSocket asyncTcpSocket = isSecure ?
+									wrapClientSocket(asyncTcpSocketImpl,
+											host, request.getUrl().getPort(),
+											sslContext, sslExecutor) :
+									asyncTcpSocketImpl;
 
-					HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
+							HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
 
-					if (inspector != null) inspector.onConnect(request, connection);
+							if (inspector != null) inspector.onConnect(request, connection);
 
-					if (expiredConnectionsCheck == null)
-						scheduleExpiredConnectionsCheck();
+							if (expiredConnectionsCheck == null)
+								scheduleExpiredConnectionsCheck();
 
-					if (isWebSocket) {
-						return connection.sendWebSocketRequest(request);
-					} else {
-						return connection.send(request);
-					}
-				}, e -> {
-					if (inspector != null) inspector.onConnectError(request, address, e);
-					request.recycleBody();
-					return Promise.ofException(translateToHttpException(e));
-				});
+							if (isWebSocket) {
+								return connection.sendWebSocketRequest(request);
+							} else {
+								return connection.send(request);
+							}
+						},
+						e -> {
+							if (inspector != null) inspector.onConnectError(request, address, e);
+							request.recycleBody();
+							return Promise.ofException(translateToHttpException(e));
+						});
 	}
 
 	@Override

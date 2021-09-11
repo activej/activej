@@ -203,17 +203,18 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 
 				return StreamSupplier.ofPromise(
 						fs.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
-								.then(Promise::of, e -> {
-									if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
-										if (logger.isWarnEnabled()) {
-											logger.warn("Ignoring log file whose size is less than log position {} {}:`{}` in {}, previous position: {}",
-													position, fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
-													sw, countingFormat.getCount(), e);
-										}
-										return Promise.of(ChannelSupplier.<ByteBuf>of());
-									}
-									return Promise.ofException(e);
-								})
+								.then(Promise::of,
+										e -> {
+											if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
+												if (logger.isWarnEnabled()) {
+													logger.warn("Ignoring log file whose size is less than log position {} {}:`{}` in {}, previous position: {}",
+															position, fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+															sw, countingFormat.getCount(), e);
+												}
+												return Promise.of(ChannelSupplier.<ByteBuf>of());
+											}
+											return Promise.ofException(e);
+										})
 								.map(fileStream -> {
 									countingFormat.resetCount();
 									sw.reset().start();

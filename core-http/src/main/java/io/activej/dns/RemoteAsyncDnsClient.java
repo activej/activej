@@ -206,26 +206,28 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 							});
 
 					return timeout(timeout, promise)
-							.then(queryResult -> {
-								if (inspector != null) {
-									inspector.onDnsQueryResult(query, queryResult);
-								}
-								logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
-								return Promise.of(queryResult);
-							}, e -> {
-								if (e instanceof AsyncTimeoutException) {
-									if (inspector != null) {
-										inspector.onDnsQueryExpiration(query);
-									}
-									logger.trace("{} timed out", query);
-									e = new DnsQueryException(DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
-									transactions.remove(transaction);
-									closeIfDone();
-								} else if (inspector != null) {
-									inspector.onDnsQueryError(query, e);
-								}
-								return Promise.ofException(e);
-							});
+							.then(
+									queryResult -> {
+										if (inspector != null) {
+											inspector.onDnsQueryResult(query, queryResult);
+										}
+										logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
+										return Promise.of(queryResult);
+									},
+									e -> {
+										if (e instanceof AsyncTimeoutException) {
+											if (inspector != null) {
+												inspector.onDnsQueryExpiration(query);
+											}
+											logger.trace("{} timed out", query);
+											e = new DnsQueryException(DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
+											transactions.remove(transaction);
+											closeIfDone();
+										} else if (inspector != null) {
+											inspector.onDnsQueryError(query, e);
+										}
+										return Promise.ofException(e);
+									});
 				});
 	}
 

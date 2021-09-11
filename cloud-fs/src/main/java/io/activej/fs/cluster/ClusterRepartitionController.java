@@ -254,11 +254,12 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								updateLastAlivePartitionIds();
 							})
 							.toVoid()
-							.then(Promise::of, e -> {
-								logger.warn("Failed to recalculate repartition plan, retrying in 1 second", e);
-								return Promises.delay(Duration.ofSeconds(1))
-										.then(this::recalculatePlan);
-							});
+							.then(Promise::of,
+									e -> {
+										logger.warn("Failed to recalculate repartition plan, retrying in 1 second", e);
+										return Promises.delay(Duration.ofSeconds(1))
+												.then(this::recalculatePlan);
+									});
 				});
 	}
 

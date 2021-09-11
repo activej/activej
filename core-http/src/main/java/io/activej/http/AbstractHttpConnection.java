@@ -416,18 +416,20 @@ public abstract class AbstractHttpConnection {
 		BinaryChannelSupplier encodedStream = BinaryChannelSupplier.ofProvidedBufs(
 				readBufs,
 				() -> socket.read()
-						.then(buf -> {
-							if (buf != null) {
-								readBufs.add(buf);
-								return Promise.complete();
-							} else {
-								return Promise.ofException(new MalformedHttpException("Incomplete HTTP message"));
-							}
-						}, e -> {
-							e = translateToHttpException(e);
-							closeWithError(e);
-							return Promise.ofException(e);
-						}),
+						.then(
+								buf -> {
+									if (buf != null) {
+										readBufs.add(buf);
+										return Promise.complete();
+									} else {
+										return Promise.ofException(new MalformedHttpException("Incomplete HTTP message"));
+									}
+								},
+								e -> {
+									e = translateToHttpException(e);
+									closeWithError(e);
+									return Promise.ofException(e);
+								}),
 				Promise::complete,
 				e -> closeWithError(translateToHttpException(e)));
 

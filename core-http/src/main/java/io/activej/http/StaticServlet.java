@@ -162,8 +162,8 @@ public final class StaticServlet implements AsyncServlet {
 										return Promise.of(value, e);
 									}
 								}))
-				.then(Promise::of, e ->
-						e instanceof ResourceNotFoundException ?
+				.then(Promise::of,
+						e -> e instanceof ResourceNotFoundException ?
 								tryLoadDefaultResource() :
 								Promise.ofException(HttpError.ofCode(400, e)));
 	}

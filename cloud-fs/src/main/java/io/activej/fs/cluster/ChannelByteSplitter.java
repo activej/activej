@@ -94,13 +94,14 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 					if (buf != null) {
 						Promises.all(outputs.stream()
 										.map(output -> output.accept(buf.slice())
-												.then(Promise::of, e1 -> {
-													failed.add(output);
-													if (outputs.size() - failed.size() < requiredSuccesses) {
-														return Promise.ofException(e1);
-													}
-													return Promise.complete();
-												})))
+												.then(Promise::of,
+														e -> {
+															failed.add(output);
+															if (outputs.size() - failed.size() < requiredSuccesses) {
+																return Promise.ofException(e);
+															}
+															return Promise.complete();
+														})))
 								.whenComplete(($, e) -> {
 									outputs.removeAll(failed);
 									if (e == null) {

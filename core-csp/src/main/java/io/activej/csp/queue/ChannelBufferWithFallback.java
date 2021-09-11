@@ -102,15 +102,16 @@ public final class ChannelBufferWithFallback<T> implements ChannelQueue<T> {
 	private Promise<Void> secondaryPut(@Nullable T item) {
 		assert buffer != null;
 		return buffer.put(item)
-				.then(Promise::of, e -> {
-					if (!(e instanceof AsyncCloseException)) {
-						return Promise.ofException(e);
-					}
-					// buffer was already closed for whatever reason,
-					// retry the whole thing (may cause loops, but should not)
-					buffer = null;
-					return doPut(item);
-				});
+				.then(Promise::of,
+						e -> {
+							if (!(e instanceof AsyncCloseException)) {
+								return Promise.ofException(e);
+							}
+							// buffer was already closed for whatever reason,
+							// retry the whole thing (may cause loops, but should not)
+							buffer = null;
+							return doPut(item);
+						});
 	}
 
 	private Promise<T> secondaryTake() {
