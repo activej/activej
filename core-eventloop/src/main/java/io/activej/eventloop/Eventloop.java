@@ -20,8 +20,8 @@ import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.Checks;
-import io.activej.eventloop.error.FatalErrorHandler;
-import io.activej.eventloop.error.FatalErrorHandlers;
+import io.activej.common.exception.FatalErrorHandler;
+import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.initializer.WithInitializer;
@@ -95,8 +95,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		JIGSAW_DETECTED = ReflectionUtils.isClassPresent("java.lang.Module");
 	}
 
-	private static volatile @NotNull FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
-
 	/**
 	 * Collection of local tasks which were added from this thread.
 	 */
@@ -159,7 +157,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @Nullable FatalErrorHandler fatalErrorHandler;
+	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -209,7 +207,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return this;
 	}
 
-	public @NotNull Eventloop withFatalErrorHandler(@Nullable FatalErrorHandler fatalErrorHandler) {
+	public @NotNull Eventloop withFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
 		this.fatalErrorHandler = fatalErrorHandler;
 		return this;
 	}
@@ -1098,9 +1096,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 					}
 				});
 			} catch (Exception ex) {
-				if (ex instanceof RuntimeException) {
-					recordFatalError(ex, computation);
-				}
+				recordFatalError(ex, computation);
 				future.completeExceptionally(ex);
 			}
 		});
@@ -1145,11 +1141,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			e = e.getCause();
 		}
 		logger.error("Fatal Error in {}", context, e);
-		if (fatalErrorHandler != null) {
-			handleFatalError(fatalErrorHandler, e, context);
-		} else {
-			handleFatalError(FatalErrorHandlers.getGlobalFatalErrorHandler(), e, context);
-		}
+		handleFatalError(fatalErrorHandler, e, context);
 		if (inspector != null) {
 			if (inEventloopThread()) {
 				inspector.onFatalError(e, context);
@@ -1181,7 +1173,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return tick;
 	}
 
-	public @Nullable FatalErrorHandler getFatalErrorHandler() {
+	public @NotNull FatalErrorHandler getFatalErrorHandler() {
 		return fatalErrorHandler;
 	}
 

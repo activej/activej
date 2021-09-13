@@ -46,7 +46,7 @@ import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.iteratorOf;
 import static io.activej.common.Utils.nullify;
-import static io.activej.eventloop.error.FatalErrorHandlers.handleFatalError;
+import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;

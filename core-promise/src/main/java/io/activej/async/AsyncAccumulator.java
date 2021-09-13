@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.eventloop.error.FatalErrorHandlers.handleFatalError;
+import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class AsyncAccumulator<A> implements AsyncCloseable {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.error;
+package io.activej.common.exception;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -19,7 +19,7 @@ import java.util.List;
 import static io.activej.csp.ChannelConsumers.channelConsumerAsOutputStream;
 import static io.activej.csp.ChannelConsumers.outputStreamAsChannelConsumer;
 import static io.activej.eventloop.Eventloop.initWithEventloop;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;

@@ -4,7 +4,7 @@ import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ChunkLocker;
 import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.error.FatalErrorHandlers;
+import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;

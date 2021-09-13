@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.Callable;
 import java.util.concurrent.RejectedExecutionException;
 
-import static io.activej.eventloop.error.FatalErrorHandlers.handleFatalError;
+import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
 
 public interface AsyncExecutor {
 	@NotNull <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException;

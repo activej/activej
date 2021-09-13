@@ -40,6 +40,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
+
 /**
  * This interface represents consumer of data items that should be used serially
  * (each consecutive {@link #accept(Object)} operation should be called only after
@@ -349,7 +351,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 						newValue = fn.apply(value);
 					} catch (Exception ex) {
 						if (ex instanceof RuntimeException) {
-							eventloop.recordFatalError(ex, fn);
+							handleFatalError(ex, fn);
 						}
 						ChannelConsumer.this.closeEx(ex);
 						return Promise.ofException(ex);

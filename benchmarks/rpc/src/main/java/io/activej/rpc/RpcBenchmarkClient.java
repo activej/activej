@@ -20,7 +20,7 @@ import java.net.InetSocketAddress;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.config.converter.ConfigConverters.ofMemSize;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.rpc.client.sender.RpcStrategies.server;

@@ -15,7 +15,7 @@ import java.security.SecureRandom;
 import java.util.concurrent.Executor;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.https.SslUtils.*;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.Executors.newCachedThreadPool;

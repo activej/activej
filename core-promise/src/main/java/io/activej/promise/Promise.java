@@ -34,6 +34,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
@@ -224,7 +225,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					} catch (Exception e) {
 						eventloop.execute(wrapContext(cb, () -> {
 							if (e instanceof RuntimeException) {
-								eventloop.recordFatalError(e, supplier);
+								handleFatalError(e, supplier);
 							}
 							cb.setException(e);
 						}));
@@ -257,7 +258,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					} catch (Exception e) {
 						eventloop.execute(wrapContext(cb, () -> {
 							if (e instanceof RuntimeException) {
-								eventloop.recordFatalError(e, runnable);
+								handleFatalError(e, runnable);
 							}
 							cb.setException(e);
 						}));

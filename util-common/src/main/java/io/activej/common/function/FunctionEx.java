@@ -20,6 +20,8 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.Function;
 
+import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
+
 @FunctionalInterface
 public interface FunctionEx<T, R> {
 	R apply(T t) throws Exception;
@@ -38,9 +40,10 @@ public interface FunctionEx<T, R> {
 		return t -> {
 			try {
 				return checkedFn.apply(t);
-			} catch (RuntimeException ex) {
-				throw ex;
 			} catch (Exception ex) {
+				if (ex instanceof RuntimeException) {
+					handleFatalError(ex, checkedFn);
+				}
 				throw UncheckedException.of(ex);
 			}
 		};

@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
 
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.common.Utils.union;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;

@@ -27,6 +27,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
+
 /**
  * An implementation of the {@link EventloopExecutor} which posts
  * only some tasks at a time to some underlying {@link Eventloop},
@@ -109,7 +111,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 				computation.run();
 			} catch (Exception ex) {
 				if (ex instanceof RuntimeException) {
-					eventloop.recordFatalError(ex, computation);
+					handleFatalError(ex, computation);
 				}
 				future.completeExceptionally(ex);
 				return;
@@ -134,9 +136,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 					}
 				});
 			} catch (Exception ex) {
-				if (ex instanceof RuntimeException) {
-					eventloop.recordFatalError(ex, computation);
-				}
+				handleFatalError(ex, computation);
 				future.completeExceptionally(ex);
 			} finally {
 				complete();

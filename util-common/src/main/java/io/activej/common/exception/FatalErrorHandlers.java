@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.error;
+package io.activej.common.exception;
 
-import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +23,6 @@ import java.io.IOError;
 import java.util.List;
 import java.util.zip.ZipError;
 
-import static io.activej.eventloop.Eventloop.getCurrentEventloopOrNull;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -33,29 +31,28 @@ import static java.util.Collections.singletonList;
  * occurrences.
  */
 public final class FatalErrorHandlers {
+	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.rethrowOnAnyError();
 
-	@NotNull
-	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
+	private static final ThreadLocal<FatalErrorHandler> CURRENT_HANDLER = ThreadLocal.withInitial(() -> globalFatalErrorHandler);
+
+	public static void setThreadFatalErrorHandler(@NotNull FatalErrorHandler handler) {
+		CURRENT_HANDLER.set(handler);
+	}
 
 	public static void setGlobalFatalErrorHandler(@NotNull FatalErrorHandler handler) {
 		globalFatalErrorHandler = handler;
 	}
 
-	public static @NotNull FatalErrorHandler getGlobalFatalErrorHandler() {
-		return globalFatalErrorHandler;
+	public static @NotNull FatalErrorHandler getThreadFatalErrorHandler() {
+		return CURRENT_HANDLER.get();
 	}
 
 	public static void handleFatalError(@NotNull Throwable e, @Nullable Object context) {
-		Eventloop eventloop = getCurrentEventloopOrNull();
-		if (eventloop == null) {
-			globalFatalErrorHandler.handle(e, context);
-		} else {
-			eventloop.recordFatalError(e, context);
-		}
+		getThreadFatalErrorHandler().handle(e, context);
 	}
 
 	public static void handleFatalError(@NotNull Throwable e) {
-		handleFatalError(e, null);
+		getThreadFatalErrorHandler().handle(e);
 	}
 
 	public static FatalErrorHandler ignoreAllErrors() {

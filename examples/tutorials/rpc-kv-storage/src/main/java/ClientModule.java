@@ -8,7 +8,7 @@ import io.activej.serializer.SerializerBuilder;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 
 // [START EXAMPLE]
 public class ClientModule extends AbstractModule {

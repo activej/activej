@@ -21,7 +21,7 @@ import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
-import io.activej.eventloop.error.FatalErrorHandler;
+import io.activej.common.exception.FatalErrorHandler;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
@@ -45,7 +45,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
-import static io.activej.eventloop.error.FatalErrorHandlers.*;
+import static io.activej.common.exception.FatalErrorHandlers.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
