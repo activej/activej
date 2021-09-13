@@ -1220,27 +1220,6 @@ public class BinarySerializerTest {
 		assertNull(testData3.getStringValue());
 	}
 
-	public static class TestDataDeserializeFactory0 {
-		String str;
-		int hash;
-
-		@Serialize
-		public String getStr() {
-			return str;
-		}
-
-		public int getHash() {
-			return hash;
-		}
-
-		public static TestDataDeserializeFactory0 create(@Deserialize("str") String str) {
-			TestDataDeserializeFactory0 testData = new TestDataDeserializeFactory0();
-			testData.str = str;
-			testData.hash = str.hashCode();
-			return testData;
-		}
-	}
-
 	public enum TestEnum {
 		ONE(1), TWO(2), THREE(3);
 
