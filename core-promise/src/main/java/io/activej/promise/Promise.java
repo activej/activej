@@ -28,10 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -346,6 +343,16 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return then(Promise::of, e -> Promise.ofException(exceptionFn.apply(e)));
 	}
 
+	default @NotNull Promise<T> mapException(@NotNull Predicate<Exception> predicate,
+			@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+		return mapException(e -> predicate.test(e) ? exceptionFn.apply(e) : e);
+	}
+
+	default @NotNull Promise<T> mapException(@NotNull Class<? extends Exception> clazz,
+			@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+		return mapException(e -> clazz.isAssignableFrom(e.getClass()) ? exceptionFn.apply(e) : e);
+	}
+
 	/**
 	 * Returns a new {@code Promise} which is obtained by calling
 	 * a provided supplier of a new promise. If {@code this} promise
@@ -404,6 +411,33 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return then((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
 	}
 
+	default @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull BiConsumerEx<? super T, Exception> fn) {
+		return then((v, e) -> {
+			if (predicate.test(v, e)) {
+				fn.accept(v, e);
+			}
+			return Promise.of(v, e);
+		});
+	}
+
+	default @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate,
+			@Nullable ConsumerEx<? super T> fn,
+			@Nullable ConsumerEx<@NotNull Exception> exceptionFn) {
+		return when(predicate, (v, e) -> {
+			if (e == null) {
+				//noinspection ConstantConditions
+				fn.accept(v);
+			} else {
+				//noinspection ConstantConditions
+				exceptionFn.accept(e);
+			}
+		});
+	}
+
+	default @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull RunnableEx action) {
+		return when(predicate, (v, e) -> action.run());
+	}
+
 	/**
 	 * Subscribes given bi consumer to be executed
 	 * after this {@code Promise} completes (either successfully or exceptionally).
@@ -415,23 +449,14 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * thrown exception.
 	 *
 	 * @param fn bi consumer that consumes a result
-	 *               and an exception of {@code this} promise
+	 *           and an exception of {@code this} promise
 	 */
 	default @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> fn) {
-		return then((v, e) -> {
-			fn.accept(v, e);
-			return Promise.of(v, e);
-		});
+		return when(P.isComplete(), fn);
 	}
 
-	default @NotNull Promise<T> whenComplete(@NotNull ConsumerEx<? super T> fn, @NotNull ConsumerEx<@NotNull Exception> exceptionFn) {
-		return whenComplete((v, e) -> {
-			if (e == null) {
-				fn.accept(v);
-			} else {
-				exceptionFn.accept(e);
-			}
-		});
+	default @NotNull Promise<T> whenComplete(ConsumerEx<? super T> fn, ConsumerEx<@NotNull Exception> exceptionFn) {
+		return when(P.isComplete(), fn, exceptionFn);
 	}
 
 	/**
@@ -447,10 +472,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise completes
 	 */
 	default @NotNull Promise<T> whenComplete(@NotNull RunnableEx action) {
-		return then((v, e) -> {
-			action.run();
-			return Promise.of(v, e);
-		});
+		return when(P.isComplete(), action);
 	}
 
 	/**
@@ -466,10 +488,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn consumer that consumes a result of {@code this} promise
 	 */
 	default @NotNull Promise<T> whenResult(ConsumerEx<? super T> fn) {
-		return then(v -> {
-			fn.accept(v);
-			return Promise.of(v);
-		});
+		return when(P.isResult(), fn, null);
+	}
+
+	default @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
+		return when(P.isResult(predicate), fn, null);
 	}
 
 	/**
@@ -486,10 +509,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *               completes successfully
 	 */
 	default @NotNull Promise<T> whenResult(@NotNull RunnableEx action) {
-		return then(v -> {
-			action.run();
-			return Promise.of(v);
-		});
+		return when(P.isResult(), action);
+	}
+
+	default @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, @NotNull RunnableEx action) {
+		return when(P.isResult(predicate), action);
 	}
 
 	/**
@@ -505,12 +529,15 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn consumer that consumes an exception of {@code this} promise
 	 */
 	default @NotNull Promise<T> whenException(@NotNull ConsumerEx<@NotNull Exception> fn) {
-		return then((v, e) -> {
-			if (e != null) {
-				fn.accept(e);
-			}
-			return Promise.of(v, e);
-		});
+		return when(P.isException(), null, fn);
+	}
+
+	default @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull ConsumerEx<@NotNull Exception> fn) {
+		return when(P.isException(predicate), null, fn);
+	}
+
+	default @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull ConsumerEx<@NotNull Exception> fn) {
+		return when(P.isException(clazz), null, fn);
 	}
 
 	/**
@@ -527,12 +554,15 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *               completes exceptionally
 	 */
 	default @NotNull Promise<T> whenException(@NotNull RunnableEx action) {
-		return then((v, e) -> {
-			if (e != null) {
-				action.run();
-			}
-			return Promise.of(v, e);
-		});
+		return when(P.isException(), action);
+	}
+
+	default @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull RunnableEx action) {
+		return when(P.isException(predicate), action);
+	}
+
+	default @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull RunnableEx action) {
+		return when(P.isException(clazz), action);
 	}
 
 	/**

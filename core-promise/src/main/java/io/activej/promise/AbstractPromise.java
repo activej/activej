@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
@@ -489,6 +490,135 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".then(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull BiConsumerEx<? super T, Exception> fn) {
+		if (isComplete()) {
+			try {
+				if (predicate.test(result, exception)) {
+					fn.accept(result, exception);
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (predicate.test(result, e)) {
+						fn.accept(result, e);
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".when(" + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @Nullable ConsumerEx<? super T> fn, @Nullable ConsumerEx<@NotNull Exception> exceptionFn) {
+		if (isComplete()) {
+			try {
+				if (predicate.test(result, exception)) {
+					if (exception == null) {
+						//noinspection ConstantConditions
+						fn.accept(result);
+					} else {
+						//noinspection ConstantConditions
+						exceptionFn.accept(exception);
+					}
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (predicate.test(result, e)) {
+						if (e == null) {
+							//noinspection ConstantConditions
+							fn.accept(result);
+						} else {
+							//noinspection ConstantConditions
+							exceptionFn.accept(e);
+						}
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".when(" + (fn != null ? formatToString(fn) : null) + ", " + (exceptionFn != null ? formatToString(exceptionFn) : null) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull RunnableEx action) {
+		if (isComplete()) {
+			try {
+				if (predicate.test(result, exception)) {
+					action.run();
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (predicate.test(result, e)) {
+						action.run();
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".when(" + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);

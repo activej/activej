@@ -21,9 +21,11 @@ import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -156,6 +158,49 @@ abstract class CompletePromise<T> implements Promise<T> {
 			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull BiConsumerEx<? super T, Exception> fn) {
+		try {
+			if (predicate.test(getResult(), null)) {
+				fn.accept(getResult(), null);
+			}
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @Nullable ConsumerEx<? super T> fn, @Nullable ConsumerEx<@NotNull Exception> exceptionFn) {
+		try {
+			if (predicate.test(getResult(), null)) {
+				//noinspection ConstantConditions
+				fn.accept(getResult());
+			}
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull RunnableEx action) {
+		try {
+			if (predicate.test(getResult(), null)) {
+				action.run();
+			}
+			return this;
 		} catch (RuntimeException ex) {
 			throw ex;
 		} catch (Exception ex) {

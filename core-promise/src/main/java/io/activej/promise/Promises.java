@@ -44,6 +44,7 @@ import java.util.stream.Stream;
 import static io.activej.common.Utils.*;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.promise.PromisePredicates.isResult;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -356,36 +357,36 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Promise<? extends T> promise1) {
+	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Promise<? extends T> promise1) {
 		return any(predicate, singletonList(promise1));
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
+	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
 		return any(predicate, asList(promise1, promise2));
 	}
 
 	@Contract(pure = true)
 	@SafeVarargs
-	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, Promise<? extends T>... promises) {
+	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, Promise<? extends T>... promises) {
 		return any(predicate, asList(promises));
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Stream<? extends Promise<? extends T>> promises) {
+	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Stream<? extends Promise<? extends T>> promises) {
 		return any(predicate, promises.iterator());
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull List<? extends Promise<? extends T>> promises) {
+	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull List<? extends Promise<? extends T>> promises) {
 		return anyIterator(predicate, promises.iterator(), true);
 	}
 
-	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<T, Exception> predicate, @NotNull Iterator<? extends Promise<? extends T>> promises) {
+	public static @NotNull <T> Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Iterator<? extends Promise<? extends T>> promises) {
 		return anyIterator(predicate, promises, false);
 	}
 
-	private static @NotNull <T> Promise<T> anyIterator(@NotNull BiPredicate<T, Exception> predicate,
+	private static @NotNull <T> Promise<T> anyIterator(@NotNull BiPredicate<? super T, Exception> predicate,
 			@NotNull Iterator<? extends Promise<? extends T>> promises, boolean ownership) {
 		if (!promises.hasNext()) return any();
 		PromiseAny<T> resultPromise = new PromiseAny<>(predicate);
@@ -842,7 +843,7 @@ public final class Promises {
 	 */
 	@SafeVarargs
 	public static <T> @NotNull Promise<T> first(AsyncSupplier<? extends T>... promises) {
-		return first(Promises.isResult(), promises);
+		return first(isResult(), promises);
 	}
 
 	/**
@@ -850,7 +851,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	public static @NotNull <T> Promise<T> first(@NotNull Iterable<? extends AsyncSupplier<? extends T>> promises) {
-		return first(Promises.isResult(), promises);
+		return first(isResult(), promises);
 	}
 
 	/**
@@ -858,7 +859,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	public static @NotNull <T> Promise<T> first(@NotNull Stream<? extends AsyncSupplier<? extends T>> promises) {
-		return first(Promises.isResult(), promises);
+		return first(isResult(), promises);
 	}
 
 	/**
@@ -866,7 +867,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	public static @NotNull <T> Promise<T> first(@NotNull Iterator<? extends Promise<? extends T>> promises) {
-		return first(Promises.isResult(), promises);
+		return first(isResult(), promises);
 	}
 
 	/**
@@ -930,38 +931,6 @@ public final class Promises {
 			return;
 		}
 		cb.setException(new Exception("There are no promises to be complete"));
-	}
-
-	/**
-	 * Returns a {@link BiPredicate} which checks if
-	 * {@code Promise} wasn't completed exceptionally.
-	 */
-	public static @NotNull <T> BiPredicate<T, Exception> isResult() {
-		return ($, e) -> e == null;
-	}
-
-	public static <T> BiPredicate<T, Exception> isResult(Predicate<? super T> predicate) {
-		return (v, e) -> e == null && predicate.test(v);
-	}
-
-	public static <T> BiPredicate<T, Exception> isResultOrError(Predicate<? super T> predicate) {
-		return (v, e) -> e != null || predicate.test(v);
-	}
-
-	public static <T> BiPredicate<T, Exception> isResultOrError(Predicate<? super T> predicate, Predicate<? super Exception> predicateError) {
-		return (v, e) -> e == null ? predicate.test(v) : predicateError.test(e);
-	}
-
-	/**
-	 * Returns a {@link BiPredicate} which checks if
-	 * {@code Promise} was completed with an exception.
-	 */
-	public static @NotNull <T> BiPredicate<T, Exception> isError() {
-		return ($, e) -> e != null;
-	}
-
-	public static @NotNull <T> BiPredicate<T, Exception> isError(Predicate<? super Exception> predicate) {
-		return ($, e) -> e != null && predicate.test(e);
 	}
 
 	/**
@@ -1049,7 +1018,7 @@ public final class Promises {
 		return retry(isResult(), asyncSupplier);
 	}
 
-	public static <T> Promise<T> retry(BiPredicate<T, Exception> breakCondition, AsyncSupplier<T> asyncSupplier) {
+	public static <T> Promise<T> retry(BiPredicate<? super T, Exception> breakCondition, AsyncSupplier<T> asyncSupplier) {
 		return first(breakCondition, Stream.generate(() -> asyncSupplier));
 	}
 
