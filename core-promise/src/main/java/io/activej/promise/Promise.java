@@ -243,28 +243,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * (returned {@code Promise} is only a marker of completion).
 	 */
 	static @NotNull Promise<Void> ofBlocking(@NotNull Executor executor, @NotNull RunnableEx runnable) {
-		return ofCallback(cb -> {
-			Eventloop eventloop = Eventloop.getCurrentEventloop();
-			eventloop.startExternalTask();
-			try {
-				executor.execute(() -> {
-					try {
-						runnable.run();
-						eventloop.execute(wrapContext(cb, () -> cb.set(null)));
-					} catch (RuntimeException e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, runnable));
-					} catch (Exception e) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
-					} catch (Throwable e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, runnable));
-					} finally {
-						eventloop.completeExternalTask();
-					}
-				});
-			} catch (RejectedExecutionException e) {
-				eventloop.completeExternalTask();
-				cb.setException(e);
-			}
+		return Promise.ofBlocking(executor, () -> {
+			runnable.run();
+			return null;
 		});
 	}
 
