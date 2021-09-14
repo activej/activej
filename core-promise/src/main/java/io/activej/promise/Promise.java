@@ -223,10 +223,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 						T result = supplier.get();
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
 					} catch (Exception e) {
-						eventloop.execute(wrapContext(cb, () -> {
-							handleRuntimeException(e, supplier);
-							cb.setException(e);
-						}));
+						handleRuntimeException(e, supplier);
+						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
 					} catch (Throwable e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, supplier));
 					} finally {
@@ -254,10 +252,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 						runnable.run();
 						eventloop.execute(wrapContext(cb, () -> cb.set(null)));
 					} catch (Exception e) {
-						eventloop.execute(wrapContext(cb, () -> {
-							handleRuntimeException(e, runnable);
-							cb.setException(e);
-						}));
+						handleRuntimeException(e, runnable);
+						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
 					} catch (Throwable e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, runnable));
 					} finally {
