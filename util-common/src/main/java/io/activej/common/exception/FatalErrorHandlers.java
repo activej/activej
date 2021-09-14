@@ -18,6 +18,8 @@ package io.activej.common.exception;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.Predicate;
 
@@ -26,6 +28,8 @@ import java.util.function.Predicate;
  * occurrences.
  */
 public final class FatalErrorHandlers {
+	private static final Logger logger = LoggerFactory.getLogger(FatalErrorHandlers.class);
+
 	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.rethrowOnAnyError();
 
 	private static final ThreadLocal<FatalErrorHandler> CURRENT_HANDLER = ThreadLocal.withInitial(() -> globalFatalErrorHandler);
@@ -90,6 +94,22 @@ public final class FatalErrorHandlers {
 
 	public static FatalErrorHandler rethrowOnMatchedError(Class<? extends Throwable> cls) {
 		return rethrowOnMatchedError(throwable -> cls.isAssignableFrom(throwable.getClass()));
+	}
+
+	public static FatalErrorHandler logging() {
+		return logging(logger);
+	}
+
+	public static FatalErrorHandler logging(Logger logger) {
+		return (e, context) -> {
+			if (!logger.isErrorEnabled()) return;
+
+			if (context == null) {
+				logger.error("Fatal error", e);
+			} else {
+				logger.error("Fatal error in {}", context, e);
+			}
+		};
 	}
 
 	public static void propagate(@NotNull Throwable e) {

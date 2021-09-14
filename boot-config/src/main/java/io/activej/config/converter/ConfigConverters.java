@@ -28,6 +28,7 @@ import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.promise.RetryPolicy;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -527,6 +528,11 @@ public final class ConfigConverters {
 										config.get(OF_CLASSES, "whitelist", emptyList()),
 										config.get(OF_CLASSES, "blacklist", emptyList())
 								));
+					case "logging":
+						String loggerName = config.get(ofString(), "logger", null);
+						return loggerName == null ?
+								logging() :
+								logging(LoggerFactory.getLogger(loggerName));
 					default:
 						throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
 				}
