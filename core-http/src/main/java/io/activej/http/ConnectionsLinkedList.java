@@ -73,7 +73,7 @@ final class ConnectionsLinkedList {
 			if (e == null)
 				connection.close();
 			else
-				connection.closeWithError(e);
+				connection.closeEx(e);
 			assert connection.prev == null && connection.next == null;
 			connection = next;
 			count++;

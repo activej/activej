@@ -198,7 +198,7 @@ public abstract class AbstractHttpConnection {
 		if (e instanceof WebSocketException) {
 			close();
 		} else {
-			closeWithError(translateToHttpException(e));
+			closeEx(translateToHttpException(e));
 		}
 	}
 
@@ -209,7 +209,7 @@ public abstract class AbstractHttpConnection {
 		socket.close();
 	}
 
-	protected final void closeWithError(@NotNull Exception e) {
+	protected final void closeEx(@NotNull Exception e) {
 		if (isClosed()) return;
 		flags |= CLOSED;
 		onClosedWithError(e);
@@ -226,7 +226,7 @@ public abstract class AbstractHttpConnection {
 		try {
 			readMessage();
 		} catch (MalformedHttpException e) {
-			closeWithError(e);
+			closeEx(e);
 		}
 	}
 
@@ -427,11 +427,11 @@ public abstract class AbstractHttpConnection {
 								},
 								e -> {
 									e = translateToHttpException(e);
-									closeWithError(e);
+									closeEx(e);
 									return Promise.ofException(e);
 								}),
 				Promise::complete,
-				e -> closeWithError(translateToHttpException(e)));
+				e -> closeEx(translateToHttpException(e)));
 
 		ChannelOutput<ByteBuf> bodyStream;
 		AsyncProcess process;
@@ -469,7 +469,7 @@ public abstract class AbstractHttpConnection {
 						this.readBuf = readBufs.hasRemaining() ? readBufs.takeRemaining() : null;
 						onBodyReceived();
 					} else {
-						closeWithError(translateToHttpException(e));
+						closeEx(translateToHttpException(e));
 					}
 				});
 	}
@@ -543,7 +543,7 @@ public abstract class AbstractHttpConnection {
 					if (e == null) {
 						onBodySent();
 					} else {
-						closeWithError(translateToHttpException(e));
+						closeEx(translateToHttpException(e));
 					}
 				});
 	}
@@ -551,8 +551,8 @@ public abstract class AbstractHttpConnection {
 	private void writeStream(ChannelSupplier<ByteBuf> supplier) {
 		supplier.streamTo(ChannelConsumer.of(
 						buf -> socket.write(buf)
-								.whenException(e -> closeWithError(translateToHttpException(e))),
-						e -> closeWithError(translateToHttpException(e))))
+								.whenException(e -> closeEx(translateToHttpException(e))),
+						e -> closeEx(translateToHttpException(e))))
 				.whenResult(this::onBodySent);
 	}
 
@@ -592,13 +592,13 @@ public abstract class AbstractHttpConnection {
 					try {
 						thenRun();
 					} catch (MalformedHttpException e1) {
-						closeWithError(e1);
+						closeEx(e1);
 					}
 				} else {
 					close();
 				}
 			} else {
-				closeWithError(translateToHttpException(e));
+				closeEx(translateToHttpException(e));
 			}
 		}
 

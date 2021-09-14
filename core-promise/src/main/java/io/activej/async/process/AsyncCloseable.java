@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Describes methods that are used to handle exceptional behaviour or to handle closing.
  * <p>
- * After {@link #close()}, {@link #closeEx(Exception)} or {@link #close()} is called, the following things
+ * After {@link #close()}, or {@link #closeEx(Exception)} is called, the following things
  * should be done:
  * <ul>
  * <li>Resources held by an object should be freed</li>

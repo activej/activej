@@ -212,7 +212,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			response.bodyStream = sanitize(concat(ChannelSupplier.of(detachReadBuf()), ChannelSupplier.ofSocket(socket)));
 			return true;
 		} else {
-			closeWithError(HANDSHAKE_FAILED);
+			closeEx(HANDSHAKE_FAILED);
 			return false;
 		}
 	}
@@ -254,7 +254,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 					if (e == null) {
 						onBodyReceived();
 					} else {
-						closeWithError(translateToHttpException(e));
+						closeEx(translateToHttpException(e));
 					}
 				});
 	}
@@ -282,7 +282,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 				.then(res -> {
 					assert res.getCode() == 101;
 					if (isAnswerInvalid(res, encodedKey)) {
-						closeWithError(HANDSHAKE_FAILED);
+						closeEx(HANDSHAKE_FAILED);
 						return Promise.ofException(HANDSHAKE_FAILED);
 					}
 					int maxWebSocketMessageSize = client.maxWebSocketMessageSize;
@@ -305,7 +305,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 							maxWebSocketMessageSize
 					));
 				})
-				.whenException(e -> closeWithError(translateToHttpException(e)));
+				.whenException(e -> closeEx(translateToHttpException(e)));
 	}
 
 	private void bindWebSocketTransformers(WebSocketFramesToBufs encoder, WebSocketBufsToFrames decoder) {
@@ -365,12 +365,12 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 						if (e == null) {
 							if (buf != null) {
 								buf.recycle();
-								closeWithError(new HttpException("Unexpected read data"));
+								closeEx(new HttpException("Unexpected read data"));
 							} else {
 								close();
 							}
 						} else {
-							closeWithError(translateToHttpException(e));
+							closeEx(translateToHttpException(e));
 						}
 					});
 			if (isClosed()) return;

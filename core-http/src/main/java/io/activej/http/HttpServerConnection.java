@@ -406,7 +406,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			request.maxBodySize = server.maxWebSocketMessageSize;
 			return true;
 		} else {
-			closeWithError(UPGRADE_WITH_BODY);
+			closeEx(UPGRADE_WITH_BODY);
 			return false;
 		}
 	}
