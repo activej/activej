@@ -18,7 +18,7 @@ package io.activej.common.function;
 
 import io.activej.common.exception.UncheckedException;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
 
 @FunctionalInterface
 public interface RunnableEx {
@@ -39,9 +39,7 @@ public interface RunnableEx {
 			try {
 				checkedFn.run();
 			} catch (Exception ex) {
-				if (ex instanceof RuntimeException) {
-					handleFatalError(ex, checkedFn);
-				}
+				handleRuntimeException(ex, checkedFn);
 				throw UncheckedException.of(ex);
 			}
 		};

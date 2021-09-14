@@ -47,12 +47,14 @@ public final class FatalErrorHandlers {
 		return CURRENT_HANDLER.get();
 	}
 
-	public static void handleFatalError(@NotNull Throwable e, @Nullable Object context) {
-		getThreadFatalErrorHandler().handle(e, context);
+	public static void handleRuntimeException(@NotNull Throwable e, @Nullable Object context) {
+		if (e instanceof RuntimeException) {
+			getThreadFatalErrorHandler().handle(e, context);
+		}
 	}
 
-	public static void handleFatalError(@NotNull Throwable e) {
-		getThreadFatalErrorHandler().handle(e);
+	public static void handleRuntimeException(@NotNull Throwable e) {
+		handleRuntimeException(e, null);
 	}
 
 	public static FatalErrorHandler ignoreAllErrors() {

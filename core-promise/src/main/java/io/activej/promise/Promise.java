@@ -34,7 +34,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
@@ -224,9 +224,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
 					} catch (Exception e) {
 						eventloop.execute(wrapContext(cb, () -> {
-							if (e instanceof RuntimeException) {
-								handleFatalError(e, supplier);
-							}
+							handleRuntimeException(e, supplier);
 							cb.setException(e);
 						}));
 					} catch (Throwable e) {
@@ -257,9 +255,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 						eventloop.execute(wrapContext(cb, () -> cb.set(null)));
 					} catch (Exception e) {
 						eventloop.execute(wrapContext(cb, () -> {
-							if (e instanceof RuntimeException) {
-								handleFatalError(e, runnable);
-							}
+							handleRuntimeException(e, runnable);
 							cb.setException(e);
 						}));
 					} catch (Throwable e) {
@@ -441,7 +437,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * thrown exception.
 	 *
 	 * @param fn bi consumer that consumes a result
-	 *               and an exception of {@code this} promise
+	 *           and an exception of {@code this} promise
 	 */
 	default @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> fn) {
 		return then((v, e) -> {

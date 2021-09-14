@@ -27,7 +27,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
 
 /**
  * An implementation of the {@link EventloopExecutor} which posts
@@ -110,9 +110,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 			try {
 				computation.run();
 			} catch (Exception ex) {
-				if (ex instanceof RuntimeException) {
-					handleFatalError(ex, computation);
-				}
+				handleRuntimeException(ex, computation);
 				future.completeExceptionally(ex);
 				return;
 			} finally {
@@ -136,7 +134,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 					}
 				});
 			} catch (Exception ex) {
-				handleFatalError(ex, computation);
+				handleRuntimeException(ex, computation);
 				future.completeExceptionally(ex);
 			} finally {
 				complete();

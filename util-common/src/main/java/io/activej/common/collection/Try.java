@@ -30,7 +30,7 @@ import java.util.function.*;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.exception.FatalErrorHandlers.handleFatalError;
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
 
 public final class Try<T> {
 	static {
@@ -63,9 +63,7 @@ public final class Try<T> {
 		try {
 			return new Try<>(computation.get(), null);
 		} catch (Exception ex) {
-			if (ex instanceof RuntimeException) {
-				handleFatalError(ex, computation);
-			}
+			handleRuntimeException(ex, computation);
 			return new Try<>(null, ex);
 		}
 	}
@@ -75,9 +73,7 @@ public final class Try<T> {
 			computation.run();
 			return new Try<>(null, null);
 		} catch (Exception ex) {
-			if (ex instanceof RuntimeException) {
-				handleFatalError(ex, computation);
-			}
+			handleRuntimeException(ex, computation);
 			return new Try<>(null, ex);
 		}
 	}
@@ -87,9 +83,7 @@ public final class Try<T> {
 			@Nullable T result = computation.call();
 			return new Try<>(result, null);
 		} catch (Exception e) {
-			if (e instanceof RuntimeException) {
-				handleFatalError(e, computation);
-			}
+			handleRuntimeException(e, computation);
 			return new Try<>(null, e);
 		}
 	}
@@ -175,9 +169,7 @@ public final class Try<T> {
 			try {
 				return new Try<>(function.apply(result), null);
 			} catch (Exception ex) {
-				if (ex instanceof RuntimeException) {
-					handleFatalError(ex, function);
-				}
+				handleRuntimeException(ex, function);
 				return new Try<>(null, ex);
 			}
 		}
