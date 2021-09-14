@@ -19,12 +19,7 @@ package io.activej.common.exception;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOError;
-import java.util.List;
-import java.util.zip.ZipError;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import java.util.function.Predicate;
 
 /**
  * Encapsulation of certain fatal error handlers that determine behaviour in case of fatal error
@@ -65,28 +60,36 @@ public final class FatalErrorHandlers {
 		return (e, context) -> shutdownForcibly();
 	}
 
-	public static FatalErrorHandler exitOnMatchedError(List<Class<?>> whiteList, List<Class<?>> blackList) {
+	public static FatalErrorHandler exitOnMatchedError(Predicate<Throwable> predicate) {
 		return (e, context) -> {
-			if (matchesAny(e.getClass(), whiteList) && !matchesAny(e.getClass(), blackList)) {
+			if (predicate.test(e)) {
 				shutdownForcibly();
 			}
 		};
 	}
 
+	public static FatalErrorHandler exitOnMatchedError(Class<? extends Throwable> cls) {
+		return exitOnMatchedError(throwable -> cls.isAssignableFrom(throwable.getClass()));
+	}
+
 	public static FatalErrorHandler exitOnJvmError() {
-		return exitOnMatchedError(singletonList(Error.class), asList(AssertionError.class, StackOverflowError.class, IOError.class, ZipError.class));
+		return exitOnMatchedError(e -> e instanceof Error);
 	}
 
 	public static FatalErrorHandler rethrowOnAnyError() {
 		return (e, context) -> propagate(e);
 	}
 
-	public static FatalErrorHandler rethrowOnMatchedError(List<Class<?>> whiteList, List<Class<?>> blackList) {
+	public static FatalErrorHandler rethrowOnMatchedError(Predicate<Throwable> predicate) {
 		return (e, context) -> {
-			if (matchesAny(e.getClass(), whiteList) && !matchesAny(e.getClass(), blackList)) {
+			if (predicate.test(e)) {
 				propagate(e);
 			}
 		};
+	}
+
+	public static FatalErrorHandler rethrowOnMatchedError(Class<? extends Throwable> cls) {
+		return rethrowOnMatchedError(throwable -> cls.isAssignableFrom(throwable.getClass()));
 	}
 
 	public static void propagate(@NotNull Throwable e) {
@@ -101,9 +104,5 @@ public final class FatalErrorHandlers {
 
 	private static void shutdownForcibly() {
 		Runtime.getRuntime().halt(1);
-	}
-
-	private static boolean matchesAny(Class<?> c, List<Class<?>> list) {
-		return list.stream().anyMatch(cl -> cl.isAssignableFrom(c));
 	}
 }

@@ -19,9 +19,9 @@ package io.activej.config.converter;
 import io.activej.async.service.EventloopTaskScheduler.Schedule;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
+import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
-import io.activej.common.exception.FatalErrorHandler;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
@@ -517,12 +517,16 @@ public final class ConfigConverters {
 						return exitOnJvmError();
 					case "rethrowOnMatchedError":
 						return rethrowOnMatchedError(
-								config.get(OF_CLASSES, "whitelist", emptyList()),
-								config.get(OF_CLASSES, "blacklist", emptyList()));
+								toThrowablePredicate(
+										config.get(OF_CLASSES, "whitelist", emptyList()),
+										config.get(OF_CLASSES, "blacklist", emptyList())
+								));
 					case "exitOnMatchedError":
 						return exitOnMatchedError(
-								config.get(OF_CLASSES, "whitelist", emptyList()),
-								config.get(OF_CLASSES, "blacklist", emptyList()));
+								toThrowablePredicate(
+										config.get(OF_CLASSES, "whitelist", emptyList()),
+										config.get(OF_CLASSES, "blacklist", emptyList())
+								));
 					default:
 						throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
 				}
@@ -536,6 +540,14 @@ public final class ConfigConverters {
 				return get(config);
 			}
 		};
+	}
+
+	private static Predicate<Throwable> toThrowablePredicate(List<Class<?>> whiteList, List<Class<?>> blackList) {
+		return e -> matchesAny(e.getClass(), whiteList) && !matchesAny(e.getClass(), blackList);
+	}
+
+	private static boolean matchesAny(Class<?> c, List<Class<?>> list) {
+		return list.stream().anyMatch(cl -> cl.isAssignableFrom(c));
 	}
 
 	public static ConfigConverter<Schedule> ofEventloopTaskSchedule() {
