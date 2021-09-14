@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -108,13 +109,17 @@ abstract class CompletePromise<T> implements Promise<T> {
 
 	@Override
 	public @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, Exception> exceptionFn) {
-		try {
-			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
-		} catch (Exception ex) {
-			return Promise.ofException(ex);
-		}
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> mapException(@NotNull Predicate<Exception> predicate, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> mapException(@NotNull Class<? extends Exception> clazz, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+		return this;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -257,9 +262,37 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
+		try {
+			if (predicate.test(getResult())) {
+				fn.accept(getResult());
+			}
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
 	public @NotNull Promise<T> whenResult(@NotNull RunnableEx action) {
 		try {
 			action.run();
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, @NotNull RunnableEx action) {
+		try {
+			if (predicate.test(getResult())) {
+				action.run();
+			}
 			return this;
 		} catch (RuntimeException ex) {
 			throw ex;
@@ -274,7 +307,27 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull ConsumerEx<@NotNull Exception> fn) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull ConsumerEx<@NotNull Exception> fn) {
+		return this;
+	}
+
+	@Override
 	public @NotNull Promise<T> whenException(@NotNull RunnableEx action) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull RunnableEx action) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull RunnableEx action) {
 		return this;
 	}
 

@@ -350,7 +350,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	default @NotNull Promise<T> mapException(@NotNull Class<? extends Exception> clazz,
 			@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
-		return mapException(e -> clazz.isAssignableFrom(e.getClass()) ? exceptionFn.apply(e) : e);
+		return mapException(e -> clazz.isAssignableFrom(e.getClass()), exceptionFn);
 	}
 
 	/**

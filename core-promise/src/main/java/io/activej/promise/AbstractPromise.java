@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
@@ -288,7 +289,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	public @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, Exception> exceptionFn) {
 		if (isComplete()) {
 			try {
-				return exception == null ? Promise.of(result) : Promise.ofException(exceptionFn.apply(exception));
+				return exception == null ? this : Promise.ofException(exceptionFn.apply(exception));
 			} catch (RuntimeException ex) {
 				throw ex;
 			} catch (Exception ex) {
@@ -316,6 +317,86 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".mapException(" + formatToString(exceptionFn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> mapException(@NotNull Predicate<Exception> predicate, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+		if (isComplete()) {
+			try {
+				return exception == null ?
+						this :
+						predicate.test(exception) ? Promise.ofException(exceptionFn.apply(exception)) : this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					complete(result);
+				} else {
+					try {
+						e = predicate.test(e) ? exceptionFn.apply(e) : e;
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
+						return;
+					}
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".mapException(" + formatToString(predicate) + ", " + formatToString(exceptionFn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> mapException(@NotNull Class<? extends Exception> clazz, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+		if (isComplete()) {
+			try {
+				return exception == null ?
+						this :
+						clazz.isAssignableFrom(exception.getClass()) ? Promise.ofException(exceptionFn.apply(exception)) : this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					complete(result);
+				} else {
+					try {
+						e = clazz.isAssignableFrom(e.getClass()) ? exceptionFn.apply(e) : e;
+					} catch (RuntimeException ex) {
+						throw ex;
+					} catch (Exception ex) {
+						completeExceptionally(ex);
+						return;
+					}
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".mapException(" + clazz.getName() + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -528,7 +609,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".when(" + formatToString(fn) + ')';
+				return ".when(" + formatToString(predicate) + ", " + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -579,7 +660,10 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".when(" + (fn != null ? formatToString(fn) : null) + ", " + (exceptionFn != null ? formatToString(exceptionFn) : null) + ')';
+				return ".when(" + formatToString(predicate) + ", " +
+						(fn != null ? formatToString(fn) : null) + ", " +
+						(exceptionFn != null ? formatToString(exceptionFn) : null) +
+						')';
 			}
 		};
 		subscribe(resultPromise);
@@ -618,7 +702,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 			@Override
 			public String describe() {
-				return ".when(" + formatToString(action) + ')';
+				return ".when(" + formatToString(predicate) + ", " + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -780,6 +864,45 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
+		if (isComplete()) {
+			try {
+				if (exception == null && predicate.test(result)) {
+					fn.accept(result);
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (e == null && predicate.test(result)) {
+						fn.accept(result);
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenResult(" + formatToString(predicate) + ", " + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
 	public @NotNull Promise<T> whenResult(@NotNull RunnableEx action) {
 		if (isComplete()) {
 			if (isResult()) {
@@ -814,6 +937,45 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".whenResult(" + formatToString(action) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, @NotNull RunnableEx action) {
+		if (isComplete()) {
+			try {
+				if (exception == null && predicate.test(result)) {
+					action.run();
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (e == null && predicate.test(result)) {
+						action.run();
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenResult(" + formatToString(predicate) + ", " + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -862,6 +1024,84 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull ConsumerEx<@NotNull Exception> fn) {
+		if (isComplete()) {
+			try {
+				if (exception != null && predicate.test(exception)) {
+					fn.accept(exception);
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (e != null && predicate.test(e)) {
+						fn.accept(e);
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenException(" + formatToString(predicate) + ", " + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull ConsumerEx<@NotNull Exception> fn) {
+		if (isComplete()) {
+			try {
+				if (exception != null && clazz.isAssignableFrom(exception.getClass())) {
+					fn.accept(exception);
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result1, @Nullable Exception e) {
+				try {
+					if (e != null && clazz.isAssignableFrom(e.getClass())) {
+						fn.accept(e);
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result1, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenException(" + clazz.getName() + ", " + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
 	public @NotNull Promise<T> whenException(@NotNull RunnableEx action) {
 		if (isComplete()) {
 			if (isException()) {
@@ -896,6 +1136,84 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".whenException(" + formatToString(action) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull RunnableEx action) {
+		if (isComplete()) {
+			try {
+				if (exception != null && predicate.test(exception)) {
+					action.run();
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (e != null && predicate.test(e)) {
+						action.run();
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenException(" + formatToString(predicate) + ", " + formatToString(action) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull RunnableEx action) {
+		if (isComplete()) {
+			try {
+				if (exception != null && clazz.isAssignableFrom(exception.getClass())) {
+					action.run();
+				}
+				return this;
+			} catch (RuntimeException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				try {
+					if (e != null && clazz.isAssignableFrom(e.getClass())) {
+						action.run();
+					}
+				} catch (RuntimeException ex) {
+					throw ex;
+				} catch (Exception ex) {
+					completeExceptionally(ex);
+					return;
+				}
+				complete(result, e);
+			}
+
+			@Override
+			public String describe() {
+				return ".whenException(" + clazz.getName() + ", " + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);

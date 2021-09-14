@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
@@ -109,6 +110,28 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, Exception> exceptionFn) {
 		try {
 			return Promise.ofException(exceptionFn.apply(exception));
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> mapException(@NotNull Predicate<Exception> predicate, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+		try {
+			return predicate.test(exception) ? Promise.ofException(exceptionFn.apply(exception)) : this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> mapException(@NotNull Class<? extends Exception> clazz, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+		try {
+			return clazz.isAssignableFrom(exception.getClass()) ? Promise.ofException(exceptionFn.apply(exception)) : this;
 		} catch (RuntimeException ex) {
 			throw ex;
 		} catch (Exception ex) {
@@ -235,7 +258,17 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
+		return this;
+	}
+
+	@Override
 	public @NotNull Promise<T> whenResult(@NotNull RunnableEx action) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, @NotNull RunnableEx action) {
 		return this;
 	}
 
@@ -252,9 +285,65 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull ConsumerEx<@NotNull Exception> fn) {
+		try {
+			if (predicate.test(exception)) {
+				fn.accept(exception);
+			}
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull ConsumerEx<@NotNull Exception> fn) {
+		try {
+			if (clazz.isAssignableFrom(exception.getClass())) {
+				fn.accept(exception);
+			}
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
 	public @NotNull Promise<T> whenException(@NotNull RunnableEx action) {
 		try {
 			action.run();
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull RunnableEx action) {
+		try {
+			if (predicate.test(exception)) {
+				action.run();
+			}
+			return this;
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull RunnableEx action) {
+		try {
+			if (clazz.isAssignableFrom(exception.getClass())) {
+				action.run();
+			}
 			return this;
 		} catch (RuntimeException ex) {
 			throw ex;
