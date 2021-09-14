@@ -19,6 +19,8 @@ package io.activej.async.callback;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
 
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
+
 public interface AsyncComputation<T> {
 	void run(Callback<? super T> callback);
 
@@ -26,9 +28,8 @@ public interface AsyncComputation<T> {
 		return callback -> {
 			try {
 				runnable.run();
-			} catch (RuntimeException ex) {
-				throw ex;
 			} catch (Exception ex) {
+				handleRuntimeException(ex, runnable);
 				callback.accept(null, ex);
 				return;
 			}
@@ -41,9 +42,8 @@ public interface AsyncComputation<T> {
 			T result;
 			try {
 				result = runnable.get();
-			} catch (RuntimeException ex) {
-				throw ex;
 			} catch (Exception ex) {
+				handleRuntimeException(ex, runnable);
 				callback.accept(null, ex);
 				return;
 			}
@@ -56,9 +56,8 @@ public interface AsyncComputation<T> {
 			AsyncComputation<? extends T> computation;
 			try {
 				computation = computationSupplier.get();
-			} catch (RuntimeException ex) {
-				throw ex;
 			} catch (Exception ex) {
+				handleRuntimeException(ex, computationSupplier);
 				callback.accept(null, ex);
 				return;
 			}
