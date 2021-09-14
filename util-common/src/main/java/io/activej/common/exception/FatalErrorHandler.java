@@ -38,4 +38,11 @@ public interface FatalErrorHandler {
 	default void handle(@NotNull Throwable e) {
 		handle(e, null);
 	}
+
+	default FatalErrorHandler andThen(FatalErrorHandler nextHandler) {
+		return (e, context) -> {
+			handle(e, context);
+			nextHandler.handle(e, context);
+		};
+	}
 }
