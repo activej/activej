@@ -13,7 +13,7 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 

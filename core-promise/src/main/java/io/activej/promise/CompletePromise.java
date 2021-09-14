@@ -28,6 +28,7 @@ import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
@@ -78,9 +79,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult()));
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -89,9 +89,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> @NotNull Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult(), null));
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -100,9 +99,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	public @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
 		try {
 			return Promise.of(fn.apply(getResult()));
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -127,9 +125,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -138,9 +135,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	public @NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.get();
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -150,9 +146,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -163,9 +158,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -177,9 +171,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 				fn.accept(getResult(), null);
 			}
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -192,9 +185,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 				fn.accept(getResult());
 			}
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -206,9 +198,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 				action.run();
 			}
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -218,9 +209,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			fn.accept(getResult(), null);
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -230,9 +220,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			fn.accept(getResult());
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -242,9 +231,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			action.run();
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -254,9 +242,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			fn.accept(getResult());
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -268,9 +255,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 				fn.accept(getResult());
 			}
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -280,9 +266,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			action.run();
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
@@ -294,9 +279,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 				action.run();
 			}
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			handleRuntimeException(ex, this);
 			return Promise.ofException(ex);
 		}
 	}

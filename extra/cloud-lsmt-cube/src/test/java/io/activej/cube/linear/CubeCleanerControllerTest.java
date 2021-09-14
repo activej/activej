@@ -31,7 +31,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeUplink;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.Collections.emptyList;
 

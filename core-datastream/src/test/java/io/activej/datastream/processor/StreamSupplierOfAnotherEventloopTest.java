@@ -19,7 +19,7 @@ import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
 import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;

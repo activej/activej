@@ -6,7 +6,7 @@ import io.activej.http.*;
 import java.io.IOException;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.http.HttpHeaders.ACCEPT_ENCODING;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.test.TestUtils.getFreePort;

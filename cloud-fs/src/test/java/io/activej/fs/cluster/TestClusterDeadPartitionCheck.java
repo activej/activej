@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.setOf;
-import static io.activej.eventloop.error.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;

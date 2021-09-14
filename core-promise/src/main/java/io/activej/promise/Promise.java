@@ -31,6 +31,7 @@ import java.util.concurrent.*;
 import java.util.function.*;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
@@ -218,9 +219,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					try {
 						T result = supplier.get();
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
-					} catch (RuntimeException e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, supplier));
 					} catch (Exception e) {
+						handleRuntimeException(e, supplier);
 						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
 					} catch (Throwable e) {
 						eventloop.execute(() -> eventloop.recordFatalError(e, supplier));

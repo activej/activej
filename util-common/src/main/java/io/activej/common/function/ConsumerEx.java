@@ -20,6 +20,8 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.Consumer;
 
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
+
 @FunctionalInterface
 public interface ConsumerEx<T> {
 	void accept(T t) throws Exception;
@@ -38,9 +40,8 @@ public interface ConsumerEx<T> {
 		return t -> {
 			try {
 				checkedFn.accept(t);
-			} catch (RuntimeException ex) {
-				throw ex;
 			} catch (Exception ex) {
+				handleRuntimeException(ex, checkedFn);
 				throw UncheckedException.of(ex);
 			}
 		};

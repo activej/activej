@@ -37,6 +37,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
 import static java.util.Arrays.asList;
 
 /**
@@ -164,9 +165,8 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 					T t;
 					try {
 						t = supplier.get();
-					} catch (RuntimeException ex) {
-						throw ex;
 					} catch (Exception ex) {
+						handleRuntimeException(ex, supplier);
 						closeEx(ex);
 						break;
 					}

@@ -19,15 +19,16 @@ package io.activej.config.converter;
 import io.activej.async.service.EventloopTaskScheduler.Schedule;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
+import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
-import io.activej.eventloop.error.FatalErrorHandler;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.promise.RetryPolicy;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -45,7 +46,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
-import static io.activej.eventloop.error.FatalErrorHandlers.*;
+import static io.activej.common.exception.FatalErrorHandlers.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
@@ -517,12 +518,21 @@ public final class ConfigConverters {
 						return exitOnJvmError();
 					case "rethrowOnMatchedError":
 						return rethrowOnMatchedError(
-								config.get(OF_CLASSES, "whitelist", emptyList()),
-								config.get(OF_CLASSES, "blacklist", emptyList()));
+								toThrowablePredicate(
+										config.get(OF_CLASSES, "whitelist", emptyList()),
+										config.get(OF_CLASSES, "blacklist", emptyList())
+								));
 					case "exitOnMatchedError":
 						return exitOnMatchedError(
-								config.get(OF_CLASSES, "whitelist", emptyList()),
-								config.get(OF_CLASSES, "blacklist", emptyList()));
+								toThrowablePredicate(
+										config.get(OF_CLASSES, "whitelist", emptyList()),
+										config.get(OF_CLASSES, "blacklist", emptyList())
+								));
+					case "logging":
+						String loggerName = config.get(ofString(), "logger", null);
+						return loggerName == null ?
+								logging() :
+								logging(LoggerFactory.getLogger(loggerName));
 					default:
 						throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
 				}
@@ -536,6 +546,14 @@ public final class ConfigConverters {
 				return get(config);
 			}
 		};
+	}
+
+	private static Predicate<Throwable> toThrowablePredicate(List<Class<?>> whiteList, List<Class<?>> blackList) {
+		return e -> matchesAny(e.getClass(), whiteList) && !matchesAny(e.getClass(), blackList);
+	}
+
+	private static boolean matchesAny(Class<?> c, List<Class<?>> list) {
+		return list.stream().anyMatch(cl -> cl.isAssignableFrom(c));
 	}
 
 	public static ConfigConverter<Schedule> ofEventloopTaskSchedule() {
