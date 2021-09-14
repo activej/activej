@@ -30,7 +30,7 @@ import static org.objectweb.asm.Type.*;
 public final class MeasureHyperLogLog extends Measure {
 	private final int registers;
 
-	MeasureHyperLogLog(int registers) {
+	private MeasureHyperLogLog(int registers) {
 		super(FieldTypes.ofHyperLogLog());
 		this.registers = registers;
 	}

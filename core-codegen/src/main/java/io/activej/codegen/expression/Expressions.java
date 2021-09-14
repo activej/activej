@@ -339,7 +339,7 @@ public class Expressions {
 	 */
 	public static Expression concat(List<Expression> arguments) {
 		if (arguments.isEmpty()) return value("");
-		return new ExpressionConcat(arguments);
+		return ExpressionConcat.create(arguments);
 	}
 
 	/**

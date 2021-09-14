@@ -37,7 +37,7 @@ public class Measures {
 	}
 
 	public static Measure hyperLogLog(int registers) {
-		return new MeasureHyperLogLog(registers);
+		return MeasureHyperLogLog.create(registers);
 	}
 
 	public static Measure union(FieldType<?> fieldType) {

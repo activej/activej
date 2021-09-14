@@ -86,7 +86,7 @@ public final class SerializerBuilder {
 
 	private final Map<Class<? extends Annotation>, Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>>> annotationAliases = new HashMap<>();
 
-	public SerializerBuilder(DefiningClassLoader classLoader) {
+	private SerializerBuilder(DefiningClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
 

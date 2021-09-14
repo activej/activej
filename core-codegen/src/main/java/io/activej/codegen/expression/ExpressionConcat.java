@@ -35,7 +35,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 public final class ExpressionConcat implements Expression {
 	private final List<Expression> arguments;
 
-	ExpressionConcat(List<Expression> arguments) {
+	private ExpressionConcat(List<Expression> arguments) {
 		this.arguments = arguments;
 	}
 
