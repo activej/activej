@@ -60,21 +60,6 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 		return processComplete;
 	}
 
-	protected final void completeProcess() {
-		completeProcessEx(null);
-	}
-
-	protected final void completeProcessEx(@Nullable Exception e) {
-		if (isProcessComplete()) return;
-		if (e == null) {
-			processComplete = true; // setting flag here only, as closeEx() method sets it on its own
-			processCompletion.trySet(null);
-			afterProcess(null);
-		} else {
-			closeEx(e);
-		}
-	}
-
 	@Override
 	public final @NotNull Promise<Void> getProcessCompletion() {
 		return processCompletion;
@@ -134,7 +119,10 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	 */
 	@Override
 	public final void close() {
-		AsyncProcess.super.close();
+		if (isProcessComplete()) return;
+		processComplete = true;
+		processCompletion.trySet(null);
+		afterProcess(null);
 	}
 
 	protected final <T> ChannelSupplier<T> sanitize(ChannelSupplier<T> supplier) {

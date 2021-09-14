@@ -113,12 +113,15 @@ public final class AsyncAccumulator<A> implements AsyncCloseable {
 		return activePromises;
 	}
 
-	public void complete() {
+	@Override
+	public void close() {
 		resultPromise.trySet(accumulator);
 	}
 
-	public void complete(A result) {
-		if (resultPromise.trySet(result)) {
+	@Override
+	public <T> void closeEx(T result, @Nullable Exception e) {
+		//noinspection unchecked
+		if (resultPromise.trySet((A) result, e)) {
 			if (result != accumulator) {
 				Recyclers.recycle(accumulator);
 			}

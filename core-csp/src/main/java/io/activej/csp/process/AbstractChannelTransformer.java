@@ -63,8 +63,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 				.then(this::onProcessStart)
 				.then(() -> input.streamTo(ChannelConsumer.of(this::onItem)))
 				.then(this::onProcessFinish)
-				.whenResult(this::completeProcess)
-				.whenException(this::closeEx);
+				.whenComplete(this::closeEx);
 	}
 
 	@SuppressWarnings("ConstantConditions")

@@ -119,7 +119,7 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 							Recyclers.recycle(item);
 						} else {
 							Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
-									.run(($, e1) -> completeProcessEx(e1));
+									.run(this::closeEx);
 						}
 					} else {
 						closeEx(e);

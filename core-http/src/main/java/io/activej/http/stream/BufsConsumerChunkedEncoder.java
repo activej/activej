@@ -82,7 +82,7 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 				.streamTo(ChannelConsumer.of(buf -> output.accept(encodeBuf(buf))))
 				.then(() -> output.accept(ByteBuf.wrapForReading(LAST_CHUNK_BYTES)))
 				.then(() -> output.acceptEndOfStream())
-				.whenResult(this::completeProcess);
+				.whenResult(this::close);
 	}
 
 	private static ByteBuf encodeBuf(ByteBuf buf) {

@@ -92,7 +92,7 @@ public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 								.whenResult(this::encodeBufs);
 					} else {
 						output.acceptAll(encoder.encodeEndOfStreamBlock(), null)
-								.whenResult(this::completeProcess);
+								.whenResult(this::close);
 					}
 				});
 	}
