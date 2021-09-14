@@ -407,7 +407,7 @@ public final class AbstractHttpConnectionTest {
 	private @NotNull FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
 		return response -> response.loadBody()
 				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
-				.post();
+				.async();
 	}
 
 	private void doTestEmptyRequestResponsePermutations(List<Consumer<HttpMessage>> messageDecorators) {
@@ -499,12 +499,12 @@ public final class AbstractHttpConnectionTest {
 				IntStream.range(0, maxKeepAlive - 1)
 						.mapToObj($ ->
 								() -> checkRequest("keep-alive", 1, connectionCount)
-										.post()
+										.async()
 										.toVoid()))
 				.then(() -> checkRequest("close", 1, connectionCount))
-				.post()
+				.async()
 				.then(() -> checkRequest("keep-alive", 2, connectionCount))
-				.post()
+				.async()
 				.whenComplete(server::close));
 	}
 

@@ -280,13 +280,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract(pure = true)
 	@NotNull Promise<T> async();
 
-	@Contract(pure = true)
-	default @NotNull Promise<T> post() {
-		SettablePromise<T> result = new SettablePromise<>();
-		this.run(result::post);
-		return result;
-	}
-
 	/**
 	 * Executes given {@code promise} after execution
 	 * of this {@code Promise} completes.

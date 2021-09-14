@@ -131,7 +131,7 @@ public final class RpcNoServerTest {
 
 		try {
 			await(rpcClient.start()
-					.post()
+					.async()
 					.whenComplete(($, e) -> {
 						if (e != null) {
 							System.err.println(e.getMessage());
