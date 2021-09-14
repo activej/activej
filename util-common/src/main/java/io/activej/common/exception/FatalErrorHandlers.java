@@ -32,7 +32,7 @@ public final class FatalErrorHandlers {
 
 	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.rethrowOnAnyError();
 
-	private static final ThreadLocal<FatalErrorHandler> CURRENT_HANDLER = ThreadLocal.withInitial(() -> globalFatalErrorHandler);
+	private static final ThreadLocal<FatalErrorHandler> CURRENT_HANDLER = new ThreadLocal<>();
 
 	public static void setThreadFatalErrorHandler(@NotNull FatalErrorHandler handler) {
 		CURRENT_HANDLER.set(handler);
@@ -43,7 +43,8 @@ public final class FatalErrorHandlers {
 	}
 
 	public static @NotNull FatalErrorHandler getThreadFatalErrorHandler() {
-		return CURRENT_HANDLER.get();
+		FatalErrorHandler handler = CURRENT_HANDLER.get();
+		return handler == null ? globalFatalErrorHandler : handler;
 	}
 
 	public static void handleRuntimeException(@NotNull Exception e, @Nullable Object context) {
