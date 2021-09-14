@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -315,7 +316,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
-						.whenResult(value -> {if (value != null) fn.accept(value);});
+						.whenResult(Objects::nonNull, fn::accept);
 			}
 		};
 	}

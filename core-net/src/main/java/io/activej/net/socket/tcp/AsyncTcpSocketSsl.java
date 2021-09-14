@@ -94,15 +94,6 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 		return new AsyncTcpSocketSsl(asyncTcpSocket, engine, executor);
 	}
 
-	private @NotNull <T> Promise<T> sanitize(T value, @Nullable Exception e) {
-		if (e == null) {
-			return Promise.of(value);
-		} else {
-			closeEx(e);
-			return Promise.ofException(e);
-		}
-	}
-
 	@Override
 	public @NotNull Promise<ByteBuf> read() {
 		read = null;
@@ -152,7 +143,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 
 	private void doRead() {
 		upstream.read()
-				.then(this::sanitize)
+				.whenException(this::closeEx)
 				.whenResult(buf -> {
 					if (isClosed()) {
 						assert pendingUpstreamWrite != null;
@@ -187,12 +178,9 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 			this.pendingUpstreamWrite = writePromise;
 		}
 		writePromise
-				.then(this::sanitize)
+				.whenException(this::closeEx)
 				.whenComplete(() -> this.pendingUpstreamWrite = null)
-				.whenResult(() -> {
-					if (isClosed()) {
-						return;
-					}
+				.whenResult($ -> !isClosed(), () -> {
 					if (engine.isOutboundDone()) {
 						close();
 						return;
@@ -299,8 +287,7 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 			Runnable task = engine.getDelegatedTask();
 			if (task == null) break;
 			Promise.ofBlocking(executor, task::run)
-					.whenResult(() -> {
-						if (isClosed()) return;
+					.whenResult($ -> !isClosed(), () -> {
 						try {
 							doHandshake();
 						} catch (SSLException e) {

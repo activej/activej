@@ -278,7 +278,10 @@ public final class HttpActiveFs implements ActiveFs {
 											.transformWith(transformer)
 											.withAcknowledgement(ack -> ack.both(response.loadBody()
 													.map(body -> fromJson(UploadAcknowledgement.class, body))
-													.whenResult(HttpActiveFs::failOnException)
+													.whenResult(uploadAck -> !uploadAck.isOk(), ack1 -> {
+														//noinspection ConstantConditions
+														throw ack1.getError();
+													})
 													.whenException(e -> {
 														channelPromise.trySetException(e);
 														buffer.closeEx(e);
@@ -290,12 +293,6 @@ public final class HttpActiveFs implements ActiveFs {
 				.whenComplete(responsePromise::trySet);
 
 		return channelPromise;
-	}
-
-	private static void failOnException(UploadAcknowledgement ack) throws FsException {
-		if (!ack.isOk()) { // noinspection ConstantConditions - checked above
-			throw ack.getError();
-		}
 	}
 
 }

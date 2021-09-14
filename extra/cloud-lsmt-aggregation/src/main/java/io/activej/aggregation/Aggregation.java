@@ -555,15 +555,14 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 		return doConsolidation(chunks)
 				.map(newChunks -> AggregationDiff.of(new LinkedHashSet<>(newChunks), new LinkedHashSet<>(chunks)))
-				.whenComplete(
-						$ -> {
-							consolidationLastTimeMillis = eventloop.currentTimeMillis() - consolidationStarted;
-							consolidations++;
-						},
-						e -> {
-							consolidationStarted = 0;
-							consolidationLastError = e;
-						});
+				.whenResult(() -> {
+					consolidationLastTimeMillis = eventloop.currentTimeMillis() - consolidationStarted;
+					consolidations++;
+				})
+				.whenException(e -> {
+					consolidationStarted = 0;
+					consolidationLastError = e;
+				});
 	}
 
 	public List<AggregationChunk> getChunksForConsolidation(Set<Object> lockedChunkIds, boolean hotSegment) {

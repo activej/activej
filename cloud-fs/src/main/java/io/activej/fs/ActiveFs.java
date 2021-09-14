@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
@@ -281,11 +282,7 @@ public interface ActiveFs {
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
 				.map(name -> info(name)
-						.whenResult(metadata -> {
-							if (metadata != null) {
-								result.put(name, metadata);
-							}
-						})))
+						.whenResult(Objects::nonNull, metadata -> result.put(name, metadata))))
 				.map($ -> result);
 	}
 

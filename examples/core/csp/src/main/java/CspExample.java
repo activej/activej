@@ -35,7 +35,7 @@ public final class CspExample extends AbstractCommunicatingProcess implements Wi
 	//[START REGION_1]
 	protected void doProcess() {
 		input.get()
-				.whenComplete((data, e) -> {
+				.whenResult(data -> {
 					if (data == null) {
 						output.acceptEndOfStream()
 								.whenResult(this::completeProcess);
@@ -45,7 +45,8 @@ public final class CspExample extends AbstractCommunicatingProcess implements Wi
 						output.accept(data)
 								.whenResult(this::doProcess);
 					}
-				});
+				})
+				.whenException(Throwable::printStackTrace);
 	}
 	//[END REGION_1]
 

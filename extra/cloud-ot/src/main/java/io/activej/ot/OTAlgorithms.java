@@ -482,14 +482,9 @@ public final class OTAlgorithms {
 										return to.hasCommit(commit.getId())
 												.then(b -> b ?
 														Promise.complete() :
-														Promises.all(
-																commit.getParents().keySet().stream()
+														Promises.all(commit.getParents().keySet().stream()
 																		.map(parentId -> from.loadCommit(parentId)
-																				.whenResult(parent -> {
-																					if (!queue.contains(parent)) {
-																						queue.add(parent);
-																					}
-																				})))
+																				.whenResult(parent -> !queue.contains(parent), queue::add)))
 																.then(() -> to.push(commit)))
 												.map($ -> true);
 									});

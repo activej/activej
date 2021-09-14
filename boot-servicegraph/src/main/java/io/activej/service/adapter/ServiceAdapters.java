@@ -17,7 +17,6 @@
 package io.activej.service.adapter;
 
 import io.activej.async.service.EventloopService;
-import io.activej.common.function.BiConsumerEx;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.BlockingSocketServer;
@@ -192,10 +191,12 @@ public final class ServiceAdapters {
 		return new ServiceAdapter<EventloopService>() {
 			@Override
 			public CompletableFuture<?> start(EventloopService instance, Executor executor) {
-				CompletableFuture<?> future = new CompletableFuture<>();
+				CompletableFuture<Object> future = new CompletableFuture<>();
 				instance.getEventloop().execute(wrapContext(instance, () -> {
 					try {
-						instance.start().whenComplete(completeFuture(future));
+						instance.start()
+								.whenResult(future::complete)
+								.whenException(future::completeExceptionally);
 					} catch (Exception e) {
 						future.completeExceptionally(e);
 					}
@@ -205,10 +206,12 @@ public final class ServiceAdapters {
 
 			@Override
 			public CompletableFuture<?> stop(EventloopService instance, Executor executor) {
-				CompletableFuture<?> future = new CompletableFuture<>();
+				CompletableFuture<Object> future = new CompletableFuture<>();
 				instance.getEventloop().execute(wrapContext(instance, () -> {
 					try {
-						instance.stop().whenComplete(completeFuture(future));
+						instance.stop()
+								.whenResult(future::complete)
+								.whenException(future::completeExceptionally);
 					} catch (Exception e) {
 						future.completeExceptionally(e);
 					}
@@ -236,8 +239,10 @@ public final class ServiceAdapters {
 
 			@Override
 			public CompletableFuture<?> stop(EventloopServer instance, Executor executor) {
-				CompletableFuture<?> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> instance.close().whenComplete(completeFuture(future))));
+				CompletableFuture<Object> future = new CompletableFuture<>();
+				instance.getEventloop().execute(wrapContext(instance, () -> instance.close()
+						.whenResult(future::complete)
+						.whenException(future::completeExceptionally)));
 				return future;
 			}
 		};
@@ -382,15 +387,4 @@ public final class ServiceAdapters {
 			}
 		};
 	}
-
-	private static <T> BiConsumerEx<T, Exception> completeFuture(CompletableFuture<?> future) {
-		return ($, e) -> {
-			if (e == null) {
-				future.complete(null);
-			} else {
-				future.completeExceptionally(e);
-			}
-		};
-	}
-
 }

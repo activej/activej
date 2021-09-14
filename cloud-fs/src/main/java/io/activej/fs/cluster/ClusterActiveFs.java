@@ -368,11 +368,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 						Promises.toList(partitions.getAlivePartitions().entrySet().stream()
 										.map(entry -> action.apply(entry.getKey(), entry.getValue())
 												.whenException(partitions.wrapDeathFn(entry.getKey()))
-												.whenResult(result -> {
-													if (cb.isComplete()) {
-														cleanup.accept(result);
-													}
-												})
+												.whenResult($ -> cb.isComplete(), cleanup::accept)
 												.toTry()
 												.then(aTry -> ensureIsAlive()
 														.map($ -> aTry)

@@ -319,11 +319,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 																				fs.upload(name, meta.getSize()) :
 																				fs.append(name, remoteMeta.getSize())
 																						.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
-																		.whenException(e -> {
-																			if (e instanceof PathContainsFileException) {
-																				logger.error("Cluster contains files with clashing paths", e);
-																			}
-																		}))
+																		.whenException(PathContainsFileException.class, e -> logger.error("Cluster contains files with clashing paths", e)))
 																.withAcknowledgement(ack -> ack
 																		.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
 																		.whenException(e -> {

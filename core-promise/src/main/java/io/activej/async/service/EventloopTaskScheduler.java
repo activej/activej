@@ -197,25 +197,24 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 				task.get() :
 				retry(task, ($, e) -> e == null || !enabled, retryPolicy))
 				.whenComplete(stats.recordStats())
-				.whenComplete((result, e) -> {
-					if (!enabled) return;
-					lastCompleteTime = eventloop.currentTimeMillis();
-					if (e == null) {
-						lastException = null;
-						errorCount = 0;
-						scheduleTask();
-					} else {
-						lastException = e;
-						errorCount++;
-						logger.error("Retry attempt " + errorCount, e);
-						if (abortOnError) {
-							scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
-							throw new RuntimeException(e);
-						} else {
+				.whenComplete(() -> lastCompleteTime = eventloop.currentTimeMillis())
+				.when(($1, $2) -> enabled,
+						$ -> {
+							lastException = null;
+							errorCount = 0;
 							scheduleTask();
-						}
-					}
-				})
+						},
+						e -> {
+							lastException = e;
+							errorCount++;
+							logger.error("Retry attempt " + errorCount, e);
+							if (abortOnError) {
+								scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
+								throw new RuntimeException(e);
+							} else {
+								scheduleTask();
+							}
+						})
 				.toVoid();
 	}
 

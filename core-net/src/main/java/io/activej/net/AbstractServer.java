@@ -254,9 +254,8 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		running = false;
 		closeServerSockets();
 		return Promise.ofCallback(this::onClose)
-				.whenComplete(
-						$ -> logger.info("Server closed: {}", this),
-						e -> logger.error("Server closed exceptionally: " + this, e));
+				.whenResult($ -> logger.info("Server closed: {}", this))
+				.whenException(e -> logger.error("Server closed exceptionally: " + this, e));
 	}
 
 	public final Future<?> closeFuture() {
@@ -338,7 +337,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		try {
 			AsyncTcpSocketNio socketNio = wrapChannel(eventloop, socketChannel, remoteSocketAddress, socketSettings);
 			Inspector inspector = ssl ? socketSslInspector : socketInspector;
-			if (inspector != null){
+			if (inspector != null) {
 				inspector.onConnect(socketNio);
 				socketNio.setInspector(inspector);
 			}

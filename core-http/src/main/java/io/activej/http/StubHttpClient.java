@@ -44,23 +44,20 @@ public final class StubHttpClient implements IAsyncHttpClient {
 		} catch (Exception e) {
 			servletResult = Promise.ofException(e);
 		}
-		return servletResult.then((res, e) -> {
-			request.recycleBody();
-			if (e == null) {
-				ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
-				Eventloop eventloop = Eventloop.getCurrentEventloop();
-				if (bodyStream != null) {
-					res.setBodyStream(bodyStream
-							.withEndOfStream(eos -> eos
-									.whenComplete(() -> eventloop.post(res::recycle))));
-				} else {
-					eventloop.post(res::recycle);
-				}
-				return Promise.of(res);
-			} else {
-				return Promise.ofException(e);
-			}
-		});
+		return servletResult
+				.whenComplete(request::recycleBody)
+				.then(res -> {
+					ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
+					Eventloop eventloop = Eventloop.getCurrentEventloop();
+					if (bodyStream != null) {
+						res.setBodyStream(bodyStream
+								.withEndOfStream(eos -> eos
+										.whenComplete(() -> eventloop.post(res::recycle))));
+					} else {
+						eventloop.post(res::recycle);
+					}
+					return Promise.of(res);
+				});
 	}
 
 }

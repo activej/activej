@@ -102,14 +102,9 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 															}
 															return Promise.complete();
 														})))
-								.whenComplete(($, e) -> {
-									outputs.removeAll(failed);
-									if (e == null) {
-										doProcess();
-									} else {
-										closeEx(new FsException("Not enough successes"));
-									}
-								});
+								.whenComplete(() -> outputs.removeAll(failed))
+								.whenException(e -> closeEx(new FsException("Not enough successes")))
+								.whenResult(this::doProcess);
 						buf.recycle();
 					} else {
 						Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
