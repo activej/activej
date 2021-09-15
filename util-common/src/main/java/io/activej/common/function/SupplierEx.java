@@ -20,7 +20,7 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.Supplier;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 @FunctionalInterface
 public interface SupplierEx<T> {
@@ -41,7 +41,7 @@ public interface SupplierEx<T> {
 			try {
 				return checkedFn.get();
 			} catch (Exception ex) {
-				handleRuntimeException(ex, checkedFn);
+				handleError(ex, checkedFn);
 				throw UncheckedException.of(ex);
 			}
 		};

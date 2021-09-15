@@ -530,9 +530,14 @@ public final class ConfigConverters {
 								));
 					case "logging":
 						String loggerName = config.get(ofString(), "logger", null);
-						return loggerName == null ?
-								logging() :
-								logging(LoggerFactory.getLogger(loggerName));
+						if (loggerName != null) {
+							return logging(LoggerFactory.getLogger(loggerName));
+						}
+						
+						String to = config.get(ofString(), "to", null);
+						if ("stdOut".equals(to)) return loggingToStdOut();
+						if ("stdErr".equals(to)) return loggingToStdErr();
+						return logging();
 					default:
 						throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
 				}

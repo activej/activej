@@ -20,6 +20,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
@@ -43,7 +44,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static java.util.Arrays.asList;
 
 /**
@@ -337,7 +338,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 								try {
 									return fn.apply(value);
 								} catch (Exception ex) {
-									handleRuntimeException(ex, fn);
+									handleError(ex, fn);
 									ChannelSupplier.this.closeEx(ex);
 									throw ex;
 								}

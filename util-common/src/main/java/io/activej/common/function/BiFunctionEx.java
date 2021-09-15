@@ -20,7 +20,7 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.BiFunction;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 @FunctionalInterface
 public interface BiFunctionEx<T, U, R> {
@@ -41,7 +41,7 @@ public interface BiFunctionEx<T, U, R> {
 			try {
 				return checkedFn.apply(t, u);
 			} catch (Exception ex) {
-				handleRuntimeException(ex, checkedFn);
+				handleError(ex, checkedFn);
 				throw UncheckedException.of(ex);
 			}
 		};

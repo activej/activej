@@ -17,6 +17,7 @@
 package io.activej.datastream;
 
 import io.activej.async.process.AsyncCloseable;
+import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.common.function.SupplierEx;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.StreamSuppliers.Closing;
@@ -37,7 +38,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static java.util.Arrays.asList;
 
 /**
@@ -166,7 +167,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 					try {
 						t = supplier.get();
 					} catch (Exception ex) {
-						handleRuntimeException(ex, supplier);
+						handleError(ex, supplier);
 						closeEx(ex);
 						break;
 					}

@@ -31,7 +31,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collector;
 
 import static io.activej.common.Utils.nullify;
-import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 final class StreamConsumers {
 
@@ -67,7 +67,7 @@ final class StreamConsumers {
 				try {
 					consumer.accept(item);
 				} catch (Exception ex) {
-					handleRuntimeException(ex, this);
+					handleError(ex, this);
 					closeEx(ex);
 				}
 			});

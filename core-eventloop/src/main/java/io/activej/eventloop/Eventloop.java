@@ -157,7 +157,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
+	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandlers.logging(logger);
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -1140,7 +1140,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
-		logger.error("Fatal Error in {}", context, e);
 		handleFatalError(fatalErrorHandler, e, context);
 		if (inspector != null) {
 			if (inEventloopThread()) {

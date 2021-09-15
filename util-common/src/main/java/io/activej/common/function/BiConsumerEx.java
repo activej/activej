@@ -20,7 +20,7 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.BiConsumer;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleRuntimeException;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 @FunctionalInterface
 public interface BiConsumerEx<T, U> {
@@ -41,7 +41,7 @@ public interface BiConsumerEx<T, U> {
 			try {
 				checkedFn.accept(t, u);
 			} catch (Exception ex) {
-				handleRuntimeException(ex, checkedFn);
+				handleError(ex, checkedFn);
 				throw UncheckedException.of(ex);
 			}
 		};

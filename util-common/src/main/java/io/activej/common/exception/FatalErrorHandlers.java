@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintStream;
 import java.util.function.Predicate;
 
 /**
@@ -47,14 +48,14 @@ public final class FatalErrorHandlers {
 		return handler == null ? globalFatalErrorHandler : handler;
 	}
 
-	public static void handleRuntimeException(@NotNull Exception e, @Nullable Object context) {
-		if (e instanceof RuntimeException) {
+	public static void handleError(@NotNull Throwable e, @Nullable Object context) {
+		if (e instanceof RuntimeException || !(e instanceof Exception)) {
 			getThreadFatalErrorHandler().handle(e, context);
 		}
 	}
 
-	public static void handleRuntimeException(@NotNull Exception e) {
-		handleRuntimeException(e, null);
+	public static void handleError(@NotNull Throwable e) {
+		handleError(e, null);
 	}
 
 	public static FatalErrorHandler ignoreAllErrors() {
@@ -111,6 +112,25 @@ public final class FatalErrorHandlers {
 				logger.error("Fatal error in {}", context, e);
 			}
 		};
+	}
+
+	public static FatalErrorHandler loggingTo(PrintStream stream) {
+		return (e, context) -> {
+			if (context == null) {
+				stream.println("Fatal error");
+			} else {
+				stream.println("Fatal error in " + context);
+			}
+			e.printStackTrace(stream);
+		};
+	}
+
+	public static FatalErrorHandler loggingToStdOut() {
+		return loggingTo(System.out);
+	}
+
+	public static FatalErrorHandler loggingToStdErr() {
+		return loggingTo(System.err);
 	}
 
 	public static void propagate(@NotNull Throwable e) {
