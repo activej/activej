@@ -31,7 +31,6 @@ import io.activej.types.scanner.TypeScannerRegistry.Context;
 import io.activej.types.scanner.TypeScannerRegistry.Mapping;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
-import org.objectweb.asm.tree.AnnotationNode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -262,7 +261,7 @@ public final class SerializerBuilder {
 		return false;
 	}
 
-	public SerializerBuilder withImplemenationClass(Class<?> implementationClass) {
+	public SerializerBuilder withImplementationClass(Class<?> implementationClass) {
 		this.implementationClass = implementationClass;
 		return this;
 	}
@@ -472,7 +471,7 @@ public final class SerializerBuilder {
 		classBuilder.withMethod("encode", int.class, asList(byte[].class, int.class, Object.class), methodBody(
 				encoderInitializers, encoderFinalizers,
 				let(cast(arg(2), serializer.getEncodeType()), data ->
-						encoderImpl(classBuilder, serializer, encodeVersion, staticEncoders, arg(0), arg(1), data))));
+						encoderImpl(serializer, encodeVersion, staticEncoders, arg(0), arg(1), data))));
 
 		classBuilder.withMethod("encode", void.class, asList(BinaryOutput.class, Object.class), methodBody(
 				encoderInitializers, encoderFinalizers,
@@ -480,11 +479,11 @@ public final class SerializerBuilder {
 						let(call(arg(0), "pos"), pos ->
 								let(cast(arg(1), serializer.getEncodeType()), data ->
 										sequence(
-												encoderImpl(classBuilder, serializer, encodeVersion, staticEncoders, buf, pos, data),
+												encoderImpl(serializer, encodeVersion, staticEncoders, buf, pos, data),
 												call(arg(0), "pos", pos)))))));
 	}
 
-	private Expression encoderImpl(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer encodeVersion, StaticEncoders staticEncoders, Expression buf, Variable pos, Expression data) {
+	private Expression encoderImpl(SerializerDef serializer, @Nullable Integer encodeVersion, StaticEncoders staticEncoders, Expression buf, Variable pos, Expression data) {
 		return sequence(
 				encodeVersion != null ?
 						writeByte(buf, pos, value((byte) (int) encodeVersion)) :
@@ -505,12 +504,12 @@ public final class SerializerBuilder {
 		Integer latestVersion = decodeVersions.isEmpty() ? null : decodeVersions.get(decodeVersions.size() - 1);
 		classBuilder.withMethod("decode", Object.class, asList(BinaryInput.class), methodBody(
 				decoderInitializers, decoderFinalizers,
-				decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, arg(0))));
+				decodeImpl(serializer, latestVersion, staticDecoders, arg(0))));
 
 		classBuilder.withMethod("decode", Object.class, asList(byte[].class, int.class), methodBody(
 				decoderInitializers, decoderFinalizers,
 				let(constructor(BinaryInput.class, arg(0), arg(1)), in ->
-						decodeImpl(classBuilder, serializer, latestVersion, staticDecoders, in))));
+						decodeImpl(serializer, latestVersion, staticDecoders, in))));
 
 		classBuilder.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),
@@ -546,7 +545,7 @@ public final class SerializerBuilder {
 				sequence(sequence(initializers), let(body, v -> sequence(sequence(finalizers), v)));
 	}
 
-	private Expression decodeImpl(ClassBuilder<?> classBuilder, SerializerDef serializer, Integer latestVersion, StaticDecoders staticDecoders,
+	private Expression decodeImpl(SerializerDef serializer, Integer latestVersion, StaticDecoders staticDecoders,
 			Expression in) {
 		return latestVersion == null ?
 				serializer.decoder(
@@ -665,9 +664,9 @@ public final class SerializerBuilder {
 		scanFields(ctx, bindings, foundSerializers);
 		scanGetters(ctx, bindings, foundSerializers);
 		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
-		scanSetters(ctx, bindings, serializer);
-		scanFactories(ctx, bindings, serializer);
-		scanConstructors(ctx, bindings, serializer);
+		scanSetters(ctx, serializer);
+		scanFactories(ctx, serializer);
+		scanConstructors(ctx, serializer);
 		if (!Modifier.isAbstract(ctx.getRawType().getModifiers())) {
 			serializer.addMatchingSetters();
 		}
@@ -736,8 +735,6 @@ public final class SerializerBuilder {
 				throw new IllegalArgumentException(format("Duplicate order %s for %s in %s", foundSerializer.order, foundSerializer, serializer));
 		}
 
-		Map<TypePath, AnnotationNode> nodes = new LinkedHashMap<>();
-
 		Collections.sort(foundSerializers);
 		for (FoundSerializer foundSerializer : foundSerializers) {
 			if (foundSerializer.methodOrField instanceof Method) {
@@ -770,8 +767,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanSetters(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
-			SerializerDefClass serializer) {
+	private void scanSetters(Context<SerializerDef> ctx, SerializerDefClass serializer) {
 		for (Method method : ctx.getRawType().getDeclaredMethods()) {
 			if (isStatic(method.getModifiers())) {
 				continue;
@@ -796,8 +792,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanFactories(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
-			SerializerDefClass serializer) {
+	private void scanFactories(Context<SerializerDef> ctx, SerializerDefClass serializer) {
 		Class<?> factoryClassType = ctx.getRawType();
 		for (Method factory : factoryClassType.getDeclaredMethods()) {
 			if (ctx.getRawType() != factory.getReturnType()) {
@@ -823,8 +818,7 @@ public final class SerializerBuilder {
 		}
 	}
 
-	private void scanConstructors(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
-			SerializerDefClass serializer) {
+	private void scanConstructors(Context<SerializerDef> ctx, SerializerDefClass serializer) {
 		boolean found = false;
 		for (Constructor<?> constructor : ctx.getRawType().getDeclaredConstructors()) {
 			List<String> fields = new ArrayList<>(constructor.getParameterTypes().length);
@@ -849,7 +843,7 @@ public final class SerializerBuilder {
 
 	private FoundSerializer tryAddField(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			Field field) {
-		SerializerBuilder.FoundSerializer result = findAnnotations(ctx, field, field.getAnnotations());
+		SerializerBuilder.FoundSerializer result = findAnnotations(field, field.getAnnotations());
 		if (result == null) {
 			return null;
 		}
@@ -872,7 +866,7 @@ public final class SerializerBuilder {
 		if (getter.isBridge()) {
 			return null;
 		}
-		FoundSerializer result = findAnnotations(ctx, getter, getter.getAnnotations());
+		FoundSerializer result = findAnnotations(getter, getter.getAnnotations());
 		if (result == null) {
 			return null;
 		}
@@ -923,8 +917,7 @@ public final class SerializerBuilder {
 		});
 	}
 
-	private @Nullable FoundSerializer findAnnotations(Context<SerializerDef> ctx,
-			Object methodOrField, Annotation[] annotations) {
+	private @Nullable FoundSerializer findAnnotations(Object methodOrField, Annotation[] annotations) {
 		int added = Serialize.DEFAULT_VERSION;
 		int removed = Serialize.DEFAULT_VERSION;
 
