@@ -14,6 +14,7 @@ import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.promise.SettablePromise;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -149,7 +150,7 @@ public final class AbstractHttpConnectionTest {
 		int code = await(client.request(HttpRequest.get(url))
 				.then(response -> {
 					assertEquals(200, response.getCode());
-					return Promise.complete().async();
+					return post(null);
 				})
 				.then(() -> client.request(HttpRequest.get(url)))
 				.map(HttpResponse::getCode)
@@ -407,7 +408,7 @@ public final class AbstractHttpConnectionTest {
 	private @NotNull FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
 		return response -> response.loadBody()
 				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
-				.async();
+				.then(AbstractHttpConnectionTest::post);
 	}
 
 	private void doTestEmptyRequestResponsePermutations(List<Consumer<HttpMessage>> messageDecorators) {
@@ -499,13 +500,19 @@ public final class AbstractHttpConnectionTest {
 				IntStream.range(0, maxKeepAlive - 1)
 						.mapToObj($ ->
 								() -> checkRequest("keep-alive", 1, connectionCount)
-										.async()
+										.then(AbstractHttpConnectionTest::post)
 										.toVoid()))
 				.then(() -> checkRequest("close", 1, connectionCount))
-				.async()
+				.then(AbstractHttpConnectionTest::post)
 				.then(() -> checkRequest("keep-alive", 2, connectionCount))
-				.async()
+				.then(AbstractHttpConnectionTest::post)
 				.whenComplete(server::close));
+	}
+
+	private static <T> Promise<T> post(T value){
+		SettablePromise<T> cb = new SettablePromise<>();
+		Eventloop.getCurrentEventloop().post(() -> cb.set(value));
+		return cb;
 	}
 
 	private void resetPort() {
