@@ -890,49 +890,34 @@ public final class SerializerBuilder {
 		return result;
 	}
 
-	public AnnotatedType annotateWithTypePath(Type type, Annotation[] annotations) {
+	private static final Map<Class<? extends Annotation>, Function<Annotation, ? extends Annotation[]>> REPEATABLES_VALUE = new HashMap<>();
+	private static final Map<Class<? extends Annotation>, Function<Annotation, int[]>> ANNOTATIONS_PATH = new HashMap<>();
+
+	static {
+		repeatable(SerializeFixedSizes.class, SerializeFixedSize.class, SerializeFixedSizes::value, SerializeFixedSize::path);
+		repeatable(SerializeNullables.class, SerializeNullable.class, SerializeNullables::value, SerializeNullable::path);
+		repeatable(SerializeReferences.class, SerializeReference.class, SerializeReferences::value, SerializeReference::path);
+		repeatable(SerializeStringFormats.class, SerializeStringFormat.class, SerializeStringFormats::value, SerializeStringFormat::path);
+		repeatable(SerializeClasses.class, SerializeClass.class, SerializeClasses::value, SerializeClass::path);
+		repeatable(SerializeVarLengths.class, SerializeVarLength.class, SerializeVarLengths::value, SerializeVarLength::path);
+	}
+
+	@SuppressWarnings({"unchecked", "RedundantCast", "rawtypes"})
+	private static <AR extends Annotation, AV extends Annotation> void repeatable(Class<AR> arClass, Class<AV> avClass,
+			Function<AR, ? extends AV[]> toValue, Function<AV, int[]> toPath) {
+		REPEATABLES_VALUE.put(arClass, (Function<Annotation, Annotation[]>) (Function) toValue);
+		ANNOTATIONS_PATH.put(avClass, (Function<Annotation, int[]>) (Function) toPath);
+	}
+
+	private static AnnotatedType annotateWithTypePath(Type type, Annotation[] annotations) {
 		return annotatedTypeOf(type, ($, path) -> {
 			List<Annotation> result = new ArrayList<>();
 			for (Annotation annotation : annotations) {
-				Annotation[] repeated;
-				if (annotation instanceof SerializeFixedSizes) {
-					repeated = ((SerializeFixedSizes) annotation).value();
-				} else if (annotation instanceof SerializeNullables) {
-					repeated = ((SerializeNullables) annotation).value();
-				} else if (annotation instanceof SerializeReferences) {
-					repeated = ((SerializeReferences) annotation).value();
-				} else if (annotation instanceof SerializeStringFormats) {
-					repeated = ((SerializeStringFormats) annotation).value();
-				} else if (annotation instanceof SerializeClasses) {
-					repeated = ((SerializeClasses) annotation).value();
-				} else if (annotation instanceof SerializeVarLengths) {
-					repeated = ((SerializeVarLengths) annotation).value();
-				} else {
-					repeated = new Annotation[]{annotation};
-				}
-
-				for (Annotation a : repeated) {
-					int[] p;
-					if (a instanceof SerializeFixedSize) {
-						p = ((SerializeFixedSize) a).path();
-					} else if (a instanceof SerializeNullable) {
-						p = ((SerializeNullable) a).path();
-					} else if (a instanceof SerializeReference) {
-						p = ((SerializeReference) a).path();
-					} else if (a instanceof SerializeStringFormat) {
-						p = ((SerializeStringFormat) a).path();
-					} else if (a instanceof SerializeClass) {
-						p = ((SerializeClass) a).path();
-					} else if (a instanceof SerializeVarLength) {
-						p = ((SerializeVarLength) a).path();
-					} else {
-						p = null;
-					}
-					if (Arrays.equals(p, path)) {
+				for (Annotation a : REPEATABLES_VALUE.getOrDefault(annotation.annotationType(), ar -> new Annotation[]{ar}).apply(annotation)) {
+					if (Arrays.equals(ANNOTATIONS_PATH.getOrDefault(a.annotationType(), av -> null).apply(a), path)) {
 						result.add(a);
 					}
 				}
-
 			}
 			return result.toArray(new Annotation[0]);
 		});
