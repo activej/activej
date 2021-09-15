@@ -38,7 +38,7 @@ public final class CspExample extends AbstractCommunicatingProcess implements Wi
 				.whenResult(data -> {
 					if (data == null) {
 						output.acceptEndOfStream()
-								.whenResult(this::close);
+								.whenResult(this::complete);
 					} else {
 						data = data.toUpperCase() + '(' + data.length() + ')';
 

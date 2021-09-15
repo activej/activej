@@ -91,7 +91,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 						if (bufs.isEmpty()) {
 							if (decoder.ignoreMissingEndOfStreamBlock()) {
 								output.acceptEndOfStream()
-										.whenResult(this::close);
+										.whenResult(this::complete);
 							} else {
 								closeEx(new MissingEndOfStreamBlockException(e));
 							}
@@ -108,7 +108,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 										input.endOfStream()
 												.then(this::doSanitize)
 												.then(() -> output.acceptEndOfStream())
-												.whenResult(this::close);
+												.whenResult(this::complete);
 									}
 								});
 					}

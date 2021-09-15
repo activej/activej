@@ -273,7 +273,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 				if (statusCode == 1000) {
 					output.acceptEndOfStream()
 							.whenComplete(() -> closeReceivedPromise.trySet(REGULAR_CLOSE))
-							.whenResult(this::close);
+							.whenResult(this::complete);
 				} else {
 					WebSocketException exception = new WebSocketException(statusCode, payload);
 					onCloseReceived(exception);

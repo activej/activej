@@ -104,7 +104,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 					return doAccept(encodeData(frame));
 				}))
 				.then(() -> sendCloseFrame(REGULAR_CLOSE))
-				.whenResult(this::close);
+				.whenResult(this::complete);
 	}
 
 	private ByteBuf doEncode(ByteBuf payload, OpCode opCode, boolean isLastFrame) {

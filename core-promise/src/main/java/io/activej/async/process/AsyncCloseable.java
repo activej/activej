@@ -19,7 +19,6 @@ package io.activej.async.process;
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Describes methods that are used to handle exceptional behaviour or to handle closing.
@@ -42,14 +41,6 @@ public interface AsyncCloseable {
 	 */
 	default void close() {
 		closeEx(new AsyncCloseException());
-	}
-
-	default <T> void closeEx(T result, @Nullable Exception e) {
-		if (e == null) {
-			close();
-		} else {
-			closeEx(e);
-		}
 	}
 
 	/**

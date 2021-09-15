@@ -108,7 +108,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 						buf.recycle();
 					} else {
 						Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
-								.whenComplete(this::closeEx);
+								.whenComplete(this::complete);
 					}
 				})
 				.whenException(this::closeEx);

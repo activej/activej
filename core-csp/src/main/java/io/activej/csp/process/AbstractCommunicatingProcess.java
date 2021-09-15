@@ -118,11 +118,16 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	 * Closes this process with {@link AsyncCloseException}
 	 */
 	@Override
-	public final void close() {
+	public final void complete(Void result) {
 		if (isProcessComplete()) return;
 		processComplete = true;
 		processCompletion.trySet(null);
 		afterProcess(null);
+	}
+
+	@Override
+	public void close() {
+		complete(null);
 	}
 
 	protected final <T> ChannelSupplier<T> sanitize(ChannelSupplier<T> supplier) {

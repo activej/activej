@@ -192,7 +192,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 					buf.recycle();
 					input.endOfStream()
 							.then(output::acceptEndOfStream)
-							.whenResult(this::close);
+							.whenResult(this::complete);
 				})
 				.whenException(this::closeEx);
 	}

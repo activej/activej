@@ -16,13 +16,16 @@
 
 package io.activej.async.process;
 
-import io.activej.promise.Promise;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public interface AsyncProcess extends AsyncCompletable<Void> {
-	@Contract(pure = true)
-	@NotNull Promise<Void> getProcessCompletion();
+public interface AsyncCompletable<R> extends AsyncCloseable {
+	void complete(R result);
 
-	@NotNull Promise<Void> startProcess();
+	default void complete(R result, @Nullable Exception e) {
+		if (e == null) {
+			complete(result);
+		} else {
+			closeEx(e);
+		}
+	}
 }

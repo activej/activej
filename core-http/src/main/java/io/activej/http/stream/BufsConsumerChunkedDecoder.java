@@ -192,7 +192,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 					bufs.skip(bytes);
 					input.endOfStream()
 							.then(output::acceptEndOfStream)
-							.whenResult(this::close);
+							.whenResult(this::complete);
 					return;
 				}
 			} catch (MalformedDataException ignored) {

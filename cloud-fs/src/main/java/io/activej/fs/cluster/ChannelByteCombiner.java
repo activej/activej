@@ -82,7 +82,7 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		Promises.all(inputs.stream().map(this::doProcessInput))
 				.whenException(output::closeEx)
 				.then($ -> output.acceptEndOfStream())
-				.whenComplete(this::closeEx);
+				.whenComplete(this::complete);
 	}
 
 	private Promise<Void> doProcessInput(ChannelSupplier<ByteBuf> input) {

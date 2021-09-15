@@ -65,7 +65,7 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 								.then(() -> currentConsumer.accept(buf))
 								.whenResult(this::doProcess);
 					} else {
-						flush().whenResult(this::close);
+						flush().whenResult(this::complete);
 					}
 				});
 	}

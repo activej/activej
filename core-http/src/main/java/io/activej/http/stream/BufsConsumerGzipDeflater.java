@@ -132,7 +132,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 		bufs.add(footer);
 		output.acceptAll(bufs.asIterator())
 				.then(output::acceptEndOfStream)
-				.whenResult(this::close);
+				.whenResult(this::complete);
 	}
 
 	private ByteBufs deflate() {

@@ -120,7 +120,7 @@ public final class AbstractCommunicatingProcessTest {
 					.whenComplete((data, e) -> {
 						if (data == null) {
 							output.acceptEndOfStream()
-									.whenComplete(this::closeEx);
+									.whenComplete(this::complete);
 						} else {
 							output.accept(data)
 									.whenResult(this::doProcess)

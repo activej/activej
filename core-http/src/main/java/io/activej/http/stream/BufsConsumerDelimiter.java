@@ -84,7 +84,7 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 		if (remaining == 0) {
 			input.endOfStream()
 					.then(output::acceptEndOfStream)
-					.whenResult(this::close);
+					.whenResult(this::complete);
 			return;
 		}
 		ByteBufs outputBufs = new ByteBufs();
@@ -97,7 +97,7 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 					} else {
 						input.endOfStream()
 								.then(output::acceptEndOfStream)
-								.whenResult(this::close);
+								.whenResult(this::complete);
 					}
 				});
 	}
