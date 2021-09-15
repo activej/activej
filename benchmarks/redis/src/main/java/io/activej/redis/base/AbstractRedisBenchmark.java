@@ -23,7 +23,7 @@ import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.inject.module.Modules.combine;
 
-public abstract class AbstractRedisBenchamark extends Launcher {
+public abstract class AbstractRedisBenchmark extends Launcher {
 	private static final String TEMPLATE = "_activej_redis_benchmark";
 
 	private static final int TOTAL_REQUESTS = 10_000_000;

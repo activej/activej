@@ -35,7 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * If you want to create a stateful annotation, you should also annotate it with {@link QualifierAnnotation}.
  * Additionally, you need to get an instance of it with compatible equals method (you can use {@link Qualifiers}.NamedImpl class as an example)
- * After that, you can use your annotation in our DSL's and then make keys programmatically with created qualifier instances.
+ * After that, you can use your annotation in our DSL and then make keys programmatically with created qualifier instances.
  */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)

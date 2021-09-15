@@ -6,7 +6,7 @@ import io.activej.redis.RedisConnection;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static java.lang.Math.min;
 
-public abstract class RedisBenchmarkPipelined extends AbstractRedisBenchamark {
+public abstract class RedisBenchmarkPipelined extends AbstractRedisBenchmark {
 	private static final int ACTIVE_REQUESTS_MIN = 10_000;
 	private static final int ACTIVE_REQUESTS_MAX = 10_000;
 

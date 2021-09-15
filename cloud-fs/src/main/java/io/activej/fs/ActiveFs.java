@@ -250,7 +250,7 @@ public interface ActiveFs {
 
 	/**
 	 * Lists files that are matched by glob.
-	 * Be sure to escape metachars if your paths contain them.
+	 * Be sure to escape meta chars if your paths contain them.
 	 * <p>
 	 *
 	 * @param glob specified in {@link java.nio.file.FileSystem#getPathMatcher NIO path matcher} documentation for glob patterns

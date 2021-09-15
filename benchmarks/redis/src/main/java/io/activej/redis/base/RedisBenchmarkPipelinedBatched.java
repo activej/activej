@@ -6,7 +6,7 @@ import io.activej.redis.RedisConnection;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static java.lang.Math.min;
 
-public abstract class RedisBenchmarkPipelinedBatched extends AbstractRedisBenchamark {
+public abstract class RedisBenchmarkPipelinedBatched extends AbstractRedisBenchmark {
 	private static final int BATCH_SIZE = 10_000;
 
 	private int batchSize;

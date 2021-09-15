@@ -59,7 +59,7 @@ public interface WebSocket extends AsyncCloseable {
 	@NotNull Promise<Message> readMessage();
 
 	/**
-	 * Returns a promise of aweb socket data frame. It may contain the whole web socket message or just some
+	 * Returns a promise of a web socket data frame. It may contain the whole web socket message or just some
 	 * part of a message. Any UTF-8 validation for text frames should be done by the user of this method.
 	 * <p>
 	 * May return a promise of {@code null} if the other side has sent a close frame of code {@code 1000}.

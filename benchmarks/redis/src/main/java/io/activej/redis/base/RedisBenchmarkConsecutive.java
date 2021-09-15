@@ -6,7 +6,7 @@ import io.activej.redis.RedisConnection;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 
-public abstract class RedisBenchmarkConsecutive extends AbstractRedisBenchamark {
+public abstract class RedisBenchmarkConsecutive extends AbstractRedisBenchmark {
 	private static final int TOTAL_REQUESTS = 100_000;
 
 	@Override

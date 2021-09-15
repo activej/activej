@@ -257,7 +257,7 @@ public class Expressions {
 	/**
 	 * Compares arguments using given compare operation
 	 *
-	 * @param eq    campare operation which will be used for the arguments
+	 * @param eq    compare operation which will be used for the arguments
 	 * @param left  first argument which will be compared
 	 * @param right second argument which will be compared
 	 * @return an expression that represents comparison

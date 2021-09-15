@@ -57,7 +57,7 @@ public final class FatalErrorHandlers {
 	}
 
 	/**
-	 * Retuns a thread fatal error handler. If no thread fatal error handler was set using
+	 * Returns a thread fatal error handler. If no thread fatal error handler was set using
 	 * {@link #setThreadFatalErrorHandler(FatalErrorHandler)}, a global fatal error handler will
 	 * be returned
 	 *
