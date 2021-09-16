@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
@@ -335,7 +334,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
+	public <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunctionEx<? super T, ? super U, ? extends V> fn) {
 		other.whenResult(Recyclers::recycle);
 		return (Promise<V>) this;
 	}

@@ -28,7 +28,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.function.*;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
@@ -83,12 +86,17 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	/**
 	 * Creates and returns a new {@link SettablePromise}
-	 * that is accepted by the provided {@link Consumer} of
+	 * that is accepted by the provided {@link ConsumerEx} of
 	 * {@link SettablePromise}
 	 */
-	static @NotNull <T> Promise<T> ofCallback(@NotNull Consumer<@NotNull SettablePromise<T>> callbackConsumer) {
+	static @NotNull <T> Promise<T> ofCallback(@NotNull ConsumerEx<@NotNull SettablePromise<T>> callbackConsumer) {
 		SettablePromise<T> cb = new SettablePromise<>();
-		callbackConsumer.accept(cb);
+		try {
+			callbackConsumer.accept(cb);
+		} catch (Exception ex) {
+			handleError(ex, callbackConsumer);
+			return Promise.ofException(ex);
+		}
 		return cb;
 	}
 
@@ -807,7 +815,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@Contract(pure = true)
 	@NotNull <U, V>
-	Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn);
+	Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunctionEx<? super T, ? super U, ? extends V> fn);
 
 	/**
 	 * Returns a new {@code Promise} when both

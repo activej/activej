@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
@@ -316,7 +315,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public final <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
+	public final <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunctionEx<? super T, ? super U, ? extends V> fn) {
 		return (Promise<V>) other
 				.map(otherResult -> fn.apply(this.getResult(), otherResult))
 				.whenException(() -> Recyclers.recycle(this.getResult()));

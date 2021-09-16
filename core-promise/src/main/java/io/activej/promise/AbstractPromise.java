@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -1183,7 +1182,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunction<? super T, ? super U, ? extends V> fn) {
+	public <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunctionEx<? super T, ? super U, ? extends V> fn) {
 		if (this.isComplete()) {
 			if (this.isResult()) {
 				return (Promise<V>) other
@@ -1210,11 +1209,11 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	private static class PromiseCombine<T, V, U> extends NextPromise<T, V> {
-		final BiFunction<? super T, ? super U, ? extends V> fn;
+		final BiFunctionEx<? super T, ? super U, ? extends V> fn;
 		@Nullable T thisResult = (T) NO_RESULT;
 		@Nullable U otherResult = (U) NO_RESULT;
 
-		PromiseCombine(BiFunction<? super T, ? super U, ? extends V> fn) {
+		PromiseCombine(BiFunctionEx<? super T, ? super U, ? extends V> fn) {
 			this.fn = fn;
 		}
 
@@ -1244,7 +1243,12 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		}
 
 		void onBothResults(@Nullable T thisResult, @Nullable U otherResult) {
-			tryComplete(fn.apply(thisResult, otherResult));
+			try {
+				tryComplete(fn.apply(thisResult, otherResult));
+			} catch (Exception e) {
+				handleError(e, fn);
+				tryCompleteExceptionally(e);
+			}
 		}
 
 		void onAnyException(@NotNull Exception e) {
