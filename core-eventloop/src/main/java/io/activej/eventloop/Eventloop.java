@@ -63,6 +63,8 @@ import java.util.function.Supplier;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseGet;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandlers.logging;
 import static io.activej.eventloop.util.Utils.tryToOptimizeSelector;
 import static java.util.Collections.emptyIterator;
 
@@ -157,7 +159,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandlers.logging(logger);
+	private @NotNull FatalErrorHandler fatalErrorHandler = ((FatalErrorHandler) this::recordFatalError)
+			.andThen(logging(logger));
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -368,6 +371,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (threadPriority != 0)
 			eventloopThread.setPriority(threadPriority);
 		CURRENT_EVENTLOOP.set(this);
+		FatalErrorHandlers.setThreadFatalErrorHandler(fatalErrorHandler);
 		ensureSelector();
 		assert selector != null;
 		breakEventloop = false;
@@ -737,7 +741,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				acceptCallback.accept(channel);
 			} catch (Throwable e) {
-				recordFatalError(e, acceptCallback);
+				handleError(e, acceptCallback);
 				closeChannel(channel, null);
 			}
 		}
@@ -770,7 +774,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 						"this is not possible without some bug in Java NIO"));
 			}
 		} catch (Throwable e) {
-			recordFatalError(e, channel);
+			handleError(e, channel);
 			closeChannel(channel, null);
 		}
 	}
@@ -787,7 +791,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		try {
 			handler.onReadReady();
 		} catch (Throwable e) {
-			recordFatalError(e, handler);
+			handleError(e, handler);
 			closeChannel(key.channel(), null);
 		}
 	}
@@ -804,7 +808,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		try {
 			handler.onWriteReady();
 		} catch (Throwable e) {
-			recordFatalError(e, handler);
+			handleError(e, handler);
 			closeChannel(key.channel(), null);
 		}
 	}
@@ -901,7 +905,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				cb.accept(null, e);
 			} catch (Throwable e1) {
-				recordFatalError(e1, cb);
+				handleError(e1, cb);
 			}
 			return;
 		}
@@ -932,7 +936,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				cb.accept(null, e);
 			} catch (Throwable e1) {
-				recordFatalError(e1, cb);
+				handleError(e1, cb);
 			}
 		}
 	}
@@ -1073,7 +1077,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 				computation.run();
 			} catch (Exception ex) {
 				if (ex instanceof RuntimeException) {
-					recordFatalError(ex, computation);
+					handleError(ex, computation);
 				}
 				future.completeExceptionally(ex);
 				return;
@@ -1096,7 +1100,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 					}
 				});
 			} catch (Exception ex) {
-				recordFatalError(ex, computation);
+				handleError(ex, computation);
 				future.completeExceptionally(ex);
 			}
 		});
@@ -1130,9 +1134,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	private void onFatalError(@NotNull Throwable e, @Nullable Runnable runnable) {
 		if (runnable instanceof RunnableWithContext) {
-			recordFatalError(e, ((RunnableWithContext) runnable).getContext());
+			handleError(e, ((RunnableWithContext) runnable).getContext());
 		} else {
-			recordFatalError(e, runnable);
+			handleError(e, runnable);
 		}
 	}
 
@@ -1140,24 +1144,12 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
-		handleFatalError(fatalErrorHandler, e, context);
 		if (inspector != null) {
 			if (inEventloopThread()) {
 				inspector.onFatalError(e, context);
 			} else {
 				Throwable finalE = e;
 				execute(() -> inspector.onFatalError(finalE, context));
-			}
-		}
-	}
-
-	private void handleFatalError(@NotNull FatalErrorHandler handler, @NotNull Throwable e, @Nullable Object context) {
-		if (inEventloopThread()) {
-			handler.handle(e, context);
-		} else {
-			try {
-				handler.handle(e, context);
-			} catch (Throwable ignored) {
 			}
 		}
 	}
