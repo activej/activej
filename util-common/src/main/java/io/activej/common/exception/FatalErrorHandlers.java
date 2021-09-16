@@ -85,6 +85,12 @@ public final class FatalErrorHandlers {
 		}
 	}
 
+	public static void handleError(@NotNull FatalErrorHandler fatalErrorHandler, @NotNull Throwable e, @Nullable Object context) {
+		if (e instanceof RuntimeException || !(e instanceof Exception)) {
+			fatalErrorHandler.handle(e, context);
+		}
+	}
+
 	/**
 	 * @see #handleError(Throwable, Object)
 	 */

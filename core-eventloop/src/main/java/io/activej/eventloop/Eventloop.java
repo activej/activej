@@ -64,6 +64,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandlers.setThreadFatalErrorHandler;
 import static io.activej.eventloop.util.Utils.tryToOptimizeSelector;
 import static java.util.Collections.emptyIterator;
 
@@ -84,6 +85,7 @@ import static java.util.Collections.emptyIterator;
  * Working of this eventloop will be ended when it has no selected keys
  * and its queues with tasks are empty.
  */
+@SuppressWarnings("unused")
 public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, WithInitializer<Eventloop>, EventloopJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
 	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
@@ -159,6 +161,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private int threadPriority;
 
 	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandlers.logging(logger).andThen(this::recordFatalError);
+	private @NotNull FatalErrorHandler fatalErrorHandlerThread = FatalErrorHandlers.rethrowOnAnyError();
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -209,7 +212,12 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	}
 
 	public @NotNull Eventloop withFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
+		return withFatalErrorHandler(fatalErrorHandler, fatalErrorHandler);
+	}
+
+	public @NotNull Eventloop withFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler, @NotNull FatalErrorHandler fatalErrorHandlerThread) {
 		this.fatalErrorHandler = fatalErrorHandler;
+		this.fatalErrorHandlerThread = fatalErrorHandlerThread;
 		return this;
 	}
 
@@ -369,7 +377,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (threadPriority != 0)
 			eventloopThread.setPriority(threadPriority);
 		CURRENT_EVENTLOOP.set(this);
-		FatalErrorHandlers.setThreadFatalErrorHandler(fatalErrorHandler);
+		setThreadFatalErrorHandler(fatalErrorHandlerThread);
 		ensureSelector();
 		assert selector != null;
 		breakEventloop = false;
@@ -739,7 +747,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				acceptCallback.accept(channel);
 			} catch (Throwable e) {
-				handleError(e, acceptCallback);
+				handleError(fatalErrorHandler, e, acceptCallback);
 				closeChannel(channel, null);
 			}
 		}
@@ -772,7 +780,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 						"this is not possible without some bug in Java NIO"));
 			}
 		} catch (Throwable e) {
-			handleError(e, channel);
+			handleError(fatalErrorHandler, e, channel);
 			closeChannel(channel, null);
 		}
 	}
@@ -789,7 +797,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		try {
 			handler.onReadReady();
 		} catch (Throwable e) {
-			handleError(e, handler);
+			handleError(fatalErrorHandler, e, handler);
 			closeChannel(key.channel(), null);
 		}
 	}
@@ -806,7 +814,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		try {
 			handler.onWriteReady();
 		} catch (Throwable e) {
-			handleError(e, handler);
+			handleError(fatalErrorHandler, e, handler);
 			closeChannel(key.channel(), null);
 		}
 	}
@@ -903,7 +911,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				cb.accept(null, e);
 			} catch (Throwable e1) {
-				handleError(e1, cb);
+				handleError(fatalErrorHandler, e1, cb);
 			}
 			return;
 		}
@@ -934,7 +942,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				cb.accept(null, e);
 			} catch (Throwable e1) {
-				handleError(e1, cb);
+				handleError(fatalErrorHandler, e1, cb);
 			}
 		}
 	}
@@ -1074,9 +1082,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				computation.run();
 			} catch (Exception ex) {
-				if (ex instanceof RuntimeException) {
-					handleError(ex, computation);
-				}
+				handleError(fatalErrorHandler, ex, computation);
 				future.completeExceptionally(ex);
 				return;
 			}
@@ -1098,7 +1104,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 					}
 				});
 			} catch (Exception ex) {
-				handleError(ex, computation);
+				handleError(fatalErrorHandler, ex, computation);
 				future.completeExceptionally(ex);
 			}
 		});
@@ -1132,9 +1138,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	private void onFatalError(@NotNull Throwable e, @Nullable Runnable runnable) {
 		if (runnable instanceof RunnableWithContext) {
-			handleError(e, ((RunnableWithContext) runnable).getContext());
+			handleError(fatalErrorHandler, e, ((RunnableWithContext) runnable).getContext());
 		} else {
-			handleError(e, runnable);
+			handleError(fatalErrorHandler, e, runnable);
 		}
 	}
 
@@ -1164,6 +1170,10 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	public @NotNull FatalErrorHandler getFatalErrorHandler() {
 		return fatalErrorHandler;
+	}
+
+	public @NotNull FatalErrorHandler getFatalErrorHandlerThread() {
+		return fatalErrorHandlerThread;
 	}
 
 	public int getThreadPriority() {

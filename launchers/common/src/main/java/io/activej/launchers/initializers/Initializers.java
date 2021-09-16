@@ -55,7 +55,9 @@ public class Initializers {
 
 	public static Initializer<Eventloop> ofEventloop(Config config) {
 		return eventloop -> eventloop
-				.withFatalErrorHandler(config.get(ofFatalErrorHandler(), "fatalErrorHandler", eventloop.getFatalErrorHandler()))
+				.withFatalErrorHandler(
+						config.get(ofFatalErrorHandler(), "fatalErrorHandler", eventloop.getFatalErrorHandler()),
+						config.get(ofFatalErrorHandler(), "fatalErrorHandlerThread", eventloop.getFatalErrorHandlerThread()))
 				.withIdleInterval(config.get(ofDuration(), "idleInterval", eventloop.getIdleInterval()))
 				.withThreadPriority(config.get(ofInteger(), "threadPriority", eventloop.getThreadPriority()));
 	}
