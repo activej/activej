@@ -42,6 +42,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.*;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.promise.PromisePredicates.isResult;
@@ -967,7 +968,7 @@ public final class Promises {
 	}
 
 	/**
-	 * Repeats provided {@link Function} until can pass {@link Predicate} test.
+	 * Repeats provided {@link FunctionEx} until can pass {@link Predicate} test.
 	 * Resembles a simple Java {@code for()} loop but with async capabilities.
 	 *
 	 * @param seed          start value
@@ -978,17 +979,17 @@ public final class Promises {
 	 * with an exception. In both situations returned {@code Promise}
 	 * is a marker of completion of the loop.
 	 */
-	public static <T> Promise<T> loop(@Nullable T seed, @NotNull Predicate<T> loopCondition, @NotNull Function<T, Promise<T>> next) {
+	public static <T> Promise<T> loop(@Nullable T seed, @NotNull Predicate<T> loopCondition, @NotNull FunctionEx<T, Promise<T>> next) {
 		if (!loopCondition.test(seed)) return Promise.of(seed);
 		return until(seed, next, v -> !loopCondition.test(v));
 	}
 
-	public static <T> Promise<T> until(@Nullable T seed, @NotNull Function<T, Promise<T>> next, @NotNull Predicate<T> breakCondition) {
+	public static <T> Promise<T> until(@Nullable T seed, @NotNull FunctionEx<T, Promise<T>> next, @NotNull Predicate<T> breakCondition) {
 		return Promise.ofCallback(cb ->
 				untilImpl(seed, next, breakCondition, cb));
 	}
 
-	private static <T> void untilImpl(@Nullable T value, @NotNull Function<T, Promise<T>> next, @NotNull Predicate<T> breakCondition, SettablePromise<T> cb) {
+	private static <T> void untilImpl(@Nullable T value, @NotNull FunctionEx<T, Promise<T>> next, @NotNull Predicate<T> breakCondition, SettablePromise<T> cb) throws Exception {
 		while (true) {
 			Promise<T> promise = next.apply(value);
 			if (promise.isResult()) {
@@ -1003,7 +1004,12 @@ public final class Promises {
 						if (breakCondition.test(newValue)) {
 							cb.set(newValue);
 						} else {
-							untilImpl(newValue, next, breakCondition, cb);
+							try {
+								untilImpl(newValue, next, breakCondition, cb);
+							} catch (Exception ex) {
+								handleError(ex, next);
+								cb.setException(ex);
+							}
 						}
 					} else {
 						cb.setException(e);
@@ -1117,7 +1123,7 @@ public final class Promises {
 	 * @param accumulator supplier of the result
 	 * @param consumer    a {@link BiConsumer} which folds a result of each of the
 	 *                    completed {@code promises} into accumulator
-	 * @param finisher    a {@link Function} which performs the final transformation
+	 * @param finisher    a {@link FunctionEx} which performs the final transformation
 	 *                    from the intermediate accumulations
 	 * @param maxCalls    max amount of concurrently running {@code Promise}s
 	 * @param promises    {@code Iterable} of {@code Promise}s
