@@ -64,7 +64,6 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.common.exception.FatalErrorHandlers.logging;
 import static io.activej.eventloop.util.Utils.tryToOptimizeSelector;
 import static java.util.Collections.emptyIterator;
 
@@ -159,8 +158,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler fatalErrorHandler = ((FatalErrorHandler) this::recordFatalError)
-			.andThen(logging(logger));
+	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandlers.logging(logger).andThen(this::recordFatalError);
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;

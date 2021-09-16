@@ -65,7 +65,7 @@ public final class FatalErrorHandlers {
 	 */
 	public static @NotNull FatalErrorHandler getThreadFatalErrorHandler() {
 		FatalErrorHandler handler = CURRENT_HANDLER.get();
-		return handler == null ? globalFatalErrorHandler : handler;
+		return handler != null ? handler : globalFatalErrorHandler;
 	}
 
 	/**
