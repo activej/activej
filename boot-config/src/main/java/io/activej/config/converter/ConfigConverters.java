@@ -506,21 +506,6 @@ public final class ConfigConverters {
 	public static final ConfigConverter<List<Class<?>>> OF_CLASSES = ofList(ofClass());
 
 	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler() {
-		return ofFatalErrorHandler((e, context) -> {
-			Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
-			if (eventloop == null) {
-				handleErrorWithGlobalHandler(e, context);
-			} else {
-				eventloop.recordFatalError(e, context);
-			}
-		});
-	}
-
-	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler(Eventloop eventloop) {
-		return ofFatalErrorHandler(eventloop::recordFatalError);
-	}
-
-	private static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler(FatalErrorHandler onRecordToEventloop) {
 		return new ConfigConverter<FatalErrorHandler>() {
 			@Override
 			public @NotNull FatalErrorHandler get(Config config) {
@@ -534,7 +519,14 @@ public final class ConfigConverters {
 					case "exitOnJvmError":
 						return exitOnJvmError();
 					case "recordToEventloop":
-						return onRecordToEventloop;
+						return (e, context) -> {
+							Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
+							if (eventloop != null) {
+								eventloop.recordFatalError(e, context);
+							} else {
+								handleErrorWithGlobalHandler(e, context);
+							}
+						};
 					case "rethrowOnMatchedError":
 						return rethrowOnMatchedError(
 								toThrowablePredicate(
