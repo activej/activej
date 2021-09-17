@@ -22,6 +22,7 @@ import io.activej.common.StringFormatUtils;
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
+import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
@@ -504,6 +505,20 @@ public final class ConfigConverters {
 	public static final ConfigConverter<List<Class<?>>> OF_CLASSES = ofList(ofClass());
 
 	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler() {
+		return ofFatalErrorHandler((e, context) -> {
+			Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
+			if (eventloop == null) {
+				propagate(e);
+			}
+			eventloop.recordFatalError(e, context);
+		});
+	}
+
+	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler(Eventloop eventloop) {
+		return ofFatalErrorHandler(eventloop::recordFatalError);
+	}
+
+	private static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler(FatalErrorHandler recordToEventloop) {
 		return new ConfigConverter<FatalErrorHandler>() {
 			@Override
 			public @NotNull FatalErrorHandler get(Config config) {
@@ -516,6 +531,8 @@ public final class ConfigConverters {
 						return exitOnAnyError();
 					case "exitOnJvmError":
 						return exitOnJvmError();
+					case "recordToEventloop":
+						return recordToEventloop;
 					case "rethrowOnMatchedError":
 						return rethrowOnMatchedError(
 								toThrowablePredicate(
