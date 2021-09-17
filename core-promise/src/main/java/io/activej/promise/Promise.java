@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandlers.propagate;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
@@ -169,8 +170,13 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 			Eventloop eventloop = Eventloop.getCurrentEventloop();
 			eventloop.startExternalTask();
 			completionStage.whenCompleteAsync((result, e) -> {
-				if (!(e instanceof Exception)) throw (Error) e;
-				eventloop.execute(wrapContext(cb, () -> cb.accept(result, (Exception) e)));
+				eventloop.execute(wrapContext(cb, () -> {
+					if (e != null) {
+						if (!(e instanceof Exception)) propagate(e);
+						handleError(e, cb);
+					}
+					cb.accept(result, (Exception) e);
+				}));
 				eventloop.completeExternalTask();
 			});
 		});
@@ -193,11 +199,20 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 						T value = future.get();
 						eventloop.execute(wrapContext(cb, () -> cb.set(value)));
 					} catch (ExecutionException e) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException((Exception) e.getCause())));
-					} catch (InterruptedException e) {
+						eventloop.execute(wrapContext(cb, () -> {
+							Throwable cause = e.getCause();
+							if (!(cause instanceof Exception)) propagate(e);
+							handleError(cause, cb);
+							cb.setException((Exception) cause);
+						}));
+					} catch (InterruptedException | CancellationException e) {
 						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
-					} catch (Exception e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, future));
+					} catch (Throwable e) {
+						eventloop.execute(wrapContext(cb, () -> {
+							if (!(e instanceof Exception)) propagate(e);
+							handleError(e, cb);
+							cb.setException((Exception) e);
+						}));
 					} finally {
 						eventloop.completeExternalTask();
 					}
@@ -227,11 +242,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 					try {
 						T result = supplier.get();
 						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
-					} catch (Exception e) {
-						handleError(e, supplier);
-						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
 					} catch (Throwable e) {
-						eventloop.execute(() -> eventloop.recordFatalError(e, supplier));
+						eventloop.execute(wrapContext(cb, () -> {
+							if (!(e instanceof Exception)) propagate(e);
+							handleError(e, cb);
+							cb.setException((Exception) e);
+						}));
 					} finally {
 						eventloop.completeExternalTask();
 					}

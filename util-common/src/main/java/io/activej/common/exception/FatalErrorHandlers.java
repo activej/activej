@@ -16,6 +16,7 @@
 
 package io.activej.common.exception;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -42,8 +43,12 @@ public final class FatalErrorHandlers {
 	 *
 	 * @param handler a global fatal error handler
 	 */
-	public static void setThreadFatalErrorHandler(@NotNull FatalErrorHandler handler) {
-		CURRENT_HANDLER.set(handler);
+	public static void setThreadFatalErrorHandler(@Nullable FatalErrorHandler handler) {
+		if (handler == null) {
+			CURRENT_HANDLER.remove();
+		} else {
+			CURRENT_HANDLER.set(handler);
+		}
 	}
 
 	/**
@@ -236,6 +241,7 @@ public final class FatalErrorHandlers {
 	 * Propagates a throwable. Throws unchecked exceptions as-is.
 	 * Checked exceptions are wrapped in a {@link RuntimeException}
 	 */
+	@Contract("_ -> fail")
 	public static void propagate(@NotNull Throwable e) {
 		if (e instanceof Error) {
 			throw (Error) e;

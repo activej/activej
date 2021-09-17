@@ -372,10 +372,12 @@ public final class ChannelSuppliers {
 							throw new IOException(e);
 						} catch (ExecutionException e) {
 							isClosed = true;
-							Exception cause = (Exception) e.getCause();
+							Throwable cause = e.getCause();
 							if (cause instanceof IOException) throw (IOException) cause;
 							if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-							throw new IOException(cause);
+							if (cause instanceof Exception) throw new IOException(cause);
+							if (cause instanceof Error) throw (Error) cause;
+							throw new RuntimeException(cause);
 						}
 						if (buf == null) {
 							isClosed = true;

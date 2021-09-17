@@ -434,6 +434,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			return;
 		}
 		closeSelector();
+		setThreadFatalErrorHandler(null);
 	}
 
 	private long getSelectTimeout() {
