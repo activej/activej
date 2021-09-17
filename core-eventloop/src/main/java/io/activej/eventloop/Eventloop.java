@@ -160,7 +160,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandler.logging(logger).andThen(this::recordFatalError);
+	private @NotNull FatalErrorHandler fatalErrorHandler = this::recordFatalError;
 	private @Nullable FatalErrorHandler fatalErrorHandlerThreadLocal;
 
 	private volatile boolean keepAlive;
@@ -1162,6 +1162,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	}
 
 	public void recordFatalError(@NotNull Throwable e, @Nullable Object context) {
+		logger.error("Fatal error in {}", context, e);
+
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
