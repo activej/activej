@@ -46,7 +46,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
-import static io.activej.common.exception.FatalErrorHandlers.*;
+import static io.activej.common.exception.FatalErrorHandler.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
@@ -533,7 +533,7 @@ public final class ConfigConverters {
 						if (loggerName != null) {
 							return logging(LoggerFactory.getLogger(loggerName));
 						}
-						
+
 						String to = config.get(ofString(), "to", null);
 						if ("stdOut".equals(to)) return loggingToStdOut();
 						if ("stdErr".equals(to)) return loggingToStdErr();

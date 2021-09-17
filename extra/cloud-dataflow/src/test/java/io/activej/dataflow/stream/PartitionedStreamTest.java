@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.setOf;
-import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;

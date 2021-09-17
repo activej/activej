@@ -47,7 +47,7 @@ import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.mapOf;
 import static io.activej.common.Utils.setOf;
-import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.Collections.*;

@@ -3,7 +3,7 @@ package io.activej.http;
 import io.activej.eventloop.Eventloop;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.common.exception.FatalErrorHandlers.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 

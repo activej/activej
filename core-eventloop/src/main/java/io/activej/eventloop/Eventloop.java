@@ -160,8 +160,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandlers.logging(logger).andThen(this::recordFatalError);
-	private @NotNull FatalErrorHandler fatalErrorHandlerThreadLocal = FatalErrorHandlers.rethrowOnAnyError();
+	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandler.logging(logger).andThen(this::recordFatalError);
+	private @NotNull FatalErrorHandler fatalErrorHandlerThreadLocal = FatalErrorHandler.rethrowOnAnyError();
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;

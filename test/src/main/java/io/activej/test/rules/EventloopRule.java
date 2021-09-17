@@ -16,7 +16,7 @@
 
 package io.activej.test.rules;
 
-import io.activej.common.exception.FatalErrorHandlers;
+import io.activej.common.exception.FatalErrorHandler;
 import io.activej.eventloop.Eventloop;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -37,7 +37,7 @@ public final class EventloopRule implements TestRule {
 	private static void createEventloop() {
 		Eventloop.create()
 				.withCurrentThread()
-				.withFatalErrorHandler(FatalErrorHandlers.rethrowOnAnyError());
+				.withFatalErrorHandler(FatalErrorHandler.rethrowOnAnyError());
 	}
 
 	@Override
