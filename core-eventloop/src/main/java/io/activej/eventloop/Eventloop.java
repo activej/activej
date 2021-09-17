@@ -161,7 +161,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private int threadPriority;
 
 	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandlers.logging(logger).andThen(this::recordFatalError);
-	private @NotNull FatalErrorHandler fatalErrorHandlerThread = FatalErrorHandlers.rethrowOnAnyError();
+	private @NotNull FatalErrorHandler fatalErrorHandlerThreadLocal = FatalErrorHandlers.rethrowOnAnyError();
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -211,13 +211,27 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return this;
 	}
 
+	/**
+	 * Sets a fatal error on an event loop level. It handles all errors that were not handled by
+	 * thread local error handler
+	 *
+	 * @param fatalErrorHandler a fatal error handler on an event loop level
+	 */
 	public @NotNull Eventloop withFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
-		return withFatalErrorHandler(fatalErrorHandler, fatalErrorHandler);
+		this.fatalErrorHandler = fatalErrorHandler;
+		return this;
 	}
 
-	public @NotNull Eventloop withFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler, @NotNull FatalErrorHandler fatalErrorHandlerThread) {
-		this.fatalErrorHandler = fatalErrorHandler;
-		this.fatalErrorHandlerThread = fatalErrorHandlerThread;
+	/**
+	 * Sets a fatal error on a thread level
+	 * <p>
+	 * This is the handler that will be set using {@link FatalErrorHandlers#setThreadFatalErrorHandler(FatalErrorHandler)}.
+	 * It is usually the first handler to handle an error "nearer" to a throw site
+	 *
+	 * @param fatalErrorHandlerThreadLocal a fatal error handler on a thread level
+	 */
+	public @NotNull Eventloop withFatalErrorHandlerThreadLocal(@NotNull FatalErrorHandler fatalErrorHandlerThreadLocal) {
+		this.fatalErrorHandlerThreadLocal = fatalErrorHandlerThreadLocal;
 		return this;
 	}
 
@@ -377,7 +391,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (threadPriority != 0)
 			eventloopThread.setPriority(threadPriority);
 		CURRENT_EVENTLOOP.set(this);
-		setThreadFatalErrorHandler(fatalErrorHandlerThread);
+		setThreadFatalErrorHandler(fatalErrorHandlerThreadLocal);
 		ensureSelector();
 		assert selector != null;
 		breakEventloop = false;
@@ -1173,8 +1187,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return fatalErrorHandler;
 	}
 
-	public @NotNull FatalErrorHandler getFatalErrorHandlerThread() {
-		return fatalErrorHandlerThread;
+	public @NotNull FatalErrorHandler getFatalErrorHandlerThreadLocal() {
+		return fatalErrorHandlerThreadLocal;
 	}
 
 	public int getThreadPriority() {
