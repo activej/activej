@@ -106,6 +106,22 @@ public final class FatalErrorHandlers {
 		handleError(e, null);
 	}
 
+	/**
+	 * Uses global fatal error handler to handle a received {@link Throwable}
+	 * <p>
+	 * If an error is a checked exception, no handling will be performed
+	 * <p>
+	 * An optional context may be passed for debug purposes
+	 *
+	 * @param e       an error to be handled
+	 * @param context an optional context that provides additional debug information
+	 */
+	public static void handleErrorWithGlobalHandler(@NotNull Throwable e, @Nullable Object context) {
+		if (e instanceof RuntimeException || !(e instanceof Exception)) {
+			globalFatalErrorHandler.handle(e, context);
+		}
+	}
+
 	static void shutdownForcibly() {
 		Runtime.getRuntime().halt(1);
 	}

@@ -48,6 +48,7 @@ import java.util.regex.Pattern;
 
 import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
 import static io.activej.common.exception.FatalErrorHandler.*;
+import static io.activej.common.exception.FatalErrorHandlers.handleErrorWithGlobalHandler;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
@@ -508,9 +509,10 @@ public final class ConfigConverters {
 		return ofFatalErrorHandler((e, context) -> {
 			Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
 			if (eventloop == null) {
-				propagate(e);
+				handleErrorWithGlobalHandler(e, context);
+			} else {
+				eventloop.recordFatalError(e, context);
 			}
-			eventloop.recordFatalError(e, context);
 		});
 	}
 
@@ -518,7 +520,7 @@ public final class ConfigConverters {
 		return ofFatalErrorHandler(eventloop::recordFatalError);
 	}
 
-	private static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler(FatalErrorHandler recordToEventloop) {
+	private static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler(FatalErrorHandler onRecordToEventloop) {
 		return new ConfigConverter<FatalErrorHandler>() {
 			@Override
 			public @NotNull FatalErrorHandler get(Config config) {
@@ -532,7 +534,7 @@ public final class ConfigConverters {
 					case "exitOnJvmError":
 						return exitOnJvmError();
 					case "recordToEventloop":
-						return recordToEventloop;
+						return onRecordToEventloop;
 					case "rethrowOnMatchedError":
 						return rethrowOnMatchedError(
 								toThrowablePredicate(
