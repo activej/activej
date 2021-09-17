@@ -161,7 +161,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private int threadPriority;
 
 	private @NotNull FatalErrorHandler fatalErrorHandler = FatalErrorHandler.logging(logger).andThen(this::recordFatalError);
-	private @NotNull FatalErrorHandler fatalErrorHandlerThreadLocal = FatalErrorHandler.rethrowOnAnyError();
+	private @Nullable FatalErrorHandler fatalErrorHandlerThreadLocal;
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -391,7 +391,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (threadPriority != 0)
 			eventloopThread.setPriority(threadPriority);
 		CURRENT_EVENTLOOP.set(this);
-		setThreadFatalErrorHandler(fatalErrorHandlerThreadLocal);
+		if (fatalErrorHandlerThreadLocal != null)
+			setThreadFatalErrorHandler(fatalErrorHandlerThreadLocal);
 		ensureSelector();
 		assert selector != null;
 		breakEventloop = false;
@@ -448,7 +449,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			return;
 		}
 		closeSelector();
-		setThreadFatalErrorHandler(null);
+		if (fatalErrorHandlerThreadLocal != null)
+			setThreadFatalErrorHandler(null);
 	}
 
 	private long getSelectTimeout() {
@@ -1187,7 +1189,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return fatalErrorHandler;
 	}
 
-	public @NotNull FatalErrorHandler getFatalErrorHandlerThreadLocal() {
+	public @Nullable FatalErrorHandler getFatalErrorHandlerThreadLocal() {
 		return fatalErrorHandlerThreadLocal;
 	}
 
