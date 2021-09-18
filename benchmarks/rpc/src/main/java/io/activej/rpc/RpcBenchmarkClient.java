@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.config.converter.ConfigConverters.ofMemSize;
 import static io.activej.inject.module.Modules.combine;
@@ -49,7 +49,7 @@ public class RpcBenchmarkClient extends Launcher {
 	@Named("client")
 	Eventloop eventloopClient() {
 		return Eventloop.create()
-				.withFatalErrorHandler(rethrowOnAnyError());
+				.withFatalErrorHandler(rethrow());
 	}
 
 	@Provides

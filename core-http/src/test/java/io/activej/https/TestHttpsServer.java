@@ -15,7 +15,7 @@ import java.security.SecureRandom;
 import java.util.concurrent.Executor;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.https.SslUtils.*;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.Executors.newCachedThreadPool;
@@ -30,7 +30,7 @@ public class TestHttpsServer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 		Executor executor = newCachedThreadPool();
 
 		AsyncServlet bobServlet = request -> HttpResponse.ok200().withBody(wrapAscii("Hello, I am Bob!"));

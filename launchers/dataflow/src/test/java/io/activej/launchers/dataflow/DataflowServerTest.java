@@ -44,7 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
@@ -378,7 +378,7 @@ public class DataflowServerTest {
 					.overrideWith(ModuleBuilder.create()
 							.bind(datasetId(malformed ? "" : "items")).toInstance(words)
 							.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", String.valueOf(port)))
-							.bind(Eventloop.class).toInstance(Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrowOnAnyError()))
+							.bind(Eventloop.class).toInstance(Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow()))
 							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
 							.bind(datasetId("result")).toInstance(StreamConsumerToList.create(result))
 							.build());

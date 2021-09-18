@@ -1162,11 +1162,12 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	}
 
 	public void recordFatalError(@NotNull Throwable e, @Nullable Object context) {
-		logger.error("Fatal error in {}", context, e);
-
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
+
+		logger.error("Fatal error in {}", context, e);
+
 		if (inspector != null) {
 			if (inEventloopThread()) {
 				inspector.onFatalError(e, context);

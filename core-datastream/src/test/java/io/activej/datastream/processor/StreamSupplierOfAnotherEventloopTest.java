@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
 import static io.activej.datastream.TestUtils.assertClosedWithError;
@@ -34,7 +34,7 @@ public class StreamSupplierOfAnotherEventloopTest {
 
 	@Before
 	public void setUp() throws InterruptedException {
-		anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+		anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 		anotherEventloop.keepAlive(true);
 		CountDownLatch latch = new CountDownLatch(1);
 		new Thread(() -> {

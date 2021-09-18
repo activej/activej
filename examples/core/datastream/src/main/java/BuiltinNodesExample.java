@@ -7,7 +7,7 @@ import io.activej.eventloop.Eventloop;
 
 import java.util.function.ToIntFunction;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 
 /**
  * Example of some simple builtin stream nodes.
@@ -99,7 +99,7 @@ public final class BuiltinNodesExample {
 	//[END REGION_4]
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrowOnAnyError());
+		Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
 
 		filter();
 		splitter();

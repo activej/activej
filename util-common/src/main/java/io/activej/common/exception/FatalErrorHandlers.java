@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
  * Utility methods that allow to handle fatal errors using thread-specific handlers
  */
 public final class FatalErrorHandlers {
-	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandler.rethrowOnAnyError();
+	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandler.rethrow();
 
 	private static final ThreadLocal<FatalErrorHandler> CURRENT_HANDLER = new ThreadLocal<>();
 
@@ -106,23 +106,15 @@ public final class FatalErrorHandlers {
 		handleError(e, null);
 	}
 
-	/**
-	 * Uses global fatal error handler to handle a received {@link Throwable}
-	 * <p>
-	 * If an error is a checked exception, no handling will be performed
-	 * <p>
-	 * An optional context may be passed for debug purposes
-	 *
-	 * @param e       an error to be handled
-	 * @param context an optional context that provides additional debug information
-	 */
-	public static void handleErrorWithGlobalHandler(@NotNull Throwable e, @Nullable Object context) {
-		if (e instanceof RuntimeException || !(e instanceof Exception)) {
-			globalFatalErrorHandler.handle(e, context);
+	public static @NotNull Exception getExceptionOrThrowError(@NotNull Throwable t) {
+		if (t instanceof Exception) {
+			return (Exception) t;
+		}
+		if (t instanceof Error) {
+			throw (Error) t;
+		} else {
+			throw new Error(t);
 		}
 	}
 
-	static void shutdownForcibly() {
-		Runtime.getRuntime().halt(1);
-	}
 }

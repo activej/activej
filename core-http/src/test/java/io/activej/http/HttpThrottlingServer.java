@@ -8,7 +8,7 @@ import io.activej.eventloop.inspector.ThrottlingController;
 import java.util.Random;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.test.TestUtils.getFreePort;
 
 public class HttpThrottlingServer {
@@ -104,7 +104,7 @@ public class HttpThrottlingServer {
 		info(options);
 
 		EventloopInspector throttlingController = ThrottlingController.create();
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread().withInspector(throttlingController);
+		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread().withInspector(throttlingController);
 
 		HttpThrottlingServer server = new HttpThrottlingServer(eventloop, options);
 

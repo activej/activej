@@ -16,7 +16,6 @@
 
 package io.activej.common.exception;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -24,8 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.util.function.Predicate;
-
-import static io.activej.common.exception.FatalErrorHandlers.shutdownForcibly;
 
 /**
  * A callback for any fatal (unchecked) exceptions
@@ -62,15 +59,36 @@ public interface FatalErrorHandler {
 	/**
 	 * A fatal error handler that simply ignores all received errors
 	 */
-	static FatalErrorHandler ignoreAllErrors() {
+	static FatalErrorHandler ignore() {
 		return (e, context) -> {};
 	}
 
 	/**
 	 * A fatal error handler that terminates JVM on any error
 	 */
-	static FatalErrorHandler exitOnAnyError() {
-		return (e, context) -> shutdownForcibly();
+	static FatalErrorHandler halt() {
+		return haltOn(t -> true);
+	}
+
+	/**
+	 * A fatal error handler that terminates JVM on any error
+	 */
+	static FatalErrorHandler haltOnError() {
+		return haltOn(e -> e instanceof Error);
+	}
+
+	/**
+	 * A fatal error handler that terminates JVM on any {@link Error}
+	 */
+	static FatalErrorHandler haltOnVirtualMachineError() {
+		return haltOn(e -> e instanceof VirtualMachineError);
+	}
+
+	/**
+	 * A fatal error handler that terminates JVM on any {@link Error}
+	 */
+	static FatalErrorHandler haltOnOutOfMemoryError() {
+		return haltOn(e -> e instanceof OutOfMemoryError);
 	}
 
 	/**
@@ -79,36 +97,19 @@ public interface FatalErrorHandler {
 	 *
 	 * @param predicate a predicate that tests a received error
 	 */
-	static FatalErrorHandler exitOnMatchedError(Predicate<Throwable> predicate) {
+	static FatalErrorHandler haltOn(Predicate<Throwable> predicate) {
 		return (e, context) -> {
 			if (predicate.test(e)) {
-				shutdownForcibly();
+				Runtime.getRuntime().halt(1);
 			}
 		};
 	}
 
 	/**
-	 * A fatal error handler that terminates JVM on any error that is an instance of
-	 * a given class
-	 *
-	 * @param cls an exception class that error class is tested against
-	 */
-	static FatalErrorHandler exitOnMatchedError(Class<? extends Throwable> cls) {
-		return exitOnMatchedError(throwable -> cls.isAssignableFrom(throwable.getClass()));
-	}
-
-	/**
-	 * A fatal error handler that terminates JVM on any {@link Error}
-	 */
-	static FatalErrorHandler exitOnJvmError() {
-		return exitOnMatchedError(e -> e instanceof Error);
-	}
-
-	/**
 	 * A fatal error handler that rethrows any error it receives
 	 */
-	static FatalErrorHandler rethrowOnAnyError() {
-		return (e, context) -> propagate(e);
+	static FatalErrorHandler rethrow() {
+		return rethrowOn(t -> true);
 	}
 
 	/**
@@ -117,29 +118,25 @@ public interface FatalErrorHandler {
 	 *
 	 * @param predicate a predicate that tests a received error
 	 */
-	static FatalErrorHandler rethrowOnMatchedError(Predicate<Throwable> predicate) {
+	static FatalErrorHandler rethrowOn(Predicate<Throwable> predicate) {
 		return (e, context) -> {
 			if (predicate.test(e)) {
-				propagate(e);
+				if (e instanceof RuntimeException) {
+					throw (RuntimeException) e;
+				} else if (e instanceof Error) {
+					throw (Error) e;
+				} else {
+					throw new Error(e);
+				}
 			}
 		};
-	}
-
-	/**
-	 * A fatal error handler that rethrows any error that is an instance of
-	 * a given class
-	 *
-	 * @param cls an exception class that error class is tested against
-	 */
-	static FatalErrorHandler rethrowOnMatchedError(Class<? extends Throwable> cls) {
-		return rethrowOnMatchedError(throwable -> cls.isAssignableFrom(throwable.getClass()));
 	}
 
 	/**
 	 * A fatal error handler that logs all errors to an internal {@link Logger}
 	 */
 	static FatalErrorHandler logging() {
-		return logging(LoggerFactory.getLogger(FatalErrorHandler.class));
+		return loggingTo(LoggerFactory.getLogger(FatalErrorHandler.class));
 	}
 
 	/**
@@ -147,7 +144,7 @@ public interface FatalErrorHandler {
 	 *
 	 * @param logger a logger to log all the received errors
 	 */
-	static FatalErrorHandler logging(Logger logger) {
+	static FatalErrorHandler loggingTo(Logger logger) {
 		return (e, context) -> {
 			if (!logger.isErrorEnabled()) return;
 
@@ -157,6 +154,24 @@ public interface FatalErrorHandler {
 				logger.error("Fatal error in {}", context, e);
 			}
 		};
+	}
+
+	/**
+	 * A fatal error handler that logs all errors to a standard output stream
+	 *
+	 * @see System#out
+	 */
+	static FatalErrorHandler loggingToSystemOut() {
+		return loggingTo(System.out);
+	}
+
+	/**
+	 * A fatal error handler that logs all errors to a standard error output stream
+	 *
+	 * @see System#err
+	 */
+	static FatalErrorHandler loggingToSystemErr() {
+		return loggingTo(System.err);
 	}
 
 	/**
@@ -173,39 +188,6 @@ public interface FatalErrorHandler {
 			}
 			e.printStackTrace(stream);
 		};
-	}
-
-	/**
-	 * A fatal error handler that logs all errors to a standard output stream
-	 *
-	 * @see System#out
-	 */
-	static FatalErrorHandler loggingToStdOut() {
-		return loggingTo(System.out);
-	}
-
-	/**
-	 * A fatal error handler that logs all errors to a standard error output stream
-	 *
-	 * @see System#err
-	 */
-	static FatalErrorHandler loggingToStdErr() {
-		return loggingTo(System.err);
-	}
-
-	/**
-	 * Propagates a throwable. Throws unchecked exceptions as-is.
-	 * Checked exceptions are wrapped in a {@link RuntimeException}
-	 */
-	@Contract("_ -> fail")
-	static void propagate(@NotNull Throwable e) {
-		if (e instanceof Error) {
-			throw (Error) e;
-		} else if (e instanceof RuntimeException) {
-			throw (RuntimeException) e;
-		} else {
-			throw new RuntimeException(e);
-		}
 	}
 
 }

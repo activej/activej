@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
@@ -42,7 +42,7 @@ final class CubeUplinkMigrationService {
 
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
-	private final Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrowOnAnyError());
+	private final Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
 	private final Executor executor = newSingleThreadExecutor();
 
 	@VisibleForTesting

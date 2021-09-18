@@ -16,7 +16,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.csp.ChannelConsumers.channelConsumerAsOutputStream;
 import static io.activej.csp.ChannelConsumers.outputStreamAsChannelConsumer;
 import static io.activej.eventloop.Eventloop.initWithEventloop;
@@ -157,7 +157,7 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testOfAnotherEventloop() {
-		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 		List<Integer> expectedList = asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(actualList::add));
@@ -172,7 +172,7 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testOfAnotherEventloopException() {
-		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 		ExpectedException expectedException = new ExpectedException();
 		List<Integer> list = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(list::add));

@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
 
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.common.Utils.union;
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -93,7 +93,7 @@ public final class TestClusterActiveFs {
 			Files.createDirectories(path);
 
 			initTempDir(path);
-			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
 			LocalActiveFs localClient = LocalActiveFs.create(serverEventloop, executor, path);
 			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(localClient))

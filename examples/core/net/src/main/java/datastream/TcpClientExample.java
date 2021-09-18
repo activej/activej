@@ -13,7 +13,7 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 
@@ -27,7 +27,7 @@ public final class TcpClientExample {
 	public static final int PORT = 9922;
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 
 		eventloop.connect(new InetSocketAddress("localhost", PORT), (socketChannel, e) -> {
 			if (e == null) {

@@ -18,7 +18,7 @@ import java.util.LinkedHashSet;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.test.TestUtils.getFreePort;
@@ -48,7 +48,7 @@ public final class SimpleProxyServerTest {
 
 	@Test
 	public void testSimpleProxyServer() throws Exception {
-		Eventloop eventloop1 = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop1 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
 		AsyncHttpServer echoServer = AsyncHttpServer.create(eventloop1,
 				request -> HttpResponse.ok200()
@@ -59,7 +59,7 @@ public final class SimpleProxyServerTest {
 		Thread echoServerThread = new Thread(eventloop1);
 		echoServerThread.start();
 
-		Eventloop eventloop2 = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError()).withCurrentThread();
+		Eventloop eventloop2 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop2)
 				.withDnsClient(CachedAsyncDnsClient.create(eventloop2, RemoteAsyncDnsClient.create(eventloop2)

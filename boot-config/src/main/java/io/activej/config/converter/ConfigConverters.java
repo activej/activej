@@ -29,7 +29,6 @@ import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.promise.RetryPolicy;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -48,7 +47,6 @@ import java.util.regex.Pattern;
 
 import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
 import static io.activej.common.exception.FatalErrorHandler.*;
-import static io.activej.common.exception.FatalErrorHandlers.handleErrorWithGlobalHandler;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
@@ -510,45 +508,46 @@ public final class ConfigConverters {
 			@Override
 			public @NotNull FatalErrorHandler get(Config config) {
 				switch (config.getValue()) {
-					case "rethrowOnAnyError":
-						return rethrowOnAnyError();
-					case "ignoreAllErrors":
-						return ignoreAllErrors();
-					case "exitOnAnyError":
-						return exitOnAnyError();
-					case "exitOnJvmError":
-						return exitOnJvmError();
-					case "recordToEventloop":
-						return (e, context) -> {
-							Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
-							if (eventloop != null) {
-								eventloop.recordFatalError(e, context);
-							} else {
-								handleErrorWithGlobalHandler(e, context);
-							}
-						};
-					case "rethrowOnMatchedError":
-						return rethrowOnMatchedError(
+					case "rethrow":
+						return rethrow();
+					case "ignore":
+						return ignore();
+					case "halt":
+						return halt();
+					case "haltOnError":
+						return haltOnError();
+					case "haltOnVirtualMachineError":
+						return haltOnVirtualMachineError();
+					case "haltOnOutOfMemoryError":
+						return haltOnOutOfMemoryError();
+					case "rethrowOn":
+						return rethrowOn(
 								toThrowablePredicate(
 										config.get(OF_CLASSES, "whitelist", emptyList()),
 										config.get(OF_CLASSES, "blacklist", emptyList())
 								));
-					case "exitOnMatchedError":
-						return exitOnMatchedError(
+					case "haltOn":
+						return haltOn(
 								toThrowablePredicate(
 										config.get(OF_CLASSES, "whitelist", emptyList()),
 										config.get(OF_CLASSES, "blacklist", emptyList())
 								));
 					case "logging":
-						String loggerName = config.get(ofString(), "logger", null);
-						if (loggerName != null) {
-							return logging(LoggerFactory.getLogger(loggerName));
-						}
-
-						String to = config.get(ofString(), "to", null);
-						if ("stdOut".equals(to)) return loggingToStdOut();
-						if ("stdErr".equals(to)) return loggingToStdErr();
 						return logging();
+					case "loggingToSystemOut":
+						return loggingToSystemOut();
+					case "loggingToSystemErr":
+						return loggingToSystemErr();
+					case "loggingToEventloop":
+						FatalErrorHandler logging = logging();
+						return (e, context) -> {
+							Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
+							if (eventloop != null) {
+								eventloop.recordFatalError(e, context);
+							} else {
+								logging.handle(e, context);
+							}
+						};
 					default:
 						throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
 				}

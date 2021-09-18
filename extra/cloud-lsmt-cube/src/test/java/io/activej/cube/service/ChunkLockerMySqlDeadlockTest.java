@@ -3,7 +3,6 @@ package io.activej.cube.service;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ChunkLocker;
 import io.activej.aggregation.ChunksAlreadyLockedException;
-import io.activej.common.exception.FatalErrorHandler;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
@@ -24,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.LongStream;
 
+import static io.activej.common.exception.FatalErrorHandler.haltOnError;
 import static io.activej.cube.service.ChunkLockerMySql.CHUNK_TABLE;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
@@ -86,7 +86,7 @@ public class ChunkLockerMySqlDeadlockTest {
 		return () -> {
 			Eventloop eventloop = Eventloop.create()
 					.withCurrentThread()
-					.withFatalErrorHandler(FatalErrorHandler.exitOnAnyError());
+					.withFatalErrorHandler(haltOnError());
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 
 			action(random, locker);

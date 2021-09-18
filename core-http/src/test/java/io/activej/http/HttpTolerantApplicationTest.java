@@ -17,7 +17,7 @@ import java.net.Socket;
 import java.util.LinkedHashSet;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
@@ -39,7 +39,7 @@ public final class HttpTolerantApplicationTest {
 	public void testTolerantServer() throws Exception {
 		int port = getFreePort();
 
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 				request ->

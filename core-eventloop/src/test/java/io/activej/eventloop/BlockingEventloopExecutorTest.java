@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static org.junit.Assert.assertEquals;
 
 public final class BlockingEventloopExecutorTest {
@@ -16,7 +16,7 @@ public final class BlockingEventloopExecutorTest {
 
 	@Before
 	public void setUp() {
-		eventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+		eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 	}
 
 	@Test

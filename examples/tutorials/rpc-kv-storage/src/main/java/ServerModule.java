@@ -5,7 +5,7 @@ import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerBuilder;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 
 // [START EXAMPLE]
 public class ServerModule extends AbstractModule {
@@ -14,7 +14,7 @@ public class ServerModule extends AbstractModule {
 	@Provides
 	Eventloop eventloop() {
 		return Eventloop.create()
-				.withFatalErrorHandler(rethrowOnAnyError());
+				.withFatalErrorHandler(rethrow());
 	}
 
 	@Provides

@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.setOf;
-import static io.activej.common.exception.FatalErrorHandler.rethrowOnAnyError;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
@@ -174,7 +174,7 @@ public final class TestClusterDeadPartitionCheck {
 
 			initTempDir(serverStorages[i]);
 
-			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrowOnAnyError());
+			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
 
 			LocalActiveFs localFs = LocalActiveFs.create(serverEventloop, executor, serverStorages[i]);
