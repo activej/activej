@@ -26,7 +26,6 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.common.reflection.ReflectionUtils;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.executor.EventloopExecutor;
@@ -65,7 +64,6 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static io.activej.common.exception.FatalErrorHandlers.setThreadFatalErrorHandler;
-import static io.activej.eventloop.util.Utils.tryToOptimizeSelector;
 import static java.util.Collections.emptyIterator;
 
 /**
@@ -90,13 +88,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
 	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
 
-	public static final boolean JIGSAW_DETECTED;
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
 	public static final Duration DEFAULT_IDLE_INTERVAL = Duration.ofSeconds(1);
-
-	static {
-		JIGSAW_DETECTED = ReflectionUtils.isClassPresent("java.lang.Module");
-	}
 
 	/**
 	 * Collection of local tasks which were added from this thread.
@@ -396,7 +389,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		ensureSelector();
 		assert selector != null;
 		breakEventloop = false;
-		boolean setWasOptimized = !JIGSAW_DETECTED && tryToOptimizeSelector(selector);
 
 		long timeAfterSelectorSelect;
 		long timeAfterBusinessLogic = 0;
@@ -418,9 +410,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			}
 
 			timeAfterSelectorSelect = refreshTimestampAndGet();
-			int keys = setWasOptimized ?
-					optimizedProcessSelectedKeys((OptimizedSelectedKeysSet) selector.selectedKeys()) :
-					processSelectedKeys(selector.selectedKeys());
+			int keys = processSelectedKeys(selector.selectedKeys());
 			int concurrentTasks = executeConcurrentTasks();
 			int scheduledTasks = executeScheduledTasks();
 			int backgroundTasks = executeBackgroundTasks();
