@@ -109,7 +109,7 @@ public final class RpcNoServerTest {
 	}
 
 	private void doTest(boolean startServerAfterConnectTimeout) throws UnknownHostException, InterruptedException {
-		Eventloop eventloopServer = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop eventloopServer = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 		RpcServer server = createServer(eventloopServer);
 		eventloopServer.submit(() -> {
 			try {

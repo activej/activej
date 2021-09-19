@@ -17,7 +17,7 @@ public class ClientModule extends AbstractModule {
 	@Provides
 	Eventloop eventloop() {
 		return Eventloop.create()
-				.withFatalErrorHandler(rethrow())
+				.withEventloopFatalErrorHandler(rethrow())
 				.withCurrentThread();
 	}
 

@@ -55,7 +55,7 @@ public class CubeCleanerControllerTest {
 		Executor executor = Executors.newCachedThreadPool();
 
 		eventloop = Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+				.withEventloopFatalErrorHandler(rethrow());
 
 		eventloop.keepAlive(true);
 

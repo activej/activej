@@ -174,7 +174,7 @@ public final class TestClusterDeadPartitionCheck {
 
 			initTempDir(serverStorages[i]);
 
-			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+			Eventloop serverEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
 
 			LocalActiveFs localFs = LocalActiveFs.create(serverEventloop, executor, serverStorages[i]);

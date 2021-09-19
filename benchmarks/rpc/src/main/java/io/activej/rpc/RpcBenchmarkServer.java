@@ -26,7 +26,7 @@ public class RpcBenchmarkServer extends Launcher {
 	@Named("server")
 	Eventloop eventloopServer() {
 		return Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+				.withEventloopFatalErrorHandler(rethrow());
 	}
 
 	@Provides

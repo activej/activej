@@ -14,7 +14,7 @@ public class ServerModule extends AbstractModule {
 	@Provides
 	Eventloop eventloop() {
 		return Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+				.withEventloopFatalErrorHandler(rethrow());
 	}
 
 	@Provides

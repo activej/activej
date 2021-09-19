@@ -86,7 +86,7 @@ public class ChunkLockerMySqlDeadlockTest {
 		return () -> {
 			Eventloop eventloop = Eventloop.create()
 					.withCurrentThread()
-					.withFatalErrorHandler(haltOnError());
+					.withEventloopFatalErrorHandler(haltOnError());
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 
 			action(random, locker);

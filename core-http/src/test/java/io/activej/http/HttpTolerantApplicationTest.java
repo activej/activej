@@ -39,7 +39,7 @@ public final class HttpTolerantApplicationTest {
 	public void testTolerantServer() throws Exception {
 		int port = getFreePort();
 
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop eventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 				request ->

@@ -57,7 +57,7 @@ public final class FatalErrorHandlers {
 	 *
 	 * @return a thread fatal error handler or a global fatal error handler if thread's handler was not set
 	 */
-	public static @NotNull FatalErrorHandler getThreadFatalErrorHandler() {
+	public static @NotNull FatalErrorHandler getFatalErrorHandler() {
 		FatalErrorHandler handler = CURRENT_HANDLER.get();
 		return handler != null ? handler : globalFatalErrorHandler;
 	}
@@ -72,7 +72,7 @@ public final class FatalErrorHandlers {
 	 * @param fatalErrorHandler a fatal error handler
 	 * @param e                 an error to be handled
 	 * @param context           an optional context that provides additional debug information
-	 * @see #getThreadFatalErrorHandler()
+	 * @see #getFatalErrorHandler()
 	 */
 	public static void handleError(@NotNull FatalErrorHandler fatalErrorHandler, @NotNull Throwable e, @Nullable Object context) {
 		if (e instanceof RuntimeException || !(e instanceof Exception)) {
@@ -91,11 +91,11 @@ public final class FatalErrorHandlers {
 	 *
 	 * @param e       an error to be handled
 	 * @param context an optional context that provides additional debug information
-	 * @see #getThreadFatalErrorHandler()
+	 * @see #getFatalErrorHandler()
 	 */
 	public static void handleError(@NotNull Throwable e, @Nullable Object context) {
 		if (e instanceof RuntimeException || !(e instanceof Exception)) {
-			getThreadFatalErrorHandler().handle(e, context);
+			getFatalErrorHandler().handle(e, context);
 		}
 	}
 

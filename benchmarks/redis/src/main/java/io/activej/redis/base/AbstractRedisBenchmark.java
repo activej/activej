@@ -52,7 +52,7 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 	@Provides
 	Eventloop eventloopClient() {
 		return Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+				.withEventloopFatalErrorHandler(rethrow());
 	}
 
 	@Provides

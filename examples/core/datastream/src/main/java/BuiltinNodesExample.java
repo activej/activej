@@ -99,7 +99,7 @@ public final class BuiltinNodesExample {
 	//[END REGION_4]
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
+		Eventloop eventloop = Eventloop.create().withCurrentThread().withEventloopFatalErrorHandler(rethrow());
 
 		filter();
 		splitter();

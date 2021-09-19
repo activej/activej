@@ -543,7 +543,7 @@ public final class ConfigConverters {
 						return (e, context) -> {
 							Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
 							if (eventloop != null) {
-								eventloop.recordFatalError(e, context);
+								eventloop.logFatalError(e, context);
 							} else {
 								logging.handle(e, context);
 							}

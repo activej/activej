@@ -160,8 +160,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler fatalErrorHandler = this::recordFatalError;
-	private @Nullable FatalErrorHandler fatalErrorHandlerThreadLocal;
+	private @NotNull FatalErrorHandler eventloopFatalErrorHandler = this::logFatalError;
+	private @Nullable FatalErrorHandler threadFatalErrorHandler;
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -217,8 +217,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 *
 	 * @param fatalErrorHandler a fatal error handler on an event loop level
 	 */
-	public @NotNull Eventloop withFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
-		this.fatalErrorHandler = fatalErrorHandler;
+	public @NotNull Eventloop withEventloopFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
+		this.eventloopFatalErrorHandler = fatalErrorHandler;
 		return this;
 	}
 
@@ -228,10 +228,10 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * This is the handler that will be set using {@link FatalErrorHandlers#setThreadFatalErrorHandler(FatalErrorHandler)}.
 	 * It is usually the first handler to handle an error "nearer" to a throw site
 	 *
-	 * @param fatalErrorHandlerThreadLocal a fatal error handler on a thread level
+	 * @param fatalErrorHandler a fatal error handler on a thread level
 	 */
-	public @NotNull Eventloop withFatalErrorHandlerThreadLocal(@NotNull FatalErrorHandler fatalErrorHandlerThreadLocal) {
-		this.fatalErrorHandlerThreadLocal = fatalErrorHandlerThreadLocal;
+	public @NotNull Eventloop withThreadFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
+		this.threadFatalErrorHandler = fatalErrorHandler;
 		return this;
 	}
 
@@ -391,8 +391,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (threadPriority != 0)
 			eventloopThread.setPriority(threadPriority);
 		CURRENT_EVENTLOOP.set(this);
-		if (fatalErrorHandlerThreadLocal != null)
-			setThreadFatalErrorHandler(fatalErrorHandlerThreadLocal);
+		if (threadFatalErrorHandler != null)
+			setThreadFatalErrorHandler(threadFatalErrorHandler);
 		ensureSelector();
 		assert selector != null;
 		breakEventloop = false;
@@ -449,7 +449,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			return;
 		}
 		closeSelector();
-		if (fatalErrorHandlerThreadLocal != null)
+		if (threadFatalErrorHandler != null)
 			setThreadFatalErrorHandler(null);
 	}
 
@@ -764,7 +764,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				acceptCallback.accept(channel);
 			} catch (Throwable e) {
-				handleError(fatalErrorHandler, e, acceptCallback);
+				handleError(eventloopFatalErrorHandler, e, acceptCallback);
 				closeChannel(channel, null);
 			}
 		}
@@ -797,7 +797,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 						"this is not possible without some bug in Java NIO"));
 			}
 		} catch (Throwable e) {
-			handleError(fatalErrorHandler, e, channel);
+			handleError(eventloopFatalErrorHandler, e, channel);
 			closeChannel(channel, null);
 		}
 	}
@@ -814,7 +814,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		try {
 			handler.onReadReady();
 		} catch (Throwable e) {
-			handleError(fatalErrorHandler, e, handler);
+			handleError(eventloopFatalErrorHandler, e, handler);
 			closeChannel(key.channel(), null);
 		}
 	}
@@ -831,7 +831,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		try {
 			handler.onWriteReady();
 		} catch (Throwable e) {
-			handleError(fatalErrorHandler, e, handler);
+			handleError(eventloopFatalErrorHandler, e, handler);
 			closeChannel(key.channel(), null);
 		}
 	}
@@ -928,7 +928,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				cb.accept(null, e);
 			} catch (Throwable e1) {
-				handleError(fatalErrorHandler, e1, cb);
+				handleError(eventloopFatalErrorHandler, e1, cb);
 			}
 			return;
 		}
@@ -959,7 +959,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				cb.accept(null, e);
 			} catch (Throwable e1) {
-				handleError(fatalErrorHandler, e1, cb);
+				handleError(eventloopFatalErrorHandler, e1, cb);
 			}
 		}
 	}
@@ -1099,7 +1099,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				computation.run();
 			} catch (Exception ex) {
-				handleError(fatalErrorHandler, ex, computation);
+				handleError(eventloopFatalErrorHandler, ex, computation);
 				future.completeExceptionally(ex);
 				return;
 			}
@@ -1121,7 +1121,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 					}
 				});
 			} catch (Exception ex) {
-				handleError(fatalErrorHandler, ex, computation);
+				handleError(eventloopFatalErrorHandler, ex, computation);
 				future.completeExceptionally(ex);
 			}
 		});
@@ -1155,13 +1155,13 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	private void onFatalError(@NotNull Throwable e, @Nullable Runnable runnable) {
 		if (runnable instanceof RunnableWithContext) {
-			handleError(fatalErrorHandler, e, ((RunnableWithContext) runnable).getContext());
+			handleError(eventloopFatalErrorHandler, e, ((RunnableWithContext) runnable).getContext());
 		} else {
-			handleError(fatalErrorHandler, e, runnable);
+			handleError(eventloopFatalErrorHandler, e, runnable);
 		}
 	}
 
-	public void recordFatalError(@NotNull Throwable e, @Nullable Object context) {
+	public void logFatalError(@NotNull Throwable e, @Nullable Object context) {
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
@@ -1188,12 +1188,12 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return tick;
 	}
 
-	public @NotNull FatalErrorHandler getFatalErrorHandler() {
-		return fatalErrorHandler;
+	public @NotNull FatalErrorHandler getEventloopFatalErrorHandler() {
+		return eventloopFatalErrorHandler;
 	}
 
-	public @Nullable FatalErrorHandler getFatalErrorHandlerThreadLocal() {
-		return fatalErrorHandlerThreadLocal;
+	public @Nullable FatalErrorHandler getThreadFatalErrorHandler() {
+		return threadFatalErrorHandler;
 	}
 
 	public int getThreadPriority() {

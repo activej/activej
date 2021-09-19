@@ -16,13 +16,13 @@
 
 package io.activej.test.rules;
 
-import io.activej.common.exception.FatalErrorHandler;
 import io.activej.eventloop.Eventloop;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import static ch.qos.logback.classic.Level.WARN;
+import static io.activej.common.exception.FatalErrorHandler.rethrow;
 
 /**
  * {@link TestRule} that creates an eventloop and sets it to ThreadLocal
@@ -37,7 +37,7 @@ public final class EventloopRule implements TestRule {
 	private static void createEventloop() {
 		Eventloop.create()
 				.withCurrentThread()
-				.withFatalErrorHandler(FatalErrorHandler.rethrow());
+				.withEventloopFatalErrorHandler(rethrow());
 	}
 
 	@Override

@@ -16,7 +16,7 @@ public final class EventloopTest {
 		StringBuilder sb = new StringBuilder();
 		Ref<Throwable> errorRef = new Ref<>();
 		Eventloop eventloop = Eventloop.create().withCurrentThread()
-				.withFatalErrorHandler((e, context) -> {
+				.withEventloopFatalErrorHandler((e, context) -> {
 					errorRef.set(e);
 					sb.append(requireNonNull(context));
 				});

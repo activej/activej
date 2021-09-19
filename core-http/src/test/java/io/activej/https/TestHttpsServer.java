@@ -30,7 +30,7 @@ public class TestHttpsServer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
+		Eventloop eventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow()).withCurrentThread();
 		Executor executor = newCachedThreadPool();
 
 		AsyncServlet bobServlet = request -> HttpResponse.ok200().withBody(wrapAscii("Hello, I am Bob!"));

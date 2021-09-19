@@ -49,7 +49,7 @@ public class RpcBenchmarkClient extends Launcher {
 	@Named("client")
 	Eventloop eventloopClient() {
 		return Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+				.withEventloopFatalErrorHandler(rethrow());
 	}
 
 	@Provides

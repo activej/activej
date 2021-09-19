@@ -378,7 +378,7 @@ public class DataflowServerTest {
 					.overrideWith(ModuleBuilder.create()
 							.bind(datasetId(malformed ? "" : "items")).toInstance(words)
 							.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", String.valueOf(port)))
-							.bind(Eventloop.class).toInstance(Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow()))
+							.bind(Eventloop.class).toInstance(Eventloop.create().withCurrentThread().withEventloopFatalErrorHandler(rethrow()))
 							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
 							.bind(datasetId("result")).toInstance(StreamConsumerToList.create(result))
 							.build());

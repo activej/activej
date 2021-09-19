@@ -157,7 +157,7 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testOfAnotherEventloop() {
-		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop anotherEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 		List<Integer> expectedList = asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(actualList::add));
@@ -172,7 +172,7 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testOfAnotherEventloopException() {
-		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop anotherEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 		ExpectedException expectedException = new ExpectedException();
 		List<Integer> list = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(list::add));

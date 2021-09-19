@@ -50,7 +50,7 @@ public class RpcBenchmark extends Launcher {
 	@Named("client")
 	Eventloop eventloopClient() {
 		return Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+				.withEventloopFatalErrorHandler(rethrow());
 	}
 
 	@Provides
@@ -58,7 +58,7 @@ public class RpcBenchmark extends Launcher {
 	Eventloop eventloopServer(@Named("client") Eventloop clientEventloop, Config config) {
 		return config.get(ofBoolean(), "multithreaded", true) ?
 				Eventloop.create()
-						.withFatalErrorHandler(rethrow()) :
+						.withEventloopFatalErrorHandler(rethrow()) :
 				clientEventloop;
 	}
 
