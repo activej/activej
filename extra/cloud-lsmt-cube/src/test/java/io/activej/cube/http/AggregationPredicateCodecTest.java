@@ -114,6 +114,12 @@ public class AggregationPredicateCodecTest {
 		doTest(between("campaign", -12, 444));
 	}
 
+	@Test
+	public void testHas() {
+		doTest(has("test"));
+		doTest(has("campaign"));
+	}
+
 	private static void doTest(AggregationPredicate predicate) {
 		String json = toJson(CODEC, predicate);
 		AggregationPredicate decoded;

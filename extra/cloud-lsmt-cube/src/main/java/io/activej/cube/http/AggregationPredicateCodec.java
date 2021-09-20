@@ -342,6 +342,9 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 					case NOT:
 						result = readNot(reader);
 						break;
+					case HAS:
+						result = readHas(reader);
+						break;
 					default:
 						throw reader.newParseError("Unknown predicate type " + type);
 				}
@@ -487,6 +490,12 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 		AggregationPredicate predicate = read(reader);
 		reader.getNextToken();
 		return not(predicate);
+	}
+
+	private AggregationPredicate readHas(JsonReader reader) throws IOException {
+		String attribute = reader.readString();
+		reader.getNextToken();
+		return has(attribute);
 	}
 
 }
