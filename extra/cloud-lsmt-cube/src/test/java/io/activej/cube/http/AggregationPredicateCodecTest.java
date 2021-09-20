@@ -2,35 +2,23 @@ package io.activej.cube.http;
 
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.common.exception.MalformedDataException;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import static io.activej.aggregation.AggregationPredicates.*;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
 
 public class AggregationPredicateCodecTest {
-	private static AggregationPredicateCodec CODEC;
-
-	@BeforeClass
-	public static void beforeClass() {
-		Map<String, Type> attributeTypes = new HashMap<>();
-		attributeTypes.put("campaign", int.class);
-		attributeTypes.put("site", String.class);
-		attributeTypes.put("hourOfDay", int.class);
-
-		Map<String, Type> measureTypes = new HashMap<>();
-		measureTypes.put("conversions", long.class);
-		measureTypes.put("eventCount", int.class);
-		measureTypes.put("ctr", double.class);
-
-		CODEC = AggregationPredicateCodec.create(attributeTypes, measureTypes);
-	}
+	private static final AggregationPredicateCodec CODEC = AggregationPredicateCodec.create(
+			mapOf("campaign", int.class,
+					"site", String.class,
+					"hourOfDay", int.class),
+			mapOf("eventCount", int.class,
+					"ctr", double.class)
+	);
 
 	@Test
 	public void testAlwaysTrue() {
