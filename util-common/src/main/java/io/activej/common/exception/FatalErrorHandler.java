@@ -64,28 +64,28 @@ public interface FatalErrorHandler {
 	}
 
 	/**
-	 * A fatal error handler that terminates JVM on any error
+	 * A fatal error handler that terminates JVM on any {@link Throwable}
 	 */
 	static FatalErrorHandler halt() {
 		return haltOn(t -> true);
 	}
 
 	/**
-	 * A fatal error handler that terminates JVM on any error
+	 * A fatal error handler that terminates JVM on any {@link Error}
 	 */
 	static FatalErrorHandler haltOnError() {
 		return haltOn(e -> e instanceof Error);
 	}
 
 	/**
-	 * A fatal error handler that terminates JVM on any {@link Error}
+	 * A fatal error handler that terminates JVM on any {@link VirtualMachineError}
 	 */
 	static FatalErrorHandler haltOnVirtualMachineError() {
 		return haltOn(e -> e instanceof VirtualMachineError);
 	}
 
 	/**
-	 * A fatal error handler that terminates JVM on any {@link Error}
+	 * A fatal error handler that terminates JVM on any {@link OutOfMemoryError}
 	 */
 	static FatalErrorHandler haltOnOutOfMemoryError() {
 		return haltOn(e -> e instanceof OutOfMemoryError);
