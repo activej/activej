@@ -37,7 +37,7 @@ import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.cube.ReportType.*;
-import static io.activej.cube.Utils.CUBE_DSL_JSON;
+import static io.activej.cube.Utils.getJsonCodec;
 
 final class QueryResultCodec implements JsonCodec<QueryResult> {
 	private static final String MEASURES_FIELD = "measures";
@@ -66,7 +66,6 @@ final class QueryResultCodec implements JsonCodec<QueryResult> {
 		this.measureTypes = measureTypes;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static QueryResultCodec create(DefiningClassLoader classLoader,
 			Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
 		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
@@ -74,22 +73,12 @@ final class QueryResultCodec implements JsonCodec<QueryResult> {
 		Map<String, Class<?>> attributeRawTypes = new LinkedHashMap<>();
 		Map<String, Class<?>> measureRawTypes = new LinkedHashMap<>();
 		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
-			Type type = entry.getValue();
-			ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(type);
-			if (readObject == null) throw new IllegalArgumentException("Cannot serialize " + type);
-			WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(type);
-			if (writeObject == null) throw new IllegalArgumentException("Cannot deserialize " + type);
-			attributeCodecs.put(entry.getKey(), JsonCodec.of(readObject, writeObject));
-			attributeRawTypes.put(entry.getKey(), Types.getRawType(type));
+			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()).nullable());
+			attributeRawTypes.put(entry.getKey(), Types.getRawType(entry.getValue()));
 		}
 		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
-			Type type = entry.getValue();
-			ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(type);
-			if (readObject == null) throw new IllegalArgumentException("Cannot serialize " + type);
-			WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(type);
-			if (writeObject == null) throw new IllegalArgumentException("Cannot deserialize " + type);
-			measureCodecs.put(entry.getKey(), JsonCodec.of(readObject, writeObject));
-			measureRawTypes.put(entry.getKey(), Types.getRawType(type));
+			measureCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()));
+			measureRawTypes.put(entry.getKey(), Types.getRawType(entry.getValue()));
 		}
 		return new QueryResultCodec(classLoader, attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
 	}
@@ -229,7 +218,6 @@ final class QueryResultCodec implements JsonCodec<QueryResult> {
 		while (reader.getNextToken() == ',') {
 			reader.getNextToken();
 			key = reader.readKey();
-			reader.getNextToken();
 			value = attributeCodecs.get(key).read(reader);
 			result.put(key, value);
 		}

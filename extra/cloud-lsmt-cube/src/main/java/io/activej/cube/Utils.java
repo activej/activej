@@ -23,6 +23,7 @@ import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.JsonWriter.WriteObject;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
+import io.activej.aggregation.util.JsonCodec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
@@ -38,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
@@ -139,6 +141,20 @@ public final class Utils {
 	public static final DslJson<?> CUBE_DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
 	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newWriter);
 	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newReader);
+
+	@NotNull
+	@SuppressWarnings("unchecked")
+	public static JsonCodec<Object> getJsonCodec(Type type) {
+		ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(type);
+		if (readObject == null) {
+			throw new IllegalArgumentException("Cannot serialize " + type);
+		}
+		WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(type);
+		if (writeObject == null) {
+			throw new IllegalArgumentException("Cannot deserialize " + type);
+		}
+		return JsonCodec.of(readObject, writeObject);
+	}
 
 	public static <T> String toJson(@NotNull WriteObject<T> writeObject, @Nullable T object) {
 		return toJsonWriter(writeObject, object).toString();

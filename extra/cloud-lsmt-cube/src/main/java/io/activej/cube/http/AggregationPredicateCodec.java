@@ -27,18 +27,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.Stream;
 
 import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.aggregation.AggregationPredicates.*;
-import static io.activej.cube.Utils.CUBE_DSL_JSON;
-import static java.util.stream.Collectors.toMap;
+import static io.activej.cube.Utils.getJsonCodec;
 
 @SuppressWarnings("rawtypes")
 final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate> {
@@ -72,23 +67,15 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 		this.attributeFormats = attributeFormats;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static AggregationPredicateCodec create(Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
-		Map<String, JsonCodec<Object>> map = Stream.concat(attributeTypes.entrySet().stream(), measureTypes.entrySet().stream())
-				.collect(toMap(Map.Entry::getKey,
-						entry -> {
-							ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(entry.getValue());
-							if (readObject == null) {
-								throw new IllegalArgumentException("Cannot serialize " + entry.getValue());
-							}
-							WriteObject<Object> writeObject = (WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(entry.getValue());
-							if (writeObject == null) {
-								throw new IllegalArgumentException("Cannot deserialize " + entry.getValue());
-							}
-							return JsonCodec.of(readObject, writeObject);
-						})
-				);
-		return new AggregationPredicateCodec(map);
+		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
+		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
+			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()).nullable());
+		}
+		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
+			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()));
+		}
+		return new AggregationPredicateCodec(attributeCodecs);
 	}
 
 	private void writeEq(JsonWriter writer, PredicateEq predicate) {
@@ -129,10 +116,11 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 
 	private void writeIn(JsonWriter writer, PredicateIn predicate) {
 		writer.writeString(predicate.getKey());
-		writer.writeByte(COMMA);
 		JsonCodec<Object> codec = attributeFormats.get(predicate.getKey());
-		//noinspection unchecked
-		writer.serialize(predicate.getValues(), codec);
+		for (Object o : predicate.getValues()) {
+			writer.writeByte(COMMA);
+			codec.write(writer, o);
+		}
 	}
 
 	private void writeBetween(JsonWriter writer, PredicateBetween predicate) {
@@ -434,13 +422,17 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 
 	private AggregationPredicate readIn(JsonReader reader) throws IOException {
 		String attribute = reader.readString();
-		reader.comma();
-		reader.getNextToken();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
-		Set<Object> values = ((JsonReader<?>) reader).readSet(readObject);
-		reader.getNextToken();
-		if (values == null) throw reader.newParseError("IN arguments cannot be null");
-		return in(attribute, values);
+		Set<Object> result = new LinkedHashSet<>();
+		byte token;
+		while ((token = reader.getNextToken()) != ARRAY_END) {
+			if (token != COMMA) {
+				throw reader.newParseError("Comma expected");
+			}
+			reader.getNextToken();
+			result.add(readObject.read(reader));
+		}
+		return in(attribute, result);
 	}
 
 	private AggregationPredicate readBetween(JsonReader reader) throws IOException {

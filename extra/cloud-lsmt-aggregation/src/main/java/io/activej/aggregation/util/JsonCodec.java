@@ -21,6 +21,7 @@ import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.JsonWriter.WriteObject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
@@ -37,5 +38,17 @@ public interface JsonCodec<T> extends ReadObject<T>, WriteObject<T> {
 				writeObject.write(writer, value);
 			}
 		};
+	}
+
+	default JsonCodec<@Nullable T> nullable() {
+		return JsonCodec.of(
+				reader -> {
+					if (reader.wasNull()) return null;
+					return JsonCodec.this.read(reader);
+				},
+				(writer, value) -> {
+					if (value == null) writer.writeNull();
+					else JsonCodec.this.write(writer, value);
+				});
 	}
 }
