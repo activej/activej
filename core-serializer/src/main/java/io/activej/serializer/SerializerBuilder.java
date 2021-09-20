@@ -733,7 +733,7 @@ public final class SerializerBuilder {
 
 	@SuppressWarnings("unchecked")
 	private SerializerDef scan(Context<SerializerDef> ctx) {
-		Map<Type, SerializerDef> cache = (Map<Type, SerializerDef>) ctx.value();
+		Map<Type, SerializerDef> cache = (Map<Type, SerializerDef>) ctx.getContextValue();
 		SerializerDef serializerDef = cache.get(ctx.getType());
 		if (serializerDef != null) return serializerDef;
 		ForwardingSerializerDefImpl forwardingSerializerDef = new ForwardingSerializerDefImpl();

@@ -34,12 +34,10 @@ import java.util.function.Function;
 
 import static io.activej.types.AnnotatedTypes.annotatedTypeOf;
 import static io.activej.types.IsAssignableUtils.isAssignable;
-import static java.util.Collections.emptyList;
 
 /**
  * A registry of {@link Mapping}s by type
  * <p>
- *
  *
  * @param <R> a type of mapping result
  */
@@ -52,23 +50,23 @@ public final class TypeScannerRegistry<R> {
 
 	public static final class Context<R> {
 		private final Mapping<R> mappingFn;
-		private final AnnotatedType[] stack;
-		private final List<AnnotatedType[]> history;
+		private final Context<R>[] stack;
+		private final AnnotatedType[] argumentStack;
 		private final Object value;
 
-		Context(Mapping<R> mappingFn, AnnotatedType[] stack, List<AnnotatedType[]> history, Object value) {
+		Context(Mapping<R> mappingFn, Context<R>[] stack, AnnotatedType[] argumentStack, Object value) {
 			this.mappingFn = mappingFn;
+			this.argumentStack = argumentStack;
 			this.stack = stack;
-			this.history = history;
 			this.value = value;
 		}
 
-		public Context<R> withValue(Object value) {
-			return new Context<>(mappingFn, stack, history, value);
+		public Context<R> withContextValue(Object value) {
+			return new Context<>(mappingFn, stack, argumentStack, value);
 		}
 
 		public Context<R> withMapping(Mapping<R> mappingFn) {
-			return new Context<>(mappingFn, stack, history, value);
+			return new Context<>(mappingFn, stack, argumentStack, value);
 		}
 
 		public Context<R> withMapping(BiFunction<Mapping<R>, Context<R>, R> mappingFn) {
@@ -84,7 +82,7 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		public AnnotatedType getAnnotatedType() {
-			return stack[stack.length - 1];
+			return argumentStack[argumentStack.length - 1];
 		}
 
 		public Annotation[] getAnnotations() {
@@ -97,10 +95,6 @@ public final class TypeScannerRegistry<R> {
 
 		public <A extends Annotation> A getAnnotation(Class<A> clazz) {
 			return AnnotationUtils.getAnnotation(clazz, this.getAnnotations());
-		}
-
-		public <A extends Annotation, T> T getAnnotation(Class<A> clazz, Function<@Nullable A, T> fn) {
-			return fn.apply(AnnotationUtils.getAnnotation(clazz, this.getAnnotations()));
 		}
 
 		public AnnotatedType[] getTypeArguments() {
@@ -123,12 +117,12 @@ public final class TypeScannerRegistry<R> {
 			return scanArgument(getTypeArgument(n));
 		}
 
-		public AnnotatedType[] getStack() {
+		public Context<R>[] getStack() {
 			return stack;
 		}
 
-		public List<AnnotatedType[]> getHistory() {
-			return history;
+		public AnnotatedType[] getArgumentStack() {
+			return argumentStack;
 		}
 
 		public R scan(Type type) {
@@ -144,19 +138,18 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		public Context<R> push(AnnotatedType annotatedType) {
-			List<AnnotatedType[]> newHistory = new ArrayList<>(history.size() + 1);
-			newHistory.addAll(history);
-			newHistory.add(stack);
-			return new Context<>(mappingFn, new AnnotatedType[]{annotatedType}, newHistory, value);
+			Context<R>[] stack = Arrays.copyOf(this.stack, this.stack.length + 1);
+			stack[stack.length - 1] = this;
+			return new Context<>(mappingFn, stack, new AnnotatedType[]{annotatedType}, value);
 		}
 
 		public Context<R> pushArgument(AnnotatedType annotatedType) {
-			AnnotatedType[] newStack = Arrays.copyOf(stack, stack.length + 1);
-			newStack[newStack.length - 1] = annotatedType;
-			return new Context<>(mappingFn, newStack, history, value);
+			AnnotatedType[] argumentStack = Arrays.copyOf(this.argumentStack, this.argumentStack.length + 1);
+			argumentStack[argumentStack.length - 1] = annotatedType;
+			return new Context<>(mappingFn, stack, argumentStack, value);
 		}
 
-		public Object value() {
+		public Object getContextValue() {
 			return value;
 		}
 
@@ -229,13 +222,14 @@ public final class TypeScannerRegistry<R> {
 	}
 
 	public TypeScanner<R> scanner(Object contextValue) {
+		//noinspection unchecked
 		return type -> scan(
 				new Context<>(
 						mappingFn == null ?
 								this::scan :
 								mappingFn,
+						(Context<R>[]) new Context[0],
 						new AnnotatedType[]{type},
-						emptyList(),
 						contextValue));
 	}
 
