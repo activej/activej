@@ -20,16 +20,16 @@ import io.activej.async.process.AsyncExecutors;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public final class AsyncPredicates {
+public final class AsyncFunctions {
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncPredicate<T> buffer(@NotNull AsyncPredicate<T> actual) {
+	public static @NotNull <T, R> AsyncFunction<T, R> buffer(@NotNull AsyncFunction<T, R> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncPredicate<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncPredicate<T> asyncPredicate) {
-		return asyncPredicate.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
+	public static @NotNull <T, R> AsyncFunction<T, R> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncFunction<T, R> asyncFunction) {
+		return asyncFunction.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
 	}
 
 }

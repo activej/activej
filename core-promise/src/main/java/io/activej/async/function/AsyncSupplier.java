@@ -20,6 +20,7 @@ import io.activej.async.process.AsyncExecutor;
 import io.activej.common.collection.Try;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
+import io.activej.common.function.SupplierEx;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -27,8 +28,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 /**
  * Represents asynchronous supplier that returns {@link Promise} of some data.
@@ -40,8 +42,21 @@ public interface AsyncSupplier<T> {
 	 */
 	Promise<T> get();
 
-	static <T> AsyncSupplier<T> of(@NotNull Supplier<Promise<T>> supplier) {
-		return supplier::get;
+	/**
+	 * Wraps a {@link SupplierEx} interface.
+	 *
+	 * @param supplier a {@link SupplierEx}
+	 * @return {@link AsyncSupplier} that works on top of {@link SupplierEx} interface
+	 */
+	static <T> AsyncSupplier<T> of(@NotNull SupplierEx<Promise<T>> supplier) {
+		return () -> {
+			try {
+				return supplier.get();
+			} catch (Exception e) {
+				handleError(e, supplier);
+				return Promise.ofException(e);
+			}
+		};
 	}
 
 	static <T> AsyncSupplier<T> ofValue(@Nullable T value) {

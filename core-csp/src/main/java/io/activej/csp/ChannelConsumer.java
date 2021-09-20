@@ -20,6 +20,7 @@ import io.activej.async.function.AsyncConsumer;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -126,9 +127,9 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * Wraps Java's {@link Consumer} in {@code ChannelConsumer}.
+	 * Wraps a {@link ConsumerEx} in {@code ChannelConsumer}.
 	 */
-	static <T> ChannelConsumer<T> ofConsumer(@NotNull Consumer<T> consumer) {
+	static <T> ChannelConsumer<T> ofConsumer(@NotNull ConsumerEx<T> consumer) {
 		return of(AsyncConsumer.of(consumer));
 	}
 

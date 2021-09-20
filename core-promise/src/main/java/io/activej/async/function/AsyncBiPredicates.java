@@ -20,15 +20,15 @@ import io.activej.async.process.AsyncExecutors;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public final class AsyncPredicates {
+public final class AsyncBiPredicates {
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncPredicate<T> buffer(@NotNull AsyncPredicate<T> actual) {
+	public static @NotNull <T, U> AsyncBiPredicate<T, U> buffer(@NotNull AsyncBiPredicate<T, U> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncPredicate<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncPredicate<T> asyncPredicate) {
+	public static @NotNull <T, U> AsyncBiPredicate<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncBiPredicate<T, U> asyncPredicate) {
 		return asyncPredicate.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
 	}
 

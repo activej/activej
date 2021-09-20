@@ -17,12 +17,15 @@
 package io.activej.async.function;
 
 import io.activej.async.process.AsyncExecutor;
+import io.activej.common.function.ConsumerEx;
+import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 /**
  * Represents an asynchronous consumer that consumes data items.
@@ -38,16 +41,25 @@ public interface AsyncConsumer<T> {
 	@NotNull Promise<Void> accept(T value);
 
 	/**
-	 * Wraps standard Java's {@link Consumer} interface.
+	 * Wraps a {@link ConsumerEx} interface.
 	 *
-	 * @param consumer - Java's {@link Consumer} of Promises
-	 * @return {@link AsyncConsumer} that works on top of standard Java's {@link Consumer} interface
+	 * @param consumer a {@link ConsumerEx}
+	 * @return {@link AsyncConsumer} that works on top of {@link ConsumerEx} interface
 	 */
-	static @NotNull <T> AsyncConsumer<T> of(@NotNull Consumer<? super T> consumer) {
+	static @NotNull <T> AsyncConsumer<T> of(@NotNull ConsumerEx<? super T> consumer) {
 		return value -> {
-			consumer.accept(value);
+			try {
+				consumer.accept(value);
+			} catch (Exception e) {
+				handleError(e, consumer);
+				return Promise.ofException(e);
+			}
 			return Promise.complete();
 		};
+	}
+
+	static <T> AsyncConsumer<T> cast(AsyncConsumer<T> consumer){
+		return consumer;
 	}
 
 	@Contract(pure = true)
@@ -66,20 +78,39 @@ public interface AsyncConsumer<T> {
 	}
 
 	@Contract(pure = true)
-	default @NotNull AsyncConsumer<T> peek(@NotNull Consumer<T> action) {
+	default @NotNull AsyncConsumer<T> peek(@NotNull ConsumerEx<T> action) {
 		return value -> {
-			action.accept(value);
+			try {
+				action.accept(value);
+			} catch (Exception e) {
+				handleError(e, action);
+				return Promise.ofException(e);
+			}
 			return accept(value);
 		};
 	}
 
 	@Contract(pure = true)
-	default @NotNull <V> AsyncConsumer<V> map(@NotNull Function<? super V, ? extends T> fn) {
-		return value -> accept(fn.apply(value));
+	default @NotNull <V> AsyncConsumer<V> map(@NotNull FunctionEx<? super V, ? extends T> fn) {
+		return value -> {
+			try {
+				return accept(fn.apply(value));
+			} catch (Exception e) {
+				handleError(e, fn);
+				return Promise.ofException(e);
+			}
+		};
 	}
 
 	@Contract(pure = true)
-	default @NotNull <V> AsyncConsumer<V> mapAsync(@NotNull Function<? super V, ? extends Promise<T>> fn) {
-		return value -> fn.apply(value).then(this::accept);
+	default @NotNull <V> AsyncConsumer<V> mapAsync(@NotNull FunctionEx<? super V, ? extends Promise<T>> fn) {
+		return value -> {
+			try {
+				return fn.apply(value).then(this::accept);
+			} catch (Exception e) {
+				handleError(e, fn);
+				return Promise.ofException(e);
+			}
+		};
 	}
 }
