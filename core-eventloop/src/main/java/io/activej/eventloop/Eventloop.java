@@ -223,7 +223,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 *
 	 * @param fatalErrorHandler a fatal error handler on a thread level
 	 */
-	public @NotNull Eventloop withThreadFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
+	public @NotNull Eventloop withThreadFatalErrorHandler(@Nullable FatalErrorHandler fatalErrorHandler) {
 		this.threadFatalErrorHandler = fatalErrorHandler;
 		return this;
 	}
