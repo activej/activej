@@ -154,14 +154,14 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * @see #ofSupplier(Function, ChannelQueue)
+	 * @see #ofSupplier(AsyncConsumer, ChannelQueue)
 	 */
-	static <T> ChannelConsumer<T> ofSupplier(Function<ChannelSupplier<T>, Promise<Void>> supplier) {
-		return ofSupplier(supplier, new ChannelZeroBuffer<>());
+	static <T> ChannelConsumer<T> ofSupplier(AsyncConsumer<ChannelSupplier<T>> supplierConsumer) {
+		return ofSupplier(supplierConsumer, new ChannelZeroBuffer<>());
 	}
 
-	static <T> ChannelConsumer<T> ofSupplier(Function<ChannelSupplier<T>, Promise<Void>> supplier, ChannelQueue<T> queue) {
-		Promise<Void> extraAcknowledge = supplier.apply(queue.getSupplier());
+	static <T> ChannelConsumer<T> ofSupplier(AsyncConsumer<ChannelSupplier<T>> supplierConsumer, ChannelQueue<T> queue) {
+		Promise<Void> extraAcknowledge = supplierConsumer.accept(queue.getSupplier());
 		ChannelConsumer<T> result = queue.getConsumer();
 		if (extraAcknowledge == Promise.complete()) return result;
 		return result

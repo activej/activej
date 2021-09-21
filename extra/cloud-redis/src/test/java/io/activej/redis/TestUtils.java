@@ -1,15 +1,14 @@
 package io.activej.redis;
 
+import io.activej.async.function.AsyncFunction;
 import io.activej.promise.Promise;
-
-import java.util.function.Function;
 
 import static java.util.Objects.deepEquals;
 import static org.junit.Assert.assertTrue;
 
 public final class TestUtils {
 
-	public static <T> T await(RedisClient client, Function<RedisConnection, Promise<T>> clientCommand) {
+	public static <T> T await(RedisClient client, AsyncFunction<RedisConnection, T> clientCommand) {
 		return io.activej.promise.TestUtils.await(client.connect()
 				.then(connection -> clientCommand.apply(connection)
 						.then((result, e) -> connection.quit()

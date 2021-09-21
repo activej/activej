@@ -16,6 +16,7 @@
 
 package io.activej.datastream;
 
+import io.activej.async.function.AsyncConsumer;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.common.function.ConsumerEx;
 import io.activej.csp.ChannelConsumer;
@@ -124,9 +125,9 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 	 * Creates a consumer which sends received items through the supplier received in the callback.
 	 * Acknowledge of that consumer will not be set until the promise received from the callback invocation completes.
 	 */
-	static <T> StreamConsumer<T> ofSupplier(Function<StreamSupplier<T>, Promise<Void>> supplier) {
+	static <T> StreamConsumer<T> ofSupplier(AsyncConsumer<StreamSupplier<T>> supplier) {
 		StreamTransformer<T, T> forwarder = StreamTransformer.identity();
-		Promise<Void> extraAcknowledge = supplier.apply(forwarder.getOutput());
+		Promise<Void> extraAcknowledge = supplier.accept(forwarder.getOutput());
 		StreamConsumer<T> result = forwarder.getInput();
 		if (extraAcknowledge == Promise.complete()) return result;
 		return result

@@ -1,6 +1,7 @@
 package io.activej.rpc.memcache;
 
 import io.activej.async.callback.Callback;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
@@ -23,8 +24,6 @@ import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 import io.activej.service.ServiceGraphModuleSettings;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.function.Supplier;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.inject.module.Modules.combine;
@@ -101,7 +100,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 		benchmark(this::roundGet, "Get");
 	}
 
-	private void benchmark(Supplier<Promise<Long>> function, String nameBenchmark) throws Exception {
+	private void benchmark(AsyncSupplier<Long> function, String nameBenchmark) throws Exception {
 		long timeAllRounds = 0;
 		long bestTime = -1;
 		long worstTime = -1;
@@ -136,7 +135,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 				bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + requestsPerSecond);
 	}
 
-	private long round(Supplier<Promise<Long>> function) throws Exception {
+	private long round(AsyncSupplier<Long> function) throws Exception {
 		return eventloop.submit(function::get).get();
 	}
 

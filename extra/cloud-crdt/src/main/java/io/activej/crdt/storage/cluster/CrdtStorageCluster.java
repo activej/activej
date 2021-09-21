@@ -16,6 +16,7 @@
 
 package io.activej.crdt.storage.cluster;
 
+import io.activej.async.function.AsyncFunction;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
 import io.activej.common.collection.Try;
@@ -47,7 +48,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
@@ -141,7 +141,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 		return partitions;
 	}
 
-	private <T extends AsyncCloseable> Promise<List<Container<T>>> connect(Function<CrdtStorage<K, S>, Promise<T>> method) {
+	private <T extends AsyncCloseable> Promise<List<Container<T>>> connect(AsyncFunction<CrdtStorage<K, S>, T> method) {
 		return Promises.toList(
 						partitions.getAlivePartitions().entrySet().stream()
 								.map(entry ->

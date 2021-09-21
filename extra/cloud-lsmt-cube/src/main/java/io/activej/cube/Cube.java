@@ -23,6 +23,7 @@ import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.AsyncAccumulator;
+import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
@@ -756,7 +757,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		return excessive;
 	}
 
-	public Promise<CubeDiff> consolidate(Function<Aggregation, Promise<AggregationDiff>> strategy) {
+	public Promise<CubeDiff> consolidate(AsyncFunction<Aggregation, AggregationDiff> strategy) {
 		logger.info("Launching consolidation");
 
 		Map<String, AggregationDiff> map = new HashMap<>();

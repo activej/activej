@@ -18,6 +18,7 @@ package io.activej.cube.service;
 
 import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
+import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
@@ -38,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -56,13 +56,13 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 
 	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
 
-	public static final Supplier<BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>>> DEFAULT_LOCKER_STRATEGY = new Supplier<BiFunction<Aggregation,
+	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<AsyncBiFunction<Aggregation,
 			Set<Object>,
-			Promise<List<AggregationChunk>>>>() {
+			List<AggregationChunk>>>() {
 		private boolean hotSegment = false;
 
 		@Override
-		public BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>> get() {
+		public AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> get() {
 			hotSegment = !hotSegment;
 			return (aggregation, chunkLocker) -> Promise.of(aggregation.getChunksForConsolidation(chunkLocker, hotSegment));
 		}
@@ -89,7 +89,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 
 	private final Map<String, ChunkLocker<Object>> lockers = new HashMap<>();
 
-	private Supplier<BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>>> strategy = DEFAULT_LOCKER_STRATEGY;
+	private Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy = DEFAULT_LOCKER_STRATEGY;
 	@SuppressWarnings("unchecked")
 	private Function<String, ChunkLocker<C>> chunkLockerFactory = $ -> (ChunkLocker<C>) NOOP_CHUNK_LOCKER;
 
@@ -121,7 +121,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		return new CubeConsolidationController<>(eventloop, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map);
 	}
 
-	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>>> strategy) {
+	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy) {
 		this.strategy = strategy;
 		return this;
 	}
@@ -147,7 +147,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	Promise<Void> doConsolidate() {
 		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		consolidating = true;
-		BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>> chunksFn = strategy.get();
+		AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn = strategy.get();
 		Map<String, List<AggregationChunk>> chunksForConsolidation = new HashMap<>();
 		return Promise.complete()
 				.then(stateManager::sync)
@@ -183,7 +183,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	}
 
 	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(String aggregationId,
-			BiFunction<Aggregation, Set<Object>, Promise<List<AggregationChunk>>> chunksFn) {
+			AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn) {
 		ChunkLocker<Object> locker = ensureLocker(aggregationId);
 		Aggregation aggregation = cube.getAggregation(aggregationId);
 

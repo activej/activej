@@ -16,6 +16,7 @@
 
 package io.activej.fs.tcp;
 
+import io.activej.async.function.AsyncFunction;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
@@ -188,7 +189,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 		onMessage(Ping.class, simpleHandler(msg -> fs.ping(), $ -> new PingFinished(), pingPromise));
 	}
 
-	private <T extends FsCommand, R> MessagingHandler<T> simpleHandler(Function<T, Promise<R>> action, Function<R, FsResponse> response, PromiseStats stats) {
+	private <T extends FsCommand, R> MessagingHandler<T> simpleHandler(AsyncFunction<T, R> action, Function<R, FsResponse> response, PromiseStats stats) {
 		return (messaging, msg) -> action.apply(msg)
 				.then(res -> messaging.send(response.apply(res)))
 				.then(messaging::sendEndOfStream)

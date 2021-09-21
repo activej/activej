@@ -1,8 +1,8 @@
 package io.activej.redis;
 
 import ai.grakn.redismock.RedisServer;
+import io.activej.async.function.AsyncFunction;
 import io.activej.eventloop.Eventloop;
-import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
@@ -10,7 +10,6 @@ import org.junit.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
 
@@ -74,7 +73,7 @@ public class RedisConnectionTestWithStub {
 		assertArrayEquals(value, await(redis -> redis.cmd(RedisRequest.of("GET", key), RedisResponse.BYTES)));
 	}
 
-	protected <T> T await(Function<RedisConnection, Promise<T>> clientCommand) {
+	protected <T> T await(AsyncFunction<RedisConnection, T> clientCommand) {
 		return io.activej.redis.TestUtils.await(client, clientCommand);
 	}
 

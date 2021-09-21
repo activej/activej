@@ -16,6 +16,8 @@
 
 package io.activej.fs;
 
+import io.activej.async.function.AsyncBiConsumer;
+import io.activej.async.function.AsyncConsumer;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.collection.Try;
@@ -31,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
@@ -147,18 +148,18 @@ final class MountingActiveFs implements ActiveFs {
 				.map(entry -> entry.getKey().deleteAll(entry.getValue())));
 	}
 
-	private Promise<Void> transfer(String source, String target, BiFunction<String, String, Function<ActiveFs, Promise<Void>>> action, boolean deleteSource) {
+	private Promise<Void> transfer(String source, String target, BiFunction<String, String, AsyncConsumer<ActiveFs>> action, boolean deleteSource) {
 		ActiveFs first = findMount(source);
 		ActiveFs second = findMount(target);
 		if (first == second) {
-			return action.apply(source, target).apply(first);
+			return action.apply(source, target).accept(first);
 		}
 		return first.download(source)
 				.then(supplier -> supplier.streamTo(second.upload(target)))
 				.then(() -> deleteSource ? first.delete(source) : Promise.complete());
 	}
 
-	private Promise<Void> transfer(Map<String, String> sourceToTarget, BiFunction<ActiveFs, Map<String, String>, Promise<Void>> action, boolean deleteSource) {
+	private Promise<Void> transfer(Map<String, String> sourceToTarget, AsyncBiConsumer<ActiveFs, Map<String, String>> action, boolean deleteSource) {
 		List<AsyncSupplier<Tuple2<String, Try<Void>>>> movePromises = new ArrayList<>();
 
 		Map<ActiveFs, Map<String, String>> groupedBySameFs = new IdentityHashMap<>();
@@ -181,7 +182,7 @@ final class MountingActiveFs implements ActiveFs {
 			}
 		}
 		for (Map.Entry<ActiveFs, Map<String, String>> entry : groupedBySameFs.entrySet()) {
-			movePromises.add(() -> action.apply(entry.getKey(), entry.getValue()).toTry().map(aTry -> new Tuple2<>("", aTry)));
+			movePromises.add(() -> action.accept(entry.getKey(), entry.getValue()).toTry().map(aTry -> new Tuple2<>("", aTry)));
 		}
 
 		return Promises.toList(movePromises.stream().map(AsyncSupplier::get))

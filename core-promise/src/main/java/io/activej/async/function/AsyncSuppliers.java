@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
-import java.util.function.Function;
 
 public final class AsyncSuppliers {
 
@@ -47,7 +46,7 @@ public final class AsyncSuppliers {
 
 	@Contract(pure = true)
 	public static @NotNull <T> AsyncSupplier<T> coalesce(@NotNull AsyncSupplier<T> actual) {
-		Function<Void, Promise<T>> fn = Promises.coalesce(() -> null, (a, v) -> {}, a -> actual.get());
+		AsyncFunction<Void, T> fn = Promises.coalesce(() -> null, (a, v) -> {}, a -> actual.get());
 		return () -> fn.apply(null);
 	}
 

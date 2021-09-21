@@ -23,8 +23,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Function;
-
 public final class AsyncRunnables {
 
 	@Contract(pure = true)
@@ -45,7 +43,7 @@ public final class AsyncRunnables {
 
 	@Contract(pure = true)
 	public static @NotNull AsyncRunnable coalesce(@NotNull AsyncRunnable actual) {
-		Function<Void, Promise<Void>> fn = Promises.coalesce(() -> null, (a, v) -> {}, a -> actual.run());
+		AsyncFunction<Void, Void> fn = Promises.coalesce(() -> null, (a, v) -> {}, a -> actual.run());
 		return () -> fn.apply(null);
 	}
 

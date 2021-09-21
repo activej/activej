@@ -16,6 +16,8 @@
 
 package io.activej.fs;
 
+import io.activej.async.function.AsyncBiConsumer;
+import io.activej.async.function.AsyncConsumer;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.FunctionEx;
 import io.activej.csp.ChannelConsumer;
@@ -30,7 +32,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -177,7 +178,7 @@ final class TransformActiveFs implements ActiveFs {
 				.collect(toSet()));
 	}
 
-	private Promise<Void> transfer(String source, String target, BiFunction<String, String, Promise<Void>> action) {
+	private Promise<Void> transfer(String source, String target, AsyncBiConsumer<String, String> action) {
 		Optional<String> transformed = into.apply(source);
 		if (!transformed.isPresent()) {
 			return Promise.ofException(new ForbiddenPathException("Path '" + source + "' is forbidden"));
@@ -186,10 +187,10 @@ final class TransformActiveFs implements ActiveFs {
 		if (!transformedNew.isPresent()) {
 			return Promise.ofException(new ForbiddenPathException("Path '" + target + "' is forbidden"));
 		}
-		return action.apply(transformed.get(), transformedNew.get());
+		return action.accept(transformed.get(), transformedNew.get());
 	}
 
-	private Promise<Void> transfer(Map<String, String> sourceToTarget, Function<Map<String, String>, Promise<Void>> action) {
+	private Promise<Void> transfer(Map<String, String> sourceToTarget, AsyncConsumer<Map<String, String>> action) {
 		Map<String, String> renamed = new LinkedHashMap<>();
 		Map<String, FsScalarException> exceptions = new HashMap<>();
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
@@ -210,7 +211,7 @@ final class TransformActiveFs implements ActiveFs {
 		if (!exceptions.isEmpty()) {
 			return Promise.ofException(new FsBatchException(exceptions));
 		}
-		return action.apply(renamed);
+		return action.accept(renamed);
 	}
 
 	private FunctionEx<Map<String, FileMetadata>, Map<String, FileMetadata>> transformMap(Predicate<String> postPredicate) {

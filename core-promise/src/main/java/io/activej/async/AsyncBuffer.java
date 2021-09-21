@@ -16,24 +16,24 @@
 
 package io.activej.async;
 
+import io.activej.async.function.AsyncFunction;
 import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class AsyncBuffer<A, R> {
-	private final Function<A, Promise<R>> executor;
+	private final AsyncFunction<A, R> executor;
 	private final Supplier<A> bufferSupplier;
 
 	private int activeCalls;
 	private A buffer;
 	private SettablePromise<R> bufferedPromise;
 
-	public AsyncBuffer(Function<A, Promise<R>> executor, Supplier<A> bufferSupplier) {
+	public AsyncBuffer(AsyncFunction<A, R> executor, Supplier<A> bufferSupplier) {
 		this.executor = executor;
 		this.bufferSupplier = bufferSupplier;
 	}

@@ -16,6 +16,8 @@
 
 package io.activej.fs;
 
+import io.activej.async.function.AsyncBiConsumer;
+import io.activej.async.function.AsyncConsumer;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -27,8 +29,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.common.Checks.checkArgument;
@@ -154,17 +154,17 @@ final class FilterActiveFs implements ActiveFs {
 				.collect(toSet()));
 	}
 
-	private Promise<Void> filteringOp(String source, String target, BiFunction<String, String, Promise<Void>> original) {
+	private Promise<Void> filteringOp(String source, String target, AsyncBiConsumer<String, String> original) {
 		if (!predicate.test(source)) {
 			return Promise.ofException(new ForbiddenPathException("Path '" + source + "' is forbidden"));
 		}
 		if (!predicate.test(target)) {
 			return Promise.ofException(new ForbiddenPathException("Path '" + target + "' is forbidden"));
 		}
-		return original.apply(source, target);
+		return original.accept(source, target);
 	}
 
-	private Promise<Void> filteringOp(Map<String, String> sourceToTarget, Function<Map<String, String>, Promise<Void>> original) {
+	private Promise<Void> filteringOp(Map<String, String> sourceToTarget, AsyncConsumer<Map<String, String>> original) {
 		Map<String, String> renamed = new LinkedHashMap<>();
 		Map<String, FsScalarException> exceptions = new HashMap<>();
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
@@ -181,6 +181,6 @@ final class FilterActiveFs implements ActiveFs {
 		if (!exceptions.isEmpty()) {
 			return Promise.ofException(new FsBatchException(exceptions));
 		}
-		return original.apply(renamed);
+		return original.accept(renamed);
 	}
 }

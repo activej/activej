@@ -19,6 +19,7 @@ package io.activej.promise;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.AsyncBuffer;
 import io.activej.async.exception.AsyncTimeoutException;
+import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.function.BiConsumerEx;
@@ -694,14 +695,14 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T, T1, R, R1> Function<T, Promise<R>> mapTuple(@NotNull TupleConstructor1<R1, R> constructor,
+	public static @NotNull <T, T1, R, R1> AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor1<R1, R> constructor,
 			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)));
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T, T1, T2, R, R1, R2> Function<T, Promise<R>> mapTuple(@NotNull TupleConstructor2<R1, R2, R> constructor,
+	public static @NotNull <T, T1, T2, R, R1, R2> AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor2<R1, R2, R> constructor,
 			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
 			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2) {
 		return t -> toTuple(constructor,
@@ -710,7 +711,7 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T, T1, T2, T3, R, R1, R2, R3> Function<T, Promise<R>> mapTuple(@NotNull TupleConstructor3<R1, R2, R3, R> constructor,
+	public static @NotNull <T, T1, T2, T3, R, R1, R2, R3> AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor3<R1, R2, R3, R> constructor,
 			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
 			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2,
 			@NotNull Function<? super T, T3> getter3, Function<T3, ? extends Promise<R3>> fn3) {
@@ -721,7 +722,7 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T, T1, T2, T3, T4, R, R1, R2, R3, R4> Function<T, Promise<R>> mapTuple(@NotNull TupleConstructor4<R1, R2, R3, R4, R> constructor,
+	public static @NotNull <T, T1, T2, T3, T4, R, R1, R2, R3, R4> AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor4<R1, R2, R3, R4, R> constructor,
 			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
 			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2,
 			@NotNull Function<? super T, T3> getter3, Function<T3, ? extends Promise<R3>> fn3,
@@ -734,7 +735,7 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T, T1, T2, T3, T4, T5, R, R1, R2, R3, R4, R5> Function<T, Promise<R>> mapTuple(@NotNull TupleConstructor5<R1, R2, R3, R4, R5, R> constructor,
+	public static @NotNull <T, T1, T2, T3, T4, T5, R, R1, R2, R3, R4, R5> AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor5<R1, R2, R3, R4, R5, R> constructor,
 			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
 			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2,
 			@NotNull Function<? super T, T3> getter3, Function<T3, ? extends Promise<R3>> fn3,
@@ -749,7 +750,7 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T, T1, T2, T3, T4, T5, T6, R, R1, R2, R3, R4, R5, R6> Function<T, Promise<R>> mapTuple(@NotNull TupleConstructor6<R1, R2, R3, R4, R5, R6, R> constructor,
+	public static @NotNull <T, T1, T2, T3, T4, T5, T6, R, R1, R2, R3, R4, R5, R6> AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor6<R1, R2, R3, R4, R5, R6, R> constructor,
 			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
 			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2,
 			@NotNull Function<? super T, T3> getter3, Function<T3, ? extends Promise<R3>> fn3,
@@ -935,16 +936,16 @@ public final class Promises {
 	}
 
 	/**
-	 * Repeats the operations of provided {@code supplier} infinitely,
-	 * until one of the {@code Promise}s completes exceptionally.
+	 * Repeats the operations of provided {@link AsyncSupplier<Boolean>} infinitely,
+	 * until one of the {@code Promise}s completes exceptionally or supplier returns a promise of {@code false}.
 	 */
-	public static @NotNull Promise<Void> repeat(@NotNull Supplier<Promise<Boolean>> supplier) {
+	public static @NotNull Promise<Void> repeat(@NotNull AsyncSupplier<Boolean> supplier) {
 		SettablePromise<Void> cb = new SettablePromise<>();
 		repeatImpl(supplier, cb);
 		return cb;
 	}
 
-	private static void repeatImpl(@NotNull Supplier<Promise<Boolean>> supplier, SettablePromise<Void> cb) {
+	private static void repeatImpl(@NotNull AsyncSupplier<Boolean> supplier, SettablePromise<Void> cb) {
 		while (true) {
 			Promise<Boolean> promise = supplier.get();
 			if (promise.isResult()) {
@@ -1155,8 +1156,8 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T, A, R> Function<T, Promise<R>> coalesce(@NotNull Supplier<A> argumentAccumulatorSupplier, @NotNull BiConsumer<A, T> argumentAccumulatorFn,
-			@NotNull Function<A, Promise<R>> fn) {
+	public static @NotNull <T, A, R> AsyncFunction<T, R> coalesce(@NotNull Supplier<A> argumentAccumulatorSupplier, @NotNull BiConsumer<A, T> argumentAccumulatorFn,
+			@NotNull AsyncFunction<A, R> fn) {
 		AsyncBuffer<A, R> buffer = new AsyncBuffer<>(fn, argumentAccumulatorSupplier);
 		return v -> {
 			Promise<R> promise = buffer.add(argumentAccumulatorFn, v);

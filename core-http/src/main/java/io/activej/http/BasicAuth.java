@@ -16,12 +16,12 @@
 
 package io.activej.http;
 
+import io.activej.async.function.AsyncBiPredicate;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Base64;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
@@ -47,14 +47,14 @@ public final class BasicAuth implements AsyncServlet {
 
 	private final AsyncServlet next;
 	private final String challenge;
-	private final BiFunction<String, String, Promise<Boolean>> credentialsLookup;
+	private final AsyncBiPredicate<String, String> credentialsLookup;
 
 	private Function<HttpResponse, HttpResponse> failureResponse =
 			response -> response
 					.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(PLAIN_TEXT_UTF_8))
 					.withBody("Authentication is required".getBytes(UTF_8));
 
-	public BasicAuth(AsyncServlet next, String realm, BiFunction<String, String, Promise<Boolean>> credentialsLookup) {
+	public BasicAuth(AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
 		this.next = next;
 		this.credentialsLookup = credentialsLookup;
 
@@ -66,12 +66,12 @@ public final class BasicAuth implements AsyncServlet {
 		return this;
 	}
 
-	public static Function<AsyncServlet, AsyncServlet> decorator(String realm, BiFunction<String, String, Promise<Boolean>> credentialsLookup) {
+	public static Function<AsyncServlet, AsyncServlet> decorator(String realm, AsyncBiPredicate<String, String> credentialsLookup) {
 		return next -> new BasicAuth(next, realm, credentialsLookup);
 	}
 
 	public static Function<AsyncServlet, AsyncServlet> decorator(String realm,
-			BiFunction<String, String, Promise<Boolean>> credentialsLookup,
+			AsyncBiPredicate<String, String> credentialsLookup,
 			Function<HttpResponse, HttpResponse> failureResponse) {
 		return next -> new BasicAuth(next, realm, credentialsLookup)
 				.withFailureResponse(failureResponse);
@@ -94,7 +94,7 @@ public final class BasicAuth implements AsyncServlet {
 		if (authData.length != 2) {
 			throw HttpError.ofCode(400, "No ':' separator");
 		}
-		return credentialsLookup.apply(authData[0], authData[1])
+		return credentialsLookup.test(authData[0], authData[1])
 				.then(result -> {
 					if (result) {
 						request.attach(new BasicAuthCredentials(authData[0], authData[1]));

@@ -16,7 +16,6 @@ import io.activej.fs.http.HttpActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.net.AbstractServer;
-import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -30,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static io.activej.common.Utils.keysToMap;
@@ -537,7 +535,7 @@ public final class TestClusterActiveFs {
 		}
 	}
 
-	private void doActionAndAssertFilesAreCopied(Map<String, String> sourceToTarget, Function<Map<String, String>, Promise<Void>> action) throws IOException {
+	private void doActionAndAssertFilesAreCopied(Map<String, String> sourceToTarget, AsyncConsumer<Map<String, String>> action) throws IOException {
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -550,7 +548,7 @@ public final class TestClusterActiveFs {
 			}
 		}
 
-		await(action.apply(sourceToTarget));
+		await(action.accept(sourceToTarget));
 		List<String> results = await(Promises.toList(sourceToTarget.values().stream()
 				.map(target -> client.download(target)
 						.then(supplier -> supplier.toCollector(ByteBufs.collector()))
