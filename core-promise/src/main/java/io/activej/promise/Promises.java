@@ -35,10 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
@@ -1091,6 +1088,22 @@ public final class Promises {
 	@SafeVarargs
 	public static <T> Iterator<Promise<T>> asPromises(AsyncSupplier<? extends T>... tasks) {
 		return asPromises(iteratorOf(tasks));
+	}
+
+	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumerEx<A, T> consumer, @NotNull FunctionEx<A, R> finisher, @NotNull Collection<Promise<T>> promises) {
+		return reduce(accumulator, consumer, finisher, promises.iterator());
+	}
+
+	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumerEx<A, T> consumer, @NotNull FunctionEx<A, R> finisher, @NotNull Stream<Promise<T>> promises) {
+		return reduce(accumulator, consumer, finisher, promises.iterator());
+	}
+
+	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumerEx<A, T> consumer, @NotNull FunctionEx<A, R> finisher, @NotNull Iterator<Promise<T>> promises) {
+		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
+		while (promises.hasNext()) {
+			asyncAccumulator.addPromise(promises.next(), consumer);
+		}
+		return asyncAccumulator.run().map(finisher);
 	}
 
 	/**
