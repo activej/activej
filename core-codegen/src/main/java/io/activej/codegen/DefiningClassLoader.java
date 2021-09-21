@@ -141,21 +141,21 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	/**
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public @NotNull <T> Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilder) {
+	public <T> @NotNull Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilder) {
 		return ensureClass(className, (cl, s) -> classBuilder.get().toBytecode(cl, s));
 	}
 
 	/**
 	 * @see #ensureClass(ClassKey, Function)
 	 */
-	public @NotNull <T> Class<T> ensureClass(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder) {
+	public <T> @NotNull Class<T> ensureClass(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder) {
 		return ensureClass(key, classLoader -> classBuilder.get().toBytecode(classLoader));
 	}
 
 	/**
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public @NotNull <T> T ensureClassAndCreateInstance(String className, Supplier<ClassBuilder<T>> classBuilder,
+	public <T> @NotNull T ensureClassAndCreateInstance(String className, Supplier<ClassBuilder<T>> classBuilder,
 			Object... arguments) {
 		return createInstance(ensureClass(className, classBuilder), arguments);
 	}
@@ -163,7 +163,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	/**
 	 * @see #ensureClass(ClassKey, Function)
 	 */
-	public @NotNull <T> T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder,
+	public <T> @NotNull T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder,
 			Object... arguments) {
 		Class<T> aClass = ensureClass(key, classBuilder);
 		return createInstance(aClass, arguments);
@@ -186,7 +186,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 * @return an ensured class
 	 */
 	@SuppressWarnings("unchecked")
-	public @NotNull <T> Class<T> ensureClass(String className, BiFunction<ClassLoader, String, GeneratedBytecode> bytecodeBuilder) {
+	public <T> @NotNull Class<T> ensureClass(String className, BiFunction<ClassLoader, String, GeneratedBytecode> bytecodeBuilder) {
 		try {
 			return (Class<T>) loadClass(className, false);
 		} catch (ClassNotFoundException ignored) {
@@ -226,7 +226,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 * @param <T>             type parameter that represents ensured class
 	 * @return an ensured class
 	 */
-	public @NotNull <T> Class<T> ensureClass(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder) {
+	public <T> @NotNull Class<T> ensureClass(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder) {
 		AtomicReference<Class<?>> reference = cachedClasses.computeIfAbsent(key, k -> new AtomicReference<>());
 		Class<?> aClass = reference.get();
 		if (aClass == null) {
@@ -247,13 +247,13 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	/**
 	 * @see #ensureClass(ClassKey, Function)
 	 */
-	public @NotNull <T> T ensureClassAndCreateInstance(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder,
+	public <T> @NotNull T ensureClassAndCreateInstance(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder,
 			Object... arguments) {
 		Class<T> aClass = ensureClass(key, bytecodeBuilder);
 		return createInstance(aClass, arguments);
 	}
 
-	static @NotNull <T> T createInstance(Class<T> aClass, Object[] arguments) {
+	static <T> @NotNull T createInstance(Class<T> aClass, Object[] arguments) {
 		try {
 			return aClass
 					.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))

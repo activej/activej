@@ -28,7 +28,7 @@ import java.util.ArrayDeque;
 public final class AsyncSuppliers {
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncSupplier<T> reuse(@NotNull AsyncSupplier<? extends T> actual) {
+	public static <T> @NotNull AsyncSupplier<T> reuse(@NotNull AsyncSupplier<? extends T> actual) {
 		return new AsyncSupplier<T>() {
 			@Nullable Promise<T> runningPromise;
 
@@ -45,18 +45,18 @@ public final class AsyncSuppliers {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncSupplier<T> coalesce(@NotNull AsyncSupplier<T> actual) {
+	public static <T> @NotNull AsyncSupplier<T> coalesce(@NotNull AsyncSupplier<T> actual) {
 		AsyncFunction<Void, T> fn = Promises.coalesce(() -> null, (a, v) -> {}, a -> actual.get());
 		return () -> fn.apply(null);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncSupplier<T> buffer(@NotNull AsyncSupplier<T> actual) {
+	public static <T> @NotNull AsyncSupplier<T> buffer(@NotNull AsyncSupplier<T> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncSupplier<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncSupplier<T> actual) {
+	public static <T> @NotNull AsyncSupplier<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncSupplier<T> actual) {
 		return actual.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
 	}
 

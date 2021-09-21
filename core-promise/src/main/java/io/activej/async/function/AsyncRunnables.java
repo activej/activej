@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 public final class AsyncRunnables {
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncRunnable reuse(@NotNull AsyncRunnable actual) {
+	public static <T> @NotNull AsyncRunnable reuse(@NotNull AsyncRunnable actual) {
 		return new AsyncRunnable() {
 			@Nullable Promise<Void> runningPromise;
 

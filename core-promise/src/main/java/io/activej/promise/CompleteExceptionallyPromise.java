@@ -95,7 +95,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
+	public <U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
 		try {
 			return Promise.of(exceptionFn.apply(exception));
 		} catch (Exception ex) {
@@ -135,12 +135,12 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
+	public <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
+	public <U> @NotNull Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 
@@ -155,7 +155,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> then(
+	public <U> @NotNull Promise<U> then(
 			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn,
 			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
 		try {

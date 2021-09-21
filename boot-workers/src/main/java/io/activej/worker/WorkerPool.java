@@ -94,11 +94,11 @@ public final class WorkerPool {
 		return scope;
 	}
 
-	public @NotNull <T> Instances<T> getInstances(Class<T> type) {
+	public <T> @NotNull Instances<T> getInstances(Class<T> type) {
 		return getInstances(Key.of(type));
 	}
 
-	public @NotNull <T> Instances<T> getInstances(Key<T> key) {
+	public <T> @NotNull Instances<T> getInstances(Key<T> key) {
 		Object[] instances = new Object[scopeInjectors.length];
 		for (int i = 0; i < scopeInjectors.length; i++) {
 			instances[i] = scopeInjectors[i].getInstance(key);

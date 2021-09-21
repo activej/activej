@@ -332,7 +332,7 @@ public final class Injector implements ResourceLocator {
 				new CompiledBindingLocator() {
 					@SuppressWarnings("unchecked")
 					@Override
-					public @NotNull <Q> CompiledBinding<Q> get(Key<Q> key) {
+					public <Q> @NotNull CompiledBinding<Q> get(Key<Q> key) {
 						return (CompiledBinding<Q>) compileBinding(
 								postprocessor,
 								scope,
@@ -372,7 +372,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public @NotNull <T> T getInstance(@NotNull Key<T> key) {
+	public <T> @NotNull T getInstance(@NotNull Key<T> key) {
 		CompiledBinding<?> binding = localCompiledBindings.get(key);
 		if (binding == null) {
 			throw DIException.cannotConstruct(key, null);
@@ -388,7 +388,7 @@ public final class Injector implements ResourceLocator {
 	 * @see #getInstance(Key)
 	 */
 	@Override
-	public @NotNull <T> T getInstance(@NotNull Class<T> type) {
+	public <T> @NotNull T getInstance(@NotNull Class<T> type) {
 		return getInstance(Key.ofType(type));
 	}
 
@@ -430,28 +430,28 @@ public final class Injector implements ResourceLocator {
 	/**
 	 * A shortcut for <code>getInstance(new Key&lt;InstanceProvider&lt;T&gt;&gt;(){})</code>
 	 */
-	public @NotNull <T> InstanceProvider<T> getInstanceProvider(@NotNull Key<T> key) {
+	public <T> @NotNull InstanceProvider<T> getInstanceProvider(@NotNull Key<T> key) {
 		return getInstance(Key.ofType(parameterizedType(InstanceProvider.class, key.getType()), key.getQualifier()));
 	}
 
 	/**
 	 * @see #getInstanceProvider(Key)
 	 */
-	public @NotNull <T> InstanceProvider<T> getInstanceProvider(@NotNull Class<T> type) {
+	public <T> @NotNull InstanceProvider<T> getInstanceProvider(@NotNull Class<T> type) {
 		return getInstanceProvider(Key.of(type));
 	}
 
 	/**
 	 * A shortcut for <code>getInstance(new Key&lt;InstanceInjector&lt;T&gt;&gt;(){})</code>
 	 */
-	public @NotNull <T> InstanceInjector<T> getInstanceInjector(@NotNull Key<T> key) {
+	public <T> @NotNull InstanceInjector<T> getInstanceInjector(@NotNull Key<T> key) {
 		return getInstance(Key.ofType(parameterizedType(InstanceInjector.class, key.getType()), key.getQualifier()));
 	}
 
 	/**
 	 * @see #getInstanceInjector(Key)
 	 */
-	public @NotNull <T> InstanceInjector<T> getInstanceInjector(@NotNull Class<T> type) {
+	public <T> @NotNull InstanceInjector<T> getInstanceInjector(@NotNull Class<T> type) {
 		return getInstanceInjector(Key.of(type));
 	}
 

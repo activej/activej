@@ -20,5 +20,5 @@ import io.activej.inject.Key;
 import org.jetbrains.annotations.NotNull;
 
 public interface CompiledBindingLocator {
-	@NotNull <Q> CompiledBinding<Q> get(Key<Q> key);
+	<Q> @NotNull CompiledBinding<Q> get(Key<Q> key);
 }

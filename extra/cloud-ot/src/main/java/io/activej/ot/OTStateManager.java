@@ -84,7 +84,7 @@ public final class OTStateManager<K, D> implements EventloopService, WithInitial
 		this.state = state;
 	}
 
-	public static @NotNull <K, D> OTStateManager<K, D> create(@NotNull Eventloop eventloop, @NotNull OTSystem<D> otSystem,
+	public static <K, D> @NotNull OTStateManager<K, D> create(@NotNull Eventloop eventloop, @NotNull OTSystem<D> otSystem,
 			@NotNull OTUplink<K, D, ?> repository, @NotNull OTState<D> state) {
 		return new OTStateManager<>(eventloop, otSystem, repository, state);
 	}

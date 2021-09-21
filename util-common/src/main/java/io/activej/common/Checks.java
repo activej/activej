@@ -88,28 +88,28 @@ public final class Checks {
 		return ENABLED_BY_DEFAULT;
 	}
 
-	public static @NotNull <T> T checkNotNull(@Nullable T reference) {
+	public static <T> @NotNull T checkNotNull(@Nullable T reference) {
 		if (reference != null) {
 			return reference;
 		}
 		throw new NullPointerException();
 	}
 
-	public static @NotNull <T> T checkNotNull(@Nullable T reference, Object message) {
+	public static <T> @NotNull T checkNotNull(@Nullable T reference, Object message) {
 		if (reference != null) {
 			return reference;
 		}
 		throw new NullPointerException(String.valueOf(message));
 	}
 
-	public static @NotNull <T> T checkNotNull(@Nullable T reference, Supplier<String> message) {
+	public static <T> @NotNull T checkNotNull(@Nullable T reference, Supplier<String> message) {
 		if (reference != null) {
 			return reference;
 		}
 		throw new NullPointerException(message.get());
 	}
 
-	public static @NotNull <T> T checkNotNull(@Nullable T reference, String template, Object... args) {
+	public static <T> @NotNull T checkNotNull(@Nullable T reference, String template, Object... args) {
 		if (reference != null) {
 			return reference;
 		}

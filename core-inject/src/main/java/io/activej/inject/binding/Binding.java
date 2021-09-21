@@ -661,7 +661,7 @@ public abstract class Binding<T> {
 			public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return Binding.this.compile(new CompiledBindingLocator() {
 					@Override
-					public @NotNull <Q> CompiledBinding<Q> get(Key<Q> key) {
+					public <Q> @NotNull CompiledBinding<Q> get(Key<Q> key) {
 						CompiledBinding<Q> originalBinding = compiledBindings.get(key);
 						if (!key.equals(dependency)) return originalBinding;
 						return new CompiledBinding<Q>() {

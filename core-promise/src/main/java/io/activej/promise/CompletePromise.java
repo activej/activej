@@ -95,7 +95,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
+	public <U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
 		try {
 			return Promise.of(fn.apply(getResult()));
 		} catch (Exception ex) {
@@ -131,7 +131,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
+	public <U> @NotNull Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.get();
 		} catch (Exception ex) {
@@ -152,7 +152,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> then(
+	public <U> @NotNull Promise<U> then(
 			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn,
 			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
 		try {

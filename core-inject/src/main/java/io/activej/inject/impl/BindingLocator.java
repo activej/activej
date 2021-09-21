@@ -33,5 +33,5 @@ public interface BindingLocator {
 	/**
 	 * Retrieves existing binding for given key or tries to recursively generate it from known {@link BindingGenerator generators}.
 	 */
-	@Nullable <T> Binding<T> get(Key<T> key);
+	<T> @Nullable Binding<T> get(Key<T> key);
 }

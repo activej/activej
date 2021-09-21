@@ -208,7 +208,7 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
 
-	public static @NotNull <K, D> Promise<OTCommit<K, D>> merge(OTRepository<K, D> repository, OTSystem<D> system, @NotNull Set<K> heads) {
+	public static <K, D> @NotNull Promise<OTCommit<K, D>> merge(OTRepository<K, D> repository, OTSystem<D> system, @NotNull Set<K> heads) {
 		checkArgument(heads.size() >= 2, "Cannot merge less than 2 heads");
 		return repository.getLevels(heads)
 				.then(levels ->

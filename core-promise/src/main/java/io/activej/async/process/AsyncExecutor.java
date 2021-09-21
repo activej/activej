@@ -26,7 +26,7 @@ import java.util.concurrent.RejectedExecutionException;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 public interface AsyncExecutor {
-	@NotNull <T> Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException;
+	<T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException;
 
 	default @NotNull Promise<Void> run(@NotNull Runnable runnable) throws RejectedExecutionException {
 		return execute(() -> {
@@ -35,7 +35,7 @@ public interface AsyncExecutor {
 		});
 	}
 
-	default @NotNull <T> Promise<T> call(@NotNull Callable<T> callable) throws RejectedExecutionException {
+	default <T> @NotNull Promise<T> call(@NotNull Callable<T> callable) throws RejectedExecutionException {
 		return execute(() -> {
 			T result;
 			try {

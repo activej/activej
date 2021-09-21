@@ -53,7 +53,7 @@ public interface AsyncRunnable {
 	}
 
 	@Contract(pure = true)
-	default @NotNull <R> R transformWith(@NotNull Function<AsyncRunnable, R> fn) {
+	default <R> @NotNull R transformWith(@NotNull Function<AsyncRunnable, R> fn) {
 		return fn.apply(this);
 	}
 

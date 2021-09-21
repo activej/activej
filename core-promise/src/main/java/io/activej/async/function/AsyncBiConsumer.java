@@ -36,7 +36,7 @@ public interface AsyncBiConsumer<T, U> {
 	 * @param consumer a {@link BiConsumerEx}
 	 * @return {@link AsyncBiConsumer} that works on top of {@link BiConsumerEx} interface
 	 */
-	static @NotNull <T, U> AsyncBiConsumer<T, U> of(@NotNull BiConsumerEx<? super T, ? super U> consumer) {
+	static <T, U> @NotNull AsyncBiConsumer<T, U> of(@NotNull BiConsumerEx<? super T, ? super U> consumer) {
 		return (t, u) -> {
 			try {
 				consumer.accept(t, u);
@@ -53,7 +53,7 @@ public interface AsyncBiConsumer<T, U> {
 	}
 
 	@Contract(pure = true)
-	default @NotNull <R> R transformWith(@NotNull Function<AsyncBiConsumer<T, U>, R> fn) {
+	default <R> @NotNull R transformWith(@NotNull Function<AsyncBiConsumer<T, U>, R> fn) {
 		return fn.apply(this);
 	}
 

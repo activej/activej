@@ -60,7 +60,7 @@ public interface AsyncPredicate<T> {
 	}
 
 	@Contract(pure = true)
-	default @NotNull <R> R transformWith(@NotNull Function<AsyncPredicate<T>, R> fn) {
+	default <R> @NotNull R transformWith(@NotNull Function<AsyncPredicate<T>, R> fn) {
 		return fn.apply(this);
 	}
 

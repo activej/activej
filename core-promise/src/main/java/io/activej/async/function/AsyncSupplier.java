@@ -102,7 +102,7 @@ public interface AsyncSupplier<T> {
 	}
 
 	@Contract(pure = true)
-	default @NotNull <R> R transformWith(@NotNull Function<AsyncSupplier<T>, R> fn) {
+	default <R> @NotNull R transformWith(@NotNull Function<AsyncSupplier<T>, R> fn) {
 		return fn.apply(this);
 	}
 

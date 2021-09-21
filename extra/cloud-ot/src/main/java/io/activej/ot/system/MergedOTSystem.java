@@ -175,13 +175,13 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 				.collect(toList());
 	}
 
-	private static @NotNull <D, D1, D2> List<D> combineLists2(List<D1> list1, List<D2> list2, TupleConstructor2<List<D1>, List<D2>, D> constructor) {
+	private static <D, D1, D2> @NotNull List<D> combineLists2(List<D1> list1, List<D2> list2, TupleConstructor2<List<D1>, List<D2>, D> constructor) {
 		return list1.isEmpty() && list2.isEmpty() ?
 				emptyList() :
 				singletonList(constructor.create(list1, list2));
 	}
 
-	private static @NotNull <D, D1, D2, D3> List<D> combineLists3(List<D1> list1, List<D2> list2, List<D3> list3, TupleConstructor3<List<D1>, List<D2>, List<D3>, D> constructor) {
+	private static <D, D1, D2, D3> @NotNull List<D> combineLists3(List<D1> list1, List<D2> list2, List<D3> list3, TupleConstructor3<List<D1>, List<D2>, List<D3>, D> constructor) {
 		return list1.isEmpty() && list2.isEmpty() && list3.isEmpty() ?
 				emptyList() :
 				singletonList(constructor.create(list1, list2, list3));

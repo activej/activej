@@ -23,12 +23,12 @@ import org.jetbrains.annotations.NotNull;
 public final class AsyncPredicates {
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncPredicate<T> buffer(@NotNull AsyncPredicate<T> actual) {
+	public static <T> @NotNull AsyncPredicate<T> buffer(@NotNull AsyncPredicate<T> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T> AsyncPredicate<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncPredicate<T> asyncPredicate) {
+	public static <T> @NotNull AsyncPredicate<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncPredicate<T> asyncPredicate) {
 		return asyncPredicate.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
 	}
 

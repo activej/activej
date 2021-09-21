@@ -45,7 +45,7 @@ public interface AsyncConsumer<T> {
 	 * @param consumer a {@link ConsumerEx}
 	 * @return {@link AsyncConsumer} that works on top of {@link ConsumerEx} interface
 	 */
-	static @NotNull <T> AsyncConsumer<T> of(@NotNull ConsumerEx<? super T> consumer) {
+	static <T> @NotNull AsyncConsumer<T> of(@NotNull ConsumerEx<? super T> consumer) {
 		return value -> {
 			try {
 				consumer.accept(value);
@@ -62,7 +62,7 @@ public interface AsyncConsumer<T> {
 	}
 
 	@Contract(pure = true)
-	default @NotNull <R> R transformWith(@NotNull Function<AsyncConsumer<T>, R> fn) {
+	default <R> @NotNull R transformWith(@NotNull Function<AsyncConsumer<T>, R> fn) {
 		return fn.apply(this);
 	}
 

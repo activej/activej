@@ -42,13 +42,13 @@ public interface EventloopExecutor extends Executor {
 	 * Executes the given computation at some time in the future in some underlying eventloop
 	 * and returns its result in a {@link CompletableFuture future}.
 	 */
-	@NotNull <T> CompletableFuture<T> submit(AsyncComputation<? extends T> computation);
+	<T> @NotNull CompletableFuture<T> submit(AsyncComputation<? extends T> computation);
 
 	/**
 	 * Executes the given computation at some time in the future in some underlying eventloop
 	 * and returns its result in a {@link CompletableFuture future}.
 	 */
-	default @NotNull <T> CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<? extends T>> computation) {
+	default <T> @NotNull CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<? extends T>> computation) {
 		return submit(AsyncComputation.ofDeferred(computation));
 	}
 }

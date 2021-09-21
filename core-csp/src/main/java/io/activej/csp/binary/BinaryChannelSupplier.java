@@ -127,7 +127,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 		return doDecode(decoder, this);
 	}
 
-	private @NotNull <T> Promise<T> doDecode(ByteBufsDecoder<T> decoder, AsyncCloseable closeable) {
+	private <T> @NotNull Promise<T> doDecode(ByteBufsDecoder<T> decoder, AsyncCloseable closeable) {
 		while (true) {
 			if (!bufs.isEmpty()) {
 				T result;

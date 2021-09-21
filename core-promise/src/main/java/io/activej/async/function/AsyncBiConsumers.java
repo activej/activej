@@ -23,12 +23,12 @@ import org.jetbrains.annotations.NotNull;
 public final class AsyncBiConsumers {
 
 	@Contract(pure = true)
-	public static @NotNull <T, U> AsyncBiConsumer<T, U> buffer(@NotNull AsyncBiConsumer<T, U> actual) {
+	public static <T, U> @NotNull AsyncBiConsumer<T, U> buffer(@NotNull AsyncBiConsumer<T, U> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull <T, U> AsyncBiConsumer<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncBiConsumer<T, U> asyncConsumer) {
+	public static <T, U> @NotNull AsyncBiConsumer<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncBiConsumer<T, U> asyncConsumer) {
 		return asyncConsumer.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
 	}
 

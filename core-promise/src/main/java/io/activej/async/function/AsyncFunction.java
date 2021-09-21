@@ -36,7 +36,7 @@ public interface AsyncFunction<T, R> {
 	 * @param function a {@link FunctionEx}
 	 * @return {@link AsyncFunction} that works on top of {@link FunctionEx} interface
 	 */
-	static @NotNull <T, R> AsyncFunction<T, R> of(@NotNull FunctionEx<? super T, ? extends R> function) {
+	static <T, R> @NotNull AsyncFunction<T, R> of(@NotNull FunctionEx<? super T, ? extends R> function) {
 		return value -> {
 			try {
 				return Promise.of(function.apply(value));
@@ -47,12 +47,12 @@ public interface AsyncFunction<T, R> {
 		};
 	}
 
-	static <T, R> AsyncFunction<T, R> cast(AsyncFunction<T, R> function){
+	static <T, R> AsyncFunction<T, R> cast(AsyncFunction<T, R> function) {
 		return function;
 	}
 
 	@Contract(pure = true)
-	default @NotNull <V> V transformWith(@NotNull Function<AsyncFunction<T, R>, V> fn) {
+	default <V> @NotNull V transformWith(@NotNull Function<AsyncFunction<T, R>, V> fn) {
 		return fn.apply(this);
 	}
 

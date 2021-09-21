@@ -241,7 +241,7 @@ public final class Modules {
 								return (CompiledBinding<Object>) oldBinding.compile(
 										new CompiledBindingLocator() {
 											@Override
-											public @NotNull <Q> CompiledBinding<Q> get(Key<Q> oldImportKey) {
+											public <Q> @NotNull CompiledBinding<Q> get(Key<Q> oldImportKey) {
 												Scope[] importKeyPath = bindings.get(oldImportKey);
 												Key<?> newImportKey = importKeyPath != null ?
 														exportsMapping.apply(importKeyPath, oldImportKey) :

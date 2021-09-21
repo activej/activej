@@ -64,19 +64,19 @@ public abstract class Key<T> {
 		}
 	}
 
-	public static @NotNull <T> Key<T> of(@NotNull Class<T> type) {
+	public static <T> @NotNull Key<T> of(@NotNull Class<T> type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	public static @NotNull <T> Key<T> of(@NotNull Class<T> type, @Nullable Object qualifier) {
+	public static <T> @NotNull Key<T> of(@NotNull Class<T> type, @Nullable Object qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	public static @NotNull <T> Key<T> ofType(@NotNull Type type) {
+	public static <T> @NotNull Key<T> ofType(@NotNull Type type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	public static @NotNull <T> Key<T> ofType(@NotNull Type type, @Nullable Object qualifier) {
+	public static <T> @NotNull Key<T> ofType(@NotNull Type type, @Nullable Object qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 

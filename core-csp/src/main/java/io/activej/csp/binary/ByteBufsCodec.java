@@ -29,7 +29,7 @@ public interface ByteBufsCodec<I, O> {
 
 	@Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException;
 
-	default @NotNull <I1, O1> ByteBufsCodec<I1, O1> andThen(DecoderFunction<? super I, ? extends I1> decoder, Function<? super O1, ? extends O> encoder) {
+	default <I1, O1> @NotNull ByteBufsCodec<I1, O1> andThen(DecoderFunction<? super I, ? extends I1> decoder, Function<? super O1, ? extends O> encoder) {
 		return new ByteBufsCodec<I1, O1>() {
 			@Override
 			public ByteBuf encode(O1 item) {

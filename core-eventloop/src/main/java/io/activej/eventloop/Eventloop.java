@@ -262,8 +262,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		throw new IllegalStateException(NO_CURRENT_EVENTLOOP_ERROR);
 	}
 
-	@Nullable
-	public static Eventloop getCurrentEventloopOrNull() {
+	public static @Nullable Eventloop getCurrentEventloopOrNull() {
 		return CURRENT_EVENTLOOP.get();
 	}
 

@@ -36,7 +36,7 @@ public interface AsyncBiFunction<T, U, R> {
 	 * @param function a {@link BiFunctionEx}
 	 * @return {@link AsyncBiFunction} that works on top of {@link BiFunctionEx} interface
 	 */
-	static @NotNull <T, U, R> AsyncBiFunction<T, U, R> of(@NotNull BiFunctionEx<? super T, ? super U, ? extends R> function) {
+	static <T, U, R> @NotNull AsyncBiFunction<T, U, R> of(@NotNull BiFunctionEx<? super T, ? super U, ? extends R> function) {
 		return (t, u) -> {
 			try {
 				return Promise.of(function.apply(t, u));
@@ -52,7 +52,7 @@ public interface AsyncBiFunction<T, U, R> {
 	}
 
 	@Contract(pure = true)
-	default @NotNull <V> V transformWith(@NotNull Function<AsyncBiFunction<T, U, R>, V> fn) {
+	default <V> @NotNull V transformWith(@NotNull Function<AsyncBiFunction<T, U, R>, V> fn) {
 		return fn.apply(this);
 	}
 

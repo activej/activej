@@ -67,23 +67,23 @@ public abstract class KeyPattern<T> {
 		}
 	}
 
-	public static @NotNull <T> KeyPattern<T> create(@NotNull Type type, Predicate<?> qualifier) {
+	public static <T> @NotNull KeyPattern<T> create(@NotNull Type type, Predicate<?> qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	public static @NotNull <T> KeyPattern<T> of(@NotNull Class<T> type) {
+	public static <T> @NotNull KeyPattern<T> of(@NotNull Class<T> type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	public static @NotNull <T> KeyPattern<T> of(@NotNull Class<T> type, Object qualifier) {
+	public static <T> @NotNull KeyPattern<T> of(@NotNull Class<T> type, Object qualifier) {
 		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 
-	public static @NotNull <T> KeyPattern<T> ofType(@NotNull Type type) {
+	public static <T> @NotNull KeyPattern<T> ofType(@NotNull Type type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	public static @NotNull <T> KeyPattern<T> ofType(@NotNull Type type, Object qualifier) {
+	public static <T> @NotNull KeyPattern<T> ofType(@NotNull Type type, Object qualifier) {
 		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 

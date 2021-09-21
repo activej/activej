@@ -36,7 +36,7 @@ public interface AsyncBiPredicate<T, U> {
 	 * @param predicate a {@link BiPredicateEx}
 	 * @return {@link AsyncBiPredicate} that works on top of {@link BiPredicateEx} interface
 	 */
-	static @NotNull <T, U> AsyncBiPredicate<T, U> of(@NotNull BiPredicateEx<? super T, ? super U> predicate) {
+	static <T, U> @NotNull AsyncBiPredicate<T, U> of(@NotNull BiPredicateEx<? super T, ? super U> predicate) {
 		return (t, u) -> {
 			try {
 				return Promise.of(predicate.test(t, u));
@@ -52,7 +52,7 @@ public interface AsyncBiPredicate<T, U> {
 	}
 
 	@Contract(pure = true)
-	default @NotNull <R> R transformWith(@NotNull Function<AsyncBiPredicate<T, U>, R> fn) {
+	default <R> @NotNull R transformWith(@NotNull Function<AsyncBiPredicate<T, U>, R> fn) {
 		return fn.apply(this);
 	}
 

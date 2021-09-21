@@ -156,7 +156,7 @@ public final class Try<T> {
 
 	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
-	private @NotNull <U> Try<U> mold() {
+	private <U> @NotNull Try<U> mold() {
 		checkState(isException());
 		return (Try<U>) this;
 	}
@@ -172,7 +172,7 @@ public final class Try<T> {
 	}
 
 	@Contract(pure = true)
-	public @NotNull <U> Try<U> map(@NotNull FunctionEx<T, U> function) {
+	public <U> @NotNull Try<U> map(@NotNull FunctionEx<T, U> function) {
 		if (exception == null) {
 			try {
 				return new Try<>(function.apply(result), null);
@@ -185,7 +185,7 @@ public final class Try<T> {
 	}
 
 	@Contract(pure = true)
-	public @NotNull <U> Try<U> flatMap(@NotNull Function<T, Try<U>> function) {
+	public <U> @NotNull Try<U> flatMap(@NotNull Function<T, Try<U>> function) {
 		return exception == null ? function.apply(result) : mold();
 	}
 
