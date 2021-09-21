@@ -50,6 +50,11 @@ public interface AsyncPredicate<T> {
 		return t -> Promise.of(Boolean.FALSE);
 	}
 
+	static <T> AsyncPredicate<T> not(AsyncPredicate<? super T> predicate) {
+		//noinspection unchecked
+		return (AsyncPredicate<T>) predicate.negate();
+	}
+
 	default AsyncPredicate<T> negate() {
 		return t -> test(t).map(b -> !b);
 	}

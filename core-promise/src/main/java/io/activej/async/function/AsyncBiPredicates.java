@@ -18,8 +18,14 @@ package io.activej.async.function;
 
 import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
+import io.activej.common.ref.RefBoolean;
+import io.activej.promise.Promises;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Stream;
 
 public final class AsyncBiPredicates {
 
@@ -36,5 +42,67 @@ public final class AsyncBiPredicates {
 	@Contract(pure = true)
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncBiPredicate<T, U> predicate) {
 		return (t, u) -> asyncExecutor.execute(() -> predicate.test(t, u));
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
+		return and(predicates.stream());
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(Stream<AsyncBiPredicate<? super T, ? super U>> predicates) {
+		return (t, u) -> Promises.reduce(new RefBoolean(true),
+				(ref, result) -> ref.set(ref.get() && result),
+				RefBoolean::get,
+				predicates.map(predicate -> predicate.test(t, u)));
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> and() {
+		return AsyncBiPredicate.alwaysTrue();
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> predicate1) {
+		//noinspection unchecked
+		return (AsyncBiPredicate<T, U>) predicate1;
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> predicate1, AsyncBiPredicate<? super T, ? super U> predicate2) {
+		//noinspection unchecked
+		return ((AsyncBiPredicate<T, U>) predicate1).and(predicate2);
+	}
+
+	@SafeVarargs
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U>... predicates) {
+		Stream<AsyncBiPredicate<? super T, ? super U>> stream = Arrays.stream(predicates);
+		return and(stream);
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
+		return or(predicates.stream());
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(Stream<AsyncBiPredicate<? super T, ? super U>> predicates) {
+		return (t, u) -> Promises.reduce(new RefBoolean(true),
+				(ref, result) -> ref.set(ref.get() || result),
+				RefBoolean::get,
+				predicates.map(predicate -> predicate.test(t, u)));
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> or() {
+		return AsyncBiPredicate.alwaysFalse();
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> predicate1) {
+		//noinspection unchecked
+		return (AsyncBiPredicate<T, U>) predicate1;
+	}
+
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> predicate1, AsyncBiPredicate<? super T, ? super U> predicate2) {
+		//noinspection unchecked
+		return ((AsyncBiPredicate<T, U>) predicate1).or(predicate2);
+	}
+
+	@SafeVarargs
+	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U>... predicates) {
+		Stream<AsyncBiPredicate<? super T, ? super U>> stream = Arrays.stream(predicates);
+		return and(stream);
 	}
 }

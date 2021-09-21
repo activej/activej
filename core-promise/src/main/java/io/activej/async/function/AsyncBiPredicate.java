@@ -42,4 +42,29 @@ public interface AsyncBiPredicate<T, U> {
 			}
 		};
 	}
+
+	static <T, U> AsyncBiPredicate<T, U> alwaysTrue() {
+		return (t, u) -> Promise.of(Boolean.TRUE);
+	}
+
+	static <T, U> AsyncBiPredicate<T, U> alwaysFalse() {
+		return (t, u) -> Promise.of(Boolean.FALSE);
+	}
+
+	static <T, U> AsyncBiPredicate<T, U> not(AsyncBiPredicate<? super T, ? super U> predicate) {
+		//noinspection unchecked
+		return (AsyncBiPredicate<T, U>) predicate.negate();
+	}
+
+	default AsyncBiPredicate<T, U> negate() {
+		return (t, u) -> test(t, u).map(b -> !b);
+	}
+
+	default AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> other) {
+		return (t, u) -> test(t, u).combine(other.test(t, u), (b1, b2) -> b1 && b2);
+	}
+
+	default AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> other) {
+		return (t, u) -> test(t, u).combine(other.test(t, u), (b1, b2) -> b1 || b2);
+	}
 }
