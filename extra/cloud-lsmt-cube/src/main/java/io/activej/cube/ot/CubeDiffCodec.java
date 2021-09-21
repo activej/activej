@@ -17,12 +17,13 @@
 package io.activej.cube.ot;
 
 import com.dslplatform.json.JsonReader;
-import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationDiffCodec;
+import io.activej.aggregation.util.JsonCodec;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.Cube;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +34,7 @@ import java.util.Map;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-public class CubeDiffCodec implements ReadObject<CubeDiff>, WriteObject<CubeDiff> {
+public class CubeDiffCodec implements JsonCodec<CubeDiff>, WithInitializer<CubeDiffCodec> {
 	private final Map<String, AggregationDiffCodec> aggregationDiffCodecs;
 
 	private CubeDiffCodec(Map<String, AggregationDiffCodec> aggregationDiffCodecs) {

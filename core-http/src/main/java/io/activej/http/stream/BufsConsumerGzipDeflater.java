@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -42,7 +43,8 @@ import static io.activej.common.Checks.checkState;
  * method is used.
  */
 public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerGzipDeflater, ByteBuf, ByteBuf> {
+		implements WithChannelTransformer<BufsConsumerGzipDeflater, ByteBuf, ByteBuf>,
+		WithInitializer<BufsConsumerGzipDeflater> {
 	public static final int DEFAULT_MAX_BUF_SIZE = 16384;
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, (byte) 0xff};

@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -33,7 +34,8 @@ import org.jetbrains.annotations.NotNull;
 import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {
+		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder>,
+		WithInitializer<ChannelFrameDecoder> {
 
 	private final @NotNull BlockDecoder decoder;
 	private boolean decoderResets;

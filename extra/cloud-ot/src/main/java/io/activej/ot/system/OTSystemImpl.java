@@ -16,6 +16,7 @@
 
 package io.activej.ot.system;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
 import io.activej.ot.exception.TransformException;
@@ -28,7 +29,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 
-public final class OTSystemImpl<D> implements OTSystem<D> {
+public final class OTSystemImpl<D> implements OTSystem<D>, WithInitializer<OTSystemImpl<D>> {
 	@FunctionalInterface
 	public interface TransformFunction<OP, L extends OP, R extends OP> {
 		TransformResult<? extends OP> transform(L left, R right) throws TransformException;

@@ -18,6 +18,7 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -48,7 +49,7 @@ import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
  * <p>
  * Inherits all the limitations of {@link ActiveFs} implementation located on server.
  */
-public final class HttpActiveFs implements ActiveFs {
+public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveFs> {
 	private final IAsyncHttpClient client;
 	private final String url;
 

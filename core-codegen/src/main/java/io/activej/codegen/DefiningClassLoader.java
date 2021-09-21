@@ -16,6 +16,7 @@
 
 package io.activej.codegen;
 
+import io.activej.codegen.util.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +55,7 @@ import static java.util.stream.Collectors.groupingBy;
  * {@link #withBytecodeStorage(BytecodeStorage)} method.
  */
 @SuppressWarnings("WeakerAccess")
-public final class DefiningClassLoader extends ClassLoader implements DefiningClassLoaderMBean {
+public final class DefiningClassLoader extends ClassLoader implements DefiningClassLoaderMBean, WithInitializer<DefiningClassLoader> {
 	public static final Path DEFAULT_DEBUG_OUTPUT_DIR = getPathSetting(DefiningClassLoader.class, "debugOutputDir", null);
 
 	private final Map<String, Class<?>> definedClasses = new ConcurrentHashMap<>();

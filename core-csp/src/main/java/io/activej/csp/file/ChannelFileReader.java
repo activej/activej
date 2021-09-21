@@ -22,6 +22,7 @@ import io.activej.async.file.ExecutorAsyncFileService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +44,7 @@ import static java.nio.file.StandardOpenOption.READ;
 /**
  * This supplier allows you to asynchronously read binary data from a file.
  */
-public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
+public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> implements WithInitializer<ChannelFileReader> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileReader.class);
 
 	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{READ};

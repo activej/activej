@@ -18,6 +18,7 @@ package io.activej.csp.queue;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
@@ -36,7 +37,7 @@ import java.util.concurrent.Executor;
 
 import static java.nio.file.StandardOpenOption.*;
 
-public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
+public final class ChannelFileBuffer implements ChannelQueue<ByteBuf>, WithInitializer<ChannelFileBuffer> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileBuffer.class);
 
 	private final ChannelFileReader reader;
@@ -63,12 +64,12 @@ public final class ChannelFileBuffer implements ChannelQueue<ByteBuf> {
 
 	public static Promise<ChannelFileBuffer> create(Executor executor, Path path, @Nullable MemSize limit) {
 		return Promise.ofBlocking(executor,
-				() -> {
-					Files.createDirectories(path.getParent());
-					FileChannel writerChannel = FileChannel.open(path, CREATE, WRITE);
-					FileChannel readerChannel = FileChannel.open(path, CREATE, READ);
-					return new Tuple2<>(writerChannel, readerChannel);
-				})
+						() -> {
+							Files.createDirectories(path.getParent());
+							FileChannel writerChannel = FileChannel.open(path, CREATE, WRITE);
+							FileChannel readerChannel = FileChannel.open(path, CREATE, READ);
+							return new Tuple2<>(writerChannel, readerChannel);
+						})
 				.map(tuple2 -> {
 					ChannelFileWriter writer = ChannelFileWriter.create(executor, tuple2.getValue1());
 					ChannelFileReader reader = ChannelFileReader.create(executor, tuple2.getValue2());

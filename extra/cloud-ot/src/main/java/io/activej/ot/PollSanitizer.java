@@ -17,6 +17,7 @@
 package io.activej.ot;
 
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +27,7 @@ import java.util.Objects;
 
 import static io.activej.promise.RetryPolicy.exponentialBackoff;
 
-public final class PollSanitizer<T> implements AsyncSupplier<T> {
+public final class PollSanitizer<T> implements AsyncSupplier<T>, WithInitializer<PollSanitizer<T>> {
 	public static final Duration DEFAULT_YIELD_INTERVAL = Duration.ofMillis(1000L);
 
 	private Duration yieldInterval = DEFAULT_YIELD_INTERVAL;

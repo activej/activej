@@ -1,5 +1,6 @@
 package io.activej.serializer.stream;
 
+import io.activej.codegen.util.WithInitializer;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
@@ -13,7 +14,7 @@ import java.io.InputStream;
 import static java.lang.Math.max;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class StreamInput implements Closeable {
+public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
 	private BinaryInput in;

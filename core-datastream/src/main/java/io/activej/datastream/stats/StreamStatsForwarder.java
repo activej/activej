@@ -16,13 +16,14 @@
 
 package io.activej.datastream.stats;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamTransformer;
 
-public class StreamStatsForwarder<T> implements StreamTransformer<T, T> {
+public class StreamStatsForwarder<T> implements StreamTransformer<T, T>, WithInitializer<StreamStatsForwarder<T>> {
 	private final Input input;
 	private final Output output;
 

@@ -18,6 +18,7 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -34,7 +35,8 @@ import static io.activej.common.Checks.checkState;
  * converting some raw data into its <a href="https://tools.ietf.org/html/rfc2616#section-3.6.1">chunked transfer encoding<a> form.
  */
 public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerChunkedEncoder, ByteBuf, ByteBuf> {
+		implements WithChannelTransformer<BufsConsumerChunkedEncoder, ByteBuf, ByteBuf>,
+		WithInitializer<BufsConsumerChunkedEncoder> {
 	private static final byte[] LAST_CHUNK_BYTES = new byte[]{48, 13, 10, 13, 10};
 
 	private ChannelSupplier<ByteBuf> input;

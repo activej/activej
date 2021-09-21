@@ -18,6 +18,7 @@ package io.activej.http;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.http.loader.ResourceIsADirectoryException;
 import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.http.loader.StaticLoader;
@@ -42,7 +43,7 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 /**
  * This servlet allows return HTTP responses by HTTP paths from some predefined storage, mainly the filesystem.
  */
-public final class StaticServlet implements AsyncServlet {
+public final class StaticServlet implements AsyncServlet, WithInitializer<StaticServlet> {
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
 
 	private final StaticLoader resourceLoader;

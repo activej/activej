@@ -19,6 +19,7 @@ package io.activej.etl;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.datastream.processor.StreamUnion;
@@ -50,7 +51,7 @@ import static java.util.Collections.emptyMap;
  * Processes logs. Creates new aggregation logs and persists to {@link LogDataConsumer} .
  */
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class LogOTProcessor<T, D> implements EventloopService, EventloopJmxBeanWithStats {
+public final class LogOTProcessor<T, D> implements EventloopService, EventloopJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(LogOTProcessor.class);
 
 	private final Eventloop eventloop;
@@ -133,7 +134,7 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 			LogPosition logPositionFrom = logPosition;
 			logPositionsAccumulator.addPromise(
 					StreamSupplierWithResult.ofPromise(
-							multilog.read(partition, logPosition.getLogFile(), logPosition.getPosition(), null))
+									multilog.read(partition, logPosition.getLogFile(), logPosition.getPosition(), null))
 							.streamTo(streamUnion.newInput()),
 					(logPositions, logPositionTo) -> {
 						if (!logPositionTo.equals(logPositionFrom)) {

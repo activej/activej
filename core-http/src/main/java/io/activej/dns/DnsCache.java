@@ -18,6 +18,7 @@ package io.activej.dns;
 
 import io.activej.common.Checks;
 import io.activej.common.StringFormatUtils;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.dns.protocol.DnsProtocol.ResponseErrorCode;
 import io.activej.dns.protocol.DnsQuery;
@@ -47,7 +48,7 @@ import static io.activej.common.Checks.checkState;
 /**
  * Represents a cache for storing resolved domains during it's time to live.
  */
-public final class DnsCache {
+public final class DnsCache implements WithInitializer<DnsCache> {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
 	private static final boolean CHECK = Checks.isEnabled(DnsCache.class);
 

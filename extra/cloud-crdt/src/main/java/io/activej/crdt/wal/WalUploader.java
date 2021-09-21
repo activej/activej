@@ -19,6 +19,7 @@ package io.activej.crdt.wal;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -61,7 +62,7 @@ import static io.activej.crdt.wal.FileWriteAheadLog.FRAME_FORMAT;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
-public final class WalUploader<K extends Comparable<K>, S> implements EventloopJmxBeanWithStats {
+public final class WalUploader<K extends Comparable<K>, S> implements EventloopJmxBeanWithStats, WithInitializer<WalUploader<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(WalUploader.class);
 
 	private static final int DEFAULT_SORT_ITEMS_IN_MEMORY = ApplicationSettings.getInt(WalUploader.class, "sortItemsInMemory", 100_000);

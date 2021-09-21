@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.Stopwatch;
 import io.activej.csp.ChannelSupplier;
@@ -57,7 +58,7 @@ import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithStats {
+public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithStats, WithInitializer<MultilogImpl<T>> {
 	private static final Logger logger = LoggerFactory.getLogger(MultilogImpl.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);

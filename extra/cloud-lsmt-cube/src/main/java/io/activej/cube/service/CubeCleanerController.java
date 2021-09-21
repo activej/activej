@@ -21,6 +21,7 @@ import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
@@ -54,7 +55,7 @@ import static io.activej.ot.OTAlgorithms.*;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWithStats {
+public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeCleanerController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration DEFAULT_CHUNKS_CLEANUP_DELAY = Duration.ofMinutes(1);

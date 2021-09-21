@@ -17,6 +17,7 @@
 package io.activej.redis;
 
 import io.activej.common.ApplicationSettings;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
@@ -39,7 +40,7 @@ import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
  * A client for Redis.
  * Allows connecting to Redis server, supports SSL.
  */
-public final class RedisClient {
+public final class RedisClient implements WithInitializer<RedisClient> {
 	private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
 
 	public static final InetSocketAddress DEFAULT_ADDRESS = ApplicationSettings.getInetSocketAddress(

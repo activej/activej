@@ -16,6 +16,7 @@
 
 package io.activej.http.session;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * A simple reference implementation of the session storage over a hash map.
  */
-public final class SessionStoreInMemory<T> implements SessionStore<T> {
+public final class SessionStoreInMemory<T> implements SessionStore<T>, WithInitializer<SessionStoreInMemory<T>> {
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
 	private @Nullable Duration sessionLifetime;

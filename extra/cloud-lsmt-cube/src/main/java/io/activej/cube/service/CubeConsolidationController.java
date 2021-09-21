@@ -20,6 +20,7 @@ import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncRunnable;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
@@ -51,7 +52,7 @@ import static io.activej.common.Utils.transformMap;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanWithStats {
+public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
 	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();

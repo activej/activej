@@ -18,6 +18,7 @@ package io.activej.cube.linear;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.exception.CubeException;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -39,7 +40,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public final class CubeBackupController implements ConcurrentJmxBean {
+public final class CubeBackupController implements ConcurrentJmxBean, WithInitializer<CubeBackupController> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "revisionTable", "cube_revision");

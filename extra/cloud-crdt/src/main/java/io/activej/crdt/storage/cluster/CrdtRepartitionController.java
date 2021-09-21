@@ -19,6 +19,7 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.process.AsyncCloseable;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.storage.CrdtStorage;
@@ -43,7 +44,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtRepartitionController<K extends Comparable<K>, S, P extends Comparable<P>> implements EventloopJmxBeanWithStats {
+public final class CrdtRepartitionController<K extends Comparable<K>, S, P extends Comparable<P>> implements EventloopJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
 	private final P localPartitionId;
 	private final CrdtStorage<K, S> localClient;
 	private final CrdtStorageCluster<K, S, P> cluster;

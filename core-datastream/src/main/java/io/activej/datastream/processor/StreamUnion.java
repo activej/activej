@@ -16,6 +16,7 @@
 
 package io.activej.datastream.processor;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
@@ -35,7 +36,7 @@ import static io.activej.common.Checks.checkState;
  *
  * @param <T> type of output data
  */
-public final class StreamUnion<T> implements HasStreamOutput<T>, HasStreamInputs {
+public final class StreamUnion<T> implements HasStreamOutput<T>, HasStreamInputs, WithInitializer<StreamUnion<T>> {
 	private final List<Input> inputs = new ArrayList<>();
 	private final Output output;
 	private boolean started;

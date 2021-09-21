@@ -18,6 +18,7 @@ package io.activej.datastream.processor;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 
 import static io.activej.common.Checks.checkArgument;
@@ -27,7 +28,7 @@ import static java.lang.Integer.numberOfLeadingZeros;
 /**
  * A stream transformer that changes each item according to given function.
  */
-public final class StreamBuffer<T> implements StreamTransformer<T, T> {
+public final class StreamBuffer<T> implements StreamTransformer<T, T>, WithInitializer<StreamBuffer<T>> {
 	private static final boolean CHECK = Checks.isEnabled(StreamBuffer.class);
 	private static final boolean NULLIFY_ON_TAKE_OUT = ApplicationSettings.getBoolean(StreamBuffer.class, "nullifyOnTakeOut", true);
 

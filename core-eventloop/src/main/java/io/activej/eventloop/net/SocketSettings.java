@@ -17,6 +17,7 @@
 package io.activej.eventloop.net;
 
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +31,7 @@ import static java.net.StandardSocketOptions.*;
 /**
  * This class is used to hold settings for a socket. Settings  will be applied when creating new socket
  */
-public final class SocketSettings {
+public final class SocketSettings implements WithInitializer<SocketSettings> {
 	private static final byte DEF_BOOL = -1;
 	private static final byte TRUE = 1;
 	private static final byte FALSE = 0;
@@ -128,7 +129,7 @@ public final class SocketSettings {
 		if (tcpNoDelay != DEF_BOOL) {
 			channel.setOption(TCP_NODELAY, tcpNoDelay != FALSE);
 		}
-		if (lingerTimeout != -1){
+		if (lingerTimeout != -1) {
 			channel.setOption(SO_LINGER, lingerTimeout);
 		}
 	}

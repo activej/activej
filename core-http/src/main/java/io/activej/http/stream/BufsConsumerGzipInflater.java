@@ -22,6 +22,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -52,7 +53,8 @@ import static java.lang.Short.reverseBytes;
  * method is used.
  */
 public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater> {
+		implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater>,
+		WithInitializer<BufsConsumerGzipInflater> {
 	public static final int MAX_HEADER_FIELD_LENGTH = 4096; //4 Kb
 	public static final int DEFAULT_BUF_SIZE = 512;
 	// endregion

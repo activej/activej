@@ -22,6 +22,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.tuple.Tuple2;
 import io.activej.cube.exception.StateFarAheadException;
 import io.activej.cube.ot.CubeDiff;
@@ -60,7 +61,8 @@ import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, CubeUplinkMySql.UplinkProtoCommit> {
+public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, CubeUplinkMySql.UplinkProtoCommit>,
+		WithInitializer<CubeUplinkMySql> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeUplinkMySql.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CubeUplinkMySql.class, "smoothingWindow", Duration.ofMinutes(5));

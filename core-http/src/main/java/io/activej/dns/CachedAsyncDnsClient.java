@@ -17,6 +17,7 @@
 package io.activej.dns;
 
 import io.activej.common.Checks;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.dns.DnsCache.DnsQueryCacheResult;
 import io.activej.dns.protocol.DnsQuery;
 import io.activej.dns.protocol.DnsQueryException;
@@ -42,7 +43,7 @@ import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
-public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxBean {
+public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxBean, WithInitializer<CachedAsyncDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(CachedAsyncDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(CachedAsyncDnsClient.class);
 

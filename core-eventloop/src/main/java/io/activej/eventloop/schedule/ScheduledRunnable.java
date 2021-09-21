@@ -16,9 +16,10 @@
 
 package io.activej.eventloop.schedule;
 
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 
-public final class ScheduledRunnable implements Comparable<ScheduledRunnable> {
+public final class ScheduledRunnable implements Comparable<ScheduledRunnable>, WithInitializer<ScheduledRunnable> {
 	private final long timestamp;
 	private Runnable runnable;
 	private boolean cancelled;

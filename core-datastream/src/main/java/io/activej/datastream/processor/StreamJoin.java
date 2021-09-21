@@ -16,6 +16,7 @@
 
 package io.activej.datastream.processor;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
@@ -36,7 +37,7 @@ import static java.util.Arrays.asList;
  * It is a {@link StreamJoin} which receives specified type and streams
  * set of join's result to the destination.
  */
-public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamOutput<V> {
+public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamOutput<V>, WithInitializer<StreamJoin<K, L, R, V>> {
 
 	/**
 	 * It is the primary interface of a joiner. It contains methods which will join streams
@@ -176,7 +177,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 
 	private final class Output extends AbstractStreamSupplier<V> {
 
-		void join(){
+		void join() {
 			resume();
 		}
 

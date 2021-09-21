@@ -16,6 +16,7 @@
 
 package io.activej.http.decoder;
 
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +30,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * A tree of https errors. A tree structure matches the structure of the decoder it was received from
  */
-public final class DecodeErrors {
+public final class DecodeErrors implements WithInitializer<DecodeErrors> {
 	private static final String DEFAULT_SEPARATOR = ".";
 
 	private @Nullable List<DecodeError> errors;

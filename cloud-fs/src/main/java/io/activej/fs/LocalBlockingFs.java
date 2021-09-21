@@ -17,6 +17,7 @@
 package io.activej.fs;
 
 import io.activej.common.ApplicationSettings;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.service.BlockingService;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -49,7 +50,7 @@ import static java.nio.file.StandardOpenOption.*;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 
-public final class LocalBlockingFs implements BlockingFs, BlockingService, ConcurrentJmxBean {
+public final class LocalBlockingFs implements BlockingFs, BlockingService, ConcurrentJmxBean, WithInitializer<LocalBlockingFs> {
 	private static final Logger logger = LoggerFactory.getLogger(LocalBlockingFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";

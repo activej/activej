@@ -21,6 +21,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
@@ -71,7 +72,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * to clean up the keep-alive connections etc.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketClient, EventloopService, EventloopJmxBeanWithStats {
+public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketClient, EventloopService, EventloopJmxBeanWithStats, WithInitializer<AsyncHttpClient> {
 	private static final Logger logger = getLogger(AsyncHttpClient.class);
 	private static final boolean CHECK = Checks.isEnabled(AsyncHttpClient.class);
 

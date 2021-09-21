@@ -20,6 +20,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.function.CrdtFilter;
@@ -49,7 +50,8 @@ import java.time.Duration;
 import java.util.concurrent.Executor;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService, EventloopJmxBeanWithStats {
+public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService,
+		EventloopJmxBeanWithStats, WithInitializer<CrdtStorageRocksDB<K, S>> {
 	private final Eventloop eventloop;
 	private final Executor executor;
 	private final RocksDB db;
@@ -184,25 +186,25 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return Promise.ofBlocking(executor,
-				() -> {
-					RocksIterator iterator = db.newIterator();
-					iterator.seekToFirst();
-					return iterator;
-				})
+						() -> {
+							RocksIterator iterator = db.newIterator();
+							iterator.seekToFirst();
+							return iterator;
+						})
 				.map(iterator -> StreamSupplier.ofChannelSupplier(ChannelSupplier.of(
-						() -> Promise.ofBlocking(executor, () -> {
-							while (iterator.isValid()) {
-								byte[] keyBytes = iterator.key();
-								byte[] stateBytes = iterator.value();
-								iterator.next();
+								() -> Promise.ofBlocking(executor, () -> {
+									while (iterator.isValid()) {
+										byte[] keyBytes = iterator.key();
+										byte[] stateBytes = iterator.value();
+										iterator.next();
 
-								S partial = function.extract(stateSerializer.decode(stateBytes, 0), timestamp);
-								if (partial != null) {
-									return new CrdtData<>(keySerializer.decode(keyBytes, 0), partial);
-								}
-							}
-							return null;
-						})))
+										S partial = function.extract(stateSerializer.decode(stateBytes, 0), timestamp);
+										if (partial != null) {
+											return new CrdtData<>(keySerializer.decode(keyBytes, 0), partial);
+										}
+									}
+									return null;
+								})))
 						.transformWith(detailedStats ? downloadStatsDetailed : downloadStats));
 	}
 

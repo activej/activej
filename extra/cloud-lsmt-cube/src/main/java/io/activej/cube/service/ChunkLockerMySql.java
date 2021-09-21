@@ -20,6 +20,7 @@ import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ChunkLocker;
 import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 
-public final class ChunkLockerMySql<C> implements ChunkLocker<C> {
+public final class ChunkLockerMySql<C> implements ChunkLocker<C>, WithInitializer<ChunkLockerMySql<C>> {
 	private static final Logger logger = LoggerFactory.getLogger(ChunkLockerMySql.class);
 
 	public static final String CHUNK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "chunkTable", "cube_chunk");

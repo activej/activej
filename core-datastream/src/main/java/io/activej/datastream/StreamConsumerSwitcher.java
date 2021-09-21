@@ -16,6 +16,7 @@
 
 package io.activej.datastream;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +30,7 @@ import static io.activej.common.Checks.checkState;
  * <p>
  * It sets its acknowledgement on supplier end of stream, and acts as if suspended when current consumer stops and acknowledges.
  */
-public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
+public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> implements WithInitializer<StreamConsumerSwitcher<T>> {
 	private InternalSupplier internalSupplier = new InternalSupplier();
 	private final Set<InternalSupplier> pendingAcknowledgements = new HashSet<>();
 

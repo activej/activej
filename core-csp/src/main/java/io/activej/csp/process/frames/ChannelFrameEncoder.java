@@ -17,6 +17,7 @@
 package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -26,7 +27,7 @@ import io.activej.csp.process.AbstractCommunicatingProcess;
 import org.jetbrains.annotations.NotNull;
 
 public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf> {
+		implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf>, WithInitializer<ChannelFrameEncoder> {
 
 	private final @NotNull BlockEncoder encoder;
 	private boolean encoderResets;

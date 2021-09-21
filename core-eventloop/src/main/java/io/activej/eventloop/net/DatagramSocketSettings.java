@@ -17,6 +17,7 @@
 package io.activej.eventloop.net;
 
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -28,7 +29,7 @@ import static java.net.StandardSocketOptions.*;
 /**
  * This class used to change settings for socket. It will be applying with creating new socket
  */
-public final class DatagramSocketSettings {
+public final class DatagramSocketSettings implements WithInitializer<DatagramSocketSettings> {
 	private static final byte DEF_BOOL = -1;
 	private static final byte TRUE = 1;
 	private static final byte FALSE = 0;

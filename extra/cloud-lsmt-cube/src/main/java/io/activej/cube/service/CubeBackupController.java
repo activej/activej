@@ -19,6 +19,7 @@ package io.activej.cube.service;
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.eventloop.Eventloop;
@@ -47,7 +48,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.checkout;
 
-public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWithStats {
+public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeBackupController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);

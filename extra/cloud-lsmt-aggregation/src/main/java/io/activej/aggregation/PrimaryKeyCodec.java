@@ -21,12 +21,13 @@ import com.dslplatform.json.JsonWriter;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.JsonCodec;
+import io.activej.common.initializer.WithInitializer;
 
 import java.io.IOException;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-public class PrimaryKeyCodec implements JsonCodec<PrimaryKey> {
+public class PrimaryKeyCodec implements JsonCodec<PrimaryKey>, WithInitializer<PrimaryKeyCodec> {
 	private final JsonCodec<Object>[] codecs;
 
 	private PrimaryKeyCodec(JsonCodec<Object>[] codecs) {
@@ -52,7 +53,7 @@ public class PrimaryKeyCodec implements JsonCodec<PrimaryKey> {
 		for (int i = 0; i < codecs.length; i++) {
 			reader.getNextToken();
 			array[i] = codecs[i].read(reader);
-			if (i != codecs.length - 1){
+			if (i != codecs.length - 1) {
 				reader.comma();
 			}
 		}

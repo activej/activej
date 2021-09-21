@@ -1,5 +1,6 @@
 package io.activej.state.file;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.fs.BlockingFs;
 import io.activej.fs.FileMetadata;
 import io.activej.serializer.stream.*;
@@ -18,7 +19,7 @@ import java.util.UUID;
 import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings({"unused", "unchecked"})
-public final class FileStateManager<T> implements StateManager<T, Long> {
+public final class FileStateManager<T> implements StateManager<T, Long>, WithInitializer<FileStateManager<T>> {
 	public static final String DEFAULT_TEMP_DIR = ".temp/";
 
 	private final BlockingFs fs;
@@ -195,7 +196,7 @@ public final class FileStateManager<T> implements StateManager<T, Long> {
 
 	public void save(@NotNull T state, Long revision) throws IOException {
 		Long lastRevision = getLastSnapshotRevision();
-		if (lastRevision != null && lastRevision >= revision){
+		if (lastRevision != null && lastRevision >= revision) {
 			throw new IllegalArgumentException("Revision cannot be less than last revision [" + lastRevision + ']');
 		}
 		doSave(state, revision);

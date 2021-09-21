@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.http.CaseInsensitiveTokenMap.Token;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +30,7 @@ import static io.activej.http.HttpUtils.hashCodeCI;
  * This is a case-insensitive token registry used as permanent header value cache.
  * Its purpose is to map header values to references to Java objects with maximum efficiency and speed.
  */
-public final class CaseInsensitiveTokenMap<T extends Token> {
+public final class CaseInsensitiveTokenMap<T extends Token> implements WithInitializer<CaseInsensitiveTokenMap<T>> {
 	public abstract static class Token {
 		protected final int hashCodeCI;
 		protected final byte[] bytes;

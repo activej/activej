@@ -16,6 +16,7 @@
 
 package io.activej.eventloop.inspector;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBean;
@@ -32,7 +33,7 @@ import java.time.Duration;
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.pow;
 
-public final class ThrottlingController implements EventloopJmxBean, EventloopInspector {
+public final class ThrottlingController implements EventloopJmxBean, EventloopInspector, WithInitializer<ThrottlingController> {
 	private static int staticInstanceCounter = 0;
 
 	private final Logger logger = LoggerFactory.getLogger(ThrottlingController.class.getName() + "." + staticInstanceCounter++);

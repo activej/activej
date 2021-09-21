@@ -16,6 +16,7 @@
 
 package io.activej.datastream;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 
@@ -28,7 +29,7 @@ import java.util.List;
  *
  * @see StreamSupplier#toList()
  */
-public final class StreamConsumerToList<T> extends AbstractStreamConsumer<T> {
+public final class StreamConsumerToList<T> extends AbstractStreamConsumer<T> implements WithInitializer<StreamConsumerToList<T>> {
 	private final SettablePromise<List<T>> resultPromise = new SettablePromise<>();
 	private final List<T> list;
 

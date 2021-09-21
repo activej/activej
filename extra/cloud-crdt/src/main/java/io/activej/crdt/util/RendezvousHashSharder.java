@@ -18,6 +18,7 @@ package io.activej.crdt.util;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.HashUtils;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefInt;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +30,7 @@ import java.util.Set;
 import static io.activej.common.Checks.checkArgument;
 import static java.util.stream.Collectors.toList;
 
-public final class RendezvousHashSharder<P extends Comparable<P>> {
+public final class RendezvousHashSharder<P extends Comparable<P>> implements WithInitializer<RendezvousHashSharder<P>> {
 	public static final int NUMBER_OF_BUCKETS = ApplicationSettings.getInt(RendezvousHashSharder.class, "numberOfBuckets", 1024);
 
 	static {

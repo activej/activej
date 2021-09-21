@@ -16,11 +16,12 @@
 
 package io.activej.multilog;
 
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public final class LogPosition implements Comparable<LogPosition> {
+public final class LogPosition implements Comparable<LogPosition>, WithInitializer<LogPosition> {
 	private static final LogPosition INITIAL_LOG_POSITION = new LogPosition(new LogFile("", 0), 0);
 
 	private final @NotNull LogFile logFile;

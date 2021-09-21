@@ -16,6 +16,7 @@
 
 package io.activej.csp.process.frames;
 
+import io.activej.common.initializer.WithInitializer;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.xxhash.StreamingXXHash32;
@@ -26,7 +27,7 @@ import java.util.zip.Checksum;
 import static io.activej.common.Checks.checkArgument;
 
 @Deprecated
-public final class LZ4LegacyFrameFormat implements FrameFormat {
+public final class LZ4LegacyFrameFormat implements FrameFormat, WithInitializer<LZ4LegacyFrameFormat> {
 	static final byte[] MAGIC = {'L', 'Z', '4', 'B', 'l', 'o', 'c', 'k'};
 	static final byte[] LAST_BYTES;
 	static final byte[] MAGIC_AND_LAST_BYTES;

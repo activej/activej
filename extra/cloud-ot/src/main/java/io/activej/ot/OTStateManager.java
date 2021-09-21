@@ -22,6 +22,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.EventloopService;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
@@ -46,7 +47,7 @@ import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.promise.Promises.sequence;
 import static java.util.Collections.singletonList;
 
-public final class OTStateManager<K, D> implements EventloopService {
+public final class OTStateManager<K, D> implements EventloopService, WithInitializer<OTStateManager<K, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
 	private final Eventloop eventloop;

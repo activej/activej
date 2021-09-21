@@ -18,6 +18,7 @@ package io.activej.eventloop.executor;
 
 import io.activej.async.callback.AsyncComputation;
 import io.activej.common.function.RunnableEx;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +36,7 @@ import static io.activej.common.exception.FatalErrorHandlers.handleError;
  * blocking when the queue is filled until some task completes and
  * frees place for a new ones.
  */
-public final class BlockingEventloopExecutor implements EventloopExecutor {
+public final class BlockingEventloopExecutor implements EventloopExecutor, WithInitializer<BlockingEventloopExecutor> {
 	private final Eventloop eventloop;
 	private final Lock lock = new ReentrantLock();
 	private final Condition notFull = lock.newCondition();

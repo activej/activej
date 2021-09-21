@@ -19,6 +19,7 @@ package io.activej.csp.file;
 import io.activej.async.file.AsyncFileService;
 import io.activej.async.file.ExecutorAsyncFileService;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +39,7 @@ import static java.nio.file.StandardOpenOption.*;
 /**
  * This consumer allows you to asynchronously write binary data to a file.
  */
-public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
+public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> implements WithInitializer<ChannelFileWriter> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileWriter.class);
 
 	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{WRITE, CREATE_NEW, APPEND};

@@ -17,6 +17,7 @@
 package io.activej.eventloop.net;
 
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
 /**
  * This class used to change settings for server socket. It will be applying with creating new server socket
  */
-public final class ServerSocketSettings {
+public final class ServerSocketSettings implements WithInitializer<ServerSocketSettings> {
 	public static final int DEFAULT_BACKLOG = 16384;
 
 	private static final byte DEF_BOOL = -1;

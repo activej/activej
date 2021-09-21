@@ -19,6 +19,7 @@ package io.activej.promise.jmx;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.function.BiConsumerEx;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.ExceptionStats;
@@ -36,7 +37,7 @@ import static io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 /**
  * Allows tracking stats of {@link Promise}s.
  */
-public class PromiseStats {
+public class PromiseStats implements WithInitializer<PromiseStats> {
 	private @Nullable Eventloop eventloop;
 
 	private int activePromises = 0;

@@ -17,6 +17,7 @@
 package io.activej.jmx;
 
 import io.activej.common.collection.Either;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.common.reflection.ReflectionUtils;
 import io.activej.jmx.api.ConcurrentJmxBeanAdapter;
@@ -60,7 +61,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 @SuppressWarnings("rawtypes")
-public final class DynamicMBeanFactory {
+public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFactory> {
 	private static final Logger logger = LoggerFactory.getLogger(DynamicMBeanFactory.class);
 
 	// refreshing jmx

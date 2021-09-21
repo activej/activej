@@ -23,6 +23,7 @@ import com.dslplatform.json.ParsingException;
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.AggregationPredicates;
 import io.activej.aggregation.util.JsonCodec;
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -36,7 +37,7 @@ import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.cube.Utils.getJsonCodec;
 
 @SuppressWarnings("rawtypes")
-final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate> {
+final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>, WithInitializer<AggregationPredicateCodec> {
 	public static final String EMPTY_STRING = "";
 	public static final String SPACES = "\\s+";
 	public static final String EQ = "eq";

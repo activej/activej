@@ -16,6 +16,8 @@
 
 package io.activej.codegen;
 
+import io.activej.codegen.util.WithInitializer;
+
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -23,7 +25,7 @@ import java.util.Optional;
 /**
  * A bytecode storage that uses file system to save/load bytecode
  */
-public final class FileBytecodeStorage extends AbstractBytecodeStorage {
+public final class FileBytecodeStorage extends AbstractBytecodeStorage implements WithInitializer<FileBytecodeStorage> {
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
 	private final Path storageDir;
@@ -34,6 +36,7 @@ public final class FileBytecodeStorage extends AbstractBytecodeStorage {
 
 	/**
 	 * Creates a new {@link BytecodeStorage} that saves/loads bytecode to/from a given directory
+	 *
 	 * @param storageDir a directory to load/store bytecode
 	 * @return a new instance of a {@code FileBytecodeStorage}
 	 */

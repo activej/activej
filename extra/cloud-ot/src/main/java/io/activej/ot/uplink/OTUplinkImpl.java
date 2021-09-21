@@ -18,6 +18,7 @@ package io.activej.ot.uplink;
 
 import io.activej.async.function.AsyncPredicate;
 import io.activej.common.function.FunctionEx;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTCommitFactory.DiffsWithLevel;
@@ -42,7 +43,7 @@ import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 import static java.util.Collections.singleton;
 
-public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC> {
+public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC>, WithInitializer<OTUplinkImpl<K, D, PC>> {
 	private static final Logger logger = LoggerFactory.getLogger(OTUplinkImpl.class);
 
 	private final OTSystem<D> otSystem;

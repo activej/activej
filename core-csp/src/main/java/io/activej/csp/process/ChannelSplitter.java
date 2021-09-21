@@ -16,6 +16,7 @@
 
 package io.activej.csp.process;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
@@ -34,7 +35,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
-		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {
+		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T>, WithInitializer<ChannelSplitter<T>> {
 	private final List<ChannelConsumer<T>> outputs = new ArrayList<>();
 
 	private ChannelSupplier<T> input;

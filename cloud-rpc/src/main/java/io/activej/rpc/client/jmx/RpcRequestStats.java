@@ -16,6 +16,7 @@
 
 package io.activej.rpc.client.jmx;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
@@ -26,7 +27,7 @@ import java.time.Duration;
 
 import static io.activej.jmx.stats.JmxHistogram.POWERS_OF_TWO;
 
-public final class RpcRequestStats implements JmxRefreshable {
+public final class RpcRequestStats implements JmxRefreshable, WithInitializer<RpcRequestStats> {
 	private final EventStats totalRequests;
 	private final EventStats failedRequests;
 	private final EventStats rejectedRequests;

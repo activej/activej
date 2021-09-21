@@ -21,6 +21,7 @@ import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
@@ -51,7 +52,7 @@ import static io.activej.promise.Promises.asPromises;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanWithStats {
+public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeLogProcessorController<K, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeLogProcessorController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);

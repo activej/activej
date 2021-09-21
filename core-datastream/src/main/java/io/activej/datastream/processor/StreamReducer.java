@@ -16,6 +16,7 @@
 
 package io.activej.datastream.processor;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
@@ -37,7 +38,7 @@ import static io.activej.common.Checks.checkArgument;
  * because it represents few consumers and one supplier.
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamOutput<O> {
+public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamOutput<O>, WithInitializer<StreamReducer<K, O, A>> {
 	public static final int DEFAULT_BUFFER_SIZE = 2000;
 
 	private final List<Input> inputs = new ArrayList<>();

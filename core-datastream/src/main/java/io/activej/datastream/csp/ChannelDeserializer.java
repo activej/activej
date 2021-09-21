@@ -22,6 +22,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.exception.UnknownFormatException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.AbstractStreamSupplier;
@@ -35,7 +36,8 @@ import static java.lang.String.format;
  * An adapter that converts a {@link ChannelSupplier} of {@link ByteBuf ByteBufs} to a {@link StreamSupplier} of some type,
  * that is deserialized from incoming binary data using given {@link BinarySerializer}.
  */
-public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T> implements WithChannelToStream<ChannelDeserializer<T>, ByteBuf, T> {
+public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
+		implements WithChannelToStream<ChannelDeserializer<T>, ByteBuf, T>, WithInitializer<ChannelDeserializer<T>> {
 	private ChannelSupplier<ByteBuf> input;
 	private final BinarySerializer<T> valueSerializer;
 

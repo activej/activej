@@ -1,5 +1,6 @@
 package io.activej.serializer.util;
 
+import io.activej.codegen.util.WithInitializer;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.BinaryInput;
@@ -7,7 +8,7 @@ import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 
-public final class RecordSerializer implements BinarySerializer<Record> {
+public final class RecordSerializer implements BinarySerializer<Record>, WithInitializer<RecordSerializer> {
 	private final RecordScheme scheme;
 	private final BinarySerializer<?>[] fieldSerializers;
 

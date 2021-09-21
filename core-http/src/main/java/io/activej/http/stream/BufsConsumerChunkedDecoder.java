@@ -21,6 +21,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufs.ByteScanner;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -42,7 +43,8 @@ import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
  * data into its raw form.
  */
 public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder> {
+		implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder>,
+		WithInitializer<BufsConsumerChunkedDecoder> {
 	public static final int MAX_CHUNK_LENGTH_DIGITS = 8;
 	public static final byte[] CRLF = {13, 10};
 
@@ -95,33 +97,33 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 
 	private void processLength() {
 		input.decode(
-				bufs -> {
-					chunkLength = 0;
-					int bytes = this.bufs.scanBytes((index, c) -> {
-						if (c >= '0' && c <= '9') {
-							chunkLength = (chunkLength << 4) + (c - '0');
-						} else if (c >= 'a' && c <= 'f') {
-							chunkLength = (chunkLength << 4) + (c - 'a' + 10);
-						} else if (c >= 'A' && c <= 'F') {
-							chunkLength = (chunkLength << 4) + (c - 'A' + 10);
-						} else if (c == ';' || c == CR) {
-							// Success
-							if (index == 0 || chunkLength < 0) {
-								throw new InvalidSizeException("Malformed chunk length");
-							}
-							return true;
-						} else {
-							throw new InvalidSizeException("Unexpected data");
-						}
-						if (index == MAX_CHUNK_LENGTH_DIGITS + 1) {
-							throw new InvalidSizeException("Chunk length exceeds maximum allowed size");
-						}
-						return false;
-					});
-					if (bytes == 0) return null;
-					this.bufs.skip(bytes - 1);
-					return chunkLength;
-				})
+						bufs -> {
+							chunkLength = 0;
+							int bytes = this.bufs.scanBytes((index, c) -> {
+								if (c >= '0' && c <= '9') {
+									chunkLength = (chunkLength << 4) + (c - '0');
+								} else if (c >= 'a' && c <= 'f') {
+									chunkLength = (chunkLength << 4) + (c - 'a' + 10);
+								} else if (c >= 'A' && c <= 'F') {
+									chunkLength = (chunkLength << 4) + (c - 'A' + 10);
+								} else if (c == ';' || c == CR) {
+									// Success
+									if (index == 0 || chunkLength < 0) {
+										throw new InvalidSizeException("Malformed chunk length");
+									}
+									return true;
+								} else {
+									throw new InvalidSizeException("Unexpected data");
+								}
+								if (index == MAX_CHUNK_LENGTH_DIGITS + 1) {
+									throw new InvalidSizeException("Chunk length exceeds maximum allowed size");
+								}
+								return false;
+							});
+							if (bytes == 0) return null;
+							this.bufs.skip(bytes - 1);
+							return chunkLength;
+						})
 				.run((chunkLength, e) -> {
 					if (e == null) {
 						if (chunkLength != 0) {

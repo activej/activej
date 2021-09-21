@@ -19,6 +19,7 @@ package io.activej.cube.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.Stopwatch;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
@@ -44,7 +45,7 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.GET;
 import static java.util.stream.Collectors.toList;
 
-public final class ReportingServiceServlet extends AsyncServletWithStats {
+public final class ReportingServiceServlet extends AsyncServletWithStats implements WithInitializer<ReportingServiceServlet> {
 	private static final Logger logger = LoggerFactory.getLogger(ReportingServiceServlet.class);
 
 	private final ICube cube;

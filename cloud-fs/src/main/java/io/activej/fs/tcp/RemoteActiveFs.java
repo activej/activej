@@ -22,6 +22,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.function.FunctionEx;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -68,7 +69,7 @@ import static java.util.Collections.emptyMap;
  * <p>
  * Inherits all the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
  */
-public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats {
+public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);

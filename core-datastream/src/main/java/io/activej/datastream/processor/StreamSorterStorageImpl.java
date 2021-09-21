@@ -17,6 +17,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.ChannelByteChunker;
@@ -50,7 +51,7 @@ import static java.lang.String.format;
  *
  * @param <T> type of storing data
  */
-public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T> {
+public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T>, WithInitializer<StreamSorterStorageImpl<T>> {
 	private static final Logger logger = LoggerFactory.getLogger(StreamSorterStorageImpl.class);
 
 	public static final String DEFAULT_FILE_PATTERN = "%d";

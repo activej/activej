@@ -16,6 +16,7 @@
 
 package io.activej.http.session;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
@@ -33,7 +34,7 @@ import java.util.function.Function;
  * The session object is {@link HttpRequest#attach attached} to the request so that the first servlet
  * could then receive and use it.
  */
-public final class SessionServlet<T> implements AsyncServlet {
+public final class SessionServlet<T> implements AsyncServlet, WithInitializer<SessionServlet<T>> {
 	private final SessionStore<T> store;
 	private final Function<HttpRequest, String> sessionIdExtractor;
 	private final AsyncServlet publicServlet;

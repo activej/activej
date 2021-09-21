@@ -21,6 +21,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelConsumer;
@@ -66,7 +67,8 @@ import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 
-public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, EventloopService, EventloopJmxBeanWithStats {
+public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, EventloopService,
+		EventloopJmxBeanWithStats, WithInitializer<FileWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(FileWriteAheadLog.class);
 
 	public static final String EXT_FINAL = ".wal";
@@ -194,10 +196,10 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 		WalConsumer finishedConsumer = consumer;
 		consumer = createConsumer();
 
-		if (detailedMonitoring){
+		if (detailedMonitoring) {
 			try {
 				totalFlushedSize.recordValue(Files.size(finishedConsumer.walFile));
-			} catch (IOException e){
+			} catch (IOException e) {
 				logger.warn("Could not get the size of flushed file {}", finishedConsumer.walFile);
 			}
 		}
@@ -260,15 +262,15 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 
 	private Promise<List<Path>> getLostFiles() {
 		return Promise.ofBlocking(executor,
-				() -> {
-					try (Stream<Path> list = Files.list(path)) {
-						return list
-								.filter(file -> Files.isRegularFile(file) &&
-										file.toString().endsWith(EXT_CURRENT) &&
-										(consumer == null || !file.equals(consumer.getWalFile())))
-								.collect(toList());
-					}
-				})
+						() -> {
+							try (Stream<Path> list = Files.list(path)) {
+								return list
+										.filter(file -> Files.isRegularFile(file) &&
+												file.toString().endsWith(EXT_CURRENT) &&
+												(consumer == null || !file.equals(consumer.getWalFile())))
+										.collect(toList());
+							}
+						})
 				.whenResult(walFiles -> {
 					if (logger.isTraceEnabled()) {
 						logger.trace("Found {} lost files {}", walFiles.size(), walFiles.stream().map(Path::getFileName).collect(toList()));
@@ -361,12 +363,12 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	}
 
 	@JmxOperation
-	public void startDetailedMonitoring(){
+	public void startDetailedMonitoring() {
 		detailedMonitoring = true;
 	}
 
 	@JmxOperation
-	public void stopDetailedMonitoring(){
+	public void stopDetailedMonitoring() {
 		detailedMonitoring = false;
 	}
 	// endregion

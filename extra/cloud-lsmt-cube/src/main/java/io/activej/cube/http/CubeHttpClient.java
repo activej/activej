@@ -18,6 +18,7 @@ package io.activej.cube.http;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;
@@ -41,7 +42,7 @@ import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class CubeHttpClient implements ICube {
+public final class CubeHttpClient implements ICube, WithInitializer<CubeHttpClient> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeHttpClient.class);
 
 	private final String url;

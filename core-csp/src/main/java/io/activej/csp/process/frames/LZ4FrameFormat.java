@@ -18,12 +18,13 @@ package io.activej.csp.process.frames;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
+import io.activej.common.initializer.WithInitializer;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 
 import static io.activej.common.Checks.checkArgument;
 
-public final class LZ4FrameFormat implements FrameFormat {
+public final class LZ4FrameFormat implements FrameFormat, WithInitializer<LZ4FrameFormat> {
 	public static final MemSize MAX_BLOCK_SIZE = ApplicationSettings.getMemSize(LZ4FrameFormat.class, "maxBlockSize", MemSize.megabytes(256));
 
 	static final byte[] MAGIC = {'L', 'Z', '4', 1};

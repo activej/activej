@@ -24,6 +24,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.BiFunctionEx;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
@@ -73,7 +74,7 @@ import static java.util.Collections.*;
  * <p>
  * This implementation does not define new limitations, other than those defined in {@link ActiveFs} interface.
  */
-public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats {
+public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats, WithInitializer<LocalActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";

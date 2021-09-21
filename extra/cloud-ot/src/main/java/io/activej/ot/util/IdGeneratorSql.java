@@ -17,6 +17,7 @@
 package io.activej.ot.util;
 
 import io.activej.async.function.AsyncRunnable;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -36,7 +37,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
-public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBeanWithStats {
+public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
 
 	private final Eventloop eventloop;
 	private final Executor executor;

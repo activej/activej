@@ -16,6 +16,7 @@
 
 package io.activej.eventloop.inspector;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -33,7 +34,7 @@ import static io.activej.eventloop.Eventloop.DEFAULT_SMOOTHING_WINDOW;
 import static io.activej.jmx.stats.JmxHistogram.POWERS_OF_TWO;
 
 @SuppressWarnings("unused")
-public final class EventloopStats extends AbstractInspector<EventloopInspector> implements EventloopInspector {
+public final class EventloopStats extends AbstractInspector<EventloopInspector> implements EventloopInspector, WithInitializer<EventloopStats> {
 	private final EventStats loops;
 	private final ValueStats selectorSelectTimeout;
 	private final ValueStats selectorSelectTime;

@@ -16,6 +16,7 @@
 
 package io.activej.eventloop.net;
 
+import io.activej.common.initializer.WithInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
-public final class BlockingSocketServer {
+public final class BlockingSocketServer implements WithInitializer<BlockingSocketServer> {
 	public interface AcceptHandler {
 		void onAccept(Socket socket) throws IOException;
 	}

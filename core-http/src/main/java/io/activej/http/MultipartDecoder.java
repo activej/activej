@@ -22,6 +22,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelConsumer;
@@ -50,7 +51,7 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Util class that allows to decode some binary channel (mainly, the request body stream) into a channel of multipart frames.
  */
-public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame> {
+public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, WithInitializer<MultipartDecoder> {
 	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(MultipartDecoder.class, "maxMetaBuffer", kilobytes(4)).toInt();
 	private static final ByteBufsDecoder<ByteBuf> OF_CRLF_DECODER = ByteBufsDecoder.ofCrlfTerminatedBytes();
 

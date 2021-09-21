@@ -18,6 +18,7 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.FunctionEx;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
@@ -51,7 +52,7 @@ import static io.activej.http.HttpMethod.POST;
  * <p>
  * This server may  be launched as a publicly available server.
  */
-public final class ActiveFsServlet {
+public final class ActiveFsServlet implements WithInitializer<ActiveFsServlet> {
 	private ActiveFsServlet() {
 	}
 

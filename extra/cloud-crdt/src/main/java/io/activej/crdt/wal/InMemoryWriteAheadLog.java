@@ -17,6 +17,7 @@
 package io.activej.crdt.wal;
 
 import io.activej.async.service.EventloopService;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -34,7 +35,8 @@ import java.util.TreeMap;
 import static io.activej.async.util.LogUtils.Level.INFO;
 import static io.activej.async.util.LogUtils.toLogger;
 
-public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, EventloopService {
+public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, EventloopService,
+		WithInitializer<InMemoryWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
 
 	private Map<K, S> map = new TreeMap<>();
@@ -78,7 +80,7 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 
 		return storage.upload()
 				.then(consumer -> StreamSupplier.ofStream(map.entrySet().stream()
-						.map(entry -> new CrdtData<>(entry.getKey(), entry.getValue())))
+								.map(entry -> new CrdtData<>(entry.getKey(), entry.getValue())))
 						.streamTo(consumer))
 				.whenException(e -> map.forEach(this::put))
 				.whenComplete(toLogger(logger, INFO, INFO, "flush", map.size()));

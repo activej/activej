@@ -16,6 +16,8 @@
 
 package io.activej.aggregation;
 
+import io.activej.common.initializer.WithInitializer;
+
 import java.util.*;
 
 import static java.util.Collections.unmodifiableList;
@@ -23,7 +25,7 @@ import static java.util.Collections.unmodifiableList;
 /**
  * Represents a query to aggregation. Contains the list of requested keys, fields, predicates and orderings.
  */
-public final class AggregationQuery {
+public final class AggregationQuery implements WithInitializer<AggregationQuery> {
 	private final List<String> keys = new ArrayList<>();
 	private final List<String> measures = new ArrayList<>();
 	private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();

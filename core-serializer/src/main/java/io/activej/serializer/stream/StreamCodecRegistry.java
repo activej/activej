@@ -16,6 +16,8 @@
 
 package io.activej.serializer.stream;
 
+import io.activej.codegen.util.WithInitializer;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -30,7 +32,7 @@ import static io.activej.serializer.stream.StreamCodecs.*;
  * <p>
  * Also it allows dynamic construction of codecs for generic types.
  */
-public final class StreamCodecRegistry implements StreamCodecFactory {
+public final class StreamCodecRegistry implements StreamCodecFactory, WithInitializer<StreamCodecRegistry> {
 	private final Map<Class<?>, BiFunction<StreamCodecFactory, StreamCodec<?>[], StreamCodec<?>>> map = new LinkedHashMap<>();
 
 	private StreamCodecRegistry() {

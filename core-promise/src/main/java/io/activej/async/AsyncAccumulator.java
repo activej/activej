@@ -18,6 +18,7 @@ package io.activej.async;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.common.function.BiConsumerEx;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -28,7 +29,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class AsyncAccumulator<A> implements AsyncCloseable {
+public final class AsyncAccumulator<A> implements AsyncCloseable, WithInitializer<AsyncAccumulator<A>> {
 	private final SettablePromise<A> resultPromise = new SettablePromise<>();
 	private boolean started;
 

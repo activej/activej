@@ -18,6 +18,7 @@ package io.activej.cube.linear;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.cube.exception.CubeException;
 import io.activej.jmx.api.ConcurrentJmxBean;
@@ -38,7 +39,7 @@ import static io.activej.cube.linear.Utils.loadResource;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 
-public final class CubeCleanerController implements ConcurrentJmxBean {
+public final class CubeCleanerController implements ConcurrentJmxBean, WithInitializer<CubeCleanerController> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration CHUNKS_CLEANUP_DELAY = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupDelay", Duration.ofMinutes(1));

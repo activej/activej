@@ -22,6 +22,7 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.codegen.util.WithInitializer;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.types.AnnotationUtils;
@@ -64,7 +65,7 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Scans fields of classes for serialization.
  */
-public final class SerializerBuilder {
+public final class SerializerBuilder implements WithInitializer<SerializerBuilder> {
 	private final DefiningClassLoader classLoader;
 
 	private final TypeScannerRegistry<SerializerDef> registry = TypeScannerRegistry.create();

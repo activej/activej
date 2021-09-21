@@ -21,6 +21,7 @@ import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
@@ -54,7 +55,7 @@ import static io.activej.promise.Promises.timeout;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanWithStats {
+public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanWithStats, WithInitializer<RemoteAsyncDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(RemoteAsyncDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(RemoteAsyncDnsClient.class);
 

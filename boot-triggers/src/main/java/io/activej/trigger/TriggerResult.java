@@ -16,6 +16,7 @@
 
 package io.activej.trigger;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.stats.ExceptionStats;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +27,7 @@ import java.util.function.Supplier;
 import static io.activej.common.Checks.checkState;
 import static io.activej.jmx.stats.MBeanFormat.formatExceptionMultiline;
 
-public final class TriggerResult {
+public final class TriggerResult implements WithInitializer<TriggerResult> {
 	private static final TriggerResult NONE = new TriggerResult(0, null, null);
 
 	private final long timestamp;

@@ -23,6 +23,7 @@ import com.dslplatform.json.NumberConverter;
 import com.dslplatform.json.StringConverter;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.QueryResult;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -39,7 +40,7 @@ import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.cube.ReportType.*;
 import static io.activej.cube.Utils.getJsonCodec;
 
-final class QueryResultCodec implements JsonCodec<QueryResult> {
+final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<QueryResultCodec> {
 	private static final String MEASURES_FIELD = "measures";
 	private static final String ATTRIBUTES_FIELD = "attributes";
 	private static final String FILTER_ATTRIBUTES_FIELD = "filterAttributes";

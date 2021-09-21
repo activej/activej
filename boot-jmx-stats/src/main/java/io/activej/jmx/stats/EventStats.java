@@ -17,6 +17,7 @@
 package io.activej.jmx.stats;
 
 import io.activej.common.ApplicationSettings;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +34,7 @@ import static java.lang.Math.*;
  * <p>
  * Class is supposed to work in a single thread
  */
-public final class EventStats implements JmxRefreshableStats<EventStats>, JmxStatsWithSmoothingWindow, JmxStatsWithReset {
+public final class EventStats implements JmxRefreshableStats<EventStats>, JmxStatsWithSmoothingWindow, JmxStatsWithReset, WithInitializer<EventStats> {
 	private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
 	private static final long MAX_INTERVAL_BETWEEN_REFRESHES = ApplicationSettings.getDuration(JmxStats.class, "maxIntervalBetweenRefreshes", Duration.ofHours(1)).toMillis();
 	private static final double LN_2 = log(2);

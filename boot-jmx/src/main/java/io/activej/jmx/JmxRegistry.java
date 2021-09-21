@@ -16,6 +16,7 @@
 
 package io.activej.jmx;
 
+import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.module.UniqueQualifierImpl;
@@ -42,7 +43,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
-public final class JmxRegistry implements JmxRegistryMXBean {
+public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<JmxRegistry> {
 	private static final Logger logger = LoggerFactory.getLogger(JmxRegistry.class);
 
 	private static final String GENERIC_PARAM_NAME_FORMAT = "T%d=%s";
@@ -171,7 +172,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 
 		if (!isJmxBean(poolInstances.get(0).getClass())) {
 			logger.info("Pool of instances with key {} was not registered to jmx, " +
-							"because instances' type or any of instances' supertypes is not annotated with @JmxBean annotation", key);
+					"because instances' type or any of instances' supertypes is not annotated with @JmxBean annotation", key);
 			return;
 		}
 
@@ -421,7 +422,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			} else if (qualifier instanceof Annotation) {
 				qualifierString = getAnnotationString((Annotation) qualifier);
 			}
-			if (qualifierString != null){
+			if (qualifierString != null) {
 				qualifierString = formatAnnotationString(qualifierString);
 			} else {
 				qualifierString = "qualifier=" + qualifier;
