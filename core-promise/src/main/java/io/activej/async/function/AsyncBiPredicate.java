@@ -16,13 +16,9 @@
 
 package io.activej.async.function;
 
-import io.activej.async.process.AsyncExecutor;
 import io.activej.common.function.BiPredicateEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Function;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -45,24 +41,5 @@ public interface AsyncBiPredicate<T, U> {
 				return Promise.ofException(e);
 			}
 		};
-	}
-
-	static <T, U> AsyncBiPredicate<T, U> cast(AsyncBiPredicate<T, U> predicate){
-		return predicate;
-	}
-
-	@Contract(pure = true)
-	default <R> @NotNull R transformWith(@NotNull Function<AsyncBiPredicate<T, U>, R> fn) {
-		return fn.apply(this);
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncBiPredicate<T, U> async() {
-		return (t, u) -> test(t, u).async();
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncBiPredicate<T, U> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
-		return (t, u) -> asyncExecutor.execute(() -> test(t, u));
 	}
 }

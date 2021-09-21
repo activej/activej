@@ -16,6 +16,7 @@
 
 package io.activej.async.function;
 
+import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,11 @@ public final class AsyncFunctions {
 
 	@Contract(pure = true)
 	public static <T, R> @NotNull AsyncFunction<T, R> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncFunction<T, R> asyncFunction) {
-		return asyncFunction.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncFunction);
 	}
 
+	@Contract(pure = true)
+	public static <T, R> @NotNull AsyncFunction<T, R> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncFunction<T, R> function) {
+		return t -> asyncExecutor.execute(() -> function.apply(t));
+	}
 }

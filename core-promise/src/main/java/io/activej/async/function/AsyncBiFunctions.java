@@ -16,6 +16,7 @@
 
 package io.activej.async.function;
 
+import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,11 @@ public final class AsyncBiFunctions {
 
 	@Contract(pure = true)
 	public static <T, U, R> @NotNull AsyncBiFunction<T, U, R> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncBiFunction<T, U, R> asyncFunction) {
-		return asyncFunction.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncFunction);
 	}
 
+	@Contract(pure = true)
+	public static <T, U, R> @NotNull AsyncBiFunction<T, U, R> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncBiFunction<T, U, R> function) {
+		return (t, u) -> asyncExecutor.execute(() -> function.apply(t, u));
+	}
 }

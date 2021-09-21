@@ -52,7 +52,7 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 
 	private final PromiseStats promiseCreateId = PromiseStats.create(Duration.ofMinutes(5));
 
-	private final AsyncRunnable reserveId = reuse(this::doReserveId).transformWith(promiseCreateId::wrapper);
+	private final AsyncRunnable reserveId = promiseCreateId.wrapper(reuse(this::doReserveId));
 
 	private IdGeneratorSql(Eventloop eventloop, Executor executor, DataSource dataSource, SqlAtomicSequence sequence) {
 		this.eventloop = eventloop;

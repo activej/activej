@@ -16,13 +16,9 @@
 
 package io.activej.async.function;
 
-import io.activej.async.process.AsyncExecutor;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Function;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -46,24 +42,5 @@ public interface AsyncBiConsumer<T, U> {
 			}
 			return Promise.complete();
 		};
-	}
-
-	static <T, U> AsyncBiConsumer<T, U> cast(AsyncBiConsumer<T, U> consumer) {
-		return consumer;
-	}
-
-	@Contract(pure = true)
-	default <R> @NotNull R transformWith(@NotNull Function<AsyncBiConsumer<T, U>, R> fn) {
-		return fn.apply(this);
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncBiConsumer<T, U> async() {
-		return (t, u) -> accept(t, u).async();
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncBiConsumer<T, U> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
-		return (t, u) -> asyncExecutor.execute(() -> accept(t, u));
 	}
 }

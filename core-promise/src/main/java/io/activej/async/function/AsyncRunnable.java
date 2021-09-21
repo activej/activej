@@ -16,13 +16,9 @@
 
 package io.activej.async.function;
 
-import io.activej.async.process.AsyncExecutor;
 import io.activej.common.function.RunnableEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Function;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -47,24 +43,4 @@ public interface AsyncRunnable {
 			return Promise.complete();
 		};
 	}
-
-	static AsyncRunnable cast(AsyncRunnable function) {
-		return function;
-	}
-
-	@Contract(pure = true)
-	default <R> @NotNull R transformWith(@NotNull Function<AsyncRunnable, R> fn) {
-		return fn.apply(this);
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncRunnable async() {
-		return () -> run().async();
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncRunnable withExecutor(@NotNull AsyncExecutor asyncExecutor) {
-		return () -> asyncExecutor.execute(this::run);
-	}
-
 }

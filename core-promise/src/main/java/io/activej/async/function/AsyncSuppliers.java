@@ -16,6 +16,7 @@
 
 package io.activej.async.function;
 
+import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -56,8 +57,13 @@ public final class AsyncSuppliers {
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncSupplier<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncSupplier<T> actual) {
-		return actual.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
+	public static <T> @NotNull AsyncSupplier<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncSupplier<T> actualSupplier) {
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), actualSupplier);
+	}
+
+	@Contract(pure = true)
+	public static <T> @NotNull AsyncSupplier<T> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncSupplier<T> supplier) {
+		return () -> asyncExecutor.execute(supplier);
 	}
 
 	@Contract(pure = true)

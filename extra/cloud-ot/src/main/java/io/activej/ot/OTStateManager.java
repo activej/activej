@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import static io.activej.async.function.AsyncRunnables.ofExecutor;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
@@ -94,7 +95,7 @@ public final class OTStateManager<K, D> implements EventloopService, WithInitial
 	}
 
 	public @NotNull OTStateManager<K, D> withPoll(@NotNull RetryPolicy<?> pollRetryPolicy) {
-		return withPoll(poll -> poll.withExecutor(AsyncExecutors.retry(pollRetryPolicy)));
+		return withPoll(poll -> ofExecutor(AsyncExecutors.retry(pollRetryPolicy), poll));
 	}
 
 	public @NotNull OTStateManager<K, D> withPoll(@NotNull Function<AsyncRunnable, AsyncRunnable> pollPolicy) {

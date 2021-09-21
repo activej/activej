@@ -16,13 +16,9 @@
 
 package io.activej.async.function;
 
-import io.activej.async.process.AsyncExecutor;
 import io.activej.common.function.BiFunctionEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Function;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -45,24 +41,5 @@ public interface AsyncBiFunction<T, U, R> {
 				return Promise.ofException(e);
 			}
 		};
-	}
-
-	static <T, U, R> AsyncBiFunction<T, U, R> cast(AsyncBiFunction<T, U, R> function){
-		return function;
-	}
-
-	@Contract(pure = true)
-	default <V> @NotNull V transformWith(@NotNull Function<AsyncBiFunction<T, U, R>, V> fn) {
-		return fn.apply(this);
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncBiFunction<T, U, R> async() {
-		return (t, u) -> apply(t, u).async();
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncBiFunction<T, U, R> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
-		return (t, u) -> asyncExecutor.execute(() -> apply(t, u));
 	}
 }

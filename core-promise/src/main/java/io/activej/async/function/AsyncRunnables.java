@@ -16,6 +16,7 @@
 
 package io.activej.async.function;
 
+import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -26,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 public final class AsyncRunnables {
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncRunnable reuse(@NotNull AsyncRunnable actual) {
+	public static @NotNull AsyncRunnable reuse(@NotNull AsyncRunnable actual) {
 		return new AsyncRunnable() {
 			@Nullable Promise<Void> runningPromise;
 
@@ -54,7 +55,11 @@ public final class AsyncRunnables {
 
 	@Contract(pure = true)
 	public static @NotNull AsyncRunnable buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncRunnable asyncRunnable) {
-		return asyncRunnable.withExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls));
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncRunnable);
 	}
 
+	@Contract(pure = true)
+	public static @NotNull AsyncRunnable ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncRunnable runnable) {
+		return () -> asyncExecutor.execute(runnable::run);
+	}
 }

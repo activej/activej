@@ -16,13 +16,9 @@
 
 package io.activej.async.function;
 
-import io.activej.async.process.AsyncExecutor;
 import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Function;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -45,24 +41,5 @@ public interface AsyncFunction<T, R> {
 				return Promise.ofException(e);
 			}
 		};
-	}
-
-	static <T, R> AsyncFunction<T, R> cast(AsyncFunction<T, R> function) {
-		return function;
-	}
-
-	@Contract(pure = true)
-	default <V> @NotNull V transformWith(@NotNull Function<AsyncFunction<T, R>, V> fn) {
-		return fn.apply(this);
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncFunction<T, R> async() {
-		return value -> apply(value).async();
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncFunction<T, R> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
-		return value -> asyncExecutor.execute(() -> apply(value));
 	}
 }
