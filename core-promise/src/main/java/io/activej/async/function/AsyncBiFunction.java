@@ -17,7 +17,6 @@
 package io.activej.async.function;
 
 import io.activej.async.process.AsyncExecutor;
-import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.BiFunctionEx;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
@@ -65,18 +64,5 @@ public interface AsyncBiFunction<T, U, R> {
 	@Contract(pure = true)
 	default @NotNull AsyncBiFunction<T, U, R> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
 		return (t, u) -> asyncExecutor.execute(() -> apply(t, u));
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncBiFunction<T, U, R> peek(@NotNull BiConsumerEx<T, U> action) {
-		return (t, u) -> {
-			try {
-				action.accept(t, u);
-			} catch (Exception e) {
-				handleError(e, action);
-				return Promise.ofException(e);
-			}
-			return apply(t, u);
-		};
 	}
 }

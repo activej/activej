@@ -18,7 +18,6 @@ package io.activej.async.function;
 
 import io.activej.async.process.AsyncExecutor;
 import io.activej.common.function.ConsumerEx;
-import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -75,42 +74,5 @@ public interface AsyncConsumer<T> {
 	@Contract(pure = true)
 	default @NotNull AsyncConsumer<T> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
 		return value -> asyncExecutor.execute(() -> accept(value));
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncConsumer<T> peek(@NotNull ConsumerEx<T> action) {
-		return value -> {
-			try {
-				action.accept(value);
-			} catch (Exception e) {
-				handleError(e, action);
-				return Promise.ofException(e);
-			}
-			return accept(value);
-		};
-	}
-
-	@Contract(pure = true)
-	default @NotNull <V> AsyncConsumer<V> map(@NotNull FunctionEx<? super V, ? extends T> fn) {
-		return value -> {
-			try {
-				return accept(fn.apply(value));
-			} catch (Exception e) {
-				handleError(e, fn);
-				return Promise.ofException(e);
-			}
-		};
-	}
-
-	@Contract(pure = true)
-	default @NotNull <V> AsyncConsumer<V> mapAsync(@NotNull FunctionEx<? super V, ? extends Promise<T>> fn) {
-		return value -> {
-			try {
-				return fn.apply(value).then(this::accept);
-			} catch (Exception e) {
-				handleError(e, fn);
-				return Promise.ofException(e);
-			}
-		};
 	}
 }

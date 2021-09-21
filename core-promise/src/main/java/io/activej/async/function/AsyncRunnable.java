@@ -67,8 +67,4 @@ public interface AsyncRunnable {
 		return () -> asyncExecutor.execute(this::run);
 	}
 
-	@Contract(pure = true)
-	default @NotNull AsyncSupplier<Void> asSupplier() {
-		return this::run;
-	}
 }

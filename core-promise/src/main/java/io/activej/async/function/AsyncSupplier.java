@@ -18,8 +18,6 @@ package io.activej.async.function;
 
 import io.activej.async.process.AsyncExecutor;
 import io.activej.common.collection.Try;
-import io.activej.common.function.ConsumerEx;
-import io.activej.common.function.FunctionEx;
 import io.activej.common.function.SupplierEx;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
@@ -121,11 +119,6 @@ public interface AsyncSupplier<T> {
 	}
 
 	@Contract(pure = true)
-	default @NotNull AsyncSupplier<Void> toVoid() {
-		return () -> get().toVoid();
-	}
-
-	@Contract(pure = true)
 	default @NotNull AsyncSupplier<Try<T>> toTry() {
 		return () -> get().toTry();
 	}
@@ -133,36 +126,5 @@ public interface AsyncSupplier<T> {
 	@Contract(pure = true)
 	default @NotNull AsyncSupplier<T> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
 		return () -> asyncExecutor.execute(this);
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncSupplier<T> peek(@NotNull ConsumerEx<? super T> action) {
-		return () -> get().whenResult(action);
-	}
-
-	/**
-	 * Applies function before supplying a {@code Promise}.
-	 *
-	 * @param fn function to be applied to the result of {@code Promise}
-	 * @return {@link AsyncSupplier} of {@code Promise}s after transformation
-	 */
-	@Contract(pure = true)
-	default @NotNull <V> AsyncSupplier<V> map(@NotNull FunctionEx<? super T, ? extends V> fn) {
-		return () -> get().map(fn);
-	}
-
-	/**
-	 * Applies function to the result of supplied {@code Promise}.
-	 *
-	 * @param fn function to be applied to the result of {@code Promise}
-	 */
-	@Contract(pure = true)
-	default @NotNull <V> AsyncSupplier<V> mapAsync(@NotNull FunctionEx<? super T, ? extends Promise<V>> fn) {
-		return () -> get().then(fn);
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncRunnable asRunnable() {
-		return () -> get().toVoid();
 	}
 }

@@ -66,17 +66,4 @@ public interface AsyncBiConsumer<T, U> {
 	default @NotNull AsyncBiConsumer<T, U> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
 		return (t, u) -> asyncExecutor.execute(() -> accept(t, u));
 	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncBiConsumer<T, U> peek(@NotNull BiConsumerEx<T, U> action) {
-		return (t, u) -> {
-			try {
-				action.accept(t, u);
-			} catch (Exception e) {
-				handleError(e, action);
-				return Promise.ofException(e);
-			}
-			return accept(t, u);
-		};
-	}
 }

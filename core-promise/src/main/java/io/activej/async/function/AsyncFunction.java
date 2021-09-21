@@ -17,7 +17,6 @@
 package io.activej.async.function;
 
 import io.activej.async.process.AsyncExecutor;
-import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
@@ -65,18 +64,5 @@ public interface AsyncFunction<T, R> {
 	@Contract(pure = true)
 	default @NotNull AsyncFunction<T, R> withExecutor(@NotNull AsyncExecutor asyncExecutor) {
 		return value -> asyncExecutor.execute(() -> apply(value));
-	}
-
-	@Contract(pure = true)
-	default @NotNull AsyncFunction<T, R> peek(@NotNull ConsumerEx<T> action) {
-		return value -> {
-			try {
-				action.accept(value);
-			} catch (Exception e) {
-				handleError(e, action);
-				return Promise.ofException(e);
-			}
-			return apply(value);
-		};
 	}
 }
