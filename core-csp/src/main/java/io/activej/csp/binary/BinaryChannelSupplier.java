@@ -16,7 +16,7 @@
 
 package io.activej.csp.binary;
 
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
@@ -104,16 +104,16 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public static BinaryChannelSupplier ofProvidedBufs(ByteBufs bufs,
-			AsyncSupplier<Void> get, AsyncSupplier<Void> complete, AsyncCloseable closeable) {
+			AsyncRunnable get, AsyncRunnable complete, AsyncCloseable closeable) {
 		return new BinaryChannelSupplier(bufs) {
 			@Override
 			public Promise<Void> needMoreData() {
-				return get.get();
+				return get.run();
 			}
 
 			@Override
 			public Promise<Void> endOfStream() {
-				return complete.get();
+				return complete.run();
 			}
 
 			@Override

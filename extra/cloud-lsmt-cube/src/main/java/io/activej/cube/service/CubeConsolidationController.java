@@ -18,7 +18,7 @@ package io.activej.cube.service;
 
 import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
@@ -43,7 +43,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.aggregation.util.Utils.collectChunkIds;
-import static io.activej.async.function.AsyncSuppliers.reuse;
+import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
@@ -131,17 +131,17 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		return this;
 	}
 
-	private final AsyncSupplier<Void> consolidate = reuse(this::doConsolidate);
-	private final AsyncSupplier<Void> cleanupIrrelevantChunks = reuse(this::doCleanupIrrelevantChunks);
+	private final AsyncRunnable consolidate = reuse(this::doConsolidate);
+	private final AsyncRunnable cleanupIrrelevantChunks = reuse(this::doCleanupIrrelevantChunks);
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> consolidate() {
-		return consolidate.get();
+		return consolidate.run();
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> cleanupIrrelevantChunks() {
-		return cleanupIrrelevantChunks.get();
+		return cleanupIrrelevantChunks.run();
 	}
 
 	Promise<Void> doConsolidate() {

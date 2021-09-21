@@ -17,7 +17,7 @@ package io.activej.cube.linear;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunk;
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
 import io.activej.cube.linear.CubeCleanerController.ChunksCleanerService;
 
@@ -88,9 +88,9 @@ final class Utils {
 		};
 	}
 
-	private static void execute(ActiveFsChunkStorage<Long> storage, AsyncSupplier<Void> supplier, String errorMessage) throws IOException {
+	private static void execute(ActiveFsChunkStorage<Long> storage, AsyncRunnable runnable, String errorMessage) throws IOException {
 		try {
-			storage.getEventloop().submit(supplier::get).get();
+			storage.getEventloop().submit(runnable::run).get();
 		} catch (InterruptedException e) {
 			throw new IOException("Eventloop thread was interrupted", e);
 		} catch (ExecutionException e) {

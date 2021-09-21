@@ -48,7 +48,7 @@ public interface AsyncRunnable {
 		};
 	}
 
-	static AsyncRunnable cast(AsyncRunnable function){
+	static AsyncRunnable cast(AsyncRunnable function) {
 		return function;
 	}
 
@@ -65,5 +65,10 @@ public interface AsyncRunnable {
 	@Contract(pure = true)
 	default @NotNull AsyncRunnable withExecutor(@NotNull AsyncExecutor asyncExecutor) {
 		return () -> asyncExecutor.execute(this::run);
+	}
+
+	@Contract(pure = true)
+	default @NotNull AsyncSupplier<Void> asSupplier() {
+		return this::run;
 	}
 }

@@ -16,8 +16,8 @@
 
 package io.activej.crdt.wal;
 
-import io.activej.async.function.AsyncSupplier;
-import io.activej.async.function.AsyncSuppliers;
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
@@ -83,7 +83,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 
 	private final WalUploader<K, S> uploader;
 
-	private final AsyncSupplier<Void> flush = AsyncSuppliers.coalesce(this::doFlush);
+	private final AsyncRunnable flush = AsyncRunnables.coalesce(this::doFlush);
 
 	private WalConsumer consumer;
 	private boolean stopping;
@@ -153,7 +153,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	@Override
 	public Promise<Void> flush() {
 		logger.trace("Flush called");
-		return flush.get()
+		return flush.run()
 				.whenComplete(flushPromise.recordStats());
 	}
 

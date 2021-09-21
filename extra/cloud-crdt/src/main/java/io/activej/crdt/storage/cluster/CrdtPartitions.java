@@ -16,8 +16,8 @@
 
 package io.activej.crdt.storage.cluster;
 
-import io.activej.async.function.AsyncSupplier;
-import io.activej.async.function.AsyncSuppliers;
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.storage.CrdtStorage;
@@ -48,8 +48,8 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 	private final SortedMap<P, CrdtStorage<K, S>> deadPartitions = new TreeMap<>();
 	private final Map<P, CrdtStorage<K, S>> deadPartitionsView = Collections.unmodifiableMap(deadPartitions);
 
-	private final AsyncSupplier<Void> checkAllPartitions = AsyncSuppliers.reuse(this::doCheckAllPartitions);
-	private final AsyncSupplier<Void> checkDeadPartitions = AsyncSuppliers.reuse(this::doCheckDeadPartitions);
+	private final AsyncRunnable checkAllPartitions = AsyncRunnables.reuse(this::doCheckAllPartitions);
+	private final AsyncRunnable checkDeadPartitions = AsyncRunnables.reuse(this::doCheckDeadPartitions);
 
 	private final SortedMap<P, CrdtStorage<K, S>> partitions = new TreeMap<>();
 	private final Map<P, CrdtStorage<K, S>> partitionsView = Collections.unmodifiableMap(partitions);
@@ -120,7 +120,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 	 * @return promise of the check
 	 */
 	public Promise<Void> checkAllPartitions() {
-		return checkAllPartitions.get()
+		return checkAllPartitions.run()
 				.whenComplete(toLogger(logger, "checkAllPartitions"));
 	}
 
@@ -132,7 +132,7 @@ public final class CrdtPartitions<K extends Comparable<K>, S, P extends Comparab
 	 * @return promise of the check
 	 */
 	public Promise<Void> checkDeadPartitions() {
-		return checkDeadPartitions.get()
+		return checkDeadPartitions.run()
 				.whenComplete(toLogger(logger, "checkDeadPartitions"));
 	}
 

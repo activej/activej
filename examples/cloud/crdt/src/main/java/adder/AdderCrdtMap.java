@@ -1,7 +1,7 @@
 package adder;
 
-import io.activej.async.function.AsyncSupplier;
-import io.activej.async.function.AsyncSuppliers;
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
@@ -19,12 +19,12 @@ public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, Eventlo
 
 	private final Eventloop eventloop;
 	private final String localServerId;
-	private final AsyncSupplier<Void> refresh;
+	private final AsyncRunnable refresh;
 
 	public AdderCrdtMap(Eventloop eventloop, String localServerId, @NotNull CrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		this.eventloop = eventloop;
 		this.localServerId = localServerId;
-		this.refresh = AsyncSuppliers.reuse(() -> doRefresh(storage));
+		this.refresh = AsyncRunnables.reuse(() -> doRefresh(storage));
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, Eventlo
 
 	@Override
 	public Promise<Void> refresh() {
-		return refresh.get();
+		return refresh.run();
 	}
 
 	@Override

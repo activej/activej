@@ -16,8 +16,8 @@
 
 package io.activej.fs.cluster;
 
-import io.activej.async.function.AsyncSupplier;
-import io.activej.async.function.AsyncSuppliers;
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.initializer.WithInitializer;
@@ -56,8 +56,8 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	private final Map<Object, ActiveFs> deadPartitions = new HashMap<>();
 	private final Map<Object, ActiveFs> deadPartitionsView = Collections.unmodifiableMap(deadPartitions);
 
-	private final AsyncSupplier<Void> checkAllPartitions = AsyncSuppliers.reuse(this::doCheckAllPartitions);
-	private final AsyncSupplier<Void> checkDeadPartitions = AsyncSuppliers.reuse(this::doCheckDeadPartitions);
+	private final AsyncRunnable checkAllPartitions = AsyncRunnables.reuse(this::doCheckAllPartitions);
+	private final AsyncRunnable checkDeadPartitions = AsyncRunnables.reuse(this::doCheckDeadPartitions);
 
 	private final Map<Object, ActiveFs> partitions = new HashMap<>();
 	private final Map<Object, ActiveFs> partitionsView = Collections.unmodifiableMap(partitions);
@@ -120,7 +120,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * @return promise of the check
 	 */
 	public Promise<Void> checkAllPartitions() {
-		return checkAllPartitions.get()
+		return checkAllPartitions.run()
 				.whenComplete(toLogger(logger, "checkAllPartitions"));
 	}
 
@@ -132,7 +132,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	 * @return promise of the check
 	 */
 	public Promise<Void> checkDeadPartitions() {
-		return checkDeadPartitions.get()
+		return checkDeadPartitions.run()
 				.whenComplete(toLogger(logger, "checkDeadPartitions"));
 	}
 

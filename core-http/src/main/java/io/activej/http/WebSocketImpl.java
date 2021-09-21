@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
@@ -193,7 +194,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 		return readPromise;
 	}
 
-	private Promise<Void> doWrite(AsyncSupplier<Void> supplier, @Nullable Recyclable recyclable) {
+	private Promise<Void> doWrite(AsyncRunnable runnable, @Nullable Recyclable recyclable) {
 		if (CHECK) {
 			checkState(eventloop.inEventloopThread());
 			checkState(writePromise == null, "Concurrent writes");
@@ -206,7 +207,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 
 		SettablePromise<Void> writePromise = new SettablePromise<>();
 		this.writePromise = writePromise;
-		supplier.get()
+		runnable.run()
 				.run((result, e) -> {
 					this.writePromise = null;
 					writePromise.trySet(result, e);

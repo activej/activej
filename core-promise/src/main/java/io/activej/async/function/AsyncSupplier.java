@@ -160,4 +160,9 @@ public interface AsyncSupplier<T> {
 	default @NotNull <V> AsyncSupplier<V> mapAsync(@NotNull FunctionEx<? super T, ? extends Promise<V>> fn) {
 		return () -> get().then(fn);
 	}
+
+	@Contract(pure = true)
+	default @NotNull AsyncRunnable asRunnable() {
+		return () -> get().toVoid();
+	}
 }

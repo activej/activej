@@ -16,8 +16,9 @@
 
 package io.activej.async.service;
 
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.function.AsyncSuppliers;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
@@ -186,10 +187,10 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 			timestamp = schedule.nextTimestamp(now, lastStartTime, lastCompleteTime);
 		}
 
-		scheduledTask = eventloop.scheduleBackground(timestamp, doCall::get);
+		scheduledTask = eventloop.scheduleBackground(timestamp, doCall::run);
 	}
 
-	private final AsyncSupplier<Void> doCall = AsyncSuppliers.reuse(this::doCall);
+	private final AsyncRunnable doCall = AsyncRunnables.reuse(this::doCall);
 
 	private Promise<Void> doCall() {
 		lastStartTime = eventloop.currentTimeMillis();
@@ -313,7 +314,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 	@JmxOperation
 	public void startNow() {
-		doCall.get();
+		doCall.run();
 	}
 
 }

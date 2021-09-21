@@ -16,7 +16,10 @@
 
 package io.activej.ot;
 
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.EventloopService;
 import io.activej.eventloop.Eventloop;
@@ -34,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
@@ -51,7 +53,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	private final OTSystem<D> otSystem;
 	private final OTUplink<K, D, Object> uplink;
 
-	private final AsyncSupplier<Boolean> fetch = reuse(this::doFetch);
+	private final AsyncSupplier<Boolean> fetch = AsyncSuppliers.reuse(this::doFetch);
 
 	private OTState<D> state;
 
@@ -67,10 +69,10 @@ public final class OTStateManager<K, D> implements EventloopService {
 	private @Nullable Object pendingProtoCommit;
 	private @Nullable List<D> pendingProtoCommitDiffs;
 
-	private final AsyncSupplier<Void> sync = reuse(this::doSync);
+	private final AsyncRunnable sync = AsyncRunnables.reuse(this::doSync);
 	private boolean isSyncing;
 
-	private @Nullable AsyncSupplier<Void> poll;
+	private @Nullable AsyncRunnable poll;
 	private boolean isPolling;
 
 	@SuppressWarnings("unchecked")
@@ -94,7 +96,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 		return withPoll(poll -> poll.withExecutor(AsyncExecutors.retry(pollRetryPolicy)));
 	}
 
-	public @NotNull OTStateManager<K, D> withPoll(@NotNull Function<AsyncSupplier<Void>, AsyncSupplier<Void>> pollPolicy) {
+	public @NotNull OTStateManager<K, D> withPoll(@NotNull Function<AsyncRunnable, AsyncRunnable> pollPolicy) {
 		this.poll = pollPolicy.apply(this::doPoll);
 		return this;
 	}
@@ -142,7 +144,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	}
 
 	public @NotNull Promise<Void> sync() {
-		return sync.get();
+		return sync.run();
 	}
 
 	/**
@@ -180,7 +182,7 @@ public final class OTStateManager<K, D> implements EventloopService {
 	private void poll() {
 		if (poll != null && !isPolling() && pendingProtoCommit == null) {
 			isPolling = true;
-			poll.get()
+			poll.run()
 					.async()
 					.whenComplete(() -> isPolling = false)
 					.whenComplete(() -> {

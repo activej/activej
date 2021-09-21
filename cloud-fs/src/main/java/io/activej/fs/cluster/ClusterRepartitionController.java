@@ -16,7 +16,7 @@
 
 package io.activej.fs.cluster;
 
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.async.service.EventloopService;
 import io.activej.common.Checks;
 import io.activej.common.collection.Try;
@@ -50,7 +50,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static io.activej.async.function.AsyncSuppliers.reuse;
+import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.*;
@@ -67,7 +67,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private final Object localPartitionId;
 	private final FsPartitions partitions;
-	private final AsyncSupplier<Void> repartition = reuse(this::doRepartition);
+	private final AsyncRunnable repartition = reuse(this::doRepartition);
 
 	private final List<String> processedFiles = new ArrayList<>();
 
@@ -142,7 +142,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	}
 
 	public @NotNull Promise<Void> repartition() {
-		return repartition.get();
+		return repartition.run();
 	}
 
 	private @NotNull Promise<Void> doRepartition() {

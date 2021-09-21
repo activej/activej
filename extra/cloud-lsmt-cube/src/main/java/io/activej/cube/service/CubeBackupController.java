@@ -17,7 +17,7 @@
 package io.activej.cube.service;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
@@ -39,7 +39,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
-import static io.activej.async.function.AsyncSuppliers.reuse;
+import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -83,11 +83,11 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 		return new CubeBackupController<>(eventloop, cubeDiffScheme, otRepository, otSystem, storage);
 	}
 
-	private final AsyncSupplier<Void> backup = reuse(this::backupHead);
+	private final AsyncRunnable backup = reuse(this::backupHead);
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> backup() {
-		return backup.get();
+		return backup.run();
 	}
 
 	public Promise<Void> backupHead() {

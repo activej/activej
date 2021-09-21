@@ -16,7 +16,7 @@
 
 package io.activej.ot.util;
 
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -31,7 +31,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-import static io.activej.async.function.AsyncSuppliers.reuse;
+import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.common.Checks.checkState;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
@@ -51,7 +51,7 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 
 	private final PromiseStats promiseCreateId = PromiseStats.create(Duration.ofMinutes(5));
 
-	private final AsyncSupplier<Void> reserveId = reuse(this::doReserveId).transformWith(promiseCreateId::wrapper);
+	private final AsyncRunnable reserveId = reuse(this::doReserveId).transformWith(promiseCreateId::wrapper);
 
 	private IdGeneratorSql(Eventloop eventloop, Executor executor, DataSource dataSource, SqlAtomicSequence sequence) {
 		this.eventloop = eventloop;
@@ -95,7 +95,7 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 		}
 		return retry(
 				isResultOrException(Objects::nonNull),
-				() -> reserveId.get()
+				() -> reserveId.run()
 						.map($ -> next < limit ? next++ : null));
 	}
 

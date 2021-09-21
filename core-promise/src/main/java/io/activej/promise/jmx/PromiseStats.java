@@ -16,6 +16,7 @@
 
 package io.activej.promise.jmx;
 
+import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.eventloop.Eventloop;
@@ -82,8 +83,12 @@ public class PromiseStats {
 		return eventloop.currentTimeMillis();
 	}
 
-	public <T> AsyncSupplier<T> wrapper(AsyncSupplier<T> callable) {
-		return () -> monitor(callable.get());
+	public <T> AsyncSupplier<T> wrapper(AsyncSupplier<T> supplier) {
+		return () -> monitor(supplier.get());
+	}
+
+	public AsyncRunnable wrapper(AsyncRunnable runnable) {
+		return () -> monitor(runnable.run());
 	}
 
 	public <T> Promise<T> monitor(Promise<T> promise) {

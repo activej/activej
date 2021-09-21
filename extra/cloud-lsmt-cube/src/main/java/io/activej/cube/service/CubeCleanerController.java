@@ -17,7 +17,7 @@
 package io.activej.cube.service;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
@@ -44,7 +44,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-import static io.activej.async.function.AsyncSuppliers.reuse;
+import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -114,10 +114,10 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 		return this;
 	}
 
-	private final AsyncSupplier<Void> cleanup = reuse(this::doCleanup);
+	private final AsyncRunnable cleanup = reuse(this::doCleanup);
 
 	public Promise<Void> cleanup() {
-		return cleanup.get();
+		return cleanup.run();
 	}
 
 	private Promise<Void> doCleanup() {

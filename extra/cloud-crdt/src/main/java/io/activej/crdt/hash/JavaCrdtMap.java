@@ -16,8 +16,8 @@
 
 package io.activej.crdt.hash;
 
-import io.activej.async.function.AsyncSupplier;
-import io.activej.async.function.AsyncSuppliers;
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
@@ -36,7 +36,7 @@ public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, E
 	private final Eventloop eventloop;
 	private final CrdtFunction<S> crdtFunction;
 
-	private final AsyncSupplier<Void> refresh;
+	private final AsyncRunnable refresh;
 
 	public JavaCrdtMap(Eventloop eventloop, CrdtFunction<S> crdtFunction) {
 		this.eventloop = eventloop;
@@ -47,7 +47,7 @@ public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, E
 	public JavaCrdtMap(Eventloop eventloop, CrdtFunction<S> crdtFunction, @NotNull CrdtStorage<K, S> storage) {
 		this.eventloop = eventloop;
 		this.crdtFunction = crdtFunction;
-		this.refresh = AsyncSuppliers.reuse(() -> doRefresh(storage));
+		this.refresh = AsyncRunnables.reuse(() -> doRefresh(storage));
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, E
 
 	@Override
 	public Promise<Void> refresh() {
-		return refresh.get();
+		return refresh.run();
 	}
 
 	@Override

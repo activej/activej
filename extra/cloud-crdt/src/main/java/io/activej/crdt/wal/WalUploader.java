@@ -16,7 +16,7 @@
 
 package io.activej.crdt.wal;
 
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.crdt.CrdtData;
@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
-import static io.activej.async.function.AsyncSuppliers.coalesce;
+import static io.activej.async.function.AsyncRunnables.coalesce;
 import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.crdt.util.Utils.deleteWalFiles;
 import static io.activej.crdt.util.Utils.getWalFiles;
@@ -67,7 +67,7 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 	private static final int DEFAULT_SORT_ITEMS_IN_MEMORY = ApplicationSettings.getInt(WalUploader.class, "sortItemsInMemory", 100_000);
 	private static final Duration SMOOTHING_WINDOW = ApplicationSettings.getDuration(WalUploader.class, "smoothingWindow", Duration.ofMinutes(5));
 
-	private final AsyncSupplier<Void> uploadToStorage = coalesce(this::doUploadToStorage);
+	private final AsyncRunnable uploadToStorage = coalesce(this::doUploadToStorage);
 
 	private final Eventloop eventloop;
 	private final Executor executor;
@@ -112,7 +112,7 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 	}
 
 	public Promise<Void> uploadToStorage() {
-		return uploadToStorage.get()
+		return uploadToStorage.run()
 				.whenComplete(uploadPromise.recordStats());
 	}
 
