@@ -23,7 +23,7 @@ import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.AsyncAccumulator;
-import io.activej.async.function.AsyncSupplier;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
@@ -760,7 +760,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		logger.info("Launching consolidation");
 
 		Map<String, AggregationDiff> map = new HashMap<>();
-		List<AsyncSupplier<Void>> runnables = new ArrayList<>();
+		List<AsyncRunnable> runnables = new ArrayList<>();
 
 		for (Entry<String, AggregationContainer> entry : aggregations.entrySet()) {
 			String aggregationId = entry.getKey();

@@ -19,6 +19,7 @@ package io.activej.promise;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.AsyncBuffer;
 import io.activej.async.exception.AsyncTimeoutException;
+import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
@@ -772,41 +773,40 @@ public final class Promises {
 	}
 
 	/**
-	 * Gets {@code Promise} from provided {@code AsyncSupplier},
-	 * waits until it completes and then returns a {@code Promise<Void>}
+	 * Executes an {@link AsyncRunnable}, returning a {@link Promise<Void>}
+	 * as a mark for completion
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull AsyncSupplier<Void> promise) {
-		return promise.get().toVoid();
+	public static @NotNull Promise<Void> sequence(@NotNull AsyncRunnable runnable) {
+		return runnable.run();
 	}
 
 	/**
-	 * Gets {@code Promise}s from provided {@code AsyncSupplier}s,
-	 * end executes them consequently, discarding their results.
+	 * Executes both {@link AsyncRunnable}s consequently, returning a {@link Promise<Void>}
+	 * as a mark for completion
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull AsyncSupplier<Void> promise1, @NotNull AsyncSupplier<Void> promise2) {
-		return promise1.get().then(() -> sequence(promise2));
-	}
-
-	/**
-	 * @see Promises#sequence(Iterator)
-	 */
-	@SafeVarargs
-	public static @NotNull Promise<Void> sequence(AsyncSupplier<Void>... promises) {
-		return sequence(asList(promises));
+	public static @NotNull Promise<Void> sequence(@NotNull AsyncRunnable runnable1, @NotNull AsyncRunnable runnable2) {
+		return runnable1.run().then(runnable2::run);
 	}
 
 	/**
 	 * @see Promises#sequence(Iterator)
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull Iterable<? extends AsyncSupplier<Void>> promises) {
-		return sequence(asPromises(promises.iterator()));
+	public static @NotNull Promise<Void> sequence(AsyncRunnable... runnables) {
+		return sequence(asList(runnables));
 	}
 
 	/**
 	 * @see Promises#sequence(Iterator)
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull Stream<? extends AsyncSupplier<Void>> promises) {
-		return sequence(asPromises(promises));
+	public static @NotNull Promise<Void> sequence(@NotNull Iterable<? extends AsyncRunnable> runnables) {
+		return sequence(transformIterator(runnables.iterator(), AsyncRunnable::run));
+	}
+
+	/**
+	 * @see Promises#sequence(Iterator)
+	 */
+	public static @NotNull Promise<Void> sequence(@NotNull Stream<? extends AsyncRunnable> runnables) {
+		return sequence(transformIterator(runnables.iterator(), AsyncRunnable::run));
 	}
 
 	/**
@@ -1193,7 +1193,9 @@ public final class Promises {
 		private final BiPredicate<? super T, ? super Exception> predicate;
 		int countdown = 1;
 
-		private PromiseAny(BiPredicate<? super T, ? super Exception> predicate) {this.predicate = predicate;}
+		private PromiseAny(BiPredicate<? super T, ? super Exception> predicate) {
+			this.predicate = predicate;
+		}
 
 		@Override
 		public void accept(@Nullable T result, @Nullable Exception e) {
