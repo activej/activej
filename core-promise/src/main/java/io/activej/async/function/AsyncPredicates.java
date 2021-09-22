@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Stream;
 
 public final class AsyncPredicates {
 
@@ -45,14 +44,10 @@ public final class AsyncPredicates {
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> and(Collection<AsyncPredicate<? super T>> predicates) {
-		return and(predicates.stream());
-	}
-
-	public static <T> @NotNull AsyncPredicate<T> and(Stream<AsyncPredicate<? super T>> predicates) {
 		return t -> Promises.reduce(new RefBoolean(true),
 				(ref, result) -> ref.set(ref.get() && result),
 				RefBoolean::get,
-				predicates.map(predicate -> predicate.test(t)));
+				predicates.stream().map(predicate -> predicate.test(t)));
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> and() {
@@ -71,19 +66,14 @@ public final class AsyncPredicates {
 
 	@SafeVarargs
 	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T>... predicates) {
-		Stream<AsyncPredicate<? super T>> stream = Arrays.stream(predicates);
-		return and(stream);
+		return and(Arrays.asList(predicates));
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> or(Collection<AsyncPredicate<? super T>> predicates) {
-		return or(predicates.stream());
-	}
-
-	public static <T> @NotNull AsyncPredicate<T> or(Stream<AsyncPredicate<? super T>> predicates) {
-		return t -> Promises.reduce(new RefBoolean(true),
+		return t -> Promises.reduce(new RefBoolean(false),
 				(ref, result) -> ref.set(ref.get() || result),
 				RefBoolean::get,
-				predicates.map(predicate -> predicate.test(t)));
+				predicates.stream().map(predicate -> predicate.test(t)));
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> or() {
@@ -102,7 +92,6 @@ public final class AsyncPredicates {
 
 	@SafeVarargs
 	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T>... predicates) {
-		Stream<AsyncPredicate<? super T>> stream = Arrays.stream(predicates);
-		return or(stream);
+		return or(Arrays.asList(predicates));
 	}
 }

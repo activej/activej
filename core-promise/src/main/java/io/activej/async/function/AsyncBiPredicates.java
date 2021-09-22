@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Stream;
 
 public final class AsyncBiPredicates {
 
@@ -45,14 +44,10 @@ public final class AsyncBiPredicates {
 	}
 
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
-		return and(predicates.stream());
-	}
-
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(Stream<AsyncBiPredicate<? super T, ? super U>> predicates) {
 		return (t, u) -> Promises.reduce(new RefBoolean(true),
 				(ref, result) -> ref.set(ref.get() && result),
 				RefBoolean::get,
-				predicates.map(predicate -> predicate.test(t, u)));
+				predicates.stream().map(predicate -> predicate.test(t, u)));
 	}
 
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and() {
@@ -71,19 +66,14 @@ public final class AsyncBiPredicates {
 
 	@SafeVarargs
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U>... predicates) {
-		Stream<AsyncBiPredicate<? super T, ? super U>> stream = Arrays.stream(predicates);
-		return and(stream);
+		return and(Arrays.asList(predicates));
 	}
 
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
-		return or(predicates.stream());
-	}
-
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(Stream<AsyncBiPredicate<? super T, ? super U>> predicates) {
-		return (t, u) -> Promises.reduce(new RefBoolean(true),
+		return (t, u) -> Promises.reduce(new RefBoolean(false),
 				(ref, result) -> ref.set(ref.get() || result),
 				RefBoolean::get,
-				predicates.map(predicate -> predicate.test(t, u)));
+				predicates.stream().map(predicate -> predicate.test(t, u)));
 	}
 
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or() {
@@ -102,7 +92,6 @@ public final class AsyncBiPredicates {
 
 	@SafeVarargs
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U>... predicates) {
-		Stream<AsyncBiPredicate<? super T, ? super U>> stream = Arrays.stream(predicates);
-		return and(stream);
+		return or(Arrays.asList(predicates));
 	}
 }
