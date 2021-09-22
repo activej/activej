@@ -16,10 +16,10 @@
 
 package io.activej.async.function;
 
+import io.activej.async.AsyncAccumulator;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.common.ref.RefBoolean;
-import io.activej.promise.Promises;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,10 +44,13 @@ public final class AsyncPredicates {
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> and(Collection<AsyncPredicate<? super T>> predicates) {
-		return t -> Promises.reduce(new RefBoolean(true),
-				(ref, result) -> ref.set(ref.get() && result),
-				RefBoolean::get,
-				predicates.stream().map(predicate -> predicate.test(t)));
+		return t -> {
+			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
+			for (AsyncPredicate<? super T> predicate : predicates) {
+				asyncAccumulator.addPromise(predicate.test(t), (ref, result) -> ref.set(ref.get() && result));
+			}
+			return asyncAccumulator.run().map(RefBoolean::get);
+		};
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> and() {
@@ -70,10 +73,13 @@ public final class AsyncPredicates {
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> or(Collection<AsyncPredicate<? super T>> predicates) {
-		return t -> Promises.reduce(new RefBoolean(false),
-				(ref, result) -> ref.set(ref.get() || result),
-				RefBoolean::get,
-				predicates.stream().map(predicate -> predicate.test(t)));
+		return t -> {
+			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
+			for (AsyncPredicate<? super T> predicate : predicates) {
+				asyncAccumulator.addPromise(predicate.test(t), (ref, result) -> ref.set(ref.get() || result));
+			}
+			return asyncAccumulator.run().map(RefBoolean::get);
+		};
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> or() {

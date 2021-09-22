@@ -16,10 +16,10 @@
 
 package io.activej.async.function;
 
+import io.activej.async.AsyncAccumulator;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.common.ref.RefBoolean;
-import io.activej.promise.Promises;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,10 +44,13 @@ public final class AsyncBiPredicates {
 	}
 
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
-		return (t, u) -> Promises.reduce(new RefBoolean(true),
-				(ref, result) -> ref.set(ref.get() && result),
-				RefBoolean::get,
-				predicates.stream().map(predicate -> predicate.test(t, u)));
+		return (t, u) -> {
+			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
+			for (AsyncBiPredicate<? super T, ? super U> predicate : predicates) {
+				asyncAccumulator.addPromise(predicate.test(t, u), (ref, result) -> ref.set(ref.get() && result));
+			}
+			return asyncAccumulator.run().map(RefBoolean::get);
+		};
 	}
 
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and() {
@@ -70,10 +73,13 @@ public final class AsyncBiPredicates {
 	}
 
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
-		return (t, u) -> Promises.reduce(new RefBoolean(false),
-				(ref, result) -> ref.set(ref.get() || result),
-				RefBoolean::get,
-				predicates.stream().map(predicate -> predicate.test(t, u)));
+		return (t, u) -> {
+			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
+			for (AsyncBiPredicate<? super T, ? super U> predicate : predicates) {
+				asyncAccumulator.addPromise(predicate.test(t, u), (ref, result) -> ref.set(ref.get() || result));
+			}
+			return asyncAccumulator.run().map(RefBoolean::get);
+		};
 	}
 
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or() {
