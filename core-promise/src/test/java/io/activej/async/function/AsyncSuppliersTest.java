@@ -1,6 +1,5 @@
-package io.activej.async;
+package io.activej.async.function;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.Ref;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
