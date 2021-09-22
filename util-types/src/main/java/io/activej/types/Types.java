@@ -45,8 +45,11 @@ public class Types {
 			} catch (ClassNotFoundException e) {
 				throw new RuntimeException(e);
 			}
+		} else if (type instanceof TypeVariable) {
+			return getRawType(getUppermostType(((TypeVariable<?>) type).getBounds()));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + type);
 		}
-		throw new IllegalArgumentException("Unsupported type: " + type);
 	}
 
 	/**

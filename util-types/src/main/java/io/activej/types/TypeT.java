@@ -18,7 +18,9 @@ package io.activej.types;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.*;
+import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Type;
 
 /**
  * A type token for defining complex types (annotated, parameterized)
@@ -86,22 +88,7 @@ public abstract class TypeT<T> {
 	 */
 	@SuppressWarnings("unchecked")
 	public final Class<T> getRawType() {
-		Type type = annotatedType.getType();
-		if (type instanceof Class) {
-			return (Class<T>) type;
-		} else if (type instanceof ParameterizedType) {
-			ParameterizedType parameterizedType = (ParameterizedType) type;
-			return (Class<T>) parameterizedType.getRawType();
-		} else if (type instanceof GenericArrayType) {
-			Class<?> rawComponentType = Types.getRawType(((GenericArrayType) type).getGenericComponentType());
-			try {
-				return (Class<T>) Class.forName("[L" + rawComponentType.getName() + ";");
-			} catch (ClassNotFoundException e) {
-				throw new RuntimeException(e);
-			}
-		} else {
-			throw new IllegalArgumentException(type.getTypeName());
-		}
+		return (Class<T>) Types.getRawType(annotatedType.getType());
 	}
 
 	@Override
