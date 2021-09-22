@@ -1090,79 +1090,111 @@ public final class Promises {
 		return asPromises(iteratorOf(tasks));
 	}
 
-	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumerEx<A, T> consumer, @NotNull FunctionEx<A, R> finisher, @NotNull Collection<Promise<T>> promises) {
-		return reduce(accumulator, consumer, finisher, promises.iterator());
+	/**
+	 * @see #reduce(A, BiConsumerEx, FunctionEx, Iterator)
+	 */
+	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, @NotNull Collection<Promise<T>> promises) {
+		return reduce(accumulator, combiner, finisher, promises.iterator());
 	}
 
-	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumerEx<A, T> consumer, @NotNull FunctionEx<A, R> finisher, @NotNull Stream<Promise<T>> promises) {
-		return reduce(accumulator, consumer, finisher, promises.iterator());
+	/**
+	 * @see #reduce(A, BiConsumerEx, FunctionEx, Iterator)
+	 */
+	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, @NotNull Stream<Promise<T>> promises) {
+		return reduce(accumulator, combiner, finisher, promises.iterator());
 	}
 
-	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumerEx<A, T> consumer, @NotNull FunctionEx<A, R> finisher, @NotNull Iterator<Promise<T>> promises) {
+	/**
+	 * Asynchronously reduce {@link Iterator} of {@link Promise<T>}s into a {@link Promise<R>}.
+	 * <p>
+	 * To reduce promises a following arguments should be supplied an <b>accumulator</b>, a <b>combiner</b>,
+	 * a <b>finisher</b> and an iterator of <b>promises</b>
+	 * <p>
+	 * Reduction principle is somewhat similar to the {@link Collector#of(Supplier, BiConsumer, BinaryOperator, Function, Collector.Characteristics...)}
+	 * <p>
+	 * If one of the {@link Promise}s completes exceptionally, a resulting promise will be completed exceptionally as well.
+	 *
+	 * @param accumulator a promise result accumulator that holds intermediate promise results
+	 * @param combiner    a combiner consumer that defines how promise results should be accumulated
+	 * @param finisher    a finisher function that maps an accumulator to a result value
+	 * @param promises    {@code Iterator} of {@code Promise}s
+	 * @param <T>         type of input elements for this operation
+	 * @param <A>         type of accumulator of intermediate promise results
+	 * @param <R>         the result type of the reduction
+	 * @return a {@code Promise} of the accumulated result of the reduction.
+	 */
+	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, @NotNull Iterator<Promise<T>> promises) {
 		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
 		while (promises.hasNext()) {
-			asyncAccumulator.addPromise(promises.next(), consumer);
+			asyncAccumulator.addPromise(promises.next(), combiner);
 		}
 		return asyncAccumulator.run().map(finisher);
 	}
 
 	/**
-	 * Allows to asynchronously reduce {@link Iterator} of {@code Promise}s
-	 * into a {@code Promise} with the help of {@link Collector}. You can
-	 * control the amount of concurrently running {@code Promise}.
+	 * Asynchronously reduce {@link Iterator} of {@link Promise<T>}s into a {@link Promise<R>}
+	 * with the help of {@link Collector}.
+	 * <p>
+	 * You can control the amount of concurrently running {@code Promise}s.
+	 * <p>
+	 * If one of the {@link Promise}s completes exceptionally, a resulting promise will be completed exceptionally as well.
 	 * <p>
 	 * This method is universal and allows implementing app-specific logic.
 	 *
 	 * @param collector mutable reduction operation that accumulates input
 	 *                  elements into a mutable result container
-	 * @param maxCalls  max amount of concurrently running {@code Promise}s
+	 * @param maxCalls  max number of concurrently running {@code Promise}s
 	 * @param promises  {@code Iterable} of {@code Promise}s
 	 * @param <T>       type of input elements for this operation
-	 * @param <A>       mutable accumulation type of the operation
-	 * @param <R>       the result type of the operation
-	 * @return a {@code Promise} which wraps the accumulated result
-	 * of the reduction. If one of the {@code promises} completed exceptionally,
-	 * a {@code Promise} with an exception will be returned.
+	 * @param <A>       type of accumulator of intermediate promise results
+	 * @param <R>       the result type of the reduction
+	 * @return a {@code Promise} of the accumulated result of the reduction.
 	 */
-	public static <T, A, R> Promise<R> reduce(@NotNull Collector<T, A, R> collector, int maxCalls,
+	public static <T, A, R> @NotNull Promise<R> reduce(@NotNull Collector<T, A, R> collector, int maxCalls,
 			@NotNull Iterator<Promise<T>> promises) {
 		return reduce(collector.supplier().get(), BiConsumerEx.of(collector.accumulator()), FunctionEx.of(collector.finisher()),
 				maxCalls, promises);
 	}
 
 	/**
+	 * Asynchronously reduce {@link Iterator} of {@link Promise<T>}s into a {@link Promise<R>}.
+	 * <p>
+	 * To reduce promises a following arguments should be supplied an <b>accumulator</b>, a <b>combiner</b>,
+	 * a <b>finisher</b> and an iterator of <b>promises</b>
+	 * <p>
+	 * You can control the amount of concurrently running {@code Promise}s.
+	 * <p>
+	 * Reduction principle is somewhat similar to the {@link Collector#of(Supplier, BiConsumer, BinaryOperator, Function, Collector.Characteristics...)}
+	 * <p>
+	 * If one of the {@link Promise}s completes exceptionally, a resulting promise will be completed exceptionally as well.
+	 *
+	 * @param accumulator a promise result accumulator that holds intermediate promise results
+	 * @param combiner    a combiner consumer that defines how promise results should be accumulated
+	 * @param finisher    a finisher function that maps an accumulator to a result value
+	 * @param maxCalls    max number of concurrently running {@code Promise}s
+	 * @param promises    {@code Iterator} of {@code Promise}s
 	 * @param <T>         type of input elements for this operation
-	 * @param <A>         mutable accumulation type of the operation
-	 * @param <R>         result type of the reduction operation
-	 * @param accumulator supplier of the result
-	 * @param consumer    a {@link BiConsumer} which folds a result of each of the
-	 *                    completed {@code promises} into accumulator
-	 * @param finisher    a {@link FunctionEx} which performs the final transformation
-	 *                    from the intermediate accumulations
-	 * @param maxCalls    max amount of concurrently running {@code Promise}s
-	 * @param promises    {@code Iterable} of {@code Promise}s
-	 * @return a {@code Promise} which wraps the accumulated result of the
-	 * reduction. If one of the {@code promises} completed exceptionally, a {@code Promise}
-	 * with an exception will be returned.
-	 * @see Promises#reduce(Collector, int, Iterator)
+	 * @param <A>         type of accumulator of intermediate promise results
+	 * @param <R>         the result type of the reduction
+	 * @return a {@code Promise} of the accumulated result of the reduction.
 	 */
-	public static <T, A, R> Promise<R> reduce(A accumulator, @NotNull BiConsumerEx<A, T> consumer, @NotNull FunctionEx<A, R> finisher, int maxCalls, @NotNull Iterator<Promise<T>> promises) {
+	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, int maxCalls, @NotNull Iterator<Promise<T>> promises) {
 		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
 		for (int i = 0; promises.hasNext() && i < maxCalls; i++) {
-			reduceImpl(asyncAccumulator, consumer, promises);
+			reduceImpl(asyncAccumulator, combiner, promises);
 		}
 		return asyncAccumulator.run().map(finisher);
 	}
 
-	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, BiConsumerEx<A, T> consumer, Iterator<Promise<T>> promises) {
+	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, BiConsumerEx<A, T> combiner, Iterator<Promise<T>> promises) {
 		while (promises.hasNext()) {
 			Promise<T> promise = promises.next();
 			if (promise.isComplete()) {
-				asyncAccumulator.addPromise(promise, consumer);
+				asyncAccumulator.addPromise(promise, combiner);
 			} else {
 				asyncAccumulator.addPromise(
-						promise.whenResult(() -> reduceImpl(asyncAccumulator, consumer, promises)),
-						consumer);
+						promise.whenResult(() -> reduceImpl(asyncAccumulator, combiner, promises)),
+						combiner);
 				break;
 			}
 		}
