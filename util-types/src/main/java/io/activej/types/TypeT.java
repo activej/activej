@@ -18,10 +18,7 @@ package io.activej.types;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.AnnotatedParameterizedType;
-import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 
 /**
  * A type token for defining complex types (annotated, parameterized)
@@ -29,14 +26,37 @@ import java.lang.reflect.Type;
  * Usage example:
  * <p>
  * {@code Type listOfStringsType = new TypeT<List<String>>(){}.getType()}
+ * <p>
+ * <b>Note that Java 8 does not seem to resolve annotations on annotated types correctly.
+ * If you need to use {@link TypeT} with annotated type while on Java 8, you can use
+ * {@link TypeT#ofAnnotatedType(AnnotatedType)} method instead of {@link TypeT} constructor</b>
  *
  * @param <T> actual type
  */
 public abstract class TypeT<T> {
 	private final @NotNull AnnotatedType annotatedType;
 
+	/**
+	 * Creates a new type token. A type argument {@link T} <b>must</b> be specified.
+	 * A typical usage is:
+	 * <p>
+	 * {@code TypeT<List<Integer>> integerListTypeT = new TypeT<List<Integer>>(){};}
+	 *
+	 * @throws AssertionError if a {@link TypeT} is created with a raw type
+	 */
 	public TypeT() {
 		this.annotatedType = getSuperclassTypeParameter(this.getClass());
+	}
+
+	private TypeT(@NotNull AnnotatedType annotatedType) {
+		this.annotatedType = annotatedType;
+	}
+
+	/**
+	 * Constructs a new {@link TypeT} out of given {@link AnnotatedType}
+	 */
+	public static <T> @NotNull TypeT<T> ofAnnotatedType(@NotNull AnnotatedType annotatedType) {
+		return new TypeT<T>(annotatedType) {};
 	}
 
 	private static @NotNull AnnotatedType getSuperclassTypeParameter(@NotNull Class<?> subclass) {
@@ -47,29 +67,46 @@ public abstract class TypeT<T> {
 		throw new AssertionError();
 	}
 
-	public @NotNull AnnotatedType getAnnotatedType() {
+	/**
+	 * @return an {@link AnnotatedType} of a {@link T}
+	 */
+	public final @NotNull AnnotatedType getAnnotatedType() {
 		return annotatedType;
 	}
 
-	public @NotNull Type getType() {
+	/**
+	 * @return a {@link Type} of a {@link T}
+	 */
+	public final @NotNull Type getType() {
 		return annotatedType.getType();
 	}
 
+	/**
+	 * @return a raw type (e.g {@link Class}) of a {@link T}
+	 */
 	@SuppressWarnings("unchecked")
-	public Class<T> getRawType() {
+	public final Class<T> getRawType() {
 		Type type = annotatedType.getType();
 		if (type instanceof Class) {
 			return (Class<T>) type;
 		} else if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
 			return (Class<T>) parameterizedType.getRawType();
+		} else if (type instanceof GenericArrayType) {
+			Class<?> rawComponentType = Types.getRawType(((GenericArrayType) type).getGenericComponentType());
+			try {
+				return (Class<T>) Class.forName("[L" + rawComponentType.getName() + ";");
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException(e);
+			}
 		} else {
 			throw new IllegalArgumentException(type.getTypeName());
 		}
 	}
 
 	@Override
-	public String toString() {
+	public final String toString() {
 		return annotatedType.toString();
 	}
+
 }
