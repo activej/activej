@@ -15,13 +15,20 @@ import static io.activej.types.Types.*;
  */
 public class IsAssignableUtils {
 
+	/**
+	 * Tests whether a {@code from} type is assignable to {@code to} type
+	 *
+	 * @param to   a 'to' type that should be checked for possible assignment
+	 * @param from a 'from' type that should be checked for possible assignment
+	 * @return whether an object of type {@code from} is assignable to an object of type {@code to}
+	 */
 	public static boolean isAssignable(@NotNull Type to, @NotNull Type from) {
 		// shortcut
 		if (to instanceof Class && from instanceof Class) return ((Class<?>) to).isAssignableFrom((Class<?>) from);
 		return isAssignable(to, from, false);
 	}
 
-	public static boolean isAssignable(Type to, Type from, boolean strict) {
+	private static boolean isAssignable(Type to, Type from, boolean strict) {
 		if (to instanceof WildcardType || from instanceof WildcardType) {
 			Type[] toUppers, toLowers;
 			if (to instanceof WildcardType) {

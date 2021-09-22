@@ -26,7 +26,8 @@ public class Types {
 	/**
 	 * Returns a raw {@link Class} for a given {@link Type}.
 	 * <p>
-	 * A type can be any of {@link Class}, {@link ParameterizedType}, {@link WildcardType} or {@link GenericArrayType}
+	 * A type can be any of {@link Class}, {@link ParameterizedType}, {@link WildcardType},
+	 * {@link GenericArrayType} or {@link TypeVariable}
 	 */
 	public static Class<?> getRawType(Type type) {
 		if (type instanceof Class) {
@@ -71,7 +72,10 @@ public class Types {
 	}
 
 	/**
-	 * Returns an array of actual type parameters for a given type
+	 * Returns an array of actual type arguments for a given {@link Type}
+	 *
+	 * @param type  type whose actual type arguments should be retrieved
+	 * @return an array of actual type arguments for a given {@link Type}
 	 */
 	public static Type[] getActualTypeArguments(Type type) {
 		if (type instanceof Class) {
@@ -86,7 +90,7 @@ public class Types {
 	}
 
 	/**
-	 * Returns a map of type bindings for a given type
+	 * Returns a map of type bindings for a given {@link Type}
 	 */
 	public static Map<TypeVariable<?>, Type> getTypeBindings(Type type) {
 		Type[] typeArguments = getActualTypeArguments(type);
@@ -100,7 +104,7 @@ public class Types {
 	}
 
 	/**
-	 * Returns a map of all type bindings for a given type.
+	 * Returns a map of all type bindings for a given {@link Type}.
 	 * Includes type bindings from a whole class hierarchy
 	 */
 	public static Map<TypeVariable<?>, Type> getAllTypeBindings(Type type) {
@@ -138,6 +142,12 @@ public class Types {
 		}
 	}
 
+	/**
+	 * Binds a given type with actual type arguments
+	 *
+	 * @param type     a type to be bound
+	 * @param bindings a map of actual types
+	 */
 	public static @NotNull Type bind(Type type, Map<TypeVariable<?>, Type> bindings) {
 		return bind(type, bindings::get);
 	}

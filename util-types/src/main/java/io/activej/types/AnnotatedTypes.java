@@ -14,13 +14,31 @@ import static java.util.stream.Collectors.joining;
  * Various utility methods to operate on annotated types
  */
 public class AnnotatedTypes {
+	/**
+	 * An empty array of {@link Annotation}s
+	 */
 	public static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
+
+	/**
+	 * An empty array of {@link AnnotatedType}s
+	 */
 	public static final AnnotatedType[] NO_ANNOTATED_TYPES = new AnnotatedType[0];
 
+	/**
+	 * Returns a raw {@link Class} for a given {@link AnnotatedType}
+	 *
+	 * @see Types#getRawType(Type)
+	 */
 	public static Class<?> getRawType(AnnotatedType type) {
 		return Types.getRawType(type.getType());
 	}
 
+	/**
+	 * Returns an array of annotated type arguments for a given {@link AnnotatedType}
+	 *
+	 * @param annotatedType annotated type whose annotated type arguments should be retrieved
+	 * @return an array of annotated type arguments for a given {@link AnnotatedType}
+	 */
 	public static AnnotatedType[] getTypeArguments(AnnotatedType annotatedType) {
 		if (annotatedType instanceof AnnotatedParameterizedType) {
 			return ((AnnotatedParameterizedType) annotatedType).getAnnotatedActualTypeArguments();
@@ -32,6 +50,9 @@ public class AnnotatedTypes {
 		return NO_ANNOTATED_TYPES;
 	}
 
+	/**
+	 * Returns a map of type bindings for a given {@link AnnotatedType}
+	 */
 	public static Map<TypeVariable<?>, AnnotatedType> getTypeBindings(AnnotatedType type) {
 		Class<?> typeClazz = getRawType(type);
 		AnnotatedType[] typeArguments = getTypeArguments(type);
@@ -44,10 +65,24 @@ public class AnnotatedTypes {
 		return map;
 	}
 
+	/**
+	 * Binds a given annotated type with actual annotated type arguments
+	 *
+	 * @param annotatedType an annotated type to be bound
+	 * @param bindings      a lookup function for actual annotated types
+	 */
 	public static AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings) {
 		return bind(annotatedType, bindings, (annotation1, annotation2) -> annotation2);
 	}
 
+	/**
+	 * Binds a given annotated type with actual annotated type arguments
+	 *
+	 * @param annotatedType        an annotated type to be bound
+	 * @param bindings             a lookup function for actual annotated types
+	 * @param annotationCombinerFn a combiner function to combine annotations of a given annotated type
+	 *                             with annotations of bound actual annotated type
+	 */
 	public static @NotNull AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
 			BiFunction<Annotation[], Annotation[], Annotation[]> annotationCombinerFn) {
 		if (annotatedType.getType() instanceof Class) return annotatedType;
@@ -109,14 +144,38 @@ public class AnnotatedTypes {
 		throw new IllegalArgumentException("Unsupported type: " + annotatedType);
 	}
 
+	/**
+	 * Constructs an {@link AnnotatedType} from a given {@link Type}.
+	 * Resulting annotated type has no annotations
+	 *
+	 * @param type a type to construct annotated type from
+	 * @return a new instance of {@link  AnnotatedType}
+	 */
 	public static @NotNull AnnotatedType annotatedTypeOf(Type type) {
 		return annotatedTypeOf(type, NO_ANNOTATIONS);
 	}
 
+	/**
+	 * Constructs an {@link AnnotatedType} from a given {@link Type} and an array of annotations.
+	 *
+	 * @param type        a type to construct annotated type from
+	 * @param annotations an array of annotations for a given type
+	 * @return a new instance of {@link  AnnotatedType}
+	 */
 	public static @NotNull AnnotatedType annotatedTypeOf(Type type, Annotation[] annotations) {
 		return annotatedTypeOf(type, ($, ints) -> ints.length == 0 ? annotations : NO_ANNOTATIONS);
 	}
 
+	/**
+	 * Constructs an {@link AnnotatedType} from a given {@link Type} and
+	 * a function that transforms a type and a path to the type into annotations for this type.
+	 * <p>
+	 * This method allows building complex annotated types
+	 *
+	 * @param type          a type to construct annotated type from
+	 * @param annotationsFn a function that transforms a type and a path to the type into annotations for this type
+	 * @return a new instance of {@link  AnnotatedType}
+	 */
 	public static @NotNull AnnotatedType annotatedTypeOf(Type type, BiFunction<Type, int[], Annotation[]> annotationsFn) {
 		return annotatedTypeOf(type, new int[]{}, annotationsFn);
 	}

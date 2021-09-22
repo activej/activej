@@ -38,16 +38,29 @@ import static io.activej.types.IsAssignableUtils.isAssignable;
 /**
  * A registry of {@link Mapping}s by type
  * <p>
+ * Allows traversing complex annotated types
  *
  * @param <R> a type of mapping result
  */
 public final class TypeScannerRegistry<R> {
 
+	/**
+	 * An interface that describes how {@link R} value should be retrieved from a {@link Context<R>}
+	 *
+	 * @param <R> type of value to be retrieved from the context
+	 */
 	public interface Mapping<R> extends Function<Context<R>, R> {
 		@Override
 		R apply(Context<R> ctx);
 	}
 
+	/**
+	 * A context that encapsulates a {@link Mapping<R>} and two stacks
+	 * (a context stack and an argument stack).
+	 * May hold an arbitrary context value
+	 *
+	 * @param <R>
+	 */
 	public static final class Context<R> {
 		private final Mapping<R> mappingFn;
 		private final Context<R>[] stack;
@@ -61,74 +74,145 @@ public final class TypeScannerRegistry<R> {
 			this.value = value;
 		}
 
+		/**
+		 * Sets a context value to this context
+		 *
+		 * @param value a context value
+		 */
 		public Context<R> withContextValue(Object value) {
 			return new Context<>(mappingFn, stack, argumentStack, value);
 		}
 
+		/**
+		 * Sets a mapping that defines how {@link R} value should be retrieved from this {@link Context<R>}
+		 *
+		 * @param mappingFn a mapping function
+		 */
 		public Context<R> withMapping(Mapping<R> mappingFn) {
 			return new Context<>(mappingFn, stack, argumentStack, value);
 		}
 
+		/**
+		 * Adds a mapping that defines how {@link R} value should be retrieved from a {@link Context<R>}
+		 * and a previous mapping
+		 *
+		 * @param mappingFn a mapping function
+		 */
 		public Context<R> withMapping(BiFunction<Mapping<R>, Context<R>, R> mappingFn) {
 			return withMapping(ctx -> mappingFn.apply(this.mappingFn, ctx));
 		}
 
+		/**
+		 * @return a type of {@code this} context
+		 */
 		public Type getType() {
 			return getAnnotatedType().getType();
 		}
 
+		/**
+		 * @return a raw type of {@code this} context
+		 */
 		public Class<?> getRawType() {
 			return Types.getRawType(getType());
 		}
 
+		/**
+		 * @return an annotated type of {@code this} context
+		 */
 		public AnnotatedType getAnnotatedType() {
 			return argumentStack[argumentStack.length - 1];
 		}
 
+		/**
+		 * @return an array of annotations of {@code this} context annotated type
+		 */
 		public Annotation[] getAnnotations() {
 			return getAnnotatedType().getAnnotations();
 		}
 
+		/**
+		 * Checks whether {@code this} context annotations contain an annotation of a given class
+		 */
 		public boolean hasAnnotation(Class<? extends Annotation> clazz) {
 			return AnnotationUtils.hasAnnotation(clazz, this.getAnnotations());
 		}
 
+		/**
+		 * @return an annotation of a given annotation type from {@code this} context annotations
+		 * or {@code null} if none matches
+		 */
 		public <A extends Annotation> A getAnnotation(Class<A> clazz) {
 			return AnnotationUtils.getAnnotation(clazz, this.getAnnotations());
 		}
 
+		/**
+		 * @return an array of annotated type arguments for {@code this} context
+		 */
 		public AnnotatedType[] getTypeArguments() {
 			return AnnotatedTypes.getTypeArguments(getAnnotatedType());
 		}
 
+		/**
+		 * @return nth annotated type argument of {@code this} context
+		 */
 		public AnnotatedType getTypeArgument(int n) {
 			return AnnotatedTypes.getTypeArguments(getAnnotatedType())[n];
 		}
 
+		/**
+		 * @return a number of annotated type arguments for {@code this} context
+		 */
 		public int getTypeArgumentsCount() {
 			return getTypeArguments().length;
 		}
 
+		/**
+		 * Checks whether {@code this} context has any type arguments
+		 */
 		public boolean hasTypeArguments() {
 			return getTypeArgumentsCount() != 0;
 		}
 
+		/**
+		 * Scans nth type argument and returns a resulting {@link R} object
+		 *
+		 * @param n an index of a type argument to be scanned
+		 * @return a scan result which is a {@link R} object
+		 */
 		public R scanTypeArgument(int n) {
 			return scanArgument(getTypeArgument(n));
 		}
 
+		/**
+		 * @return ca context stack of {@code this} context
+		 */
 		public Context<R>[] getStack() {
 			return stack;
 		}
 
+		/**
+		 * @return an argument stack of {@code this} context
+		 */
 		public AnnotatedType[] getArgumentStack() {
 			return argumentStack;
 		}
 
+		/**
+		 * Scans a given type and returns a resulting {@link R} object
+		 *
+		 * @param type a type to be scanned
+		 * @return a scan result which is a {@link R} object
+		 */
 		public R scan(Type type) {
 			return scan(annotatedTypeOf(type));
 		}
 
+		/**
+		 * Scans a given annotated type and returns a resulting {@link R} object
+		 *
+		 * @param annotatedType an annotated type to be scanned
+		 * @return a scan result which is a {@link R} object
+		 */
 		public R scan(AnnotatedType annotatedType) {
 			return mappingFn.apply(push(annotatedType));
 		}
@@ -137,18 +221,27 @@ public final class TypeScannerRegistry<R> {
 			return mappingFn.apply(pushArgument(annotatedType));
 		}
 
+		/**
+		 * Pushes {@code this} context onto a context stack and returns a new context
+		 *
+		 * @param annotatedType an annotated type to be pushed onto a context stack
+		 * @return a context after an annotated type has been pushed onto a stack
+		 */
 		public Context<R> push(AnnotatedType annotatedType) {
 			Context<R>[] stack = Arrays.copyOf(this.stack, this.stack.length + 1);
 			stack[stack.length - 1] = this;
 			return new Context<>(mappingFn, stack, new AnnotatedType[]{annotatedType}, value);
 		}
 
-		public Context<R> pushArgument(AnnotatedType annotatedType) {
+		private Context<R> pushArgument(AnnotatedType annotatedType) {
 			AnnotatedType[] argumentStack = Arrays.copyOf(this.argumentStack, this.argumentStack.length + 1);
 			argumentStack[argumentStack.length - 1] = annotatedType;
 			return new Context<>(mappingFn, stack, argumentStack, value);
 		}
 
+		/**
+		 * @return a context value if it is present, or {@code null} otherwise
+		 */
 		public Object getContextValue() {
 			return value;
 		}
@@ -175,25 +268,54 @@ public final class TypeScannerRegistry<R> {
 	private TypeScannerRegistry() {
 	}
 
+	/**
+	 * Creates a new {@link TypeScannerRegistry}
+	 *
+	 * @param <R> type of values to be retrieved from the registry
+	 * @return a new instance of {@link TypeScannerRegistry}
+	 */
 	public static <R> TypeScannerRegistry<R> create() {
 		return new TypeScannerRegistry<>();
 	}
 
+	/**
+	 * Adds a mapping for a given type
+	 *
+	 * @param typeT a type token
+	 * @param fn    a mapping token to be added for a given type
+	 */
 	public TypeScannerRegistry<R> with(TypeT<?> typeT, Mapping<R> fn) {
 		entries.add(new MappingEntry<>(typeT.getType(), fn));
 		return this;
 	}
 
+	/**
+	 * Adds a mapping for a given type
+	 *
+	 * @param type a type
+	 * @param fn   a mapping to be added for a given type
+	 */
 	public TypeScannerRegistry<R> with(Type type, Mapping<R> fn) {
 		entries.add(new MappingEntry<>(type, fn));
 		return this;
 	}
 
+	/**
+	 * Adds a mapping that defines how {@link R} value should be retrieved from a {@link Context<R>}
+	 *
+	 * @param mappingFn a mapping function
+	 */
 	public TypeScannerRegistry<R> withMapping(Mapping<R> mappingFn) {
 		this.mappingFn = mappingFn;
 		return this;
 	}
 
+	/**
+	 * Adds a mapping that defines how {@link R} value should be retrieved from a {@link Context<R>}
+	 * and a mapping that does {@link #scan(Context)}
+	 *
+	 * @param mappingFn a mapping function
+	 */
 	public TypeScannerRegistry<R> withMapping(BiFunction<Mapping<R>, Context<R>, R> mappingFn) {
 		this.mappingFn = ctx -> mappingFn.apply(this::scan, ctx);
 		return this;
@@ -217,11 +339,22 @@ public final class TypeScannerRegistry<R> {
 		return best.fn;
 	}
 
+	/**
+	 * Creates a new type scanner with no context value
+	 *
+	 * @return a new instance of {@link TypeScanner}
+	 */
 	public TypeScanner<R> scanner() {
 		return scanner(null);
 	}
 
-	public TypeScanner<R> scanner(Object contextValue) {
+	/**
+	 * Creates a new type scanner with a context value
+	 *
+	 * @param contextValue a context value of this type scanner, possibly {@code null}
+	 * @return a new instance of {@link TypeScanner}
+	 */
+	public TypeScanner<R> scanner(@Nullable Object contextValue) {
 		//noinspection unchecked
 		return type -> scan(
 				new Context<>(
@@ -233,6 +366,12 @@ public final class TypeScannerRegistry<R> {
 						contextValue));
 	}
 
+	/**
+	 * Scans a context and retrieves {@link R} value as a result
+	 *
+	 * @param ctx a scan context
+	 * @return {@link R} value retrieved as a result of scan
+	 */
 	public R scan(Context<R> ctx) {
 		AnnotatedType annotatedType = ctx.getAnnotatedType();
 		Mapping<R> fn = match(annotatedType.getType());

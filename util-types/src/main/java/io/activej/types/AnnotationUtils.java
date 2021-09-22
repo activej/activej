@@ -26,10 +26,16 @@ import java.lang.annotation.Annotation;
 @SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
 public final class AnnotationUtils {
 
+	/**
+	 * Checks whether annotations contain an annotation of a given type
+	 */
 	public static boolean hasAnnotation(Class<? extends Annotation> type, Annotation[] annotations) {
 		return getAnnotation(type, annotations) != null;
 	}
 
+	/**
+	 * Returns the first annotation of a given annotation type, or {@code null} if none matches
+	 */
 	public static <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
 		for (int i = 0; i < annotations.length; i++) {
 			if (annotations[i].annotationType() == type) {
