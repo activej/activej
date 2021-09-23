@@ -8,6 +8,11 @@ import io.activej.serializer.annotations.SerializeNullable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * <b>This is example does not work on Java version less than Java 12</b>
+ * <p>
+ * <a href="https://activej.io/serializer/examples#path-based-serialization">See more</a>
+ */
 public class SerializeNoPathExample {
 
 	//[START Storage]
