@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 public final class AsyncPredicates {
 
@@ -69,7 +70,8 @@ public final class AsyncPredicates {
 
 	@SafeVarargs
 	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T>... predicates) {
-		return and(Arrays.asList(predicates));
+		//noinspection RedundantCast
+		return and(((List<AsyncPredicate<? super T>>) Arrays.asList(predicates)));
 	}
 
 	public static <T> @NotNull AsyncPredicate<T> or(Collection<AsyncPredicate<? super T>> predicates) {
@@ -98,6 +100,7 @@ public final class AsyncPredicates {
 
 	@SafeVarargs
 	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T>... predicates) {
-		return or(Arrays.asList(predicates));
+		//noinspection RedundantCast
+		return or(((List<AsyncPredicate<? super T>>) Arrays.asList(predicates)));
 	}
 }
