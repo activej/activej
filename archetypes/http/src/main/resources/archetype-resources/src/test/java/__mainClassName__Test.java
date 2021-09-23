@@ -1,4 +1,4 @@
-package $
+package ${groupId};
 
 import org.junit.Test;
 

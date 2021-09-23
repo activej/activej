@@ -1,9 +1,11 @@
-package $
+package ${groupId};
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
@@ -13,7 +15,7 @@ import io.activej.service.ServiceGraphModule;
 import java.net.InetSocketAddress;
 import java.util.Scanner;
 
-import static io.activej.config.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofInteger;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class MyRpcClient extends Launcher {
@@ -38,7 +40,7 @@ public class MyRpcClient extends Launcher {
     @Provides
     RpcClient rpcClient(Eventloop eventloop, Config config) {
         return RpcClient.create(eventloop)
-                .withSerializerBuilder(SerializerBuilder.create())
+                .withSerializerBuilder(SerializerBuilder.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader())))
                 .withMessageTypes(String.class)
                 .withStrategy(RpcStrategies.server(
                         new InetSocketAddress(config.get(ofInteger(), "port", RPC_LISTENER_PORT))));
@@ -55,7 +57,7 @@ public class MyRpcClient extends Launcher {
         while (true) {
             System.out.print("Your input > ");
             String line = scanner.nextLine();
-            if (line.toLowerCase().equals("exit")) {
+            if (line.equalsIgnoreCase("exit")) {
                 return;
             }
             eventloop.submit(() -> client.sendRequest(line))

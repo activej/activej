@@ -1,7 +1,8 @@
 package $
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
-import io.activej.config.ConfigConverters;
+import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.rpc.RpcServerLauncher;
@@ -17,15 +18,15 @@ public class MyRpcServer extends RpcServerLauncher {
     RpcServer provideRpcServer(Eventloop eventloop, Config config) {
         return RpcServer.create(eventloop)
                 // You shouldn't forget about message serializer!
-                .withSerializerBuilder(SerializerBuilder.create(Thread.currentThread().getContextClassLoader()))
+                .withSerializerBuilder(SerializerBuilder.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader())))
                 // You can define any message types by class
                 .withMessageTypes(String.class)
                 // Your message handlers can be written below
-                .withHandler(String.class, String.class, request -> {
-                    if (request.toLowerCase().equals("hello") || request.toLowerCase().equals("hi")) {
+                .withHandler(String.class, request -> {
+                    if (request.equalsIgnoreCase("hello") || request.equalsIgnoreCase("hi")) {
                         return Promise.of("Hi, user!");
                     }
-                    if (request.equals("What is your name?")) {
+                    if (request.equalsIgnoreCase("What is your name?")) {
                         return Promise.of("My name is ... RPC Server :)");
                     }
                     return Promise.of(request + " " + request);
