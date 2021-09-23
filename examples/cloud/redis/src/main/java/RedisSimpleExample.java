@@ -21,10 +21,8 @@ public final class RedisSimpleExample {
 		client.connect()
 				.then(connection -> connection.cmd(RedisRequest.of("SET", KEY, VALUE), RedisResponse.OK)
 						.then(() -> connection.cmd(RedisRequest.of("GET", KEY), RedisResponse.BYTES_UTF8))
-						.then(result -> {
-							System.out.println("Key: '" + KEY + "', value: '" + result + '\'');
-							return connection.cmd(RedisRequest.of("DEL", KEY), RedisResponse.SKIP);
-						})
+						.whenResult(result -> System.out.println("Key: '" + KEY + "', value: '" + result + '\''))
+						.then(result -> connection.cmd(RedisRequest.of("DEL", KEY), RedisResponse.SKIP))
 						.then(connection::quit)
 				)
 				.whenException(Exception::printStackTrace);
