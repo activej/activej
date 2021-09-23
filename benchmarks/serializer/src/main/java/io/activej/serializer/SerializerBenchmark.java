@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3_LE;
+import static io.activej.serializer.CompatibilityLevel.LEVEL_4_LE;
 import static io.activej.serializer.StringFormat.*;
 
 @SuppressWarnings("ALL")
@@ -27,8 +27,7 @@ import static io.activej.serializer.StringFormat.*;
 public class SerializerBenchmark {
 	private static final DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 	private static final BinarySerializer<TestData> serializer = SerializerBuilder.create(definingClassLoader)
-			.withCompatibilityLevel(LEVEL_3_LE)
-			// .withGeneratedBytecodePath(Paths.get("tmp").toAbsolutePath())
+			.withCompatibilityLevel(LEVEL_4_LE)
 			.build(TestData.class);
 	private static final byte[] array = new byte[10000];
 
@@ -175,6 +174,7 @@ public class SerializerBenchmark {
 			testData1.elements.add(e);
 		}
 		serializer.encode(array, 0, testData1);
+		serializer.decode(array, 0);
 	}
 
 	@Benchmark
