@@ -16,6 +16,9 @@
 
 package io.activej.common.exception;
 
+/**
+ * An exception that represents either malformed or improper size
+ */
 public class InvalidSizeException extends MalformedDataException {
 	public InvalidSizeException() {
 		super("Invalid size");

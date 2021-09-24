@@ -25,7 +25,7 @@ package io.activej.common.recycle;
 @SuppressWarnings("JavadocReference")
 public interface Recyclable {
 	/**
-	 * Free some resource that this object possesses, e.g. return itself to the pool etc.
+	 * Free some resource that this object possesses, e.g. return itself to the pool, etc.
 	 */
 	void recycle();
 }

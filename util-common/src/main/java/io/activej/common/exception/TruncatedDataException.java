@@ -16,6 +16,9 @@
 
 package io.activej.common.exception;
 
+/**
+ * An exception that represents truncated data
+ */
 public class TruncatedDataException extends MalformedDataException {
 	public TruncatedDataException() {
 		super("Truncated data");

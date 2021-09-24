@@ -16,6 +16,9 @@
 
 package io.activej.common.exception;
 
+/**
+ * An exception that represents an unknown data format
+ */
 public class UnknownFormatException extends MalformedDataException {
 	public UnknownFormatException() {
 		super("Unknown format");

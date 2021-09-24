@@ -16,6 +16,9 @@
 
 package io.activej.common.exception;
 
+/**
+ * An exception that represents unexpected data
+ */
 public class UnexpectedDataException extends MalformedDataException {
 	public UnexpectedDataException() {
 		super("Unexpected data");

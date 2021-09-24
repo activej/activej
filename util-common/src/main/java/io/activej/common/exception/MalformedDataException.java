@@ -16,6 +16,11 @@
 
 package io.activej.common.exception;
 
+/**
+ * An exception that represents malformed data
+ * <p>
+ * This a generic parsing exception
+ */
 public class MalformedDataException extends Exception {
 	public MalformedDataException() {
 	}

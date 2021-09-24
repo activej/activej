@@ -13,6 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import static io.activej.common.Utils.first;
 import static java.util.Collections.singletonMap;
 
+/**
+ * A registry of known {@link Recycler}s
+ */
 @SuppressWarnings("unchecked")
 public class Recyclers {
 	private static final Recycler<?> NO_RECYCLER = item -> {};
@@ -29,6 +32,15 @@ public class Recyclers {
 		register(CompletionStage.class, future -> future.thenAccept(Recyclers::recycle));
 	}
 
+	/**
+	 * Registers a new recycler for some type
+	 *
+	 * @param type a class of object that will be recycled
+	 * @param item a recycler for a given type
+	 * @param <T>  a type of object that will be recycled
+	 * @throws IllegalStateException if a recycler for a type already exists
+	 *                               and is not equal to a given recycler
+	 */
 	synchronized public static <T> void register(Class<T> type, Recycler<T> item) {
 		REGISTRY.put(type, item);
 		for (Map.Entry<Class<?>, Recycler<?>> entry : CACHED_RECYCLERS.entrySet()) {
@@ -41,6 +53,12 @@ public class Recyclers {
 		}
 	}
 
+	/**
+	 * Recycles a given object if there is a registered recycler for an object's class.
+	 * Otherwise, does nothing
+	 *
+	 * @param object an object to be recycled
+	 */
 	public static void recycle(Object object) {
 		if (object == null) return;
 		//noinspection unchecked
@@ -50,6 +68,13 @@ public class Recyclers {
 		}
 	}
 
+	/**
+	 * Ensures a recycler for a given type
+	 *
+	 * @param type a type for which a recycler will be ensured
+	 * @return an ensured recycler for a given type
+	 * @throws IllegalArgumentException if there are conflicting recyclers that match given type
+	 */
 	public static @NotNull Recycler<?> ensureRecycler(@NotNull Class<?> type) {
 		Recycler<?> recycler = CACHED_RECYCLERS.get(type);
 		if (recycler != null) return recycler;

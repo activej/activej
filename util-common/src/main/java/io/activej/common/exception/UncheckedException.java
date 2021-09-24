@@ -19,6 +19,13 @@ package io.activej.common.exception;
 import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * A wrapper exception that wraps checked exceptions into a runtime exception,
+ * so that it could be thrown from a non-throwing call sites.
+ * <p>
+ * If this exception is thrown, it should be properly handled later on,
+ * propagating a cause of {@link UncheckedException} based on application logic
+ */
 public final class UncheckedException extends RuntimeException {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(UncheckedException.class, "withStackTrace", false);
 

@@ -21,15 +21,36 @@ import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
 
+/**
+ * An initializer of some value
+ * <p>
+ * Basically, a consumer of some object that should initialize that object
+ * <p>
+ * This interface is mostly used to initialize objects that follow <i>create().with()</i> pattern
+ * which you can find throughout a codebase
+ *
+ * @param <T> a type of object to be initialized
+ */
 @FunctionalInterface
 public interface Initializer<T> extends Consumer<T> {
 
+	/**
+	 * Combines multiple initializers into a single initializers that
+	 * initializes an object by calling each given serializer in order
+	 *
+	 * @param initializers initializers to be combined into a single initializer
+	 * @param <T>          a type of object to be initialized
+	 * @return a combined initializer
+	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@SafeVarargs
 	static <T> Initializer<T> combine(Initializer<? super T>... initializers) {
 		return combine((List) asList((Initializer[]) initializers));
 	}
 
+	/**
+	 * @see #combine(Initializer[])
+	 */
 	static <T> Initializer<T> combine(Iterable<? extends Initializer<? super T>> initializers) {
 		return target -> initializers.forEach(initializer -> initializer.accept(target));
 	}

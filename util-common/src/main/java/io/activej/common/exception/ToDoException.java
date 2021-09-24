@@ -16,6 +16,12 @@
 
 package io.activej.common.exception;
 
+import org.jetbrains.annotations.ApiStatus.Internal;
+
+/**
+ * A helper exception that indicates that some API needs to be implemented
+ */
+@Internal
 public class ToDoException extends RuntimeException {
 
 	public ToDoException() {
