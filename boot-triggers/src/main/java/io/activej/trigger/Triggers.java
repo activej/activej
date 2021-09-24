@@ -125,7 +125,7 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 					newResults.put(trigger, newResult);
 				}
 			}
-			for (Trigger trigger : difference(cachedResults.keySet(), newResults.keySet())) {
+			for (Trigger trigger : new HashSet<>(difference(cachedResults.keySet(), newResults.keySet()))) {
 				cachedResults.remove(trigger);
 				suppressedResults.remove(trigger);
 			}

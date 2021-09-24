@@ -282,6 +282,22 @@ public class TriggersTest {
 		}
 	}
 
+	@Test
+	public void testEmptyNewResults() {
+		Triggers triggers = Triggers.create();
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(10_000, Triggers.CACHE_TIMEOUT.toMillis() * 2);
+
+		for (int i = 0; i < 10; i++) {
+			RefBoolean s = new RefBoolean(false);
+			triggers.addTrigger(Severity.HIGH, "Component", "name" + i, () -> s.flip() ?
+					TriggerResult.create() :
+					TriggerResult.none());
+		}
+
+		assertEquals(10, triggers.getResultsHigh().size());
+		assertTrue(triggers.getResultsHigh().isEmpty());
+	}
+
 	private long increaseTimestampAndGet() {
 		timestamp += 10000;
 		return timestamp;
