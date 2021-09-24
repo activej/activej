@@ -16,6 +16,7 @@
 
 package io.activej.common;
 
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,6 +31,10 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.*;
 
+/**
+ * Utility helper methods for internal use
+ */
+@Internal
 public class Utils {
 	public static final int TO_STRING_LIMIT = ApplicationSettings.getInt(Utils.class, "toStringLimit", 10);
 
@@ -120,6 +125,14 @@ public class Utils {
 		return true;
 	}
 
+	/**
+	 * Concatenates two lists into one
+	 * <p>
+	 * No guarantee on a mutability of a resulting list is made,
+	 * so list should be considered unmodifiable
+	 * <p>
+	 * If any of concatenated lists is modified, the behaviour of a concatenated list is undefined
+	 */
 	@SuppressWarnings("unchecked")
 	public static <D> List<D> concat(List<? extends D> list1, List<? extends D> list2) {
 		if (list1.isEmpty()) return (List<D>) list2;
@@ -130,21 +143,48 @@ public class Utils {
 		return (List<D>) asList(objects);
 	}
 
+	/**
+	 * @see #setOf(Object[])
+	 */
 	public static <T> Set<T> setOf(T item) {
 		return singleton(item);
 	}
 
+	/**
+	 * Returns a {@link Set} of provided elements
+	 * <p>
+	 * No guarantee on a mutability of a resulting set is made,
+	 * so set should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code Set#of} method
+	 */
 	@SafeVarargs
 	public static <T> Set<T> setOf(T... items) {
 		return new LinkedHashSet<>(asList(items));
 	}
 
+	/**
+	 * Returns a difference of two sets
+	 * <p>
+	 * No guarantee on a mutability of a resulting set is made,
+	 * so set should be considered unmodifiable
+	 * <p>
+	 * If any of provided sets is modified, the behaviour of a resulting set is undefined
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Set<T> difference(Set<? extends T> a, Set<? extends T> b) {
 		if (b.isEmpty()) return (Set<T>) a;
 		return a.stream().filter(t -> !b.contains(t)).collect(toSet());
 	}
 
+	/**
+	 * Returns an intersection of two sets
+	 * <p>
+	 * No guarantee on a mutability of a resulting set is made,
+	 * so set should be considered unmodifiable
+	 * <p>
+	 * If any of provided sets is modified, the behaviour of a resulting set is undefined
+	 */
 	public static <T> Set<T> intersection(Set<? extends T> a, Set<? extends T> b) {
 		return a.size() < b.size() ?
 				a.stream().filter(b::contains).collect(toSet()) :
@@ -157,6 +197,14 @@ public class Utils {
 				b.stream().anyMatch(a::contains);
 	}
 
+	/**
+	 * Returns a union of two sets
+	 * <p>
+	 * No guarantee on a mutability of a resulting set is made,
+	 * so set should be considered unmodifiable
+	 * <p>
+	 * If any of provided sets is modified, the behaviour of a resulting set is undefined
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Set<T> union(Set<? extends T> a, Set<? extends T> b) {
 		if (a.isEmpty()) return (Set<T>) b;
@@ -184,14 +232,28 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * @see #listOf(Object[])
+	 */
 	public static <T> List<T> listOf() {
 		return emptyList();
 	}
 
+	/**
+	 * @see #listOf(Object[])
+	 */
 	public static <T> List<T> listOf(T value) {
 		return singletonList(value);
 	}
 
+	/**
+	 * Returns a {@link List} of provided elements
+	 * <p>
+	 * No guarantee on a mutability of a resulting list is made,
+	 * so list should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code List#of} method
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> List<T> listOf(T... items) {
 		return asList(items);
@@ -302,16 +364,30 @@ public class Utils {
 		};
 	}
 
+	/**
+	 * @see #mapOf(Object, Object, Object, Object)
+	 */
 	public static <K, V> Map<K, V> mapOf() {
 		return new LinkedHashMap<>();
 	}
 
+	/**
+	 * @see #mapOf(Object, Object, Object, Object)
+	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1) {
 		Map<K, V> map = new LinkedHashMap<>();
 		map.put(key1, value1);
 		return map;
 	}
 
+	/**
+	 * Returns a {@link Map} of provided keys and values
+	 * <p>
+	 * No guarantee on a mutability of a resulting map is made,
+	 * so map should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code Map#of} method
+	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2) {
 		Map<K, V> map = new LinkedHashMap<>();
 		map.put(key1, value1);
@@ -319,6 +395,9 @@ public class Utils {
 		return map;
 	}
 
+	/**
+	 * @see #mapOf(Object, Object, Object, Object)
+	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3) {
 		Map<K, V> map = new LinkedHashMap<>();
 		map.put(key1, value1);
@@ -327,6 +406,9 @@ public class Utils {
 		return map;
 	}
 
+	/**
+	 * @see #mapOf(Object, Object, Object, Object)
+	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4) {
 		Map<K, V> map = new LinkedHashMap<>();
 		map.put(key1, value1);
@@ -336,6 +418,9 @@ public class Utils {
 		return map;
 	}
 
+	/**
+	 * @see #mapOf(Object, Object, Object, Object)
+	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5) {
 		Map<K, V> map = new LinkedHashMap<>();
 		map.put(key1, value1);
@@ -346,6 +431,9 @@ public class Utils {
 		return map;
 	}
 
+	/**
+	 * @see #mapOf(Object, Object, Object, Object)
+	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5, K key6, V value6) {
 		Map<K, V> map = new LinkedHashMap<>();
 		map.put(key1, value1);
