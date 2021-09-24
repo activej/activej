@@ -173,9 +173,9 @@ public final class StaticServlet implements AsyncServlet, WithInitializer<Static
 		String dirPath = mappedPath.endsWith("/") || mappedPath.isEmpty() ? mappedPath : (mappedPath + '/');
 		return Promises.first(
 						indexResources.stream()
-								.map(indexResource -> AsyncSupplier.of(() ->
+								.map(indexResource -> (AsyncSupplier<HttpResponse>) () ->
 										resourceLoader.load(dirPath + indexResource)
-												.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource))))))
+												.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource)))))
 				.mapException(e -> new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e));
 	}
 

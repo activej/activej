@@ -345,8 +345,10 @@ public final class PromisesTest {
 	public void testFirstSuccessfulForStackOverflow() {
 		Exception exception = new Exception();
 		Stream<AsyncSupplier<Void>> suppliers = Stream.concat(
-				Stream.generate(() -> AsyncSupplier.of(() -> Promise.<Void>ofException(exception))).limit(100_000),
-				Stream.of(AsyncSupplier.of(() -> Promise.complete()))
+				Stream.generate(() -> AsyncSupplier.<Void>of(() -> {
+					throw exception;
+				})).limit(100_000),
+				Stream.of(AsyncSupplier.of(() -> null))
 		);
 		await(first(suppliers));
 	}

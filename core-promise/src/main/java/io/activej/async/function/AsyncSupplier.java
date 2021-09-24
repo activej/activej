@@ -38,10 +38,10 @@ public interface AsyncSupplier<T> {
 	 * @param supplier a {@link SupplierEx}
 	 * @return {@link AsyncSupplier} that works on top of {@link SupplierEx} interface
 	 */
-	static <T> AsyncSupplier<T> of(@NotNull SupplierEx<Promise<T>> supplier) {
+	static <T> AsyncSupplier<T> of(@NotNull SupplierEx<T> supplier) {
 		return () -> {
 			try {
-				return supplier.get();
+				return Promise.of(supplier.get());
 			} catch (Exception e) {
 				handleError(e, supplier);
 				return Promise.ofException(e);
