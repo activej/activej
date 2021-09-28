@@ -84,6 +84,49 @@ abstract class CompletePromise<T> implements Promise<T> {
 		}
 	}
 
+    @Override
+    public @NotNull <U> Promise<U> mapWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+		try {
+			return Promise.of(predicate.test(getResult()) ? fn.apply(getResult()) : fnElse.apply(getResult()));
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> mapWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends T> fn) {
+		try {
+			T result = getResult();
+			return Promise.of(predicate.test(result) ? fn.apply(result) : result);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> mapWhenNull(@NotNull SupplierEx<? extends T> supplier) {
+		try {
+			T result = getResult();
+			return Promise.of(result == null ? supplier.get() : result);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> mapWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
+		try {
+			T result = getResult();
+			return Promise.of(result != null ? fn.apply(result) : null);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
 	@Override
 	public final <U> @NotNull Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
@@ -124,6 +167,47 @@ abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> thenWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
+		try {
+			return (Promise<U>) (predicate.test(getResult()) ? fn.apply(getResult()) : fnElse.apply(getResult()));
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> thenWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
+		try {
+			return (Promise<T>) (predicate.test(getResult()) ? fn.apply(getResult()) : this);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull Promise<T> thenWhenNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
+		try {
+			return (Promise<T>) (getResult() == null ? supplier.get() : this);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> thenWhenNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
+		try {
+			T result = getResult();
+			return (Promise<U>) (result != null ? fn.apply(result) : this);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);

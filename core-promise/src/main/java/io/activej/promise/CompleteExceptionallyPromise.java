@@ -84,6 +84,26 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		return (Promise<U>) this;
 	}
 
+    @Override
+    public @NotNull <U> Promise<U> mapWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+		return (Promise<U>) this;
+	}
+
+	@Override
+	public @NotNull Promise<T> mapWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends T> fn) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> mapWhenNull(@NotNull SupplierEx<? extends T> supplier) {
+		return this;
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> mapWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
+		return (Promise<U>) this;
+	}
+
 	@Override
 	public <U> @NotNull Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
@@ -136,6 +156,26 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 
 	@Override
 	public <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn) {
+		return (Promise<U>) this;
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> thenWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
+		return (Promise<U>) this;
+	}
+
+	@Override
+	public @NotNull Promise<T> thenWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
+		return this;
+	}
+
+	@Override
+	public @NotNull Promise<T> thenWhenNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
+		return this;
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> thenWhenNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 

@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -207,6 +208,162 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".map(" + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> mapWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+		if (isComplete()) {
+			try {
+				return isResult() ?
+						Promise.of(predicate.test(result) ? fn.apply(result) : fnElse.apply(result)) :
+						(Promise<U>) this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					U newResult;
+					try {
+						newResult = predicate.test(result) ? fn.apply(result) : fnElse.apply(result);
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+						return;
+					}
+					complete(newResult);
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".mapWhen(" + formatToString(predicate) + ", " + formatToString(fn) + ", " + formatToString(fnElse) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> mapWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends T> fn) {
+		if (isComplete()) {
+			try {
+				return isResult() ?
+						Promise.of(predicate.test(result) ? fn.apply(result) : result) :
+						this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					T newResult;
+					try {
+						newResult = predicate.test(result) ? fn.apply(result) : result;
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+						return;
+					}
+					complete(newResult);
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".mapWhen(" + formatToString(predicate) + ", " + formatToString(fn) + ", " + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> mapWhenNull(@NotNull SupplierEx<? extends T> supplier) {
+		if (isComplete()) {
+			try {
+				return isResult() ?
+						Promise.of(result == null ? supplier.get() : result) :
+						this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					T newResult;
+					try {
+						newResult = result == null ? supplier.get() : result;
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+						return;
+					}
+					complete(newResult);
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".mapWhenNull(" + formatToString(supplier) + ", " + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> mapWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
+		if (isComplete()) {
+			try {
+				return isResult() ?
+						Promise.of(Objects.nonNull(result) ? fn.apply(result) : null) :
+						(Promise<U>) this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					U newResult;
+					try {
+						newResult = result != null ? fn.apply(result) : null;
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+						return;
+					}
+					complete(newResult);
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".mapWhenNonNull(" + ", " + formatToString(fn) + ", " + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -459,6 +616,174 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".then(" + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> thenWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
+		if (isComplete()) {
+			try {
+				return isResult() ?
+						(Promise<U>) (predicate.test(result) ? fn.apply(result) : fnElse.apply(result)) :
+						(Promise<U>) this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					Promise<? extends U> promise;
+					try {
+						promise = predicate.test(result) ? fn.apply(result) : fnElse.apply(result);
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+						return;
+					}
+					promise.run(this::complete);
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".thenWhen(" + formatToString(predicate) + ", " + formatToString(fn) + ", " + formatToString(fnElse) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> thenWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
+		if (isComplete()) {
+			try {
+				return isResult() ?
+						(Promise<T>) (predicate.test(result) ? fn.apply(result) : this) :
+						this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					if (predicate.test(result)) {
+						Promise<? extends T> promise;
+						try {
+							promise = fn.apply(result);
+						} catch (Exception ex) {
+							handleError(ex, this);
+							completeExceptionally(ex);
+							return;
+						}
+						promise.run(this::complete);
+					} else {
+						complete(result);
+					}
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".thenWhen(" + formatToString(predicate) + ", " + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull Promise<T> thenWhenNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
+		if (isComplete()) {
+			try {
+				return isResult() ?
+						(Promise<T>) (result == null ? supplier.get() : this) :
+						this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					if (result == null) {
+						Promise<? extends T> promise;
+						try {
+							promise = supplier.get();
+						} catch (Exception ex) {
+							handleError(ex, this);
+							completeExceptionally(ex);
+							return;
+						}
+						promise.run(this::complete);
+					} else {
+						complete(result);
+					}
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".thenWhenNull(" + ", " + formatToString(supplier) + ", " + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public @NotNull <U> Promise<U> thenWhenNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
+		if (isComplete()) {
+			try {
+				return isResult() ?
+						(Promise<U>) (result != null ? fn.apply(result) : this) :
+						(Promise<U>) this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+			@Override
+			public void accept(T result, @Nullable Exception e) {
+				if (e == null) {
+					if (result != null) {
+						Promise<? extends U> promise;
+						try {
+							promise = fn.apply(result);
+						} catch (Exception ex) {
+							handleError(ex, this);
+							completeExceptionally(ex);
+							return;
+						}
+						promise.run(this::complete);
+					} else {
+						complete(null);
+					}
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".thenWhenNonNull(" + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
