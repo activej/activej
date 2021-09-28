@@ -693,15 +693,15 @@ public final class Promises {
 
 	@Contract(pure = true)
 	public static <T, T1, R, R1> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor1<R1, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1) {
+			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)));
 	}
 
 	@Contract(pure = true)
 	public static <T, T1, T2, R, R1, R2> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor2<R1, R2, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2) {
+			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)));
@@ -709,9 +709,9 @@ public final class Promises {
 
 	@Contract(pure = true)
 	public static <T, T1, T2, T3, R, R1, R2, R3> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor3<R1, R2, R3, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2,
-			@NotNull Function<? super T, T3> getter3, Function<T3, ? extends Promise<R3>> fn3) {
+			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+			@NotNull Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)),
@@ -720,10 +720,10 @@ public final class Promises {
 
 	@Contract(pure = true)
 	public static <T, T1, T2, T3, T4, R, R1, R2, R3, R4> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor4<R1, R2, R3, R4, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2,
-			@NotNull Function<? super T, T3> getter3, Function<T3, ? extends Promise<R3>> fn3,
-			@NotNull Function<? super T, T4> getter4, Function<T4, ? extends Promise<R4>> fn4) {
+			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+			@NotNull Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+			@NotNull Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)),
@@ -733,11 +733,11 @@ public final class Promises {
 
 	@Contract(pure = true)
 	public static <T, T1, T2, T3, T4, T5, R, R1, R2, R3, R4, R5> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor5<R1, R2, R3, R4, R5, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2,
-			@NotNull Function<? super T, T3> getter3, Function<T3, ? extends Promise<R3>> fn3,
-			@NotNull Function<? super T, T4> getter4, Function<T4, ? extends Promise<R4>> fn4,
-			@NotNull Function<? super T, T5> getter5, Function<T5, ? extends Promise<R5>> fn5) {
+			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+			@NotNull Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+			@NotNull Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
+			@NotNull Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)),
@@ -748,12 +748,12 @@ public final class Promises {
 
 	@Contract(pure = true)
 	public static <T, T1, T2, T3, T4, T5, T6, R, R1, R2, R3, R4, R5, R6> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor6<R1, R2, R3, R4, R5, R6, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, ? extends Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, ? extends Promise<R2>> fn2,
-			@NotNull Function<? super T, T3> getter3, Function<T3, ? extends Promise<R3>> fn3,
-			@NotNull Function<? super T, T4> getter4, Function<T4, ? extends Promise<R4>> fn4,
-			@NotNull Function<? super T, T5> getter5, Function<T5, ? extends Promise<R5>> fn5,
-			@NotNull Function<? super T, T6> getter6, Function<T6, ? extends Promise<R6>> fn6) {
+			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+			@NotNull Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+			@NotNull Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
+			@NotNull Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5,
+			@NotNull Function<? super T, T6> getter6, Function<T6, Promise<R6>> fn6) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)),

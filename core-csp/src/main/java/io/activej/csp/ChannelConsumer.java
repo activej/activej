@@ -374,7 +374,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @param <V> type of data accepted by the {@code fn} and ChannelConsumer
 	 * @return a wrapper ChannelConsumer
 	 */
-	default <V> ChannelConsumer<V> mapAsync(Function<? super V, ? extends Promise<T>> fn) {
+	default <V> ChannelConsumer<V> mapAsync(Function<? super V, Promise<T>> fn) {
 		return new AbstractChannelConsumer<V>(this) {
 			@Override
 			protected Promise<Void> doAccept(V value) {

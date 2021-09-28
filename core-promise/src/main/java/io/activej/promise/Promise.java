@@ -351,8 +351,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	}
 
 	default <U> @NotNull Promise<U> mapWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
-		//noinspection unchecked
-		return mapWhen(Objects::nonNull, fn, (FunctionEx<T, U>) FunctionEx.identity());
+		return mapWhen(Objects::nonNull, fn, $ -> null);
 	}
 
 	/**
@@ -469,7 +468,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn a supplier of a new promise which will be called
 	 *           if {@code this} promise completes successfully
 	 */
-	<U> @NotNull Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn);
+	<U> @NotNull Promise<U> then(@NotNull SupplierEx<Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -488,25 +487,24 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * applied to the result of {@code this} promise
 	 * @see CompletionStage#thenCompose(Function)
 	 */
-	<U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn);
+	<U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn);
 
 	default <U> @NotNull Promise<U> thenWhen(@NotNull Predicate<? super T> predicate,
-			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn, @NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fnElse) {
+			@NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
 		return then(t -> predicate.test(t) ? fn.apply(t) : fnElse.apply(t));
 	}
 
 	default @NotNull Promise<T> thenWhen(@NotNull Predicate<? super T> predicate,
-			@NotNull FunctionEx<? super T, ? extends Promise<? extends T>> fn) {
+			@NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
 		return thenWhen(predicate, fn, Promise::of);
 	}
 
-	default @NotNull Promise<T> thenWhenNull(@NotNull SupplierEx<? extends Promise<? extends T>> supplier) {
+	default @NotNull Promise<T> thenWhenNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
 		return thenWhen(Objects::isNull, $ -> supplier.get(), Promise::of);
 	}
 
-	default <U> @NotNull Promise<U> thenWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends Promise<? extends U>> fn) {
-		//noinspection unchecked
-		return thenWhen(Objects::nonNull, fn, (FunctionEx<T, ? extends Promise<? extends U>>) (FunctionEx<T, ? extends Promise<? extends T>>) Promise::of);
+	default <U> @NotNull Promise<U> thenWhenNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
+		return thenWhen(Objects::nonNull, fn, $ -> Promise.of(null));
 	}
 
 	/**
@@ -525,7 +523,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is the result of function
 	 * applied to the result and exception of {@code this} promise
 	 */
-	<U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends Promise<? extends U>> fn);
+	<U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, @Nullable Exception, Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -545,8 +543,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * function applied either to a result or an exception of {@code this} promise.
 	 */
 	default <U> @NotNull Promise<U> then(
-			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn,
-			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
+			@NotNull FunctionEx<? super T, Promise<? extends U>> fn,
+			@NotNull FunctionEx<@NotNull Exception, Promise<? extends U>> exceptionFn) {
 		return then((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
 	}
 

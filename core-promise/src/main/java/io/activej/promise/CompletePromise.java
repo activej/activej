@@ -121,7 +121,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public final <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
+	public final <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
 		} catch (Exception ex) {
@@ -131,7 +131,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
+	public <U> @NotNull Promise<U> then(@NotNull SupplierEx<Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.get();
 		} catch (Exception ex) {
@@ -142,7 +142,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public final <U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
+	public final <U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
 		} catch (Exception ex) {
@@ -153,8 +153,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 
 	@Override
 	public <U> @NotNull Promise<U> then(
-			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn,
-			@NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
+			@NotNull FunctionEx<? super T, Promise<? extends U>> fn,
+			@NotNull FunctionEx<@NotNull Exception, Promise<? extends U>> exceptionFn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
 		} catch (Exception ex) {

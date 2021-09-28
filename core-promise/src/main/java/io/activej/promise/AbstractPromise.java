@@ -392,7 +392,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(@NotNull SupplierEx<? extends Promise<? extends U>> fn) {
+	public <U> @NotNull Promise<U> then(@NotNull SupplierEx<Promise<? extends U>> fn) {
 		if (isComplete()) {
 			try {
 				return isResult() ? (Promise<U>) fn.get() : (Promise<U>) this;
@@ -429,7 +429,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn) {
+	public <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn) {
 		if (isComplete()) {
 			try {
 				return isResult() ? (Promise<U>) fn.apply(result) : (Promise<U>) this;
@@ -466,7 +466,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
+	public <U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, Promise<? extends U>> fn) {
 		if (isComplete()) {
 			try {
 				return (Promise<U>) fn.apply(result, exception);
@@ -511,7 +511,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn, @NotNull FunctionEx<@NotNull Exception, ? extends Promise<? extends U>> exceptionFn) {
+	public <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<@NotNull Exception, Promise<? extends U>> exceptionFn) {
 		if (isComplete()) {
 			try {
 				return (Promise<U>) (exception == null ? fn.apply(result) : exceptionFn.apply(exception));

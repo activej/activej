@@ -101,7 +101,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	/**
 	 * Wraps provided default {@link Supplier} to ChannelSupplier.
 	 */
-	static <T> ChannelSupplier<T> ofSupplier(Supplier<? extends Promise<T>> supplier) {
+	static <T> ChannelSupplier<T> ofSupplier(Supplier<Promise<T>> supplier) {
 		return of(supplier::get);
 	}
 
@@ -350,7 +350,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * based on current ChannelSupplier and applies provided {@code fn}
 	 * to its Promise asynchronously.
 	 */
-	default <V> ChannelSupplier<V> mapAsync(Function<? super @NotNull T, ? extends Promise<V>> fn) {
+	default <V> ChannelSupplier<V> mapAsync(Function<? super @NotNull T, Promise<V>> fn) {
 		return new AbstractChannelSupplier<V>(this) {
 			@Override
 			protected Promise<V> doGet() {
