@@ -158,20 +158,16 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 
 	Promise<SyncData<K, D>> startSync() {
 		return storage.getSyncData()
-				.then(syncData -> {
-					if (syncData.getProtoCommit() != null) {
-						return Promise.of(syncData);
-					}
-					return storage.fetch(syncData.getCommitId())
-							.then(fetchedData -> {
-								long headCommitId = fetchedData.getCommitId();
-								List<D> diffs = fetchedData.getDiffs();
-								return uplink.createProtoCommit(syncData.getUplinkCommitId(), concat(syncData.getUplinkDiffs(), diffs), 0)
-										.then(protoCommit ->
-												storage.startSync(headCommitId, syncData.getUplinkCommitId(), protoCommit)
-														.map($ -> new SyncData<>(headCommitId, syncData.getUplinkCommitId(), syncData.getUplinkLevel(), diffs, protoCommit)));
-							});
-				});
+				.thenWhen(syncData -> syncData.getProtoCommit() == null,
+						syncData -> storage.fetch(syncData.getCommitId())
+								.then(fetchedData -> {
+									long headCommitId = fetchedData.getCommitId();
+									List<D> diffs = fetchedData.getDiffs();
+									return uplink.createProtoCommit(syncData.getUplinkCommitId(), concat(syncData.getUplinkDiffs(), diffs), 0)
+											.then(protoCommit ->
+													storage.startSync(headCommitId, syncData.getUplinkCommitId(), protoCommit)
+															.map($ -> new SyncData<>(headCommitId, syncData.getUplinkCommitId(), syncData.getUplinkLevel(), diffs, protoCommit)));
+								}));
 	}
 
 	void completeSync(long commitId, List<D> accumulatedDiffs, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs, SettablePromise<Void> cb) {
@@ -195,20 +191,18 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 
 	@Override
 	public Promise<FetchData<Long, D>> checkout() {
+		//noinspection ConstantConditions
 		return retry(
 				isResultOrException(Objects::nonNull),
 				() -> storage.getSnapshot()
-						.then(snapshotData -> snapshotData != null ?
-								Promise.of(snapshotData) :
-								uplink.checkout()
-										.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.getDiffs(), uplinkSnapshotData.getCommitId(), uplinkSnapshotData.getLevel())
-												.then(ok -> Promise.of(ok ?
-														new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.getDiffs()) :
-														null)))))
-				.then(snapshotData ->
-						storage.fetch(snapshotData.getCommitId())
-								.map(fetchData ->
-										new FetchData<>(fetchData.getCommitId(), NO_LEVEL, concat(snapshotData.getDiffs(), fetchData.getDiffs()))));
+						.thenWhenNull(() -> uplink.checkout()
+								.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.getDiffs(), uplinkSnapshotData.getCommitId(), uplinkSnapshotData.getLevel())
+										.mapWhen(ok -> ok,
+												$ -> new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.getDiffs()),
+												$ -> null))))
+				.then(snapshotData -> storage.fetch(snapshotData.getCommitId())
+						.map(fetchData ->
+								new FetchData<>(fetchData.getCommitId(), NO_LEVEL, concat(snapshotData.getDiffs(), fetchData.getDiffs()))));
 	}
 
 	@Override

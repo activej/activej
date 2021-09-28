@@ -30,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import static io.activej.common.function.FunctionEx.identity;
 
@@ -84,16 +85,14 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 					return Promise.ofException(exception);
 				}
 				return input.get()
-						.map(buf -> {
-							if (buf == null) {
-								return null;
-							} else {
-								buf.recycle();
-								Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
-								input.closeEx(exception);
-								throw exception;
-							}
-						});
+						.whenResult(Objects::nonNull,
+								buf -> {
+									buf.recycle();
+									Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+									input.closeEx(exception);
+									throw exception;
+								})
+						.toVoid();
 			}
 
 			@Override

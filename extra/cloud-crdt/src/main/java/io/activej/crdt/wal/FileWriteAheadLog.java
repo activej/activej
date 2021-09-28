@@ -253,11 +253,10 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 
 	private Promise<Void> awaitExternalFlush() {
 		return getWalFiles(executor, path)
-				.then(walFiles -> {
-					if (walFiles.isEmpty()) return Promise.complete();
-					return Promises.delay(Duration.ofSeconds(1))
-							.then(this::awaitExternalFlush);
-				});
+				.thenWhen(List::isEmpty,
+						$ -> Promise.complete(),
+						$ -> Promises.delay(Duration.ofSeconds(1))
+								.then(this::awaitExternalFlush));
 	}
 
 	private Promise<List<Path>> getLostFiles() {

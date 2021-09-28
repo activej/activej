@@ -63,7 +63,8 @@ public class AdderServerModule extends AbstractModule {
 				},
 				GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request ->
 						map.get(request.getUserId())
-								.map(state -> state == null ? 0 : state.value())
+								.mapWhenNonNull(SimpleSumsCrdtState::value)
+								.mapWhenNull(() -> 0f)
 								.map(GetResponse::new)
 		);
 	}

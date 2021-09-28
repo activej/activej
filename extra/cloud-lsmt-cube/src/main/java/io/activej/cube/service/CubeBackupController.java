@@ -94,12 +94,10 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 	public Promise<Void> backupHead() {
 		return repository.getHeads()
 				.mapException(e -> new CubeException("Failed to get heads", e))
-				.then(heads -> {
-					if (heads.isEmpty()) {
-						throw new CubeException("Heads are empty");
-					}
-					return backup(first(heads));
+				.whenResult(Set::isEmpty, $ -> {
+					throw new CubeException("Heads are empty");
 				})
+				.then(heads -> backup(first(heads)))
 				.whenComplete(promiseBackup.recordStats())
 				.whenComplete(toLogger(logger, thisMethod()));
 	}

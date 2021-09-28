@@ -51,25 +51,24 @@ public abstract class AbstractGraphReducer<K, D, A, R> implements GraphReducer<K
 
 	@Override
 	public final @NotNull Promise<Result<R>> onCommit(@NotNull OTCommit<K, D> commit) {
+		//noinspection OptionalGetWithoutIsPresent
 		return tryGetResult(commit, accumulators, headCommits)
-				.then(maybeResult -> {
-					if (maybeResult.isPresent()) {
-						return completePromise(maybeResult.get());
-					}
-
-					Map<K, A> toHeads = accumulators.remove(commit.getId());
-					for (K parent : commit.getParents().keySet()) {
-						Map<K, A> parentToHeads = accumulators.computeIfAbsent(parent, $ -> new HashMap<>());
-						for (Map.Entry<K, A> entry : toHeads.entrySet()) {
-							A newAccumulatedDiffs = diffsReducer.accumulate(entry.getValue(), commit.getParents().get(parent));
-							A existingAccumulatedDiffs = parentToHeads.get(entry.getKey());
-							A combinedAccumulatedDiffs = existingAccumulatedDiffs == null ?
-									newAccumulatedDiffs :
-									diffsReducer.combine(existingAccumulatedDiffs, newAccumulatedDiffs);
-							parentToHeads.put(entry.getKey(), combinedAccumulatedDiffs);
-						}
-					}
-					return resumePromise();
-				});
+				.thenWhen(Optional::isPresent,
+						result -> completePromise(result.get()),
+						$ -> {
+							Map<K, A> toHeads = accumulators.remove(commit.getId());
+							for (K parent : commit.getParents().keySet()) {
+								Map<K, A> parentToHeads = accumulators.computeIfAbsent(parent, $2 -> new HashMap<>());
+								for (Map.Entry<K, A> entry : toHeads.entrySet()) {
+									A newAccumulatedDiffs = diffsReducer.accumulate(entry.getValue(), commit.getParents().get(parent));
+									A existingAccumulatedDiffs = parentToHeads.get(entry.getKey());
+									A combinedAccumulatedDiffs = existingAccumulatedDiffs == null ?
+											newAccumulatedDiffs :
+											diffsReducer.combine(existingAccumulatedDiffs, newAccumulatedDiffs);
+									parentToHeads.put(entry.getKey(), combinedAccumulatedDiffs);
+								}
+							}
+							return resumePromise();
+						});
 	}
 }

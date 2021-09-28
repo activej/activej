@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.LongStream;
 
 import static io.activej.csp.binary.ByteBufsDecoder.ofNullTerminatedBytes;
@@ -59,13 +60,12 @@ public final class MessagingWithBinaryStreamingTest {
 
 	private static void pong(Messaging<Integer, Integer> messaging) {
 		messaging.receive()
-				.then(msg -> {
-					if (msg != null) {
-						return messaging.send(msg).whenResult(() -> pong(messaging));
-					}
-					messaging.close();
-					return Promise.complete();
-				})
+				.thenWhen(Objects::nonNull,
+						msg -> messaging.send(msg).whenResult(() -> pong(messaging)),
+						$ -> {
+							messaging.close();
+							return Promise.complete();
+						})
 				.whenException(e -> messaging.close());
 	}
 
@@ -93,7 +93,7 @@ public final class MessagingWithBinaryStreamingTest {
 	@Test
 	public void testPing() throws Exception {
 		SimpleServer.create(socket ->
-				pong(MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))
+						pong(MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))
 				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
@@ -107,19 +107,19 @@ public final class MessagingWithBinaryStreamingTest {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
 		SimpleServer.create(
-				socket -> {
-					MessagingWithBinaryStreaming<String, String> messaging =
-							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
+						socket -> {
+							MessagingWithBinaryStreaming<String, String> messaging =
+									MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
 
-					messaging.receive()
-							.whenResult(msg -> {
-								assertEquals("start", msg);
-								StreamSupplier.ofIterable(source)
-										.transformWith(ChannelSerializer.create(LONG_SERIALIZER)
-												.withInitialBufferSize(MemSize.of(1)))
-										.streamTo(messaging.sendBinaryStream());
-							});
-				})
+							messaging.receive()
+									.whenResult(msg -> {
+										assertEquals("start", msg);
+										StreamSupplier.ofIterable(source)
+												.transformWith(ChannelSerializer.create(LONG_SERIALIZER)
+														.withInitialBufferSize(MemSize.of(1)))
+												.streamTo(messaging.sendBinaryStream());
+									});
+						})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
@@ -146,20 +146,20 @@ public final class MessagingWithBinaryStreamingTest {
 		ByteBufsCodec<String, String> serializer = STRING_SERIALIZER;
 
 		SimpleServer.create(
-				socket -> {
-					MessagingWithBinaryStreaming<String, String> messaging =
-							MessagingWithBinaryStreaming.create(socket, serializer);
+						socket -> {
+							MessagingWithBinaryStreaming<String, String> messaging =
+									MessagingWithBinaryStreaming.create(socket, serializer);
 
-					messaging.receive()
-							.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
-							.then(() ->
-									messaging.receiveBinaryStream()
-											.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
-											.toList()
-											.then(list ->
-													messaging.sendEndOfStream().map($2 -> list)))
-							.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
-				})
+							messaging.receive()
+									.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
+									.then(() ->
+											messaging.receiveBinaryStream()
+													.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
+													.toList()
+													.then(list ->
+															messaging.sendEndOfStream().map($2 -> list)))
+									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
+						})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
@@ -185,21 +185,21 @@ public final class MessagingWithBinaryStreamingTest {
 		ByteBufsCodec<String, String> serializer = STRING_SERIALIZER;
 
 		SimpleServer.create(
-				socket -> {
-					MessagingWithBinaryStreaming<String, String> messaging = MessagingWithBinaryStreaming.create(socket, serializer);
+						socket -> {
+							MessagingWithBinaryStreaming<String, String> messaging = MessagingWithBinaryStreaming.create(socket, serializer);
 
-					messaging.receive()
-							.whenResult(msg -> assertEquals("start", msg))
-							.then(msg ->
-									messaging.receiveBinaryStream()
-											.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
-											.toList()
-											.then(list ->
-													messaging.send("ack")
-															.then(messaging::sendEndOfStream)
-															.map($ -> list)))
-							.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
-				})
+							messaging.receive()
+									.whenResult(msg -> assertEquals("start", msg))
+									.then(msg ->
+											messaging.receiveBinaryStream()
+													.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
+													.toList()
+													.then(list ->
+															messaging.send("ack")
+																	.then(messaging::sendEndOfStream)
+																	.map($ -> list)))
+									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
+						})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
@@ -226,19 +226,19 @@ public final class MessagingWithBinaryStreamingTest {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
 		SimpleServer.create(
-				socket -> {
-					MessagingWithBinaryStreaming<String, String> messaging =
-							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
+						socket -> {
+							MessagingWithBinaryStreaming<String, String> messaging =
+									MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
 
-					messaging.receive()
-							.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
-							.then(msg -> messaging.sendEndOfStream())
-							.then(msg ->
-									messaging.receiveBinaryStream()
-											.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
-											.toList())
-							.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
-				})
+							messaging.receive()
+									.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
+									.then(msg -> messaging.sendEndOfStream())
+									.then(msg ->
+											messaging.receiveBinaryStream()
+													.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
+													.toList())
+									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
+						})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();

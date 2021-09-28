@@ -246,14 +246,14 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 					shortBuf.recycle();
 					return toSkip;
 				})
-				.then(toSkip -> {
-					if (toSkip > MAX_HEADER_FIELD_LENGTH) {
-						MalformedDataException exception = new InvalidSizeException("FEXTRA part of a header is larger than maximum allowed length");
-						closeEx(exception);
-						return Promise.ofException(exception);
-					}
-					return input.decode(ofFixedSize(toSkip));
-				})
+				.thenWhen(toSkip -> toSkip > MAX_HEADER_FIELD_LENGTH,
+						$ -> {
+							MalformedDataException exception = new InvalidSizeException("FEXTRA part of a header is larger than maximum allowed length");
+							closeEx(exception);
+							return Promise.ofException(exception);
+						},
+						toSkip -> input.decode(ofFixedSize(toSkip))
+				)
 				.whenException(this::closeEx)
 				.whenResult(ByteBuf::recycle)
 				.whenResult(() -> runNext(flag - FEXTRA));

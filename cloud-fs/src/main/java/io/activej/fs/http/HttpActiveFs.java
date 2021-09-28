@@ -244,7 +244,7 @@ public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveF
 				return Promise.of(response);
 			case 500:
 				return response.loadBody()
-						.then(body -> {
+						.map(body -> {
 							try {
 								throw fromJson(FsException.class, body);
 							} catch (MalformedDataException ignored) {

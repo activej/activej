@@ -6,7 +6,6 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ref.RefLong;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
-import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -39,16 +38,16 @@ public final class AbstractServerTest {
 
 		RefLong delay = new RefLong(5);
 		SimpleServer.create(socket -> Promises.repeat(
-				() -> socket.read()
-						.whenResult(buf ->
-								getCurrentEventloop().delay(delay.inc(),
-										() -> socket.write(buf)
-												.whenComplete(() -> {
-													if (buf == null) {
-														socket.close();
-													}
-												})))
-						.map(Objects::nonNull)))
+						() -> socket.read()
+								.whenResult(buf ->
+										getCurrentEventloop().delay(delay.inc(),
+												() -> socket.write(buf)
+														.whenComplete(() -> {
+															if (buf == null) {
+																socket.close();
+															}
+														})))
+								.map(Objects::nonNull)))
 				.withSocketSettings(settings)
 				.withListenAddress(address)
 				.withAcceptOnce()
@@ -61,14 +60,9 @@ public final class AbstractServerTest {
 								.then(() -> {
 									ByteBufs bufs = new ByteBufs();
 									return Promises.<ByteBuf>until(null,
-											$2 -> socket.read()
-													.then(buf -> {
-														if (buf != null) {
-															bufs.add(buf);
-														}
-														return Promise.of(buf);
-													}),
-											Objects::isNull)
+													$2 -> socket.read()
+															.whenResult(Objects::nonNull, bufs::add),
+													Objects::isNull)
 											.map($2 -> bufs.takeRemaining());
 								})
 								.whenComplete(socket::close)));

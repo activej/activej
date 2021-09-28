@@ -23,6 +23,7 @@ import io.activej.http.HttpResponse;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -68,13 +69,11 @@ public final class SessionServlet<T> implements AsyncServlet, WithInitializer<Se
 		}
 
 		return store.get(id)
-				.then(sessionObject -> {
-					if (sessionObject != null) {
-						request.attach(sessionObject);
-						return privateServlet.serveAsync(request);
-					} else {
-						return publicServlet.serveAsync(request);
-					}
-				});
+				.thenWhen(Objects::nonNull,
+						sessionObject -> {
+							request.attach(sessionObject);
+							return privateServlet.serveAsync(request);
+						},
+						$ -> publicServlet.serveAsync(request));
 	}
 }

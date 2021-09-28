@@ -169,15 +169,16 @@ public final class OTAlgorithms {
 					protected @NotNull Promise<Optional<FindResult<K, A>>> tryGetResult(OTCommit<K, D> commit,
 							Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 						return matchPredicate.test(commit)
-								.map(matched -> {
-									if (!matched) return Optional.empty();
-									Map.Entry<K, A> someHead = accumulators.get(commit.getId()).entrySet().iterator().next();
-									return Optional.of(new FindResult<>(
-											epoch, commit.getId(), commit.getParentIds(), commit.getLevel(),
-											someHead.getKey(), headCommits.get(someHead.getKey()).getLevel(),
-											someHead.getValue()
-									));
-								});
+								.mapWhen(matched -> matched,
+										$ -> {
+											Map.Entry<K, A> someHead = accumulators.get(commit.getId()).entrySet().iterator().next();
+											return Optional.of(new FindResult<>(
+													epoch, commit.getId(), commit.getParentIds(), commit.getLevel(),
+													someHead.getKey(), headCommits.get(someHead.getKey()).getLevel(),
+													someHead.getValue()
+											));
+										},
+										$ -> Optional.empty());
 					}
 				});
 	}
@@ -480,9 +481,9 @@ public final class OTAlgorithms {
 										if (queue.isEmpty()) return Promise.of(false);
 										OTCommit<K, D> commit = queue.poll();
 										return to.hasCommit(commit.getId())
-												.then(b -> b ?
-														Promise.complete() :
-														Promises.all(commit.getParents().keySet().stream()
+												.thenWhen(hasCommit -> hasCommit,
+														$ -> Promise.complete(),
+														$ -> Promises.all(commit.getParents().keySet().stream()
 																		.map(parentId -> from.loadCommit(parentId)
 																				.whenResult(parent -> !queue.contains(parent), queue::add)))
 																.then(() -> to.push(commit)))

@@ -29,6 +29,8 @@ import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.fs.http.FsCommand.*;
 import static io.activej.fs.util.MessageTypes.STRING_SET_TYPE;
@@ -145,18 +147,17 @@ public final class ActiveFsServlet implements WithInitializer<ActiveFsServlet> {
 	}
 
 	private static @NotNull Promise<HttpResponse> rangeDownload(ActiveFs fs, boolean inline, String name, String rangeHeader) {
+		//noinspection ConstantConditions
 		return fs.info(name)
-				.then(meta -> {
-					if (meta == null) {
-						throw new FileNotFoundException();
-					}
-					return HttpResponse.file(
-							(offset, limit) -> fs.download(name, offset, limit),
-							name,
-							meta.getSize(),
-							rangeHeader,
-							inline);
+				.whenResult(Objects::isNull, $ -> {
+					throw new FileNotFoundException();
 				})
+				.then(meta -> HttpResponse.file(
+						(offset, limit) -> fs.download(name, offset, limit),
+						name,
+						meta.getSize(),
+						rangeHeader,
+						inline))
 				.map(identity(), errorResponseFn());
 	}
 

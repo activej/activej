@@ -147,14 +147,12 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 		return findAllCommonParents(repository, otSystem, frozenCut)
 				.then(parents -> findAnyCommonParent(repository, otSystem, parents))
 				.then(checkpointNode -> repository.hasSnapshot(checkpointNode)
-						.then(snapshot -> {
-							if (snapshot) {
-								logger.info("Snapshot already exists, skip cleanup");
-								return Promise.complete();
-							} else {
-								return trySaveSnapshotAndCleanupChunks(checkpointNode);
-							}
-						}))
+						.thenWhen(hasSnapshot -> hasSnapshot,
+								$ -> {
+									logger.info("Snapshot already exists, skip cleanup");
+									return Promise.complete();
+								},
+								$ -> trySaveSnapshotAndCleanupChunks(checkpointNode)))
 				.mapException(e -> !(e instanceof GraphExhaustedException),
 						e -> new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e))
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
@@ -171,23 +169,22 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 	}
 
 	private Promise<Void> trySaveSnapshotAndCleanupChunks(K checkpointNode) {
+		//noinspection OptionalGetWithoutIsPresent
 		return checkout(repository, otSystem, checkpointNode)
 				.then(checkpointDiffs -> repository.saveSnapshot(checkpointNode, checkpointDiffs)
 						.then(() -> findSnapshot(singleton(checkpointNode), extraSnapshotsCount))
-						.then(lastSnapshot -> {
-							if (lastSnapshot.isPresent())
-								return Promises.toTuple(Tuple::new,
+						.thenWhen(Optional::isPresent,
+								lastSnapshot -> Promises.toTuple(Tuple::new,
 												collectRequiredChunks(checkpointNode),
 												repository.loadCommit(lastSnapshot.get()))
 										.then(tuple ->
 												cleanup(lastSnapshot.get(),
 														union(chunksInDiffs(cubeDiffScheme, checkpointDiffs), tuple.collectedChunks),
-														tuple.lastSnapshot.getInstant().minus(chunksCleanupDelay)));
-							else {
-								logger.info("Not enough snapshots, skip cleanup");
-								return Promise.complete();
-							}
-						}))
+														tuple.lastSnapshot.getInstant().minus(chunksCleanupDelay))),
+								$ -> {
+									logger.info("Not enough snapshots, skip cleanup");
+									return Promise.complete();
+								}))
 				.whenComplete(toLogger(logger, thisMethod(), checkpointNode));
 	}
 

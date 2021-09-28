@@ -95,13 +95,13 @@ public final class BasicAuth implements AsyncServlet {
 			throw HttpError.ofCode(400, "No ':' separator");
 		}
 		return credentialsLookup.test(authData[0], authData[1])
-				.then(result -> {
-					if (result) {
-						request.attach(new BasicAuthCredentials(authData[0], authData[1]));
-						return next.serveAsync(request);
-					}
-					return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));
-				});
+				.thenWhen(ok -> ok,
+						$ -> {
+							request.attach(new BasicAuthCredentials(authData[0], authData[1]));
+							return next.serveAsync(request);
+						},
+						$ -> Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)))
+				);
 	}
 
 	public static final class BasicAuthCredentials {

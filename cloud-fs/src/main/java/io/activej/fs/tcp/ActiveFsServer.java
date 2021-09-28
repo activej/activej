@@ -36,11 +36,11 @@ import java.net.InetAddress;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Checks.checkNotNull;
 import static io.activej.csp.binary.Utils.nullTerminated;
 import static io.activej.fs.util.RemoteFsUtils.*;
 
@@ -105,10 +105,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 		MessagingWithBinaryStreaming<FsCommand, FsResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()
-				.then(msg -> {
-					MessagingHandler<FsCommand> handler = checkNotNull(handlers.get(msg.getClass()));
-					return handler.onMessage(messaging, msg);
-				})
+				.then(msg -> handlers.get(msg.getClass()).onMessage(messaging, msg))
 				.whenComplete(handleRequestPromise.recordStats())
 				.whenException(e -> {
 					logger.warn("got an error while handling message : {}", this, e);
@@ -159,11 +156,11 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 			long offset = msg.getOffset();
 			long limit = msg.getLimit();
 			return fs.info(name)
+					.whenResult(Objects::isNull, $ -> {
+						throw new FileNotFoundException();
+					})
 					.then(meta -> {
-						if (meta == null) {
-							throw new FileNotFoundException();
-						}
-
+						//noinspection ConstantConditions
 						long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));
 
 						return fs.download(name, offset, fixedLimit)
