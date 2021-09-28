@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.BiPredicate;
@@ -335,6 +336,25 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	<U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn);
 
+	default <U> @NotNull Promise<U> mapWhen(@NotNull Predicate<? super T> predicate,
+			@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+		return map(t -> predicate.test(t) ? fn.apply(t) : fnElse.apply(t));
+	}
+
+	default @NotNull Promise<T> mapWhen(@NotNull Predicate<? super T> predicate,
+			@NotNull FunctionEx<? super T, ? extends T> fn) {
+		return mapWhen(predicate, fn, FunctionEx.identity());
+	}
+
+	default @NotNull Promise<T> mapWhenNull(@NotNull SupplierEx<? extends T> supplier) {
+		return mapWhen(Objects::isNull, $ -> supplier.get(), FunctionEx.identity());
+	}
+
+	default <U> @NotNull Promise<U> mapWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
+		//noinspection unchecked
+		return mapWhen(Objects::nonNull, fn, (FunctionEx<T, U>) FunctionEx.identity());
+	}
+
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
 	 * a result and an exception of {@code this} promise to some other value.
@@ -469,6 +489,25 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @see CompletionStage#thenCompose(Function)
 	 */
 	<U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn);
+
+	default <U> @NotNull Promise<U> thenWhen(@NotNull Predicate<? super T> predicate,
+			@NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fn, @NotNull FunctionEx<? super T, ? extends Promise<? extends U>> fnElse) {
+		return then(t -> predicate.test(t) ? fn.apply(t) : fnElse.apply(t));
+	}
+
+	default @NotNull Promise<T> thenWhen(@NotNull Predicate<? super T> predicate,
+			@NotNull FunctionEx<? super T, ? extends Promise<? extends T>> fn) {
+		return thenWhen(predicate, fn, Promise::of);
+	}
+
+	default @NotNull Promise<T> thenWhenNull(@NotNull SupplierEx<? extends Promise<? extends T>> supplier) {
+		return thenWhen(Objects::isNull, $ -> supplier.get(), Promise::of);
+	}
+
+	default <U> @NotNull Promise<U> thenWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends Promise<? extends U>> fn) {
+		//noinspection unchecked
+		return thenWhen(Objects::nonNull, fn, (FunctionEx<T, ? extends Promise<? extends U>>) (FunctionEx<T, ? extends Promise<? extends T>>) Promise::of);
+	}
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -818,6 +857,16 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	default @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull RunnableEx action) {
 		return when(P.isException(clazz), action);
+	}
+
+	@SuppressWarnings("unchecked")
+	default @NotNull <U> Promise<U> cast() {
+		return (Promise<U>) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	default @NotNull <U> Promise<U> cast(Class<? extends U> cls) {
+		return (Promise<U>) this;
 	}
 
 	/**
