@@ -336,20 +336,106 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	<U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn);
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a result of {@code this} promise to some other value using one of
+	 * provided mapping functions.
+	 * <p>
+	 * If predicate returns {@code true}, the first mapping function is used,
+	 * otherwise the second mapping function is used.
+	 * <p>
+	 * If {@code this} promise is completed exceptionally, no mapping
+	 * function will be applied.
+	 *
+	 * <p>
+	 * A mapping functions may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param predicate a predicate that tests the result of a promise
+	 *                  to decide which one of the two mapping functions
+	 *                  will be applied to the promise result
+	 * @param fn        a function to map the result of this {@code Promise}
+	 *                  to a new value if a predicate returns {@code true}
+	 * @param elseFn    a function to map the result of this {@code Promise}
+	 *                  to a new value if a predicate returns {@code false}
+	 * @return new {@code Promise} whose result is the result of one of two
+	 * mapping functions applied to the result of {@code this} promise
+	 */
 	default <U> @NotNull Promise<U> mapWhen(@NotNull Predicate<? super T> predicate,
-			@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
-		return map(t -> predicate.test(t) ? fn.apply(t) : fnElse.apply(t));
+			@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> elseFn) {
+		return map(t -> predicate.test(t) ? fn.apply(t) : elseFn.apply(t));
 	}
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a result of {@code this} promise to some other value of the same type.
+	 * <p>
+	 * If predicate returns {@code true}, the mapping function is used,
+	 * otherwise the result is returned as-is.
+	 * <p>
+	 * If {@code this} promise is completed exceptionally, a mapping
+	 * function will not be applied.
+	 *
+	 * <p>
+	 * A mapping function may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param predicate a predicate that tests the result of a promise
+	 *                  to decide whether a mapping function
+	 *                  will be applied to the promise result
+	 * @param fn        a function to map the result of this {@code Promise}
+	 *                  to a new value if a predicate returns {@code true}
+	 * @return new {@code Promise} whose result is either the original result of a promise
+	 * or a mapped result of {@code this} promise
+	 */
 	default @NotNull Promise<T> mapWhen(@NotNull Predicate<? super T> predicate,
 			@NotNull FunctionEx<? super T, ? extends T> fn) {
 		return mapWhen(predicate, fn, FunctionEx.identity());
 	}
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by supplying
+	 * a new result in case a promise result is {@code null}
+	 * <p>
+	 * If a promise result is not {@code null}, the result is returned as-is
+	 * <p>
+	 * If {@code this} promise is completed exceptionally, a supplier will not be called.
+	 *
+	 * <p>
+	 * A supplier may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param supplier a supplier of a new promise result in case an original
+	 *                 promise result is {@code null}
+	 * @return new {@code Promise} where {@code null} result is replaced with a
+	 * result supplied by a given supplier
+	 */
 	default @NotNull Promise<T> mapWhenNull(@NotNull SupplierEx<? extends T> supplier) {
-		return mapWhen(Objects::isNull, $ -> supplier.get(), FunctionEx.identity());
+		return mapWhen(Objects::isNull, $ -> supplier.get());
 	}
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a non-{@code null} result of {@code this} promise to some other value.
+	 * <p>
+	 * If a promise result is {@code null}, the mapping function is not used
+	 * and result is returned as-is
+	 * <p>
+	 * If {@code this} promise is completed exceptionally, a mapping
+	 * function will not be applied.
+	 *
+	 * <p>
+	 * A mapping function may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param fn a function to map the result of this {@code Promise}
+	 *           to a new value if a result of {@code this} promise is {@code null}
+	 * @return new {@code Promise} whose result is either {@code null} or a mapped result
+	 */
 	default <U> @NotNull Promise<U> mapWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
 		return mapWhen(Objects::nonNull, fn, $ -> null);
 	}
@@ -489,20 +575,108 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	<U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn);
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a result of {@code this} promise to some other promise using one of
+	 * provided mapping functions.
+	 * <p>
+	 * If predicate returns {@code true}, the first mapping function is used,
+	 * otherwise the second mapping function is used.
+	 * <p>
+	 * If {@code this} promise is completed exceptionally, no mapping
+	 * function will be applied.
+	 *
+	 * <p>
+	 * A mapping functions may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param predicate a predicate that tests the result of a promise
+	 *                  to decide which one of the two mapping functions
+	 *                  will be applied to the promise result
+	 * @param fn        a function to map the result of this {@code Promise}
+	 *                  to a new promise if a predicate returns {@code true}
+	 * @param elseFn    a function to map the result of this {@code Promise}
+	 *                  to a new promise if a predicate returns {@code false}
+	 * @return new {@code Promise} which is the result of one of two
+	 * mapping functions applied to the result of {@code this} promise
+	 */
 	default <U> @NotNull Promise<U> thenWhen(@NotNull Predicate<? super T> predicate,
-			@NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
-		return then(t -> predicate.test(t) ? fn.apply(t) : fnElse.apply(t));
+			@NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> elseFn) {
+		return then(t -> predicate.test(t) ? fn.apply(t) : elseFn.apply(t));
 	}
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a result of {@code this} promise to some other promise of the same result type.
+	 * <p>
+	 * If predicate returns {@code true}, the mapping function is used,
+	 * otherwise the returned promise has the same result as {@code this} promise.
+	 * <p>
+	 * If {@code this} promise is completed exceptionally, a mapping
+	 * function will not be applied.
+	 *
+	 * <p>
+	 * A mapping function may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param predicate a predicate that tests the result of a promise
+	 *                  to decide whether a mapping function
+	 *                  will be applied to the promise result
+	 * @param fn        a function to map the result of this {@code Promise}
+	 *                  to a new promise if a predicate returns {@code true}
+	 * @return new {@code Promise} which either has the original result or is a promise
+	 * obtained by mapping the result of {@code this} promise to a new promise
+	 */
 	default @NotNull Promise<T> thenWhen(@NotNull Predicate<? super T> predicate,
 			@NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
 		return thenWhen(predicate, fn, Promise::of);
 	}
 
+	/**
+	 * Returns a new {@code Promise} which is obtained from a promise supplier
+	 * in case a promise result is {@code null}
+	 * <p>
+	 * If a promise result is not {@code null}, the returned promise
+	 * has the same result as {@code this} promise.
+	 * <p>
+	 * If {@code this} promise is completed exceptionally, a supplier will not be called.
+	 *
+	 * <p>
+	 * A supplier may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param supplier a supplier of a new promise in case an original
+	 *                 promise result is {@code null}
+	 * @return new {@code Promise} where {@code null} result is replaced with a
+	 * a new promise supplied by a given supplier
+	 */
 	default @NotNull Promise<T> thenWhenNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
 		return thenWhen(Objects::isNull, $ -> supplier.get(), Promise::of);
 	}
 
+	/**
+	 * Returns a new {@code Promise} which is obtained by mapping
+	 * a non-{@code null} result of {@code this} promise to some other promise.
+	 * <p>
+	 * If a promise result is {@code null}, the returned promise
+	 * has the same {@code null} result as {@code this} promise.
+	 * <p>
+	 * If {@code this} promise is completed exceptionally, a mapping
+	 * function will not be applied.
+	 *
+	 * <p>
+	 * A mapping function may throw a checked exception. In this case
+	 * the resulting promise is completed exceptionally with a
+	 * thrown exception.
+	 *
+	 * @param fn a function to map the result of this {@code Promise}
+	 *           to a new promise if a result of {@code this} promise is {@code null}
+	 * @return new {@code Promise} which is either obtained by mapping a {@code null}
+	 * result of {@code this} promise or is a promise with a {@code null} result
+	 */
 	default <U> @NotNull Promise<U> thenWhenNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
 		return thenWhen(Objects::nonNull, fn, $ -> Promise.of(null));
 	}
@@ -857,11 +1031,44 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return when(P.isException(clazz), action);
 	}
 
+	/**
+	 * Casts {@code this} promise to a promise of some other type {@link U}
+	 * <p>
+	 * Usage example:
+	 * <pre>
+	 * Promise&lt;Object&gt; promise = Promise.of(255);
+	 * promise.&lt;Integer&gt;cast()
+	 *      .map(Integer::toHexString)
+	 *      .whenResult(hex -> System.out.println(hex));
+	 * </pre>
+	 *
+	 * @param <U> a type to which a promise result will be cast
+	 * @return a promise of type {@link U}
+	 * @throws ClassCastException if a promise result is not {@code null}
+	 *                            and a cast could not be made
+	 */
 	@SuppressWarnings("unchecked")
 	default @NotNull <U> Promise<U> cast() {
 		return (Promise<U>) this;
 	}
 
+	/**
+	 * Casts {@code this} promise to a promise of some other type {@link U}
+	 * <p>
+	 * Usage example:
+	 * <pre>
+	 * Promise&lt;Object&gt; promise = Promise.of(255);
+	 * promise.cast(Integer.class)
+	 *      .map(Integer::toHexString)
+	 *      .whenResult(hex -> System.out.println(hex));
+	 * </pre>
+	 *
+	 * @param cls a class to which a result of {@code this} promise will be cast
+	 * @param <U> a type to which a promise result will be cast
+	 * @return a promise of type {@link U}
+	 * @throws ClassCastException if a promise result is not {@code null}
+	 *                            and a cast could not be made
+	 */
 	@SuppressWarnings("unchecked")
 	default @NotNull <U> Promise<U> cast(Class<? extends U> cls) {
 		return (Promise<U>) this;
