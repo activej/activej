@@ -213,7 +213,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	public String toString() {
 		return "RpcServerConnection{" +
 				"address=" + remoteAddress +
-				",active=" + activeRequests +
+				", active=" + activeRequests +
 				", successes=" + successfulRequests.getTotalCount() +
 				", failures=" + failedRequests.getTotalCount() +
 				'}';

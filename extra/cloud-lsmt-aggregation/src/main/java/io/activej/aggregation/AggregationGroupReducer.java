@@ -161,7 +161,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	public String toString() {
 		return "AggregationGroupReducer{" +
 				"keys=" + aggregation.getKeys() +
-				"measures=" + measures +
+				", measures=" + measures +
 				", chunkSize=" + chunkSize +
 				", map.size=" + map.size() +
 				'}';
