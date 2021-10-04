@@ -16,6 +16,7 @@
 
 package io.activej.csp;
 
+import io.activej.async.function.AsyncRunnable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.recycle.Recyclers;
@@ -32,8 +33,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Provides additional functionality for managing {@link ChannelConsumer}s.
@@ -88,6 +87,21 @@ public final class ChannelConsumers {
 		return new RecyclingChannelConsumer<>();
 	}
 
+	/**
+	 * Creates an asynchronous {@link ChannelConsumer<ByteBuf>} out of some {@link OutputStream}.
+	 * <p>
+	 * I/O operations are executed using a specified {@link Executor}, so that the channel consumer
+	 * operations does not block the eventloop thread.
+	 * <p>
+	 * Passed {@link OutputStream} will be closed once a resulting {@link ChannelConsumer<ByteBuf>} is closed or
+	 * in case an error occurs during channel consumer operations.
+	 * <p>
+	 * <b>This method should be called from within eventloop thread</b>
+	 *
+	 * @param executor     an executor that will execute blocking I/O
+	 * @param outputStream an {@link OutputStream} that is transformed into a {@link ChannelConsumer<ByteBuf>}
+	 * @return a {@link ChannelConsumer<ByteBuf>} out ouf an {@link OutputStream}
+	 */
 	public static ChannelConsumer<ByteBuf> outputStreamAsChannelConsumer(Executor executor, OutputStream outputStream) {
 		return new AbstractChannelConsumer<ByteBuf>() {
 			@Override
@@ -100,6 +114,7 @@ public final class ChannelConsumers {
 							buf.recycle();
 						}
 					} else {
+						outputStream.flush();
 						outputStream.close();
 					}
 				});
@@ -117,8 +132,24 @@ public final class ChannelConsumers {
 		};
 	}
 
+	/**
+	 * Creates an {@link OutputStream} out of a {@link ChannelConsumer<ByteBuf>}.
+	 * <p>
+	 * Asynchronous operations are executed in a context of a specified {@link Eventloop}
+	 * <p>
+	 * Passed {@link ChannelSupplier<ByteBuf>} will be closed once a resulting {@link OutputStream} is closed or
+	 * in case an error occurs while reading data.
+	 * <p>
+	 * <b>{@link OutputStream}'s methods are blocking, so they should not be called from an eventloop thread</b>
+	 *
+	 * @param eventloop       an eventloop that will execute asynchronous operations
+	 * @param channelConsumer a {@link ChannelSupplier<ByteBuf>} that is transformed to an {@link OutputStream}
+	 * @return an {@link OutputStream} out ouf a {@link ChannelSupplier<ByteBuf>}
+	 */
 	public static OutputStream channelConsumerAsOutputStream(Eventloop eventloop, ChannelConsumer<ByteBuf> channelConsumer) {
 		return new OutputStream() {
+			private boolean isClosed;
+
 			@Override
 			public void write(int b) throws IOException {
 				write(new byte[]{(byte) b}, 0, 1);
@@ -126,22 +157,29 @@ public final class ChannelConsumers {
 
 			@Override
 			public void write(byte @NotNull [] b, int off, int len) throws IOException {
-				submit(ByteBuf.wrap(b, off, off + len));
+				if (isClosed) {
+					throw new IOException("Stream Closed");
+				}
+				submit(() -> channelConsumer.accept(ByteBuf.wrap(b, off, off + len)));
 			}
 
 			@Override
 			public void close() throws IOException {
-				submit(null);
+				if (isClosed) return;
+				isClosed = true;
+				submit(() -> channelConsumer.acceptEndOfStream()
+						.whenComplete(channelConsumer::close));
 			}
 
-			private void submit(ByteBuf buf) throws IOException {
-				CompletableFuture<Void> future = eventloop.submit(() -> channelConsumer.accept(buf));
+			private void submit(AsyncRunnable runnable) throws IOException {
+				CompletableFuture<Void> future = eventloop.submit(runnable::run);
 				try {
 					future.get();
 				} catch (InterruptedException e) {
-					eventloop.execute(wrapContext(channelConsumer, channelConsumer::close));
+					close();
 					throw new IOException(e);
 				} catch (ExecutionException e) {
+					close();
 					Throwable cause = e.getCause();
 					if (cause instanceof IOException) throw (IOException) cause;
 					if (cause instanceof RuntimeException) throw (RuntimeException) cause;

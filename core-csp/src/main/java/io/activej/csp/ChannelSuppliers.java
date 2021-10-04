@@ -16,6 +16,7 @@
 
 package io.activej.csp;
 
+import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -47,7 +48,6 @@ import java.util.function.ToIntFunction;
 import static io.activej.common.Utils.iteratorOf;
 import static io.activej.common.Utils.nullify;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 
@@ -303,10 +303,44 @@ public final class ChannelSuppliers {
 		};
 	}
 
+	private static final @NotNull MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(8);
+
+	/**
+	 * @see #inputStreamAsChannelSupplier(Executor, int, InputStream)
+	 */
 	public static ChannelSupplier<ByteBuf> inputStreamAsChannelSupplier(Executor executor, MemSize bufSize, InputStream is) {
 		return inputStreamAsChannelSupplier(executor, bufSize.toInt(), is);
 	}
 
+	/**
+	 * Creates an asynchronous {@link ChannelSupplier} out of some {@link InputStream}.
+	 * <p>
+	 * Uses a default buffer size of <b>8 kilobytes</b>
+	 *
+	 * @see #inputStreamAsChannelSupplier(Executor, int, InputStream)
+	 */
+	public static ChannelSupplier<ByteBuf> inputStreamAsChannelSupplier(Executor executor, InputStream is) {
+		return inputStreamAsChannelSupplier(executor, DEFAULT_BUFFER_SIZE, is);
+	}
+
+	/**
+	 * Creates an asynchronous {@link ChannelSupplier<ByteBuf>} out of some {@link InputStream}.
+	 * <p>
+	 * I/O operations are executed using a specified {@link Executor}, so that the channel supplier
+	 * operations does not block the eventloop thread.
+	 * <p>
+	 * A size of a {@link ByteBuf} returned by {@link ChannelSupplier#get()} will not exceed specified limit
+	 * <p>
+	 * Passed {@link InputStream} will be closed once a resulting {@link ChannelSupplier<ByteBuf>} is closed or
+	 * in case an error occurs during channel supplier operations.
+	 * <p>
+	 * <b>This method should be called from within eventloop thread</b>
+	 *
+	 * @param executor    an executor that will execute blocking I/O
+	 * @param bufSize     a limit on a size of a byte buf supplied by returned {@link ChannelSupplier<ByteBuf>}
+	 * @param inputStream an {@link InputStream} that is transformed into a {@link ChannelSupplier<ByteBuf>}
+	 * @return a {@link ChannelSupplier<ByteBuf>} out ouf an {@link InputStream}
+	 */
 	public static ChannelSupplier<ByteBuf> inputStreamAsChannelSupplier(Executor executor, int bufSize, InputStream inputStream) {
 		return new AbstractChannelSupplier<ByteBuf>() {
 			@Override
@@ -342,10 +376,25 @@ public final class ChannelSuppliers {
 		};
 	}
 
+	/**
+	 * Creates an {@link InputStream} out of a {@link ChannelSupplier<ByteBuf>}.
+	 * <p>
+	 * Asynchronous operations are executed in a context of a specified {@link Eventloop}
+	 * <p>
+	 * Passed {@link ChannelSupplier<ByteBuf>} will be closed once a resulting {@link InputStream} is closed or
+	 * in case an error occurs while reading data.
+	 * <p>
+	 * <b>{@link InputStream}'s methods are blocking, so they should not be called from an eventloop thread</b>
+	 *
+	 * @param eventloop       an eventloop that will execute asynchronous operations
+	 * @param channelSupplier a {@link ChannelSupplier<ByteBuf>} that is transformed to an {@link InputStream}
+	 * @return an {@link InputStream} out ouf a {@link ChannelSupplier<ByteBuf>}
+	 */
 	public static InputStream channelSupplierAsInputStream(Eventloop eventloop, ChannelSupplier<ByteBuf> channelSupplier) {
 		return new InputStream() {
-			@Nullable ByteBuf current = null;
-			boolean isClosed;
+			private @Nullable ByteBuf current = null;
+			private boolean isClosed;
+			private boolean isEOS;
 
 			@Override
 			public int read() throws IOException {
@@ -358,29 +407,17 @@ public final class ChannelSuppliers {
 			}
 
 			private int doRead(ToIntFunction<ByteBuf> reader) throws IOException {
-				if (isClosed) return -1;
+				if (isClosed) {
+					throw new IOException("Stream Closed");
+				}
+				if (isEOS) return -1;
 				ByteBuf peeked = current;
 				if (peeked == null) {
 					ByteBuf buf;
 					do {
-						CompletableFuture<ByteBuf> future = eventloop.submit(channelSupplier::get);
-						try {
-							buf = future.get();
-						} catch (InterruptedException e) {
-							isClosed = true;
-							eventloop.execute(wrapContext(channelSupplier, channelSupplier::close));
-							throw new IOException(e);
-						} catch (ExecutionException e) {
-							isClosed = true;
-							Throwable cause = e.getCause();
-							if (cause instanceof IOException) throw (IOException) cause;
-							if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-							if (cause instanceof Exception) throw new IOException(cause);
-							if (cause instanceof Error) throw (Error) cause;
-							throw new RuntimeException(cause);
-						}
+						buf = submit(channelSupplier::get);
 						if (buf == null) {
-							isClosed = true;
+							isEOS = true;
 							return -1;
 						}
 					} while (!buf.canRead());
@@ -397,11 +434,34 @@ public final class ChannelSuppliers {
 			}
 
 			@Override
-			public void close() {
+			public void close() throws IOException {
+				if (isClosed) return;
 				isClosed = true;
 				current = nullify(current, ByteBuf::recycle);
-				eventloop.execute(wrapContext(channelSupplier, channelSupplier::close));
+				submit(() -> {
+					channelSupplier.close();
+					return Promise.complete();
+				});
 			}
+
+			private <T> T submit(AsyncSupplier<T> supplier) throws IOException {
+				CompletableFuture<T> future = eventloop.submit(supplier::get);
+				try {
+					return future.get();
+				} catch (InterruptedException e) {
+					close();
+					throw new IOException(e);
+				} catch (ExecutionException e) {
+					close();
+					Throwable cause = e.getCause();
+					if (cause instanceof IOException) throw (IOException) cause;
+					if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+					if (cause instanceof Exception) throw new IOException(cause);
+					if (cause instanceof Error) throw (Error) cause;
+					throw new RuntimeException(cause);
+				}
+			}
+
 		};
 	}
 
