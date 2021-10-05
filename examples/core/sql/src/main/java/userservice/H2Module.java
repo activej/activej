@@ -1,3 +1,5 @@
+package userservice;
+
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import org.h2.jdbcx.JdbcDataSource;
@@ -11,7 +13,7 @@ import javax.sql.DataSource;
  */
 public class H2Module extends AbstractModule {
 
-	public static final String INIT_SCRIPT = "init.sql";
+	public static final String INIT_SCRIPT = "userservice/init.sql";
 
 	@Provides
 	DataSource dataSourceH2() {

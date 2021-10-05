@@ -1,6 +1,5 @@
-import dao.User;
-import dao.UserDao;
-import dao.UserDaoSql;
+package userservice;
+
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -9,6 +8,9 @@ import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promises;
 import io.activej.service.ServiceGraphModule;
+import userservice.dao.User;
+import userservice.dao.UserDao;
+import userservice.dao.UserDaoSql;
 
 import javax.sql.DataSource;
 import java.util.Map;

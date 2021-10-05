@@ -1,4 +1,4 @@
-package dao;
+package userservice.dao;
 
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;

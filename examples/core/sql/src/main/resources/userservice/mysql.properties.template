@@ -1,4 +1,4 @@
-# Copy this file to 'mysql.properties' file in the 'resources' directory
+# Copy this file to 'mysql.properties' file in the 'resources/userprofile' directory
 # Set proper MySql 'user', 'password', 'db' fields
 # User should have permissions to create new tables
 

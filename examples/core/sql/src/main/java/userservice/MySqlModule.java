@@ -1,3 +1,5 @@
+package userservice;
+
 import com.mysql.cj.jdbc.MysqlDataSource;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -21,8 +23,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class MySqlModule extends AbstractModule {
 
-	public static final String MYSQL_PROPERTIES_FILE = "mysql.properties";
-	public static final String INIT_SCRIPT = "init.sql";
+	public static final String MYSQL_PROPERTIES_FILE = "userservice/mysql.properties";
+	public static final String INIT_SCRIPT = "userservice/init.sql";
 
 	@Provides
 	DataSource dataSourceMySql() throws IOException, SQLException {
