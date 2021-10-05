@@ -15,8 +15,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public final class JdbcSqlLauncher extends Launcher {
-	public static final String DATASOURCE_PROPERTIES = "advanced/mysql.properties";
+public final class JdbcPooledSqlLauncher extends Launcher {
+	public static final String DATASOURCE_PROPERTIES = "advanced/mysql-pooled.properties";
 
 	public static final String USER_TABLE_SCRIPT = "advanced/ddl/user.sql";
 	public static final String NEW_USER_TABLE_SCRIPT = "advanced/ddl/new_user.sql";
@@ -66,11 +66,11 @@ public final class JdbcSqlLauncher extends Launcher {
 	protected Module getModule() {
 		return Modules.combine(
 				ConfigModule.create(),
-				DataSourceModule.create()
+				DataSourcePooledModule.create()
 		);
 	}
 
 	public static void main(String[] args) throws Exception {
-		new JdbcSqlLauncher().launch(args);
+		new JdbcPooledSqlLauncher().launch(args);
 	}
 }

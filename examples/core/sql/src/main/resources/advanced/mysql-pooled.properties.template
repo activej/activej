@@ -1,17 +1,6 @@
-# Copy this file to 'datasource.properties' file in the 'resources/advanced' directory.
-# You can set either standard MySQL DataSource properties or HikariCP DatasourceProperties.
-# DB User should have permissions to create new tables.
-# If there is no 'resources/advanced/datasource.properties' file or it is empty, a default H2 DataSource will be used.
-#
-# To set MySQL DataSource properties prefix those with "mysql." (e.g. "mysql.user=test")
-# Available MySQL properties:
-#   mysql.server=<an address to a database server>
-#   mysql.db=<a name of a database>
-#   mysql.user=<a username>
-#   mysql.password=<a password>
-#   mysql.timeZone=<a server time zone>
-#
+# Copy this file to 'mysql-pooled.properties' file in the 'resources/advanced' directory.
 # To set HikariCP DataSource properties prefix those with "hikari." (e.g. "hikari.user=test")
+#
 # Available HikariCP properties:
 #	hikari.autoCommit=<default auto-commit behavior>
 #	hikari.catalog=<default catalog name>

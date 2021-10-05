@@ -19,8 +19,8 @@ import java.io.IOException;
 import static advanced.jooq.model.tables.NewUser.NEW_USER;
 import static advanced.jooq.model.tables.User.USER;
 
-public final class JooqSqlLauncher extends Launcher {
-	public static final String DATASOURCE_PROPERTIES = "advanced/mysql.properties";
+public final class JooqPooledSqlLauncher extends Launcher {
+	public static final String DATASOURCE_PROPERTIES = "advanced/mysql-pooled.properties";
 
 	public static final String USER_TABLE_SCRIPT = "advanced/ddl/user.sql";
 	public static final String NEW_USER_TABLE_SCRIPT = "advanced/ddl/new_user.sql";
@@ -67,11 +67,11 @@ public final class JooqSqlLauncher extends Launcher {
 	protected Module getModule() {
 		return Modules.combine(
 				ConfigModule.create(),
-				DataSourceModule.create()
+				DataSourcePooledModule.create()
 		);
 	}
 
 	public static void main(String[] args) throws Exception {
-		new JooqSqlLauncher().launch(args);
+		new JooqPooledSqlLauncher().launch(args);
 	}
 }
