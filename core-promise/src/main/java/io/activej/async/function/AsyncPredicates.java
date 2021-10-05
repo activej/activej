@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
 public final class AsyncPredicates {
 
@@ -44,6 +45,18 @@ public final class AsyncPredicates {
 		return t -> asyncExecutor.execute(() -> predicate.test(t));
 	}
 
+	/**
+	 * Returns a composed {@link AsyncPredicate} that represents a logical AND of all predicates
+	 * in a given collection
+	 * <p>
+	 * Unlike Java's {@link Predicate#and(Predicate)} this method does not provide short-circuit.
+	 * If either predicate returns an exceptionally completed promise,
+	 * the combined asynchronous predicate also returns an exceptionally completed promise
+	 *
+	 * @param predicates a collection of {@link AsyncPredicate}s that will be logically ANDed
+	 * @return a composed {@link AsyncPredicate} that represents a logical AND of asynchronous predicates
+	 * in a given collection
+	 */
 	public static <T> @NotNull AsyncPredicate<T> and(Collection<AsyncPredicate<? super T>> predicates) {
 		return t -> {
 			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
@@ -54,26 +67,51 @@ public final class AsyncPredicates {
 		};
 	}
 
+	/**
+	 * @return an {@link AsyncPredicate} that always returns promise of {@code true}
+	 * @see #and(Collection)
+	 */
 	public static <T> @NotNull AsyncPredicate<T> and() {
 		return AsyncPredicate.alwaysTrue();
 	}
 
+	/**
+	 * @see #and(Collection)
+	 */
 	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T> predicate1) {
 		//noinspection unchecked
 		return (AsyncPredicate<T>) predicate1;
 	}
 
+	/**
+	 * @see #and(Collection)
+	 */
 	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T> predicate1, AsyncPredicate<? super T> predicate2) {
 		//noinspection unchecked
 		return ((AsyncPredicate<T>) predicate1).and(predicate2);
 	}
 
+	/**
+	 * @see #and(Collection)
+	 */
 	@SafeVarargs
 	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T>... predicates) {
 		//noinspection RedundantCast
 		return and(((List<AsyncPredicate<? super T>>) Arrays.asList(predicates)));
 	}
 
+	/**
+	 * Returns a composed {@link AsyncPredicate} that represents a logical OR of all predicates
+	 * in a given collection
+	 * <p>
+	 * Unlike Java's {@link Predicate#or(Predicate)} this method does not provide short-circuit.
+	 * If either predicate returns an exceptionally completed promise,
+	 * the combined asynchronous predicate also returns an exceptionally completed promise
+	 *
+	 * @param predicates a collection of {@link AsyncPredicate}s that will be logically ORed
+	 * @return a composed {@link AsyncPredicate} that represents a logical OR of asynchronous predicates
+	 * in a given collection
+	 */
 	public static <T> @NotNull AsyncPredicate<T> or(Collection<AsyncPredicate<? super T>> predicates) {
 		return t -> {
 			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
@@ -84,20 +122,33 @@ public final class AsyncPredicates {
 		};
 	}
 
+	/**
+	 * @return an {@link AsyncPredicate} that always returns promise of {@code false}
+	 * @see #or(Collection)
+	 */
 	public static <T> @NotNull AsyncPredicate<T> or() {
 		return AsyncPredicate.alwaysFalse();
 	}
 
+	/**
+	 * @see #or(Collection)
+	 */
 	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T> predicate1) {
 		//noinspection unchecked
 		return (AsyncPredicate<T>) predicate1;
 	}
 
+	/**
+	 * @see #or(Collection)
+	 */
 	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T> predicate1, AsyncPredicate<? super T> predicate2) {
 		//noinspection unchecked
 		return ((AsyncPredicate<T>) predicate1).or(predicate2);
 	}
 
+	/**
+	 * @see #or(Collection)
+	 */
 	@SafeVarargs
 	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T>... predicates) {
 		//noinspection RedundantCast

@@ -20,6 +20,8 @@ import io.activej.common.function.BiPredicateEx;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Predicate;
+
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 @FunctionalInterface
@@ -43,27 +45,68 @@ public interface AsyncBiPredicate<T, U> {
 		};
 	}
 
+	/**
+	 * @return an {@link AsyncBiPredicate} that always returns promise of {@code true}
+	 */
 	static <T, U> AsyncBiPredicate<T, U> alwaysTrue() {
 		return (t, u) -> Promise.of(Boolean.TRUE);
 	}
 
+	/**
+	 * @return an {@link AsyncBiPredicate} that always returns promise of {@code false}
+	 */
 	static <T, U> AsyncBiPredicate<T, U> alwaysFalse() {
 		return (t, u) -> Promise.of(Boolean.FALSE);
 	}
 
+	/**
+	 * Negates a given {@link AsyncBiPredicate}
+	 *
+	 * @param predicate an original {@link AsyncBiPredicate}
+	 * @return an {@link AsyncBiPredicate} that represents a logical negation of original predicate
+	 */
 	static <T, U> AsyncBiPredicate<T, U> not(AsyncBiPredicate<? super T, ? super U> predicate) {
 		//noinspection unchecked
 		return (AsyncBiPredicate<T, U>) predicate.negate();
 	}
 
+	/**
+	 * Negates {@code this} {@link AsyncBiPredicate}
+	 *
+	 * @return an {@link AsyncBiPredicate} that represents a logical negation of {@code this} predicate
+	 */
 	default AsyncBiPredicate<T, U> negate() {
 		return (t, u) -> test(t, u).map(b -> !b);
 	}
 
+	/**
+	 * Returns a composed {@link AsyncBiPredicate} that represents a logical AND of this
+	 * asynchronous predicate and the other
+	 * <p>
+	 * Unlike Java's {@link Predicate#and(Predicate)} this method does not provide short-circuit.
+	 * If either {@code this} or {@code other} predicate returns an exceptionally completed promise,
+	 * the combined asynchronous predicate also returns an exceptionally completed promise
+	 *
+	 * @param other other {@link AsyncBiPredicate} that will be logically ANDed with {@code this} predicate
+	 * @return a composed {@link AsyncBiPredicate} that represents a logical AND of this
+	 * asynchronous predicate and the other
+	 */
 	default AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> other) {
 		return (t, u) -> test(t, u).combine(other.test(t, u), (b1, b2) -> b1 && b2);
 	}
 
+	/**
+	 * Returns a composed {@link AsyncBiPredicate} that represents a logical OR of this
+	 * asynchronous predicate and the other
+	 * <p>
+	 * Unlike Java's {@link Predicate#or(Predicate)} this method does not provide short-circuit.
+	 * If either {@code this} or {@code other} predicate returns an exceptionally completed promise,
+	 * the combined asynchronous predicate also returns an exceptionally completed promise
+	 *
+	 * @param other other {@link AsyncBiPredicate} that will be logically ORed with {@code this} predicate
+	 * @return a composed {@link AsyncBiPredicate} that represents a logical OR of this
+	 * asynchronous predicate and the other
+	 */
 	default AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> other) {
 		return (t, u) -> test(t, u).combine(other.test(t, u), (b1, b2) -> b1 || b2);
 	}
