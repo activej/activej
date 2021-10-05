@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<configuration xmlns="http://www.jooq.org/xsd/jooq-codegen-3.14.0.xsd">
+
+  <generator>
+    <name>org.jooq.codegen.JavaGenerator</name>
+
+    <database>
+      <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
+      <properties>
+        <property>
+          <key>scripts</key>
+          <value>src/main/resources/advanced/ddl/*.sql</value>
+        </property>
+      </properties>
+    </database>
+
+    <target>
+      <packageName>advanced.jooq.model</packageName>
+      <directory>src/main/java</directory>
+    </target>
+  </generator>
+</configuration>

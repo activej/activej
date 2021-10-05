@@ -1,5 +1,8 @@
 package advanced.util;
 
+import org.jooq.DSLContext;
+import org.jooq.Table;
+
 import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,10 +10,9 @@ import java.io.InputStream;
 import java.sql.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.nCopies;
 
 public final class Utils {
-	private static final String HORIZONTAL_BORDER = String.join("", nCopies(31, "-"));
+	private static final String HORIZONTAL_BORDER = "+---+------------+------------+";
 
 	public static void printTables(DataSource dataSource, String... tables) throws SQLException {
 		if (tables.length == 0) return;
@@ -21,7 +23,7 @@ public final class Utils {
 					ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table);
 
 
-					System.out.println(table + ":\n" + HORIZONTAL_BORDER);
+					System.out.println('\"' + table + "\":\n" + HORIZONTAL_BORDER);
 					ResultSetMetaData metaData = resultSet.getMetaData();
 					System.out.printf("|%3s|%12s|%12s|%n",
 							metaData.getColumnName(1),
@@ -39,20 +41,32 @@ public final class Utils {
 								resultSet.getString(3));
 					}
 
-					if (isEmpty) {
-						System.out.printf("|%29s|%n", "(empty)");
-					}
-					System.out.println(HORIZONTAL_BORDER + '\n');
+					System.out.println(isEmpty ? '\n' : HORIZONTAL_BORDER + '\n');
 				}
 			}
 		}
 	}
 
-	public static void initialize(DataSource dataSource, String initScript) throws SQLException, IOException {
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute(new String(loadResource(initScript), UTF_8));
+	public static void printTables(DSLContext context, Table<?>... tables) {
+		for (Table<?> table : tables) {
+			System.out.println(table + ":");
+			System.out.println(context.select().from(table).fetch());
+		}
+	}
+
+	public static void initialize(DataSource dataSource, String... initScripts) throws SQLException, IOException {
+		for (String initScript : initScripts) {
+			try (Connection connection = dataSource.getConnection()) {
+				try (Statement statement = connection.createStatement()) {
+					statement.execute(new String(loadResource(initScript), UTF_8));
+				}
 			}
+		}
+	}
+
+	public static void initialize(DSLContext context, String... initScripts) throws IOException {
+		for (String initScript : initScripts) {
+			context.execute(new String(loadResource(initScript), UTF_8));
 		}
 	}
 

@@ -16,7 +16,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public final class JdbcSqlLauncher extends Launcher {
-	public static final String INIT_SCRIPT = "advanced/init.sql";
+	public static final String USER_TABLE_SCRIPT = "advanced/ddl/user.sql";
+	public static final String NEW_USER_TABLE_SCRIPT = "advanced/ddl/new_user.sql";
+	public static final String INIT_TABLES_SCRIPT = "advanced/init.sql";
+
 	public static final String DATASOURCE_PROPERTIES = "advanced/datasource.properties";
 
 	public static final String TABLE_FROM = "user";
@@ -33,7 +36,7 @@ public final class JdbcSqlLauncher extends Launcher {
 
 	@Override
 	protected void onStart() throws IOException, SQLException {
-		Utils.initialize(dataSource, INIT_SCRIPT);
+		Utils.initialize(dataSource, USER_TABLE_SCRIPT, NEW_USER_TABLE_SCRIPT, INIT_TABLES_SCRIPT);
 
 		System.out.println("TABLES BEFORE:");
 		Utils.printTables(dataSource, TABLE_FROM, TABLE_TO);
@@ -41,7 +44,7 @@ public final class JdbcSqlLauncher extends Launcher {
 
 	@Override
 	protected void run() throws SQLException {
-		logger.info("Copying data from table `{}` to table `{}`...", TABLE_FROM, TABLE_TO);
+		logger.info("Copying data from table \"{}\" to table \"{}\"...", TABLE_FROM, TABLE_TO);
 
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
