@@ -18,6 +18,7 @@
     <modules>
         <module>http</module>
         <module>rpc</module>
+        <module>jdbc</module>
     </modules>
 
     <build>
