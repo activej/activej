@@ -165,7 +165,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 						.whenComplete(promiseConsolidateImpl.recordStats()))
 				.whenResult(this::cubeDiffJmx)
 				.whenComplete(this::logCubeDiff)
-				.thenIf(CubeDiff::isEmpty,
+				.thenIfElse(CubeDiff::isEmpty,
 						$ -> Promise.complete(),
 						cubeDiff -> aggregationChunkStorage.finish(addedChunks(cubeDiff))
 								.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
@@ -189,7 +189,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 				() -> locker.getLockedChunks()
 						.then(lockedChunkIds -> chunksFn.apply(aggregation, lockedChunkIds))
-						.thenIf(List::isEmpty,
+						.thenIfElse(List::isEmpty,
 								chunks -> {
 									logger.info("Nothing to consolidate in aggregation '{}", this);
 									return Promise.of(chunks);

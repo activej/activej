@@ -53,7 +53,7 @@ public abstract class AbstractGraphReducer<K, D, A, R> implements GraphReducer<K
 	public final @NotNull Promise<Result<R>> onCommit(@NotNull OTCommit<K, D> commit) {
 		//noinspection OptionalGetWithoutIsPresent
 		return tryGetResult(commit, accumulators, headCommits)
-				.thenIf(Optional::isPresent,
+				.thenIfElse(Optional::isPresent,
 						result -> completePromise(result.get()),
 						$ -> {
 							Map<K, A> toHeads = accumulators.remove(commit.getId());

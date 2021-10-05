@@ -362,7 +362,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of one of two
 	 * mapping functions applied to the result of {@code this} promise
 	 */
-	default <U> @NotNull Promise<U> mapIf(@NotNull Predicate<? super T> predicate,
+	default <U> @NotNull Promise<U> mapIfElse(@NotNull Predicate<? super T> predicate,
 			@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> elseFn) {
 		return map(t -> predicate.test(t) ? fn.apply(t) : elseFn.apply(t));
 	}
@@ -392,7 +392,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	default @NotNull Promise<T> mapIf(@NotNull Predicate<? super T> predicate,
 			@NotNull FunctionEx<? super T, ? extends T> fn) {
-		return mapIf(predicate, fn, FunctionEx.identity());
+		return mapIfElse(predicate, fn, FunctionEx.identity());
 	}
 
 	/**
@@ -437,7 +437,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is either {@code null} or a mapped result
 	 */
 	default <U> @NotNull Promise<U> mapIfNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
-		return mapIf(Objects::nonNull, fn, $ -> null);
+		return mapIfElse(Objects::nonNull, fn, $ -> null);
 	}
 
 	/**
@@ -601,7 +601,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is the result of one of two
 	 * mapping functions applied to the result of {@code this} promise
 	 */
-	default <U> @NotNull Promise<U> thenIf(@NotNull Predicate<? super T> predicate,
+	default <U> @NotNull Promise<U> thenIfElse(@NotNull Predicate<? super T> predicate,
 			@NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> elseFn) {
 		return then(t -> predicate.test(t) ? fn.apply(t) : elseFn.apply(t));
 	}
@@ -631,7 +631,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	default @NotNull Promise<T> thenIf(@NotNull Predicate<? super T> predicate,
 			@NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
-		return thenIf(predicate, fn, Promise::of);
+		return thenIfElse(predicate, fn, Promise::of);
 	}
 
 	/**
@@ -654,7 +654,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * a new promise supplied by a given supplier
 	 */
 	default @NotNull Promise<T> thenIfNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
-		return thenIf(Objects::isNull, $ -> supplier.get(), Promise::of);
+		return thenIfElse(Objects::isNull, $ -> supplier.get(), Promise::of);
 	}
 
 	/**
@@ -678,7 +678,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * result of {@code this} promise or is a promise with a {@code null} result
 	 */
 	default <U> @NotNull Promise<U> thenIfNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
-		return thenIf(Objects::nonNull, fn, $ -> Promise.of(null));
+		return thenIfElse(Objects::nonNull, fn, $ -> Promise.of(null));
 	}
 
 	/**

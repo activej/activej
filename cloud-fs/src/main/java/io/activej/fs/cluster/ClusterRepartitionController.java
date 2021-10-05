@@ -166,7 +166,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 									if (!repartitionPlan.hasNext()) return Promise.of(false);
 									String name = repartitionPlan.next();
 									return localFs.info(name)
-											.thenIf(Objects::isNull,
+											.thenIfElse(Objects::isNull,
 													$ -> {
 														logger.warn("File '{}' that should be repartitioned has been deleted", name);
 														return Promise.of(false);
@@ -269,7 +269,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 		List<Object> ids = new ArrayList<>(selected);
 		boolean belongsToLocal = ids.remove(localPartitionId);
 		return getInfoResults(name, meta, ids)
-				.thenIf(Objects::isNull,
+				.thenIfElse(Objects::isNull,
 						$ -> Promise.of(false),
 						infoResults -> {
 							if (infoResults.shouldBeDeleted()) { // everybody had the file
@@ -327,7 +327,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 																				.whenComplete(cb::accept))));
 											})
 											.map(Promise::toTry))
-									.thenIf(tries -> !tries.stream().allMatch(Try::isSuccess),
+									.thenIfElse(tries -> !tries.stream().allMatch(Try::isSuccess),
 											$ -> {
 												logger.warn("failed uploading file {}, skipping", meta);
 												return Promise.of(false);

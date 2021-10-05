@@ -147,7 +147,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 		return findAllCommonParents(repository, otSystem, frozenCut)
 				.then(parents -> findAnyCommonParent(repository, otSystem, parents))
 				.then(checkpointNode -> repository.hasSnapshot(checkpointNode)
-						.thenIf(hasSnapshot -> hasSnapshot,
+						.thenIfElse(hasSnapshot -> hasSnapshot,
 								$ -> {
 									logger.info("Snapshot already exists, skip cleanup");
 									return Promise.complete();
@@ -173,7 +173,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 		return checkout(repository, otSystem, checkpointNode)
 				.then(checkpointDiffs -> repository.saveSnapshot(checkpointNode, checkpointDiffs)
 						.then(() -> findSnapshot(singleton(checkpointNode), extraSnapshotsCount))
-						.thenIf(Optional::isPresent,
+						.thenIfElse(Optional::isPresent,
 								lastSnapshot -> Promises.toTuple(Tuple::new,
 												collectRequiredChunks(checkpointNode),
 												repository.loadCommit(lastSnapshot.get()))

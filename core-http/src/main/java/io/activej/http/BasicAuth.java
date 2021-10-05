@@ -95,7 +95,7 @@ public final class BasicAuth implements AsyncServlet {
 			throw HttpError.ofCode(400, "No ':' separator");
 		}
 		return credentialsLookup.test(authData[0], authData[1])
-				.thenIf(ok -> ok,
+				.thenIfElse(ok -> ok,
 						$ -> {
 							request.attach(new BasicAuthCredentials(authData[0], authData[1]));
 							return next.serveAsync(request);

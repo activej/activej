@@ -197,7 +197,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 				() -> storage.getSnapshot()
 						.thenIfNull(() -> uplink.checkout()
 								.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.getDiffs(), uplinkSnapshotData.getCommitId(), uplinkSnapshotData.getLevel())
-										.mapIf(ok -> ok,
+										.mapIfElse(ok -> ok,
 												$ -> new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.getDiffs()),
 												$ -> null))))
 				.then(snapshotData -> storage.fetch(snapshotData.getCommitId())

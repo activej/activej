@@ -69,7 +69,7 @@ public final class SessionServlet<T> implements AsyncServlet, WithInitializer<Se
 		}
 
 		return store.get(id)
-				.thenIf(Objects::nonNull,
+				.thenIfElse(Objects::nonNull,
 						sessionObject -> {
 							request.attach(sessionObject);
 							return privateServlet.serveAsync(request);

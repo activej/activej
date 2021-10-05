@@ -215,7 +215,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> mapIf(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+	public @NotNull <U> Promise<U> mapIfElse(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
@@ -623,7 +623,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> thenIf(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
+	public @NotNull <U> Promise<U> thenIfElse(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
