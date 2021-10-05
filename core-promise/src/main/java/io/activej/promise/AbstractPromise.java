@@ -215,7 +215,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> mapWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+	public @NotNull <U> Promise<U> mapIf(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
@@ -254,7 +254,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> mapWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends T> fn) {
+	public @NotNull Promise<T> mapIf(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends T> fn) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
@@ -293,7 +293,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> mapWhenNull(@NotNull SupplierEx<? extends T> supplier) {
+	public @NotNull Promise<T> mapIfNull(@NotNull SupplierEx<? extends T> supplier) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
@@ -332,7 +332,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> mapWhenNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
+	public @NotNull <U> Promise<U> mapIfNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
@@ -623,7 +623,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> thenWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
+	public @NotNull <U> Promise<U> thenIf(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
@@ -662,7 +662,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> thenWhen(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
+	public @NotNull Promise<T> thenIf(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
@@ -705,7 +705,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> thenWhenNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
+	public @NotNull Promise<T> thenIfNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
 		if (isComplete()) {
 			try {
 				return isResult() ?
@@ -748,7 +748,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> thenWhenNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
+	public @NotNull <U> Promise<U> thenIfNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
 		if (isComplete()) {
 			try {
 				return isResult() ?

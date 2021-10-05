@@ -158,7 +158,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 
 	Promise<SyncData<K, D>> startSync() {
 		return storage.getSyncData()
-				.thenWhen(syncData -> syncData.getProtoCommit() == null,
+				.thenIf(syncData -> syncData.getProtoCommit() == null,
 						syncData -> storage.fetch(syncData.getCommitId())
 								.then(fetchedData -> {
 									long headCommitId = fetchedData.getCommitId();
@@ -195,9 +195,9 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 		return retry(
 				isResultOrException(Objects::nonNull),
 				() -> storage.getSnapshot()
-						.thenWhenNull(() -> uplink.checkout()
+						.thenIfNull(() -> uplink.checkout()
 								.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.getDiffs(), uplinkSnapshotData.getCommitId(), uplinkSnapshotData.getLevel())
-										.mapWhen(ok -> ok,
+										.mapIf(ok -> ok,
 												$ -> new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.getDiffs()),
 												$ -> null))))
 				.then(snapshotData -> storage.fetch(snapshotData.getCommitId())

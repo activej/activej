@@ -122,7 +122,7 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanW
 				.map($ -> stateManager.getCommitId())
 				.then(commitId -> predicate.test(commitId)
 						.mapException(e -> new CubeException("Failed to test commit '" + commitId + "' with predicate", e)))
-				.thenWhen(ok -> ok,
+				.thenIf(ok -> ok,
 						$ -> {
 							logger.info("Pull to commit: {}, start log processing", stateManager.getCommitId());
 

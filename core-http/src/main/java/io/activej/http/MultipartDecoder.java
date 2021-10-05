@@ -138,7 +138,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, 
 	public Promise<Void> split(ChannelSupplier<ByteBuf> source, MultipartDataHandler dataHandler) {
 		ChannelSupplier<MultipartFrame> frames = BinaryChannelSupplier.of(source).decodeStream(this);
 		return frames.get()
-				.thenWhenNonNull(frame -> {
+				.thenIfNonNull(frame -> {
 					if (frame.isHeaders()) {
 						return doSplit(frame, frames, dataHandler);
 					}

@@ -60,7 +60,7 @@ public final class MessagingWithBinaryStreamingTest {
 
 	private static void pong(Messaging<Integer, Integer> messaging) {
 		messaging.receive()
-				.thenWhen(Objects::nonNull,
+				.thenIf(Objects::nonNull,
 						msg -> messaging.send(msg).whenResult(() -> pong(messaging)),
 						$ -> {
 							messaging.close();
