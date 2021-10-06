@@ -40,7 +40,7 @@ public final class BlockingEventloopExecutorTest {
 
 		eventloopThread.join();
 
-		assertEquals(actual, expected);
+		assertEquals(expected, actual);
 	}
 
 	@Test
@@ -64,7 +64,7 @@ public final class BlockingEventloopExecutorTest {
 
 		eventloopThread.join();
 
-		assertEquals(actual, expected);
+		assertEquals(expected, actual);
 	}
 
 	@Test
@@ -89,7 +89,7 @@ public final class BlockingEventloopExecutorTest {
 
 		eventloopThread.join();
 
-		assertEquals(actual, expected);
+		assertEquals(expected, actual);
 
 	}
 }

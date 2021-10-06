@@ -28,7 +28,7 @@ import java.util.Objects;
 import static io.activej.promise.RetryPolicy.exponentialBackoff;
 
 public final class PollSanitizer<T> implements AsyncSupplier<T>, WithInitializer<PollSanitizer<T>> {
-	public static final Duration DEFAULT_YIELD_INTERVAL = Duration.ofMillis(1000L);
+	public static final Duration DEFAULT_YIELD_INTERVAL = Duration.ofSeconds(1);
 
 	private Duration yieldInterval = DEFAULT_YIELD_INTERVAL;
 

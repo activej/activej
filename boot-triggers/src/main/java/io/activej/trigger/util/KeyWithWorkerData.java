@@ -59,7 +59,7 @@ public final class KeyWithWorkerData {
 
 		return workerId == that.workerId
 				&& key.equals(that.key)
-				&& (Objects.equals(pool, that.pool));
+				&& Objects.equals(pool, that.pool);
 	}
 
 	@Override

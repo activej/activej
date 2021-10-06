@@ -285,11 +285,7 @@ public final class PartitionedStreamTest {
 						.filter(new IsEven())
 						.collect(toSet())));
 
-		try {
-			assertEquals(sourceFiltered, allTargetItems);
-		} catch (AssertionError e) {
-			e.printStackTrace();
-		}
+		assertEquals(sourceFiltered, allTargetItems);
 	}
 
 	// region modules

@@ -122,7 +122,7 @@ public final class RedisClient implements WithInitializer<RedisClient> {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.map(
 						socket -> {
-							RedisConnection connection = new RedisConnection(eventloop, this,
+							RedisConnection connection = new RedisConnection(this,
 									sslContext != null ?
 											wrapClientSocket(socket,
 													address.getHostName(), address.getPort(),

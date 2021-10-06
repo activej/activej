@@ -463,9 +463,9 @@ public final class HttpCookie {
 		return maxAge == that.maxAge &&
 				secure == that.secure &&
 				httpOnly == that.httpOnly &&
+				expirationDate == that.expirationDate &&
 				Objects.equals(name, that.name) &&
 				Objects.equals(value, that.value) &&
-				Objects.equals(expirationDate, that.expirationDate) &&
 				Objects.equals(domain, that.domain) &&
 				Objects.equals(path, that.path) &&
 				Objects.equals(extension, that.extension);

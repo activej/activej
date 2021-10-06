@@ -75,7 +75,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	private final Set<OpenOption> appendOptions = new HashSet<>(DEFAULT_APPEND_OPTIONS);
 	private final Set<OpenOption> appendNewOptions = new HashSet<>(DEFAULT_APPEND_NEW_OPTIONS);
 
-	private boolean hardlinkOnCopy = false;
+	private boolean hardLinkOnCopy = false;
 	private Path tempDir;
 	private boolean fsyncUploads = DEFAULT_FSYNC_UPLOADS;
 	private boolean fsyncDirectories = DEFAULT_FSYNC_DIRECTORIES;
@@ -102,7 +102,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	 */
 	@SuppressWarnings("UnusedReturnValue")
 	public LocalBlockingFs withHardLinkOnCopy(boolean hardLinkOnCopy) {
-		this.hardlinkOnCopy = hardLinkOnCopy;
+		this.hardLinkOnCopy = hardLinkOnCopy;
 		return this;
 	}
 
@@ -379,7 +379,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 					continue;
 				}
 
-				if (hardlinkOnCopy) {
+				if (hardLinkOnCopy) {
 					try {
 						ensureTarget(path, targetPath, () -> copyViaHardlink(path, targetPath, now));
 					} catch (IOException e) {

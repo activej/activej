@@ -19,8 +19,6 @@ package io.activej.serializer.impl;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import java.util.Collection;
-
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 public final class SerializerDefCollection extends AbstractSerializerDefCollection {
@@ -29,7 +27,7 @@ public final class SerializerDefCollection extends AbstractSerializerDefCollecti
 	}
 
 	private SerializerDefCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
-		super(valueSerializer, Collection.class, decodeType, Object.class, nullable);
+		super(valueSerializer, encodeType, decodeType, Object.class, nullable);
 	}
 
 	@Override

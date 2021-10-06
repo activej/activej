@@ -24,7 +24,6 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -47,7 +46,6 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 	static final int INITIAL_BUFFER_SIZE = ApplicationSettings.getInt(RedisConnection.class, "initialWriteBufferSize", 16384);
 
-	private final Eventloop eventloop;
 	private final RedisClient client;
 
 	private ByteBuf readBuf = ByteBuf.empty();
@@ -69,8 +67,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	private boolean flushPosted;
 	private final int autoFlushIntervalMillis;
 
-	RedisConnection(Eventloop eventloop, RedisClient client, AsyncTcpSocket socket, @NotNull Duration autoFlushInterval) {
-		this.eventloop = eventloop;
+	RedisConnection(RedisClient client, AsyncTcpSocket socket, @NotNull Duration autoFlushInterval) {
 		this.client = client;
 		this.socket = socket;
 		this.autoFlushIntervalMillis = (int) autoFlushInterval.toMillis();

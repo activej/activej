@@ -104,7 +104,7 @@ public final class ClusterRepartitionControllerStressTest {
 				.withReplicationCount(3);
 
 		scheduler = EventloopTaskScheduler.create(eventloop, this.partitions::checkDeadPartitions)
-				.withInterval(Duration.ofMillis(1000));
+				.withInterval(Duration.ofSeconds(1));
 
 		scheduler.start();
 

@@ -482,7 +482,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void copyAllSingleFile() {
-		both(client -> await(client.copyAll((mapOf("file", "newFile")))));
+		both(client -> await(client.copyAll(mapOf("file", "newFile"))));
 
 		assertFileEquals(firstPath, secondPath, "file", "newFile");
 		assertFilesAreSame(firstPath, secondPath);
@@ -529,10 +529,10 @@ public final class TestLocalActiveFsInvariants {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
 			Exception exception = awaitException(
-					client.copyAll((mapOf(
+					client.copyAll(mapOf(
 							"directory", "newDirectory",
 							"directory2", "newDirectory2"
-					))));
+					)));
 			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
 		});
 
@@ -673,7 +673,7 @@ public final class TestLocalActiveFsInvariants {
 	public void moveAllSingleFile() throws IOException {
 		byte[] bytesBefore = Files.readAllBytes(firstPath.resolve("file"));
 
-		both(client -> await(client.moveAll((mapOf("file", "newFile")))));
+		both(client -> await(client.moveAll(mapOf("file", "newFile"))));
 
 		bothPaths(path -> {
 			assertThat(listPaths(path), not(contains(Paths.get("file"))));
@@ -688,10 +688,10 @@ public final class TestLocalActiveFsInvariants {
 		byte[] bytesBefore1 = Files.readAllBytes(firstPath.resolve("file"));
 		byte[] bytesBefore2 = Files.readAllBytes(firstPath.resolve("file2"));
 
-		both(client -> await(client.moveAll((mapOf(
+		both(client -> await(client.moveAll(mapOf(
 				"file", "newFile",
 				"file2", "newFile2"
-		)))));
+		))));
 
 		bothPaths(path -> {
 			assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2"))));
@@ -731,10 +731,10 @@ public final class TestLocalActiveFsInvariants {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll((mapOf(
+					client.moveAll(mapOf(
 							"directory", "newDirectory",
 							"directory2", "newDirectory2"
-					))));
+					)));
 			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
 		});
 

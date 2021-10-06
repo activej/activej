@@ -229,7 +229,7 @@ public final class Preprocessor {
 		// since no cycles are possible between scopes,
 		// we just run a simple dfs that ignores unsatisfied
 		// dependencies for each scope independently
-		Set<Key<?>[]> cycles = collectCycles(bindings.get());
+		List<Key<?>[]> cycles = collectCycles(bindings.get());
 
 		if (!cycles.isEmpty()) {
 			throw new DIException(cycles.stream()
@@ -247,10 +247,10 @@ public final class Preprocessor {
 	 * <p>
 	 * Unsatisfied dependencies are ignored.
 	 */
-	public static Set<Key<?>[]> collectCycles(Map<Key<?>, Binding<?>> bindings) {
+	public static List<Key<?>[]> collectCycles(Map<Key<?>, Binding<?>> bindings) {
 		Set<Key<?>> visited = new HashSet<>();
 		LinkedHashSet<Key<?>> visiting = new LinkedHashSet<>();
-		Set<Key<?>[]> cycles = new HashSet<>();
+		List<Key<?>[]> cycles = new ArrayList<>();
 		// the DAG is not necessarily connected, so we go through any possibly disconnected part
 		for (Key<?> key : bindings.keySet()) {
 			if (!visited.contains(key)) {
@@ -260,7 +260,7 @@ public final class Preprocessor {
 		return cycles;
 	}
 
-	private static void collectCycles(Map<Key<?>, Binding<?>> bindings, Set<Key<?>> visited, LinkedHashSet<Key<?>> visiting, Set<Key<?>[]> cycles, Key<?> key) {
+	private static void collectCycles(Map<Key<?>, Binding<?>> bindings, Set<Key<?>> visited, LinkedHashSet<Key<?>> visiting, List<Key<?>[]> cycles, Key<?> key) {
 		Binding<?> binding = bindings.get(key);
 		if (binding == null) {
 			// just ignore unsatisfied dependencies as if they never existed

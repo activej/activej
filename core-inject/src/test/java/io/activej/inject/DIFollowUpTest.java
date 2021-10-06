@@ -188,7 +188,7 @@ public class DIFollowUpTest {
 		Injector injector = Injector.of(Trie.leaf(bindings));
 		Cookie instance = injector.getInstance(Cookie.class);
 
-		assertEquals(10.f, instance.getPastry().getSugar().getWeight());
+		assertEquals(10.f, instance.getPastry().getSugar().getWeight(), 0.0f);
 	}
 	//[END REGION_1]
 
@@ -336,8 +336,8 @@ public class DIFollowUpTest {
 		float zerosugarWeight = injector.getInstance(Key.of(Cookie.class, "zerosugar"))
 				.getPastry().getSugar().getWeight();
 
-		assertEquals(10.f, normalWeight);
-		assertEquals(0.f, zerosugarWeight);
+		assertEquals(10.f, normalWeight, 0.0f);
+		assertEquals(0.f, zerosugarWeight, 0.0f);
 	}
 	//[END REGION_7]
 
@@ -360,8 +360,8 @@ public class DIFollowUpTest {
 		float zerosugarWeight = injector.getInstance(Key.of(Cookie.class, "zerosugar"))
 				.getPastry().getSugar().getWeight();
 
-		assertEquals(10.f, normalWeight);
-		assertEquals(0.f, zerosugarWeight);
+		assertEquals(10.f, normalWeight, 0.0f);
+		assertEquals(0.f, zerosugarWeight, 0.0f);
 	}
 	//[END REGION_10]
 

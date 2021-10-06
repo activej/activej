@@ -294,12 +294,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-            <excludes>
-                <exclude>**/*.properties</exclude>
-                <exclude>**/logback.xml</exclude>
-                <exclude>**/logback-test.xml</exclude>
-            </excludes>
-            <archive>
+          <excludes>
+            <exclude>**/*.properties</exclude>
+            <exclude>**/logback.xml</exclude>
+            <exclude>**/logback-test.xml</exclude>
+          </excludes>
+          <archive>
             <manifestEntries>
               <git-SHA-1>${buildNumber}</git-SHA-1>
             </manifestEntries>

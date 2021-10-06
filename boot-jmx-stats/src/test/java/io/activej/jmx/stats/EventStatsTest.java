@@ -182,7 +182,7 @@ public class EventStatsTest {
 	}
 
 	public static int uniformRandom(int min, int max) {
-		return min + Math.abs(RANDOM.nextInt()) % (max - min + 1);
+		return min + Math.abs(RANDOM.nextInt(Integer.MAX_VALUE)) % (max - min + 1);
 	}
 
 	@Test

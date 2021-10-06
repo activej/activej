@@ -31,7 +31,7 @@ public final class TypeTokenExample {
 
 		Key<?> complex = Key.ofType(parameterizedType(List.class, parameterizedType(List.class, String.class)));
 		Key<List<List<String>>> subclassedButTypesafe = new Key<List<List<String>>>() {};
-		System.out.println("complex == subclassedButTypesafe = " + (complex.equals(subclassedButTypesafe)));
+		System.out.println("complex == subclassedButTypesafe = " + complex.equals(subclassedButTypesafe));
 	}
 }
 //[END EXAMPLE]

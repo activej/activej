@@ -339,7 +339,7 @@ public class ValueStatsTest {
 	}
 
 	public static int uniformRandom(int min, int max) {
-		return min + (Math.abs(RANDOM.nextInt()) % (max - min + 1));
+		return min + (Math.abs(RANDOM.nextInt(Integer.MAX_VALUE)) % (max - min + 1));
 	}
 
 	@Test
@@ -500,7 +500,7 @@ public class ValueStatsTest {
 		ValueStats valueStats = ValueStats.create(Duration.ofSeconds(10)).withAbsoluteValues(true);
 
 		long currentTimestamp = 0;
-		double inputValue = 0.123456789123456789;
+		double inputValue = 0.123456789123456789d;
 
 		// Test if difference is 0.1 - precision should be 0.1/1000 = 0.0001 (4 digits)
 		for (int i = 0; i < 2; i++) {

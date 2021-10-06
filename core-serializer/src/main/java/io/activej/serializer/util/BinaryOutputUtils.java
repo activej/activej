@@ -79,7 +79,7 @@ public final class BinaryOutputUtils {
 		buf[off] = (byte) v;
 		buf[off + 1] = (byte) (v >>> 8);
 		buf[off + 2] = (byte) (v >>> 16);
-		buf[off + 3] = (byte) ((v >>> 24));
+		buf[off + 3] = (byte) (v >>> 24);
 		return off + 4;
 	}
 

@@ -284,9 +284,9 @@ public final class Injector implements ResourceLocator {
 		}
 
 		bindings.put(Key.of(Injector.class), Binding.to(
-				() -> {
-					throw new AssertionError("Injector constructor must never be called since it's instance is always put in the cache manually");
-				})
+						() -> {
+							throw new AssertionError("Injector constructor must never be called since it's instance is always put in the cache manually");
+						})
 				.as(EAGER));
 
 		compiledBindingsOfParent.forEach(compiledBindings::putIfAbsent);

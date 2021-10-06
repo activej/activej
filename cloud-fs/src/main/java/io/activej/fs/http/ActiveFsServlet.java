@@ -96,7 +96,7 @@ public final class ActiveFsServlet implements WithInitializer<ActiveFsServlet> {
 				.map(GET, "/" + LIST, request -> {
 					String glob = request.getQueryParameter("glob");
 					glob = glob != null ? glob : "**";
-					return (fs.list(glob))
+					return fs.list(glob)
 							.map(list -> HttpResponse.ok200()
 											.withBody(toJson(list))
 											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)),

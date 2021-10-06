@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.http.stream.BufsConsumerChunkedDecoder.CRLF;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -41,6 +40,7 @@ public final class HttpStreamTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
+	public static final String CRLF = "\r\n";
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
@@ -134,18 +134,16 @@ public final class HttpStreamTest {
 	public void testChunkedEncodingMessage() throws IOException {
 		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
-		String crlf = new String(CRLF, UTF_8);
-
 		String chunkedRequest =
-				"POST / HTTP/1.1" + crlf +
-						"Host: localhost" + crlf +
-						"Transfer-Encoding: chunked" + crlf + crlf +
-						"4" + crlf + "Test" + crlf + "0" + crlf + crlf;
+				"POST / HTTP/1.1" + CRLF +
+						"Host: localhost" + CRLF +
+						"Transfer-Encoding: chunked" + CRLF + CRLF +
+						"4" + CRLF + "Test" + CRLF + "0" + CRLF + CRLF;
 
 		String responseMessage =
-				"HTTP/1.1 200 OK" + crlf +
-						"Connection: keep-alive" + crlf +
-						"Content-Length: 4" + crlf + crlf +
+				"HTTP/1.1 200 OK" + CRLF +
+						"Connection: keep-alive" + CRLF +
+						"Content-Length: 4" + CRLF + CRLF +
 						"Test";
 
 		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))
@@ -164,12 +162,10 @@ public final class HttpStreamTest {
 	public void testMalformedChunkedEncodingMessage() throws IOException {
 		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
-		String crlf = new String(CRLF, UTF_8);
-
 		String chunkedRequest =
-				"POST / HTTP/1.1" + crlf +
-						"Host: localhost" + crlf +
-						"Transfer-Encoding: chunked" + crlf + crlf +
+				"POST / HTTP/1.1" + CRLF +
+						"Host: localhost" + CRLF +
+						"Transfer-Encoding: chunked" + CRLF + CRLF +
 						"ffffffffff";
 
 		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))
@@ -192,13 +188,11 @@ public final class HttpStreamTest {
 	public void testTruncatedRequest() throws IOException {
 		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
-		String crlf = new String(CRLF, UTF_8);
-
 		String chunkedRequest =
-				"POST / HTTP/1.1" + crlf +
-						"Host: localhost" + crlf +
-						"Content-Length: 13" + crlf +
-						"Transfer-Encoding: chunked" + crlf + crlf +
+				"POST / HTTP/1.1" + CRLF +
+						"Host: localhost" + CRLF +
+						"Content-Length: 13" + CRLF +
+						"Transfer-Encoding: chunked" + CRLF + CRLF +
 						"3";
 
 		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))

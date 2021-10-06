@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 import static io.activej.common.Utils.first;
 import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
@@ -189,14 +190,19 @@ public class FileWriteAheadLogTest {
 				new CrdtData<>(1L, GSet.of(9, 10, 11))
 		);
 
-		Set<Path> remainingWalFiles = Files.list(path).collect(toSet());
-		assertEquals(2, remainingWalFiles.size());
-		assertTrue(await(await(storage.download()).toList()).isEmpty());
+		Set<Path> remainingWalFiles;
+		try (Stream<Path> list = Files.list(path)) {
+			remainingWalFiles = list.collect(toSet());
+			assertEquals(2, remainingWalFiles.size());
+			assertTrue(await(await(storage.download()).toList()).isEmpty());
+		}
 
 		await(wal.start());
-		Set<Path> walFilesAfterStart = Files.list(path).collect(toSet());
-		assertEquals(1, walFilesAfterStart.size());
-		assertFalse(remainingWalFiles.contains(first(walFilesAfterStart)));
+		try (Stream<Path> list = Files.list(path)) {
+			Set<Path> walFilesAfterStart = list.collect(toSet());
+			assertEquals(1, walFilesAfterStart.size());
+			assertFalse(remainingWalFiles.contains(first(walFilesAfterStart)));
+		}
 
 		List<CrdtData<Long, GSet<Integer>>> actual = await(await(storage.download()).toList());
 		assertEquals(expected, actual);
@@ -224,14 +230,19 @@ public class FileWriteAheadLogTest {
 		truncateFile(walFile1, 0.75);
 		truncateFile(walFile2, 0.75);
 
-		Set<Path> remainingWalFiles = Files.list(path).collect(toSet());
-		assertEquals(2, remainingWalFiles.size());
-		assertTrue(await(await(storage.download()).toList()).isEmpty());
+		Set<Path> remainingWalFiles;
+		try (Stream<Path> list = Files.list(path)) {
+			remainingWalFiles = list.collect(toSet());
+			assertEquals(2, remainingWalFiles.size());
+			assertTrue(await(await(storage.download()).toList()).isEmpty());
+		}
 
 		await(wal.start());
-		Set<Path> walFilesAfterStart = Files.list(path).collect(toSet());
-		assertEquals(1, walFilesAfterStart.size());
-		assertFalse(remainingWalFiles.contains(first(walFilesAfterStart)));
+		try (Stream<Path> list = Files.list(path)) {
+			Set<Path> walFilesAfterStart = list.collect(toSet());
+			assertEquals(1, walFilesAfterStart.size());
+			assertFalse(remainingWalFiles.contains(first(walFilesAfterStart)));
+		}
 
 		List<CrdtData<Long, GSet<Integer>>> actual = await(await(storage.download()).toList());
 		assertEquals(expected, actual);
@@ -254,14 +265,19 @@ public class FileWriteAheadLogTest {
 		Path walFile3 = craftWALFile();
 		truncateFile(walFile3, 0);
 
-		Set<Path> remainingWalFiles = Files.list(path).collect(toSet());
-		assertEquals(3, remainingWalFiles.size());
-		assertTrue(await(await(storage.download()).toList()).isEmpty());
+		Set<Path> remainingWalFiles;
+		try (Stream<Path> list = Files.list(path)) {
+			remainingWalFiles = list.collect(toSet());
+			assertEquals(3, remainingWalFiles.size());
+			assertTrue(await(await(storage.download()).toList()).isEmpty());
+		}
 
 		await(wal.start());
-		Set<Path> walFilesAfterStart = Files.list(path).collect(toSet());
-		assertEquals(1, walFilesAfterStart.size());
-		assertFalse(remainingWalFiles.contains(first(walFilesAfterStart)));
+		try (Stream<Path> list = Files.list(path)) {
+			Set<Path> walFilesAfterStart = list.collect(toSet());
+			assertEquals(1, walFilesAfterStart.size());
+			assertFalse(remainingWalFiles.contains(first(walFilesAfterStart)));
+		}
 
 		List<CrdtData<Long, GSet<Integer>>> actual = await(await(storage.download()).toList());
 		assertEquals(expected, actual);
@@ -271,7 +287,7 @@ public class FileWriteAheadLogTest {
 	private final Path craftWALFile(CrdtData<Long, GSet<Integer>>... mockData) {
 		Path file = path.resolve(UUID.randomUUID() + EXT_FINAL);
 		await(StreamSupplier.ofChannelSupplier(ChannelSupplier.of(mockData)
-				.mapAsync(data -> Promises.delay(Duration.ofMillis(1), data)))
+						.mapAsync(data -> Promises.delay(Duration.ofMillis(1), data)))
 				.transformWith(ChannelSerializer.create(serializer)
 						.withAutoFlushInterval(Duration.ZERO))
 				.transformWith(ChannelFrameEncoder.create(FRAME_FORMAT))

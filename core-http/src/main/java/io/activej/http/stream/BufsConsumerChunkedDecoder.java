@@ -46,7 +46,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder>,
 		WithInitializer<BufsConsumerChunkedDecoder> {
 	public static final int MAX_CHUNK_LENGTH_DIGITS = 8;
-	public static final byte[] CRLF = {13, 10};
+
+	private static final byte[] CRLF = {13, 10};
 
 	private ByteBufs bufs;
 	private BinaryChannelSupplier input;

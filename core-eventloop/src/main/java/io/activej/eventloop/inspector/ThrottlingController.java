@@ -94,7 +94,7 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 				.withInitialThrottling(INITIAL_THROTTLING);
 	}
 
-	private @NotNull ThrottlingController withEventloop(@NotNull Eventloop eventloop) {
+	public @NotNull ThrottlingController withEventloop(@NotNull Eventloop eventloop) {
 		setEventloop(eventloop);
 		return this;
 	}

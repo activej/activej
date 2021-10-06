@@ -96,8 +96,8 @@ public class HttpError extends HttpException implements Promisable<HttpResponse>
 	}
 
 	@Override
-	public String toString() {
-		String msg = getLocalizedMessage();
+	public String getMessage() {
+		String msg = super.getMessage();
 		if (msg != null) {
 			return "HTTP code " + code + ": " + msg;
 		}

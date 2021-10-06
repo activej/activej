@@ -264,7 +264,7 @@ public final class TestClusterActiveFs {
 			}
 		}
 
-		assertEquals(copies, REPLICATION_COUNT);
+		assertEquals(REPLICATION_COUNT, copies);
 	}
 
 	@Test

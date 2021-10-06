@@ -444,6 +444,7 @@ public final class TestLocalBlockingFsInvariants {
 		both(client -> {
 			try {
 				client.deleteAll(setOf("file", ".."));
+				fail();
 			} catch (FileSystemException e) {
 				assertThat(e.getMessage(), containsString("Path '..' is forbidden"));
 			}
@@ -477,7 +478,7 @@ public final class TestLocalBlockingFsInvariants {
 
 	@Test
 	public void copyAllSingleFile() {
-		both(client -> client.copyAll((mapOf("file", "newFile"))));
+		both(client -> client.copyAll(mapOf("file", "newFile")));
 
 		assertFileEquals(firstPath, secondPath, "file", "newFile");
 		assertFilesAreSame(firstPath, secondPath);
@@ -517,10 +518,10 @@ public final class TestLocalBlockingFsInvariants {
 	public void copyAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.copyAll((mapOf(
+				() -> client.copyAll(mapOf(
 						"directory", "newDirectory",
 						"directory2", "newDirectory2"
-				)))));
+				))));
 
 		assertEquals(before, listPaths(firstPath));
 		assertFilesAreSame(firstPath, secondPath);
@@ -576,6 +577,7 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"file2", "../new"
 				));
+				fail();
 			} catch (FileSystemException e) {
 				assertThat(e.getMessage(), containsString("Path '.." + File.separatorChar + "new' is forbidden"));
 			}
@@ -590,6 +592,7 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"../new", "newFile2"
 				));
+				fail();
 			} catch (FileSystemException e) {
 				assertThat(e.getMessage(), containsString("Path '.." + File.separatorChar + "new' is forbidden"));
 			}
@@ -650,7 +653,7 @@ public final class TestLocalBlockingFsInvariants {
 	public void moveAllSingleFile() throws IOException {
 		byte[] bytesBefore = Files.readAllBytes(firstPath.resolve("file"));
 
-		both(client -> client.moveAll((mapOf("file", "newFile"))));
+		both(client -> client.moveAll(mapOf("file", "newFile")));
 
 		bothPaths(path -> {
 			assertThat(listPaths(path), not(contains(Paths.get("file"))));
@@ -665,10 +668,10 @@ public final class TestLocalBlockingFsInvariants {
 		byte[] bytesBefore1 = Files.readAllBytes(firstPath.resolve("file"));
 		byte[] bytesBefore2 = Files.readAllBytes(firstPath.resolve("file2"));
 
-		both(client -> client.moveAll((mapOf(
+		both(client -> client.moveAll(mapOf(
 				"file", "newFile",
 				"file2", "newFile2"
-		))));
+		)));
 
 		bothPaths(path -> {
 			assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2"))));
@@ -701,10 +704,10 @@ public final class TestLocalBlockingFsInvariants {
 	public void moveAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.moveAll((mapOf(
+				() -> client.moveAll(mapOf(
 						"directory", "newDirectory",
 						"directory2", "newDirectory2"
-				)))));
+				))));
 
 		assertEquals(before, listPaths(firstPath));
 		assertFilesAreSame(firstPath, secondPath);
@@ -754,6 +757,7 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"file2", "../new"
 				));
+				fail();
 			} catch (FileSystemException e) {
 				assertThat(e.getMessage(), containsString("Path '.." + File.separatorChar + "new' is forbidden"));
 			}
@@ -768,6 +772,7 @@ public final class TestLocalBlockingFsInvariants {
 						"file", "newFile",
 						"../new", "newFile2"
 				));
+				fail();
 			} catch (FileSystemException e) {
 				assertThat(e.getMessage(), containsString("Path '.." + File.separatorChar + "new' is forbidden"));
 			}
@@ -948,6 +953,7 @@ public final class TestLocalBlockingFsInvariants {
 	private static void assertException(Class<? extends IOException> errorClass, IORunnable runnable) {
 		try {
 			runnable.run();
+			fail();
 		} catch (IOException ioException) {
 			assertThat(ioException, instanceOf(errorClass));
 		}

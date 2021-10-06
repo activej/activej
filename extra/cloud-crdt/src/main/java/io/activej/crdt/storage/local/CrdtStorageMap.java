@@ -39,8 +39,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.Iterator;
+import java.util.NavigableMap;
 import java.util.Objects;
-import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Stream;
 
@@ -53,7 +53,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	private final CrdtFilter<S> filter = $ -> true;
 
-	private final SortedMap<K, CrdtData<K, S>> map = new ConcurrentSkipListMap<>();
+	private final NavigableMap<K, CrdtData<K, S>> map = new ConcurrentSkipListMap<>();
 
 	// region JMX
 	private boolean detailedStats;

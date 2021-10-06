@@ -102,7 +102,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private final Set<OpenOption> appendNewOptions = new HashSet<>(DEFAULT_APPEND_NEW_OPTIONS);
 
 	private MemSize readerBufferSize = MemSize.kilobytes(256);
-	private boolean hardlinkOnCopy = false;
+	private boolean hardLinkOnCopy = false;
 	private Path tempDir;
 	private boolean fsyncUploads = DEFAULT_FSYNC_UPLOADS;
 	private boolean fsyncDirectories = DEFAULT_FSYNC_DIRECTORIES;
@@ -159,7 +159,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	 */
 	@SuppressWarnings("UnusedReturnValue")
 	public LocalActiveFs withHardLinkOnCopy(boolean hardLinkOnCopy) {
-		this.hardlinkOnCopy = hardLinkOnCopy;
+		this.hardLinkOnCopy = hardLinkOnCopy;
 		return this;
 	}
 
@@ -506,7 +506,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private void doCopy(Path path, Path targetPath) throws IOException, FsScalarException {
-		if (hardlinkOnCopy) {
+		if (hardLinkOnCopy) {
 			try {
 				ensureTarget(path, targetPath, () -> copyViaHardlink(path, targetPath, now));
 			} catch (IOException | FsScalarException e) {
