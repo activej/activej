@@ -36,7 +36,6 @@ import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.eventloop.schedule.Scheduler;
-import io.activej.eventloop.util.OptimizedSelectedKeysSet;
 import io.activej.eventloop.util.RunnableWithContext;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -511,58 +510,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			if (sw != null && inspector != null) inspector.onUpdateSelectedKeyDuration(sw);
 		}
 
-		int keys = acceptKeys + connectKeys + readKeys + writeKeys + invalidKeys;
-
-		if (keys != 0) {
-			long loopTime = refreshTimestampAndGet() - startTimestamp;
-			if (inspector != null)
-				inspector.onUpdateSelectedKeysStats(lastSelectedKeys, invalidKeys, acceptKeys, connectKeys, readKeys, writeKeys, loopTime);
-		}
-
-		return keys;
-	}
-
-	private int optimizedProcessSelectedKeys(@NotNull OptimizedSelectedKeysSet selectedKeys) {
-		long startTimestamp = timestamp;
-		Stopwatch sw = monitoring ? Stopwatch.createUnstarted() : null;
-
-		int invalidKeys = 0, acceptKeys = 0, connectKeys = 0, readKeys = 0, writeKeys = 0;
-
-		for (int i = 0; i < selectedKeys.size(); i++) {
-			SelectionKey key = selectedKeys.get(i);
-			if (!key.isValid()) {
-				invalidKeys++;
-				continue;
-			}
-
-			if (sw != null) {
-				sw.reset();
-				sw.start();
-			}
-
-			if (key.isAcceptable()) {
-				onAccept(key);
-				acceptKeys++;
-			} else if (key.isConnectable()) {
-				onConnect(key);
-				connectKeys++;
-			} else {
-				if (key.isReadable()) {
-					onRead(key);
-					readKeys++;
-				}
-				if (key.isValid()) {
-					if (key.isWritable()) {
-						onWrite(key);
-						writeKeys++;
-					}
-				} else {
-					invalidKeys++;
-				}
-			}
-			if (sw != null && inspector != null) inspector.onUpdateSelectedKeyDuration(sw);
-		}
-		selectedKeys.clear();
 		int keys = acceptKeys + connectKeys + readKeys + writeKeys + invalidKeys;
 
 		if (keys != 0) {
