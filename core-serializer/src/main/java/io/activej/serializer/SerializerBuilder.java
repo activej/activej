@@ -434,6 +434,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	}
 
 	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 *
 	 * @see #build(AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> build(Type type) {
@@ -441,6 +443,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	}
 
 	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 *
 	 * @see #build(AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> build(Class<T> type) {
@@ -448,6 +452,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	}
 
 	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 *
 	 * @see #build(AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> build(TypeT<T> typeT) {
@@ -473,6 +479,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	}
 
 	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 *
 	 * @see #build(String, AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> build(String className, Type type) {
@@ -480,6 +488,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	}
 
 	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 *
 	 * @see #build(String, AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> build(String className, Class<T> type) {
@@ -487,6 +497,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	}
 
 	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 *
 	 * @see #build(String, AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> build(String className, TypeT<T> typeT) {

@@ -40,6 +40,9 @@ public interface FatalErrorHandler {
 	void handle(@NotNull Throwable e, @Nullable Object context);
 
 	/**
+	 * Called when an unchecked exception is caught during execution of some task
+	 *
+	 * @param e the caught exception
 	 * @see #handle(Throwable, Object)
 	 */
 	default void handle(@NotNull Throwable e) {

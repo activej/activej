@@ -153,7 +153,7 @@ public final class Try<T> {
 	}
 
 	/**
-	 * @return whether this {@link Try} is successful
+	 * Returns whether this {@link Try} is successful
 	 */
 	@Contract(pure = true)
 	public boolean isSuccess() {
@@ -161,7 +161,7 @@ public final class Try<T> {
 	}
 
 	/**
-	 * @return whether this {@link Try} is failed
+	 * Returns whether this {@link Try} is failed
 	 */
 	@Contract(pure = true)
 	public boolean isException() {
@@ -169,7 +169,7 @@ public final class Try<T> {
 	}
 
 	/**
-	 * @return a result of this {@link Try}, possibly {@code null}
+	 * Returns a result of this {@link Try}, possibly {@code null}
 	 */
 	@Contract(pure = true)
 	public @Nullable T get() {
@@ -201,7 +201,7 @@ public final class Try<T> {
 	}
 
 	/**
-	 * @return an exception of this {@link Try}, possibly {@code null}
+	 * Returns an exception of this {@link Try}, possibly {@code null}
 	 */
 	@Contract(pure = true)
 	public @Nullable Exception getException() {

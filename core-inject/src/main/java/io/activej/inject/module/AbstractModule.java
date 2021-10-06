@@ -79,6 +79,8 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * This method begins a chain of binding builder DSL calls
+	 *
 	 * @see ModuleBuilder#bind(Key)
 	 */
 	protected final <T> ModuleBuilder0<T> bind(@NotNull Key<T> key) {
@@ -87,6 +89,8 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * This method begins a chain of binding builder DSL calls.
+	 *
 	 * @see ModuleBuilder#bind(Key)
 	 */
 	protected final <T> ModuleBuilder0<T> bind(Class<T> type) {
@@ -95,6 +99,8 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * This method begins a chain of binding builder DSL calls.
+	 *
 	 * @see ModuleBuilder#bind(Key)
 	 */
 	protected final <T> ModuleBuilder0<T> bind(Class<T> type, Object qualifier) {
@@ -123,6 +129,10 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * Adds all bindings, transformers, generators and multibinders from given modules to this one.
+	 * <p>
+	 * This works just as if you'd define all of those directly in this module.
+	 *
 	 * @see ModuleBuilder#install
 	 */
 	protected final void install(Module module) {
@@ -131,6 +141,8 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * Adds a {@link BindingGenerator generator} for a given class to this module.
+	 *
 	 * @see ModuleBuilder#generate
 	 */
 	protected final <T> void generate(KeyPattern<T> pattern, BindingGenerator<T> bindingGenerator) {
@@ -143,6 +155,8 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * Adds a {@link BindingTransformer transformer} with a given type to this module.
+	 *
 	 * @see ModuleBuilder#transform
 	 */
 	protected final <T> void transform(KeyPattern<T> pattern, BindingTransformer<T> bindingTransformer) {
@@ -155,6 +169,8 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * Adds a {@link Multibinder multibinder} for a given key to this module.
+	 *
 	 * @see ModuleBuilder#multibind
 	 */
 	protected final <T> void multibind(Key<T> key, Multibinder<T> multibinder) {
@@ -188,6 +204,10 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * This is a helper method that provides a functionality similar to {@link ProvidesIntoSet}.
+	 * It binds given binding as a singleton set to a set key made from given key
+	 * and also {@link Multibinders#toSet multibinds} each of such sets together.
+	 *
 	 * @see ModuleBuilder#bindIntoSet(Key, Binding)
 	 */
 	protected final <S, T extends S> void bindIntoSet(Key<S> setOf, Binding<T> binding) {
@@ -196,6 +216,10 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * This is a helper method that provides a functionality similar to {@link ProvidesIntoSet}.
+	 * It binds given binding as a singleton set to a set key made from given key
+	 * and also {@link Multibinders#toSet multibinds} each of such sets together.
+	 *
 	 * @see ModuleBuilder#bindIntoSet(Key, Binding)
 	 */
 	protected final <S, T extends S> void bindIntoSet(Key<S> setOf, Key<T> item) {
@@ -203,6 +227,10 @@ public abstract class AbstractModule implements Module {
 	}
 
 	/**
+	 * This is a helper method that provides a functionality similar to {@link ProvidesIntoSet}.
+	 * It binds given binding as a singleton set to a set key made from given key
+	 * and also {@link Multibinders#toSet multibinds} each of such sets together.
+	 *
 	 * @see ModuleBuilder#bindIntoSet(Key, Binding)
 	 */
 	protected final <S, T extends S> void bindIntoSet(@NotNull Key<S> setOf, @NotNull T element) {

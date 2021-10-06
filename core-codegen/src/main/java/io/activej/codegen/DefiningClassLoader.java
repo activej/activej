@@ -139,6 +139,8 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	}
 
 	/**
+	 * Ensures that a class of a given name is present
+	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
 	public <T> @NotNull Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilder) {
@@ -146,13 +148,17 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	}
 
 	/**
-	 * @see #ensureClass(ClassKey, Function)
+	 * Ensures that a class of a given name is present
+	 *
+	 * @see #ensureClass(String, BiFunction)
 	 */
 	public <T> @NotNull Class<T> ensureClass(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder) {
 		return ensureClass(key, classLoader -> classBuilder.get().toBytecode(classLoader));
 	}
 
 	/**
+	 * Ensures that a class of a given name is present
+	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
 	public <T> @NotNull T ensureClassAndCreateInstance(String className, Supplier<ClassBuilder<T>> classBuilder,
@@ -161,7 +167,9 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	}
 
 	/**
-	 * @see #ensureClass(ClassKey, Function)
+	 * Ensures that a class of a given name is present and creates a new instance of such class
+	 *
+	 * @see #ensureClass(String, BiFunction)
 	 */
 	public <T> @NotNull T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder,
 			Object... arguments) {
@@ -245,6 +253,8 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	}
 
 	/**
+	 * Ensures that a class of a given name is present and creates a new instance of such class
+	 *
 	 * @see #ensureClass(ClassKey, Function)
 	 */
 	public <T> @NotNull T ensureClassAndCreateInstance(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder,

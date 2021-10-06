@@ -70,21 +70,21 @@ public abstract class TypeT<T> {
 	}
 
 	/**
-	 * @return an {@link AnnotatedType} of a {@link T}
+	 * Returns an {@link AnnotatedType} of a {@link T}
 	 */
 	public final @NotNull AnnotatedType getAnnotatedType() {
 		return annotatedType;
 	}
 
 	/**
-	 * @return a {@link Type} of a {@link T}
+	 * Returns a {@link Type} of a {@link T}
 	 */
 	public final @NotNull Type getType() {
 		return annotatedType.getType();
 	}
 
 	/**
-	 * @return a raw type (e.g {@link Class}) of a {@link T}
+	 * Returns a raw type (e.g {@link Class}) of a {@link T}
 	 */
 	@SuppressWarnings("unchecked")
 	public final Class<T> getRawType() {

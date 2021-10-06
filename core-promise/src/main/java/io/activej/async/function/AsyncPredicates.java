@@ -68,7 +68,8 @@ public final class AsyncPredicates {
 	}
 
 	/**
-	 * @return an {@link AsyncPredicate} that always returns promise of {@code true}
+	 * Returns an {@link AsyncPredicate} that always returns promise of {@code true}
+	 *
 	 * @see #and(Collection)
 	 */
 	public static <T> @NotNull AsyncPredicate<T> and() {
@@ -76,7 +77,12 @@ public final class AsyncPredicates {
 	}
 
 	/**
+	 * Returns a given asynchronous predicate
+	 * <p>
+	 * A shortcut for {@link #and(AsyncPredicate[])}
+	 *
 	 * @see #and(Collection)
+	 * @see #and(AsyncPredicate[])
 	 */
 	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T> predicate1) {
 		//noinspection unchecked
@@ -84,7 +90,10 @@ public final class AsyncPredicates {
 	}
 
 	/**
+	 * An optimization for {@link #and(AsyncPredicate[])}
+	 *
 	 * @see #and(Collection)
+	 * @see #and(AsyncPredicate[])
 	 */
 	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T> predicate1, AsyncPredicate<? super T> predicate2) {
 		//noinspection unchecked
@@ -92,6 +101,9 @@ public final class AsyncPredicates {
 	}
 
 	/**
+	 * Returns a composed {@link AsyncPredicate} that represents a logical AND of all predicates
+	 * in a given array
+	 *
 	 * @see #and(Collection)
 	 */
 	@SafeVarargs
@@ -131,7 +143,12 @@ public final class AsyncPredicates {
 	}
 
 	/**
+	 * Returns a given asynchronous predicate
+	 * <p>
+	 * A shortcut for {@link #or(AsyncPredicate[])}
+	 *
 	 * @see #or(Collection)
+	 * @see #or(AsyncPredicate[])
 	 */
 	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T> predicate1) {
 		//noinspection unchecked
@@ -139,7 +156,10 @@ public final class AsyncPredicates {
 	}
 
 	/**
+	 * An optimization for {@link #or(AsyncPredicate[])}
+	 *
 	 * @see #or(Collection)
+	 * @see #or(AsyncPredicate[])
 	 */
 	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T> predicate1, AsyncPredicate<? super T> predicate2) {
 		//noinspection unchecked
@@ -147,6 +167,9 @@ public final class AsyncPredicates {
 	}
 
 	/**
+	 * Returns a composed {@link AsyncPredicate} that represents a logical OR of all predicates
+	 * in a given array
+	 *
 	 * @see #or(Collection)
 	 */
 	@SafeVarargs

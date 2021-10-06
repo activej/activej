@@ -51,6 +51,10 @@ public interface ModuleBuilder {
 	ModuleBuilder install(Collection<Module> modules);
 
 	/**
+	 * Adds all bindings, transformers, generators and multibinders from given modules to this one.
+	 * <p>
+	 * This works just as if you'd define all of those directly in this module.
+	 *
 	 * @see #install(Collection)
 	 */
 	default ModuleBuilder install(Module... modules) {
@@ -80,6 +84,8 @@ public interface ModuleBuilder {
 	}
 
 	/**
+	 * Begins a chain of binding builder DSL calls
+	 *
 	 * @see #bind(Key)
 	 */
 	default <T> ModuleBuilder0<T> bind(Class<T> cls) {
@@ -87,6 +93,8 @@ public interface ModuleBuilder {
 	}
 
 	/**
+	 * Begins a chain of binding builder DSL calls
+	 *
 	 * @see #bind(Key)
 	 */
 	default <T> ModuleBuilder0<T> bind(Class<T> cls, Object qualifier) {
@@ -126,6 +134,8 @@ public interface ModuleBuilder {
 	<S, T extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Binding<T> binding);
 
 	/**
+	 * A helper method that provides a functionality similar to {@link ProvidesIntoSet}.
+	 *
 	 * @see #bindIntoSet(Key, Binding)
 	 * @see Binding#to(Key)
 	 */

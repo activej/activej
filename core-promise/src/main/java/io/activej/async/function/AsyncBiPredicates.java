@@ -68,7 +68,8 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
-	 * @return an {@link AsyncPredicate} that always returns promise of {@code true}
+	 * Returns an {@link AsyncBiPredicate} that always returns promise of {@code true}
+	 *
 	 * @see #and(Collection)
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and() {
@@ -76,7 +77,12 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
+	 * Returns a given asynchronous predicate
+	 * <p>
+	 * A shortcut for {@link #and(AsyncBiPredicate[])}
+	 *
 	 * @see #and(Collection)
+	 * @see #and(AsyncBiPredicate[])
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> predicate1) {
 		//noinspection unchecked
@@ -84,7 +90,10 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
+	 * An optimization for {@link #and(AsyncBiPredicate[])}
+	 *
 	 * @see #and(Collection)
+	 * @see #and(AsyncBiPredicate[])
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> predicate1, AsyncBiPredicate<? super T, ? super U> predicate2) {
 		//noinspection unchecked
@@ -92,6 +101,9 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
+	 * Returns a composed {@link AsyncBiPredicate} that represents a logical AND of all predicates
+	 * in a given array
+	 *
 	 * @see #and(Collection)
 	 */
 	@SafeVarargs
@@ -101,15 +113,15 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
-	 * Returns a composed {@link AsyncPredicate} that represents a logical OR of all predicates
+	 * Returns a composed {@link AsyncBiPredicate} that represents a logical OR of all predicates
 	 * in a given collection
 	 * <p>
 	 * Unlike Java's {@link Predicate#or(Predicate)} this method does not provide short-circuit.
 	 * If either predicate returns an exceptionally completed promise,
 	 * the combined asynchronous predicate also returns an exceptionally completed promise
 	 *
-	 * @param predicates a collection of {@link AsyncPredicate}s that will be logically ORed
-	 * @return a composed {@link AsyncPredicate} that represents a logical OR of asynchronous predicates
+	 * @param predicates a collection of {@link AsyncBiPredicate}s that will be logically ORed
+	 * @return a composed {@link AsyncBiPredicate} that represents a logical OR of asynchronous predicates
 	 * in a given collection
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
@@ -123,7 +135,8 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
-	 * @return an {@link AsyncPredicate} that always returns promise of {@code false}
+	 * Returns an {@link AsyncBiPredicate} that always returns promise of {@code false}
+	 *
 	 * @see #or(Collection)
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or() {
@@ -131,7 +144,12 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
+	 * Returns a given asynchronous predicate
+	 * <p>
+	 * A shortcut for {@link #or(AsyncBiPredicate[])}
+	 *
 	 * @see #or(Collection)
+	 * @see #or(AsyncBiPredicate[])
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> predicate1) {
 		//noinspection unchecked
@@ -139,7 +157,10 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
+	 * An optimization for {@link #or(AsyncBiPredicate[])}
+	 *
 	 * @see #or(Collection)
+	 * @see #or(AsyncBiPredicate[])
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> predicate1, AsyncBiPredicate<? super T, ? super U> predicate2) {
 		//noinspection unchecked
@@ -147,6 +168,9 @@ public final class AsyncBiPredicates {
 	}
 
 	/**
+	 * Returns a composed {@link AsyncBiPredicate} that represents a logical OR of all predicates
+	 * in a given array
+	 *
 	 * @see #or(Collection)
 	 */
 	@SafeVarargs

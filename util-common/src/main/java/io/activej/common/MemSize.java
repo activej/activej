@@ -106,14 +106,15 @@ public final class MemSize implements Comparable<MemSize> {
 	}
 
 	/**
-	 * @return a number of bytes is this {@link MemSize}
+	 * Returns a number of bytes is this {@link MemSize}
 	 */
 	public long toLong() {
 		return bytes;
 	}
 
 	/**
-	 * @return a number of bytes is this {@link MemSize} as {@code int}
+	 * Returns a number of bytes is this {@link MemSize} as {@code int}
+	 *
 	 * @throws IllegalStateException if number of bytes is greater than {@link Integer#MAX_VALUE}
 	 */
 	public int toInt() {

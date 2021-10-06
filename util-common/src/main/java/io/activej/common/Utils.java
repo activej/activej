@@ -144,6 +144,8 @@ public class Utils {
 	}
 
 	/**
+	 * Returns a {@link Set} of a provided element
+	 *
 	 * @see #setOf(Object[])
 	 */
 	public static <T> Set<T> setOf(T item) {
@@ -233,6 +235,8 @@ public class Utils {
 	}
 
 	/**
+	 * Returns an empty {@link List}
+	 *
 	 * @see #listOf(Object[])
 	 */
 	public static <T> List<T> listOf() {
@@ -240,6 +244,8 @@ public class Utils {
 	}
 
 	/**
+	 * Returns a {@link List} of a provided element
+	 *
 	 * @see #listOf(Object[])
 	 */
 	public static <T> List<T> listOf(T value) {
@@ -365,14 +371,24 @@ public class Utils {
 	}
 
 	/**
-	 * @see #mapOf(Object, Object, Object, Object)
+	 * Returns an empty {@link Map}
+	 * <p>
+	 * No guarantee on a mutability of a resulting map is made,
+	 * so map should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code Map#of} method
 	 */
 	public static <K, V> Map<K, V> mapOf() {
 		return new LinkedHashMap<>();
 	}
 
 	/**
-	 * @see #mapOf(Object, Object, Object, Object)
+	 * Returns a {@link Map} of provided key and value
+	 * <p>
+	 * No guarantee on a mutability of a resulting map is made,
+	 * so map should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code Map#of} method
 	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1) {
 		Map<K, V> map = new LinkedHashMap<>();
@@ -396,7 +412,12 @@ public class Utils {
 	}
 
 	/**
-	 * @see #mapOf(Object, Object, Object, Object)
+	 * Returns a {@link Map} of provided keys and values
+	 * <p>
+	 * No guarantee on a mutability of a resulting map is made,
+	 * so map should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code Map#of} method
 	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3) {
 		Map<K, V> map = new LinkedHashMap<>();
@@ -407,7 +428,12 @@ public class Utils {
 	}
 
 	/**
-	 * @see #mapOf(Object, Object, Object, Object)
+	 * Returns a {@link Map} of provided keys and values
+	 * <p>
+	 * No guarantee on a mutability of a resulting map is made,
+	 * so map should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code Map#of} method
 	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4) {
 		Map<K, V> map = new LinkedHashMap<>();
@@ -419,7 +445,12 @@ public class Utils {
 	}
 
 	/**
-	 * @see #mapOf(Object, Object, Object, Object)
+	 * Returns a {@link Map} of provided keys and values
+	 * <p>
+	 * No guarantee on a mutability of a resulting map is made,
+	 * so map should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code Map#of} method
 	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5) {
 		Map<K, V> map = new LinkedHashMap<>();
@@ -432,7 +463,12 @@ public class Utils {
 	}
 
 	/**
-	 * @see #mapOf(Object, Object, Object, Object)
+	 * Returns a {@link Map} of provided keys and values
+	 * <p>
+	 * No guarantee on a mutability of a resulting map is made,
+	 * so map should be considered unmodifiable
+	 * <p>
+	 * This is a simple alternative to Java 9's {@code Map#of} method
 	 */
 	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5, K key6, V value6) {
 		Map<K, V> map = new LinkedHashMap<>();

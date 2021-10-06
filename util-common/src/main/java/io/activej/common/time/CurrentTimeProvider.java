@@ -23,19 +23,19 @@ import java.time.Instant;
  */
 public interface CurrentTimeProvider {
 	/**
-	 * @return current time in milliseconds
+	 * Returns current time in milliseconds
 	 */
 	long currentTimeMillis();
 
 	/**
-	 * @return current time as an {@link Instant}
+	 * Returns current time as an {@link Instant}
 	 */
 	default Instant currentInstant() {
 		return Instant.ofEpochMilli(currentTimeMillis());
 	}
 
 	/**
-	 * @return a provider of current time that uses {@link System#currentTimeMillis()}
+	 * Returns a provider of current time that uses {@link System#currentTimeMillis()}
 	 */
 	static CurrentTimeProvider ofSystem() {
 		return System::currentTimeMillis;

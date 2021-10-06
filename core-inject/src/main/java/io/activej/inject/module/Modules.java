@@ -69,6 +69,8 @@ public final class Modules {
 	}
 
 	/**
+	 * Combines multiple modules into one.
+	 *
 	 * @see #combine(Collection)
 	 */
 	public static Module combine(Module... modules) {
@@ -83,7 +85,9 @@ public final class Modules {
 	}
 
 	/**
-	 * @see #combine(Collection)
+	 * Consecutively overrides each of the given modules with the next one after it and returns the accumulated result.
+	 *
+	 * @see #override(List) (Collection)
 	 */
 	public static Module override(Module... modules) {
 		return override(asList(modules));

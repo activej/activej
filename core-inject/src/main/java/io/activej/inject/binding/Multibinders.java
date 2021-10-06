@@ -48,7 +48,7 @@ public final class Multibinders {
 	}
 
 	/**
-	 * Multibinder that returns a binding that applies given reducing function to set of <b>instances</b> provided by all conflicting bindings.
+	 * Multibinder that returns a binding that applies given reducing function to a stream of <b>instances</b> provided by all conflicting bindings.
 	 */
 	@SuppressWarnings("rawtypes")
 	public static <T> Multibinder<T> ofReducer(BiFunction<Key<T>, Stream<T>, T> reducerFunction) {
@@ -83,6 +83,8 @@ public final class Multibinders {
 	}
 
 	/**
+	 * Multibinder that returns a binding that reduces all <b>instances</b> provided by all conflicting bindings using a  binary operator.
+	 *
 	 * @see #ofReducer
 	 */
 	@SuppressWarnings("OptionalGetWithoutIsPresent")

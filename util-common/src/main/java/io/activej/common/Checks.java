@@ -85,7 +85,7 @@ public final class Checks {
 	}
 
 	/**
-	 * @return a boolean that indicates whether checks are enabled by default
+	 * Returns a boolean that indicates whether checks are enabled by default
 	 */
 	public static boolean isEnabledByDefault() {
 		return ENABLED_BY_DEFAULT;

@@ -103,6 +103,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	}
 
 	/**
+	 * Creates a new {@code Promise} of the given value
+	 *
 	 * @see #ofOptional(Optional, Supplier)
 	 */
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")

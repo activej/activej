@@ -74,7 +74,7 @@ public class Types {
 	/**
 	 * Returns an array of actual type arguments for a given {@link Type}
 	 *
-	 * @param type  type whose actual type arguments should be retrieved
+	 * @param type type whose actual type arguments should be retrieved
 	 * @return an array of actual type arguments for a given {@link Type}
 	 */
 	public static Type[] getActualTypeArguments(Type type) {
@@ -213,6 +213,8 @@ public class Types {
 	}
 
 	/**
+	 * Creates an instance of {@link ParameterizedType}
+	 *
 	 * @see #parameterizedType(Type, Type, Type[])
 	 */
 	public static ParameterizedType parameterizedType(Class<?> rawType, Type... parameters) {

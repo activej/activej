@@ -38,7 +38,7 @@ public interface Initializer<T> extends Consumer<T> {
 	 * Combines multiple initializers into a single initializers that
 	 * initializes an object by calling each given serializer in order
 	 *
-	 * @param initializers initializers to be combined into a single initializer
+	 * @param initializers an array of initializers to be combined into a single initializer
 	 * @param <T>          a type of object to be initialized
 	 * @return a combined initializer
 	 */
@@ -49,7 +49,12 @@ public interface Initializer<T> extends Consumer<T> {
 	}
 
 	/**
-	 * @see #combine(Initializer[])
+	 * Combines multiple initializers into a single initializers that
+	 * initializes an object by calling each given serializer in order
+	 *
+	 * @param initializers an iterable of initializers to be combined into a single initializer
+	 * @param <T>          a type of object to be initialized
+	 * @return a combined initializer
 	 */
 	static <T> Initializer<T> combine(Iterable<? extends Initializer<? super T>> initializers) {
 		return target -> initializers.forEach(initializer -> initializer.accept(target));

@@ -26,7 +26,7 @@ import java.util.List;
  * It's highly recommended for implementations of this interface to be stateless or immutable
  * (namely have immutable state after creation)
  *
- * @param <T>
+ * @param <T> a type of objects to be reduced
  */
 public interface JmxReducer<T> {
 	@Nullable T reduce(List<? extends T> list);

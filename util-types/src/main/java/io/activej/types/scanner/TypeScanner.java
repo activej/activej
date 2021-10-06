@@ -29,20 +29,27 @@ import static io.activej.types.AnnotatedTypes.annotatedTypeOf;
 public interface TypeScanner<R> {
 	/**
 	 * Scans an annotated type and maps it to an {@link R} result
+	 *
 	 * @param type an annotated type to be scanned
 	 * @return a result of scan
 	 */
 	R scan(AnnotatedType type);
 
 	/**
-	 * @see #scan(AnnotatedType)
+	 * Scans a  type and maps it to an {@link R} result
+	 *
+	 * @param type a type to be scanned
+	 * @return a result of scan
 	 */
 	default R scan(Type type) {
 		return scan(annotatedTypeOf(type));
 	}
 
 	/**
-	 * @see #scan(AnnotatedType)
+	 * Scans a type token and maps it to an {@link R} result
+	 *
+	 * @param type a type token to be scanned
+	 * @return a result of scan
 	 */
 	default R scan(TypeT<?> type) {
 		return scan(type.getAnnotatedType());

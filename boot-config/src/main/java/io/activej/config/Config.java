@@ -81,14 +81,15 @@ public interface Config {
 	}
 
 	/**
-	 * @return value stored in root or defaultValue
+	 * Returns a value stored in root or a default value
 	 */
 	default String getValue(@Nullable String defaultValue) {
 		return get(THIS, defaultValue);
 	}
 
 	/**
-	 * @return value stored in root
+	 * Returns a value stored in root
+	 *
 	 * @throws NoSuchElementException if there is nothing in root
 	 */
 	default String getValue() throws NoSuchElementException {
@@ -137,7 +138,8 @@ public interface Config {
 	}
 
 	/**
-	 * @return String value that lays in path
+	 * Returns a string value that lays in path
+	 *
 	 * @see Config#get(ConfigConverter, String, Object)
 	 */
 	default String get(String path, @Nullable String defaultValue) {
@@ -156,6 +158,8 @@ public interface Config {
 	}
 
 	/**
+	 * Returns a value from this {@link Config} converted using a given config converter
+	 *
 	 * @param converter specifies how to convert config string value into &lt;T&gt;
 	 * @param path      path to config value. Example: "rpc.server.port" to get port for rpc server.
 	 * @param <T>       return type
@@ -167,7 +171,7 @@ public interface Config {
 	}
 
 	/**
-	 * @return child {@code Config} if it exists, {@link Config#EMPTY} config otherwise
+	 * Returns a child {@code Config} if it exists, {@link Config#EMPTY} config otherwise
 	 */
 	default Config getChild(String path) {
 		checkPath(path);
@@ -240,7 +244,7 @@ public interface Config {
 	}
 
 	/**
-	 * @return empty config
+	 * Returns an empty config
 	 */
 	static Config create() {
 		return EMPTY;
@@ -290,24 +294,49 @@ public interface Config {
 	}
 
 	/**
-	 * @see Config#ofProperties(Path, boolean)
+	 * Creates a new config from properties file
+	 *
+	 * @see #ofProperties(Path, boolean)
 	 */
 	static Config ofProperties(String fileName, boolean optional) {
 		return ofProperties(Paths.get(fileName), optional);
 	}
 
+	/**
+	 * Creates a new config from properties file that resides in a class path
+	 *
+	 * @see #ofClassPathProperties(String, ClassLoader, boolean) (Path, boolean)
+	 */
 	static Config ofClassPathProperties(String fileName) {
 		return ofClassPathProperties(fileName, Thread.currentThread().getContextClassLoader(), false);
 	}
 
+	/**
+	 * Creates a new config from properties file that resides in a class path
+	 *
+	 * @see #ofClassPathProperties(String, ClassLoader, boolean) (Path, boolean)
+	 */
 	static Config ofClassPathProperties(String fileName, ClassLoader classLoader) {
 		return ofClassPathProperties(fileName, classLoader, false);
 	}
 
+	/**
+	 * Creates a new config from properties file that resides in a class path
+	 *
+	 * @see #ofClassPathProperties(String, ClassLoader, boolean) (Path, boolean)
+	 */
 	static Config ofClassPathProperties(String fileName, boolean optional) {
 		return ofClassPathProperties(fileName, Thread.currentThread().getContextClassLoader(), optional);
 	}
 
+	/**
+	 * Creates a new config from properties file that resides in a class path
+	 *
+	 * @param fileName    a name of a properties file
+	 * @param classLoader a class loader that will be used to load a properties file from a class path
+	 * @param optional    whether a properties file is optional
+	 * @return a new {@link Config}
+	 */
 	static Config ofClassPathProperties(String fileName, ClassLoader classLoader, boolean optional) {
 		Properties props = new Properties();
 		if (fileName.startsWith("/")) {
@@ -329,9 +358,9 @@ public interface Config {
 	}
 
 	/**
-	 * Creates new config from file
+	 * Creates a new config from properties file
 	 *
-	 * @param file     with properties
+	 * @param file     properties file
 	 * @param optional if true will log warning "Can't load..." else throws exception
 	 * @return new {@code Config}
 	 */
@@ -372,13 +401,15 @@ public interface Config {
 	}
 
 	/**
-	 * @return new {@code Config} with only one value
+	 * Returns a new {@code Config} with only one value
 	 */
 	static Config ofValue(String value) {
 		return create().with(THIS, value);
 	}
 
 	/**
+	 * Creates a config out of a given value and a config converter for a value
+	 *
 	 * @param configConverter specifies converter for &lt;T&gt;
 	 * @param value           of type &lt;T&gt;
 	 * @return new {@code Config} with given value
@@ -422,6 +453,8 @@ public interface Config {
 	}
 
 	/**
+	 * Adds a value to a given path for this {@link Config}
+	 *
 	 * @param path path
 	 * @return new {@code Config} with value in path
 	 */
@@ -446,6 +479,8 @@ public interface Config {
 	}
 
 	/**
+	 * Adds a {@link Config} to a given path for this {@link Config}
+	 *
 	 * @param path   path
 	 * @param config holds one value at root
 	 * @return new {@code Config} with overridden value in path
@@ -481,6 +516,8 @@ public interface Config {
 	}
 
 	/**
+	 * Overrides this config with another config
+	 *
 	 * @param other config with values
 	 * @return new {@code Config} with values from this config overridden by values from other
 	 * this method returns new config instead of changing the old one.

@@ -435,6 +435,8 @@ public final class Injector implements ResourceLocator {
 	}
 
 	/**
+	 * A shortcut for <code>getInstanceProvider(Key.of(type))</code>
+	 *
 	 * @see #getInstanceProvider(Key)
 	 */
 	public <T> @NotNull InstanceProvider<T> getInstanceProvider(@NotNull Class<T> type) {
@@ -449,6 +451,8 @@ public final class Injector implements ResourceLocator {
 	}
 
 	/**
+	 * A shortcut for <code>getInstanceInjector(Key.of(type))</code>
+	 *
 	 * @see #getInstanceInjector(Key)
 	 */
 	public <T> @NotNull InstanceInjector<T> getInstanceInjector(@NotNull Class<T> type) {
@@ -472,6 +476,9 @@ public final class Injector implements ResourceLocator {
 	}
 
 	/**
+	 * This method returns an instance only if it already was created by a {@link #getInstance} call before,
+	 * it does not trigger instance creation.
+	 *
 	 * @see #peekInstance(Key)
 	 */
 	public <T> @Nullable T peekInstance(@NotNull Class<T> type) {
@@ -486,6 +493,8 @@ public final class Injector implements ResourceLocator {
 	}
 
 	/**
+	 * This method checks if an instance for this key was created by a {@link #getInstance} call before.
+	 *
 	 * @see #hasInstance(Key)
 	 */
 	public boolean hasInstance(@NotNull Class<?> type) {
@@ -523,6 +532,11 @@ public final class Injector implements ResourceLocator {
 	}
 
 	/**
+	 * This method puts an instance into a cache slot of given key,
+	 * meaning that already existing instance would be replaced or a binding would never be actually called.
+	 * <p>
+	 * Use this at your own risk, this allows high control over the injector, but can be easily abused.
+	 *
 	 * @see #putInstance(Key, Object)
 	 */
 	public <T> void putInstance(Class<T> key, T instance) {
@@ -545,6 +559,8 @@ public final class Injector implements ResourceLocator {
 	}
 
 	/**
+	 * This method returns true if a binding was bound for given class key.
+	 *
 	 * @see #hasBinding(Key)
 	 */
 	public boolean hasBinding(Class<?> type) {

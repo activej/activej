@@ -46,14 +46,14 @@ public interface AsyncBiPredicate<T, U> {
 	}
 
 	/**
-	 * @return an {@link AsyncBiPredicate} that always returns promise of {@code true}
+	 * Returns an {@link AsyncBiPredicate} that always returns promise of {@code true}
 	 */
 	static <T, U> AsyncBiPredicate<T, U> alwaysTrue() {
 		return (t, u) -> Promise.of(Boolean.TRUE);
 	}
 
 	/**
-	 * @return an {@link AsyncBiPredicate} that always returns promise of {@code false}
+	 * Returns an {@link AsyncBiPredicate} that always returns promise of {@code false}
 	 */
 	static <T, U> AsyncBiPredicate<T, U> alwaysFalse() {
 		return (t, u) -> Promise.of(Boolean.FALSE);

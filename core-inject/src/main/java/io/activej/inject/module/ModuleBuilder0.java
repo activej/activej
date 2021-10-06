@@ -28,16 +28,20 @@ import java.util.function.Supplier;
 
 public interface ModuleBuilder0<T> extends ModuleBuilder {
 	/**
-	 * The binding being built by this builder will be added to the binding graph trie at given scope path
+	 * The binding being built by this builder will be added to the binding graph trie at a given scope path
 	 */
 	ModuleBuilder1<T> in(Scope[] scope);
 
 	/**
+	 * The binding being built by this builder will be added to the binding graph trie at a given scope path
+	 *
 	 * @see #in(Scope[])
 	 */
 	ModuleBuilder1<T> in(@NotNull Scope scope, Scope... scopes);
 
 	/**
+	 * The binding being built by this builder will be added to the binding graph trie at a given scope path
+	 *
 	 * @see #in(Scope[])
 	 */
 	ModuleBuilder1<T> in(@NotNull Class<? extends Annotation> annotationClass, Class<?>... annotationClasses);
@@ -48,14 +52,17 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	ModuleBuilder1<T> to(@NotNull Binding<? extends T> binding);
 
 	/**
-	 * DSL shortcut for creating a binding that just calls a binding at given key
-	 * and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding that just calls a binding at a given key
+	 * and {@link #to(Binding) binding it} to a current key.
 	 */
 	default ModuleBuilder1<T> to(@NotNull Key<? extends T> implementation) {
 		return to(Binding.to(implementation));
 	}
 
 	/**
+	 * DSL shortcut for creating a binding that just calls a binding at a given key
+	 * and {@link #to(Binding) binding it} to a current key.
+	 *
 	 * @see #to(Key)
 	 */
 	default ModuleBuilder1<T> to(@NotNull Class<? extends T> implementation) {
@@ -64,21 +71,24 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 
 	/**
 	 * DSL shortcut for creating a binding from a given instance
-	 * and {@link #to(Binding) binding it} to current key.
+	 * and {@link #to(Binding) binding it} to a current key.
 	 */
 	default ModuleBuilder1<T> toInstance(@NotNull T instance) {
 		return to(Binding.toInstance(instance));
 	}
 
 	/**
-	 * DSL shortcut for creating a binding that calls a supplier from binding at given key
-	 * and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding that calls a supplier from binding at a given key
+	 * and {@link #to(Binding) binding it} to a current key.
 	 */
 	default ModuleBuilder1<T> toSupplier(@NotNull Key<? extends Supplier<? extends T>> supplierKey) {
 		return to(Binding.toSupplier(supplierKey));
 	}
 
 	/**
+	 * DSL shortcut for creating a binding that calls a supplier from binding at a given key
+	 * and {@link #to(Binding) binding it} to a current key.
+	 *
 	 * @see #toSupplier(Key)
 	 */
 	default ModuleBuilder1<T> toSupplier(@NotNull Class<? extends Supplier<? extends T>> supplierType) {
@@ -86,35 +96,35 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default ModuleBuilder1<T> to(@NotNull ConstructorN<? extends T> factory, Class<?>[] dependencies) {
 		return to(Binding.to(factory, dependencies));
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default ModuleBuilder1<T> to(@NotNull ConstructorN<? extends T> factory, Key<?>[] dependencies) {
 		return to(Binding.to(factory, dependencies));
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default ModuleBuilder1<T> to(@NotNull ConstructorN<? extends T> factory, Dependency[] dependencies) {
 		return to(Binding.to(factory, dependencies));
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default ModuleBuilder1<T> to(@NotNull Constructor0<? extends T> constructor) {
 		return to(Binding.to(constructor));
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1> ModuleBuilder1<T> to(@NotNull Constructor1<T1, ? extends T> constructor,
 			@NotNull Class<T1> dependency1) {
@@ -122,7 +132,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2> ModuleBuilder1<T> to(@NotNull Constructor2<T1, T2, ? extends T> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2) {
@@ -130,7 +140,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2, T3> ModuleBuilder1<T> to(@NotNull Constructor3<T1, T2, T3, ? extends T> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3) {
@@ -138,7 +148,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2, T3, T4> ModuleBuilder1<T> to(@NotNull Constructor4<T1, T2, T3, T4, ? extends T> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4) {
@@ -146,7 +156,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2, T3, T4, T5> ModuleBuilder1<T> to(@NotNull Constructor5<T1, T2, T3, T4, T5, ? extends T> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4, @NotNull Class<T5> dependency5) {
@@ -154,7 +164,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2, T3, T4, T5, T6> ModuleBuilder1<T> to(@NotNull Constructor6<T1, T2, T3, T4, T5, T6, ? extends T> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4, @NotNull Class<T5> dependency5, @NotNull Class<T6> dependency6) {
@@ -162,7 +172,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1> ModuleBuilder1<T> to(@NotNull Constructor1<T1, ? extends T> constructor,
 			@NotNull Key<T1> dependency1) {
@@ -170,7 +180,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2> ModuleBuilder1<T> to(@NotNull Constructor2<T1, T2, ? extends T> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2) {
@@ -178,7 +188,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2, T3> ModuleBuilder1<T> to(@NotNull Constructor3<T1, T2, T3, ? extends T> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3) {
@@ -186,7 +196,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2, T3, T4> ModuleBuilder1<T> to(@NotNull Constructor4<T1, T2, T3, T4, ? extends T> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4) {
@@ -194,7 +204,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2, T3, T4, T5> ModuleBuilder1<T> to(@NotNull Constructor5<T1, T2, T3, T4, T5, ? extends T> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5) {
@@ -202,7 +212,7 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	}
 
 	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to current key.
+	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default <T1, T2, T3, T4, T5, T6> ModuleBuilder1<T> to(@NotNull Constructor6<T1, T2, T3, T4, T5, T6, ? extends T> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5, @NotNull Key<T6> dependency6) {

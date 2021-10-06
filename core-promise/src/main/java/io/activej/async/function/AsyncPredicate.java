@@ -45,14 +45,14 @@ public interface AsyncPredicate<T> {
 	}
 
 	/**
-	 * @return an {@link AsyncPredicate} that always returns promise of {@code true}
+	 * Returns an {@link AsyncPredicate} that always returns promise of {@code true}
 	 */
 	static <T> AsyncPredicate<T> alwaysTrue() {
 		return t -> Promise.of(Boolean.TRUE);
 	}
 
 	/**
-	 * @return an {@link AsyncPredicate} that always returns promise of {@code false}
+	 * Returns an {@link AsyncPredicate} that always returns promise of {@code false}
 	 */
 	static <T> AsyncPredicate<T> alwaysFalse() {
 		return t -> Promise.of(Boolean.FALSE);

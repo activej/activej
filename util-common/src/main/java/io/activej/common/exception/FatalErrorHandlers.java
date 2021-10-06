@@ -100,6 +100,8 @@ public final class FatalErrorHandlers {
 	}
 
 	/**
+	 * Uses current thread's fatal error handler to handle a received {@link Throwable}
+	 *
 	 * @see #handleError(Throwable, Object)
 	 */
 	public static void handleError(@NotNull Throwable e) {

@@ -115,7 +115,7 @@ public final class ConfigConverters {
 	}
 
 	/**
-	 * @return config converter with days in period
+	 * Returns a config converter with days in period
 	 */
 	public static ConfigConverter<Integer> ofPeriodAsDays() {
 		return ofPeriod().transform(Period::getDays, Period::ofDays);
@@ -136,7 +136,7 @@ public final class ConfigConverters {
 	}
 
 	/**
-	 * @return config converter with millis in duration
+	 * Returns a config converter with millis in duration
 	 */
 	public static ConfigConverter<Long> ofDurationAsMillis() {
 		return ofDuration().transform(Duration::toMillis, Duration::ofMillis);
@@ -157,7 +157,7 @@ public final class ConfigConverters {
 	}
 
 	/**
-	 * @return config converter with epoch millis in instant
+	 * Returns a config converter with epoch millis in instant
 	 */
 	public static ConfigConverter<Long> ofInstantAsEpochMillis() {
 		return ofInstant().transform(Instant::toEpochMilli, Instant::ofEpochMilli);
@@ -361,14 +361,14 @@ public final class ConfigConverters {
 	}
 
 	/**
-	 * @return config converter with bytes in MemSize
+	 * Returns a config converter with bytes in MemSize
 	 */
 	public static ConfigConverter<Long> ofMemSizeAsLong() {
 		return ofMemSize().transform(MemSize::toLong, MemSize::of);
 	}
 
 	/**
-	 * @return config converter with bytes in MemSize
+	 * Returns a config converter with bytes in MemSize
 	 */
 	public static ConfigConverter<Integer> ofMemSizeAsInt() {
 		return ofMemSize().transform(MemSize::toInt, (Function<Integer, MemSize>) MemSize::of);

@@ -77,7 +77,7 @@ public final class Either<L, R> {
 	}
 
 	/**
-	 * @return whether this {@link Either} is <i>left</i> (has <i>left</i> value)
+	 * Returns whether this {@link Either} is <i>left</i> (has <i>left</i> value)
 	 */
 	@Contract(pure = true)
 	public boolean isLeft() {
@@ -85,7 +85,7 @@ public final class Either<L, R> {
 	}
 
 	/**
-	 * @return whether this {@link Either} is <i>right</i> (has <i>right</i> value)
+	 * Returns whether this {@link Either} is <i>right</i> (has <i>right</i> value)
 	 */
 	@Contract(pure = true)
 	public boolean isRight() {
@@ -93,7 +93,7 @@ public final class Either<L, R> {
 	}
 
 	/**
-	 * @return a <i>left</i> value
+	 * Returns a <i>left</i> value
 	 */
 	@Contract(pure = true)
 	public @Nullable L getLeft() {
@@ -101,7 +101,7 @@ public final class Either<L, R> {
 	}
 
 	/**
-	 * @return a <i>right</i> value
+	 * Returns a <i>right</i> value
 	 */
 	@Contract(pure = true)
 	public @Nullable R getRight() {

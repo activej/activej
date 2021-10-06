@@ -165,11 +165,11 @@ public final class RingBuffer implements RingBufferMBean, WithInitializer<RingBu
 	}
 
 	/**
-	 * The method is used to try to get the slice from the {@see Buffer}
-	 * It will return the latest actual data for the {@param key}
+	 * The method is used to try to get the slice from the {@link Buffer}
+	 * It will return the latest actual data for the {@code key}
 	 *
 	 * @param key of your item
-	 * @return the item in case your item is still present in {@see Buffer}
+	 * @return the item in case your item is still present in {@link Buffer}
 	 */
 	public Slice get(byte[] key) {
 		statsGets.recordEvent();
@@ -187,9 +187,9 @@ public final class RingBuffer implements RingBufferMBean, WithInitializer<RingBu
 	}
 
 	/**
-	 * The method is used to cache the actual information for the {@param key}
+	 * The method is used to cache the actual information for the {@code key}
 	 *
-	 * @param key  is used as a pointer for the cached {@param data}
+	 * @param key  is used as a pointer for the cached {@code data}
 	 * @param data is thing to need to cache
 	 */
 	public void put(byte[] key, byte[] data) {
@@ -198,7 +198,7 @@ public final class RingBuffer implements RingBufferMBean, WithInitializer<RingBu
 
 	/**
 	 * The same to the above method,
-	 * there are extra params to handle the {@param data}
+	 * there are extra params to handle the {@code data}
 	 */
 	public void put(byte[] key, byte[] data, int offset, int length) {
 		if (CHECK) checkArgument(data.length <= ringBuffers[currentBuffer].array.length,

@@ -59,7 +59,7 @@ public final class TypeScannerRegistry<R> {
 	 * (a context stack and an argument stack).
 	 * May hold an arbitrary context value
 	 *
-	 * @param <R>
+	 * @param <R> a type of context data
 	 */
 	public static final class Context<R> {
 		private final Mapping<R> mappingFn;
@@ -103,28 +103,28 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		/**
-		 * @return a type of {@code this} context
+		 * Returns a type of {@code this} context
 		 */
 		public Type getType() {
 			return getAnnotatedType().getType();
 		}
 
 		/**
-		 * @return a raw type of {@code this} context
+		 * Returns a raw type of {@code this} context
 		 */
 		public Class<?> getRawType() {
 			return Types.getRawType(getType());
 		}
 
 		/**
-		 * @return an annotated type of {@code this} context
+		 * Returns an annotated type of {@code this} context
 		 */
 		public AnnotatedType getAnnotatedType() {
 			return argumentStack[argumentStack.length - 1];
 		}
 
 		/**
-		 * @return an array of annotations of {@code this} context annotated type
+		 * Returns an array of annotations of {@code this} context annotated type
 		 */
 		public Annotation[] getAnnotations() {
 			return getAnnotatedType().getAnnotations();
@@ -138,7 +138,7 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		/**
-		 * @return an annotation of a given annotation type from {@code this} context annotations
+		 * Returns an annotation of a given annotation type from {@code this} context annotations
 		 * or {@code null} if none matches
 		 */
 		public <A extends Annotation> A getAnnotation(Class<A> clazz) {
@@ -146,21 +146,21 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		/**
-		 * @return an array of annotated type arguments for {@code this} context
+		 * Returns an array of annotated type arguments for {@code this} context
 		 */
 		public AnnotatedType[] getTypeArguments() {
 			return AnnotatedTypes.getTypeArguments(getAnnotatedType());
 		}
 
 		/**
-		 * @return nth annotated type argument of {@code this} context
+		 * Returns nth annotated type argument of {@code this} context
 		 */
 		public AnnotatedType getTypeArgument(int n) {
 			return AnnotatedTypes.getTypeArguments(getAnnotatedType())[n];
 		}
 
 		/**
-		 * @return a number of annotated type arguments for {@code this} context
+		 * Returns a number of annotated type arguments for {@code this} context
 		 */
 		public int getTypeArgumentsCount() {
 			return getTypeArguments().length;
@@ -184,14 +184,14 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		/**
-		 * @return ca context stack of {@code this} context
+		 * Returns a context stack of {@code this} context
 		 */
 		public Context<R>[] getStack() {
 			return stack;
 		}
 
 		/**
-		 * @return an argument stack of {@code this} context
+		 * Returns an argument stack of {@code this} context
 		 */
 		public AnnotatedType[] getArgumentStack() {
 			return argumentStack;
@@ -240,7 +240,7 @@ public final class TypeScannerRegistry<R> {
 		}
 
 		/**
-		 * @return a context value if it is present, or {@code null} otherwise
+		 * Returns a context value if it is present, or {@code null} otherwise
 		 */
 		public Object getContextValue() {
 			return value;
