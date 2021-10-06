@@ -134,6 +134,11 @@ public class PageRankTest {
 			if (pageId != rank.pageId) return false;
 			return Math.abs(rank.value - value) < 0.001;
 		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(pageId, value);
+		}
 	}
 
 	public static class RankKeyFunction implements Function<Rank, Long> {

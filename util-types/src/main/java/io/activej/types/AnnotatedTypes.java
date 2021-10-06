@@ -269,7 +269,7 @@ public class AnnotatedTypes {
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T extends Annotation> T getAnnotation(@NotNull Class<T> annotationClass) {
-			return (T) Arrays.stream(annotations).filter(a -> a.getClass() == annotationClass).findFirst().orElse(null);
+			return (T) Arrays.stream(annotations).filter(a -> a.annotationType() == annotationClass).findFirst().orElse(null);
 		}
 
 		@Override

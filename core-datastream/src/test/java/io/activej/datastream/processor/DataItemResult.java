@@ -1,5 +1,7 @@
 package io.activej.datastream.processor;
 
+import java.util.Objects;
+
 public class DataItemResult {
 	public int key1;
 	public int key2;
@@ -26,6 +28,11 @@ public class DataItemResult {
 
 		return (key1 == that.key1) && (key2 == that.key2)
 				&& (metric1 == that.metric1) && (metric2 == that.metric2) && (metric3 == that.metric3);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(key1, key2, metric1, metric2, metric3);
 	}
 
 	@Override

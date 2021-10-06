@@ -11,6 +11,8 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.Objects;
+
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
 import static io.activej.datastream.TestUtils.*;
@@ -315,6 +317,11 @@ public class StreamReducerTest {
 			if (Double.compare(that.metric3, metric3) != 0) return false;
 
 			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(key, metric1, metric2, metric3);
 		}
 
 		@Override

@@ -73,7 +73,7 @@ public class AsyncPredicatesTest {
 		AsyncPredicate<Integer> andPredicate = and(isMultipleOf3, isMultipleOf4, failingPredicate);
 
 		Exception exception = awaitException(andPredicate.test(0));
-		assertSame(exception, exception);
+		assertSame(expected, exception);
 	}
 
 	@Test
@@ -131,6 +131,6 @@ public class AsyncPredicatesTest {
 		AsyncPredicate<Integer> andPredicate = or(isMultipleOf3, isMultipleOf4, failingPredicate);
 
 		Exception exception = awaitException(andPredicate.test(0));
-		assertSame(exception, exception);
+		assertSame(expected, exception);
 	}
 }

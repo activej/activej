@@ -244,6 +244,11 @@ public class StreamJoinTest {
 		}
 
 		@Override
+		public int hashCode() {
+			return Objects.hash(id, detailId, master, detail);
+		}
+
+		@Override
 		public String toString() {
 			return "DataItemMasterDetail{" +
 					"id=" + id +

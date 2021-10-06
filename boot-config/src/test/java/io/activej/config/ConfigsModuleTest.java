@@ -8,6 +8,7 @@ import io.activej.launcher.annotation.OnStart;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -38,6 +39,11 @@ public class ConfigsModuleTest {
 			return field1 == testClass.field1
 					&& Double.compare(testClass.field2, field2) == 0
 					&& field3 == testClass.field3;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(field1, field2, field3);
 		}
 	}
 

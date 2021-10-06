@@ -73,7 +73,7 @@ public class AsyncBiPredicatesTest {
 		AsyncBiPredicate<Integer, Integer> andPredicate = and(isSumMultipleOf3, isSumMultipleOf4, failingPredicate);
 
 		Exception exception = awaitException(andPredicate.test(0, 0));
-		assertSame(exception, exception);
+		assertSame(expected, exception);
 	}
 
 	@Test
@@ -131,6 +131,6 @@ public class AsyncBiPredicatesTest {
 		AsyncBiPredicate<Integer, Integer> andPredicate = or(isSumMultipleOf3, isSumMultipleOf4, failingPredicate);
 
 		Exception exception = awaitException(andPredicate.test(0, 0));
-		assertSame(exception, exception);
+		assertSame(expected, exception);
 	}
 }
