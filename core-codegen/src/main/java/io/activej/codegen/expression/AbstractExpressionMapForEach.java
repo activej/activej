@@ -22,18 +22,18 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.Iterator;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.getType;
 
 public abstract class AbstractExpressionMapForEach implements Expression {
 	protected final Expression collection;
-	protected final Function<Expression, Expression> forKey;
-	protected final Function<Expression, Expression> forValue;
+	protected final UnaryOperator<Expression> forKey;
+	protected final UnaryOperator<Expression> forValue;
 	protected final Class<?> entryClazz;
 
-	protected AbstractExpressionMapForEach(Expression collection, Function<Expression, Expression> forKey, Function<Expression, Expression> forValue, Class<?> entryClazz) {
+	protected AbstractExpressionMapForEach(Expression collection, UnaryOperator<Expression> forKey, UnaryOperator<Expression> forValue, Class<?> entryClazz) {
 		this.collection = collection;
 		this.forKey = forKey;
 		this.forValue = forValue;

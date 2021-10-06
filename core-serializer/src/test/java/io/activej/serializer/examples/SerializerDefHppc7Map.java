@@ -6,7 +6,7 @@ import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.AbstractSerializerDefMap;
 import io.activej.serializer.impl.SerializerDefNullable;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
@@ -21,7 +21,7 @@ public final class SerializerDefHppc7Map extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	protected Expression mapForEach(Expression collection, Function<Expression, Expression> forEachKey, Function<Expression, Expression> forEachValue) {
+	protected Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue) {
 		try {
 			String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");

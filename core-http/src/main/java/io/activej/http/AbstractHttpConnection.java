@@ -115,7 +115,7 @@ public abstract class AbstractHttpConnection {
 	 * @param eventloop   eventloop which will handle its I/O operations
 	 * @param maxBodySize - maximum size of message body
 	 */
-	public AbstractHttpConnection(Eventloop eventloop, AsyncTcpSocket socket, int maxBodySize) {
+	protected AbstractHttpConnection(Eventloop eventloop, AsyncTcpSocket socket, int maxBodySize) {
 		this.eventloop = eventloop;
 		this.socket = socket;
 		this.maxBodySize = maxBodySize;

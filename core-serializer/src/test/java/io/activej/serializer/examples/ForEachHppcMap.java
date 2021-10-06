@@ -4,13 +4,13 @@ import io.activej.codegen.expression.AbstractExpressionMapForEach;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.VarLocal;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.property;
 
 public final class ForEachHppcMap extends AbstractExpressionMapForEach {
 
-	public ForEachHppcMap(Expression collection, Function<Expression, Expression> forEachValue, Function<Expression, Expression> forEachKey, Class<?> entryType) {
+	public ForEachHppcMap(Expression collection, UnaryOperator<Expression> forEachValue, UnaryOperator<Expression> forEachKey, Class<?> entryType) {
 		super(collection, forEachKey, forEachValue, entryType);
 	}
 

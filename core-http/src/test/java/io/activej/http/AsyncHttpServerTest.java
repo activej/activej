@@ -52,16 +52,16 @@ public final class AsyncHttpServerTest {
 
 	public AsyncHttpServer blockingHttpServer() {
 		return AsyncHttpServer.create(eventloop,
-				request ->
-						HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))
+						request ->
+								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))
 				.withListenPort(port);
 	}
 
 	public AsyncHttpServer asyncHttpServer() {
 		return AsyncHttpServer.create(eventloop,
-				request ->
-						Promise.ofCallback(cb -> cb.post(
-								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))))
+						request ->
+								Promise.ofCallback(cb -> cb.post(
+										HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))))
 				.withListenPort(port);
 	}
 
@@ -69,8 +69,8 @@ public final class AsyncHttpServerTest {
 
 	public AsyncHttpServer delayedHttpServer() {
 		return AsyncHttpServer.create(eventloop,
-				request -> Promises.delay(RANDOM.nextInt(3),
-						HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery()))))
+						request -> Promises.delay(RANDOM.nextInt(3),
+								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery()))))
 				.withListenPort(port);
 	}
 
@@ -295,8 +295,8 @@ public final class AsyncHttpServerTest {
 		buf.put(body);
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				req -> HttpResponse.ok200()
-						.withBody(encodeAscii(req.getUrl().getPathAndQuery())))
+						req -> HttpResponse.ok200()
+								.withBody(encodeAscii(req.getUrl().getPathAndQuery())))
 				.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -306,7 +306,7 @@ public final class AsyncHttpServerTest {
 			socket.connect(new InetSocketAddress("localhost", port));
 			socket.getOutputStream().write(buf.array(), buf.head(), buf.readRemaining());
 			buf.recycle();
-			Thread.sleep(100);
+//			Thread.sleep(100);
 		}
 		server.closeFuture().get();
 		thread.join();
@@ -319,7 +319,7 @@ public final class AsyncHttpServerTest {
 	@Test
 	public void testExpectContinue() throws Exception {
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())))
+						request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())))
 				.withListenPort(port);
 
 		server.listen();
@@ -347,11 +347,11 @@ public final class AsyncHttpServerTest {
 	@Test
 	public void testBodyRecycledOnce() throws IOException, InterruptedException {
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				request -> {
-					// imitate network problems
-					shutdownAllChannels();
-					return HttpResponse.ok200();
-				})
+						request -> {
+							// imitate network problems
+							shutdownAllChannels();
+							return HttpResponse.ok200();
+						})
 				.withListenPort(port)
 				.withAcceptOnce(true);
 
@@ -425,7 +425,7 @@ public final class AsyncHttpServerTest {
 							assertFalse(request.isRecycled());
 							assertTrue(request.getConnection().isClosed());
 
-							assertEquals(request.getHeader(HttpHeaders.HOST), "localhost");
+							assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
 							return HttpResponse.ofCode(400);
 						}));
 		server.withListenPort(port);

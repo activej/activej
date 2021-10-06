@@ -29,7 +29,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.util.Utils.get;
@@ -282,7 +282,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		return decoder(staticDecoders, in, version, compatibilityLevel, value -> sequence());
 	}
 
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Function<Expression, Expression> instanceInitializer) {
+	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, UnaryOperator<Expression> instanceInitializer) {
 		if (decodeType.isInterface()) {
 			return deserializeInterface(staticDecoders, in, version, compatibilityLevel);
 		}
@@ -438,7 +438,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 	}
 
 	private Expression deserializeClassSimple(StaticDecoders staticDecoders, Expression in,
-			int version, CompatibilityLevel compatibilityLevel, Function<Expression, Expression> instanceInitializer) {
+			int version, CompatibilityLevel compatibilityLevel, UnaryOperator<Expression> instanceInitializer) {
 		return let(
 				constructor(decodeType),
 				instance ->

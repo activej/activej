@@ -21,7 +21,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
@@ -29,9 +29,9 @@ import static org.objectweb.asm.Type.VOID_TYPE;
 final class ExpressionFor implements Expression {
 	private final Expression from;
 	private final Expression to;
-	private final Function<Expression, Expression> forVar;
+	private final UnaryOperator<Expression> forVar;
 
-	ExpressionFor(Expression from, Expression to, Function<Expression, Expression> forVar) {
+	ExpressionFor(Expression from, Expression to, UnaryOperator<Expression> forVar) {
 		this.from = from;
 		this.to = to;
 		this.forVar = forVar;

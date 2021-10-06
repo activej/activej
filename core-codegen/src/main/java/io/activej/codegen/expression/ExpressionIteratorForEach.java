@@ -16,11 +16,11 @@
 
 package io.activej.codegen.expression;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 final class ExpressionIteratorForEach extends AbstractExpressionIteratorForEach {
 
-	ExpressionIteratorForEach(Expression collection, Class<?> type, Function<Expression, Expression> forEach) {
+	ExpressionIteratorForEach(Expression collection, Class<?> type, UnaryOperator<Expression> forEach) {
 		super(collection, type, forEach);
 	}
 

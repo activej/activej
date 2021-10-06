@@ -22,16 +22,16 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.Iterator;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static org.objectweb.asm.Type.*;
 
 public abstract class AbstractExpressionIteratorForEach implements Expression {
 	protected final Expression collection;
 	protected final Class<?> type;
-	protected final Function<Expression, Expression> forEach;
+	protected final UnaryOperator<Expression> forEach;
 
-	protected AbstractExpressionIteratorForEach(Expression collection, Class<?> type, Function<Expression, Expression> forEach) {
+	protected AbstractExpressionIteratorForEach(Expression collection, Class<?> type, UnaryOperator<Expression> forEach) {
 		this.collection = collection;
 		this.type = type;
 		this.forEach = forEach;

@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
@@ -43,7 +44,7 @@ public abstract class RecordProjection implements Function<Record, Record>, BiCo
 		if (!isParentChild(schemeFrom.getClassLoader(), classLoader))
 			throw new IllegalArgumentException("Unrelated ClassLoaders");
 		RecordScheme schemeTo = RecordScheme.create(classLoader);
-		Map<String, Function<Expression, Expression>> mapping = new HashMap<>();
+		Map<String, UnaryOperator<Expression>> mapping = new HashMap<>();
 		for (String field : schemeFrom.getFields()) {
 			Type fieldType = schemeFrom.getFieldType(field);
 			if (fields.contains(field)) {
@@ -55,14 +56,14 @@ public abstract class RecordProjection implements Function<Record, Record>, BiCo
 	}
 
 	public static RecordProjection projection(RecordScheme schemeFrom, RecordScheme schemeTo,
-			Map<String, Function<Expression, Expression>> mapping) {
+			Map<String, UnaryOperator<Expression>> mapping) {
 		DefiningClassLoader classLoaderChild = getClassLoaderChild(schemeFrom.getClassLoader(), schemeTo.getClassLoader());
 		return projection(DefiningClassLoader.create(classLoaderChild), null, schemeFrom, schemeTo, mapping);
 	}
 
 	public static @NotNull RecordProjection projection(DefiningClassLoader classLoader, @Nullable Object classKey,
 			RecordScheme schemeFrom, RecordScheme schemeTo,
-			Map<String, Function<Expression, Expression>> mapping) {
+			Map<String, UnaryOperator<Expression>> mapping) {
 		schemeFrom.build();
 		schemeTo.build();
 		return classLoader.ensureClassAndCreateInstance(

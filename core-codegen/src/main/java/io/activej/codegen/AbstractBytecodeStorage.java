@@ -108,7 +108,7 @@ public abstract class AbstractBytecodeStorage implements BytecodeStorage {
 	 * @param e         I/O exception
 	 */
 	protected void onSaveError(String className, byte[] bytecode, IOException e) {
-		logger.warn("Could not save bytecode for class: " + className, e);
+		logger.warn("Could not save bytecode for class: {}", className, e);
 	}
 
 }

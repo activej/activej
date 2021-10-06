@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
 import static io.activej.codegen.expression.Expressions.add;
@@ -55,7 +55,7 @@ public class RecordProjectionTest {
 				.withField("x", int.class)
 				.build();
 
-		Map<String, Function<Expression, Expression>> mapping = new HashMap<>();
+		Map<String, UnaryOperator<Expression>> mapping = new HashMap<>();
 		mapping.put("x", recordFrom -> add(schemeFrom.property(recordFrom, "int"), schemeFrom.property(recordFrom, "Integer")));
 
 		RecordProjection projection = RecordProjection.projection(schemeFrom, schemeTo, mapping);

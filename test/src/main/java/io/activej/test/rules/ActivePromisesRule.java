@@ -42,7 +42,7 @@ public final class ActivePromisesRule implements TestRule {
 			} catch (Throwable t) {
 				int n = TestUtils.getActivePromises();
 				if (n != 0) {
-					logger.info(n + " promise assertion" + (n == 1 ? " was" : "s were") + " not checked");
+					logger.info("{} promise assertion{} not checked", n, (n == 1 ? " was" : "s were"));
 				}
 				throw t;
 			}

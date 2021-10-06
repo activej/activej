@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.LongPredicate;
 import java.util.function.Predicate;
 
 import static io.activej.aggregation.util.Utils.createBinarySerializer;
@@ -254,15 +255,16 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 								skipped.inc();
 								return false;
 							})
-							.peek(entry -> {
+							.map(entry -> {
 								if (logger.isTraceEnabled()) {
 									FileTime lastModifiedTime = FileTime.fromMillis(entry.getValue().getTimestamp());
 									logger.trace("Delete file: {} with last modifiedTime: {}({} millis)", entry.getKey(),
 											lastModifiedTime, lastModifiedTime.toMillis());
 								}
 								deleted.inc();
+
+								return entry.getKey();
 							})
-							.map(Map.Entry::getKey)
 							.collect(toSet());
 					if (toDelete.isEmpty()) return Promise.complete();
 					return fs.deleteAll(toDelete)
@@ -278,7 +280,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 				.whenComplete(promiseCleanup.recordStats());
 	}
 
-	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, Predicate<Long> lastModifiedPredicate) {
+	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, LongPredicate lastModifiedPredicate) {
 		return fs.list(toDir(chunksPath) + "*" + LOG)
 				.mapException(e -> new AggregationException("Failed to list chunks", e))
 				.map(list ->

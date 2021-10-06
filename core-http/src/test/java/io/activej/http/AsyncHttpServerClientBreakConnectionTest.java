@@ -15,6 +15,7 @@ import java.io.IOException;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertEquals;
 
 public class AsyncHttpServerClientBreakConnectionTest {
 	private final Logger logger = LoggerFactory.getLogger(AsyncHttpServerClientBreakConnectionTest.class);
@@ -52,11 +53,13 @@ public class AsyncHttpServerClientBreakConnectionTest {
 
 	@Test
 	public void testBreakConnection() {
-		await(client.request(
-				HttpRequest.post("http://127.0.0.1:" + freePort)
-						.withBody("Hello World".getBytes()))
-				.map(response ->
+		String result = await(client.request(
+						HttpRequest.post("http://127.0.0.1:" + freePort)
+								.withBody("Hello World".getBytes()))
+				.then(response ->
 						response.loadBody()
 								.map(body -> body.getString(UTF_8))));
+
+		assertEquals("Hello World", result);
 	}
 }

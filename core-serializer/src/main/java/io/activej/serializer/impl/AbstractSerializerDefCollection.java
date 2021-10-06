@@ -23,7 +23,7 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
@@ -43,7 +43,7 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		this.nullable = nullable;
 	}
 
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, Function<Expression, Expression> value) {
+	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> value) {
 		return forEach(collection, valueType, value);
 	}
 

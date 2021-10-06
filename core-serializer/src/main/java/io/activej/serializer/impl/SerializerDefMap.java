@@ -23,7 +23,7 @@ import io.activej.serializer.SerializerDef;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
@@ -56,7 +56,7 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	public Expression mapForEach(Expression collection, Function<Expression, Expression> forEachKey, Function<Expression, Expression> forEachValue) {
+	public Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue) {
 		return forEach(collection, forEachKey, forEachValue);
 	}
 

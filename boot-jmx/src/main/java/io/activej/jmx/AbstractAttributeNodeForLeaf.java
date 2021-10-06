@@ -35,7 +35,7 @@ abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 	protected final ValueFetcher fetcher;
 	private boolean visible;
 
-	public AbstractAttributeNodeForLeaf(String name, @Nullable String description, ValueFetcher fetcher, boolean visible) {
+	protected AbstractAttributeNodeForLeaf(String name, @Nullable String description, ValueFetcher fetcher, boolean visible) {
 		this.name = name;
 		this.description = description;
 		this.fetcher = fetcher;

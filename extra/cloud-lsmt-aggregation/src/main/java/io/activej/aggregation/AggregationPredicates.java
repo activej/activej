@@ -1088,6 +1088,10 @@ public class AggregationPredicates {
 							E.call(E.call(E.value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
 		}
 
+		private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
+			return fields.containsKey(key) ? fields.get(key).toStringValue(value) : value;
+		}
+
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
@@ -1578,10 +1582,6 @@ public class AggregationPredicates {
 	@SuppressWarnings("unchecked")
 	private static Object toInternalValue(Map<String, FieldType> fields, String key, Object value) {
 		return fields.containsKey(key) ? fields.get(key).toInternalValue(value) : value;
-	}
-
-	private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
-		return fields.containsKey(key) ? fields.get(key).toStringValue(value) : value;
 	}
 
 	public static RangeScan toRangeScan(AggregationPredicate predicate, List<String> primaryKey, Map<String, FieldType> fields) {

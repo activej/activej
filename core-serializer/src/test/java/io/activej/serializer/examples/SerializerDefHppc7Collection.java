@@ -6,7 +6,7 @@ import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.AbstractSerializerDefCollection;
 import io.activej.serializer.impl.SerializerDefNullable;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
@@ -23,7 +23,7 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 	// endregion
 
 	@Override
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, Function<Expression, Expression> value) {
+	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> value) {
 		try {
 			String prefix = capitalize(elementType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");

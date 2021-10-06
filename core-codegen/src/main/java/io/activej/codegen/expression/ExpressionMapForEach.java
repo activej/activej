@@ -17,13 +17,13 @@
 package io.activej.codegen.expression;
 
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.call;
 
 final class ExpressionMapForEach extends AbstractExpressionMapForEach {
 
-	ExpressionMapForEach(Expression collection, Function<Expression, Expression> forEachKey, Function<Expression, Expression> forEachValue) {
+	ExpressionMapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue) {
 		super(collection, forEachKey, forEachValue, Map.Entry.class);
 	}
 

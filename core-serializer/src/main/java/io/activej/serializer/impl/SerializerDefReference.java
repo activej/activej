@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
@@ -87,7 +87,7 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 		return let(cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), HashMap.class),
 				map -> let(readVarInt(in),
 						index -> {
-							Function<Expression, Expression> instanceInitializer = instance -> call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), instance);
+							UnaryOperator<Expression> instanceInitializer = instance -> call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), instance);
 							return ifThenElse(cmpEq(index, value(0)),
 									serializer instanceof SerializerDefClass ?
 											((SerializerDefClass) serializer).decoder(staticDecoders, in, version, compatibilityLevel, instanceInitializer) :

@@ -49,7 +49,7 @@ public abstract class AbstractModule implements Module {
 
 	private final @Nullable StackTraceElement location;
 
-	public AbstractModule() {
+	protected AbstractModule() {
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 		StackTraceElement found = null;
 		Class<?> cls = getClass();

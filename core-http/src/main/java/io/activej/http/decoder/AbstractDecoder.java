@@ -23,7 +23,7 @@ package io.activej.http.decoder;
 public abstract class AbstractDecoder<R> implements Decoder<R> {
 	private final String id;
 
-	public AbstractDecoder(String id) {
+	protected AbstractDecoder(String id) {
 		this.id = id;
 	}
 

@@ -86,12 +86,13 @@ public final class AsyncHttpClientTest {
 	}
 
 	@Test
-	@Ignore
+	@Ignore("Requires DNS look up, may flood remote server")
 	public void testClientTimeoutConnect() {
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withConnectTimeout(Duration.ofMillis(1));
 		Exception e = awaitException(client.request(HttpRequest.get("http://google.com")));
-		assertThat(e, instanceOf(AsyncTimeoutException.class));
+		assertThat(e, instanceOf(HttpException.class));
+		assertThat(e.getCause(), instanceOf(AsyncTimeoutException.class));
 	}
 
 	@Test

@@ -13,7 +13,7 @@ public abstract class AbstractNode implements Node {
 
 	protected @Nullable Exception error = null;
 
-	public AbstractNode(int index) {
+	protected AbstractNode(int index) {
 		this.index = index;
 	}
 

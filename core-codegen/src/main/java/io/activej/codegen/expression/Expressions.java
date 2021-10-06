@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -877,19 +878,19 @@ public class Expressions {
 		return new ExpressionArraySet(array, position, newElement);
 	}
 
-	public static Expression forEach(Expression collection, Function<Expression, Expression> it) {
+	public static Expression forEach(Expression collection, UnaryOperator<Expression> it) {
 		return forEach(collection, Object.class, it);
 	}
 
-	public static Expression forEach(Expression collection, Class<?> type, Function<Expression, Expression> it) {
+	public static Expression forEach(Expression collection, Class<?> type, UnaryOperator<Expression> it) {
 		return new ExpressionIteratorForEach(collection, type, it);
 	}
 
-	public static Expression loop(Expression from, Expression to, Function<Expression, Expression> it) {
+	public static Expression loop(Expression from, Expression to, UnaryOperator<Expression> it) {
 		return new ExpressionFor(from, to, it);
 	}
 
-	public static Expression forEach(Expression collection, Function<Expression, Expression> forEachKey, Function<Expression, Expression> forEachValue) {
+	public static Expression forEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue) {
 		return new ExpressionMapForEach(collection, forEachKey, forEachValue);
 	}
 
