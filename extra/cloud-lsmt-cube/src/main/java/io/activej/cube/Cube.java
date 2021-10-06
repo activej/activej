@@ -64,6 +64,7 @@ import io.activej.promise.Promises;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -699,6 +700,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		return queryResultSupplier;
 	}
 
+	@VisibleForTesting
 	List<AggregationContainer> getCompatibleAggregationsForQuery(Collection<String> dimensions,
 			Collection<String> storedMeasures,
 			AggregationPredicate where) {

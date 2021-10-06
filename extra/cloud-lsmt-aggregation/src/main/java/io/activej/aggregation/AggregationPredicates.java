@@ -136,7 +136,7 @@ public class AggregationPredicates {
 		register(PredicateHas.class, PredicateHas.class, (left, right) -> left.key.equals(right.key) ? left : null);
 		PredicateSimplifier simplifierHas = (PredicateSimplifier<PredicateHas, AggregationPredicate>) (left, right) -> right.getDimensions().contains(left.getKey()) ? right : null;
 		register(PredicateHas.class, PredicateEq.class, simplifierHas);
-		register(PredicateHas.class, PredicateNotEq.class, (left, right) -> left.key.equals(right.key) ? left : null);
+		register(PredicateHas.class, PredicateNotEq.class, simplifierHas);
 		register(PredicateHas.class, PredicateLe.class, simplifierHas);
 		register(PredicateHas.class, PredicateGe.class, simplifierHas);
 		register(PredicateHas.class, PredicateLt.class, simplifierHas);
@@ -255,6 +255,13 @@ public class AggregationPredicates {
 			if (right.from.compareTo(left.value) < 0 && right.to.compareTo(left.value) < 0)
 				return right;
 			return null;
+		});
+		register(PredicateNotEq.class, PredicateIn.class, (left, right) -> {
+			if (!left.key.equals(right.key))
+				return null;
+			if (right.values.contains(left.value))
+				return alwaysFalse();
+			return right;
 		});
 
 		register(PredicateLe.class, PredicateLe.class, (left, right) -> {
@@ -977,7 +984,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return emptySet();
+			return setOf(key);
 		}
 
 		@Override

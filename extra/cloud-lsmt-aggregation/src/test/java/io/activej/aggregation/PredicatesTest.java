@@ -430,6 +430,44 @@ public class PredicatesTest {
 	}
 
 	@Test
+	public void testPredicateNotEqAndPredicateIn() {
+		AggregationPredicate predicate;
+		predicate = and(notEq("x", 0), in("x"));
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicate = and(notEq("x", 0), in("x", 0));
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicate = and(notEq("x", 0), in("x", 1));
+		assertEquals(in("x", 1), predicate.simplify());
+
+		predicate = and(notEq("x", 0), in("x", 0, 1, 2, 3));
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicate = and(notEq("x", 0), has("x"));
+		assertEquals(notEq("x", 0), predicate.simplify());
+	}
+
+	@Test
+	public void testPredicateNotEqAndPredicateInAndPredicateHas() {
+		AggregationPredicate predicate, predicateHas, predicateNotEq, predicateIn;
+		predicateHas = has("x");
+		predicateNotEq = notEq("x", 0);
+
+		predicateIn = in("x");
+		predicate = and(predicateIn, predicateHas);
+		assertEquals(alwaysFalse(), predicate.simplify());
+		predicate = and(predicateIn, predicateNotEq);
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicateIn = in("x", 1, 2, 3);
+		predicate = and(predicateIn, predicateHas);
+		assertEquals(in("x", 1, 2, 3), predicate.simplify());
+		predicate = and(predicateIn, predicateNotEq);
+		assertEquals(in("x", 1, 2, 3), predicate.simplify());
+	}
+
+	@Test
 	public void testPredicateInAndPredicateEq() {
 		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), eq("x", 2));
@@ -575,6 +613,60 @@ public class PredicatesTest {
 		assertTrue(matches(record, "stringValue", "^abc.*fg$"));
 	}
 
+	@Test
+	public void testMatches() {
+		Matcher matcher;
+
+		matcher = new Matcher(notEq("campaign", 0));
+		testMatches(matcher, notEq("campaign", 0), notEq("other", 0));
+		assertFalse(matcher.match(notEq("other", 0)));
+
+		matcher = new Matcher(has("campaign"));
+		testMatches(matcher, has("campaign"), has("other"));
+		assertFalse(matcher.match(has("other")));
+
+		matcher = new Matcher(alwaysTrue());
+		testMatches(matcher, notEq("campaign", 0), notEq("other", 0));
+		assertTrue(matcher.match(notEq("other", 0)));
+
+		testMatches(matcher, has("campaign"), has("other"));
+		assertTrue(matcher.match(has("other")));
+	}
+
+	private void testMatches(Matcher matcher, AggregationPredicate belongPredicate, AggregationPredicate belongOtherPredicate) {
+
+		assertTrue(matcher.match(belongPredicate));
+		assertTrue(matcher.match(and(
+				in("campaign", 1, 3, 30)
+		)));
+		assertTrue(matcher.match(and(
+				belongPredicate,
+				in("campaign", 1, 3, 30)
+		)));
+		assertTrue(matcher.match(and(
+				belongPredicate,
+				in("campaign", 1, 3, 30)
+		)));
+		assertTrue(matcher.match(and(
+				belongOtherPredicate,
+				in("campaign", 1, 3, 30)
+		)));
+		assertTrue(matcher.match(and(
+				belongPredicate,
+				belongOtherPredicate,
+				in("campaign", 1, 3, 30)
+		)));
+		assertTrue(matcher.match(and(
+				in("other", 1, 3, 30),
+				in("campaign", 1, 3, 30)
+		)));
+		assertTrue(matcher.match(and(
+				belongPredicate,
+				in("other", 1, 3, 30),
+				in("campaign", 1, 3, 30)
+		)));
+	}
+
 	@SuppressWarnings("unchecked")
 	private boolean matches(Record record, String field, String pattern) {
 		AggregationPredicate aggregationPredicate = AggregationPredicates.regexp(field, pattern);
@@ -610,5 +702,18 @@ public class PredicatesTest {
 		public float floatValue;
 		public double doubleValue;
 		public String stringValue;
+	}
+
+	private static final class Matcher {
+		private final AggregationPredicate matchPredicate;
+
+		private Matcher(AggregationPredicate predicate) {
+			this.matchPredicate = predicate.simplify();
+		}
+
+		private boolean match(AggregationPredicate predicate) {
+			AggregationPredicate simplified = predicate.simplify();
+			return simplified.equals(and(matchPredicate, simplified).simplify());
+		}
 	}
 }
