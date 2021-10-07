@@ -548,6 +548,18 @@ public class AggregationPredicates {
 			if (predicate instanceof PredicateNotEq)
 				return new PredicateEq(((PredicateNotEq) predicate).key, ((PredicateNotEq) predicate).value);
 
+			if (predicate instanceof PredicateGt)
+				return new PredicateLe(((PredicateGt) predicate).key, ((PredicateGt) predicate).value);
+
+			if (predicate instanceof PredicateLt)
+				return new PredicateGe(((PredicateLt) predicate).key, ((PredicateLt) predicate).value);
+
+			if (predicate instanceof PredicateGe)
+				return new PredicateLt(((PredicateGe) predicate).key, ((PredicateGe) predicate).value);
+
+			if (predicate instanceof PredicateLe)
+				return new PredicateGt(((PredicateLe) predicate).key, ((PredicateLe) predicate).value);
+
 			return not(predicate.simplify());
 		}
 

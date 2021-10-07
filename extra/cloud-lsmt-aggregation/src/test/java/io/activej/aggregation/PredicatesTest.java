@@ -646,6 +646,19 @@ public class PredicatesTest {
 	}
 
 	@Test
+	public void testPredicateNot() {
+		assertEquals(alwaysFalse(), not(not(alwaysFalse())).simplify());
+
+		assertEquals(eq("x", 100), not(notEq("x", 100)).simplify());
+		assertEquals(notEq("x", 100), not(eq("x", 100)).simplify());
+
+		assertEquals(gt("x", 100), not(le("x", 100)).simplify());
+		assertEquals(ge("x", 100), not(lt("x", 100)).simplify());
+		assertEquals(lt("x", 100), not(ge("x", 100)).simplify());
+		assertEquals(le("x", 100), not(gt("x", 100)).simplify());
+	}
+
+	@Test
 	public void testMatches() {
 		Matcher matcher;
 
