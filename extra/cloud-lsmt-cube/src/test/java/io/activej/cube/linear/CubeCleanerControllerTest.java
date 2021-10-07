@@ -14,10 +14,7 @@ import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
 import io.activej.test.rules.ByteBufRule;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import javax.sql.DataSource;
@@ -44,6 +41,7 @@ public class CubeCleanerControllerTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private Eventloop eventloop;
+	private Thread eventloopThread;
 	private DataSource dataSource;
 	private CubeUplinkMySql uplink;
 	private ActiveFsChunkStorage<Long> aggregationChunkStorage;
@@ -59,8 +57,8 @@ public class CubeCleanerControllerTest {
 
 		eventloop.keepAlive(true);
 
-		Thread thread = new Thread(eventloop);
-		thread.start();
+		eventloopThread = new Thread(eventloop);
+		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
@@ -76,6 +74,12 @@ public class CubeCleanerControllerTest {
 		uplink = CubeUplinkMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		uplink.initialize();
 		uplink.truncateTables();
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		eventloop.keepAlive(false);
+		eventloopThread.join();
 	}
 
 	@Test

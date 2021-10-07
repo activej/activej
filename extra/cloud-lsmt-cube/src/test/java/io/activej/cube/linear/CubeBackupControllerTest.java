@@ -24,10 +24,7 @@ import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import javax.sql.DataSource;
@@ -68,6 +65,7 @@ public class CubeBackupControllerTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private Eventloop eventloop;
+	private Thread eventloopThread;
 	private DataSource dataSource;
 	private ActiveFs activeFs;
 	private CubeUplinkMySql uplink;
@@ -84,8 +82,8 @@ public class CubeBackupControllerTest {
 
 		eventloop.keepAlive(true);
 
-		Thread thread = new Thread(eventloop);
-		thread.start();
+		eventloopThread = new Thread(eventloop);
+		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
@@ -106,6 +104,12 @@ public class CubeBackupControllerTest {
 		uplink = CubeUplinkMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		backupController.initialize();
 		backupController.truncateTables();
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		eventloop.keepAlive(false);
+		eventloopThread.join();
 	}
 
 	@Test
