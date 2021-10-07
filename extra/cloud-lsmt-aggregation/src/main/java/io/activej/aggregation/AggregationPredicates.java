@@ -258,6 +258,14 @@ public class AggregationPredicates {
 				return right;
 			return null;
 		});
+		register(PredicateNotEq.class, PredicateRegexp.class, (left, right) -> {
+			if (!left.key.equals(right.key))
+				return null;
+			if (left.value instanceof CharSequence &&
+					right.regexp.matcher((CharSequence) left.value).matches())
+				return null;
+			return right;
+		});
 		register(PredicateNotEq.class, PredicateIn.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
