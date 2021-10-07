@@ -20,6 +20,7 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -196,7 +197,8 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateRegexp.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (right.regexp.matcher(left.key).matches())
+			if (left.value instanceof CharSequence &&
+					right.regexp.matcher((CharSequence) left.value).matches())
 				return left;
 			return alwaysFalse();
 		});
@@ -1488,7 +1490,7 @@ public class AggregationPredicates {
 		return values.length == 1 ? new PredicateEq(key, values[0]) : new PredicateIn(key, new TreeSet(asList(values)));
 	}
 
-	public static AggregationPredicate regexp(String key, String pattern) {
+	public static AggregationPredicate regexp(String key, @Language("RegExp") String pattern) {
 		return new PredicateRegexp(key, Pattern.compile(pattern));
 	}
 

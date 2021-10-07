@@ -614,6 +614,22 @@ public class PredicatesTest {
 	}
 
 	@Test
+	public void testPredicateRegexpAndPredicateEq() {
+		AggregationPredicate predicate;
+		predicate = and(regexp("x", "tes."), eq("x", "test"));
+		assertEquals(eq("x", "test"), predicate.simplify());
+
+		predicate = and(regexp("x", ".*"), eq("x", "test"));
+		assertEquals(eq("x", "test"), predicate.simplify());
+
+		predicate = and(regexp("x", "tex."), eq("x", "test"));
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicate = and(regexp("x", ""), eq("x", "test"));
+		assertEquals(alwaysFalse(), predicate.simplify());
+	}
+
+	@Test
 	public void testMatches() {
 		Matcher matcher;
 
