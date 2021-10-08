@@ -51,9 +51,9 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	private final Eventloop eventloop;
 	private final CrdtFunction<S> function;
 
-	private final CrdtFilter<S> filter = $ -> true;
-
 	private final NavigableMap<K, CrdtData<K, S>> map = new ConcurrentSkipListMap<>();
+
+	private CrdtFilter<S> filter = $ -> true;
 
 	// region JMX
 	private boolean detailedStats;
@@ -81,6 +81,11 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageMap<K, S> create(Eventloop eventloop) {
 		return new CrdtStorageMap<>(eventloop, CrdtFunction.<S>ofCrdtType());
+	}
+
+	public CrdtStorageMap<K, S> withFilter(CrdtFilter<S> filter) {
+		this.filter = filter;
+		return this;
 	}
 
 	@Override

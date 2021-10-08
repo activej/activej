@@ -5,53 +5,80 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.JmxRefreshableStats;
 import org.junit.Test;
 
+import java.util.List;
+
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 
 public class DynamicMBeanFactoryAttributeExceptionsTest {
+
+	private static final JmxBeanSettings SETTINGS = defaultSettings();
+
 	@Test
 	public void concurrentJmxBeansAreNotAllowedToBeInPool() {
-		assertThrows("ConcurrentJmxBeans cannot be used in pool", IllegalArgumentException.class, () ->
-				DynamicMBeanFactory.create()
-						.createDynamicMBean(
-								asList(new ConcurrentJmxBeanWithSingleIntAttr(), new ConcurrentJmxBeanWithSingleIntAttr()),
-								defaultSettings(), false));
+		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
+		List<ConcurrentJmxBeanWithSingleIntAttr> beans = asList(new ConcurrentJmxBeanWithSingleIntAttr(), new ConcurrentJmxBeanWithSingleIntAttr());
+
+		try {
+			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("ConcurrentJmxBeans cannot be used in pool", e.getMessage());
+		}
 	}
 
 	// test JmxRefreshableStats as @JmxAttribute, all returned stats should be concrete classes with public no-arg constructor
 	@Test
 	public void jmxStatsAttributeCannotBeInterface() {
-		assertThrows("Return type of JmxRefreshableStats attribute must be concrete class " +
-				"that implements JmxRefreshableStats interface " +
-				"and contains static factory \"createAccumulator()\" method " +
-				"or static factory \"create()\" method " +
-				"or public no-arg constructor", IllegalArgumentException.class, () ->
-				DynamicMBeanFactory.create()
-						.createDynamicMBean(singletonList(new MBeanWithInterfaceAsJmxStatsAttributes()), defaultSettings(), false));
+		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
+		List<MBeanWithInterfaceAsJmxStatsAttributes> beans = singletonList(new MBeanWithInterfaceAsJmxStatsAttributes());
+
+		try {
+			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
+					"that implements JmxStats interface " +
+					"and contains static factory \"createAccumulator()\" method " +
+					"or static factory \"create()\" method " +
+					"or public no-arg constructor"));
+		}
 	}
 
 	@Test
 	public void jmxStatsAttributeCannotBeAbstractClass() {
-		assertThrows("Return type of JmxRefreshableStats attribute must be concrete class " +
-				"that implements JmxRefreshableStats interface " +
-				"and contains static factory \"createAccumulator()\" method " +
-				"or static factory \"create()\" method " +
-				"or public no-arg constructor", IllegalArgumentException.class, () ->
-				DynamicMBeanFactory.create()
-						.createDynamicMBean(singletonList(new MBeanWithAbstractClassAsJmxStatsAttributes()), defaultSettings(), false));
+		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
+		List<MBeanWithAbstractClassAsJmxStatsAttributes> beans = singletonList(new MBeanWithAbstractClassAsJmxStatsAttributes());
+
+		try {
+			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
+					"that implements JmxStats interface " +
+					"and contains static factory \"createAccumulator()\" method " +
+					"or static factory \"create()\" method " +
+					"or public no-arg constructor"));
+		}
 	}
 
 	@Test
 	public void jmxStatsAttributesClassMustHavePublicNoArgConstructor() {
-		assertThrows("Return type of JmxRefreshableStats attribute must be concrete class " +
-				"that implements JmxRefreshableStats interface " +
-				"and contains static factory \"createAccumulator()\" method " +
-				"or static factory \"create()\" method " +
-				"or public no-arg constructor", IllegalArgumentException.class, () ->
-				DynamicMBeanFactory.create()
-						.createDynamicMBean(singletonList(new MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor()), defaultSettings(), false));
+		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
+		List<MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor> beans = singletonList(new MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor());
+
+		try {
+			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
+					"that implements JmxStats interface " +
+					"and contains static factory \"createAccumulator()\" method " +
+					"or static factory \"create()\" method " +
+					"or public no-arg constructor"));
+		}
 	}
 
 	public static final class ConcurrentJmxBeanWithSingleIntAttr implements ConcurrentJmxBean {

@@ -21,6 +21,9 @@ import static io.activej.ot.OTAlgorithms.mergeAndUpdateHeads;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings({"ArraysAsListWithZeroOrOneArgument"})
 public final class OTSystemTest {
@@ -36,6 +39,9 @@ public final class OTSystemTest {
 		TransformResult<TestOp> result = SYSTEM.transform(left, right);
 		System.out.println(result.left);
 		System.out.println(result.right);
+
+		assertEquals(right, result.left);
+		assertEquals(left, result.right);
 	}
 
 	@Test
@@ -45,6 +51,9 @@ public final class OTSystemTest {
 		TransformResult<TestOp> result = SYSTEM.transform(left, right);
 		System.out.println(result.left);
 		System.out.println(result.right);
+
+		assertEquals(asList(set(13, -20), add(30), add(10)), result.left);
+		assertTrue(result.right.isEmpty());
 	}
 
 	@Test
@@ -52,6 +61,8 @@ public final class OTSystemTest {
 		List<? extends TestOp> arg = asList(add(2), set(2, 1), add(2), add(10));
 		List<TestOp> result = SYSTEM.squash(arg);
 		System.out.println(result);
+
+		assertEquals(singletonList(set(0, 13)), result);
 	}
 
 	@Test

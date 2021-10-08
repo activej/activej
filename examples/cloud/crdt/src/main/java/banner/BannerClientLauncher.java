@@ -28,7 +28,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	public static final int BANNER_SIZE = 10;
 
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
-	private static final List<Long> USER_IDS = Stream.generate(() -> RANDOM.nextLong(10 * USER_IDS_SIZE))
+	private static final List<Long> USER_IDS = Stream.generate(() -> RANDOM.nextLong(10L * USER_IDS_SIZE))
 			.distinct()
 			.limit(USER_IDS_SIZE)
 			.collect(toList());

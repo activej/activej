@@ -21,6 +21,8 @@ import io.activej.jmx.stats.ExceptionStats;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.util.function.BooleanSupplier;
+import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -150,16 +152,16 @@ public final class TriggerResult implements WithInitializer<TriggerResult> {
 		return isPresent() ? new TriggerResult(timestamp, throwable, value, count) : NONE;
 	}
 
-	public TriggerResult withCount(Supplier<Integer> count) {
-		return isPresent() ? new TriggerResult(timestamp, throwable, value, count.get()) : NONE;
+	public TriggerResult withCount(IntSupplier count) {
+		return isPresent() ? new TriggerResult(timestamp, throwable, value, count.getAsInt()) : NONE;
 	}
 
 	public TriggerResult when(boolean condition) {
 		return isPresent() && condition ? this : NONE;
 	}
 
-	public TriggerResult when(Supplier<Boolean> conditionSupplier) {
-		return isPresent() && conditionSupplier.get() ? this : NONE;
+	public TriggerResult when(BooleanSupplier conditionSupplier) {
+		return isPresent() && conditionSupplier.getAsBoolean() ? this : NONE;
 	}
 
 	@SuppressWarnings("unchecked")

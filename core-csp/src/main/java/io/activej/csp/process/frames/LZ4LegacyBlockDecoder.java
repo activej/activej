@@ -156,7 +156,7 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 	}
 
 	private static final class IntLeScanner implements ByteBufs.ByteScanner {
-		public int value;
+		int value;
 
 		@Override
 		public boolean consume(int index, byte b) {

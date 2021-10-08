@@ -14,8 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import static io.activej.config.converter.ConfigConverters.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class ConfigsModuleTest {
 	private static class TestClass {
@@ -63,30 +62,26 @@ public class ConfigsModuleTest {
 		assertNotNull(config);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testPathConfig() {
-		Config config = Config.ofProperties("test.properties");
-		assertNotNull(config);
+		assertThrows(IllegalArgumentException.class, () -> Config.ofProperties("test.properties"));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testClassPathNotFoundProperties() {
-		Config.ofClassPathProperties("notFound.properties");
+		assertThrows(IllegalArgumentException.class, () -> Config.ofClassPathProperties("notFound.properties"));
 	}
 
 	@Test
 	public void testClassPathNotFoundPropertiesOptional() {
-		Config.ofClassPathProperties("notFound.properties", true);
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testPathNameNotFoundProperties() {
-		Config.ofProperties("notFound.properties");
+		Config config = Config.ofClassPathProperties("notFound.properties", true);
+		assertTrue(config.isEmpty());
 	}
 
 	@Test
 	public void testPathNameNotFoundPropertiesOptional() {
-		Config.ofProperties("notFound.properties", true);
+		Config config = Config.ofProperties("notFound.properties", true);
+		assertTrue(config.isEmpty());
 	}
 
 	@Test

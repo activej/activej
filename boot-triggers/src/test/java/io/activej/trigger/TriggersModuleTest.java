@@ -22,13 +22,15 @@ public class TriggersModuleTest {
 
 	@Test
 	public void testDuplicatesRejection() {
-		assertThrows("Cannot assign duplicate trigger",
-				IllegalArgumentException.class,
-				() -> Injector.of(
-						TriggersModule.create()
-								.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create())
-								.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create())
-				));
+		TriggersModule triggersModule = TriggersModule.create()
+				.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
+
+		try {
+			triggersModule.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("Cannot assign duplicate trigger", e.getMessage());
+		}
 	}
 
 	@Test

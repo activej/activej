@@ -35,7 +35,7 @@ import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static junit.framework.TestCase.fail;
 
 @RunWith(Parameterized.class)
 public final class TestGzipProcessorUtils {
@@ -82,9 +82,12 @@ public final class TestGzipProcessorUtils {
 		raw.moveTail(-4);
 		raw.writeInt(Integer.reverseBytes(2));
 
-		assertThrows("Decompressed data size is not equal to input size from GZIP trailer",
-				MalformedHttpException.class,
-				() -> fromGzip(raw, 11_000_000));
+		try {
+			fromGzip(raw, 11_000_000);
+			fail();
+		} catch (MalformedHttpException e) {
+			assertEquals("Decompressed data size is not equal to input size from GZIP trailer", e.getMessage());
+		}
 	}
 
 	@Test
@@ -92,25 +95,28 @@ public final class TestGzipProcessorUtils {
 		ByteBuf badBuf = ByteBufPool.allocate(100);
 		badBuf.put(new byte[]{-1, -1, -1, -1, -1, -1});
 
-		assertThrows("Corrupted GZIP header",
-				MalformedHttpException.class,
-				() -> fromGzip(badBuf, 11_000_000));
+		try {
+			fromGzip(badBuf, 11_000_000);
+			fail();
+		} catch (MalformedHttpException e) {
+			assertEquals("Corrupted GZIP header", e.getMessage());
+		}
 	}
 
 	@Test
 	public void testGzippedCommunicationBetweenClientServer() throws IOException {
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> request.loadBody(CHARACTERS_COUNT)
-						.map(body -> {
-							assertEquals("gzip", request.getHeader(CONTENT_ENCODING));
-							assertEquals("gzip", request.getHeader(ACCEPT_ENCODING));
+						request -> request.loadBody(CHARACTERS_COUNT)
+								.map(body -> {
+									assertEquals("gzip", request.getHeader(CONTENT_ENCODING));
+									assertEquals("gzip", request.getHeader(ACCEPT_ENCODING));
 
-							String receivedData = body.getString(UTF_8);
-							assertEquals(text, receivedData);
-							return HttpResponse.ok200()
-									.withBodyGzipCompression()
-									.withBody(ByteBufStrings.wrapAscii(receivedData));
-						}))
+									String receivedData = body.getString(UTF_8);
+									assertEquals(text, receivedData);
+									return HttpResponse.ok200()
+											.withBodyGzipCompression()
+											.withBody(ByteBufStrings.wrapAscii(receivedData));
+								}))
 				.withListenPort(port);
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());

@@ -11,10 +11,7 @@ public final class PromisesExample {
 		//[START REGION_1]
 		Promises.repeat(() -> {
 			System.out.println("This is iteration #" + ++counter);
-			if (counter == 5) {
-				return Promise.of(false);
-			}
-			return Promise.of(true);
+			return Promise.of(counter != 5);
 		});
 		//[END REGION_1]
 		System.out.println();

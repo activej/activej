@@ -911,7 +911,7 @@ public class BinarySerializerTest {
 		testData2 = doTest(testData1, serializer1, serializer1);
 		assertEquals(testData1.a, testData2.a);
 		assertEquals(testData1.b, testData2.b);
-		assertEquals(testData2.c, testData2.c);
+		assertEquals(testData1.c, testData2.c);
 
 		testData2 = doTest(testData1, serializer2, serializer2);
 		assertEquals(testData1.a, testData2.a);

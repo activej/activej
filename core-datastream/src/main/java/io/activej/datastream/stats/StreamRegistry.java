@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -112,7 +112,7 @@ public final class StreamRegistry<V> implements Iterable<V>, WithInitializer<Str
 		return supplier.withEndOfStream(subscribe(value));
 	}
 
-	private Function<Promise<Void>, Promise<Void>> subscribe(V value) {
+	private UnaryOperator<Promise<Void>> subscribe(V value) {
 		Entry<V> entry = new Entry<>(value);
 		Node<Entry<V>> node = list.addFirstValue(entry);
 		return promise -> promise

@@ -32,8 +32,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingGenerators.combinedGenerator;
@@ -99,7 +99,7 @@ public final class Injector implements ResourceLocator {
 
 	final AtomicReferenceArray[] scopeCaches;
 
-	private static Supplier<Function<CompiledBinding<?>, CompiledBinding<?>>> bytecodePostprocessorFactory = Function::identity;
+	private static Supplier<UnaryOperator<CompiledBinding<?>>> bytecodePostprocessorFactory = UnaryOperator::identity;
 
 	/**
 	 * Enables specialization of compiled bindings. <b>Depends on {@code ActiveJ-Specializer} module</b>
@@ -111,7 +111,7 @@ public final class Injector implements ResourceLocator {
 			Constructor<?> constructor = aClass.getConstructor();
 			constructor.setAccessible(true);
 			Object specializerInstance = constructor.newInstance();
-			Function<CompiledBinding<?>, CompiledBinding<?>> specializer = (Function<CompiledBinding<?>, CompiledBinding<?>>) specializerInstance;
+			UnaryOperator<CompiledBinding<?>> specializer = (UnaryOperator<CompiledBinding<?>>) specializerInstance;
 			Injector.bytecodePostprocessorFactory = () -> specializer;
 		} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException | ClassNotFoundException | InstantiationException e) {
 			throw new IllegalStateException("Can not access ActiveJ Specializer", e);
@@ -237,7 +237,7 @@ public final class Injector implements ResourceLocator {
 			Map<Key<?>, Binding<?>> bindings,
 			Map<Key<?>, CompiledBinding<?>> compiledBindingsOfParent
 	) {
-		Function<CompiledBinding<?>, CompiledBinding<?>> postprocessor = bytecodePostprocessorFactory.get();
+		UnaryOperator<CompiledBinding<?>> postprocessor = bytecodePostprocessorFactory.get();
 
 		boolean threadsafe = path.length == 0 || path[path.length - 1].isThreadsafe();
 
@@ -298,7 +298,7 @@ public final class Injector implements ResourceLocator {
 	}
 
 	private static CompiledBinding<?> compileBinding(
-			Function<CompiledBinding<?>, CompiledBinding<?>> postprocessor,
+			UnaryOperator<CompiledBinding<?>> postprocessor,
 			int scope, Scope[] path, boolean threadsafe,
 			Key<?> key, Map<Key<?>, Binding<?>> bindings,
 			Map<Key<?>, CompiledBinding<?>> compiledBindings, Map<Key<?>, CompiledBinding<?>> compiledBindingsOfParent,

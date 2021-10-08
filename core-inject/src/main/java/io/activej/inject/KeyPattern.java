@@ -34,21 +34,22 @@ import static io.activej.types.IsAssignableUtils.isAssignable;
  * this pattern's {@link #type} and this pattern's qualifier is {@code null} or matches
  * a {@link Key#getQualifier()}  key's qualifier
  */
+@SuppressWarnings("unused") // <T> is required to obtain type from type parameter
 public abstract class KeyPattern<T> {
 	private final @NotNull Type type;
 	private final Predicate<?> qualifier;
 
-	public KeyPattern() {
+	protected KeyPattern() {
 		this.type = getTypeParameter();
 		this.qualifier = null;
 	}
 
-	public KeyPattern(Object qualifier) {
+	protected KeyPattern(Object qualifier) {
 		this.type = getTypeParameter();
 		this.qualifier = predicateOf(qualifier);
 	}
 
-	public KeyPattern(Predicate<?> qualifier) {
+	protected KeyPattern(Predicate<?> qualifier) {
 		this.type = getTypeParameter();
 		this.qualifier = qualifier;
 	}

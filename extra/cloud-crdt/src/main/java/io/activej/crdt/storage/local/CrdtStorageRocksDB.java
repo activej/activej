@@ -44,6 +44,7 @@ import io.activej.promise.Promise;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.rocksdb.*;
 
 import java.time.Duration;
@@ -231,7 +232,7 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 		return Promise.complete();
 	}
 
-	public Promise<S> get(K key) {
+	public Promise<@Nullable S> get(K key) {
 		return Promise.ofBlocking(executor, () -> {
 			ByteBuf buf = ByteBufPool.allocate(bufferSize);
 			keySerializer.encode(buf.array(), buf.head(), key);

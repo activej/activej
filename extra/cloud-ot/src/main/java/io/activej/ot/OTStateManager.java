@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.async.function.AsyncRunnables.ofExecutor;
 import static io.activej.async.util.LogUtils.thisMethod;
@@ -91,14 +91,14 @@ public final class OTStateManager<K, D> implements EventloopService, WithInitial
 	}
 
 	public @NotNull OTStateManager<K, D> withPoll() {
-		return withPoll(Function.identity());
+		return withPoll(UnaryOperator.identity());
 	}
 
 	public @NotNull OTStateManager<K, D> withPoll(@NotNull RetryPolicy<?> pollRetryPolicy) {
 		return withPoll(poll -> ofExecutor(AsyncExecutors.retry(pollRetryPolicy), poll));
 	}
 
-	public @NotNull OTStateManager<K, D> withPoll(@NotNull Function<AsyncRunnable, AsyncRunnable> pollPolicy) {
+	public @NotNull OTStateManager<K, D> withPoll(@NotNull UnaryOperator<AsyncRunnable> pollPolicy) {
 		this.poll = pollPolicy.apply(this::doPoll);
 		return this;
 	}

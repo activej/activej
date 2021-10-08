@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * This interface represents an object that can asynchronously receive streams of data.
@@ -152,7 +152,7 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 	/**
 	 * Creates a consumer from this one with its <i>acknowledge</i> signal modified by the given function.
 	 */
-	default StreamConsumer<T> withAcknowledgement(Function<Promise<Void>, Promise<Void>> fn) {
+	default StreamConsumer<T> withAcknowledgement(UnaryOperator<Promise<Void>> fn) {
 		Promise<Void> acknowledgement = getAcknowledgement();
 		Promise<Void> newAcknowledgement = fn.apply(acknowledgement);
 		if (acknowledgement == newAcknowledgement) return this;

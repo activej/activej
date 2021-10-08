@@ -439,9 +439,11 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 			for (Key node : path.isEmpty() ? services.keySet() : forwards.getOrDefault(path.get(path.size() - 1), emptySet())) {
 				int loopIndex = path.indexOf(node);
 				if (loopIndex != -1) {
-					logger.warn("Circular dependencies found: {}", path.subList(loopIndex, path.size()).stream()
-							.map(this::keyToString)
-							.collect(joining(", ", "[", "]")));
+					if (logger.isWarnEnabled()) {
+						logger.warn("Circular dependencies found: {}", path.subList(loopIndex, path.size()).stream()
+								.map(this::keyToString)
+								.collect(joining(", ", "[", "]")));
+					}
 					return path.subList(loopIndex, path.size());
 				}
 				if (!visited.contains(node)) {

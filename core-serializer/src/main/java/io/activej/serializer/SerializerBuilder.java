@@ -1021,11 +1021,11 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		repeatable(SerializeVarLengths.class, SerializeVarLength.class, SerializeVarLengths::value, SerializeVarLength::path);
 	}
 
-	@SuppressWarnings({"unchecked", "RedundantCast", "rawtypes"})
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private static <AR extends Annotation, AV extends Annotation> void repeatable(Class<AR> arClass, Class<AV> avClass,
 			Function<AR, ? extends AV[]> toValue, Function<AV, int[]> toPath) {
-		REPEATABLES_VALUE.put(arClass, (Function<Annotation, Annotation[]>) (Function) toValue);
-		ANNOTATIONS_PATH.put(avClass, (Function<Annotation, int[]>) (Function) toPath);
+		REPEATABLES_VALUE.put(arClass, (Function) toValue);
+		ANNOTATIONS_PATH.put(avClass, (Function) toPath);
 	}
 
 	private static AnnotatedType annotateWithTypePath(Type type, Annotation[] annotations) {

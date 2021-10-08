@@ -10,9 +10,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -131,18 +129,13 @@ public class ChannelSupplierTest {
 		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
-					try {
-						InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
-						int b;
-						ByteBuf buf = ByteBufPool.allocate(100);
-						while ((b = inputStream.read()) != -1) {
-							buf.writeByte((byte) b);
-						}
-						assertEquals("HelloWorld", buf.asString(UTF_8));
-					} catch (IOException e) {
-						throw new UncheckedIOException(e);
+					InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
+					int b;
+					ByteBuf buf = ByteBufPool.allocate(100);
+					while ((b = inputStream.read()) != -1) {
+						buf.writeByte((byte) b);
 					}
-					return null;
+					assertEquals("HelloWorld", buf.asString(UTF_8));
 				}));
 	}
 
@@ -153,18 +146,13 @@ public class ChannelSupplierTest {
 		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
-					try {
-						InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
-						int b;
-						ByteBuf buf = ByteBufPool.allocate(100);
-						while ((b = inputStream.read()) != -1) {
-							buf.writeByte((byte) b);
-						}
-						assertTrue(buf.asString(UTF_8).isEmpty());
-					} catch (IOException e) {
-						throw new UncheckedIOException(e);
+					InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
+					int b;
+					ByteBuf buf = ByteBufPool.allocate(100);
+					while ((b = inputStream.read()) != -1) {
+						buf.writeByte((byte) b);
 					}
-					return null;
+					assertTrue(buf.asString(UTF_8).isEmpty());
 				}));
 	}
 }

@@ -146,7 +146,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean, WithIniti
 				throw new CubeException("Failed to connect to the database", e);
 			}
 
-			logger.trace("Required chunks: " + requiredChunks);
+			logger.trace("Required chunks: {}", requiredChunks);
 
 			checkRequiredChunks(requiredChunks);
 			cleanupChunks(requiredChunks);

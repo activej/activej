@@ -40,7 +40,7 @@ import static java.util.Collections.emptyList;
 public abstract class Dataset<T> {
 	private final Class<T> valueType;
 
-	public Dataset(Class<T> valueType) {
+	protected Dataset(Class<T> valueType) {
 		this.valueType = valueType;
 	}
 

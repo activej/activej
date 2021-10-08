@@ -140,7 +140,7 @@ final class ByteBufConcurrentQueue {
 
 	@Override
 	public String toString() {
-		return "ByteBufConcurrentStack{" +
+		return "ByteBufConcurrentQueue{" +
 				"size=" + size() +
 				", array=" + array.get().length() +
 				", map=" + map.size() +

@@ -27,6 +27,7 @@ import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 /**
  * Represents the 'predefined storage' for the {@link io.activej.http.StaticServlet StaticServlet}.
@@ -41,7 +42,7 @@ public interface StaticLoader {
 				Promise.ofException(new ResourceNotFoundException("Resource '" + path + "' has been filtered out"));
 	}
 
-	default StaticLoader map(Function<String, String> fn) {
+	default StaticLoader map(UnaryOperator<String> fn) {
 		return path -> this.load(fn.apply(path));
 	}
 

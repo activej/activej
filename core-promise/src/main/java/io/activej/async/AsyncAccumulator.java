@@ -119,10 +119,8 @@ public final class AsyncAccumulator<A> implements AsyncCloseable, WithInitialize
 	}
 
 	public void complete(A result) {
-		if (resultPromise.trySet(result)) {
-			if (result != accumulator) {
-				Recyclers.recycle(accumulator);
-			}
+		if (resultPromise.trySet(result) && result != accumulator) {
+			Recyclers.recycle(accumulator);
 		}
 	}
 

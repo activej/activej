@@ -50,7 +50,7 @@ public class MultiModuleExample {
 		}
 
 		public String queryData() {
-			System.out.printf("Querying %s:%s for data\n", address, dbName);
+			System.out.printf("Querying %s:%s for data%n", address, dbName);
 			return "data";
 		}
 	}
@@ -66,7 +66,7 @@ public class MultiModuleExample {
 
 		public void process() {
 			String data = dataSource.queryData();
-			System.out.printf("Processing data: '%s'\n", data);
+			System.out.printf("Processing data: '%s'%n", data);
 		}
 	}
 	//[END REGION_5]

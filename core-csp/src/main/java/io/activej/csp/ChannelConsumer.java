@@ -36,10 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -418,7 +415,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 *           materialized and returned
 	 * @return a wrapper ChannelConsumer
 	 */
-	default ChannelConsumer<T> withAcknowledgement(Function<Promise<Void>, Promise<Void>> fn) {
+	default ChannelConsumer<T> withAcknowledgement(UnaryOperator<Promise<Void>> fn) {
 		SettablePromise<Void> acknowledgement = new SettablePromise<>();
 		Promise<Void> newAcknowledgement = fn.apply(acknowledgement);
 		return new AbstractChannelConsumer<T>(this) {

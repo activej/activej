@@ -694,12 +694,12 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@JmxAttribute
 	public PromiseStats getAppendBeginPromise() {
-		return uploadBeginPromise;
+		return appendBeginPromise;
 	}
 
 	@JmxAttribute
 	public PromiseStats getAppendFinishPromise() {
-		return uploadFinishPromise;
+		return appendFinishPromise;
 	}
 
 	@JmxAttribute

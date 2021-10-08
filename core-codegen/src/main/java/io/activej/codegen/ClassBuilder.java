@@ -428,12 +428,12 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 			constructors.put(new Method("<init>", VOID_TYPE, new Type[]{}), superConstructor());
 		}
 
-		for (Method m : constructors.keySet()) {
-			Expression expression = constructors.get(m);
+		for (Map.Entry<Method, Expression> entry : constructors.entrySet()) {
+			Method method = entry.getKey();
 
-			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC, m, null, null, cw);
-			Context ctx = new Context(classLoader, this, g, classType, m);
-			ctx.cast(expression.load(ctx), m.getReturnType());
+			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
+			Context ctx = new Context(classLoader, this, g, classType, method);
+			ctx.cast(entry.getValue().load(ctx), method.getReturnType());
 			g.returnValue();
 
 			g.endMethod();
@@ -495,9 +495,10 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 			Context ctx = new Context(classLoader, this, g, classType, m);
 
-			for (String field : this.fieldExpressions.keySet()) {
+			for (Map.Entry<String, Expression> entry : this.fieldExpressions.entrySet()) {
+				String field = entry.getKey();
 				if (!this.fieldsStatic.contains(field)) continue;
-				Expression expression = this.fieldExpressions.get(field);
+				Expression expression = entry.getValue();
 
 				if (expression instanceof ExpressionConstant && !((ExpressionConstant) expression).isJvmPrimitive()) {
 					set(staticField(field), cast(

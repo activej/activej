@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 public abstract class ForwardingStreamSupplier<T> implements StreamSupplier<T> {
 	protected final StreamSupplier<T> supplier;
 
-	public ForwardingStreamSupplier(StreamSupplier<T> supplier) {
+	protected ForwardingStreamSupplier(StreamSupplier<T> supplier) {
 		this.supplier = supplier;
 	}
 

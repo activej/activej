@@ -12,8 +12,7 @@ import java.util.Map;
 
 import static io.activej.jmx.DynamicMBeanFactoryAttributesTest.createDynamicMBeanFor;
 import static io.activej.jmx.helper.Utils.nameToAttribute;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class DynamicMBeanFactoryAttributesSelectionTest {
 
@@ -48,17 +47,11 @@ public class DynamicMBeanFactoryAttributesSelectionTest {
 
 	}
 
-	@Test(expected = RuntimeException.class)
+	@Test
 	public void throwsExceptionInCaseOfInvalidFieldName() {
 		MBeansStubWithInvalidExtraAttrName mbeanStub = new MBeansStubWithInvalidExtraAttrName();
-		DynamicMBean mbean = createDynamicMBeanFor(mbeanStub);
 
-		MBeanInfo mBeanInfo = mbean.getMBeanInfo();
-
-		MBeanAttributeInfo[] attributesInfoArr = mBeanInfo.getAttributes();
-
-		assertEquals(1, attributesInfoArr.length);
-		assertEquals("stats_sum", attributesInfoArr[0].getName());
+		assertThrows(RuntimeException.class, () -> createDynamicMBeanFor(mbeanStub));
 	}
 
 	public static class MBeanWithNoExtraSubAttributes implements ConcurrentJmxBean {

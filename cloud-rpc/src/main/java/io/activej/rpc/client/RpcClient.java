@@ -620,9 +620,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	}
 
 	RpcRequestStats ensureRequestStatsPerClass(Class<?> requestClass) {
-		if (!requestStatsPerClass.containsKey(requestClass)) {
-			requestStatsPerClass.put(requestClass, RpcRequestStats.create(SMOOTHING_WINDOW));
-		}
-		return requestStatsPerClass.get(requestClass);
+		return requestStatsPerClass.computeIfAbsent(requestClass, $ -> RpcRequestStats.create(SMOOTHING_WINDOW));
 	}
 }

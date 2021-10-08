@@ -225,7 +225,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 						logger.info("Found no irrelevant chunks");
 						return Promise.complete();
 					}
-					logger.info("Removing irrelevant chunks: " + irrelevantChunks.keySet());
+					logger.info("Removing irrelevant chunks: {}", irrelevantChunks.keySet());
 					Map<String, AggregationDiff> diffMap = transformMap(irrelevantChunks,
 							chunksToRemove -> AggregationDiff.of(emptySet(), chunksToRemove));
 					CubeDiff cubeDiff = CubeDiff.of(diffMap);

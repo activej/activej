@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.ToLongFunction;
 
 import static io.activej.common.Utils.keysToMap;
 import static java.util.Collections.singletonMap;
@@ -51,8 +52,8 @@ public interface OTCommitFactory<K, D> {
 		return createCommit(singletonMap(parent, parentDiff));
 	}
 
-	default Promise<OTCommit<K, D>> createCommit(Set<K> parents, Function<K, List<D>> diffs, Function<K, Long> level) {
-		return createCommit(keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(level.apply(parent), diffs.apply(parent))));
+	default Promise<OTCommit<K, D>> createCommit(Set<K> parents, Function<K, List<D>> diffs, ToLongFunction<K> level) {
+		return createCommit(keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(level.applyAsLong(parent), diffs.apply(parent))));
 	}
 
 	default Promise<OTCommit<K, D>> createCommit(K parent, List<D> diffs, long level) {

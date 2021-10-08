@@ -3,7 +3,7 @@ package io.activej.common;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 public class MemSizeTest {
 	@Test
@@ -97,22 +97,31 @@ public class MemSizeTest {
 
 	@Test
 	public void testParsingExceptions() {
-		assertThrows("MemSize unit bytes cannot be fractional",
-				IllegalArgumentException.class,
-				() -> MemSize.valueOf("2.2b"));
+		try {
+			MemSize.valueOf("2.2b");
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("MemSize unit bytes cannot be fractional", e.getMessage());
+		}
 	}
 
 	@Test
 	public void testLongOverflow() {
-		assertThrows("Resulting number of bytes exceeds Long.MAX_VALUE",
-				IllegalArgumentException.class,
-				() -> MemSize.kilobytes(Long.MAX_VALUE));
+		try {
+			MemSize.kilobytes(Long.MAX_VALUE);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("Resulting number of bytes exceeds Long.MAX_VALUE", e.getMessage());
+		}
 	}
 
 	@Test
 	public void testMemSizeOfNegative() {
-		assertThrows("Cannot create MemSize of negative value",
-				IllegalArgumentException.class,
-				() -> MemSize.kilobytes(-1));
+		try {
+			MemSize.kilobytes(-1);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("Cannot create MemSize of negative value", e.getMessage());
+		}
 	}
 }

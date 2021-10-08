@@ -41,7 +41,7 @@ public final class ChannelBufferExample {
 						return apple + 1;
 					}));
 
-			granny.streamTo(ChannelConsumer.<Integer>ofConsumer((apple) ->
+			granny.streamTo(ChannelConsumer.<Integer>ofConsumer(apple ->
 					System.out.println("Grandson takes apple #" + apple)).async());
 
 			eventloop.run();

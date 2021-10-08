@@ -106,7 +106,6 @@ public class ChannelConsumerTest {
 						outputStream.write(i);
 					}
 					outputStream.flush();
-					return null;
 				}));
 
 		for (int i = 0; i < expectedSize; i++) {
@@ -126,13 +125,8 @@ public class ChannelConsumerTest {
 
 		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
 		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
-			try {
-				OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
-				outputStream.flush();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return null;
+			OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
+			outputStream.flush();
 		}));
 	}
 

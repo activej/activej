@@ -35,7 +35,7 @@ import java.util.Set;
 public abstract class ForwardingActiveFs implements ActiveFs {
 	private final ActiveFs peer;
 
-	public ForwardingActiveFs(ActiveFs peer) {
+	protected ForwardingActiveFs(ActiveFs peer) {
 		this.peer = peer;
 	}
 

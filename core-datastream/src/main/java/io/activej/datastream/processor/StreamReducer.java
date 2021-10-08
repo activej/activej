@@ -111,7 +111,7 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 		private final ArrayDeque<I> deque = new ArrayDeque<>();
 		private final int bufferSize;
 
-		public Input() {
+		protected Input() {
 			this.index = StreamReducer.this.inputs.size();
 			this.priorityQueue = StreamReducer.this.priorityQueue;
 			this.bufferSize = StreamReducer.this.bufferSize;

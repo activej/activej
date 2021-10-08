@@ -18,7 +18,7 @@ package io.activej.common;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Function;
+import java.util.function.LongUnaryOperator;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -129,8 +129,8 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @param fn a mapping function that maps current size to a new one
 	 * @return a new {@link MemSize} with mapped number of bytes
 	 */
-	public @NotNull MemSize map(@NotNull Function<Long, Long> fn) {
-		return MemSize.of(fn.apply(bytes));
+	public @NotNull MemSize map(@NotNull LongUnaryOperator fn) {
+		return MemSize.of(fn.applyAsLong(bytes));
 	}
 
 	/**

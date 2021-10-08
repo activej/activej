@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.List;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
@@ -61,8 +62,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 	@SuppressWarnings("rawtypes")
 	private final ArrayDeque receiveQueue = new ArrayDeque<>();
-	@SuppressWarnings("rawtypes")
-	private ArrayList transactionQueue;
+	private List<Object> transactionQueue;
 
 	private boolean flushPosted;
 	private final int autoFlushIntervalMillis;
@@ -144,7 +144,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	public Promise<Void> discard() {
 		if (CHECK) checkState(inTransaction(), "DISCARD without MULTI");
 		logger.trace("Transaction is being discarded");
-		ArrayList<?> transactionQueue = this.transactionQueue;
+		List<?> transactionQueue = this.transactionQueue;
 		this.transactionQueue = null;
 		int count = transactionQueue.size() / 2;
 		if (count != 0) {
@@ -174,8 +174,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	public Promise<Object[]> exec() {
 		if (CHECK) checkState(inTransaction(), "EXEC without MULTI");
 		logger.trace("Executing transaction");
-		//noinspection rawtypes
-		ArrayList transactionQueue = this.transactionQueue;
+		List<?> transactionQueue = this.transactionQueue;
 		this.transactionQueue = null;
 		int count = transactionQueue.size() / 2;
 		return cmd(RedisRequest.of("EXEC"),
@@ -246,7 +245,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	public Promise<Void> quit() {
 		if (transactionQueue != null) {
 			QuitCalledException e = new QuitCalledException();
-			ArrayList<?> transactionQueue = this.transactionQueue;
+			List<?> transactionQueue = this.transactionQueue;
 			this.transactionQueue = null;
 			abortTransaction(transactionQueue, e);
 		}
@@ -398,7 +397,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		transactionQueue = nullify(transactionQueue, queue -> abortTransaction(queue, e));
 	}
 
-	private void abortTransaction(ArrayList<?> transactionQueue, Exception e) {
+	private void abortTransaction(List<?> transactionQueue, Exception e) {
 		for (int i = 0; i < transactionQueue.size() / 2; i++) {
 			SettablePromise<?> promise = (SettablePromise<?>) transactionQueue.get(2 * i + 1);
 			promise.trySetException(e);

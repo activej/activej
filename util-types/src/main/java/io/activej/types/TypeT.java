@@ -46,7 +46,7 @@ public abstract class TypeT<T> {
 	 *
 	 * @throws AssertionError if a {@link TypeT} is created with a raw type
 	 */
-	public TypeT() {
+	protected TypeT() {
 		this.annotatedType = getSuperclassTypeParameter(this.getClass());
 	}
 

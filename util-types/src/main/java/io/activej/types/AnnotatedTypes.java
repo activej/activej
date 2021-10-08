@@ -6,6 +6,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
@@ -84,7 +85,7 @@ public class AnnotatedTypes {
 	 *                             with annotations of bound actual annotated type
 	 */
 	public static @NotNull AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
-			BiFunction<Annotation[], Annotation[], Annotation[]> annotationCombinerFn) {
+			BinaryOperator<Annotation[]> annotationCombinerFn) {
 		if (annotatedType.getType() instanceof Class) return annotatedType;
 		Annotation[] annotations = annotatedType.getAnnotations();
 		if (annotatedType instanceof AnnotatedTypeVariable) {

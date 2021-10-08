@@ -34,7 +34,7 @@ public final class ClassKey<T> {
 
 	public static <T> ClassKey<T> of(Class<? super T> clazz, Object... parameters) {
 		//noinspection unchecked,rawtypes
-		return new ClassKey<T>((Class) clazz, parameters);
+		return new ClassKey<>((Class) clazz, parameters);
 	}
 
 	public Class<T> getKeyClass() {

@@ -14,6 +14,7 @@ import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;
 import javax.management.MBeanParameterInfo;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
@@ -100,14 +101,14 @@ public final class DynamicMBeanFactoryOperationsTest {
 		mbean.invoke("multiplyAndAdd", new Object[]{120, 150}, new String[]{"long", "long"});
 
 		// check first bean
-		assertEquals(bean_1.getCount(), 2);
-		assertEquals(bean_1.getInfo(), "data1data2");
-		assertEquals(bean_1.getSum(), 120 * 150);
+		assertEquals(2, bean_1.getCount());
+		assertEquals("data1data2", bean_1.getInfo());
+		assertEquals(120 * 150, bean_1.getSum());
 
 		// check second bean
-		assertEquals(bean_2.getCount(), 2 + 3);
-		assertEquals(bean_2.getInfo(), "second" + "data1data2");
-		assertEquals(bean_2.getSum(), 10 * 15 + 120 * 150);
+		assertEquals(2 + 3, bean_2.getCount());
+		assertEquals("second" + "data1data2", bean_2.getInfo());
+		assertEquals(10 * 15 + 120 * 150, bean_2.getSum());
 	}
 
 	@Test
@@ -122,9 +123,11 @@ public final class DynamicMBeanFactoryOperationsTest {
 	@Test
 	public void itShouldThrowExceptionForNonPublicOperations() {
 		MBeanWithNonPublicOperation instance = new MBeanWithNonPublicOperation();
+		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
+		List<MBeanWithNonPublicOperation> beans = singletonList(instance);
+		JmxBeanSettings settings = defaultSettings();
 		try {
-			DynamicMBeanFactory.create()
-					.createDynamicMBean(singletonList(instance), defaultSettings(), false);
+			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
 			fail();
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage(), containsString( "A method \"action\" in class '" + MBeanWithNonPublicOperation.class.getName() +

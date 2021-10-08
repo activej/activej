@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.ToLongFunction;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.entriesToMap;
@@ -59,8 +60,8 @@ public final class OTCommit<K, D> {
 		return new OTCommit<>(epoch, id, parents);
 	}
 
-	public static <K, D> OTCommit<K, D> of(int epoch, K id, Set<K> parents, Function<K, List<D>> diffs, Function<K, Long> levels) {
-		return of(epoch, id, keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(levels.apply(parent), diffs.apply(parent))));
+	public static <K, D> OTCommit<K, D> of(int epoch, K id, Set<K> parents, Function<K, List<D>> diffs, ToLongFunction<K> levels) {
+		return of(epoch, id, keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(levels.applyAsLong(parent), diffs.apply(parent))));
 	}
 
 	public static <K, D> OTCommit<K, D> ofCommit(int epoch, @NotNull K id, @NotNull K parent, @NotNull DiffsWithLevel<D> diffs) {

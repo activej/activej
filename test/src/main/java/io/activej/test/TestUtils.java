@@ -64,7 +64,9 @@ public final class TestUtils {
 
 	public static DataSource dataSource(String databasePropertiesPath) throws IOException, SQLException {
 		Properties properties = new Properties();
-		properties.load(new InputStreamReader(new BufferedInputStream(new FileInputStream(databasePropertiesPath)), StandardCharsets.UTF_8));
+		try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(new FileInputStream(databasePropertiesPath)), StandardCharsets.UTF_8)) {
+			properties.load(reader);
+		}
 
 		MysqlDataSource dataSource = new MysqlDataSource();
 		dataSource.setUrl("jdbc:mysql://" + properties.getProperty("dataSource.serverName") + '/' + properties.getProperty("dataSource.databaseName"));

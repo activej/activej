@@ -333,8 +333,9 @@ public final class TestDI {
 
 	@Test
 	public void cyclicInjects() {
+		Module module = ModuleBuilder.create().bind(RecursiveA.class).build();
 		try {
-			Injector.of(ModuleBuilder.create().bind(RecursiveA.class).build());
+			Injector.of(module);
 			fail("should've detected the cycle and fail");
 		} catch (DIException e) {
 			e.printStackTrace();
@@ -400,13 +401,13 @@ public final class TestDI {
 		assertEquals("str: 42", instance2.string);
 		assertEquals(42, instance2.integer.intValue());
 
+		Module module2 = ModuleBuilder.create()
+				.bind(TestDI.class).toInstance(TestDI.this)
+				.bind(ClassWithCustomDeps.class)
+				.bind(String.class).toInstance("str")
+				.build();
 		try {
-			Injector injector3 = Injector.of(ModuleBuilder.create()
-					.bind(TestDI.class).toInstance(TestDI.this)
-					.bind(ClassWithCustomDeps.class)
-					.bind(String.class).toInstance("str")
-					.build());
-			injector3.getInstance(ClassWithCustomDeps.class);
+			Injector.of(module2);
 			fail("should've failed, but didn't");
 		} catch (DIException e) {
 			e.printStackTrace();
@@ -914,8 +915,9 @@ public final class TestDI {
 				return captured;
 			}
 		}
+		Module module = ModuleBuilder.create().bind(MethodLocal.class).build();
 		try {
-			Injector.of(ModuleBuilder.create().bind(MethodLocal.class).build());
+			Injector.of(module);
 			fail("Should've failed here");
 		} catch (DIException e) {
 			e.printStackTrace();
@@ -959,10 +961,10 @@ public final class TestDI {
 
 	@Test
 	public void scopedBindFail() {
+		Module module1 = ModuleBuilder.create().bind(String.class).in(Scope1.class).build();
+		Module module2 = ModuleBuilder.create().bind(String.class).toInstance("root string").build();
 		try {
-			Injector.of(
-					ModuleBuilder.create().bind(String.class).in(Scope1.class).build(),
-					ModuleBuilder.create().bind(String.class).toInstance("root string").build());
+			Injector.of(module1, module2);
 			fail("Should've failed");
 		} catch (DIException e) {
 			assertTrue(e.getMessage().startsWith("Refused to generate an explicitly requested binding for key String"));

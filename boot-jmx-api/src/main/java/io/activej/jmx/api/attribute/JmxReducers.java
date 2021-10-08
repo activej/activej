@@ -20,7 +20,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToLongFunction;
 import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
 
@@ -60,7 +61,7 @@ public final class JmxReducers {
 	}
 
 	private static @Nullable Number reduceNumbers(List<? extends Number> list,
-			Function<DoubleStream, Double> opDouble, Function<LongStream, Long> opLong) {
+			ToDoubleFunction<DoubleStream> opDouble, ToLongFunction<LongStream> opLong) {
 		list = list.stream().filter(Objects::nonNull).collect(toList());
 
 		if (list.isEmpty()) return null;
@@ -68,10 +69,10 @@ public final class JmxReducers {
 		Class<?> numberClass = list.get(0).getClass();
 		if (isFloatingPointNumber(numberClass)) {
 			return convert(numberClass,
-					opDouble.apply(list.stream().mapToDouble(Number::doubleValue)));
+					opDouble.applyAsDouble(list.stream().mapToDouble(Number::doubleValue)));
 		} else if (isIntegerNumber(numberClass)) {
 			return convert(numberClass,
-					opLong.apply(list.stream().mapToLong(Number::longValue)));
+					opLong.applyAsLong(list.stream().mapToLong(Number::longValue)));
 		} else {
 			throw new IllegalArgumentException(
 					"Unsupported objects of type: " + numberClass.getName());

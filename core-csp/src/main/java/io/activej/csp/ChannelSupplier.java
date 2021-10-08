@@ -35,10 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -463,7 +460,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		return toCollector(Collectors.toList());
 	}
 
-	default ChannelSupplier<T> withEndOfStream(Function<Promise<Void>, Promise<Void>> fn) {
+	default ChannelSupplier<T> withEndOfStream(UnaryOperator<Promise<Void>> fn) {
 		SettablePromise<Void> endOfStream = new SettablePromise<>();
 		Promise<Void> newEndOfStream = fn.apply(endOfStream);
 		return new AbstractChannelSupplier<T>(this) {

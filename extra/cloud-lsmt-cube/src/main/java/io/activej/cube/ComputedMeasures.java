@@ -30,10 +30,10 @@ import static java.util.Collections.singleton;
 public class ComputedMeasures {
 	private static final class E extends Expressions {}
 
-	public static abstract class AbstractComputedMeasure implements ComputedMeasure {
+	public abstract static class AbstractComputedMeasure implements ComputedMeasure {
 		protected final Set<ComputedMeasure> dependencies;
 
-		public AbstractComputedMeasure(ComputedMeasure... dependencies) {
+		protected AbstractComputedMeasure(ComputedMeasure... dependencies) {
 			this.dependencies = new LinkedHashSet<>(Arrays.asList(dependencies));
 		}
 
@@ -65,7 +65,7 @@ public class ComputedMeasures {
 		}
 	}
 
-	private static abstract class AbstractArithmeticMeasure extends AbstractComputedMeasure {
+	private abstract static class AbstractArithmeticMeasure extends AbstractComputedMeasure {
 		public AbstractArithmeticMeasure(ComputedMeasure... dependencies) {
 			super(dependencies);
 		}

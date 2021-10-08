@@ -61,7 +61,7 @@ public final class RpcStrategySharding implements RpcStrategy {
 		}
 		if (activeSenders < minActiveSubStrategies)
 			return null;
-		if (subSenders.size() == 0)
+		if (subSenders.isEmpty())
 			return null;
 		if (subSenders.size() == 1)
 			return subSenders.get(0);

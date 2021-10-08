@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 public abstract class ForwardingStreamConsumer<T> implements StreamConsumer<T> {
 	protected final StreamConsumer<T> consumer;
 
-	public ForwardingStreamConsumer(StreamConsumer<T> consumer) {
+	protected ForwardingStreamConsumer(StreamConsumer<T> consumer) {
 		this.consumer = consumer;
 	}
 

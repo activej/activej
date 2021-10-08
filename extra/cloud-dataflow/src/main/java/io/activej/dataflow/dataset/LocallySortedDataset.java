@@ -34,7 +34,7 @@ public abstract class LocallySortedDataset<K, T> extends Dataset<T> {
 
 	private final Function<T, K> keyFunction;
 
-	public LocallySortedDataset(Class<T> valueType, Comparator<K> keyComparator, Class<K> keyType,
+	protected LocallySortedDataset(Class<T> valueType, Comparator<K> keyComparator, Class<K> keyType,
 			Function<T, K> keyFunction) {
 		super(valueType);
 		this.keyComparator = keyComparator;

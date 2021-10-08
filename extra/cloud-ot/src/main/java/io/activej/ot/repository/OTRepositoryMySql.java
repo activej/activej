@@ -292,7 +292,6 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 
 						connection.commit();
 					}
-					return (Void) null;
 				})
 				.whenComplete(promisePush.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), commits));
@@ -315,7 +314,6 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 
 						connection.commit();
 					}
-					return (Void) null;
 				})
 				.whenComplete(promiseUpdateHeads.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), newHeads, excludedHeads));
@@ -471,7 +469,6 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 							ps.setString(1, snapshot);
 							ps.setLong(2, revisionId);
 							ps.executeUpdate();
-							return (Void) null;
 						}
 					}
 				})
@@ -509,8 +506,6 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 
 						connection.commit();
 					}
-
-					return (Void) null;
 				})
 				.whenComplete(toLogger(logger, thisMethod(), minId));
 	}
@@ -529,7 +524,6 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 							statement.setLong(3, commit.getLevel());
 							statement.setString(4, toJson(snapshot));
 							statement.executeUpdate();
-							return (Void) null;
 						}
 					}
 				})

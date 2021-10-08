@@ -480,38 +480,6 @@ public final class HttpUtils {
 		return result;
 	}
 
-	static int decodeUtf8(byte[] array, int pos, int len, char[] buffer, int to) throws MalformedHttpException {
-		int end = pos + len;
-		try {
-			while (pos < end) {
-				int c = array[pos++] & 0xff;
-				switch ((c >> 4) & 0x0F) {
-					case 0:
-					case 1:
-					case 2:
-					case 3:
-					case 4:
-					case 5:
-					case 6:
-					case 7:
-						buffer[to++] = (char) c;
-						break;
-					case 12:
-					case 13:
-						buffer[to++] = (char) ((c & 0x1F) << 6 | array[pos++] & 0x3F);
-						break;
-					case 14:
-						buffer[to++] = (char) ((c & 0x0F) << 12 | (array[pos++] & 0x3F) << 6 | (array[pos++] & 0x3F));
-						break;
-				}
-			}
-			if (pos > end) throw new MalformedHttpException("Malformed utf-8 input: Read past end");
-		} catch (ArrayIndexOutOfBoundsException ignored) {
-			throw new MalformedHttpException("Malformed utf-8 input");
-		}
-		return to;
-	}
-
 	static int hashCodeCI(byte[] array, int offset, int size) {
 		int result = 0;
 		for (int i = offset; i < offset + size; i++) {

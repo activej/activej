@@ -56,15 +56,13 @@ public final class LogPosition implements Comparable<LogPosition>, WithInitializ
 		return position;
 	}
 
-	@SuppressWarnings("RedundantIfStatement")
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		LogPosition that = (LogPosition) o;
 		if (position != that.position) return false;
-		if (!Objects.equals(logFile, that.logFile)) return false;
-		return true;
+		return Objects.equals(logFile, that.logFile);
 	}
 
 	@Override

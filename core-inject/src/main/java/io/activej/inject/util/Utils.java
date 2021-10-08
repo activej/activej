@@ -137,7 +137,7 @@ public final class Utils {
 	 */
 	public static String makeGraphVizGraph(Trie<Scope, Map<Key<?>, Binding<?>>> trie) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("digraph {\n	rankdir=BT;\n");
+		sb.append("digraph {\n\trankdir=BT;\n");
 		Set<ScopedValue<Key<?>>> known = new HashSet<>();
 		writeNodes(UNSCOPED, trie, known, "", new int[]{0}, sb);
 		writeEdges(UNSCOPED, trie, known, sb);

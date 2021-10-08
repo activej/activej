@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 public final class Datasets {
 
@@ -48,7 +49,7 @@ public final class Datasets {
 		return new DatasetMap<>(dataset, mapper, resultType);
 	}
 
-	public static <T> Dataset<T> map(Dataset<T> dataset, Function<T, T> mapper) {
+	public static <T> Dataset<T> map(Dataset<T> dataset, UnaryOperator<T> mapper) {
 		return map(dataset, mapper, dataset.valueType());
 	}
 

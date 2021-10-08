@@ -276,10 +276,7 @@ public class TriggersTest {
 		for (Thread thread : threads) {
 			thread.join();
 		}
-		Throwable error = throwableRef.get();
-		if (error != null) {
-			throw new AssertionError(error);
-		}
+		assertNull(throwableRef.get());
 	}
 
 	@Test

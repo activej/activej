@@ -125,7 +125,7 @@ public final class DefaultModule implements Module {
 		);
 	}
 
-	public synchronized static <T> void register(KeyPattern<T> key, BindingGenerator<T> bindingGenerator) {
+	public static synchronized <T> void register(KeyPattern<T> key, BindingGenerator<T> bindingGenerator) {
 		generators.computeIfAbsent(key, $ -> new HashSet<>()).add(bindingGenerator);
 	}
 

@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import static io.activej.csp.ChannelSupplier.ofPromise;
@@ -77,7 +77,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private final CrdtFunction<S> function;
 	private final CrdtDataSerializer<K, S> serializer;
 
-	private Function<String, String> namingStrategy = ext -> UUID.randomUUID() + "." + ext;
+	private UnaryOperator<String> namingStrategy = ext -> UUID.randomUUID() + "." + ext;
 	private Duration consolidationMargin = Duration.ofMinutes(30);
 
 	private ActiveFs consolidationFolderFs;
@@ -132,7 +132,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		return this;
 	}
 
-	public CrdtStorageFs<K, S> withNamingStrategy(Function<String, String> namingStrategy) {
+	public CrdtStorageFs<K, S> withNamingStrategy(UnaryOperator<String> namingStrategy) {
 		this.namingStrategy = namingStrategy;
 		return this;
 	}

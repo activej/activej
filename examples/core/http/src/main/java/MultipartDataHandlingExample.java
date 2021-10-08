@@ -87,8 +87,8 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 
 					return request.handleMultipart(MultipartDataHandler.fieldsToMap(fields, this::upload))
 							.map($ -> {
-								logger.info("Received fields: " + fields);
-								logger.info("Uploaded " + fileUploadsCount + " files total");
+								logger.info("Received fields: {}", fields);
+								logger.info("Uploaded {} files total", fileUploadsCount);
 								return HttpResponse.ok200();
 							});
 				});

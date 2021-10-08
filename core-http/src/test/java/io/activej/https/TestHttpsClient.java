@@ -34,7 +34,7 @@ public final class TestHttpsClient {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
-	@Ignore
+	@Ignore("Connects to external URL, may fail on no internet connection")
 	public void testClient() throws NoSuchAlgorithmException {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 

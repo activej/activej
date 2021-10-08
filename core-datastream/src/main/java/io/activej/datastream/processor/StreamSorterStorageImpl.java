@@ -164,7 +164,6 @@ public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T>,
 					logger.warn("Could not delete {}", path, e);
 				}
 			}
-			return null;
 		});
 	}
 }

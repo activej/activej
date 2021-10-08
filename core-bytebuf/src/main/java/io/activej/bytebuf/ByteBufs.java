@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.stream.Collector;
 
@@ -720,6 +721,7 @@ public final class ByteBufs implements Recyclable {
 
 		@Override
 		public @NotNull ByteBuf next() {
+			if (first == last) throw new NoSuchElementException();
 			ByteBuf buf = bufs[first];
 			if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
 			first = (first + 1) % bufs.length;

@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -261,7 +261,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	/**
 	 * Creates a supplier from this one with its <i>end of stream</i> signal modified by the given function.
 	 */
-	default StreamSupplier<T> withEndOfStream(Function<Promise<Void>, Promise<Void>> fn) {
+	default StreamSupplier<T> withEndOfStream(UnaryOperator<Promise<Void>> fn) {
 		Promise<Void> endOfStream = getEndOfStream();
 		Promise<Void> suppliedEndOfStream = fn.apply(endOfStream);
 		if (endOfStream == suppliedEndOfStream) {

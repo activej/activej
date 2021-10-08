@@ -45,7 +45,7 @@ import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
  * exceptionally.
  */
 public abstract class WebSocketServlet implements AsyncServlet {
-	public WebSocketServlet() {
+	protected WebSocketServlet() {
 		checkState(WebSocket.ENABLED, "Web sockets are disabled by application settings");
 	}
 

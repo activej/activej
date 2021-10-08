@@ -206,7 +206,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return this;
 	}
 
-	synchronized private void doEnsureBuild() {
+	private synchronized void doEnsureBuild() {
 		Collection<String> hashCodeEqualsFields;
 		if (this.hashCodeEqualsFields != null) {
 			Set<String> missing = getMissingFields(this.hashCodeEqualsFields);
@@ -228,17 +228,18 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 						.withMethod("equals",
 								equalsImpl(hashCodeEqualsFields.stream().map(this::getClassField).collect(toList())))
 						.withInitializer(b -> {
-							for (String field : fieldTypes.keySet()) {
-								Type type = fieldTypes.get(field);
+							for (Map.Entry<String, Type> entry : fieldTypes.entrySet()) {
+								Type type = entry.getValue();
 								//noinspection rawtypes
-								b.withField(getClassField(field), type instanceof Class ? ((Class) type) : Object.class);
+								b.withField(getClassField(entry.getKey()), type instanceof Class ? ((Class) type) : Object.class);
 							}
 						}));
 
 		recordGetters = new RecordGetter[size()];
 		recordSetters = new RecordSetter[size()];
-		for (String field : fieldTypes.keySet()) {
-			Type fieldType = fieldTypes.get(field);
+		for (Map.Entry<String, Type> entry : fieldTypes.entrySet()) {
+			String field = entry.getKey();
+			Type fieldType = entry.getValue();
 			Variable property = this.property(cast(arg(0), generatedClass), field);
 			RecordGetter<?> recordGetter = classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordGetter.class, this, field),

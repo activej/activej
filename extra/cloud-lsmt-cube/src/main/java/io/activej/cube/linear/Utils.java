@@ -1,4 +1,3 @@
-package io.activej.cube.linear;
 /*
  * Copyright (C) 2020 ActiveJ LLC.
  *
@@ -14,6 +13,8 @@ package io.activej.cube.linear;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package io.activej.cube.linear;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunk;

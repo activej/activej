@@ -50,7 +50,7 @@ public abstract class DataflowClientLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "dataflow-client.properties";
 
 	@Inject
-	DataflowClient client;
+	protected DataflowClient client;
 
 	@Provides
 	Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {

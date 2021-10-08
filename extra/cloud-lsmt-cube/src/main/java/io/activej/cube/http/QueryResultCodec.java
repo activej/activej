@@ -125,6 +125,9 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 					sortedBy = readStrings(reader);
 					break;
 				case RECORDS_FIELD:
+					if (recordScheme == null) {
+						throw reader.newParseError('\'' + METADATA_FIELD + "' field should go before '" + RECORDS_FIELD + "' field");
+					}
 					records = readRecords(reader, recordScheme);
 					break;
 				case COUNT_FIELD:
@@ -134,6 +137,9 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 					filterAttributes = readFilterAttributes(reader);
 					break;
 				case TOTALS_FIELD:
+					if (recordScheme == null){
+						throw reader.newParseError('\'' + METADATA_FIELD + "' field should go before '" + TOTALS_FIELD + "' field");
+					}
 					totals = readTotals(reader, recordScheme);
 					break;
 				default:

@@ -13,13 +13,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
 
-public abstract class RecordProjection implements Function<Record, Record>, BiConsumer<Record, Record> {
+public abstract class RecordProjection implements UnaryOperator<Record>, BiConsumer<Record, Record> {
 	private final RecordScheme schemeFrom;
 	private final RecordScheme schemeTo;
 
@@ -72,10 +71,10 @@ public abstract class RecordProjection implements Function<Record, Record>, BiCo
 						.withConstructor(asList(RecordScheme.class, RecordScheme.class),
 								superConstructor(arg(0), arg(1)))
 						.withMethod("accept", void.class, asList(Record.class, Record.class), sequence(seq -> {
-							for (String field : mapping.keySet()) {
+							for (Map.Entry<String, UnaryOperator<Expression>> entry : mapping.entrySet()) {
 								seq.add(Expressions.set(
-										schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), field),
-										mapping.get(field).apply(cast(arg(0), schemeFrom.getRecordClass()))
+										schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), entry.getKey()),
+										entry.getValue().apply(cast(arg(0), schemeFrom.getRecordClass()))
 								));
 							}
 						})),

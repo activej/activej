@@ -286,16 +286,14 @@ public class PageRankTest {
 		};
 	}
 
-	@Test
-	@Ignore
+	@SuppressWarnings("unused") // For manual run
 	public void launchServers() throws Exception {
 		launchServer(address1, generatePages(100000), (Consumer<Rank>) $ -> {});
 		launchServer(address2, generatePages(90000), (Consumer<Rank>) $ -> {});
 		await();
 	}
 
-	@Test
-	@Ignore
+	@SuppressWarnings("unused") // For manual run
 	public void postPageRankTask() throws Exception {
 		SortedDataset<Long, Page> sorted = sortedDatasetOfId("items", Page.class, Long.class, new PageKeyFunction(), new LongComparator());
 		SortedDataset<Long, Page> repartitioned = repartitionSort(sorted);
@@ -308,8 +306,7 @@ public class PageRankTest {
 		await(graph.execute());
 	}
 
-	@Test
-	@Ignore
+	@SuppressWarnings("unused") // For manual run
 	public void runDebugServer() throws Exception {
 		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
 		env.getInstance(AsyncHttpServer.class).withListenPort(8080).listen();

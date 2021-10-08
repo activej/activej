@@ -225,10 +225,8 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 														if (size.get() == receivingSize) {
 															return;
 														}
-														logger.error("invalid stream size for file " + name +
-																" (offset " + offset + ", limit " + limit + ")," +
-																" expected: " + receivingSize +
-																" actual: " + size.get());
+														logger.error("invalid stream size for file {} (offset {}, limit {}), expected: {} actual: {}",
+																name, offset, limit, receivingSize, size.get());
 														throw size.get() < receivingSize ?
 																new TruncatedDataException() :
 																new UnexpectedDataException();

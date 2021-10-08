@@ -13,6 +13,7 @@ import javax.management.*;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.CustomMatchers.objectname;
@@ -59,9 +60,11 @@ public class DynamicMBeanRegistrationTest {
 	public void itShouldThrowExceptionForNonPublicMBeans() {
 		NonPublicMBean instance = new NonPublicMBean();
 
+		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
+		List<NonPublicMBean> beans = singletonList(instance);
+		JmxBeanSettings settings = defaultSettings();
 		try {
-			DynamicMBeanFactory.create()
-					.createDynamicMBean(singletonList(instance), defaultSettings(), false);
+			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
 			fail();
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage(), containsString("A class '" + NonPublicMBean.class.getName() +

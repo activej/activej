@@ -67,7 +67,7 @@ public class ClassScanExample {
 		}
 
 		public String queryData() {
-			System.out.printf("Querying %s:%s for data\n", address, dbName);
+			System.out.printf("Querying %s:%s for data%n", address, dbName);
 			return "data";
 		}
 	}

@@ -28,7 +28,7 @@ public final class HttpUrlTest {
 	public void testSimple() {
 		UrlParser url = UrlParser.of("https://127.0.0.1:45678");
 
-		assertSame(url.getProtocol(), HTTPS);
+		assertSame(HTTPS, url.getProtocol());
 		assertEquals("127.0.0.1", url.getHost());
 		assertEquals(45678, url.getPort());
 	}
@@ -37,7 +37,7 @@ public final class HttpUrlTest {
 	public void testWebSocket() {
 		UrlParser url = UrlParser.of("ws://127.0.0.1:45678");
 
-		assertSame(url.getProtocol(), WS);
+		assertSame(WS, url.getProtocol());
 		assertEquals("127.0.0.1", url.getHost());
 		assertEquals(45678, url.getPort());
 	}
@@ -46,7 +46,7 @@ public final class HttpUrlTest {
 	public void testSecureWebSocket() {
 		UrlParser url = UrlParser.of("wss://127.0.0.1:45678");
 
-		assertSame(url.getProtocol(), WSS);
+		assertSame(WSS, url.getProtocol());
 		assertEquals("127.0.0.1", url.getHost());
 		assertEquals(45678, url.getPort());
 	}
@@ -380,21 +380,18 @@ public final class HttpUrlTest {
 		assertEquals("", url.getQueryParameter("x"));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testEmptyHost() {
-		UrlParser url = UrlParser.of("http://:80/");
-		assertEquals("", url.getHost());
+		assertThrows(IllegalArgumentException.class, () -> UrlParser.of("http://:80/"));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testEmptyHost2() {
-		UrlParser url = UrlParser.of("http:///");
-		assertEquals("", url.getHost());
+		assertThrows(IllegalArgumentException.class, () -> UrlParser.of("http:///"));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testEmptyHost3() {
-		UrlParser url = UrlParser.of("http://?test=':80'");
-		assertEquals("", url.getHost());
+		assertThrows(IllegalArgumentException.class, () -> UrlParser.of("http://?test=':80'"));
 	}
 }

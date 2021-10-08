@@ -49,7 +49,7 @@ class StaticLoaderFileReader implements StaticLoader {
 		return Promise.ofBlocking(executor,
 				() -> {
 					if (Files.isRegularFile(file)) {
-						return null;
+						return;
 					}
 					if (Files.isDirectory(file)) {
 						throw new ResourceIsADirectoryException("Resource '" + path + "' is a directory");

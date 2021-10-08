@@ -113,8 +113,9 @@ public class StreamCodecRegistryTest {
 	@Test
 	public void notRegisteredCodec() {
 		StreamCodecRegistry registry = StreamCodecRegistry.createDefault();
+		TypeT<Object> type = new TypeT<Object>() {};
 		try {
-			registry.get(new TypeT<Object>() {});
+			registry.get(type);
 			fail();
 		} catch (IllegalArgumentException e) {
 			assertEquals("Codec is not registered for " + Object.class, e.getMessage());

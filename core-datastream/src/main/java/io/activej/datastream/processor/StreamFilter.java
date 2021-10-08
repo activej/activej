@@ -30,7 +30,7 @@ public abstract class StreamFilter<I, O> implements StreamTransformer<I, O> {
 	private final Input input;
 	private final Output output;
 
-	public StreamFilter() {
+	protected StreamFilter() {
 		this.input = new Input();
 		this.output = new Output();
 

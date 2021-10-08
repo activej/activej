@@ -27,7 +27,7 @@ import java.util.function.Function;
  * @param <T> data item type
  */
 public abstract class SortedDataset<K, T> extends LocallySortedDataset<K, T> {
-	public SortedDataset(Class<T> valueType, Comparator<K> keyComparator, Class<K> keyType, Function<T, K> keyFunction) {
+	protected SortedDataset(Class<T> valueType, Comparator<K> keyComparator, Class<K> keyType, Function<T, K> keyFunction) {
 		super(valueType, keyComparator, keyType, keyFunction);
 	}
 }

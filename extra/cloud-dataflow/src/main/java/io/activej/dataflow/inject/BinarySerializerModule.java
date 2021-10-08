@@ -47,7 +47,7 @@ public final class BinarySerializerModule extends AbstractModule {
 		transform(BinarySerializer.class, (bindings, scope, key, binding) -> {
 			Class<?> rawType = key.getTypeParameter(0).getRawType();
 			return binding.mapInstance(serializer -> {
-				locator.serializers.putIfAbsent(rawType, (BinarySerializer<?>) serializer);
+				locator.serializers.putIfAbsent(rawType, serializer);
 				return serializer;
 			});
 		});

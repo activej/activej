@@ -129,7 +129,7 @@ final class LZ4BlockDecoder implements BlockDecoder {
 	}
 
 	private static final class IntScanner implements ByteBufs.ByteScanner {
-		public int value;
+		int value;
 
 		@Override
 		public boolean consume(int index, byte b) {

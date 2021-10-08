@@ -573,7 +573,7 @@ public final class TestClusterActiveFs {
 					copies++;
 				}
 			}
-			assertEquals(copies, REPLICATION_COUNT);
+			assertEquals(REPLICATION_COUNT, copies);
 		}
 	}
 

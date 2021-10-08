@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
@@ -59,7 +60,7 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 	 * @param splitFn split function
 	 * @return this {@link ChannelSplitter}
 	 */
-	public ChannelSplitter<T> withSplitFunction(Function<T, T> splitFn) {
+	public ChannelSplitter<T> withSplitFunction(UnaryOperator<T> splitFn) {
 		this.splitFn = splitFn;
 		return this;
 	}

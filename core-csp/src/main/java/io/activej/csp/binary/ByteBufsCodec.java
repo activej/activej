@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public interface ByteBufsCodec<I, O> {
 	ByteBuf encode(O item);
@@ -45,7 +46,7 @@ public interface ByteBufsCodec<I, O> {
 		};
 	}
 
-	static @NotNull ByteBufsCodec<ByteBuf, ByteBuf> ofDelimiter(ByteBufsDecoder<ByteBuf> delimiterIn, Function<ByteBuf, ByteBuf> delimiterOut) {
+	static @NotNull ByteBufsCodec<ByteBuf, ByteBuf> ofDelimiter(ByteBufsDecoder<ByteBuf> delimiterIn, UnaryOperator<ByteBuf> delimiterOut) {
 		return new ByteBufsCodec<ByteBuf, ByteBuf>() {
 			@Override
 			public ByteBuf encode(ByteBuf buf) {

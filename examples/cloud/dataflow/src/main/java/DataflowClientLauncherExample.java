@@ -3,7 +3,6 @@ import dto.ExtractStringFunction;
 import dto.StringCount;
 import dto.StringCountReducer;
 import io.activej.config.Config;
-import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
@@ -31,9 +30,6 @@ import static java.util.Comparator.naturalOrder;
 //[START REGION_1]
 public final class DataflowClientLauncherExample extends DataflowClientLauncher {
 	private static final String DEFAULT_PARTITION = "127.0.0.1:9000";
-
-	@Inject
-	DataflowClient client;
 
 	@Inject
 	DataflowGraph graph;

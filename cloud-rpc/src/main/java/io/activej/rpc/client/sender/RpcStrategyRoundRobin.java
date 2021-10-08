@@ -50,7 +50,7 @@ public final class RpcStrategyRoundRobin implements RpcStrategy {
 		List<RpcSender> subSenders = list.listOfSenders(pool);
 		if (subSenders.size() < minActiveSubStrategies)
 			return null;
-		if (subSenders.size() == 0)
+		if (subSenders.isEmpty())
 			return null;
 		if (subSenders.size() == 1)
 			return subSenders.get(0);

@@ -438,9 +438,9 @@ public final class HttpCookie {
 						cookie.setHttpOnly(true);
 					}
 				};
-
+			default:
+				return null;
 		}
-		return null;
 	}
 
 	private static Instant decodeExpirationDate(byte[] bytes, int start) throws MalformedHttpException {

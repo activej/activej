@@ -16,6 +16,7 @@ import static io.activej.rpc.client.sender.RpcStrategies.servers;
 import static io.activej.rpc.client.sender.RpcStrategies.sharding;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @SuppressWarnings("ConstantConditions")
 public class RpcStrategyShardingTest {
@@ -64,7 +65,7 @@ public class RpcStrategyShardingTest {
 		assertEquals(2, connection3.getRequests());
 	}
 
-	@Test(expected = ExecutionException.class)
+	@Test
 	public void itShouldCallOnExceptionOfCallbackWhenChosenServerIsNotActive() throws ExecutionException, InterruptedException {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
@@ -89,8 +90,13 @@ public class RpcStrategyShardingTest {
 
 		assertEquals(1, connection2.getRequests());
 		assertEquals(1, connection3.getRequests());
-		future1.get();
 
+		try {
+			future1.get();
+			fail();
+		} catch (ExecutionException e) {
+			assertEquals("No senders available", e.getCause().getMessage());
+		}
 	}
 
 }

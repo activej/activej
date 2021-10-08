@@ -44,7 +44,7 @@ import static io.activej.http.WebSocketConstants.OpCode.OP_PONG;
 
 final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<WebSocketFramesToBufs, Frame, ByteBuf> {
-	private static final Boolean CHECK = Checks.isEnabled(WebSocketFramesToBufs.class);
+	private static final boolean CHECK = Checks.isEnabled(WebSocketFramesToBufs.class);
 
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 

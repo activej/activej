@@ -750,6 +750,22 @@ public final class Specializer {
 			return specializedMethods.get(result);
 		}
 
+		private ClassNode ensureClassNode(Class<?> clazz) {
+			ClassNode classNode = new ClassNode();
+			ClassReader cr;
+			try {
+				ClassLoader classLoader = clazz.getClassLoader();
+				String pathToClass = clazz.getName().replace('.', '/') + ".class";
+				InputStream classInputStream = classLoader.getResourceAsStream(pathToClass);
+				//noinspection ConstantConditions - null is allowed
+				cr = new ClassReader(classInputStream);
+			} catch (IOException e) {
+				throw new IllegalArgumentException(e);
+			}
+			cr.accept(classNode, ClassReader.SKIP_DEBUG | ClassReader.EXPAND_FRAMES);
+			return classNode;
+		}
+
 	}
 
 	private static synchronized int registerStaticValue(Object value) {
@@ -781,22 +797,6 @@ public final class Specializer {
 			specialization.scanInstance();
 		}
 		return specialization;
-	}
-
-	private ClassNode ensureClassNode(Class<?> clazz) {
-		ClassNode classNode = new ClassNode();
-		ClassReader cr;
-		try {
-			ClassLoader classLoader = clazz.getClassLoader();
-			String pathToClass = clazz.getName().replace('.', '/') + ".class";
-			InputStream classInputStream = classLoader.getResourceAsStream(pathToClass);
-			//noinspection ConstantConditions - null is allowed
-			cr = new ClassReader(classInputStream);
-		} catch (IOException e) {
-			throw new IllegalArgumentException(e);
-		}
-		cr.accept(classNode, ClassReader.SKIP_DEBUG | ClassReader.EXPAND_FRAMES);
-		return classNode;
 	}
 
 	public boolean isSpecialized(Object instance) {

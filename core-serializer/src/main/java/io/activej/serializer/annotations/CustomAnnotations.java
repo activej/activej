@@ -46,7 +46,7 @@ public final class CustomAnnotations {
 		return new SerializerVarLengthImpl();
 	}
 
-	static abstract class AbstractSerializeAnnotation implements Annotation {
+	abstract static class AbstractSerializeAnnotation implements Annotation {
 		@Override
 		public final Class<? extends Annotation> annotationType() {
 			throw new UnsupportedOperationException();

@@ -56,9 +56,6 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	abstract public T getResult();
-
-	@Override
 	public final Exception getException() {
 		return null;
 	}

@@ -19,7 +19,7 @@ package io.activej.specializer;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Array;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static java.lang.System.identityHashCode;
 
@@ -91,7 +91,7 @@ class Utils {
 	}
 
 	@SuppressWarnings("unused") // A private class that should only be accessed via Reflection API
-	private static class InjectorSpecializer implements Function<Object, Object> {
+	private static class InjectorSpecializer implements UnaryOperator<Object> {
 		private final Specializer specializer;
 
 		public InjectorSpecializer() {

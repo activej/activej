@@ -273,9 +273,11 @@ public class DynamicMBeanFactoryAttributesTest {
 	@Test
 	public void itShouldThrowExceptionForNonPublicAttributes() {
 		MBeanWithNonPublicAttributes instance = new MBeanWithNonPublicAttributes();
+		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
+		List<MBeanWithNonPublicAttributes> beans = singletonList(instance);
+		JmxBeanSettings settings = defaultSettings();
 		try {
-			DynamicMBeanFactory.create()
-					.createDynamicMBean(singletonList(instance), defaultSettings(), false);
+			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
 			fail();
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage(), containsString( "A method \"getValue\" in class '" + MBeanWithNonPublicAttributes.class.getName() +

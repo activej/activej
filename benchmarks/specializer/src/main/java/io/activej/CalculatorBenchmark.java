@@ -17,7 +17,7 @@ import java.util.function.DoubleUnaryOperator;
 
 @State(Scope.Benchmark)
 public class CalculatorBenchmark {
-	final static Specializer SPECIALIZER = Specializer.create();
+	static final Specializer SPECIALIZER = Specializer.create();
 
 	CalculatorExpression ast;
 	CalculatorExpression manual;

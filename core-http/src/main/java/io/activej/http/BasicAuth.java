@@ -24,6 +24,7 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
 import static io.activej.http.HttpHeaders.AUTHORIZATION;
@@ -49,7 +50,7 @@ public final class BasicAuth implements AsyncServlet {
 	private final String challenge;
 	private final AsyncBiPredicate<String, String> credentialsLookup;
 
-	private Function<HttpResponse, HttpResponse> failureResponse =
+	private UnaryOperator<HttpResponse> failureResponse =
 			response -> response
 					.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(PLAIN_TEXT_UTF_8))
 					.withBody("Authentication is required".getBytes(UTF_8));
@@ -61,7 +62,7 @@ public final class BasicAuth implements AsyncServlet {
 		challenge = PREFIX + "realm=\"" + realm + "\", charset=\"UTF-8\"";
 	}
 
-	public BasicAuth withFailureResponse(Function<HttpResponse, HttpResponse> failureResponse) {
+	public BasicAuth withFailureResponse(UnaryOperator<HttpResponse> failureResponse) {
 		this.failureResponse = failureResponse;
 		return this;
 	}
@@ -72,7 +73,7 @@ public final class BasicAuth implements AsyncServlet {
 
 	public static Function<AsyncServlet, AsyncServlet> decorator(String realm,
 			AsyncBiPredicate<String, String> credentialsLookup,
-			Function<HttpResponse, HttpResponse> failureResponse) {
+			UnaryOperator<HttpResponse> failureResponse) {
 		return next -> new BasicAuth(next, realm, credentialsLookup)
 				.withFailureResponse(failureResponse);
 	}

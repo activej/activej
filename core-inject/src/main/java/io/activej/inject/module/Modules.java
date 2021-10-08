@@ -29,8 +29,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.Scope.UNSCOPED;
@@ -155,7 +155,7 @@ public final class Modules {
 		return remap(module, key -> remappingInverted.getOrDefault(key, key));
 	}
 
-	public static Module remap(Module module, Function<Key<?>, Key<?>> remapping) {
+	public static Module remap(Module module, UnaryOperator<Key<?>> remapping) {
 		return remap(module, (path, key) -> remapping.apply(key), (path, key) -> remapping.apply(key));
 	}
 

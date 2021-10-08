@@ -248,7 +248,7 @@ public class FrameFormats {
 		}
 
 		private static final class LengthScanner implements ByteBufs.ByteScanner {
-			public int value;
+			int value;
 
 			@Override
 			public boolean consume(int index, byte b) throws MalformedDataException {

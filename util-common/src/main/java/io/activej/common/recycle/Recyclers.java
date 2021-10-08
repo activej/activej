@@ -41,7 +41,7 @@ public class Recyclers {
 	 * @throws IllegalStateException if a recycler for a type already exists
 	 *                               and is not equal to a given recycler
 	 */
-	synchronized public static <T> void register(Class<T> type, Recycler<T> item) {
+	public static synchronized <T> void register(Class<T> type, Recycler<T> item) {
 		REGISTRY.put(type, item);
 		for (Map.Entry<Class<?>, Recycler<?>> entry : CACHED_RECYCLERS.entrySet()) {
 			Class<?> cachedType = entry.getKey();
@@ -81,7 +81,7 @@ public class Recyclers {
 		return doCache(type);
 	}
 
-	synchronized private static @NotNull Recycler<?> doCache(@NotNull Class<?> type) {
+	private static synchronized @NotNull Recycler<?> doCache(@NotNull Class<?> type) {
 		Recycler<?> recycler = lookup(type);
 		CACHED_RECYCLERS.put(type, recycler);
 		return recycler;
@@ -114,15 +114,16 @@ public class Recyclers {
 			map.putAll(doLookup(anInterface));
 		}
 		Map<Class<?>, Recycler<?>> result = new HashMap<>();
-		for (Class<?> key1 : map.keySet()) {
+		for (Map.Entry<Class<?>, Recycler<?>> entry : map.entrySet()) {
 			boolean isAssignable = false;
+			Class<?> key1 = entry.getKey();
 			for (Class<?> key2 : map.keySet()) {
 				if (key1 != key2 && key1.isAssignableFrom(key2)) {
 					isAssignable = true;
 					break;
 				}
 			}
-			if (!isAssignable) result.put(key1, map.get(key1));
+			if (!isAssignable) result.put(key1, entry.getValue());
 		}
 		return result;
 	}

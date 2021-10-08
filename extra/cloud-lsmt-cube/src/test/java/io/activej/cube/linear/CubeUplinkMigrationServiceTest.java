@@ -23,9 +23,7 @@ import io.activej.ot.util.IdGenerator;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -49,8 +47,6 @@ import static org.junit.Assert.assertTrue;
 public final class CubeUplinkMigrationServiceTest {
 
 	public static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static EventloopRule eventloopRule = new EventloopRule();

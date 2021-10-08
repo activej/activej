@@ -43,12 +43,12 @@ public abstract class Key<T> {
 	private final @NotNull Type type;
 	private final @Nullable Object qualifier;
 
-	public Key() {
+	protected Key() {
 		this.type = getTypeParameter();
 		this.qualifier = null;
 	}
 
-	public Key(@Nullable Object qualifier) {
+	protected Key(@Nullable Object qualifier) {
 		this.type = getTypeParameter();
 		this.qualifier = qualifier;
 	}
