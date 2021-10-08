@@ -35,11 +35,12 @@
     <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-core</artifactId>
+      <version>1.22</version>
     </dependency>
     <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-generator-annprocess</artifactId>
-      <scope>provided</scope>
+      <version>1.22</version>
     </dependency>
   </dependencies>
 
