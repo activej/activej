@@ -833,6 +833,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			try {
 				latch.await();
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 				throw new MBeanException(e);
 			}
 
@@ -921,6 +922,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			try {
 				latch.await();
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 				throw new MBeanException(e);
 			}
 

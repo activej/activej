@@ -549,7 +549,10 @@ public final class PartitionedStreamTest {
 					throw new RuntimeException(e);
 				}
 			}).get();
-		} catch (InterruptedException | ExecutionException e) {
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AssertionError(e);
+		} catch (ExecutionException e) {
 			throw new AssertionError(e);
 		}
 	}

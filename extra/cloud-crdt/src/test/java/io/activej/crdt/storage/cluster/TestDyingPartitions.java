@@ -144,6 +144,7 @@ public final class TestDyingPartitions {
 					eventloopThread.join();
 				}
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 				throw new RuntimeException(e);
 			}
 		}

@@ -209,7 +209,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 							handleError(e, cb);
 							cb.setException(e);
 						}));
-					} catch (InterruptedException | CancellationException e) {
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
+					} catch (CancellationException e) {
 						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
 					} catch (Throwable throwable) {
 						eventloop.execute(wrapContext(cb, () -> {

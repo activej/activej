@@ -279,6 +279,7 @@ public final class ServiceAdapters {
 						eventloopThread.join();
 						future.complete(null);
 					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
 						future.completeExceptionally(e);
 					}
 				});
@@ -360,6 +361,7 @@ public final class ServiceAdapters {
 								if (e == null) {
 									doAction(instance, executor, iterator, future, action);
 								} else if (e instanceof InterruptedException) {
+									Thread.currentThread().interrupt();
 									future.completeExceptionally(e);
 								} else if (e instanceof ExecutionException) {
 									future.completeExceptionally(e.getCause());

@@ -593,7 +593,10 @@ public final class TestClusterActiveFs {
 			executor.shutdown();
 			//noinspection ResultOfMethodCallIgnored
 			executor.awaitTermination(1, TimeUnit.SECONDS);
-		} catch (InterruptedException | ExecutionException e) {
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AssertionError(e);
+		} catch (ExecutionException e) {
 			throw new AssertionError(e);
 		}
 	}

@@ -93,6 +93,7 @@ final class Utils {
 		try {
 			storage.getEventloop().submit(runnable::run).get();
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			throw new IOException("Eventloop thread was interrupted", e);
 		} catch (ExecutionException e) {
 			throw new IOException(errorMessage, e);

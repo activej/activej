@@ -58,6 +58,7 @@ public class TestUtils {
 		try {
 			return future.get();
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			throw new AssertionError(e);
 		}
 	}

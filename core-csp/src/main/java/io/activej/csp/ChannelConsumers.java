@@ -177,6 +177,7 @@ public final class ChannelConsumers {
 					future.get();
 				} catch (InterruptedException e) {
 					close();
+					Thread.currentThread().interrupt();
 					throw new IOException(e);
 				} catch (ExecutionException e) {
 					close();

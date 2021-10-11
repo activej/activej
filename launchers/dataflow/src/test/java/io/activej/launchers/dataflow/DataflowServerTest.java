@@ -251,6 +251,7 @@ public class DataflowServerTest {
 		try {
 			latch.await();
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			throw new AssertionError(e);
 		}
 		return launcher;

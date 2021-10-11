@@ -89,6 +89,7 @@ public class AdvancedServiceExample extends Launcher {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 				System.out.println("DBService is started");
 			});
@@ -102,6 +103,7 @@ public class AdvancedServiceExample extends Launcher {
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 				System.out.println("DBService is stopped");
 			});
@@ -126,6 +128,7 @@ public class AdvancedServiceExample extends Launcher {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 				System.out.println("EmailService is started");
 			});

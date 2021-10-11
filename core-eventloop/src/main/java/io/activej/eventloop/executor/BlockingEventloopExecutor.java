@@ -76,6 +76,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor, WithI
 		try {
 			post(runnable);
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			future.completeExceptionally(e);
 		}
 	}
@@ -101,6 +102,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor, WithI
 				}
 			});
 		} catch (InterruptedException ignored) {
+			Thread.currentThread().interrupt();
 		}
 	}
 

@@ -184,6 +184,7 @@ public final class ByteBufPool {
 						//noinspection BusyWait
 						Thread.sleep(WATCHDOG_INTERVAL.toMillis());
 					} catch (InterruptedException ignored) {
+						Thread.currentThread().interrupt();
 						break;
 					}
 				}

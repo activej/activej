@@ -343,6 +343,7 @@ public abstract class Launcher {
 			// and wait a bit for things after the `launch` call, such as JUnit finishing or whatever
 			Thread.sleep(10);
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			logger.error("Shutdown thread got interrupted", e);
 		}
 	}, "shutdownNotification");

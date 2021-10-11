@@ -85,6 +85,7 @@ public final class CrdtClusterExample {
 		try {
 			Thread.sleep(1);
 		} catch (InterruptedException ignored) {
+			Thread.currentThread().interrupt();
 		}
 
 		LWWSet<String> set = LWWSet.of("#2", "#4");

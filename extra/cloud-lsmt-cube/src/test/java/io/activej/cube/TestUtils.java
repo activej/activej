@@ -59,7 +59,10 @@ public final class TestUtils {
 	public static <T> T asyncAwait(Eventloop eventloop, AsyncSupplier<T> supplier) {
 		try {
 			return eventloop.submit(supplier::get).get();
-		} catch (InterruptedException | ExecutionException e) {
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AssertionError(e);
+		} catch (ExecutionException e) {
 			throw new AssertionError(e);
 		}
 	}
