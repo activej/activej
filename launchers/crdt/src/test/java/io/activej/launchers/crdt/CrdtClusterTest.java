@@ -20,7 +20,6 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import io.activej.test.rules.LoggingRule;
 import io.activej.types.TypeT;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -49,9 +48,6 @@ public final class CrdtClusterTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@ClassRule
-	public static final LoggingRule loggingRule = new LoggingRule();
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();

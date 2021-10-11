@@ -18,7 +18,6 @@ import io.activej.promise.Promise;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import io.activej.test.rules.LoggingRule;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
@@ -74,9 +73,6 @@ public final class TestClusterDeadPartitionCheck {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@ClassRule
-	public static final LoggingRule loggingRule = new LoggingRule();
 
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();

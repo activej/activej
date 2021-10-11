@@ -6,7 +6,6 @@ import io.activej.promise.Promises;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import io.activej.test.rules.LoggingRule;
 import org.junit.*;
 
 import java.net.InetAddress;
@@ -29,9 +28,6 @@ public final class AsyncDnsClientTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@ClassRule
-	public static final LoggingRule loggingRule = new LoggingRule();
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();

@@ -21,7 +21,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import static ch.qos.logback.classic.Level.WARN;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 
 /**
@@ -31,7 +30,6 @@ public final class EventloopRule implements TestRule {
 
 	static {
 		createEventloop();
-		LoggingRule.enableOfLoggerLogging(Eventloop.class, WARN);
 	}
 
 	private static void createEventloop() {

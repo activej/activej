@@ -10,7 +10,9 @@ import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promises;
 import io.activej.test.TestUtils;
-import io.activej.test.rules.*;
+import io.activej.test.rules.ActivePromisesRule;
+import io.activej.test.rules.ByteBufRule;
+import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -30,12 +32,8 @@ import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.slf4j.event.Level.TRACE;
-import static org.slf4j.event.Level.WARN;
 
 @Ignore("takes forever, only for manual testing")
-@LoggerConfig(WARN)
-@LoggerConfig(packageOf = ActiveFsServer.class, value = TRACE)
 public final class ClusterRepartitionControllerStressTest {
 	private static final int CLIENT_SERVER_PAIRS = 10;
 
@@ -47,9 +45,6 @@ public final class ClusterRepartitionControllerStressTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@ClassRule
-	public static final LoggingRule loggingRule = new LoggingRule();
 
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
