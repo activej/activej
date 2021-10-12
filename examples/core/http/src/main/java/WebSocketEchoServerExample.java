@@ -32,7 +32,7 @@ public final class WebSocketEchoServerExample extends HttpServerLauncher {
 		if (message.getType() == MessageType.TEXT) {
 			msg = message.getText();
 		} else {
-			msg = message.getBuf().asString(UTF_8);
+			msg = message.getBuf().getString(UTF_8);
 		}
 		logger.info("Received message: {}", msg);
 	}

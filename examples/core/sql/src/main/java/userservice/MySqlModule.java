@@ -23,8 +23,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class MySqlModule extends AbstractModule {
 
-	public static final String MYSQL_PROPERTIES_FILE = "userservice/mysql.properties";
-	public static final String INIT_SCRIPT = "userservice/init.sql";
+	public static final String MYSQL_PROPERTIES_FILE = "/userservice/mysql.properties";
+	public static final String INIT_SCRIPT = "/userservice/init.sql";
 
 	@Provides
 	DataSource dataSourceMySql() throws IOException, SQLException {
@@ -60,9 +60,7 @@ public class MySqlModule extends AbstractModule {
 	}
 
 	private static byte[] loadResource() throws IOException {
-		try (InputStream stream = Thread.currentThread()
-				.getContextClassLoader()
-				.getResourceAsStream(MySqlModule.INIT_SCRIPT)
+		try (InputStream stream = MySqlModule.class.getResourceAsStream(INIT_SCRIPT)
 		) {
 			assert stream != null;
 
