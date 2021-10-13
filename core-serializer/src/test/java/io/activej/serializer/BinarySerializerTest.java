@@ -14,10 +14,12 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.activej.common.Utils.setOf;
+import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
 import static io.activej.serializer.Utils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.not;
@@ -1250,7 +1252,7 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testCustomSerializeEnum() {
-		TestEnum sourceData = TestEnum.TWO;
+		TestEnum sourceData = TWO;
 		TestEnum resultData = doTest(TestEnum.class, sourceData);
 		assertEquals(sourceData, resultData);
 	}
@@ -1263,7 +1265,7 @@ public class BinarySerializerTest {
 	@Test
 	public void testListEnums() {
 		ListEnumHolder testData1 = new ListEnumHolder();
-		testData1.list = asList(TestEnum.ONE, TestEnum.THREE, TestEnum.TWO);
+		testData1.list = asList(ONE, TestEnum.THREE, TWO);
 		ListEnumHolder testData2 = doTest(ListEnumHolder.class, testData1);
 		assertEquals(testData1.list, testData2.list);
 	}
@@ -1277,8 +1279,8 @@ public class BinarySerializerTest {
 	public void testMapEnums() {
 		MapEnumHolder testData1 = new MapEnumHolder();
 		testData1.map = new HashMap<>();
-		testData1.map.put(TestEnum.ONE, "abc");
-		testData1.map.put(TestEnum.TWO, "xyz");
+		testData1.map.put(ONE, "abc");
+		testData1.map.put(TWO, "xyz");
 		MapEnumHolder testData2 = doTest(MapEnumHolder.class, testData1);
 		assertEquals(testData1.map, testData2.map);
 		assertTrue(testData2.map instanceof EnumMap);
@@ -1407,7 +1409,7 @@ public class BinarySerializerTest {
 		testData1.set.add(2);
 		SetIntegerHolder testData2 = doTest(SetIntegerHolder.class, testData1);
 		assertEquals(testData1.set, testData2.set);
-		assertTrue(testData2.set instanceof LinkedHashSet);
+		assertTrue(testData2.set instanceof HashSet);
 	}
 
 	public static class EnumSetHolder {
@@ -1416,34 +1418,142 @@ public class BinarySerializerTest {
 
 		@Serialize
 		@SerializeNullable
-		public @Nullable Set<TestEnum> setNullable;
+		public Set<TestEnum> setNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Set<TestEnum> setNullableNull;
+
+		@Serialize
+		public Set<TestEnum> setEmpty;
+
+		@Serialize
+		@SerializeNullable
+		public Set<TestEnum> setEmptyNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Set<TestEnum> setEmptyNullableNull;
+
+		@Serialize
+		public Set<TestEnum> setSingle;
+
+		@Serialize
+		@SerializeNullable
+		public Set<TestEnum> setSingleNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Set<TestEnum> setSingleNullableNull;
+
+		@Serialize
+		public EnumSet<TestEnum> enumSet;
+
+		@Serialize
+		@SerializeNullable
+		public EnumSet<TestEnum> enumSetNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public EnumSet<TestEnum> enumSetNullableNull;
+
+		@Serialize
+		public EnumSet<TestEnum> enumSetEmpty;
+
+		@Serialize
+		@SerializeNullable
+		public EnumSet<TestEnum> enumSetEmptyNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public EnumSet<TestEnum> enumSetEmptyNullableNull;
+
+		@Serialize
+		public EnumSet<TestEnum> enumSetSingle;
+
+		@Serialize
+		@SerializeNullable
+		public EnumSet<TestEnum> enumSetSingleNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public EnumSet<TestEnum> enumSetSingleNullableNull;
 	}
 
 	@Test
 	public void testEnumSet() {
-		EnumSetHolder testData1 = new EnumSetHolder();
-		testData1.set = EnumSet.copyOf(asList(TestEnum.THREE, TestEnum.ONE));
-		EnumSetHolder testData2 = doTest(EnumSetHolder.class, testData1);
-		assertEquals(testData1.set, testData2.set);
-		assertTrue(testData2.set instanceof EnumSet);
+		Set<TestEnum> set = setOf(ONE, TWO);
+		Set<TestEnum> setNullable = setOf(TWO, THREE);
+		Set<TestEnum> setEmpty = emptySet();
+		Set<TestEnum> setEmptyNullable = emptySet();
+		Set<TestEnum> setSingle = singleton(ONE);
+		Set<TestEnum> setSingleNullable = singleton(TWO);
 
-		// test for empty set with null
-		EnumSetHolder testEmpty1 = new EnumSetHolder();
-		testEmpty1.set = EnumSet.noneOf(TestEnum.class);
-		testEmpty1.setNullable = null;
-		EnumSetHolder testEmpty2 = doTest(EnumSetHolder.class, testEmpty1);
-		assertEquals(testEmpty1.set, testEmpty2.set);
-		assertEquals(testEmpty1.setNullable, testEmpty2.setNullable);
-		assertTrue(testEmpty2.set instanceof EnumSet);
-		assertNull(testEmpty2.setNullable);
+		EnumSet<TestEnum> enumSet = EnumSet.of(ONE, TWO);
+		EnumSet<TestEnum> enumSetNullable = EnumSet.of(TWO, THREE);
+		EnumSet<TestEnum> enumSetEmpty = EnumSet.noneOf(TestEnum.class);
+		EnumSet<TestEnum> enumSetEmptyNullable = EnumSet.noneOf(TestEnum.class);
+		EnumSet<TestEnum> enumSetSingle = EnumSet.of(ONE);
+		EnumSet<TestEnum> enumSetSingleNullable = EnumSet.of(TWO);
 
-		// test for empty set without null
-		testEmpty1.setNullable = EnumSet.noneOf(TestEnum.class);
-		testEmpty2 = doTest(EnumSetHolder.class, testEmpty1);
-		assertEquals(testEmpty1.set, testEmpty2.set);
-		assertEquals(testEmpty1.setNullable, testEmpty2.setNullable);
-		assertTrue(testEmpty2.set instanceof EnumSet);
-		assertTrue(testEmpty2.setNullable instanceof EnumSet);
+		EnumSetHolder holder = new EnumSetHolder();
+		holder.set = set;
+		holder.setNullableNotNull = setNullable;
+		holder.setEmpty = setEmpty;
+		holder.setEmptyNullableNotNull = setEmptyNullable;
+		holder.setSingle = setSingle;
+		holder.setSingleNullableNotNull = setSingleNullable;
+
+		holder.enumSet = enumSet;
+		holder.enumSetNullableNotNull = enumSetNullable;
+		holder.enumSetEmpty = enumSetEmpty;
+		holder.enumSetEmptyNullableNotNull = enumSetEmptyNullable;
+		holder.enumSetSingle = enumSetSingle;
+		holder.enumSetSingleNullableNotNull = enumSetSingleNullable;
+
+		EnumSetHolder deserialized = doTest(EnumSetHolder.class, holder);
+
+		assertEquals(set, deserialized.set);
+		assertThat(deserialized.set, instanceOf(EnumSet.class));
+
+		assertEquals(setNullable, deserialized.setNullableNotNull);
+		assertThat(deserialized.setNullableNotNull, instanceOf(EnumSet.class));
+
+		assertNull(deserialized.setNullableNull);
+
+		assertEquals(setEmpty, deserialized.setEmpty);
+		assertThat(deserialized.setEmpty, not(instanceOf(EnumSet.class)));
+
+		assertEquals(setEmptyNullable, deserialized.setEmptyNullableNotNull);
+		assertThat(deserialized.setEmptyNullableNotNull, not(instanceOf(EnumSet.class)));
+
+		assertNull(deserialized.setEmptyNullableNull);
+
+		assertEquals(setSingle, deserialized.setSingle);
+		assertThat(deserialized.setSingle, not(instanceOf(EnumSet.class)));
+
+		assertEquals(setSingleNullable, deserialized.setSingleNullableNotNull);
+		assertThat(deserialized.setSingleNullableNotNull, not(instanceOf(EnumSet.class)));
+
+		assertNull(deserialized.setSingleNullableNull);
+
+		assertEquals(enumSet, deserialized.enumSet);
+
+		assertEquals(enumSetNullable, deserialized.enumSetNullableNotNull);
+
+		assertNull(deserialized.enumSetNullableNull);
+
+		assertEquals(enumSetEmpty, deserialized.enumSetEmpty);
+
+		assertEquals(enumSetEmptyNullable, deserialized.enumSetEmptyNullableNotNull);
+
+		assertNull(deserialized.enumSetEmptyNullableNull);
+
+		assertEquals(enumSetSingle, deserialized.enumSetSingle);
+
+		assertEquals(enumSetSingleNullable, deserialized.enumSetSingleNullableNotNull);
+
+		assertNull(deserialized.enumSetSingleNullableNull);
 	}
 
 	public static class Generic<T> {
@@ -2016,38 +2126,94 @@ public class BinarySerializerTest {
 	@Test
 	public void testSets() {
 		Set<String> regular = new TreeSet<>();
-
-		assertThat(regular, not(instanceOf(HashSet.class)));
-
 		regular.add("a");
 		regular.add("b");
 		regular.add("c");
 
+		Set<String> regularNullable = new TreeSet<>();
+		regularNullable.add("d");
+		regularNullable.add("e");
+		regularNullable.add("f");
+
+		Set<String> regularEmpty = new TreeSet<>();
+
+		Set<String> regularEmptyNullable = new TreeSet<>();
+
+		Set<String> regularSingle = new TreeSet<>();
+		regularSingle.add("g");
+
+		Set<String> regularSingleNullable = new TreeSet<>();
+		regularSingleNullable.add("h");
+
 		HashSet<String> hash = new HashSet<>();
-		hash.add("d");
-		hash.add("e");
-		hash.add("f");
+		hash.add("i");
+		hash.add("j");
+		hash.add("k");
+
+		HashSet<String> hashNullable = new HashSet<>();
+		hashNullable.add("l");
+		hashNullable.add("m");
+		hashNullable.add("n");
 
 		LinkedHashSet<String> linked = new LinkedHashSet<>();
-		linked.add("g");
-		linked.add("h");
-		linked.add("i");
+		linked.add("o");
+		linked.add("p");
+		linked.add("q");
+
+		LinkedHashSet<String> linkedNullable = new LinkedHashSet<>();
+		linkedNullable.add("r");
+		linkedNullable.add("s");
+		linkedNullable.add("t");
 
 		SetsHolder setsHolder = new SetsHolder();
 		setsHolder.regular = regular;
+		setsHolder.regularNullableNotNull = regularNullable;
+		setsHolder.regularEmpty = regularEmpty;
+		setsHolder.regularEmptyNullableNotNull = regularEmptyNullable;
+		setsHolder.regularSingle = regularSingle;
+		setsHolder.regularSingleNullableNotNull = regularSingleNullable;
 		setsHolder.hash = hash;
+		setsHolder.hashNullableNotNull = hashNullable;
 		setsHolder.linked = linked;
+		setsHolder.linkedNullableNotNull = linkedNullable;
 
 		SetsHolder deserialized = doTest(SetsHolder.class, setsHolder);
 
 		assertEquals(regular, deserialized.regular);
-		assertSame(LinkedHashSet.class, deserialized.regular.getClass());
+		assertSame(HashSet.class, deserialized.regular.getClass());
+
+		assertEquals(regularNullable, deserialized.regularNullableNotNull);
+		assertSame(HashSet.class, deserialized.regularNullableNotNull.getClass());
+
+		assertNull(deserialized.regularNullableNull);
+
+		assertEquals(regularEmpty, deserialized.regularEmpty);
+		assertNotSame(HashSet.class, deserialized.regularEmpty.getClass());
+
+		assertEquals(regularEmptyNullable, deserialized.regularEmptyNullableNotNull);
+		assertNotSame(HashSet.class, deserialized.regularEmptyNullableNotNull.getClass());
+
+		assertNull(deserialized.regularEmptyNullableNull);
+
+		assertEquals(regularSingle, deserialized.regularSingle);
+		assertNotSame(HashSet.class, deserialized.regularSingle.getClass());
+
+		assertEquals(regularSingleNullable, deserialized.regularSingleNullableNotNull);
+		assertNotSame(HashSet.class, deserialized.regularSingleNullableNotNull.getClass());
+
+		assertNull(deserialized.regularSingleNullableNull);
 
 		assertEquals(hash, deserialized.hash);
-		assertSame(HashSet.class, deserialized.hash.getClass());
+
+		assertEquals(hashNullable, deserialized.hashNullableNotNull);
+
+		assertNull(deserialized.hashNullableNull);
 
 		assertEquals(linked, deserialized.linked);
-		assertSame(LinkedHashSet.class, deserialized.linked.getClass());
+
+		assertEquals(linkedNullable, deserialized.linkedNullableNotNull);
+
+		assertNull(deserialized.linkedNullableNull);
 	}
 
 	@Test
@@ -2151,10 +2317,56 @@ public class BinarySerializerTest {
 		public Set<String> regular;
 
 		@Serialize
+		@SerializeNullable
+		public Set<String> regularNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Set<String> regularNullableNull;
+
+		@Serialize
+		public Set<String> regularEmpty;
+
+		@Serialize
+		@SerializeNullable
+		public Set<String> regularEmptyNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Set<String> regularEmptyNullableNull;
+
+		@Serialize
+		public Set<String> regularSingle;
+
+		@Serialize
+		@SerializeNullable
+		public Set<String> regularSingleNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Set<String> regularSingleNullableNull;
+
+		@Serialize
 		public HashSet<String> hash;
 
 		@Serialize
+		@SerializeNullable
+		public HashSet<String> hashNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public HashSet<String> hashNullableNull;
+
+		@Serialize
 		public LinkedHashSet<String> linked;
+
+		@Serialize
+		@SerializeNullable
+		public LinkedHashSet<String> linkedNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public LinkedHashSet<String> linkedNullableNull;
 	}
 
 	public static class MapsHolder {

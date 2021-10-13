@@ -30,30 +30,18 @@ import java.util.Set;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
-public final class SerializerDefSet extends AbstractSerializerDefCollection {
-	public SerializerDefSet(SerializerDef valueSerializer) {
+public final class SerializerDefEnumSet extends AbstractSerializerDefCollection {
+	public SerializerDefEnumSet(SerializerDef valueSerializer) {
 		this(valueSerializer, false);
 	}
 
-	private SerializerDefSet(SerializerDef valueSerializer, boolean nullable) {
-		super(valueSerializer, Set.class, Set.class, Object.class, nullable);
+	private SerializerDefEnumSet(SerializerDef valueSerializer, boolean nullable) {
+		super(valueSerializer, EnumSet.class, EnumSet.class, Enum.class, nullable);
 	}
 
 	@Override
 	protected Expression createConstructor(Expression length) {
-		if (valueSerializer.getDecodeType().isEnum()) {
-			return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getEncodeType()));
-		}
-		return constructor(HashSet.class, length);
-	}
-
-	@Override
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
-		return ifThenElse(cmpEq(length, value(0)),
-				staticCall(Collections.class, "emptySet"),
-				ifThenElse(cmpEq(length, value(1)),
-						staticCall(Collections.class, "singleton", valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),
-						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
+		return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getDecodeType()));
 	}
 
 	@Override
@@ -61,6 +49,6 @@ public final class SerializerDefSet extends AbstractSerializerDefCollection {
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
-		return new SerializerDefSet(valueSerializer, true);
+		return new SerializerDefEnumSet(valueSerializer, true);
 	}
 }
