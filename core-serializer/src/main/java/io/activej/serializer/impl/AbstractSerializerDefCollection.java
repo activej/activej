@@ -44,8 +44,8 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		this.nullable = nullable;
 	}
 
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> value, Variable length) {
-		return forEach(collection, valueType, value);
+	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Variable length) {
+		return forEach(collection, valueType, action);
 	}
 
 	protected Expression createBuilder(Expression length) {
@@ -114,7 +114,7 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
 		return let(createBuilder(length), builder -> sequence(
 				loop(value(0), length,
-						it -> add(builder, it, cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
+						i -> add(builder, i, cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
 				build(builder)));
 	}
 

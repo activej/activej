@@ -39,9 +39,9 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> value, Variable length) {
+	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Variable length) {
 		return loop(value(0), length,
-				i -> let(call(collection, "get", i), value::apply));
+				i -> let(call(collection, "get", i), action::apply));
 	}
 
 	@Override
@@ -50,8 +50,8 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected @NotNull Expression add(Expression array, Expression index, Expression element) {
-		return arraySet(array, index, element);
+	protected @NotNull Expression add(Expression array, Expression i, Expression element) {
+		return arraySet(array, i, element);
 	}
 
 	@Override

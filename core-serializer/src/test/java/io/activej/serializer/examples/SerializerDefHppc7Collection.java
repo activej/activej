@@ -22,11 +22,11 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 	// endregion
 
 	@Override
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> value, Variable length) {
+	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Variable length) {
 		try {
 			String prefix = capitalize(elementType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");
-			return new ForEachHppcCollection(collection, iteratorType, value);
+			return new ForEachHppcCollection(collection, iteratorType, action);
 		} catch (ClassNotFoundException e) {
 			throw new IllegalStateException("There is no hppc cursor for " + elementType.getSimpleName(), e);
 		}

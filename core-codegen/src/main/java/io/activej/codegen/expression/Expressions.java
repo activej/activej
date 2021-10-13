@@ -878,20 +878,20 @@ public class Expressions {
 		return new ExpressionArraySet(array, position, newElement);
 	}
 
-	public static Expression forEach(Expression collection, UnaryOperator<Expression> it) {
-		return forEach(collection, Object.class, it);
+	public static Expression forEach(Expression collection, UnaryOperator<Expression> action) {
+		return forEach(collection, Object.class, action);
 	}
 
-	public static Expression forEach(Expression collection, Class<?> type, UnaryOperator<Expression> it) {
-		return new ExpressionIteratorForEach(collection, type, it);
+	public static Expression forEach(Expression collection, Class<?> type, UnaryOperator<Expression> action) {
+		return new ExpressionIteratorForEach(collection, type, action);
 	}
 
-	public static Expression loop(Expression from, Expression to, UnaryOperator<Expression> it) {
-		return new ExpressionFor(from, to, it);
+	public static Expression forEach(Expression collection, UnaryOperator<Expression> keyAction, UnaryOperator<Expression> valueAction) {
+		return new ExpressionMapForEach(collection, keyAction, valueAction);
 	}
 
-	public static Expression forEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue) {
-		return new ExpressionMapForEach(collection, forEachKey, forEachValue);
+	public static Expression loop(Expression from, Expression to, UnaryOperator<Expression> action) {
+		return new ExpressionFor(from, to, action);
 	}
 
 	public static Expression neg(Expression arg) {
