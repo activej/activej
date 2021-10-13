@@ -39,7 +39,7 @@ public final class SerializerDefSet extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected Expression createConstructor(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		if (valueSerializer.getDecodeType().isEnum()) {
 			return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getEncodeType()));
 		}

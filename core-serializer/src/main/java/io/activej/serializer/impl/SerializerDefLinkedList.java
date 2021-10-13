@@ -34,7 +34,7 @@ public final class SerializerDefLinkedList extends AbstractSerializerDefCollecti
 	}
 
 	@Override
-	protected Expression createConstructor(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		return constructor(LinkedList.class);
 	}
 

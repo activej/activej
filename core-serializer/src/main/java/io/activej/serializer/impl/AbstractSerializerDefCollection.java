@@ -44,12 +44,20 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		this.nullable = nullable;
 	}
 
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> value) {
+	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> value, Variable length) {
 		return forEach(collection, valueType, value);
 	}
 
-	protected Expression createConstructor(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		return constructor(decodeType, length);
+	}
+
+	protected @NotNull Expression add(Expression builder, Expression index, Expression element) {
+		return call(builder, "add", element);
+	}
+
+	protected Expression build(Expression builder) {
+		return builder;
 	}
 
 	@Override
@@ -74,19 +82,16 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		Expression forEach = collectionForEach(value, valueSerializer.getEncodeType(),
-				it -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(it, valueSerializer.getEncodeType()), version, compatibilityLevel));
-
 		if (!nullable) {
-			return sequence(
-					writeVarInt(buf, pos, call(value, "size")),
-					forEach);
+			return let(call(value, "size"), length -> sequence(
+					writeVarInt(buf, pos, length),
+					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel, length)));
 		} else {
 			return ifThenElse(isNull(value),
 					writeByte(buf, pos, value((byte) 0)),
-					sequence(
-							writeVarInt(buf, pos, inc(call(value, "size"))),
-							forEach));
+					let(call(value, "size"), length -> sequence(
+							writeVarInt(buf, pos, inc(length)),
+							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel, length))));
 		}
 	}
 
@@ -100,6 +105,21 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
 	}
 
+	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Variable length) {
+		return collectionForEach(value, valueSerializer.getEncodeType(),
+				it -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(it, valueSerializer.getEncodeType()), version, compatibilityLevel),
+				length);
+	}
+
+	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
+		return let(createBuilder(length), builder -> sequence(
+				loop(value(0), length,
+						it -> add(builder, it, cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
+				build(builder)));
+	}
+
+	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
+
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
@@ -107,15 +127,4 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		}
 		return doEnsureNullable(compatibilityLevel);
 	}
-
-	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
-
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
-		return let(createConstructor(length), instance -> sequence(
-				loop(value(0), length,
-						it -> call(instance, "add",
-								cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
-				instance));
-	}
-
 }
