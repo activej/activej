@@ -24,27 +24,27 @@ import org.jetbrains.annotations.NotNull;
 import static io.activej.codegen.expression.Expressions.call;
 import static io.activej.codegen.expression.Expressions.constructor;
 
-public final class SerializerDefMap extends AbstractSerializerDefMap {
-	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
-		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, false);
+public final class SerializerDefRegularCollection extends AbstractSerializerDefCollection {
+	public SerializerDefRegularCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
+		this(valueSerializer, encodeType, decodeType, false);
 	}
 
-	private SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
-		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, nullable);
+	private SerializerDefRegularCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
+		super(valueSerializer, encodeType, decodeType, Object.class, nullable);
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return constructor(decodeType, initialSize(length));
+		return constructor(decodeType, length);
 	}
 
 	@Override
-	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
-		return call(builder, "put", key, value);
+	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
+		return call(builder, "add", element);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefMap(keySerializer, valueSerializer, encodeType, decodeType, true);
+		return new SerializerDefRegularCollection(valueSerializer, encodeType, decodeType, true);
 	}
 }

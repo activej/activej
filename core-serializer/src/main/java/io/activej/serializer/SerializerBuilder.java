@@ -156,21 +156,21 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 					return new SerializerDefString(a == null ? StringFormat.UTF8 : a.value());
 				})
 
-				.with(Collection.class, ctx -> new SerializerDefCollection(ctx.scanTypeArgument(0), Collection.class, ArrayList.class))
-				.with(Queue.class, ctx -> new SerializerDefCollection(ctx.scanTypeArgument(0), Queue.class, ArrayDeque.class))
+				.with(Collection.class, ctx -> new SerializerDefRegularCollection(ctx.scanTypeArgument(0), Collection.class, ArrayList.class))
+				.with(Queue.class, ctx -> new SerializerDefRegularCollection(ctx.scanTypeArgument(0), Queue.class, ArrayDeque.class))
 
 				.with(List.class, ctx -> new SerializerDefList(ctx.scanTypeArgument(0)))
-				.with(ArrayList.class, ctx -> new SerializerDefCollection(ctx.scanTypeArgument(0), ArrayList.class, ArrayList.class))
+				.with(ArrayList.class, ctx -> new SerializerDefRegularCollection(ctx.scanTypeArgument(0), ArrayList.class, ArrayList.class))
 				.with(LinkedList.class, ctx -> new SerializerDefLinkedList(ctx.scanTypeArgument(0)))
 
 				.with(Map.class, ctx -> new SerializerGenericDefMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
-				.with(HashMap.class, ctx -> new SerializerDefMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), HashMap.class, HashMap.class))
-				.with(LinkedHashMap.class, ctx -> new SerializerDefMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), LinkedHashMap.class, LinkedHashMap.class))
+				.with(HashMap.class, ctx -> new SerializerDefRegularMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), HashMap.class, HashMap.class))
+				.with(LinkedHashMap.class, ctx -> new SerializerDefRegularMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), LinkedHashMap.class, LinkedHashMap.class))
 				.with(EnumMap.class, ctx -> new SerializerDefEnumMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
 
 				.with(Set.class, ctx -> new SerializerDefSet(ctx.scanTypeArgument(0)))
-				.with(HashSet.class, ctx -> new SerializerDefCollection(ctx.scanTypeArgument(0), HashSet.class, HashSet.class))
-				.with(LinkedHashSet.class, ctx -> new SerializerDefCollection(ctx.scanTypeArgument(0), LinkedHashSet.class, LinkedHashSet.class))
+				.with(HashSet.class, ctx -> new SerializerDefRegularCollection(ctx.scanTypeArgument(0), HashSet.class, HashSet.class))
+				.with(LinkedHashSet.class, ctx -> new SerializerDefRegularCollection(ctx.scanTypeArgument(0), LinkedHashSet.class, LinkedHashSet.class))
 				.with(EnumSet.class, ctx -> new SerializerDefEnumSet(ctx.scanTypeArgument(0)))
 
 				.with(Object.class, builder::scan);
