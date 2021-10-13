@@ -49,7 +49,7 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected @NotNull Expression add(Expression array, Expression i, Expression element) {
+	protected @NotNull Expression addToBuilder(Expression array, Expression i, Expression element) {
 		return arraySet(array, i, element);
 	}
 

@@ -52,22 +52,6 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 		return forEach(collection, forEachKey, forEachValue);
 	}
 
-	protected Expression createBuilder(Expression length) {
-		return constructor(decodeType, initialSize(length));
-	}
-
-	protected @NotNull Expression put(Expression builder, Expression index, Expression key, Expression value) {
-		return call(builder, "put", key, value);
-	}
-
-	protected Expression build(Expression builder) {
-		return builder;
-	}
-
-	protected Expression initialSize(Expression length) {
-		return div(mul(length, value(4)), value(3));
-	}
-
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit("key", keySerializer);
@@ -125,10 +109,22 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return let(createBuilder(length), builder -> sequence(
 				loop(value(0), length,
-						i -> put(builder, i,
+						i -> putToBuilder(builder, i,
 								cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
 								cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType))),
 				build(builder)));
+	}
+
+	protected abstract Expression createBuilder(Expression length);
+
+	protected abstract @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value);
+
+	protected Expression build(Expression builder) {
+		return builder;
+	}
+
+	protected static Expression initialSize(Expression length) {
+		return div(mul(length, value(5)), value(3));
 	}
 
 	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);

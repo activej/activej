@@ -48,18 +48,6 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		return forEach(collection, valueType, action);
 	}
 
-	protected Expression createBuilder(Expression length) {
-		return constructor(decodeType, length);
-	}
-
-	protected @NotNull Expression add(Expression builder, Expression index, Expression element) {
-		return call(builder, "add", element);
-	}
-
-	protected Expression build(Expression builder) {
-		return builder;
-	}
-
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(valueSerializer);
@@ -114,8 +102,16 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return let(createBuilder(length), builder -> sequence(
 				loop(value(0), length,
-						i -> add(builder, i, cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
+						i -> addToBuilder(builder, i, cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
 				build(builder)));
+	}
+
+	protected abstract Expression createBuilder(Expression length);
+
+	protected abstract @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element);
+
+	protected Expression build(Expression builder) {
+		return builder;
 	}
 
 	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);

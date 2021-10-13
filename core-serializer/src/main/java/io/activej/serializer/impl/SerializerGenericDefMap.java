@@ -28,12 +28,12 @@ import java.util.Map;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-public final class SerializerDefGenericMap extends AbstractSerializerDefMap {
-	public SerializerDefGenericMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
+public final class SerializerGenericDefMap extends AbstractSerializerDefMap {
+	public SerializerGenericDefMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
 		this(keySerializer, valueSerializer, false);
 	}
 
-	private SerializerDefGenericMap(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
+	private SerializerGenericDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
 		super(keySerializer, valueSerializer, Map.class, Map.class, Object.class, Object.class, nullable);
 	}
 
@@ -44,6 +44,11 @@ public final class SerializerDefGenericMap extends AbstractSerializerDefMap {
 			return constructor(EnumMap.class, value(rawType));
 		}
 		return constructor(HashMap.class, initialSize(length));
+	}
+
+	@Override
+	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
+		return call(builder, "put", key, value);
 	}
 
 	@Override
@@ -59,6 +64,6 @@ public final class SerializerDefGenericMap extends AbstractSerializerDefMap {
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefGenericMap(keySerializer, valueSerializer, true);
+		return new SerializerGenericDefMap(keySerializer, valueSerializer, true);
 	}
 }

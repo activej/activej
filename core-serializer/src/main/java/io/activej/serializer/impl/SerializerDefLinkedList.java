@@ -19,9 +19,11 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedList;
 
+import static io.activej.codegen.expression.Expressions.call;
 import static io.activej.codegen.expression.Expressions.constructor;
 
 public final class SerializerDefLinkedList extends AbstractSerializerDefCollection {
@@ -36,6 +38,11 @@ public final class SerializerDefLinkedList extends AbstractSerializerDefCollecti
 	@Override
 	protected Expression createBuilder(Expression length) {
 		return constructor(LinkedList.class);
+	}
+
+	@Override
+	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
+		return call(builder, "add", element);
 	}
 
 	@Override

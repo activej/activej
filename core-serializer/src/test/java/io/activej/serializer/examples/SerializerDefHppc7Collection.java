@@ -4,9 +4,12 @@ import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.AbstractSerializerDefCollection;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.UnaryOperator;
 
+import static io.activej.codegen.expression.Expressions.call;
+import static io.activej.codegen.expression.Expressions.constructor;
 import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
 
 public final class SerializerDefHppc7Collection extends AbstractSerializerDefCollection {
@@ -29,6 +32,16 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 		} catch (ClassNotFoundException e) {
 			throw new IllegalStateException("There is no hppc cursor for " + elementType.getSimpleName(), e);
 		}
+	}
+
+    @Override
+    protected Expression createBuilder(Expression length) {
+		return constructor(decodeType, length);
+	}
+
+	@Override
+	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
+		return call(builder, "add", element);
 	}
 
 	@Override

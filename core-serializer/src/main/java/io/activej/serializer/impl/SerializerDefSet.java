@@ -46,6 +46,11 @@ public final class SerializerDefSet extends AbstractSerializerDefCollection {
 	}
 
 	@Override
+	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
+		return call(builder, "add", element);
+	}
+
+	@Override
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return ifThenElse(cmpEq(length, value(0)),
 				staticCall(Collections.class, "emptySet"),

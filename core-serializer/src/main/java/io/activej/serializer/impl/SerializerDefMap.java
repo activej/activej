@@ -16,8 +16,13 @@
 
 package io.activej.serializer.impl;
 
+import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import org.jetbrains.annotations.NotNull;
+
+import static io.activej.codegen.expression.Expressions.call;
+import static io.activej.codegen.expression.Expressions.constructor;
 
 public final class SerializerDefMap extends AbstractSerializerDefMap {
 	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
@@ -26,6 +31,16 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 
 	private SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
 		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, nullable);
+	}
+
+	@Override
+	protected Expression createBuilder(Expression length) {
+		return constructor(decodeType, initialSize(length));
+	}
+
+	@Override
+	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
+		return call(builder, "put", key, value);
 	}
 
 	@Override
