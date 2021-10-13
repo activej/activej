@@ -13,8 +13,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.activej.common.Utils.mapOf;
-import static io.activej.common.Utils.setOf;
+import static io.activej.common.Utils.*;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
 import static io.activej.serializer.Utils.*;
@@ -1925,7 +1924,7 @@ public class BinarySerializerTest {
 		testData1.address = InetAddress.getByName("127.0.0.1");
 		testData1.address2 = InetAddress.getByName("2001:0db8:11a3:09d7:1f34:8a2e:07a0:765d");
 
-		testData1.list = Arrays.asList(Integer.MIN_VALUE, Integer.MAX_VALUE);
+		testData1.list = asList(Integer.MIN_VALUE, Integer.MAX_VALUE);
 
 		TestObject testData2 = doTest(TestObject.class, testData1);
 
@@ -2275,25 +2274,12 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testSets() {
-		Set<String> regular = new TreeSet<>();
-		regular.add("a");
-		regular.add("b");
-		regular.add("c");
-
-		Set<String> regularNullable = new TreeSet<>();
-		regularNullable.add("d");
-		regularNullable.add("e");
-		regularNullable.add("f");
-
-		Set<String> regularEmpty = new TreeSet<>();
-
-		Set<String> regularEmptyNullable = new TreeSet<>();
-
-		Set<String> regularSingle = new TreeSet<>();
-		regularSingle.add("g");
-
-		Set<String> regularSingleNullable = new TreeSet<>();
-		regularSingleNullable.add("h");
+		Set<String> regular = setOf("a", "b", "c");
+		Set<String> regularNullable = setOf("d", "e", "f");
+		Set<String> regularEmpty = setOf();
+		Set<String> regularEmptyNullable = setOf();
+		Set<String> regularSingle = setOf("g");
+		Set<String> regularSingleNullable = setOf("h");
 
 		HashSet<String> hash = new HashSet<>();
 		hash.add("i");
@@ -2338,18 +2324,18 @@ public class BinarySerializerTest {
 		assertNull(deserialized.regularNullableNull);
 
 		assertEquals(regularEmpty, deserialized.regularEmpty);
-		assertNotSame(HashSet.class, deserialized.regularEmpty.getClass());
+		assertSame(emptySet().getClass(), deserialized.regularEmpty.getClass());
 
 		assertEquals(regularEmptyNullable, deserialized.regularEmptyNullableNotNull);
-		assertNotSame(HashSet.class, deserialized.regularEmptyNullableNotNull.getClass());
+		assertSame(emptySet().getClass(), deserialized.regularEmptyNullableNotNull.getClass());
 
 		assertNull(deserialized.regularEmptyNullableNull);
 
 		assertEquals(regularSingle, deserialized.regularSingle);
-		assertNotSame(HashSet.class, deserialized.regularSingle.getClass());
+		assertSame(singleton(null).getClass(), deserialized.regularSingle.getClass());
 
 		assertEquals(regularSingleNullable, deserialized.regularSingleNullableNotNull);
-		assertNotSame(HashSet.class, deserialized.regularSingleNullableNotNull.getClass());
+		assertSame(singleton(null).getClass(), deserialized.regularSingleNullableNotNull.getClass());
 
 		assertNull(deserialized.regularSingleNullableNull);
 
@@ -2367,26 +2353,99 @@ public class BinarySerializerTest {
 	}
 
 	@Test
+	public void testLists() {
+		List<String> regular = listOf("a", "b", "c");
+		List<String> regularNullable = listOf("d", "e", "f");
+		List<String> regularEmpty = listOf();
+		List<String> regularEmptyNullable = listOf();
+		List<String> regularSingle = listOf("g");
+		List<String> regularSingleNullable = listOf("h");
+
+		ArrayList<String> array = new ArrayList<>();
+		array.add("i");
+		array.add("j");
+		array.add("k");
+
+		ArrayList<String> arrayNullable = new ArrayList<>();
+		arrayNullable.add("l");
+		arrayNullable.add("m");
+		arrayNullable.add("n");
+
+		LinkedList<String> linked = new LinkedList<>();
+		linked.add("o");
+		linked.add("p");
+		linked.add("q");
+
+		LinkedList<String> linkedNullable = new LinkedList<>();
+		linkedNullable.add("r");
+		linkedNullable.add("s");
+		linkedNullable.add("t");
+
+		ListsHolder listsHolder = new ListsHolder();
+		listsHolder.regular = regular;
+		listsHolder.regularNullableNotNull = regularNullable;
+		listsHolder.regularEmpty = regularEmpty;
+		listsHolder.regularEmptyNullableNotNull = regularEmptyNullable;
+		listsHolder.regularSingle = regularSingle;
+		listsHolder.regularSingleNullableNotNull = regularSingleNullable;
+		listsHolder.array = array;
+		listsHolder.arrayNullableNotNull = arrayNullable;
+		listsHolder.linked = linked;
+		listsHolder.linkedNullableNotNull = linkedNullable;
+
+		ListsHolder deserialized = doTest(ListsHolder.class, listsHolder);
+
+		assertEquals(regular, deserialized.regular);
+		assertSame(asList(null, null).getClass(), deserialized.regular.getClass());
+
+		assertEquals(regularNullable, deserialized.regularNullableNotNull);
+		assertSame(asList(null, null).getClass(), deserialized.regularNullableNotNull.getClass());
+
+		assertNull(deserialized.regularNullableNull);
+
+		assertEquals(regularEmpty, deserialized.regularEmpty);
+		assertSame(emptyList().getClass(), deserialized.regularEmpty.getClass());
+
+		assertEquals(regularEmptyNullable, deserialized.regularEmptyNullableNotNull);
+		assertSame(emptyList().getClass(), deserialized.regularEmptyNullableNotNull.getClass());
+
+		assertNull(deserialized.regularEmptyNullableNull);
+
+		assertEquals(regularSingle, deserialized.regularSingle);
+		assertSame(singletonList(null).getClass(), deserialized.regularSingle.getClass());
+
+		assertEquals(regularSingleNullable, deserialized.regularSingleNullableNotNull);
+		assertSame(singletonList(null).getClass(), deserialized.regularSingleNullableNotNull.getClass());
+
+		assertNull(deserialized.regularSingleNullableNull);
+
+		assertEquals(array, deserialized.array);
+
+		assertEquals(arrayNullable, deserialized.arrayNullableNotNull);
+
+		assertNull(deserialized.arrayNullableNull);
+
+		assertEquals(linked, deserialized.linked);
+
+		assertEquals(linkedNullable, deserialized.linkedNullableNotNull);
+
+		assertNull(deserialized.linkedNullableNull);
+	}
+
+	@Test
 	public void testMaps() {
-		Map<Integer, String> regular = new TreeMap<>();
-		regular.put(1, "a");
-		regular.put(2, "b");
-		regular.put(3, "c");
-
-		Map<Integer, String> regularNullable = new TreeMap<>();
-		regularNullable.put(4, "d");
-		regularNullable.put(5, "e");
-		regularNullable.put(6, "f");
-
-		Map<Integer, String> regularEmpty = new TreeMap<>();
-
-		Map<Integer, String> regularEmptyNullable = new TreeMap<>();
-
-		Map<Integer, String> regularSingle = new TreeMap<>();
-		regularSingle.put(7, "g");
-
-		Map<Integer, String> regularSingleNullable = new TreeMap<>();
-		regularSingleNullable.put(8, "h");
+		Map<Integer, String> regular = mapOf(
+				1, "a",
+				2, "b",
+				3, "c");
+		Map<Integer, String> regularNullable = mapOf(
+				4, "d",
+				5, "e",
+				6, "f");
+		Map<Integer, String> regularEmpty = mapOf();
+		Map<Integer, String> regularEmptyNullable = mapOf();
+		Map<Integer, String> regularSingle = mapOf(7, "g");
+		Map<Integer, String> regularSingleNullable = mapOf(8, "h");
 
 		HashMap<Integer, String> hash = new HashMap<>();
 		hash.put(9, "i");
@@ -2431,18 +2490,18 @@ public class BinarySerializerTest {
 		assertNull(deserialized.regularNullableNull);
 
 		assertEquals(regularEmpty, deserialized.regularEmpty);
-		assertNotSame(HashMap.class, deserialized.regularEmpty.getClass());
+		assertSame(emptyMap().getClass(), deserialized.regularEmpty.getClass());
 
 		assertEquals(regularEmptyNullable, deserialized.regularEmptyNullableNotNull);
-		assertNotSame(HashMap.class, deserialized.regularEmptyNullableNotNull.getClass());
+		assertSame(emptyMap().getClass(), deserialized.regularEmptyNullableNotNull.getClass());
 
 		assertNull(deserialized.regularEmptyNullableNull);
 
 		assertEquals(regularSingle, deserialized.regularSingle);
-		assertNotSame(HashMap.class, deserialized.regularSingle.getClass());
+		assertSame(singletonMap(null, null).getClass(), deserialized.regularSingle.getClass());
 
 		assertEquals(regularSingleNullable, deserialized.regularSingleNullableNotNull);
-		assertNotSame(HashMap.class, deserialized.regularSingleNullableNotNull.getClass());
+		assertSame(singletonMap(null, null).getClass(), deserialized.regularSingleNullableNotNull.getClass());
 
 		assertNull(deserialized.regularSingleNullableNull);
 
@@ -2573,6 +2632,63 @@ public class BinarySerializerTest {
 		@Serialize
 		@SerializeNullable
 		public LinkedHashSet<String> linkedNullableNull;
+	}
+
+	public static class ListsHolder {
+		@Serialize
+		public List<String> regular;
+
+		@Serialize
+		@SerializeNullable
+		public List<String> regularNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public List<String> regularNullableNull;
+
+		@Serialize
+		public List<String> regularEmpty;
+
+		@Serialize
+		@SerializeNullable
+		public List<String> regularEmptyNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public List<String> regularEmptyNullableNull;
+
+		@Serialize
+		public List<String> regularSingle;
+
+		@Serialize
+		@SerializeNullable
+		public List<String> regularSingleNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public List<String> regularSingleNullableNull;
+
+		@Serialize
+		public ArrayList<String> array;
+
+		@Serialize
+		@SerializeNullable
+		public ArrayList<String> arrayNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public ArrayList<String> arrayNullableNull;
+
+		@Serialize
+		public LinkedList<String> linked;
+
+		@Serialize
+		@SerializeNullable
+		public LinkedList<String> linkedNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public LinkedList<String> linkedNullableNull;
 	}
 
 	public static class MapsHolder {

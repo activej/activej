@@ -24,6 +24,7 @@ import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
@@ -113,12 +114,16 @@ public final class SerializerDefList extends AbstractSerializerDef implements Se
 	}
 
 	private Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression len) {
-		return let(arrayNew(Object[].class, len),
-				array -> sequence(
-						loop(value(0), len,
-								i -> arraySet(array, i,
-										cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
-						staticCall(Arrays.class, "asList", array)));
+		return ifThenElse(cmpEq(len, value(0)),
+				staticCall(Collections.class, "emptyList"),
+				ifThenElse(cmpEq(len, value(1)),
+						staticCall(Collections.class, "singletonList", valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),
+						let(arrayNew(Object[].class, len),
+								array -> sequence(
+										loop(value(0), len,
+												i -> arraySet(array, i,
+														cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
+										staticCall(Arrays.class, "asList", array)))));
 	}
 
 }
