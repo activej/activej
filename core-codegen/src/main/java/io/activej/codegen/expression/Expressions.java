@@ -886,8 +886,8 @@ public class Expressions {
 		return new ExpressionIteratorForEach(collection, type, action);
 	}
 
-	public static Expression forEach(Expression collection, UnaryOperator<Expression> keyAction, UnaryOperator<Expression> valueAction) {
-		return new ExpressionMapForEach(collection, keyAction, valueAction);
+	public static Expression forEach(Expression map, UnaryOperator<Expression> keyAction, UnaryOperator<Expression> valueAction) {
+		return new ExpressionMapForEach(map, keyAction, valueAction);
 	}
 
 	public static Expression loop(Expression from, Expression to, UnaryOperator<Expression> action) {

@@ -525,10 +525,10 @@ public class ExpressionTest {
 		WriteAllListElement writeAllListElement = ClassBuilder.create(WriteAllListElement.class)
 				.withMethod("write",
 						forEach(arg(0),
-								it -> sequence(call(arg(1), "add", it), voidExp())))
+								it -> call(arg(1), "add", it)))
 				.withMethod("writeIter",
 						forEach(arg(0),
-								it -> sequence(call(arg(1), "add", it), voidExp())))
+								it -> call(arg(1), "add", it)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
 		writeAllListElement.write(listFrom, listTo1);

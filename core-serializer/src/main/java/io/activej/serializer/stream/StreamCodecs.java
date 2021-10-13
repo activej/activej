@@ -154,7 +154,7 @@ public final class StreamCodecs {
 												let(arrayNew(arrayType, length),
 														array -> let(call(stream, "getBinaryInput"),
 																in -> sequence(
-																		loop(value(0), length(array),
+																		loop(value(0), length,
 																				i -> arraySet(array, i, call(in, decode))),
 																		array))))))
 						.defineClassAndCreateInstance(CLASS_LOADER));

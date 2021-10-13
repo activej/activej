@@ -616,7 +616,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		return sequence(
 				encodeVersion != null ?
 						writeByte(buf, pos, value((byte) (int) encodeVersion)) :
-						sequence(),
+						voidExp(),
 
 				serializer.encoder(staticEncoders,
 						buf, pos, data,
