@@ -96,7 +96,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 		} else {
 			Expression methodLength = fixedSize != -1 ? value(fixedSize) : length(cast(value, type));
 
-			Expression writeCollection = loop(value(0), methodLength,
+			Expression writeCollection = iterate(value(0), methodLength,
 					i -> valueSerializer.defineEncoder(staticEncoders, buf, pos, arrayGet(cast(value, type), i), version, compatibilityLevel));
 
 			if (!nullable) {
@@ -142,7 +142,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 	private Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression size) {
 		return let(arrayNew(type, size),
 				array -> sequence(
-						loop(value(0), size,
+						iterate(value(0), size,
 								i -> arraySet(array, i,
 										cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), type.getComponentType()))),
 						array));

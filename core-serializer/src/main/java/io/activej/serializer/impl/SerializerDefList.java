@@ -38,8 +38,8 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
-		return loop(value(0), length,
+	protected Expression iterateCollection(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
+		return iterate(value(0), length,
 				i -> let(call(collection, "get", i), action::apply));
 	}
 

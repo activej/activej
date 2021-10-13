@@ -29,12 +29,12 @@ import static org.objectweb.asm.Type.*;
 public abstract class AbstractExpressionIteratorForEach implements Expression {
 	protected final Expression collection;
 	protected final Class<?> type;
-	protected final UnaryOperator<Expression> forEach;
+	protected final UnaryOperator<Expression> action;
 
-	protected AbstractExpressionIteratorForEach(Expression collection, Class<?> type, UnaryOperator<Expression> forEach) {
+	protected AbstractExpressionIteratorForEach(Expression collection, Class<?> type, UnaryOperator<Expression> action) {
 		this.collection = collection;
 		this.type = type;
-		this.forEach = forEach;
+		this.action = action;
 	}
 
 	protected abstract Expression getValue(VarLocal varIt);
@@ -47,7 +47,7 @@ public abstract class AbstractExpressionIteratorForEach implements Expression {
 
 		Type collectionType = collection.load(ctx);
 		if (collectionType.getSort() == ARRAY) {
-			return arrayForEach(ctx, g, labelLoop, labelExit);
+			return iterateArray(ctx, g, labelLoop, labelExit);
 		}
 
 		VarLocal varIter = ctx.newLocal(getType(Iterator.class));
@@ -71,7 +71,7 @@ public abstract class AbstractExpressionIteratorForEach implements Expression {
 		VarLocal it = ctx.newLocal(getType(type));
 		it.store(ctx);
 
-		Type forEachType = forEach.apply(getValue(it)).load(ctx);
+		Type forEachType = action.apply(getValue(it)).load(ctx);
 		if (forEachType.getSize() == 1)
 			g.pop();
 		if (forEachType.getSize() == 2)
@@ -83,7 +83,7 @@ public abstract class AbstractExpressionIteratorForEach implements Expression {
 
 	}
 
-	public Type arrayForEach(Context ctx, GeneratorAdapter g, Label labelLoop, Label labelExit) {
+	private Type iterateArray(Context ctx, GeneratorAdapter g, Label labelLoop, Label labelExit) {
 		VarLocal len = ctx.newLocal(INT_TYPE);
 		g.arrayLength();
 		len.store(ctx);
@@ -106,7 +106,7 @@ public abstract class AbstractExpressionIteratorForEach implements Expression {
 		VarLocal it = ctx.newLocal(getType(type));
 		it.store(ctx);
 
-		forEach.apply(getValue(it)).load(ctx);
+		action.apply(getValue(it)).load(ctx);
 
 		varPosition.load(ctx);
 		g.push(1);

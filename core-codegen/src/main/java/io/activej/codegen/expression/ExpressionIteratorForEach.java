@@ -20,8 +20,8 @@ import java.util.function.UnaryOperator;
 
 final class ExpressionIteratorForEach extends AbstractExpressionIteratorForEach {
 
-	ExpressionIteratorForEach(Expression collection, Class<?> type, UnaryOperator<Expression> forEach) {
-		super(collection, type, forEach);
+	ExpressionIteratorForEach(Expression collection, Class<?> type, UnaryOperator<Expression> action) {
+		super(collection, type, action);
 	}
 
 	@Override

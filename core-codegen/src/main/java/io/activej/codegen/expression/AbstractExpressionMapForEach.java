@@ -22,21 +22,19 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.Iterator;
-import java.util.function.UnaryOperator;
+import java.util.function.BinaryOperator;
 
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.getType;
 
 public abstract class AbstractExpressionMapForEach implements Expression {
 	protected final Expression collection;
-	protected final UnaryOperator<Expression> forKey;
-	protected final UnaryOperator<Expression> forValue;
+	protected final BinaryOperator<Expression> action;
 	protected final Class<?> entryClazz;
 
-	protected AbstractExpressionMapForEach(Expression collection, UnaryOperator<Expression> forKey, UnaryOperator<Expression> forValue, Class<?> entryClazz) {
+	protected AbstractExpressionMapForEach(Expression collection, BinaryOperator<Expression> action, Class<?> entryClazz) {
 		this.collection = collection;
-		this.forKey = forKey;
-		this.forValue = forValue;
+		this.action = action;
 		this.entryClazz = entryClazz;
 	}
 
@@ -68,16 +66,10 @@ public abstract class AbstractExpressionMapForEach implements Expression {
 		VarLocal entry = ctx.newLocal(entryType);
 		entry.store(ctx);
 
-		Type forKeyType = forKey.apply(getKey(entry)).load(ctx);
+		Type forKeyType = action.apply(getKey(entry), getValue(entry)).load(ctx);
 		if (forKeyType.getSize() == 1)
 			g.pop();
 		if (forKeyType.getSize() == 2)
-			g.pop2();
-
-		Type forValueType = forValue.apply(getValue(entry)).load(ctx);
-		if (forValueType.getSize() == 1)
-			g.pop();
-		if (forValueType.getSize() == 2)
 			g.pop2();
 
 		g.goTo(labelLoop);

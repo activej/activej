@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -672,6 +673,10 @@ public class Expressions {
 		return new ExpressionArithmeticOp(ArithmeticOperation.REM, left, right);
 	}
 
+	public static Expression neg(Expression arg) {
+		return new ExpressionNeg(arg);
+	}
+
 	/**
 	 * An expression that represents a bitwise AND operation
 	 *
@@ -878,24 +883,24 @@ public class Expressions {
 		return new ExpressionArraySet(array, position, newElement);
 	}
 
-	public static Expression forEach(Expression collection, UnaryOperator<Expression> action) {
-		return forEach(collection, Object.class, action);
+	public static Expression iterateCollection(Expression collection, UnaryOperator<Expression> action) {
+		return iterateCollection(collection, Object.class, action);
 	}
 
-	public static Expression forEach(Expression collection, Class<?> type, UnaryOperator<Expression> action) {
+	public static Expression iterateCollection(Expression collection, Class<?> type, UnaryOperator<Expression> action) {
 		return new ExpressionIteratorForEach(collection, type, action);
 	}
 
-	public static Expression forEach(Expression map, UnaryOperator<Expression> keyAction, UnaryOperator<Expression> valueAction) {
-		return new ExpressionMapForEach(map, keyAction, valueAction);
+	public static Expression iterateMap(Expression map, UnaryOperator<Expression> keyAction, UnaryOperator<Expression> valueAction) {
+		return new ExpressionMapForEach(map, (key, value) -> sequence(keyAction.apply(key), valueAction.apply(value)));
 	}
 
-	public static Expression loop(Expression from, Expression to, UnaryOperator<Expression> action) {
+	public static Expression iterateMap(Expression map, BinaryOperator<Expression> action) {
+		return new ExpressionMapForEach(map, action);
+	}
+
+	public static Expression iterate(Expression from, Expression to, UnaryOperator<Expression> action) {
 		return new ExpressionFor(from, to, action);
-	}
-
-	public static Expression neg(Expression arg) {
-		return new ExpressionNeg(arg);
 	}
 
 }

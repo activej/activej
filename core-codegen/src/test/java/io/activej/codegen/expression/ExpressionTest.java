@@ -524,10 +524,10 @@ public class ExpressionTest {
 
 		WriteAllListElement writeAllListElement = ClassBuilder.create(WriteAllListElement.class)
 				.withMethod("write",
-						forEach(arg(0),
+						iterateCollection(arg(0),
 								it -> call(arg(1), "add", it)))
 				.withMethod("writeIter",
-						forEach(arg(0),
+						iterateCollection(arg(0),
 								it -> call(arg(1), "add", it)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -555,7 +555,7 @@ public class ExpressionTest {
 		List<Long> list = new ArrayList<>();
 
 		WriteArrayElements writeArrayElements = ClassBuilder.create(WriteArrayElements.class)
-				.withMethod("write", forEach(arg(0),
+				.withMethod("write", iterateCollection(arg(0),
 						it -> sequence(call(arg(1), "add", cast(it, Object.class)), voidExp())))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -1028,7 +1028,7 @@ public class ExpressionTest {
 	public void testCallingOfProtectedMethods() {
 		ClassBuilder.clearStaticConstants();
 		Cashier instance = ClassBuilder.create(Cashier.class)
-				.withMethod("getPrice", mul(Expressions.value(2), Expressions.call(self(), "hiddenPrice")))
+				.withMethod("getPrice", mul(value(2), call(self(), "hiddenPrice")))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		assertEquals(200, instance.getPrice());
 		assertStaticConstantsCleared();

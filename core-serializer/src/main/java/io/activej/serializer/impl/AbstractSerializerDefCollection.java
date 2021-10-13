@@ -17,6 +17,7 @@
 package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
@@ -44,8 +45,8 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		this.nullable = nullable;
 	}
 
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
-		return forEach(collection, valueType, action);
+	protected Expression iterateCollection(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
+		return Expressions.iterateCollection(collection, valueType, action);
 	}
 
 	@Override
@@ -94,14 +95,14 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	}
 
 	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Expression length) {
-		return collectionForEach(value, valueSerializer.getEncodeType(),
+		return iterateCollection(value, valueSerializer.getEncodeType(),
 				it -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(it, valueSerializer.getEncodeType()), version, compatibilityLevel),
 				length);
 	}
 
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return let(createBuilder(length), builder -> sequence(
-				loop(value(0), length,
+				iterate(value(0), length,
 						i -> addToBuilder(builder, i, cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
 				build(builder)));
 	}

@@ -145,7 +145,7 @@ public final class StreamCodecs {
 										call(stream, "writeVarInt", length(array)),
 										call(stream, "ensure", mul(value(elementSize), length(array))),
 										let(call(stream, "getBinaryOutput"),
-												out -> loop(value(0), length(array),
+												out -> iterate(value(0), length(array),
 														i -> call(out, encode, arrayGet(array, i)))))))
 						.withMethod("decode",
 								let(call(stream, "readVarInt"),
@@ -154,7 +154,7 @@ public final class StreamCodecs {
 												let(arrayNew(arrayType, length),
 														array -> let(call(stream, "getBinaryInput"),
 																in -> sequence(
-																		loop(value(0), length,
+																		iterate(value(0), length,
 																				i -> arraySet(array, i, call(in, decode))),
 																		array))))))
 						.defineClassAndCreateInstance(CLASS_LOADER));
