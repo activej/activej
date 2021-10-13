@@ -3,7 +3,6 @@ package io.activej.serializer;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.test.rules.ClassBuilderConstantsRule;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -14,6 +13,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.activej.common.Utils.mapOf;
 import static io.activej.common.Utils.setOf;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
@@ -1556,6 +1556,156 @@ public class BinarySerializerTest {
 		assertNull(deserialized.enumSetSingleNullableNull);
 	}
 
+	public static class EnumMapHolder {
+		@Serialize
+		public Map<TestEnum, String> map;
+
+		@Serialize
+		@SerializeNullable
+		public Map<TestEnum, String> mapNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Map<TestEnum, String> mapNullableNull;
+
+		@Serialize
+		public Map<TestEnum, String> mapEmpty;
+
+		@Serialize
+		@SerializeNullable
+		public Map<TestEnum, String> mapEmptyNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Map<TestEnum, String> mapEmptyNullableNull;
+
+		@Serialize
+		public Map<TestEnum, String> mapSingle;
+
+		@Serialize
+		@SerializeNullable
+		public Map<TestEnum, String> mapSingleNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Map<TestEnum, String> mapSingleNullableNull;
+
+		@Serialize
+		public EnumMap<TestEnum, String> enumMap;
+
+		@Serialize
+		@SerializeNullable
+		public EnumMap<TestEnum, String> enumMapNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public EnumMap<TestEnum, String> enumMapNullableNull;
+
+		@Serialize
+		public EnumMap<TestEnum, String> enumMapEmpty;
+
+		@Serialize
+		@SerializeNullable
+		public EnumMap<TestEnum, String> enumMapEmptyNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public EnumMap<TestEnum, String> enumMapEmptyNullableNull;
+
+		@Serialize
+		public EnumMap<TestEnum, String> enumMapSingle;
+
+		@Serialize
+		@SerializeNullable
+		public EnumMap<TestEnum, String> enumMapSingleNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public EnumMap<TestEnum, String> enumMapSingleNullableNull;
+	}
+
+	@Test
+	public void testEnumMap() {
+		Map<TestEnum, String> map = mapOf(ONE, "one", TWO, "two");
+		Map<TestEnum, String> mapNullable = mapOf(TWO, "two", THREE, "three");
+		Map<TestEnum, String> mapEmpty = emptyMap();
+		Map<TestEnum, String> mapEmptyNullable = emptyMap();
+		Map<TestEnum, String> mapSingle = singletonMap(ONE, "one");
+		Map<TestEnum, String> mapSingleNullable = singletonMap(TWO, "two");
+
+		EnumMap<TestEnum, String> enumMap = new EnumMap<>(TestEnum.class);
+		enumMap.put(ONE, "one");
+		enumMap.put(TWO, "two");
+		EnumMap<TestEnum, String> enumMapNullable = new EnumMap<>(TestEnum.class);
+		enumMapNullable.put(TWO, "two");
+		enumMapNullable.put(THREE, "three");
+		EnumMap<TestEnum, String> enumMapEmpty = new EnumMap<>(TestEnum.class);
+		EnumMap<TestEnum, String> enumMapEmptyNullable = new EnumMap<>(TestEnum.class);
+		EnumMap<TestEnum, String> enumMapSingle = new EnumMap<>(TestEnum.class);
+		enumMapSingle.put(ONE, "one");
+		EnumMap<TestEnum, String> enumMapSingleNullable = new EnumMap<>(TestEnum.class);
+		enumMapSingleNullable.put(TWO, "two");
+
+		EnumMapHolder holder = new EnumMapHolder();
+		holder.map = map;
+		holder.mapNullableNotNull = mapNullable;
+		holder.mapEmpty = mapEmpty;
+		holder.mapEmptyNullableNotNull = mapEmptyNullable;
+		holder.mapSingle = mapSingle;
+		holder.mapSingleNullableNotNull = mapSingleNullable;
+
+		holder.enumMap = enumMap;
+		holder.enumMapNullableNotNull = enumMapNullable;
+		holder.enumMapEmpty = enumMapEmpty;
+		holder.enumMapEmptyNullableNotNull = enumMapEmptyNullable;
+		holder.enumMapSingle = enumMapSingle;
+		holder.enumMapSingleNullableNotNull = enumMapSingleNullable;
+
+		EnumMapHolder deserialized = doTest(EnumMapHolder.class, holder);
+
+		assertEquals(map, deserialized.map);
+		assertThat(deserialized.map, instanceOf(EnumMap.class));
+
+		assertEquals(mapNullable, deserialized.mapNullableNotNull);
+		assertThat(deserialized.mapNullableNotNull, instanceOf(EnumMap.class));
+
+		assertNull(deserialized.mapNullableNull);
+
+		assertEquals(mapEmpty, deserialized.mapEmpty);
+		assertThat(deserialized.mapEmpty, not(instanceOf(EnumMap.class)));
+
+		assertEquals(mapEmptyNullable, deserialized.mapEmptyNullableNotNull);
+		assertThat(deserialized.mapEmptyNullableNotNull, not(instanceOf(EnumMap.class)));
+
+		assertNull(deserialized.mapEmptyNullableNull);
+
+		assertEquals(mapSingle, deserialized.mapSingle);
+		assertThat(deserialized.mapSingle, not(instanceOf(EnumMap.class)));
+
+		assertEquals(mapSingleNullable, deserialized.mapSingleNullableNotNull);
+		assertThat(deserialized.mapSingleNullableNotNull, not(instanceOf(EnumMap.class)));
+
+		assertNull(deserialized.mapSingleNullableNull);
+
+		assertEquals(enumMap, deserialized.enumMap);
+
+		assertEquals(enumMapNullable, deserialized.enumMapNullableNotNull);
+
+		assertNull(deserialized.enumMapNullableNull);
+
+		assertEquals(enumMapEmpty, deserialized.enumMapEmpty);
+
+		assertEquals(enumMapEmptyNullable, deserialized.enumMapEmptyNullableNotNull);
+
+		assertNull(deserialized.enumMapEmptyNullableNull);
+
+		assertEquals(enumMapSingle, deserialized.enumMapSingle);
+
+		assertEquals(enumMapSingleNullable, deserialized.enumMapSingleNullableNotNull);
+
+		assertNull(deserialized.enumMapSingleNullableNull);
+	}
+
 	public static class Generic<T> {
 		@Serialize
 		public T item;
@@ -2219,38 +2369,94 @@ public class BinarySerializerTest {
 	@Test
 	public void testMaps() {
 		Map<Integer, String> regular = new TreeMap<>();
+		regular.put(1, "a");
+		regular.put(2, "b");
+		regular.put(3, "c");
 
-		assertThat(regular, not(instanceOf(HashMap.class)));
+		Map<Integer, String> regularNullable = new TreeMap<>();
+		regularNullable.put(4, "d");
+		regularNullable.put(5, "e");
+		regularNullable.put(6, "f");
 
-		regular.put(100, "a");
-		regular.put(50, "b");
-		regular.put(200, "c");
+		Map<Integer, String> regularEmpty = new TreeMap<>();
+
+		Map<Integer, String> regularEmptyNullable = new TreeMap<>();
+
+		Map<Integer, String> regularSingle = new TreeMap<>();
+		regularSingle.put(7, "g");
+
+		Map<Integer, String> regularSingleNullable = new TreeMap<>();
+		regularSingleNullable.put(8, "h");
 
 		HashMap<Integer, String> hash = new HashMap<>();
-		hash.put(120, "d");
-		hash.put(70, "e");
-		hash.put(230, "f");
+		hash.put(9, "i");
+		hash.put(10, "j");
+		hash.put(11, "k");
+
+		HashMap<Integer, String> hashNullable = new HashMap<>();
+		hashNullable.put(12, "l");
+		hashNullable.put(13, "m");
+		hashNullable.put(14, "n");
 
 		LinkedHashMap<Integer, String> linked = new LinkedHashMap<>();
-		linked.put(14, "g");
-		linked.put(200, "h");
-		linked.put(4, "i");
+		linked.put(15, "o");
+		linked.put(16, "p");
+		linked.put(17, "q");
 
-		MapsHolder mapsHolder = new MapsHolder();
-		mapsHolder.regular = regular;
-		mapsHolder.hash = hash;
-		mapsHolder.linked = linked;
+		LinkedHashMap<Integer, String> linkedNullable = new LinkedHashMap<>();
+		linkedNullable.put(18, "r");
+		linkedNullable.put(19, "s");
+		linkedNullable.put(20, "t");
 
-		MapsHolder deserialized = doTest(MapsHolder.class, mapsHolder);
+		MapsHolder setsHolder = new MapsHolder();
+		setsHolder.regular = regular;
+		setsHolder.regularNullableNotNull = regularNullable;
+		setsHolder.regularEmpty = regularEmpty;
+		setsHolder.regularEmptyNullableNotNull = regularEmptyNullable;
+		setsHolder.regularSingle = regularSingle;
+		setsHolder.regularSingleNullableNotNull = regularSingleNullable;
+		setsHolder.hash = hash;
+		setsHolder.hashNullableNotNull = hashNullable;
+		setsHolder.linked = linked;
+		setsHolder.linkedNullableNotNull = linkedNullable;
+
+		MapsHolder deserialized = doTest(MapsHolder.class, setsHolder);
 
 		assertEquals(regular, deserialized.regular);
-		assertSame(LinkedHashMap.class, deserialized.regular.getClass());
+		assertSame(HashMap.class, deserialized.regular.getClass());
+
+		assertEquals(regularNullable, deserialized.regularNullableNotNull);
+		assertSame(HashMap.class, deserialized.regularNullableNotNull.getClass());
+
+		assertNull(deserialized.regularNullableNull);
+
+		assertEquals(regularEmpty, deserialized.regularEmpty);
+		assertNotSame(HashMap.class, deserialized.regularEmpty.getClass());
+
+		assertEquals(regularEmptyNullable, deserialized.regularEmptyNullableNotNull);
+		assertNotSame(HashMap.class, deserialized.regularEmptyNullableNotNull.getClass());
+
+		assertNull(deserialized.regularEmptyNullableNull);
+
+		assertEquals(regularSingle, deserialized.regularSingle);
+		assertNotSame(HashMap.class, deserialized.regularSingle.getClass());
+
+		assertEquals(regularSingleNullable, deserialized.regularSingleNullableNotNull);
+		assertNotSame(HashMap.class, deserialized.regularSingleNullableNotNull.getClass());
+
+		assertNull(deserialized.regularSingleNullableNull);
 
 		assertEquals(hash, deserialized.hash);
-		assertSame(HashMap.class, deserialized.hash.getClass());
+
+		assertEquals(hashNullable, deserialized.hashNullableNotNull);
+
+		assertNull(deserialized.hashNullableNull);
 
 		assertEquals(linked, deserialized.linked);
-		assertSame(LinkedHashMap.class, deserialized.linked.getClass());
+
+		assertEquals(linkedNullable, deserialized.linkedNullableNotNull);
+
+		assertNull(deserialized.linkedNullableNull);
 	}
 
 	@Test
@@ -2374,10 +2580,56 @@ public class BinarySerializerTest {
 		public Map<Integer, String> regular;
 
 		@Serialize
+		@SerializeNullable
+		public Map<Integer, String> regularNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Map<Integer, String> regularNullableNull;
+
+		@Serialize
+		public Map<Integer, String> regularEmpty;
+
+		@Serialize
+		@SerializeNullable
+		public Map<Integer, String> regularEmptyNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Map<Integer, String> regularEmptyNullableNull;
+
+		@Serialize
+		public Map<Integer, String> regularSingle;
+
+		@Serialize
+		@SerializeNullable
+		public Map<Integer, String> regularSingleNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public Map<Integer, String> regularSingleNullableNull;
+
+		@Serialize
 		public HashMap<Integer, String> hash;
 
 		@Serialize
+		@SerializeNullable
+		public HashMap<Integer, String> hashNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public HashMap<Integer, String> hashNullableNull;
+
+		@Serialize
 		public LinkedHashMap<Integer, String> linked;
+
+		@Serialize
+		@SerializeNullable
+		public LinkedHashMap<Integer, String> linkedNullableNotNull;
+
+		@Serialize
+		@SerializeNullable
+		public LinkedHashMap<Integer, String> linkedNullableNull;
 	}
 
 	public static class LinkedListHolderImpl implements LinkedListHolder {

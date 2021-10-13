@@ -97,27 +97,23 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(readVarInt(in), length ->
 				!nullable ?
-						let(createConstructor(length), instance -> sequence(
-								loop(value(0), length,
-										it -> sequence(
-												call(instance, "put",
-														cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
-														cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType)
-												),
-												voidExp())),
-								instance)) :
+						doDecode(staticDecoders, in, version, compatibilityLevel, length) :
 						ifThenElse(
 								cmpEq(length, value(0)),
 								nullRef(decodeType),
-								let(createConstructor(length), instance -> sequence(
-										loop(value(0), dec(length),
-												it -> sequence(
-														call(instance, "put",
-																cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
-																cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType)
-														),
-														voidExp())),
-										instance))));
+								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
+	}
+
+	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
+		return let(createConstructor(length), instance -> sequence(
+				loop(value(0), length,
+						it -> sequence(
+								call(instance, "put",
+										cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
+										cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType)
+								),
+								voidExp())),
+				instance));
 	}
 
 }

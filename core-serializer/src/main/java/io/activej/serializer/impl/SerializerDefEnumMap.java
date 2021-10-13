@@ -17,25 +17,31 @@
 package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.EnumMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
-import static org.objectweb.asm.Type.getType;
 
-public final class SerializerDefMap extends AbstractSerializerDefMap {
-	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
-		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, false);
+public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
+	public SerializerDefEnumMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
+		this(keySerializer, valueSerializer, false);
 	}
 
-	private SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
-		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, nullable);
+	private SerializerDefEnumMap(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
+		super(keySerializer, valueSerializer, EnumMap.class, EnumMap.class, Enum.class, Object.class, nullable);
+	}
+
+	@Override
+	protected Expression createConstructor(Expression length) {
+		return constructor(EnumMap.class, value(keySerializer.getDecodeType()));
 	}
 
 	@Override
@@ -48,6 +54,6 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
-		return new SerializerDefMap(keySerializer, valueSerializer, encodeType, decodeType, true);
+		return new SerializerDefEnumMap(keySerializer, valueSerializer, true);
 	}
 }
