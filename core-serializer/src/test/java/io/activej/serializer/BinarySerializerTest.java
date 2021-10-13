@@ -1,5 +1,7 @@
 package io.activej.serializer;
 
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -10,13 +12,17 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Utils.*;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
 import static io.activej.serializer.Utils.*;
+import static io.activej.serializer.impl.SerializerExpressions.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -2759,6 +2765,61 @@ public class BinarySerializerTest {
 		@Override
 		public LinkedList<String> list() {
 			return this.list;
+		}
+	}
+
+	// Accessing UTF-8 Charset used to fail on Java 16+
+	@Test
+	public void testUTF8Charset() {
+		BinarySerializer<StringHolder> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+				.with(StringHolder.class, ctx -> new StringHolderSerializerDef())
+				.build(StringHolder.class);
+
+		StringHolder stringHolder = new StringHolder("test");
+
+		byte[] array = new byte[100];
+		serializer.encode(array, 0, stringHolder);
+		StringHolder decoded = serializer.decode(array, 0);
+
+		assertEquals(stringHolder.string, decoded.string);
+	}
+
+	public static final class StringHolderSerializerDef extends AbstractSerializerDef {
+
+		@Override
+		public Class<?> getEncodeType() {
+			return StringHolder.class;
+		}
+
+		@Override
+		public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+			Expression string = call(value, "getString");
+			Expression charset = value(UTF_8, Charset.class);
+
+			return let(call(string, "getBytes", charset), bytes -> sequence(
+					writeVarInt(buf, pos, length(bytes)),
+					writeBytes(buf, pos, bytes)));
+		}
+
+		@Override
+		public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+			Expression charset = value(UTF_8, Charset.class);
+
+			return let(arrayNew(byte[].class, readVarInt(in)), array ->
+					sequence(readBytes(in, array),
+							constructor(StringHolder.class, constructor(String.class, array, charset))));
+		}
+	}
+
+	public static final class StringHolder {
+		private final String string;
+
+		public StringHolder(String string) {
+			this.string = string;
+		}
+
+		public String getString() {
+			return string;
 		}
 	}
 }

@@ -34,18 +34,22 @@ public final class ExpressionConstant implements Expression {
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 
 	private final @NotNull Object value;
-	private final @Nullable Type type;
+	private final @Nullable Class<?> cls;
 
 	private final int id = COUNTER.incrementAndGet();
 
 	ExpressionConstant(@NotNull Object value) {
 		this.value = value;
-		this.type = null;
+		this.cls = null;
 	}
 
-	ExpressionConstant(@NotNull Object value, Class<?> type) {
+	ExpressionConstant(@NotNull Object value, Class<?> cls) {
+		if (!cls.isInstance(value)) {
+			throw new IllegalArgumentException(value + " is not an instance of " + cls);
+		}
+
 		this.value = value;
-		this.type = getType(type);
+		this.cls = cls;
 	}
 
 	public @NotNull Object getValue() {
@@ -55,8 +59,8 @@ public final class ExpressionConstant implements Expression {
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
-		Type type = this.type;
-		if (type == null) {
+		Type type;
+		if (this.cls == null) {
 			if (value instanceof String) {
 				type = getType(String.class);
 			} else if (value instanceof Type) {
@@ -64,6 +68,8 @@ public final class ExpressionConstant implements Expression {
 			} else {
 				type = getType(Primitives.unwrap(value.getClass()));
 			}
+		} else {
+			type = getType(this.cls);
 		}
 		if (value instanceof Byte) {
 			g.push((Byte) value);
@@ -89,8 +95,9 @@ public final class ExpressionConstant implements Expression {
 			g.getStatic(type, ((Enum<?>) value).name(), type);
 		} else {
 			String field = "$STATIC_CONSTANT_" + getId();
-			ctx.getClassBuilder().withStaticFinalField(field, value.getClass(), this);
-			g.getStatic(ctx.getSelfType(), field, getType(value.getClass()));
+			Class<?> aClass = cls == null ? value.getClass() : cls;
+			ctx.getClassBuilder().withStaticFinalField(field, aClass, this);
+			g.getStatic(ctx.getSelfType(), field, getType(aClass));
 		}
 		return type;
 	}
