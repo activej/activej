@@ -1,7 +1,6 @@
 package io.activej.serializer.examples;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.AbstractSerializerDefCollection;
@@ -22,7 +21,7 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 	// endregion
 
 	@Override
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Variable length) {
+	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
 		try {
 			String prefix = capitalize(elementType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");

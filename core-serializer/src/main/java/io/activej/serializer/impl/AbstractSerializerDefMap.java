@@ -48,12 +48,20 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 		this.nullable = nullable;
 	}
 
-	protected Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue){
+	protected Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue, Expression length) {
 		return forEach(collection, forEachKey, forEachValue);
 	}
 
-	protected Expression createConstructor(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		return constructor(decodeType, initialSize(length));
+	}
+
+	protected @NotNull Expression put(Expression builder, Expression index, Expression key, Expression value) {
+		return call(builder, "put", key, value);
+	}
+
+	protected Expression build(Expression builder) {
+		return builder;
 	}
 
 	protected Expression initialSize(Expression length) {
@@ -83,17 +91,17 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		Expression length = length(value);
-		Expression writeLength = writeVarInt(buf, pos, !nullable ? length : inc(length));
-		Expression forEach = mapForEach(value,
-				k -> keySerializer.defineEncoder(staticEncoders, buf, pos, cast(k, keySerializer.getEncodeType()), version, compatibilityLevel),
-				v -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(v, valueSerializer.getEncodeType()), version, compatibilityLevel));
-
-		return !nullable ?
-				sequence(writeLength, forEach) :
-				ifThenElse(isNull(value),
-						writeByte(buf, pos, value((byte) 0)),
-						sequence(writeLength, forEach));
+		if (!nullable) {
+			return let(length(value), length -> sequence(
+					writeVarInt(buf, pos, length),
+					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel, length)));
+		} else {
+			return ifThenElse(isNull(value),
+					writeByte(buf, pos, value((byte) 0)),
+					let(length(value), length -> sequence(
+							writeVarInt(buf, pos, inc(length)),
+							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel, length))));
+		}
 	}
 
 	@Override
@@ -107,23 +115,30 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
 	}
 
+	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		return mapForEach(value,
+				k -> keySerializer.defineEncoder(staticEncoders, buf, pos, cast(k, keySerializer.getEncodeType()), version, compatibilityLevel),
+				v -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(v, valueSerializer.getEncodeType()), version, compatibilityLevel),
+				length);
+	}
+
+	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		return let(createBuilder(length), builder -> sequence(
+				loop(value(0), length,
+						i -> put(builder, i,
+								cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
+								cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType))),
+				build(builder)));
+	}
+
+	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
+
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return doEnsureNullable(compatibilityLevel);
-	}
-
-	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
-
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
-		return let(createConstructor(length), instance -> sequence(
-				loop(value(0), length,
-						i -> call(instance, "put",
-								cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
-								cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType))),
-				instance));
 	}
 
 }

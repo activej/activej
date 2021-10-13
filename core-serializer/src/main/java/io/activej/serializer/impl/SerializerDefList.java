@@ -17,7 +17,6 @@
 package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +38,7 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Variable length) {
+	protected Expression collectionForEach(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
 		return loop(value(0), length,
 				i -> let(call(collection, "get", i), action::apply));
 	}
@@ -60,7 +59,7 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
+	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return ifThenElse(cmpEq(length, value(0)),
 				staticCall(Collections.class, "emptyList"),
 				ifThenElse(cmpEq(length, value(1)),

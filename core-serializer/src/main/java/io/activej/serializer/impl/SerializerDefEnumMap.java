@@ -35,7 +35,7 @@ public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	protected Expression createConstructor(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		return constructor(EnumMap.class, value(keySerializer.getDecodeType()));
 	}
 
