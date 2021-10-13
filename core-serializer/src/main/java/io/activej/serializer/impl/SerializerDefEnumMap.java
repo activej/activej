@@ -17,18 +17,13 @@
 package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.EnumMap;
-import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
 	public SerializerDefEnumMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
@@ -50,10 +45,7 @@ public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
-			return new SerializerDefNullable(this);
-		}
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefEnumMap(keySerializer, valueSerializer, true);
 	}
 }

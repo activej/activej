@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 public final class SerializerDefSet extends AbstractSerializerDefCollection {
 	public SerializerDefSet(SerializerDef valueSerializer) {
@@ -57,10 +56,7 @@ public final class SerializerDefSet extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
-			return new SerializerDefNullable(this);
-		}
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefSet(valueSerializer, true);
 	}
 }

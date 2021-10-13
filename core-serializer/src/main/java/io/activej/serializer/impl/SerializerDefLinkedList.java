@@ -17,15 +17,12 @@
 package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.LinkedList;
 
-import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
+import static io.activej.codegen.expression.Expressions.constructor;
 
 public final class SerializerDefLinkedList extends AbstractSerializerDefCollection {
 	public SerializerDefLinkedList(SerializerDef valueSerializer) {
@@ -42,10 +39,7 @@ public final class SerializerDefLinkedList extends AbstractSerializerDefCollecti
 	}
 
 	@Override
-	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
-			return new SerializerDefNullable(this);
-		}
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefLinkedList(valueSerializer, true);
 	}
 }

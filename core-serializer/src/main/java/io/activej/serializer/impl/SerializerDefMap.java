@@ -20,14 +20,9 @@ import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import java.util.EnumMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.function.UnaryOperator;
 
-import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
-import static org.objectweb.asm.Type.getType;
+import static io.activej.codegen.expression.Expressions.forEach;
 
 public final class SerializerDefMap extends AbstractSerializerDefMap {
 	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
@@ -44,10 +39,7 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
-			return new SerializerDefNullable(this);
-		}
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefMap(keySerializer, valueSerializer, encodeType, decodeType, true);
 	}
 }
