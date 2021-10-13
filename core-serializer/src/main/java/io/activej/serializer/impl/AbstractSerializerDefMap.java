@@ -48,7 +48,9 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 		this.nullable = nullable;
 	}
 
-	protected abstract Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue);
+	protected Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue){
+		return forEach(collection, forEachKey, forEachValue);
+	}
 
 	protected Expression createConstructor(Expression length) {
 		return constructor(decodeType, initialSize(length));

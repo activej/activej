@@ -21,9 +21,9 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
 import java.util.EnumMap;
-import java.util.function.UnaryOperator;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expressions.constructor;
+import static io.activej.codegen.expression.Expressions.value;
 
 public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
 	public SerializerDefEnumMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
@@ -37,11 +37,6 @@ public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
 	@Override
 	protected Expression createConstructor(Expression length) {
 		return constructor(EnumMap.class, value(keySerializer.getDecodeType()));
-	}
-
-	@Override
-	public Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue) {
-		return forEach(collection, forEachKey, forEachValue);
 	}
 
 	@Override

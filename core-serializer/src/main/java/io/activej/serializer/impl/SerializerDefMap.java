@@ -16,13 +16,8 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-
-import java.util.function.UnaryOperator;
-
-import static io.activej.codegen.expression.Expressions.forEach;
 
 public final class SerializerDefMap extends AbstractSerializerDefMap {
 	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
@@ -31,11 +26,6 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 
 	private SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
 		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, nullable);
-	}
-
-	@Override
-	public Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue) {
-		return forEach(collection, forEachKey, forEachValue);
 	}
 
 	@Override

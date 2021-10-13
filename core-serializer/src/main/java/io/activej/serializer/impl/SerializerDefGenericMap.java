@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 
@@ -57,11 +56,6 @@ public final class SerializerDefGenericMap extends AbstractSerializerDefMap {
 								keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel),
 								valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),
 						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
-	}
-
-	@Override
-	public Expression mapForEach(Expression collection, UnaryOperator<Expression> forEachKey, UnaryOperator<Expression> forEachValue) {
-		return forEach(collection, forEachKey, forEachValue);
 	}
 
 	@Override
