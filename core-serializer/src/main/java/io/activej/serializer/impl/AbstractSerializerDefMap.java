@@ -118,12 +118,9 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
 		return let(createConstructor(length), instance -> sequence(
 				loop(value(0), length,
-						it -> sequence(
-								call(instance, "put",
-										cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
-										cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType)
-								),
-								voidExp())),
+						it -> call(instance, "put",
+								cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
+								cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType))),
 				instance));
 	}
 

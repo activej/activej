@@ -113,10 +113,8 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Variable length) {
 		return let(createConstructor(length), instance -> sequence(
 				loop(value(0), length,
-						it -> sequence(
-								call(instance, "add",
-										cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType)),
-								voidExp())),
+						it -> call(instance, "add",
+								cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
 				instance));
 	}
 
