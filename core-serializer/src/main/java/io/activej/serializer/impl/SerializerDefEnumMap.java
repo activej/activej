@@ -35,6 +35,11 @@ public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefEnumMap(keySerializer, valueSerializer, true);
+	}
+
+	@Override
 	protected Expression createBuilder(Expression length) {
 		return constructor(EnumMap.class, value(keySerializer.getDecodeType()));
 	}
@@ -42,10 +47,5 @@ public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
 	@Override
 	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
 		return call(builder, "put", key, value);
-	}
-
-	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefEnumMap(keySerializer, valueSerializer, true);
 	}
 }

@@ -895,6 +895,13 @@ public class Expressions {
 //		return loop(ifThenElse(condition, sequence(body, value(true)), value(false)));
 	}
 
+	public static Expression iterate(Expression from, Expression to, UnaryOperator<Expression> action) {
+		return new ExpressionIterate(from, to, action);
+//		return let(new Expression[]{from, to},
+//				vars -> loop(cmpLt(vars[0], vars[1]),
+//						sequence(action.apply(vars[0]), set(vars[0], inc(vars[0])))));
+	}
+
 	public static Expression iterateArray(Variable array, UnaryOperator<Expression> action) {
 		return iterate(value(0), length(array),
 				i -> action.apply(arrayGet(array, i)));
@@ -911,9 +918,7 @@ public class Expressions {
 	}
 
 	public static Expression iterateIterator(Variable iterator, UnaryOperator<Expression> action) {
-		return loop(call(iterator, "hasNext"),
-				let(call(iterator, "next"),
-						action::apply));
+		return loop(call(iterator, "hasNext"), let(call(iterator, "next"), action::apply));
 	}
 
 	public static Expression iterateMap(Expression map, UnaryOperator<Expression> keyAction, UnaryOperator<Expression> valueAction) {
@@ -927,11 +932,12 @@ public class Expressions {
 						call(cast(it, Map.Entry.class), "getValue")));
 	}
 
-	public static Expression iterate(Expression from, Expression to, UnaryOperator<Expression> action) {
-		return new ExpressionIterate(from, to, action);
-//		return let(new Expression[]{from, to},
-//				vars -> loop(cmpLt(vars[0], vars[1]),
-//						sequence(action.apply(vars[0]), set(vars[0], inc(vars[0])))));
+	public static Expression iterateMapKeys(Expression map, UnaryOperator<Expression> action) {
+		return iterateIterable(call(map, "keySet"), action);
+	}
+
+	public static Expression iterateMapValues(Expression map, UnaryOperator<Expression> action) {
+		return iterateIterable(call(map, "values"), action);
 	}
 
 }

@@ -34,6 +34,11 @@ public final class SerializerDefRegularCollection extends AbstractSerializerDefC
 	}
 
 	@Override
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefRegularCollection(valueSerializer, encodeType, decodeType, true);
+	}
+
+	@Override
 	protected Expression createBuilder(Expression length) {
 		return constructor(decodeType, length);
 	}
@@ -41,10 +46,5 @@ public final class SerializerDefRegularCollection extends AbstractSerializerDefC
 	@Override
 	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
 		return call(builder, "add", element);
-	}
-
-	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefRegularCollection(valueSerializer, encodeType, decodeType, true);
 	}
 }

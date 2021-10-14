@@ -17,7 +17,6 @@
 package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
@@ -49,10 +48,6 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 		this.nullable = nullable;
 	}
 
-	protected Expression iterateMap(Expression collection, BinaryOperator<Expression> keyValueAction, Expression length) {
-		return Expressions.iterateMap(collection, keyValueAction);
-	}
-
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit("key", keySerializer);
@@ -75,7 +70,17 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
+			return new SerializerDefNullable(this);
+		}
+		return doEnsureNullable(compatibilityLevel);
+	}
+
+	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
+
+	@Override
+	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		if (!nullable) {
 			return let(length(value), length -> sequence(
 					writeVarInt(buf, pos, length),
@@ -89,8 +94,20 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 		}
 	}
 
+	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		return doIterateMap(value,
+				(k, v) -> sequence(
+						keySerializer.defineEncoder(staticEncoders, buf, pos, cast(k, keySerializer.getEncodeType()), version, compatibilityLevel),
+						valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(v, valueSerializer.getEncodeType()), version, compatibilityLevel)),
+				length);
+	}
+
+	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction, Expression length) {
+		return iterateMap(collection, keyValueAction);
+	}
+
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(readVarInt(in), length ->
 				!nullable ?
 						doDecode(staticDecoders, in, version, compatibilityLevel, length) :
@@ -98,14 +115,6 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 								cmpEq(length, value(0)),
 								nullRef(decodeType),
 								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
-	}
-
-	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Expression length) {
-		return iterateMap(value,
-				(k, v) -> sequence(
-						keySerializer.defineEncoder(staticEncoders, buf, pos, cast(k, keySerializer.getEncodeType()), version, compatibilityLevel),
-						valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(v, valueSerializer.getEncodeType()), version, compatibilityLevel)),
-				length);
 	}
 
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
@@ -127,16 +136,6 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 
 	protected static Expression initialSize(Expression length) {
 		return div(mul(length, value(5)), value(3));
-	}
-
-	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
-
-	@Override
-	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
-			return new SerializerDefNullable(this);
-		}
-		return doEnsureNullable(compatibilityLevel);
 	}
 
 }

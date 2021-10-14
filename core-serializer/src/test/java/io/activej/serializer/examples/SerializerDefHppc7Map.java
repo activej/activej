@@ -1,6 +1,7 @@
 package io.activej.serializer.examples;
 
 import io.activej.codegen.expression.Expression;
+import io.activej.common.exception.UncheckedException;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.AbstractSerializerDefMap;
@@ -21,7 +22,12 @@ public final class SerializerDefHppc7Map extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	protected Expression iterateMap(Expression collection, BinaryOperator<Expression> action, Expression length) {
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefHppc7Map(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
+	}
+
+	@Override
+	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> action, Expression length) {
 		try {
 			String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");
@@ -30,7 +36,7 @@ public final class SerializerDefHppc7Map extends AbstractSerializerDefMap {
 							property(cast(it, iteratorType), "key"),
 							property(cast(it, iteratorType), "value")));
 		} catch (ClassNotFoundException e) {
-			throw new IllegalStateException("There is no hppc cursor for " + keyType.getSimpleName(), e);
+			throw UncheckedException.of(e);
 		}
 	}
 
@@ -42,10 +48,5 @@ public final class SerializerDefHppc7Map extends AbstractSerializerDefMap {
 	@Override
 	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
 		return call(builder, "put", key, value);
-	}
-
-	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefHppc7Map(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
 	}
 }

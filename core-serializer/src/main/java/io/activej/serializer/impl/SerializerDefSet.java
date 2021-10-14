@@ -38,16 +38,8 @@ public final class SerializerDefSet extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
-		if (valueSerializer.getDecodeType().isEnum()) {
-			return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getEncodeType()));
-		}
-		return constructor(HashSet.class, length);
-	}
-
-	@Override
-	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
-		return call(builder, "add", element);
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefSet(valueSerializer, true);
 	}
 
 	@Override
@@ -60,7 +52,15 @@ public final class SerializerDefSet extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefSet(valueSerializer, true);
+	protected Expression createBuilder(Expression length) {
+		if (valueSerializer.getDecodeType().isEnum()) {
+			return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getEncodeType()));
+		}
+		return constructor(HashSet.class, length);
+	}
+
+	@Override
+	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
+		return call(builder, "add", element);
 	}
 }

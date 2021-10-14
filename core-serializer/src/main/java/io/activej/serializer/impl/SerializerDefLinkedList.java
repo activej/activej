@@ -36,6 +36,11 @@ public final class SerializerDefLinkedList extends AbstractSerializerDefCollecti
 	}
 
 	@Override
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefLinkedList(valueSerializer, true);
+	}
+
+	@Override
 	protected Expression createBuilder(Expression length) {
 		return constructor(LinkedList.class);
 	}
@@ -43,10 +48,5 @@ public final class SerializerDefLinkedList extends AbstractSerializerDefCollecti
 	@Override
 	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
 		return call(builder, "add", element);
-	}
-
-	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefLinkedList(valueSerializer, true);
 	}
 }

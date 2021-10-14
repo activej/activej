@@ -35,6 +35,11 @@ public final class SerializerDefEnumSet extends AbstractSerializerDefCollection 
 	}
 
 	@Override
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefEnumSet(valueSerializer, true);
+	}
+
+	@Override
 	protected Expression createBuilder(Expression length) {
 		return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getDecodeType()));
 	}
@@ -42,10 +47,5 @@ public final class SerializerDefEnumSet extends AbstractSerializerDefCollection 
 	@Override
 	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
 		return call(builder, "add", element);
-	}
-
-	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefEnumSet(valueSerializer, true);
 	}
 }

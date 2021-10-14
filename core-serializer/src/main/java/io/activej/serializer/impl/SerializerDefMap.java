@@ -38,17 +38,8 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
-		Class<?> rawType = keySerializer.getDecodeType();
-		if (rawType.isEnum()) {
-			return constructor(EnumMap.class, value(rawType));
-		}
-		return constructor(HashMap.class, initialSize(length));
-	}
-
-	@Override
-	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
-		return call(builder, "put", key, value);
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefMap(keySerializer, valueSerializer, true);
 	}
 
 	@Override
@@ -63,7 +54,16 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefMap(keySerializer, valueSerializer, true);
+	protected Expression createBuilder(Expression length) {
+		Class<?> rawType = keySerializer.getDecodeType();
+		if (rawType.isEnum()) {
+			return constructor(EnumMap.class, value(rawType));
+		}
+		return constructor(HashMap.class, initialSize(length));
+	}
+
+	@Override
+	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
+		return call(builder, "put", key, value);
 	}
 }

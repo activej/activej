@@ -38,8 +38,22 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	}
 
 	@Override
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefList(valueSerializer, true);
+	}
+
+	@Override
 	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
 		return let(collection, v -> iterateList(v, action));
+	}
+
+	@Override
+	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		return ifThenElse(cmpEq(length, value(0)),
+				staticCall(Collections.class, "emptyList"),
+				ifThenElse(cmpEq(length, value(1)),
+						staticCall(Collections.class, "singletonList", valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),
+						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
 	}
 
 	@Override
@@ -55,19 +69,5 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	@Override
 	protected Expression build(Expression array) {
 		return staticCall(Arrays.class, "asList", array);
-	}
-
-	@Override
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
-		return ifThenElse(cmpEq(length, value(0)),
-				staticCall(Collections.class, "emptyList"),
-				ifThenElse(cmpEq(length, value(1)),
-						staticCall(Collections.class, "singletonList", valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),
-						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
-	}
-
-	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefList(valueSerializer, true);
 	}
 }

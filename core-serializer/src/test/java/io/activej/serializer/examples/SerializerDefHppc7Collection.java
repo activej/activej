@@ -1,6 +1,7 @@
 package io.activej.serializer.examples;
 
 import io.activej.codegen.expression.Expression;
+import io.activej.common.exception.UncheckedException;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.AbstractSerializerDefCollection;
@@ -12,7 +13,6 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
 
 public final class SerializerDefHppc7Collection extends AbstractSerializerDefCollection {
-	// region creators
 	public SerializerDefHppc7Collection(SerializerDef valueSerializer, Class<?> collectionType, Class<?> elementType, Class<?> collectionImplType, boolean nullable) {
 		super(valueSerializer, collectionType, collectionImplType, elementType, nullable);
 	}
@@ -20,7 +20,11 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 	public SerializerDefHppc7Collection(Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType, SerializerDef valueSerializer) {
 		this(valueSerializer, collectionType, valueType, collectionImplType, false);
 	}
-	// endregion
+
+	@Override
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefHppc7Collection(valueSerializer, encodeType, elementType, decodeType, true);
+	}
 
 	@Override
 	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
@@ -31,7 +35,7 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 					it -> action.apply(
 							property(cast(it, iteratorType), "value")));
 		} catch (ClassNotFoundException e) {
-			throw new IllegalStateException("There is no hppc cursor for " + elementType.getSimpleName(), e);
+			throw UncheckedException.of(e);
 		}
 	}
 
@@ -43,10 +47,5 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 	@Override
 	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
 		return call(builder, "add", element);
-	}
-
-	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefHppc7Collection(valueSerializer, encodeType, elementType, decodeType, true);
 	}
 }

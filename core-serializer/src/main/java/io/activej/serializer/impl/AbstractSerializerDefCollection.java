@@ -65,7 +65,17 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
+			return new SerializerDefNullable(this);
+		}
+		return doEnsureNullable(compatibilityLevel);
+	}
+
+	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
+
+	@Override
+	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		if (!nullable) {
 			return let(length(value), length -> sequence(
 					writeVarInt(buf, pos, length),
@@ -79,16 +89,6 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		}
 	}
 
-	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return let(readVarInt(in), length ->
-				!nullable ?
-						doDecode(staticDecoders, in, version, compatibilityLevel, length) :
-						ifThenElse(cmpEq(length, value(0)),
-								nullRef(decodeType),
-								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
-	}
-
 	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return doIterate(value,
 				it -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(it, valueSerializer.getEncodeType()), version, compatibilityLevel));
@@ -96,6 +96,16 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 
 	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
 		return iterateIterable(collection, action);
+	}
+
+	@Override
+	public final Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		return let(readVarInt(in), length ->
+				!nullable ?
+						doDecode(staticDecoders, in, version, compatibilityLevel, length) :
+						ifThenElse(cmpEq(length, value(0)),
+								nullRef(decodeType),
+								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
 	}
 
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
@@ -111,15 +121,5 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 
 	protected Expression build(Expression builder) {
 		return builder;
-	}
-
-	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
-
-	@Override
-	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
-			return new SerializerDefNullable(this);
-		}
-		return doEnsureNullable(compatibilityLevel);
 	}
 }

@@ -34,6 +34,11 @@ public final class SerializerDefRegularMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+		return new SerializerDefRegularMap(keySerializer, valueSerializer, encodeType, decodeType, true);
+	}
+
+	@Override
 	protected Expression createBuilder(Expression length) {
 		return constructor(decodeType, initialSize(length));
 	}
@@ -41,10 +46,5 @@ public final class SerializerDefRegularMap extends AbstractSerializerDefMap {
 	@Override
 	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
 		return call(builder, "put", key, value);
-	}
-
-	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefRegularMap(keySerializer, valueSerializer, encodeType, decodeType, true);
 	}
 }
