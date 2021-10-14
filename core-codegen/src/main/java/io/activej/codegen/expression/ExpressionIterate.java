@@ -26,12 +26,12 @@ import java.util.function.UnaryOperator;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
 
-final class ExpressionFor implements Expression {
+final class ExpressionIterate implements Expression {
 	private final Expression from;
 	private final Expression to;
 	private final UnaryOperator<Expression> forVar;
 
-	ExpressionFor(Expression from, Expression to, UnaryOperator<Expression> forVar) {
+	ExpressionIterate(Expression from, Expression to, UnaryOperator<Expression> forVar) {
 		this.from = from;
 		this.to = to;
 		this.forVar = forVar;

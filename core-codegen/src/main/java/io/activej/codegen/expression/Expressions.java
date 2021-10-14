@@ -124,6 +124,9 @@ public class Expressions {
 	 * @return an expression that represents a new local variable with some action applied to it
 	 */
 	public static Expression let(Expression expression, Function<Variable, Expression> fn) {
+		if (expression instanceof Variable) {
+			return fn.apply((Variable) expression);
+		}
 		Variable variable = new ExpressionLet(expression);
 		return sequence(variable, fn.apply(variable));
 	}
@@ -884,11 +887,12 @@ public class Expressions {
 	}
 
 	public static Expression loop(Expression body) {
-		return new ExpressionLoop(body);
+		return loop(body, voidExp());
 	}
 
 	public static Expression loop(Expression condition, Expression body) {
-		return new ExpressionLoop(ifThenElse(condition, sequence(body, value(true)), value(false)));
+		return new ExpressionLoop(condition, body);
+//		return loop(ifThenElse(condition, sequence(body, value(true)), value(false)));
 	}
 
 	public static Expression iterateArray(Variable array, UnaryOperator<Expression> action) {
@@ -924,10 +928,10 @@ public class Expressions {
 	}
 
 	public static Expression iterate(Expression from, Expression to, UnaryOperator<Expression> action) {
-		return let(new Expression[]{from, to},
-				vars -> loop(cmpLt(vars[0], vars[1]),
-						sequence(action.apply(vars[0]), set(vars[0], inc(vars[0])))));
-//		return new ExpressionFor(from, to, action);
+		return new ExpressionIterate(from, to, action);
+//		return let(new Expression[]{from, to},
+//				vars -> loop(cmpLt(vars[0], vars[1]),
+//						sequence(action.apply(vars[0]), set(vars[0], inc(vars[0])))));
 	}
 
 }

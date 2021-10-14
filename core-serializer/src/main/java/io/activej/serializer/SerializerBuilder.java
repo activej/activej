@@ -615,7 +615,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 												call(arg(0), "pos", pos)))))));
 	}
 
-	private Expression encoderImpl(SerializerDef serializer, @Nullable Integer encodeVersion, StaticEncoders staticEncoders, Expression buf, Variable pos, Expression data) {
+	private Expression encoderImpl(SerializerDef serializer, @Nullable Integer encodeVersion, StaticEncoders staticEncoders, Expression buf, Variable pos, Variable data) {
 		return sequence(
 				encodeVersion != null ?
 						writeByte(buf, pos, value((byte) (int) encodeVersion)) :

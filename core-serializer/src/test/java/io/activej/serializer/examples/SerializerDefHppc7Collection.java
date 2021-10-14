@@ -8,8 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.UnaryOperator;
 
-import static io.activej.codegen.expression.Expressions.call;
-import static io.activej.codegen.expression.Expressions.constructor;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
 
 public final class SerializerDefHppc7Collection extends AbstractSerializerDefCollection {
@@ -28,14 +27,16 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 		try {
 			String prefix = capitalize(elementType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");
-			return new ForEachHppcCollection(collection, iteratorType, action);
+			return iterateIterable(collection,
+					it -> action.apply(
+							property(cast(it, iteratorType), "value")));
 		} catch (ClassNotFoundException e) {
 			throw new IllegalStateException("There is no hppc cursor for " + elementType.getSimpleName(), e);
 		}
 	}
 
-    @Override
-    protected Expression createBuilder(Expression length) {
+	@Override
+	protected Expression createBuilder(Expression length) {
 		return constructor(decodeType, length);
 	}
 

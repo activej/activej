@@ -23,22 +23,33 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
-public class ExpressionLoop implements Expression {
-	protected final Expression body;
+final class ExpressionLoop implements Expression {
+	private final Expression condition;
+	private final Expression body;
 
-	public ExpressionLoop(Expression body) {this.body = body;}
+	ExpressionLoop(Expression condition, Expression body) {
+		this.condition = condition;
+		this.body = body;
+	}
 
 	@Override
-	public final Type load(Context ctx) {
+	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		Label labelLoop = new Label();
 		Label labelExit = new Label();
 
 		g.mark(labelLoop);
 
-		body.load(ctx);
+		Type conditionType = condition.load(ctx);
+		if (conditionType != BOOLEAN_TYPE) throw new IllegalArgumentException("Condition must return boolean");
 		g.push(false);
 		g.ifCmp(BOOLEAN_TYPE, GeneratorAdapter.EQ, labelExit);
+
+		Type bodyType = body.load(ctx);
+		if (bodyType.getSize() == 1)
+			g.pop();
+		if (bodyType.getSize() == 2)
+			g.pop2();
 
 		g.goTo(labelLoop);
 		g.mark(labelExit);
