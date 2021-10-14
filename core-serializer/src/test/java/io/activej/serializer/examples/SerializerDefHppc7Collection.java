@@ -24,7 +24,7 @@ public final class SerializerDefHppc7Collection extends AbstractSerializerDefCol
 	// endregion
 
 	@Override
-	protected Expression iterateCollection(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
+	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
 		try {
 			String prefix = capitalize(elementType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");

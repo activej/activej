@@ -38,9 +38,8 @@ public final class SerializerDefList extends AbstractSerializerDefCollection {
 	}
 
 	@Override
-	protected Expression iterateCollection(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
-		return iterate(value(0), length,
-				i -> let(call(collection, "get", i), action::apply));
+	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
+		return let(collection, v -> iterateList(v, action));
 	}
 
 	@Override

@@ -524,10 +524,9 @@ public class ExpressionTest {
 
 		WriteAllListElement writeAllListElement = ClassBuilder.create(WriteAllListElement.class)
 				.withMethod("write",
-						iterateCollection(arg(0),
-								it -> call(arg(1), "add", it)))
+						iterateIterable(arg(0), it -> call(arg(1), "add", it)))
 				.withMethod("writeIter",
-						iterateCollection(arg(0),
+						iterateIterator(arg(0),
 								it -> call(arg(1), "add", it)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -555,7 +554,7 @@ public class ExpressionTest {
 		List<Long> list = new ArrayList<>();
 
 		WriteArrayElements writeArrayElements = ClassBuilder.create(WriteArrayElements.class)
-				.withMethod("write", iterateCollection(arg(0),
+				.withMethod("write", iterateArray(arg(0),
 						it -> sequence(call(arg(1), "add", cast(it, Object.class)), voidExp())))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 

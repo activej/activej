@@ -169,7 +169,7 @@ public class Expressions {
 	 * @return new instance of the Expression which is cast to the type
 	 */
 	public static Expression cast(Expression expression, Class<?> type) {
-		return new ExpressionCast(expression, getType(type));
+		return type == Object.class ? expression : new ExpressionCast(expression, getType(type));
 	}
 
 	/**
@@ -801,8 +801,8 @@ public class Expressions {
 		return new ExpressionStaticCallSelf(method, asList(arguments));
 	}
 
-	public static Expression arrayGet(Expression array, Expression nom) {
-		return new ExpressionArrayGet(array, nom);
+	public static Expression arrayGet(Expression array, Expression index) {
+		return new ExpressionArrayGet(array, index);
 	}
 
 	public static Expression isNull(Expression field) {
@@ -883,24 +883,51 @@ public class Expressions {
 		return new ExpressionArraySet(array, position, newElement);
 	}
 
-	public static Expression iterateCollection(Expression collection, UnaryOperator<Expression> action) {
-		return iterateCollection(collection, Object.class, action);
+	public static Expression loop(Expression body) {
+		return new ExpressionLoop(body);
 	}
 
-	public static Expression iterateCollection(Expression collection, Class<?> type, UnaryOperator<Expression> action) {
-		return new ExpressionIteratorForEach(collection, type, action);
+	public static Expression loop(Expression condition, Expression body) {
+		return new ExpressionLoop(ifThenElse(condition, sequence(body, value(true)), value(false)));
+	}
+
+	public static Expression iterateArray(Variable array, UnaryOperator<Expression> action) {
+		return iterate(value(0), length(array),
+				i -> action.apply(arrayGet(array, i)));
+	}
+
+	public static Expression iterateList(Variable list, UnaryOperator<Expression> action) {
+		return iterate(value(0), length(list),
+				i -> action.apply(call(list, "get", i)));
+	}
+
+	public static Expression iterateIterable(Expression iterable, UnaryOperator<Expression> action) {
+		return let(call(iterable, "iterator"),
+				it -> iterateIterator(it, action));
+	}
+
+	public static Expression iterateIterator(Variable iterator, UnaryOperator<Expression> action) {
+		return loop(call(iterator, "hasNext"),
+				let(call(iterator, "next"),
+						action::apply));
 	}
 
 	public static Expression iterateMap(Expression map, UnaryOperator<Expression> keyAction, UnaryOperator<Expression> valueAction) {
-		return new ExpressionMapForEach(map, (key, value) -> sequence(keyAction.apply(key), valueAction.apply(value)));
+		return iterateMap(map, (key, value) -> sequence(keyAction.apply(key), valueAction.apply(value)));
 	}
 
 	public static Expression iterateMap(Expression map, BinaryOperator<Expression> action) {
-		return new ExpressionMapForEach(map, action);
+		return iterateIterable(call(map, "entrySet"),
+				it -> action.apply(
+						call(cast(it, Map.Entry.class), "getKey"),
+						call(cast(it, Map.Entry.class), "getValue")));
 	}
 
 	public static Expression iterate(Expression from, Expression to, UnaryOperator<Expression> action) {
-		return new ExpressionFor(from, to, action);
+		return let(new Expression[]{from, to},
+				vars -> loop(cmpLt(vars[0], vars[1]),
+						sequence(action.apply(vars[0]), set(vars[0], inc(vars[0])))));
+//		return new ExpressionFor(from, to, action);
 	}
 
 }

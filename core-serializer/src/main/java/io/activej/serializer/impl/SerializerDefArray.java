@@ -94,20 +94,20 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 				);
 			}
 		} else {
-			Expression methodLength = fixedSize != -1 ? value(fixedSize) : length(cast(value, type));
+			Expression size = fixedSize != -1 ? value(fixedSize) : length(cast(value, type));
 
-			Expression writeCollection = iterate(value(0), methodLength,
+			Expression writeCollection = iterate(value(0), size,
 					i -> valueSerializer.defineEncoder(staticEncoders, buf, pos, arrayGet(cast(value, type), i), version, compatibilityLevel));
 
 			if (!nullable) {
 				return sequence(
-						writeVarInt(buf, pos, methodLength),
+						writeVarInt(buf, pos, size),
 						writeCollection);
 			} else {
 				return ifThenElse(isNull(value),
 						writeByte(buf, pos, value((byte) 0)),
 						sequence(
-								writeVarInt(buf, pos, inc(methodLength)),
+								writeVarInt(buf, pos, inc(size)),
 								writeCollection));
 			}
 		}

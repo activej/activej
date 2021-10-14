@@ -17,7 +17,6 @@
 package io.activej.serializer.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
@@ -45,10 +44,6 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		this.nullable = nullable;
 	}
 
-	protected Expression iterateCollection(Expression collection, Class<?> valueType, UnaryOperator<Expression> action, Expression length) {
-		return Expressions.iterateCollection(collection, valueType, action);
-	}
-
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(valueSerializer);
@@ -74,13 +69,13 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		if (!nullable) {
 			return let(length(value), length -> sequence(
 					writeVarInt(buf, pos, length),
-					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel, length)));
+					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel)));
 		} else {
 			return ifThenElse(isNull(value),
 					writeByte(buf, pos, value((byte) 0)),
 					let(length(value), length -> sequence(
 							writeVarInt(buf, pos, inc(length)),
-							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel, length))));
+							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel))));
 		}
 	}
 
@@ -94,10 +89,13 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
 	}
 
-	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Expression length) {
-		return iterateCollection(value, valueSerializer.getEncodeType(),
-				it -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(it, valueSerializer.getEncodeType()), version, compatibilityLevel),
-				length);
+	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		return doIterate(value,
+				it -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(it, valueSerializer.getEncodeType()), version, compatibilityLevel));
+	}
+
+	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
+		return iterateIterable(collection, action);
 	}
 
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
