@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -51,16 +52,21 @@ public final class Specializer {
 	private static final Map<Integer, Object> STATIC_VALUES = new ConcurrentHashMap<>();
 
 	private final BytecodeClassLoader classLoader;
-
+	private BiFunction<Object, Integer, String> classNaming = (instance, n) -> {
+		String packageName = instance.getClass().getPackage().getName();
+		return (packageName.isEmpty() ? "" : packageName + ".") + "SpecializedClass_" + n;
+	};
 	private Predicate<Class<?>> predicate;
-
-	final Map<IdentityKey<?>, Specialization> specializations = new HashMap<>();
-
+	private final Map<IdentityKey<?>, Specialization> specializations = new HashMap<>();
 	private Path bytecodeSaveDir;
 
-	private Specializer(ClassLoader parent) {classLoader = new BytecodeClassLoader(parent);}
+	private Specializer(ClassLoader parent) {
+		this.classLoader = new BytecodeClassLoader(parent);
+	}
 
-	private Specializer() {classLoader = new BytecodeClassLoader();}
+	private Specializer() {
+		this.classLoader = new BytecodeClassLoader();
+	}
 
 	public static Specializer create(ClassLoader parent) {
 		return new Specializer(parent);
@@ -68,6 +74,15 @@ public final class Specializer {
 
 	public static Specializer create() {
 		return new Specializer();
+	}
+
+	public Specializer withClassNaming(Function<Class<?>, String> classNaming) {
+		return withClassNaming((instance, n) -> classNaming.apply(instance.getClass()) + n);
+	}
+
+	public Specializer withClassNaming(BiFunction<Object, Integer, String> classNaming) {
+		this.classNaming = classNaming;
+		return this;
 	}
 
 	public Specializer withPredicate(Predicate<Class<?>> predicate) {
@@ -98,7 +113,8 @@ public final class Specializer {
 		Specialization(Object instance) {
 			this.instance = instance;
 			this.instanceClass = normalizeClass(instance.getClass());
-			this.specializedType = Type.getType("L" + ("SpecializedClass" + classLoader.classN.incrementAndGet()) + ";");
+			this.specializedType = Type.getType(
+					"L" + classNaming.apply(instance, classLoader.classN.incrementAndGet()).replace('.', '/') + ";");
 		}
 
 		void scanInstance() {
@@ -774,6 +790,7 @@ public final class Specializer {
 		return idx;
 	}
 
+	@SuppressWarnings("unused")
 	public static synchronized Object takeStaticValue(int idx) {
 		return STATIC_VALUES.remove(idx);
 	}
@@ -781,11 +798,24 @@ public final class Specializer {
 	public <T> T specialize(T instance) {
 		if (instance.getClass().getClassLoader() instanceof BytecodeClassLoader) return instance;
 		if (predicate != null && !predicate.test(instance.getClass())) return instance;
+		ensureAccessibility(instance.getClass());
 		Specialization specialization = ensureSpecialization(instance);
 		for (Specialization s : specializations.values()) {
 			s.ensureClass();
 		}
 		return (T) specialization.ensureInstance();
+	}
+
+	private static void ensureAccessibility(Class<?> clazz) {
+		for (Field field : clazz.getDeclaredFields()) {
+			Class<?> fieldType = field.getType();
+			if (fieldType.isAnonymousClass()) {
+				throw new IllegalArgumentException("Field type cannot be anonymous class: " + field);
+			}
+			if (!Modifier.isPublic(fieldType.getModifiers())) {
+				throw new IllegalArgumentException("Field type is not accessible: " + fieldType);
+			}
+		}
 	}
 
 	private <T> Specialization ensureSpecialization(T instance) {

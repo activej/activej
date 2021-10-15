@@ -19,6 +19,8 @@ package io.activej.specializer;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.function.UnaryOperator;
 
 import static java.lang.System.identityHashCode;
@@ -98,8 +100,9 @@ class Utils {
 			try {
 				Class<?> compiledBindingClass = Class.forName("io.activej.inject.impl.CompiledBinding");
 				this.specializer = Specializer.create(Thread.currentThread().getContextClassLoader())
+//						.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
 						.withPredicate(cls -> compiledBindingClass.isAssignableFrom(cls) &&
-								!cls.getName().startsWith("io.activej.inject.binding.Multibinders$"));
+								Arrays.stream(cls.getDeclaredFields()).map(Field::getType).noneMatch(Class::isAnonymousClass));
 			} catch (ClassNotFoundException e) {
 				throw new IllegalStateException("Can not access ActiveJ Inject", e);
 			}
