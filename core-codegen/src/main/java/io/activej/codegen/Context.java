@@ -49,6 +49,7 @@ public final class Context {
 	private final Method method;
 
 	private Set<Method> accessibleMethods;
+	private final Map<Object, VarLocal> varLocals = new HashMap<>();
 
 	public Context(ClassLoader classLoader, ClassBuilder<?> builder,
 			GeneratorAdapter g,
@@ -123,6 +124,22 @@ public final class Context {
 		if (type == Type.VOID_TYPE) return VarLocal.VAR_LOCAL_VOID;
 		int local = getGeneratorAdapter().newLocal(type);
 		return new VarLocal(local);
+	}
+
+	public VarLocal ensureLocal(Object key, Expression expression) {
+		VarLocal varLocal = varLocals.get(key);
+		if (varLocal == null) {
+			Type type = expression.load(this);
+			if (type == Type.VOID_TYPE) {
+				varLocal = VarLocal.VAR_LOCAL_VOID;
+			} else {
+				int local = getGeneratorAdapter().newLocal(type);
+				varLocal = new VarLocal(local);
+				g.storeLocal(local);
+			}
+			varLocals.put(key, varLocal);
+		}
+		return varLocal;
 	}
 
 	public Class<?> toJavaType(Type type) {

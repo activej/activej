@@ -22,7 +22,6 @@ import org.objectweb.asm.Type;
 
 final class ExpressionLet implements Variable {
 	private final Expression value;
-	private VarLocal var;
 
 	ExpressionLet(Expression value) {
 		this.value = value;
@@ -30,10 +29,7 @@ final class ExpressionLet implements Variable {
 
 	@Override
 	public Type load(Context ctx) {
-		if (var == null) {
-			var = ctx.newLocal(value.load(ctx));
-			var.store(ctx);
-		}
+		VarLocal var = ctx.ensureLocal(this, value);
 		return var.load(ctx);
 	}
 
@@ -44,12 +40,7 @@ final class ExpressionLet implements Variable {
 
 	@Override
 	public void store(Context ctx, Object storeContext, Type type) {
-		if (var == null) {
-			Type fieldType = value.load(ctx);
-			var = ctx.newLocal(fieldType);
-			var.store(ctx);
-		}
-
+		VarLocal var = ctx.ensureLocal(this, value);
 		var.store(ctx, storeContext, type);
 	}
 }
