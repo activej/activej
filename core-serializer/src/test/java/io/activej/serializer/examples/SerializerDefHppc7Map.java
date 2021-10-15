@@ -27,7 +27,7 @@ public final class SerializerDefHppc7Map extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> action, Expression length) {
+	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> action) {
 		try {
 			String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");

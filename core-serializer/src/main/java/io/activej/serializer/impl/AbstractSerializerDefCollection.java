@@ -77,15 +77,15 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	@Override
 	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		if (!nullable) {
-			return let(length(value), length -> sequence(
-					writeVarInt(buf, pos, length),
-					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel)));
+			return sequence(
+					writeVarInt(buf, pos, length(value)),
+					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel));
 		} else {
 			return ifThenElse(isNull(value),
 					writeByte(buf, pos, value((byte) 0)),
-					let(length(value), length -> sequence(
-							writeVarInt(buf, pos, inc(length)),
-							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel))));
+					sequence(
+							writeVarInt(buf, pos, inc(length(value))),
+							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel)));
 		}
 	}
 

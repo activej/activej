@@ -82,27 +82,26 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	@Override
 	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		if (!nullable) {
-			return let(length(value), length -> sequence(
-					writeVarInt(buf, pos, length),
-					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel, length)));
+			return sequence(
+					writeVarInt(buf, pos, length(value)),
+					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel));
 		} else {
 			return ifThenElse(isNull(value),
 					writeByte(buf, pos, value((byte) 0)),
-					let(length(value), length -> sequence(
-							writeVarInt(buf, pos, inc(length)),
-							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel, length))));
+					sequence(
+							writeVarInt(buf, pos, inc(length(value))),
+							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel)));
 		}
 	}
 
-	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return doIterateMap(value,
 				(k, v) -> sequence(
 						keySerializer.defineEncoder(staticEncoders, buf, pos, cast(k, keySerializer.getEncodeType()), version, compatibilityLevel),
-						valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(v, valueSerializer.getEncodeType()), version, compatibilityLevel)),
-				length);
+						valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(v, valueSerializer.getEncodeType()), version, compatibilityLevel)));
 	}
 
-	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction, Expression length) {
+	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction) {
 		return iterateMap(collection, keyValueAction);
 	}
 

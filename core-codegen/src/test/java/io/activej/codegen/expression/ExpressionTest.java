@@ -555,7 +555,7 @@ public class ExpressionTest {
 
 		WriteArrayElements writeArrayElements = ClassBuilder.create(WriteArrayElements.class)
 				.withMethod("write", iterateArray(arg(0),
-						it -> sequence(call(arg(1), "add", cast(it, Object.class)), voidExp())))
+						it -> call(arg(1), "add", cast(it, Object.class))))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
 		writeArrayElements.write(intsFrom, list);
