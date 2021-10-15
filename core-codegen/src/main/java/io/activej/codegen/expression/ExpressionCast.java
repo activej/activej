@@ -20,7 +20,9 @@ import io.activej.codegen.Context;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
+import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Type.getType;
+import static org.objectweb.asm.commons.InstructionAdapter.OBJECT_TYPE;
 
 /**
  * Defines method in order to cast a function to a type
@@ -39,7 +41,11 @@ final class ExpressionCast implements Expression {
 	@Override
 	public Type load(Context ctx) {
 		Type targetType = this.targetType == SELF_TYPE ? ctx.getSelfType() : this.targetType;
-		ctx.cast(expression.load(ctx), targetType);
+
+		Type sourceType = expression.load(ctx);
+		if (!targetType.equals(OBJECT_TYPE) || isPrimitiveType(sourceType)) {
+			ctx.cast(sourceType, targetType);
+		}
 		return targetType;
 	}
 }

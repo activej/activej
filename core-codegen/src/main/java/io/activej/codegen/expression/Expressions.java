@@ -172,7 +172,7 @@ public class Expressions {
 	 * @return new instance of the Expression which is cast to the type
 	 */
 	public static Expression cast(Expression expression, Class<?> type) {
-		return type == Object.class ? expression : new ExpressionCast(expression, getType(type));
+		return new ExpressionCast(expression, getType(type));
 	}
 
 	/**
