@@ -124,9 +124,6 @@ public class Expressions {
 	 * @return an expression that represents a new local variable with some action applied to it
 	 */
 	public static Expression let(Expression expression, Function<Variable, Expression> fn) {
-		if (expression instanceof Variable) {
-			return fn.apply((Variable) expression);
-		}
 		Variable variable = new ExpressionLet(expression);
 		return sequence(variable, fn.apply(variable));
 	}
