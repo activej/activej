@@ -23,6 +23,7 @@ import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
@@ -96,7 +97,7 @@ public abstract class HttpServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-//		Injector.useSpecializer();
+		Injector.useSpecializer();
 
 		Launcher launcher = new HttpServerLauncher() {
 			@Override
