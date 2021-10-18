@@ -320,7 +320,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T> StreamCodec<Set<T>> ofSet(StreamCodec<T> itemCodec) {
-		return ofCollection(itemCodec, LinkedHashSet::new);
+		return ofCollection(itemCodec, length -> new HashSet<>(hashInitialSize(length)));
 	}
 
 	public static <E extends Enum<E>> StreamCodec<Set<E>> ofEnumSet(Class<E> type) {
@@ -345,8 +345,9 @@ public final class StreamCodecs {
 
 			@Override
 			public List<T> decode(StreamInput input) throws IOException {
-				Object[] array = new Object[input.readVarInt()];
-				for (int i = 0; i < array.length; i++) {
+				int length = input.readVarInt();
+				Object[] array = new Object[length];
+				for (int i = 0; i < length; i++) {
 					array[i] = itemCodecFn.apply(i).decode(input);
 				}
 				//noinspection unchecked
@@ -361,23 +362,31 @@ public final class StreamCodecs {
 
 	public static <K, V> StreamCodec<Map<K, V>> ofMap(StreamCodec<K> keyCodec,
 			Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn) {
-		return new StreamCodec<Map<K, V>>() {
+		return ofMap(keyCodec, valueCodecFn, length -> new HashMap<>(hashInitialSize(length)));
+	}
+
+	public static <E extends Enum<E>, V> StreamCodec<Map<E, V>> ofEnumMap(Class<E> type, StreamCodec<V> valueCodec) {
+		return ofMap(StreamCodecs.ofEnum(type), $ -> valueCodec, $ -> new EnumMap<>(type));
+	}
+
+	public static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn, IntFunction<M> factory) {
+		return new StreamCodec<M>() {
 			@Override
-			public void encode(StreamOutput output, Map<K, V> map) throws IOException {
+			public void encode(StreamOutput output, M map) throws IOException {
 				output.writeVarInt(map.size());
 				for (Map.Entry<K, V> entry : map.entrySet()) {
 					keyCodec.encode(output, entry.getKey());
 					//noinspection unchecked
-					StreamCodec<V> codec = (StreamCodec<V>) valueCodecFn.apply(entry.getKey());
-					codec.encode(output, entry.getValue());
+					StreamCodec<V> valueCodec = (StreamCodec<V>) valueCodecFn.apply(entry.getKey());
+					valueCodec.encode(output, entry.getValue());
 				}
 			}
 
 			@Override
-			public Map<K, V> decode(StreamInput input) throws IOException {
-				int size = input.readVarInt();
-				Map<K, V> map = new LinkedHashMap<>(size * 4 / 3);
-				for (int i = 0; i < size; i++) {
+			public M decode(StreamInput input) throws IOException {
+				int length = input.readVarInt();
+				M map = factory.apply(length);
+				for (int i = 0; i < length; i++) {
 					K key = keyCodec.decode(input);
 					V value = valueCodecFn.apply(key).decode(input);
 					map.put(key, value);
@@ -385,7 +394,6 @@ public final class StreamCodecs {
 				return map;
 			}
 		};
-
 	}
 
 	public static class SubtypeBuilder<T> {
@@ -489,6 +497,10 @@ public final class StreamCodecs {
 				return instance;
 			}
 		};
+	}
+
+	private static int hashInitialSize(int length) {
+		return (length + 2) / 3 * 4;
 	}
 
 	static class OfBinarySerializer<T> implements StreamCodec<T> {
