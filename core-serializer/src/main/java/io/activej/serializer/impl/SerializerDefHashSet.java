@@ -20,26 +20,25 @@ import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import java.util.LinkedList;
-
 import static io.activej.codegen.expression.Expressions.constructor;
+import static io.activej.serializer.util.Utils.hashInitialSize;
 
-public final class SerializerDefLinkedList extends SerializerDefRegularCollection {
-	public SerializerDefLinkedList(SerializerDef valueSerializer) {
-		this(valueSerializer, false);
+public final class SerializerDefHashSet extends SerializerDefRegularCollection {
+	public SerializerDefHashSet(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
+		this(valueSerializer, encodeType, decodeType, false);
 	}
 
-	private SerializerDefLinkedList(SerializerDef valueSerializer, boolean nullable) {
-		super(valueSerializer, LinkedList.class, LinkedList.class, Object.class, nullable);
+	private SerializerDefHashSet(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
+		super(valueSerializer, encodeType, decodeType, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefLinkedList(valueSerializer, true);
+		return new SerializerDefHashSet(valueSerializer, encodeType, decodeType, true);
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return constructor(LinkedList.class);
+		return constructor(decodeType, hashInitialSize(length));
 	}
 }

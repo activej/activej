@@ -116,7 +116,7 @@ public class SerializerBuilderUtils {
 				throw new NullPointerException();
 			if (keySerializer == null)
 				throw new NullPointerException();
-			return new SerializerDefHppc7Map(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType);
+			return new SerializerDefHppc7HashMap(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType);
 		};
 	}
 
@@ -124,6 +124,7 @@ public class SerializerBuilderUtils {
 		String prefix = capitalize(valueType.getSimpleName());
 		if (!collectionType.getSimpleName().startsWith(prefix))
 			throw new IllegalArgumentException(format("Expected setType '%s', but was begin '%s'", collectionType.getSimpleName(), prefix));
+		boolean isHashSet = collectionImplType.getSimpleName().contains("HashSet");
 		return ctx -> {
 			SerializerDef valueSerializer;
 			if (ctx.hasTypeArguments()) {
@@ -135,7 +136,10 @@ public class SerializerBuilderUtils {
 			}
 			if (valueSerializer == null)
 				throw new NullPointerException();
-			return new SerializerDefHppc7Collection(collectionType, collectionImplType, valueType, valueSerializer);
+			if (isHashSet) {
+				return new SerializerDefHppc7HashSet(valueSerializer, collectionType, collectionImplType, valueType);
+			}
+			return new SerializerDefHppc7RegularCollection(valueSerializer, collectionType, collectionImplType, valueType);
 		};
 	}
 }

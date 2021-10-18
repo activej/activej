@@ -24,18 +24,19 @@ import org.jetbrains.annotations.NotNull;
 import static io.activej.codegen.expression.Expressions.call;
 import static io.activej.codegen.expression.Expressions.constructor;
 
-public final class SerializerDefRegularCollection extends AbstractSerializerDefCollection {
+public class SerializerDefRegularCollection extends AbstractSerializerDefCollection {
+
 	public SerializerDefRegularCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {
-		this(valueSerializer, encodeType, decodeType, false);
+		this(valueSerializer, encodeType, decodeType, Object.class, false);
 	}
 
-	private SerializerDefRegularCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
-		super(valueSerializer, encodeType, decodeType, Object.class, nullable);
+	protected SerializerDefRegularCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, @NotNull Class<?> elementType, boolean nullable) {
+		super(valueSerializer, encodeType, decodeType, elementType, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefRegularCollection(valueSerializer, encodeType, decodeType, true);
+		return new SerializerDefRegularCollection(valueSerializer, encodeType, decodeType, elementType, true);
 	}
 
 	@Override

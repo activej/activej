@@ -2473,19 +2473,19 @@ public class BinarySerializerTest {
 		linkedNullable.put(19, "s");
 		linkedNullable.put(20, "t");
 
-		MapsHolder setsHolder = new MapsHolder();
-		setsHolder.regular = regular;
-		setsHolder.regularNullableNotNull = regularNullable;
-		setsHolder.regularEmpty = regularEmpty;
-		setsHolder.regularEmptyNullableNotNull = regularEmptyNullable;
-		setsHolder.regularSingle = regularSingle;
-		setsHolder.regularSingleNullableNotNull = regularSingleNullable;
-		setsHolder.hash = hash;
-		setsHolder.hashNullableNotNull = hashNullable;
-		setsHolder.linked = linked;
-		setsHolder.linkedNullableNotNull = linkedNullable;
+		MapsHolder mapsHolder = new MapsHolder();
+		mapsHolder.regular = regular;
+		mapsHolder.regularNullableNotNull = regularNullable;
+		mapsHolder.regularEmpty = regularEmpty;
+		mapsHolder.regularEmptyNullableNotNull = regularEmptyNullable;
+		mapsHolder.regularSingle = regularSingle;
+		mapsHolder.regularSingleNullableNotNull = regularSingleNullable;
+		mapsHolder.hash = hash;
+		mapsHolder.hashNullableNotNull = hashNullable;
+		mapsHolder.linked = linked;
+		mapsHolder.linkedNullableNotNull = linkedNullable;
 
-		MapsHolder deserialized = doTest(MapsHolder.class, setsHolder);
+		MapsHolder deserialized = doTest(MapsHolder.class, mapsHolder);
 
 		assertEquals(regular, deserialized.regular);
 		assertSame(HashMap.class, deserialized.regular.getClass());

@@ -19,13 +19,13 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumMap;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expressions.constructor;
+import static io.activej.codegen.expression.Expressions.value;
 
-public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
+public final class SerializerDefEnumMap extends SerializerDefRegularMap {
 	public SerializerDefEnumMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
 		this(keySerializer, valueSerializer, false);
 	}
@@ -44,8 +44,4 @@ public final class SerializerDefEnumMap extends AbstractSerializerDefMap {
 		return constructor(EnumMap.class, value(keySerializer.getDecodeType()));
 	}
 
-	@Override
-	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
-		return call(builder, "put", key, value);
-	}
 }

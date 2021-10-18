@@ -4,26 +4,26 @@ import io.activej.codegen.expression.Expression;
 import io.activej.common.exception.UncheckedException;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import io.activej.serializer.impl.AbstractSerializerDefMap;
-import org.jetbrains.annotations.NotNull;
+import io.activej.serializer.impl.SerializerDefRegularMap;
 
 import java.util.function.BinaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
+import static io.activej.serializer.util.Utils.hashInitialSize;
 
-public final class SerializerDefHppc7Map extends AbstractSerializerDefMap {
-	public SerializerDefHppc7Map(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
+public final class SerializerDefHppc7HashMap extends SerializerDefRegularMap {
+	public SerializerDefHppc7HashMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
 		this(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType, false);
 	}
 
-	private SerializerDefHppc7Map(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType, boolean nullable) {
+	private SerializerDefHppc7HashMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType, boolean nullable) {
 		super(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SerializerDefHppc7Map(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
+		return new SerializerDefHppc7HashMap(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
 	}
 
 	@Override
@@ -42,11 +42,6 @@ public final class SerializerDefHppc7Map extends AbstractSerializerDefMap {
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return constructor(decodeType, initialSize(length));
-	}
-
-	@Override
-	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
-		return call(builder, "put", key, value);
+		return constructor(decodeType, hashInitialSize(length));
 	}
 }

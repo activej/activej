@@ -27,8 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.util.Utils.hashInitialSize;
 
-public final class SerializerDefMap extends AbstractSerializerDefMap {
+public final class SerializerDefMap extends SerializerDefRegularMap {
 	public SerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
 		this(keySerializer, valueSerializer, false);
 	}
@@ -59,11 +60,6 @@ public final class SerializerDefMap extends AbstractSerializerDefMap {
 		if (rawType.isEnum()) {
 			return constructor(EnumMap.class, value(rawType));
 		}
-		return constructor(HashMap.class, initialSize(length));
-	}
-
-	@Override
-	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
-		return call(builder, "put", key, value);
+		return constructor(HashMap.class, hashInitialSize(length));
 	}
 }

@@ -132,9 +132,4 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	protected Expression build(Expression builder) {
 		return builder;
 	}
-
-	protected static Expression initialSize(Expression length) {
-		return div(mul(length, value(5)), value(3));
-	}
-
 }

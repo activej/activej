@@ -28,7 +28,7 @@ import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-public final class SerializerDefList extends AbstractSerializerDefCollection {
+public final class SerializerDefList extends SerializerDefRegularCollection {
 	public SerializerDefList(SerializerDef valueSerializer) {
 		this(valueSerializer, false);
 	}

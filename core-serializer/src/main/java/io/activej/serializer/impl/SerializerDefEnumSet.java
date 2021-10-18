@@ -19,13 +19,13 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expressions.staticCall;
+import static io.activej.codegen.expression.Expressions.value;
 
-public final class SerializerDefEnumSet extends AbstractSerializerDefCollection {
+public final class SerializerDefEnumSet extends SerializerDefRegularCollection {
 	public SerializerDefEnumSet(SerializerDef valueSerializer) {
 		this(valueSerializer, false);
 	}
@@ -42,10 +42,5 @@ public final class SerializerDefEnumSet extends AbstractSerializerDefCollection 
 	@Override
 	protected Expression createBuilder(Expression length) {
 		return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getDecodeType()));
-	}
-
-	@Override
-	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
-		return call(builder, "add", element);
 	}
 }

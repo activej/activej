@@ -27,8 +27,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.util.Utils.hashInitialSize;
 
-public final class SerializerDefSet extends AbstractSerializerDefCollection {
+public final class SerializerDefSet extends SerializerDefRegularCollection {
 	public SerializerDefSet(SerializerDef valueSerializer) {
 		this(valueSerializer, false);
 	}
@@ -56,11 +57,6 @@ public final class SerializerDefSet extends AbstractSerializerDefCollection {
 		if (valueSerializer.getDecodeType().isEnum()) {
 			return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getEncodeType()));
 		}
-		return constructor(HashSet.class, length);
-	}
-
-	@Override
-	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
-		return call(builder, "add", element);
+		return constructor(HashSet.class, hashInitialSize(length));
 	}
 }
