@@ -16,7 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
-	BinaryInput in;
+	private BinaryInput in;
 	private int limit;
 	private final InputStream inputStream;
 
@@ -54,8 +54,12 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 	protected void recycle(byte[] array) {
 	}
 
-	public BinaryInput getBinaryInput() {
+	public BinaryInput in() {
 		return in;
+	}
+
+	public void in(BinaryInput in) {
+		this.in = in;
 	}
 
 	public byte[] array() {
@@ -64,6 +68,10 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 
 	public int pos() {
 		return in.pos();
+	}
+
+	public void pos(int pos) {
+		in.pos(pos);
 	}
 
 	public int limit() {

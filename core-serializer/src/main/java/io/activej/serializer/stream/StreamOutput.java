@@ -12,7 +12,7 @@ import java.io.OutputStream;
 public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
-	BinaryOutput out;
+	private BinaryOutput out;
 	private final OutputStream outputStream;
 
 	private StreamOutput(OutputStream outputStream, int initialBufferSize) {
@@ -36,8 +36,12 @@ public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
 		out = null;
 	}
 
-	public BinaryOutput getBinaryOutput() {
+	public BinaryOutput out() {
 		return out;
+	}
+
+	public void out(BinaryOutput out) {
+		this.out = out;
 	}
 
 	public byte[] array() {
@@ -46,6 +50,10 @@ public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
 
 	public int pos() {
 		return out.pos();
+	}
+
+	public void pos(int pos) {
+		out.pos(pos);
 	}
 
 	public int limit() {

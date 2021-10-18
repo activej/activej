@@ -146,7 +146,7 @@ public final class StreamCodecs {
 								array -> sequence(
 										call(stream, "writeVarInt", length(array)),
 										call(stream, "ensure", mul(value(elementSize), length(array))),
-										let(call(stream, "getBinaryOutput"),
+										let(call(stream, "out"),
 												out -> iterateArray(array,
 														it -> call(out, encode, it))))))
 						.withMethod("decode",
@@ -154,7 +154,7 @@ public final class StreamCodecs {
 										length -> sequence(
 												call(stream, "ensure", mul(value(elementSize), length)),
 												let(arrayNew(arrayType, length),
-														array -> let(call(stream, "getBinaryInput"),
+														array -> let(call(stream, "in"),
 																in -> sequence(
 																		iterate(value(0), length,
 																				i -> arraySet(array, i, call(in, decode))),
@@ -167,7 +167,7 @@ public final class StreamCodecs {
 			@Override
 			public void encode(StreamOutput output, int[] array) throws IOException {
 				output.ensure((array.length + 1) * 5);
-				BinaryOutput out = output.getBinaryOutput();
+				BinaryOutput out = output.out();
 				out.writeVarInt(array.length);
 				for (int i = 0; i < array.length; i++) {
 					out.writeVarInt(array[i]);
@@ -177,7 +177,7 @@ public final class StreamCodecs {
 			@Override
 			public int[] decode(StreamInput input) throws IOException {
 				int[] array = new int[input.readVarInt()];
-				BinaryInput in = input.getBinaryInput();
+				BinaryInput in = input.in();
 				int idx = 0;
 				while (idx < array.length) {
 					input.ensure(array.length - idx);
@@ -200,7 +200,7 @@ public final class StreamCodecs {
 			@Override
 			public void encode(StreamOutput output, long[] array) throws IOException {
 				output.ensure((array.length + 1) * 10);
-				BinaryOutput out = output.getBinaryOutput();
+				BinaryOutput out = output.out();
 				out.writeVarInt(array.length);
 				for (int i = 0; i < array.length; i++) {
 					out.writeVarLong(array[i]);
@@ -210,7 +210,7 @@ public final class StreamCodecs {
 			@Override
 			public long[] decode(StreamInput input) throws IOException {
 				long[] array = new long[input.readVarInt()];
-				BinaryInput in = input.getBinaryInput();
+				BinaryInput in = input.in();
 				int idx = 0;
 				while (idx < array.length) {
 					input.ensure(array.length - idx);
@@ -515,7 +515,7 @@ public final class StreamCodecs {
 			output.ensure(estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2));
 			BinaryOutput out;
 			for (; ; ) {
-				out = output.out;
+				out = output.out();
 				positionBegin = out.pos();
 				positionData = positionBegin + estimatedHeaderSize;
 				out.pos(positionData);
@@ -565,7 +565,7 @@ public final class StreamCodecs {
 			assert headerDelta > 0;
 			int newPositionData = positionData + headerDelta;
 			int newPositionEnd = newPositionData + dataSize;
-			byte[] array = output.out.array();
+			byte[] array = output.array();
 			if (newPositionEnd < array.length) {
 				System.arraycopy(array, positionData, array, newPositionData, dataSize);
 			} else {
@@ -573,44 +573,44 @@ public final class StreamCodecs {
 				byte[] oldArray = array;
 
 				// ensured size without flush
-				output.out = new BinaryOutput(allocate(newPositionEnd));
+				output.out(new BinaryOutput(allocate(newPositionEnd)));
 
-				array = output.out.array();
+				array = output.array();
 				System.arraycopy(oldArray, 0, array, 0, positionBegin);
 				System.arraycopy(oldArray, positionData, array, newPositionData, dataSize);
 				recycle(oldArray);
 			}
-			output.out.pos(newPositionEnd);
+			output.pos(newPositionEnd);
 		}
 
 		private static int varIntSize(int dataSize) {
 			return 1 + (31 - Integer.numberOfLeadingZeros(dataSize)) / 7;
 		}
 
-		private void writeSize(byte[] buf, int pos, int size, int headerSize) {
+		private void writeSize(byte[] array, int pos, int size, int headerSize) {
 			if (headerSize == 1) {
-				buf[pos] = (byte) size;
+				array[pos] = (byte) size;
 				return;
 			}
 
-			buf[pos] = (byte) ((size & 0x7F) | 0x80);
+			array[pos] = (byte) ((size & 0x7F) | 0x80);
 			size >>>= 7;
 			if (headerSize == 2) {
-				buf[pos + 1] = (byte) size;
+				array[pos + 1] = (byte) size;
 				return;
 			}
 
-			buf[pos + 1] = (byte) ((size & 0x7F) | 0x80);
+			array[pos + 1] = (byte) ((size & 0x7F) | 0x80);
 			size >>>= 7;
 			if (headerSize == 3) {
-				buf[pos + 2] = (byte) size;
+				array[pos + 2] = (byte) size;
 				return;
 			}
 
 			assert headerSize == 4;
-			buf[pos + 2] = (byte) ((size & 0x7F) | 0x80);
+			array[pos + 2] = (byte) ((size & 0x7F) | 0x80);
 			size >>>= 7;
-			buf[pos + 3] = (byte) size;
+			array[pos + 3] = (byte) size;
 		}
 
 		protected byte[] allocate(int size) {
@@ -626,10 +626,11 @@ public final class StreamCodecs {
 
 			input.ensure(messageSize);
 
-			int oldPos = input.in.pos();
+			BinaryInput in = input.in();
+			int oldPos = in.pos();
 			try {
-				T item = serializer.decode(input.in);
-				if (input.in.pos() - oldPos != messageSize) {
+				T item = serializer.decode(in);
+				if (in.pos() - oldPos != messageSize) {
 					throw new CorruptedDataException("Deserialized size != decoded data size");
 				}
 				return item;
