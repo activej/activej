@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
@@ -488,24 +489,29 @@ public final class StreamCodecs {
 		};
 	}
 
-	public static class OfBinarySerializer<T> implements StreamCodec<T> {
+	static class OfBinarySerializer<T> implements StreamCodec<T> {
 		private static final int MAX_SIZE = 1 << 28; // 256MB
+		public static final int DEFAULT_ESTIMATED_SIZE = 1;
 
 		private final BinarySerializer<T> serializer;
 
-		private int estimatedDataSize;
-		private int estimatedHeaderSize;
+		private final AtomicInteger estimation = new AtomicInteger();
+
+		public OfBinarySerializer(BinarySerializer<T> serializer) {
+			this(serializer, DEFAULT_ESTIMATED_SIZE);
+		}
 
 		public OfBinarySerializer(BinarySerializer<T> serializer, int estimatedSize) {
 			this.serializer = serializer;
-			this.estimatedDataSize = estimatedSize;
-			this.estimatedHeaderSize = varIntSize(estimatedDataSize);
+			this.estimation.set(estimatedSize);
 		}
 
 		@Override
 		public final void encode(StreamOutput output, T item) throws IOException {
 			int positionBegin;
 			int positionData;
+			final int estimatedDataSize = estimation.get();
+			final int estimatedHeaderSize = varIntSize(estimatedDataSize);
 			output.ensure(estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2));
 			BinaryOutput out;
 			for (; ; ) {
@@ -526,24 +532,36 @@ public final class StreamCodecs {
 
 			int positionEnd = out.pos();
 			int dataSize = positionEnd - positionData;
+			int headerSize;
 			if (dataSize > estimatedDataSize) {
-				estimateMore(output, positionBegin, positionData, dataSize);
+				headerSize = varIntSize(dataSize);
+				estimateMore(output, positionBegin, positionData, dataSize, headerSize);
+			} else {
+				headerSize = estimatedHeaderSize;
 			}
-			writeSize(output.array(), positionBegin, dataSize);
+			writeSize(output.array(), positionBegin, dataSize, headerSize);
 		}
 
-		private void estimateMore(StreamOutput output, int positionBegin, int positionData, int dataSize) {
+		private void estimateMore(StreamOutput output, int positionBegin, int positionData, int dataSize, int headerSize) {
 			if (!(dataSize < MAX_SIZE)) throw new IllegalArgumentException("Unsupported size");
-			estimatedDataSize = dataSize;
-			estimatedHeaderSize = varIntSize(estimatedDataSize);
-			ensureHeaderSize(output, positionBegin, positionData, dataSize);
+
+			while (true) {
+				int estimationOld = estimation.get();
+				int estimationNew = Math.max(estimationOld, dataSize);
+				if (estimation.compareAndSet(estimationOld, estimationNew)) {
+					break;
+				}
+			}
+
+			ensureHeaderSize(output, positionBegin, positionData, dataSize, headerSize);
 		}
 
-		private void ensureHeaderSize(StreamOutput output, int positionBegin, int positionData, int dataSize) {
+		private void ensureHeaderSize(StreamOutput output, int positionBegin, int positionData,
+				int dataSize, int headerSize) {
 			int previousHeaderSize = positionData - positionBegin;
-			if (previousHeaderSize == estimatedHeaderSize) return; // offset is enough for header
+			if (previousHeaderSize == headerSize) return; // offset is enough for header
 
-			int headerDelta = estimatedHeaderSize - previousHeaderSize;
+			int headerDelta = headerSize - previousHeaderSize;
 			assert headerDelta > 0;
 			int newPositionData = positionData + headerDelta;
 			int newPositionEnd = newPositionData + dataSize;
@@ -569,27 +587,27 @@ public final class StreamCodecs {
 			return 1 + (31 - Integer.numberOfLeadingZeros(dataSize)) / 7;
 		}
 
-		private void writeSize(byte[] buf, int pos, int size) {
-			if (estimatedHeaderSize == 1) {
+		private void writeSize(byte[] buf, int pos, int size, int headerSize) {
+			if (headerSize == 1) {
 				buf[pos] = (byte) size;
 				return;
 			}
 
 			buf[pos] = (byte) ((size & 0x7F) | 0x80);
 			size >>>= 7;
-			if (estimatedHeaderSize == 2) {
+			if (headerSize == 2) {
 				buf[pos + 1] = (byte) size;
 				return;
 			}
 
 			buf[pos + 1] = (byte) ((size & 0x7F) | 0x80);
 			size >>>= 7;
-			if (estimatedHeaderSize == 3) {
+			if (headerSize == 3) {
 				buf[pos + 2] = (byte) size;
 				return;
 			}
 
-			assert estimatedHeaderSize == 4;
+			assert headerSize == 4;
 			buf[pos + 2] = (byte) ((size & 0x7F) | 0x80);
 			size >>>= 7;
 			buf[pos + 3] = (byte) size;
@@ -649,5 +667,4 @@ public final class StreamCodecs {
 		}
 
 	}
-
 }
