@@ -2,7 +2,6 @@ package io.activej.serializer.stream;
 
 import io.activej.codegen.util.WithInitializer;
 import io.activej.serializer.BinaryOutput;
-import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,15 +10,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
-	private static final int MAX_SIZE = 1 << 28; // 256MB
-
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
-	private BinaryOutput out;
+	BinaryOutput out;
 	private final OutputStream outputStream;
-
-	private int estimatedDataSize = 1;
-	private int estimatedHeaderSize = 1;
 
 	private StreamOutput(OutputStream outputStream, int initialBufferSize) {
 		this.outputStream = outputStream;
@@ -94,94 +88,6 @@ public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
 			outputStream.write(out.array(), 0, out.pos());
 			out.pos(0);
 		}
-	}
-
-	public final <T> void serialize(BinarySerializer<T> serializer, T value) throws IOException {
-		int positionBegin;
-		int positionData;
-		ensure(estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2));
-		for (; ; ) {
-			positionBegin = out.pos();
-			positionData = positionBegin + estimatedHeaderSize;
-			out.pos(positionData);
-			try {
-				serializer.encode(out, value);
-			} catch (ArrayIndexOutOfBoundsException e) {
-				int dataSize = out.array().length - positionData;
-				out.pos(positionBegin);
-				ensure(estimatedHeaderSize + dataSize + 1 + (dataSize >>> 1));
-				continue;
-			}
-			break;
-		}
-
-		int positionEnd = out.pos();
-		int dataSize = positionEnd - positionData;
-		if (dataSize > estimatedDataSize) {
-			estimateMore(positionBegin, positionData, dataSize);
-		}
-		writeSize(out.array(), positionBegin, dataSize);
-	}
-
-	private void ensureHeaderSize(int positionBegin, int positionData, int dataSize) {
-		int previousHeaderSize = positionData - positionBegin;
-		if (previousHeaderSize == estimatedHeaderSize) return; // offset is enough for header
-
-		int headerDelta = estimatedHeaderSize - previousHeaderSize;
-		assert headerDelta > 0;
-		int newPositionData = positionData + headerDelta;
-		int newPositionEnd = newPositionData + dataSize;
-		if (newPositionEnd < out.array().length) {
-			System.arraycopy(out.array(), positionData, out.array(), newPositionData, dataSize);
-		} else {
-			// rare case when data overflows array
-			byte[] oldArray = out.array();
-
-			// ensured size without flush
-			this.out = new BinaryOutput(allocate(newPositionEnd));
-			System.arraycopy(oldArray, 0, out.array(), 0, positionBegin);
-			System.arraycopy(oldArray, positionData, out.array(), newPositionData, dataSize);
-			recycle(oldArray);
-		}
-		out.pos(newPositionEnd);
-	}
-
-	private void estimateMore(int positionBegin, int positionData, int dataSize) {
-		assert dataSize < MAX_SIZE;
-
-		estimatedDataSize = dataSize;
-		estimatedHeaderSize = varIntSize(estimatedDataSize);
-		ensureHeaderSize(positionBegin, positionData, dataSize);
-	}
-
-	private static int varIntSize(int dataSize) {
-		return 1 + (31 - Integer.numberOfLeadingZeros(dataSize)) / 7;
-	}
-
-	private void writeSize(byte[] buf, int pos, int size) {
-		if (estimatedHeaderSize == 1) {
-			buf[pos] = (byte) size;
-			return;
-		}
-
-		buf[pos] = (byte) ((size & 0x7F) | 0x80);
-		size >>>= 7;
-		if (estimatedHeaderSize == 2) {
-			buf[pos + 1] = (byte) size;
-			return;
-		}
-
-		buf[pos + 1] = (byte) ((size & 0x7F) | 0x80);
-		size >>>= 7;
-		if (estimatedHeaderSize == 3) {
-			buf[pos + 2] = (byte) size;
-			return;
-		}
-
-		assert estimatedHeaderSize == 4;
-		buf[pos + 2] = (byte) ((size & 0x7F) | 0x80);
-		size >>>= 7;
-		buf[pos + 3] = (byte) size;
 	}
 
 	public final void write(byte[] b) throws IOException {

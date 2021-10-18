@@ -5,6 +5,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
+import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -485,6 +486,168 @@ public final class StreamCodecs {
 				return instance;
 			}
 		};
+	}
+
+	public static class OfBinarySerializer<T> implements StreamCodec<T> {
+		private static final int MAX_SIZE = 1 << 28; // 256MB
+
+		private final BinarySerializer<T> serializer;
+
+		private int estimatedDataSize;
+		private int estimatedHeaderSize;
+
+		public OfBinarySerializer(BinarySerializer<T> serializer, int estimatedSize) {
+			this.serializer = serializer;
+			this.estimatedDataSize = estimatedSize;
+			this.estimatedHeaderSize = varIntSize(estimatedDataSize);
+		}
+
+		@Override
+		public final void encode(StreamOutput output, T item) throws IOException {
+			int positionBegin;
+			int positionData;
+			output.ensure(estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2));
+			BinaryOutput out;
+			for (; ; ) {
+				out = output.out;
+				positionBegin = out.pos();
+				positionData = positionBegin + estimatedHeaderSize;
+				out.pos(positionData);
+				try {
+					serializer.encode(out, item);
+				} catch (ArrayIndexOutOfBoundsException e) {
+					int dataSize = out.array().length - positionData;
+					out.pos(positionBegin);
+					output.ensure(estimatedHeaderSize + dataSize + 1 + (dataSize >>> 1));
+					continue;
+				}
+				break;
+			}
+
+			int positionEnd = out.pos();
+			int dataSize = positionEnd - positionData;
+			if (dataSize > estimatedDataSize) {
+				estimateMore(output, positionBegin, positionData, dataSize);
+			}
+			writeSize(output.array(), positionBegin, dataSize);
+		}
+
+		private void estimateMore(StreamOutput output, int positionBegin, int positionData, int dataSize) {
+			if (!(dataSize < MAX_SIZE)) throw new IllegalArgumentException("Unsupported size");
+			estimatedDataSize = dataSize;
+			estimatedHeaderSize = varIntSize(estimatedDataSize);
+			ensureHeaderSize(output, positionBegin, positionData, dataSize);
+		}
+
+		private void ensureHeaderSize(StreamOutput output, int positionBegin, int positionData, int dataSize) {
+			int previousHeaderSize = positionData - positionBegin;
+			if (previousHeaderSize == estimatedHeaderSize) return; // offset is enough for header
+
+			int headerDelta = estimatedHeaderSize - previousHeaderSize;
+			assert headerDelta > 0;
+			int newPositionData = positionData + headerDelta;
+			int newPositionEnd = newPositionData + dataSize;
+			byte[] array = output.out.array();
+			if (newPositionEnd < array.length) {
+				System.arraycopy(array, positionData, array, newPositionData, dataSize);
+			} else {
+				// rare case when data overflows array
+				byte[] oldArray = array;
+
+				// ensured size without flush
+				output.out = new BinaryOutput(allocate(newPositionEnd));
+
+				array = output.out.array();
+				System.arraycopy(oldArray, 0, array, 0, positionBegin);
+				System.arraycopy(oldArray, positionData, array, newPositionData, dataSize);
+				recycle(oldArray);
+			}
+			output.out.pos(newPositionEnd);
+		}
+
+		private static int varIntSize(int dataSize) {
+			return 1 + (31 - Integer.numberOfLeadingZeros(dataSize)) / 7;
+		}
+
+		private void writeSize(byte[] buf, int pos, int size) {
+			if (estimatedHeaderSize == 1) {
+				buf[pos] = (byte) size;
+				return;
+			}
+
+			buf[pos] = (byte) ((size & 0x7F) | 0x80);
+			size >>>= 7;
+			if (estimatedHeaderSize == 2) {
+				buf[pos + 1] = (byte) size;
+				return;
+			}
+
+			buf[pos + 1] = (byte) ((size & 0x7F) | 0x80);
+			size >>>= 7;
+			if (estimatedHeaderSize == 3) {
+				buf[pos + 2] = (byte) size;
+				return;
+			}
+
+			assert estimatedHeaderSize == 4;
+			buf[pos + 2] = (byte) ((size & 0x7F) | 0x80);
+			size >>>= 7;
+			buf[pos + 3] = (byte) size;
+		}
+
+		protected byte[] allocate(int size) {
+			return new byte[size];
+		}
+
+		protected void recycle(byte[] array) {
+		}
+
+		@Override
+		public T decode(StreamInput input) throws IOException {
+			int messageSize = readSize(input);
+
+			input.ensure(messageSize);
+
+			int oldPos = input.in.pos();
+			try {
+				T item = serializer.decode(input.in);
+				if (input.in.pos() - oldPos != messageSize) {
+					throw new CorruptedDataException("Deserialized size != decoded data size");
+				}
+				return item;
+			} catch (CorruptedDataException e) {
+				input.close();
+				throw e;
+			}
+		}
+
+		private int readSize(StreamInput input) throws IOException {
+			int result;
+			byte b = input.readByte();
+			if (b >= 0) {
+				result = b;
+			} else {
+				result = b & 0x7f;
+				if ((b = input.readByte()) >= 0) {
+					result |= b << 7;
+				} else {
+					result |= (b & 0x7f) << 7;
+					if ((b = input.readByte()) >= 0) {
+						result |= b << 14;
+					} else {
+						result |= (b & 0x7f) << 14;
+						if ((b = input.readByte()) >= 0) {
+							result |= b << 21;
+						} else {
+							input.close();
+							throw new CorruptedDataException("Invalid size");
+						}
+					}
+				}
+			}
+			return result;
+		}
+
 	}
 
 }

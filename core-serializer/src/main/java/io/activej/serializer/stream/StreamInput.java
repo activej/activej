@@ -2,7 +2,6 @@ package io.activej.serializer.stream;
 
 import io.activej.codegen.util.WithInitializer;
 import io.activej.serializer.BinaryInput;
-import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
-	private BinaryInput in;
+	BinaryInput in;
 	private int limit;
 	private final InputStream inputStream;
 
@@ -126,51 +125,6 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 			limit += bytesRead;
 		}
 		return false;
-	}
-
-	public final <T> T deserialize(BinarySerializer<T> serializer) throws IOException {
-		int messageSize = readSize();
-
-		ensure(messageSize);
-
-		int oldPos = in.pos();
-		try {
-			T item = serializer.decode(in);
-			if (in.pos() - oldPos != messageSize) {
-				throw new CorruptedDataException("Deserialized size != decoded data size");
-			}
-			return item;
-		} catch (CorruptedDataException e) {
-			close();
-			throw e;
-		}
-	}
-
-	private int readSize() throws IOException {
-		int result;
-		byte b = readByte();
-		if (b >= 0) {
-			result = b;
-		} else {
-			result = b & 0x7f;
-			if ((b = readByte()) >= 0) {
-				result |= b << 7;
-			} else {
-				result |= (b & 0x7f) << 7;
-				if ((b = readByte()) >= 0) {
-					result |= b << 14;
-				} else {
-					result |= (b & 0x7f) << 14;
-					if ((b = readByte()) >= 0) {
-						result |= b << 21;
-					} else {
-						close();
-						throw new CorruptedDataException("Invalid size");
-					}
-				}
-			}
-		}
-		return result;
 	}
 
 	private char[] ensureCharArray(int length) {

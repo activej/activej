@@ -1,5 +1,6 @@
 package io.activej.serializer;
 
+import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamInput;
 import io.activej.serializer.stream.StreamOutput;
 import org.junit.Test;
@@ -35,6 +36,7 @@ public final class StreamInputOutputTest {
 	@Test
 	public void bufferSizeOneWithBinarySerializer() throws IOException {
 		BinarySerializer<byte[]> serializer = BinarySerializers.BYTES_SERIALIZER;
+		StreamCodec<byte[]> codec = StreamCodec.ofBinarySerializer(serializer);
 		int int1 = 123;
 		int int2 = -567;
 		byte[] array = new byte[10 * 1024];
@@ -43,14 +45,14 @@ public final class StreamInputOutputTest {
 		try (StreamOutput streamOutput = StreamOutput.create(baos, 1)) {
 			streamOutput.writeInt(int1);
 			streamOutput.writeInt(int2);
-			streamOutput.serialize(serializer, array);
+			codec.encode(streamOutput, array);
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 		try (StreamInput streamInput = StreamInput.create(bais)) {
 			assertEquals(int1, streamInput.readInt());
 			assertEquals(int2, streamInput.readInt());
-			assertArrayEquals(array, streamInput.deserialize(serializer));
+			assertArrayEquals(array, codec.decode(streamInput));
 		}
 	}
 
@@ -61,16 +63,17 @@ public final class StreamInputOutputTest {
 				- 1;
 		for (byte[] array : asList(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024], new byte[nearMaxSize])) {
 			BinarySerializer<byte[]> serializer = BinarySerializers.BYTES_SERIALIZER;
+			StreamCodec<byte[]> codec = StreamCodec.ofBinarySerializer(serializer);
 			ThreadLocalRandom.current().nextBytes(array);
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try (StreamOutput streamOutput = StreamOutput.create(baos, 1)) {
-				streamOutput.serialize(serializer, array);
+				codec.encode(streamOutput, array);
 			}
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 			try (StreamInput streamInput = StreamInput.create(bais)) {
-				assertArrayEquals(array, streamInput.deserialize(serializer));
+				assertArrayEquals(array, codec.decode(streamInput));
 			}
 		}
 	}

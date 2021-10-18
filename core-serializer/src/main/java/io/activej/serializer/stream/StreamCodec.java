@@ -20,17 +20,11 @@ public interface StreamCodec<T> extends StreamEncoder<T>, StreamDecoder<T> {
 		};
 	}
 
-	static <T> StreamCodec<T> of(BinarySerializer<T> binarySerializer) {
-		return new StreamCodec<T>() {
-			@Override
-			public void encode(StreamOutput output, T item) throws IOException {
-				output.serialize(binarySerializer, item);
-			}
+	static <T> StreamCodec<T> ofBinarySerializer(BinarySerializer<T> binarySerializer) {
+		return ofBinarySerializer(binarySerializer, 1);
+	}
 
-			@Override
-			public T decode(StreamInput input) throws IOException {
-				return input.deserialize(binarySerializer);
-			}
-		};
+	static <T> StreamCodec<T> ofBinarySerializer(BinarySerializer<T> binarySerializer, int estimatedSize) {
+		return new StreamCodecs.OfBinarySerializer<>(binarySerializer, estimatedSize);
 	}
 }
