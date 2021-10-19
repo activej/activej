@@ -137,6 +137,42 @@ public class StreamCodecsTest {
 		assertEquals(f, fResult, 1e-10);
 	}
 
+	@Test
+	public void ofVarIntArrayList() {
+		StreamCodec<List<int[]>> codec = StreamCodecs.ofList(StreamCodecs.ofVarIntArray());
+		List<int[]> expected = Arrays.asList(
+				new int[]{-1, -2, -3},
+				new int[]{1, 2, 3},
+				new int[]{-1, 0, 1},
+				new int[]{Integer.MIN_VALUE, Integer.MAX_VALUE}
+		);
+		List<int[]> result = doTest(codec, expected);
+
+		assertEquals(expected.size(), result.size());
+
+		for (int i = 0; i < expected.size(); i++) {
+			assertArrayEquals(expected.get(i), result.get(i));
+		}
+	}
+
+	@Test
+	public void ofVarLongArrayList() {
+		StreamCodec<List<long[]>> codec = StreamCodecs.ofList(StreamCodecs.ofVarLongArray());
+		List<long[]> expected = Arrays.asList(
+				new long[]{-1, -2, -3},
+				new long[]{1, 2, 3},
+				new long[]{-1, 0, 1},
+				new long[]{Long.MIN_VALUE, Long.MAX_VALUE}
+		);
+		List<long[]> result = doTest(codec, expected);
+
+		assertEquals(expected.size(), result.size());
+
+		for (int i = 0; i < expected.size(); i++) {
+			assertArrayEquals(expected.get(i), result.get(i));
+		}
+	}
+
 	private static <T> T doTest(StreamCodec<T> codec, T value) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (StreamOutput output = StreamOutput.create(baos, 1)) {

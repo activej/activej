@@ -180,8 +180,9 @@ public final class StreamCodecs {
 				BinaryInput in = input.in();
 				int idx = 0;
 				while (idx < array.length) {
-					input.ensure(array.length - idx);
-					int safeReadCount = input.remaining() / 5;
+					int remaining = array.length - idx;
+					input.ensure(remaining);
+					int safeReadCount = Math.min(remaining, input.remaining() / 5);
 					if (safeReadCount == 0) break;
 					for (int i = 0; i < safeReadCount; i++) {
 						array[idx++] = in.readVarInt();
@@ -213,8 +214,9 @@ public final class StreamCodecs {
 				BinaryInput in = input.in();
 				int idx = 0;
 				while (idx < array.length) {
-					input.ensure(array.length - idx);
-					int safeReadCount = input.remaining() / 10;
+					int remaining = array.length - idx;
+					input.ensure(remaining);
+					int safeReadCount = Math.min(remaining, input.remaining() / 10);
 					if (safeReadCount == 0) break;
 					for (int i = 0; i < safeReadCount; i++) {
 						array[idx++] = in.readVarLong();
