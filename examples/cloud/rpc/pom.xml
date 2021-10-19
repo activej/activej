@@ -23,5 +23,10 @@
       <artifactId>activej-memcache</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-specializer</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>
