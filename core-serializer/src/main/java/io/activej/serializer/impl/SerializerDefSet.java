@@ -39,7 +39,7 @@ public final class SerializerDefSet extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefSet(valueSerializer, true);
 	}
 
@@ -53,7 +53,7 @@ public final class SerializerDefSet extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
+	protected @NotNull Expression createBuilder(Expression length) {
 		if (valueSerializer.getDecodeType().isEnum()) {
 			return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getEncodeType()));
 		}

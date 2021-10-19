@@ -65,14 +65,12 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	}
 
 	@Override
-	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+	public final SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return doEnsureNullable(compatibilityLevel);
 	}
-
-	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
 
 	@Override
 	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
@@ -89,13 +87,9 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		}
 	}
 
-	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel){
 		return doIterate(value,
 				it -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(it, valueSerializer.getEncodeType()), version, compatibilityLevel));
-	}
-
-	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
-		return iterateIterable(collection, action);
 	}
 
 	@Override
@@ -108,18 +102,20 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
 	}
 
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length){
 		return let(createBuilder(length), builder -> sequence(
 				iterate(value(0), length,
 						i -> addToBuilder(builder, i, cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
 				build(builder)));
 	}
 
-	protected abstract Expression createBuilder(Expression length);
+	protected abstract @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
+
+	protected abstract @NotNull Expression doIterate(Expression collection, UnaryOperator<Expression> action);
+
+	protected abstract @NotNull Expression createBuilder(Expression length);
 
 	protected abstract @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element);
 
-	protected Expression build(Expression builder) {
-		return builder;
-	}
+	protected abstract @NotNull Expression build(Expression builder);
 }

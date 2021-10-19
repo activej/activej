@@ -5,6 +5,7 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.SerializerDefRegularMap;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BinaryOperator;
 
@@ -22,12 +23,12 @@ public final class SerializerDefHppc7HashMap extends SerializerDefRegularMap {
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefHppc7HashMap(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
 	}
 
 	@Override
-	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> action) {
+	protected @NotNull Expression doIterateMap(Expression collection, BinaryOperator<Expression> action) {
 		try {
 			String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");
@@ -41,7 +42,7 @@ public final class SerializerDefHppc7HashMap extends SerializerDefRegularMap {
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
+	protected @NotNull Expression createBuilder(Expression length) {
 		return constructor(decodeType, hashInitialSize(length));
 	}
 }

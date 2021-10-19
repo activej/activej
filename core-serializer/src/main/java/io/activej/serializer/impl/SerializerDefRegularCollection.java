@@ -21,8 +21,9 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
-import static io.activej.codegen.expression.Expressions.call;
-import static io.activej.codegen.expression.Expressions.constructor;
+import java.util.function.UnaryOperator;
+
+import static io.activej.codegen.expression.Expressions.*;
 
 public class SerializerDefRegularCollection extends AbstractSerializerDefCollection {
 
@@ -35,17 +36,27 @@ public class SerializerDefRegularCollection extends AbstractSerializerDefCollect
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefRegularCollection(valueSerializer, encodeType, decodeType, elementType, true);
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
+	protected @NotNull Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
+		return iterateIterable(collection, action);
+	}
+
+	@Override
+	protected @NotNull Expression createBuilder(Expression length) {
 		return constructor(decodeType, length);
 	}
 
 	@Override
 	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
 		return call(builder, "add", element);
+	}
+
+	@Override
+	protected @NotNull Expression build(Expression builder) {
+		return builder;
 	}
 }

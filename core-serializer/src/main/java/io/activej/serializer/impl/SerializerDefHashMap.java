@@ -19,6 +19,7 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import org.jetbrains.annotations.NotNull;
 
 import static io.activej.codegen.expression.Expressions.constructor;
 import static io.activej.serializer.util.Utils.hashInitialSize;
@@ -33,12 +34,12 @@ public final class SerializerDefHashMap extends SerializerDefRegularMap {
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefHashMap(keySerializer, valueSerializer, encodeType, decodeType, true);
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
+	protected @NotNull Expression createBuilder(Expression length) {
 		return constructor(decodeType, hashInitialSize(length));
 	}
 }

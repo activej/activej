@@ -19,6 +19,7 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedList;
 
@@ -34,12 +35,12 @@ public final class SerializerDefLinkedList extends SerializerDefRegularCollectio
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefLinkedList(valueSerializer, true);
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
+	protected @NotNull Expression createBuilder(Expression length) {
 		return constructor(LinkedList.class);
 	}
 }

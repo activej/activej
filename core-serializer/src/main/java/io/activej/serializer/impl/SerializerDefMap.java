@@ -39,7 +39,7 @@ public final class SerializerDefMap extends SerializerDefRegularMap {
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefMap(keySerializer, valueSerializer, true);
 	}
 
@@ -55,7 +55,7 @@ public final class SerializerDefMap extends SerializerDefRegularMap {
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
+	protected @NotNull Expression createBuilder(Expression length) {
 		Class<?> rawType = keySerializer.getDecodeType();
 		if (rawType.isEnum()) {
 			return constructor(EnumMap.class, value(rawType));

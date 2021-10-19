@@ -70,14 +70,12 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	}
 
 	@Override
-	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+	public final SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDefNullable(this);
 		}
 		return doEnsureNullable(compatibilityLevel);
 	}
-
-	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
 
 	@Override
 	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
@@ -101,10 +99,6 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 						valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(v, valueSerializer.getEncodeType()), version, compatibilityLevel)));
 	}
 
-	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction) {
-		return iterateMap(collection, keyValueAction);
-	}
-
 	@Override
 	public final Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(readVarInt(in), length ->
@@ -125,11 +119,13 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 				build(builder)));
 	}
 
-	protected abstract Expression createBuilder(Expression length);
+	protected abstract @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
+
+	protected abstract @NotNull Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction);
+
+	protected abstract @NotNull Expression createBuilder(Expression length);
 
 	protected abstract @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value);
 
-	protected Expression build(Expression builder) {
-		return builder;
-	}
+	protected abstract @NotNull Expression build(Expression builder);
 }

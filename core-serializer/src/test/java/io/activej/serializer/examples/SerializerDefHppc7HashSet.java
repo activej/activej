@@ -3,6 +3,7 @@ package io.activej.serializer.examples;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import org.jetbrains.annotations.NotNull;
 
 import static io.activej.codegen.expression.Expressions.constructor;
 import static io.activej.serializer.util.Utils.hashInitialSize;
@@ -17,12 +18,12 @@ public final class SerializerDefHppc7HashSet extends SerializerDefHppc7RegularCo
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefHppc7HashSet(valueSerializer, encodeType, decodeType, elementType, true);
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
+	protected @NotNull Expression createBuilder(Expression length) {
 		return constructor(decodeType, hashInitialSize(length));
 	}
 }

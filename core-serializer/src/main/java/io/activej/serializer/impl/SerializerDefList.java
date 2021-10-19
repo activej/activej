@@ -38,12 +38,12 @@ public final class SerializerDefList extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefList(valueSerializer, true);
 	}
 
 	@Override
-	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
+	protected @NotNull Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
 		return let(collection, v -> iterateList(v, action));
 	}
 
@@ -57,7 +57,7 @@ public final class SerializerDefList extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
+	protected @NotNull Expression createBuilder(Expression length) {
 		return arrayNew(Object[].class, length);
 	}
 
@@ -67,7 +67,7 @@ public final class SerializerDefList extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected Expression build(Expression array) {
+	protected @NotNull Expression build(Expression array) {
 		return staticCall(Arrays.class, "asList", array);
 	}
 }
