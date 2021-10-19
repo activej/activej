@@ -71,7 +71,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 		if (requestHandler == null) {
 			return Promise.ofException(new MalformedDataException("Failed to process request " + request));
 		}
-		return requestHandler.run(request);
+		return requestHandler.run(request).promise();
 	}
 
 	@Override

@@ -16,7 +16,7 @@
 
 package io.activej.rpc.server;
 
-import io.activej.promise.Promise;
+import io.activej.promise.Promisable;
 
 /**
  * Implementations of this interface specifies the behavior according to
@@ -30,5 +30,5 @@ import io.activej.promise.Promise;
  */
 @FunctionalInterface
 public interface RpcRequestHandler<I, O> {
-	Promise<O> run(I request);
+	Promisable<O> run(I request);
 }
