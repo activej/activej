@@ -452,4 +452,37 @@ public class IsAssignableTest {
 			));
 		}
 	}
+
+	@Test
+	public void typeVariables() throws NoSuchMethodException {
+		{
+			assertTrue(isAssignable(new TypeT<List<String>>() {}.getType(), Interface.class.getMethod("listOfT").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<Integer>>() {}.getType(), Interface.class.getMethod("listOfT").getGenericReturnType()));
+
+			assertFalse(isAssignable(new TypeT<List<String>>() {}.getType(), Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<Integer>>() {}.getType(), Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType()));
+		}
+
+		{
+			assertTrue(isAssignable(Interface.class.getMethod("listOfT").getGenericReturnType(), new TypeT<List<String>>() {}.getType()));
+			assertTrue(isAssignable(Interface.class.getMethod("listOfT").getGenericReturnType(), new TypeT<List<Integer>>() {}.getType()));
+
+			assertFalse(isAssignable(Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType(), new TypeT<List<String>>() {}.getType()));
+			assertTrue(isAssignable(Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType(), new TypeT<List<Integer>>() {}.getType()));
+		}
+	}
+
+	interface Interface {
+		<T> List<T> listOfT();
+
+		<T extends Number> List<T> listOfTExtendsNumber();
+
+		default void test() {
+			List<String> tAsString = listOfT();
+			List<Integer> tAsInteger = listOfT();
+
+//			List<String> tExtendsNumberAsString = listOfTExtendsNumber();
+			List<Integer> tExtendsNumberAsInteger = listOfTExtendsNumber();
+		}
+	}
 }

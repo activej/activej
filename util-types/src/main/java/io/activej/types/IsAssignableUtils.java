@@ -69,6 +69,9 @@ public class IsAssignableUtils {
 		if (to instanceof TypeVariable) {
 			return isAssignable(getRawType(to), from, false);
 		}
+		if (from instanceof TypeVariable) {
+			return isAssignable(getRawType(from), to, false);
+		}
 		if (!strict && to instanceof Class) {
 			return ((Class<?>) to).isAssignableFrom(getRawType(from));
 		}
