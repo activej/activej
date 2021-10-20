@@ -179,4 +179,77 @@ public final class TypeUtils {
 		}
 	}
 
+	public static Type simplifyType(Type original) {
+		if (original instanceof Class) {
+			return original;
+		}
+
+		if (original instanceof GenericArrayType) {
+			Type componentType = ((GenericArrayType) original).getGenericComponentType();
+			Type repackedComponentType = simplifyType(componentType);
+			if (componentType != repackedComponentType) {
+				return Types.genericArrayType(repackedComponentType);
+			}
+			return original;
+		}
+
+		if (original instanceof ParameterizedType) {
+			ParameterizedType parameterizedType = (ParameterizedType) original;
+			Type[] typeArguments = parameterizedType.getActualTypeArguments();
+			Type[] repackedTypeArguments = simplifyTypes(typeArguments);
+			if (typeArguments != repackedTypeArguments) {
+				return Types.parameterizedType(
+						parameterizedType.getOwnerType(),
+						parameterizedType.getRawType(),
+						repackedTypeArguments
+				);
+			}
+			return original;
+		}
+
+		if (original instanceof TypeVariable) {
+			throw new IllegalArgumentException("Key should not contain a type variable: " + original);
+		}
+
+		if (original instanceof WildcardType) {
+			WildcardType wildcardType = (WildcardType) original;
+			Type[] upperBounds = wildcardType.getUpperBounds();
+			if (upperBounds.length == 1) {
+				Type upperBound = upperBounds[0];
+				if (upperBound != Object.class) {
+					return simplifyType(upperBound);
+				}
+			} else if (upperBounds.length > 1) {
+				throw new IllegalArgumentException("Multiple upper bounds not supported: " + original);
+			}
+
+			Type[] lowerBounds = wildcardType.getLowerBounds();
+			if (lowerBounds.length == 1) {
+				return simplifyType(lowerBounds[0]);
+			} else if (lowerBounds.length > 1) {
+				throw new IllegalArgumentException("Multiple lower bounds not supported: " + original);
+			}
+			return Object.class;
+		}
+
+		return original;
+	}
+
+	private static Type[] simplifyTypes(Type[] original) {
+		int length = original.length;
+		for (int i = 0; i < length; i++) {
+			Type typeArgument = original[i];
+			Type repackTypeArgument = simplifyType(typeArgument);
+			if (repackTypeArgument != typeArgument) {
+				Type[] repackedTypeArguments = new Type[length];
+				System.arraycopy(original, 0, repackedTypeArguments, 0, i);
+				repackedTypeArguments[i++] = repackTypeArgument;
+				for (; i < length; i++) {
+					repackedTypeArguments[i] = simplifyType(original[i]);
+				}
+				return repackedTypeArguments;
+			}
+		}
+		return original;
+	}
 }

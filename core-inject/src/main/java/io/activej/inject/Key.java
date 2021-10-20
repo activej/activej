@@ -26,6 +26,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
+import static io.activej.inject.util.TypeUtils.simplifyType;
+
 /**
  * The key defines an identity of a binding. In any DI, a key is usually a type of the object along
  * with some optional tag to distinguish between bindings which make objects of the same type.
@@ -44,17 +46,17 @@ public abstract class Key<T> {
 	private final @Nullable Object qualifier;
 
 	protected Key() {
-		this.type = getTypeParameter();
+		this.type = simplifyType(getTypeParameter());
 		this.qualifier = null;
 	}
 
 	protected Key(@Nullable Object qualifier) {
-		this.type = getTypeParameter();
+		this.type = simplifyType(getTypeParameter());
 		this.qualifier = qualifier;
 	}
 
 	Key(@NotNull Type type, @Nullable Object qualifier) {
-		this.type = type;
+		this.type = simplifyType(type);
 		this.qualifier = qualifier;
 	}
 
