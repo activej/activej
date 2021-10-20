@@ -1323,4 +1323,27 @@ public final class TestDI {
 
 	}
 
+	@Test
+	public void genericModule() {
+		Key<List<Integer>> integerListKey = new Key<List<Integer>>() {};
+		Key<List<String>> stringListKey = new Key<List<String>>() {};
+
+		Injector injector = Injector.of(new GenericModule2(),
+				ModuleBuilder.create()
+						.bind(integerListKey)
+						.bind(stringListKey)
+						.bind(Integer.class).to(() -> 123)
+						.bind(String.class).to(() -> "test")
+						.build());
+
+		assertEquals(singletonList(123), injector.getInstance(integerListKey));
+		assertEquals(singletonList("test"), injector.getInstance(stringListKey));
+	}
+
+	public static final class GenericModule2 extends AbstractModule {
+		@Provides
+		<A> List<A> listA(A a) {
+			return singletonList(a);
+		}
+	}
 }

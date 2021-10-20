@@ -66,6 +66,9 @@ public class IsAssignableUtils {
 		}
 		if (to instanceof GenericArrayType) to = getRawType(to);
 		if (from instanceof GenericArrayType) from = getRawType(from);
+		if (to instanceof TypeVariable) {
+			return isAssignable(getRawType(to), from, false);
+		}
 		if (!strict && to instanceof Class) {
 			return ((Class<?>) to).isAssignableFrom(getRawType(from));
 		}

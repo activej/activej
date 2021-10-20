@@ -372,7 +372,6 @@ public final class ReflectionUtils {
 		return scanClassInto(moduleClass, module, ModuleBuilder.create());
 	}
 
-	@SuppressWarnings("unchecked")
 	public static Module scanClassInto(@NotNull Class<?> moduleClass, @Nullable Object module, ModuleBuilder builder) {
 		for (Method method : moduleClass.getDeclaredMethods()) {
 			if (method.isAnnotationPresent(Provides.class)) {
@@ -409,8 +408,8 @@ public final class ReflectionUtils {
 						throw new DIException("Generic type variables " + unused + " are not used in return type of templated provider method " + method);
 					}
 					builder.generate(
-							KeyPattern.of((Class<Object>) method.getReturnType()),
-							new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
+							KeyPattern.ofType(returnType, qualifier),
+							new TemplatedProviderGenerator(methodScope, method, module, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
 				}
 
 			} else if (method.isAnnotationPresent(ProvidesIntoSet.class)) {
@@ -466,25 +465,21 @@ public final class ReflectionUtils {
 
 	private static class TemplatedProviderGenerator implements BindingGenerator<Object> {
 		private final Scope[] methodScope;
-		private final @Nullable Object qualifier;
 		private final Method method;
 
 		private final Object module;
-		private final Type returnType;
 		private final BindingType bindingType;
 
-		private TemplatedProviderGenerator(Scope[] methodScope, @Nullable Object qualifier, Method method, Object module, Type returnType, BindingType bindingType) {
+		private TemplatedProviderGenerator(Scope[] methodScope, Method method, Object module, BindingType bindingType) {
 			this.methodScope = methodScope;
-			this.qualifier = qualifier;
 			this.method = method;
 			this.module = module;
-			this.returnType = returnType;
 			this.bindingType = bindingType;
 		}
 
 		@Override
 		public @Nullable Binding<Object> generate(BindingLocator bindings, Scope[] scope, Key<Object> key) {
-			if (scope.length < methodScope.length || (qualifier != null && !qualifier.equals(key.getQualifier())) || !TypeUtils.matches(key.getType(), returnType)) {
+			if (scope.length < methodScope.length) {
 				return null;
 			}
 			for (int i = 0; i < methodScope.length; i++) {
