@@ -45,6 +45,8 @@ public abstract class Key<T> {
 	private final @NotNull Type type;
 	private final @Nullable Object qualifier;
 
+	private int hash;
+
 	protected Key() {
 		this.type = simplifyType(getTypeParameter());
 		this.qualifier = null;
@@ -148,7 +150,11 @@ public abstract class Key<T> {
 
 	@Override
 	public int hashCode() {
-		return 31 * type.hashCode() + (qualifier == null ? 0 : qualifier.hashCode());
+		int hashCode = hash;
+		if (hashCode == 0) {
+			hash = 31 * type.hashCode() + (qualifier == null ? 0 : qualifier.hashCode());
+		}
+		return hash;
 	}
 
 	@Override
