@@ -458,17 +458,161 @@ public class IsAssignableTest {
 		{
 			assertTrue(isAssignable(new TypeT<List<String>>() {}.getType(), Interface.class.getMethod("listOfT").getGenericReturnType()));
 			assertTrue(isAssignable(new TypeT<List<Integer>>() {}.getType(), Interface.class.getMethod("listOfT").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<Object>>() {}.getType(), Interface.class.getMethod("listOfT").getGenericReturnType()));
 
 			assertFalse(isAssignable(new TypeT<List<String>>() {}.getType(), Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType()));
 			assertTrue(isAssignable(new TypeT<List<Integer>>() {}.getType(), Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<Object>>() {}.getType(), Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType()));
+
+			assertTrue(isAssignable(new TypeT<List<String>>() {}.getType(), Interface.class.getMethod("listOfTExtendsObject").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<Integer>>() {}.getType(), Interface.class.getMethod("listOfTExtendsObject").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<Object>>() {}.getType(), Interface.class.getMethod("listOfTExtendsObject").getGenericReturnType()));
 		}
 
 		{
 			assertTrue(isAssignable(Interface.class.getMethod("listOfT").getGenericReturnType(), new TypeT<List<String>>() {}.getType()));
 			assertTrue(isAssignable(Interface.class.getMethod("listOfT").getGenericReturnType(), new TypeT<List<Integer>>() {}.getType()));
+			assertTrue(isAssignable(Interface.class.getMethod("listOfT").getGenericReturnType(), new TypeT<List<Object>>() {}.getType()));
 
 			assertFalse(isAssignable(Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType(), new TypeT<List<String>>() {}.getType()));
 			assertTrue(isAssignable(Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType(), new TypeT<List<Integer>>() {}.getType()));
+			assertFalse(isAssignable(Interface.class.getMethod("listOfTExtendsNumber").getGenericReturnType(), new TypeT<List<Object>>() {}.getType()));
+
+			assertTrue(isAssignable(Interface.class.getMethod("listOfTExtendsObject").getGenericReturnType(), new TypeT<List<String>>() {}.getType()));
+			assertTrue(isAssignable(Interface.class.getMethod("listOfTExtendsObject").getGenericReturnType(), new TypeT<List<Integer>>() {}.getType()));
+			assertTrue(isAssignable(Interface.class.getMethod("listOfTExtendsObject").getGenericReturnType(), new TypeT<List<Object>>() {}.getType()));
+		}
+	}
+
+	@Test
+	public void typeVariablesMultipleGenerics() throws NoSuchMethodException {
+		{
+			assertTrue(isAssignable(new TypeT<Map<String, String>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKV").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<Map<Integer, Integer>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKV").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<Map<Object, Object>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKV").getGenericReturnType()));
+
+			assertFalse(isAssignable(new TypeT<Map<String, String>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsNumberV").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<Map<Integer, Integer>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsNumberV").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<Map<Object, Object>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsNumberV").getGenericReturnType()));
+
+			assertFalse(isAssignable(new TypeT<Map<String, String>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKVExtendsNumber").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<Map<Integer, Integer>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKVExtendsNumber").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<Map<Object, Object>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKVExtendsNumber").getGenericReturnType()));
+
+			assertFalse(isAssignable(new TypeT<Map<String, String>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsNumberVExtendsNumber").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<Map<Integer, Integer>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsNumberVExtendsNumber").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<Map<Object, Object>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsNumberVExtendsNumber").getGenericReturnType()));
+
+			assertTrue(isAssignable(new TypeT<Map<String, String>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsObjectVExtendsObject").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<Map<Integer, Integer>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsObjectVExtendsObject").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<Map<Object, Object>>() {}.getType(), MultipleGenerics.class.getMethod("mapOfKExtendsObjectVExtendsObject").getGenericReturnType()));
+		}
+
+		{
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKV").getGenericReturnType(), new TypeT<Map<String, String>>() {}.getType()));
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKV").getGenericReturnType(), new TypeT<Map<Integer, Integer>>() {}.getType()));
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKV").getGenericReturnType(), new TypeT<Map<Object, Object>>() {}.getType()));
+
+			assertFalse(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsNumberV").getGenericReturnType(), new TypeT<Map<String, String>>() {}.getType()));
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsNumberV").getGenericReturnType(), new TypeT<Map<Integer, Integer>>() {}.getType()));
+			assertFalse(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsNumberV").getGenericReturnType(), new TypeT<Map<Object, Object>>() {}.getType()));
+
+			assertFalse(isAssignable(MultipleGenerics.class.getMethod("mapOfKVExtendsNumber").getGenericReturnType(), new TypeT<Map<String, String>>() {}.getType()));
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKVExtendsNumber").getGenericReturnType(), new TypeT<Map<Integer, Integer>>() {}.getType()));
+			assertFalse(isAssignable(MultipleGenerics.class.getMethod("mapOfKVExtendsNumber").getGenericReturnType(), new TypeT<Map<Object, Object>>() {}.getType()));
+
+			assertFalse(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsNumberVExtendsNumber").getGenericReturnType(), new TypeT<Map<String, String>>() {}.getType()));
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsNumberVExtendsNumber").getGenericReturnType(), new TypeT<Map<Integer, Integer>>() {}.getType()));
+			assertFalse(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsNumberVExtendsNumber").getGenericReturnType(), new TypeT<Map<Object, Object>>() {}.getType()));
+
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsObjectVExtendsObject").getGenericReturnType(), new TypeT<Map<String, String>>() {}.getType()));
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsObjectVExtendsObject").getGenericReturnType(), new TypeT<Map<Integer, Integer>>() {}.getType()));
+			assertTrue(isAssignable(MultipleGenerics.class.getMethod("mapOfKExtendsObjectVExtendsObject").getGenericReturnType(), new TypeT<Map<Object, Object>>() {}.getType()));
+		}
+	}
+
+	@Test
+	public void typeVariablesMultipleBounds() throws NoSuchMethodException {
+		{
+			assertFalse(isAssignable(new TypeT<List<String>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<Object>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<A>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<B>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClass>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassA>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<TestClassAPlusB>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<ExtendsTestClassAPlusB>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassB>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<TestClassBPlusA>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<ExtendsTestClassBPlusA>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<TestClassAAndB>>() {}.getType(), MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType()));
+
+			assertFalse(isAssignable(new TypeT<List<String>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<Object>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<A>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<B>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClass>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassA>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<TestClassAPlusB>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<ExtendsTestClassAPlusB>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassB>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassBPlusA>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<ExtendsTestClassBPlusA>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassAAndB>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType()));
+
+			assertFalse(isAssignable(new TypeT<List<String>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<Object>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<A>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<B>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClass>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassA>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassAPlusB>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<ExtendsTestClassAPlusB>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassB>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<TestClassBPlusA>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertTrue(isAssignable(new TypeT<List<ExtendsTestClassBPlusA>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+			assertFalse(isAssignable(new TypeT<List<TestClassAAndB>>() {}.getType(), MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType()));
+		}
+
+		{
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<String>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<Object>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<A>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<B>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<TestClass>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<TestClassA>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<TestClassAPlusB>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<ExtendsTestClassAPlusB>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<TestClassB>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<TestClassBPlusA>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<ExtendsTestClassBPlusA>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfAandB").getGenericReturnType(), new TypeT<List<TestClassAAndB>>() {}.getType()));
+
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<String>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<Object>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<A>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<B>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<TestClass>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<TestClassA>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<TestClassAPlusB>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<ExtendsTestClassAPlusB>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<TestClassB>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<TestClassBPlusA>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<ExtendsTestClassBPlusA>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassAAndB").getGenericReturnType(), new TypeT<List<TestClassAAndB>>() {}.getType()));
+
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<String>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<Object>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<A>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<B>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<TestClass>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<TestClassA>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<TestClassAPlusB>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<ExtendsTestClassAPlusB>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<TestClassB>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<TestClassBPlusA>>() {}.getType()));
+			assertTrue(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<ExtendsTestClassBPlusA>>() {}.getType()));
+			assertFalse(isAssignable(MultipleBounds.class.getMethod("listOfClassBAndA").getGenericReturnType(), new TypeT<List<TestClassAAndB>>() {}.getType()));
 		}
 	}
 
@@ -477,12 +621,123 @@ public class IsAssignableTest {
 
 		<T extends Number> List<T> listOfTExtendsNumber();
 
+		<T extends Object> List<T> listOfTExtendsObject();
+
 		default void test() {
 			List<String> tAsString = listOfT();
 			List<Integer> tAsInteger = listOfT();
+			List<Object> tAsObject = listOfT();
 
 //			List<String> tExtendsNumberAsString = listOfTExtendsNumber();
 			List<Integer> tExtendsNumberAsInteger = listOfTExtendsNumber();
+//			List<Object> tExtendsNumberAsObject = listOfTExtendsNumber();
+
+			List<String> tExtendsObjectAsString = listOfTExtendsObject();
+			List<Integer> tExtendsObjectAsInteger = listOfTExtendsObject();
+			List<Object> tExtendsObjectAsObject = listOfTExtendsObject();
 		}
 	}
+
+	interface MultipleGenerics {
+		<K, V> Map<K, V> mapOfKV();
+
+		<K extends Number, V> Map<K, V> mapOfKExtendsNumberV();
+
+		<K, V extends Number> Map<K, V> mapOfKVExtendsNumber();
+
+		<K extends Number, V extends Number> Map<K, V> mapOfKExtendsNumberVExtendsNumber();
+
+		<K extends Object, V extends Object> Map<K, V> mapOfKExtendsObjectVExtendsObject();
+
+		default void test() {
+			Map<String, String> kAsStringVAsString = mapOfKV();
+			Map<Integer, Integer> kAsIntegerVAsInteger = mapOfKV();
+			Map<Object, Object> kAsObjectVAsObject = mapOfKV();
+
+//			Map<String, String> kExtendsNumberAsStringVAsString = mapOfKExtendsNumberV();
+			Map<Integer, Integer> kExtendsNumberAsIntegerVAsInteger = mapOfKExtendsNumberV();
+//			Map<Object, Object> kExtendsNumberAsObjectVAsObject = mapOfKExtendsNumberV();
+
+//			Map<String, String> kAsStringVExtendsNumberAsString = mapOfKVExtendsNumber();
+			Map<Integer, Integer> kAsIntegerVExtendsNumberAsInteger = mapOfKVExtendsNumber();
+//			Map<Object, Object> kAsObjectVExtendsNumberAsObject = mapOfKVExtendsNumber();
+
+//			Map<String, String> kExtendsNumberAsStringVExtendsNumberAsString = mapOfKExtendsNumberVExtendsNumber();
+			Map<Integer, Integer> kExtendsNumberAsIntegerVExtendsNumberAsInteger = mapOfKExtendsNumberVExtendsNumber();
+//			Map<Object, Object> kExtendsNumberAsObjectVExtendsNumberAsObject = mapOfKExtendsNumberVExtendsNumber();
+
+			Map<String, String> kExtendsObjectAsStringVExtendsObjectAsString = mapOfKExtendsObjectVExtendsObject();
+			Map<Integer, Integer> kExtendsObjectAsIntegerVExtendsObjectAsInteger = mapOfKExtendsObjectVExtendsObject();
+			Map<Object, Object> kExtendsObjectAsObjectVExtendsObjectAsObject = mapOfKExtendsObjectVExtendsObject();
+		}
+	}
+
+	interface MultipleBounds {
+		<T extends A & B> List<T> listOfAandB();
+
+		<T extends TestClassA & B> List<T> listOfClassAAndB();
+
+		<T extends TestClassB & A> List<T> listOfClassBAndA();
+
+		default void test() {
+//			List<String> tAsStringList1 = listOfAandB();
+//			List<Object> tAsObjectList1 = listOfAandB();
+//			List<A> tAsAList1 = listOfAandB();
+//			List<B> tAsBList1 = listOfAandB();
+//			List<TestClass> tAsTestClassList1 = listOfAandB();
+//			List<TestClassA> tAsTestClassAList1 = listOfAandB();
+			List<TestClassAPlusB> tAsTestClassAPlusBList1 = listOfAandB();
+			List<ExtendsTestClassAPlusB> tAsExtendsTestClassAPlusBList1 = listOfAandB();
+//			List<TestClassB> tAsTestClassBList1 = listOfAandB();
+			List<TestClassBPlusA> tAsTestClassBPlusAList1 = listOfAandB();
+			List<ExtendsTestClassBPlusA> tAsExtendsTestClassBPlusAList1 = listOfAandB();
+			List<TestClassAAndB> tAsTestClassAAndBList1 = listOfAandB();
+
+//			List<String> tAsStringList2 = listOfClassAAndB();
+//			List<Object> tAsObjectList2 = listOfClassAAndB();
+//			List<A> tAsAList2 = listOfClassAAndB();
+//			List<B> tAsBList2 = listOfClassAAndB();
+//			List<TestClass> tAsTestClassList2 = listOfClassAAndB();
+//			List<TestClassA> tAsTestClassAList2 = listOfClassAAndB();
+			List<TestClassAPlusB> tAsTestClassAPlusBList2 = listOfClassAAndB();
+			List<ExtendsTestClassAPlusB> tAsExtendsTestClassAPlusBList2 = listOfClassAAndB();
+//			List<TestClassB> tAsTestClassBList2 = listOfClassAAndB();
+//			List<TestClassBPlusA> tAsTestClassBPlusAList2 = listOfClassAAndB();
+//			List<ExtendsTestClassBPlusA> tAsExtendsTestClassBPlusAList2 = listOfClassAAndB();
+//			List<TestClassAAndB> tAsTestClassAAndBList2 = listOfClassAAndB();
+
+//			List<String> tAsStringList3 = listOfClassBAndA();
+//			List<Object> tAsObjectList3 = listOfClassBAndA();
+//			List<A> tAsAList3 = listOfClassBAndA();
+//			List<B> tAsBList3 = listOfClassBAndA();
+//			List<TestClass> tAsTestClassList3 = listOfClassBAndA();
+//			List<TestClassA> tAsTestClassAList3 = listOfClassBAndA();
+//			List<TestClassAPlusB> tAsTestClassAPlusBList3 = listOfClassBAndA();
+//			List<ExtendsTestClassAPlusB> tAsExtendsTestClassAPlusBList3 = listOfClassBAndA();
+//			List<TestClassB> tAsTestClassBList3 = listOfClassBAndA();
+			List<TestClassBPlusA> tAsTestClassBPlusAList3 = listOfClassBAndA();
+			List<ExtendsTestClassBPlusA> tAsExtendsTestClassBPlusAList3 = listOfClassBAndA();
+//			List<TestClassAAndB> tAsTestClassAAndBList3 = listOfClassBAndA();
+		}
+	}
+
+	interface A {}
+
+	interface B {}
+
+	class TestClass {}
+
+	class TestClassA extends TestClass implements A {}
+
+	class TestClassAPlusB extends TestClassA implements B {}
+
+	class ExtendsTestClassAPlusB extends TestClassAPlusB {}
+
+	class TestClassB extends TestClass implements B {}
+
+	class TestClassBPlusA extends TestClassB implements A {}
+
+	class ExtendsTestClassBPlusA extends TestClassBPlusA {}
+
+	class TestClassAAndB extends TestClass implements A, B {}
 }
