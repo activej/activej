@@ -336,7 +336,9 @@ public final class ReflectionUtils {
 		Binding<T> binding = Binding.to(
 				args -> {
 					try {
-						return (T) method.invoke(module, args);
+						T result = (T) method.invoke(module, args);
+						if (result == null) throw new NullPointerException("@Provides method must return non-null result, method " + method);
+						return result;
 					} catch (IllegalAccessException e) {
 						throw new DIException("Not allowed to call method " + method, e);
 					} catch (InvocationTargetException e) {
@@ -508,7 +510,9 @@ public final class ReflectionUtils {
 			Binding<Object> binding = Binding.to(
 					args -> {
 						try {
-							return method.invoke(module, args);
+							Object result = method.invoke(module, args);
+							if (result == null) throw new NullPointerException("@Provides method must return non-null result, method " + method);
+							return result;
 						} catch (IllegalAccessException e) {
 							throw new DIException("Not allowed to call generic method " + method + " to provide requested key " + key, e);
 						} catch (InvocationTargetException e) {
