@@ -27,7 +27,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.function.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static io.activej.inject.util.Utils.union;
@@ -61,14 +64,6 @@ public abstract class Binding<T> {
 
 	public static <T> Binding<T> toInstance(@NotNull T instance) {
 		return new BindingToInstance<>(instance);
-	}
-
-	public static <T> Binding<T> toSupplier(@NotNull Key<? extends Supplier<? extends T>> supplierKey) {
-		return Binding.to(Supplier::get, supplierKey);
-	}
-
-	public static <T> Binding<T> toSupplier(@NotNull Class<? extends Supplier<? extends T>> supplierType) {
-		return Binding.to(Supplier::get, supplierType);
 	}
 
 	// region Various Binding.to(...) overloads

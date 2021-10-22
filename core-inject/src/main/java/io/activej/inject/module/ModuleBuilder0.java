@@ -24,7 +24,6 @@ import io.activej.inject.util.Constructors.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
-import java.util.function.Supplier;
 
 public interface ModuleBuilder0<T> extends ModuleBuilder {
 	/**
@@ -75,24 +74,6 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	 */
 	default ModuleBuilder1<T> toInstance(@NotNull T instance) {
 		return to(Binding.toInstance(instance));
-	}
-
-	/**
-	 * DSL shortcut for creating a binding that calls a supplier from binding at a given key
-	 * and {@link #to(Binding) binding it} to a current key.
-	 */
-	default ModuleBuilder1<T> toSupplier(@NotNull Key<? extends Supplier<? extends T>> supplierKey) {
-		return to(Binding.toSupplier(supplierKey));
-	}
-
-	/**
-	 * DSL shortcut for creating a binding that calls a supplier from binding at a given key
-	 * and {@link #to(Binding) binding it} to a current key.
-	 *
-	 * @see #toSupplier(Key)
-	 */
-	default ModuleBuilder1<T> toSupplier(@NotNull Class<? extends Supplier<? extends T>> supplierType) {
-		return to(Binding.toSupplier(supplierType));
 	}
 
 	/**
