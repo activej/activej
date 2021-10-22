@@ -16,6 +16,8 @@
 
 package io.activej.inject.impl;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @SuppressWarnings("rawtypes")
@@ -39,5 +41,5 @@ public abstract class AbstractUnsyncCompiledBinding<R> implements CompiledBindin
 		return instance;
 	}
 
-	protected abstract R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope);
+	protected abstract @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope);
 }

@@ -747,30 +747,6 @@ public final class TestDI {
 		assertEquals(expected, map);
 	}
 
-	@Test
-	public void providesNull() {
-
-		Injector injector = Injector.of(ModuleBuilder.create()
-				.scan(new Object() {
-					@Provides
-					Integer integer() {
-						return null;
-					}
-
-					@Provides
-					String string(Integer integer) {
-						return "str: " + integer;
-					}
-				})
-				.build());
-
-		try {
-			injector.getInstance(String.class);
-		} catch (DIException e) {
-			assertTrue(e.getMessage().startsWith("Binding refused to construct an instance for key Integer"));
-		}
-	}
-
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
 	@ScopeAnnotation

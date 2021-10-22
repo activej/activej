@@ -178,19 +178,19 @@ public abstract class Binding<T> {
 		return this;
 	}
 
-	public Binding<T> onInstance(@NotNull Consumer<? super T> consumer) {
+	public Binding<T> onInstance(@NotNull Consumer<? super @NotNull T> consumer) {
 		return mapInstance(null, (args, instance) -> {
 			consumer.accept(instance);
 			return instance;
 		});
 	}
 
-	public <R> Binding<R> mapInstance(@NotNull Function<? super T, ? extends R> fn) {
+	public <R> Binding<R> mapInstance(@NotNull Function<? super @NotNull T, ? extends @NotNull R> fn) {
 		return mapInstance(null, (args, instance) -> fn.apply(instance));
 	}
 
 	@SuppressWarnings("Duplicates")
-	public <R> Binding<R> mapInstance(@Nullable List<Key<?>> dependencies, @NotNull BiFunction<Object[], ? super T, ? extends R> fn) {
+	public <R> Binding<R> mapInstance(@Nullable List<Key<?>> dependencies, @NotNull BiFunction<Object[], ? super @NotNull T, ? extends @NotNull R> fn) {
 		if (dependencies != null) {
 			Set<Key<?>> missing = dependencies.stream()
 					.filter(required -> this.dependencies.stream().noneMatch(existing -> existing.getKey().equals(required)))
