@@ -20,6 +20,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.net.BlockingSocketServer;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.net.EventloopServer;
 import io.activej.service.Service;
 import org.slf4j.Logger;
@@ -112,6 +113,28 @@ public final class ServiceAdapters {
 			@Override
 			protected void stop(BlockingService instance) throws Exception {
 				instance.stop();
+			}
+		};
+	}
+
+	public static <T> ServiceAdapter<OptionalDependency<T>> forOptionalDependency(ServiceAdapter<T> adapter) {
+		return new ServiceAdapter<OptionalDependency<T>>() {
+			@Override
+			public CompletableFuture<?> start(OptionalDependency<T> optional, Executor executor) {
+				if (optional.isPresent()) {
+					T instance = optional.get();
+					return adapter.start(instance, executor);
+				}
+				return CompletableFuture.completedFuture(null);
+			}
+
+			@Override
+			public CompletableFuture<?> stop(OptionalDependency<T> optional, Executor executor) {
+				if (optional.isPresent()) {
+					T instance = optional.get();
+					return adapter.stop(instance, executor);
+				}
+				return CompletableFuture.completedFuture(null);
 			}
 		};
 	}

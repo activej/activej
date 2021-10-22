@@ -30,6 +30,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.Dependency;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.util.ScopedValue;
 import io.activej.inject.util.Trie;
@@ -46,6 +47,7 @@ import org.slf4j.Logger;
 
 import javax.sql.DataSource;
 import java.io.Closeable;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
@@ -59,6 +61,7 @@ import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static io.activej.service.Utils.combineAll;
 import static io.activej.service.Utils.completedExceptionallyFuture;
 import static io.activej.service.adapter.ServiceAdapters.*;
+import static io.activej.types.Types.getRawType;
 import static java.lang.Thread.currentThread;
 import static java.util.Collections.*;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -558,6 +561,14 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 	@SuppressWarnings("unchecked")
 	private <T> @Nullable ServiceAdapter<T> lookupAdapter(Key<T> key, Class<T> instanceClass) {
+		Type type = key.getType();
+		if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() == OptionalDependency.class) {
+			Type actualTypeArgument = ((ParameterizedType) type).getActualTypeArguments()[0];
+			ServiceAdapter<?> serviceAdapter = lookupAdapter(Key.ofType(actualTypeArgument, key.getQualifier()), getRawType(actualTypeArgument));
+			if (serviceAdapter != null) {
+				return (ServiceAdapter<T>) ServiceAdapters.forOptionalDependency(serviceAdapter);
+			}
+		}
 		ServiceAdapter<T> serviceAdapter = (ServiceAdapter<T>) keys.get(key);
 		if (serviceAdapter == null) {
 			List<Class<?>> foundRegisteredClasses = new ArrayList<>();
