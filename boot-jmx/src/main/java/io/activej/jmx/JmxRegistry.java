@@ -19,6 +19,7 @@ package io.activej.jmx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.UniqueQualifierImpl;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 import io.activej.worker.WorkerPool;
@@ -96,6 +97,17 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 
 	public void registerSingleton(@NotNull Key<?> key, @NotNull Object singletonInstance, @NotNull JmxBeanSettings settings) {
 		Class<?> instanceClass = singletonInstance.getClass();
+		if (instanceClass == OptionalDependency.class) {
+			OptionalDependency<?> optional = (OptionalDependency<?>) singletonInstance;
+			if (!optional.isPresent()) {
+				return;
+			}
+			Type actualTypeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
+			key = Key.ofType(actualTypeArgument, key.getQualifier());
+			singletonInstance = optional.get();
+			registerSingleton(key, singletonInstance, settings);
+			return;
+		}
 		Object mbean;
 		if (isJmxBean(instanceClass)) {
 			// this will throw exception if something happens during initialization
@@ -144,7 +156,19 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 	}
 
 	public void unregisterSingleton(@NotNull Key<?> key, Object singletonInstance) {
-		if (isMBean(singletonInstance.getClass())) {
+		Class<?> instanceClass = singletonInstance.getClass();
+		if (instanceClass == OptionalDependency.class) {
+			OptionalDependency<?> optional = (OptionalDependency<?>) singletonInstance;
+			if (!optional.isPresent()) {
+				return;
+			}
+			Type actualTypeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
+			key = Key.ofType(actualTypeArgument, key.getQualifier());
+			singletonInstance = optional.get();
+			unregisterSingleton(key, singletonInstance);
+			return;
+		}
+		if (isMBean(instanceClass)) {
 			try {
 				ProtoObjectName name = createProtoObjectNameForKey(key);
 				name = objectNameMapper.apply(name);
@@ -170,7 +194,27 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 			return;
 		}
 
-		if (!isJmxBean(poolInstances.get(0).getClass())) {
+		Class<?> instanceClass = poolInstances.get(0).getClass();
+
+		if (instanceClass == OptionalDependency.class) {
+			List<Object> actualInstances = new ArrayList<>(poolInstances.size());
+			for (Object poolInstance : poolInstances) {
+				OptionalDependency<?> optional = (OptionalDependency<?>) poolInstance;
+				if (!optional.isPresent()) {
+					logger.info("Pool of instances with key {} was not registered to jmx, " +
+							"because some instances were not present", key);
+					return;
+				}
+
+				actualInstances.add(optional.get());
+			}
+			Type actualTypeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
+			key = Key.ofType(actualTypeArgument, key.getQualifier());
+			registerWorkers(pool, key, actualInstances, settings);
+			return;
+		}
+
+		if (!isJmxBean(instanceClass)) {
 			logger.info("Pool of instances with key {} was not registered to jmx, " +
 					"because instances' type or any of instances' supertypes is not annotated with @JmxBean annotation", key);
 			return;
@@ -239,7 +283,27 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 			return;
 		}
 
-		if (!isJmxBean(poolInstances.get(0).getClass())) {
+		Class<?> instanceClass = poolInstances.get(0).getClass();
+
+		if (instanceClass == OptionalDependency.class) {
+			List<Object> actualInstances = new ArrayList<>(poolInstances.size());
+			for (Object poolInstance : poolInstances) {
+				OptionalDependency<?> optional = (OptionalDependency<?>) poolInstance;
+				if (!optional.isPresent()) {
+					logger.info("Pool of instances with key {} was not registered to jmx, " +
+							"because some instances were not present", key);
+					return;
+				}
+
+				actualInstances.add(optional.get());
+			}
+			Type actualTypeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
+			key = Key.ofType(actualTypeArgument, key.getQualifier());
+			unregisterWorkers(pool, key, actualInstances);
+			return;
+		}
+
+		if (!isJmxBean(instanceClass)) {
 			return;
 		}
 

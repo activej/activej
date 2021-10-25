@@ -1,6 +1,7 @@
 package io.activej.jmx;
 
 import io.activej.inject.Key;
+import io.activej.inject.binding.OptionalDependency;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
@@ -30,6 +31,29 @@ public class StandardMBeansRegistrationTest {
 
 		Key<?> key = Key.of(ServiceStub.class);
 		jmxRegistry.registerSingleton(key, service, defaultSettings());
+	}
+
+	@Test
+	public void itShouldRegisterOptionalDependenciesMBeans() throws Exception {
+		ServiceStub service = new ServiceStub();
+
+		context.checking(new Expectations() {{
+			oneOf(mBeanServer).registerMBean(with(service), with(objectname(domain + ":type=ServiceStub")));
+		}});
+
+		Key<?> key = new Key<OptionalDependency<ServiceStub>>() {};
+		jmxRegistry.registerSingleton(key, OptionalDependency.of(service), defaultSettings());
+	}
+
+	@Test
+	public void itShouldNotRegisterEmptyOptionalDependenciesMBeans() {
+		context.checking(new Expectations() {
+			// we do not expect any calls
+			// any call of mBeanServer will produce error
+		});
+
+		Key<?> key = new Key<OptionalDependency<ServiceStub>>() {};
+		jmxRegistry.registerSingleton(key, OptionalDependency.empty(), defaultSettings());
 	}
 
 	@Test
