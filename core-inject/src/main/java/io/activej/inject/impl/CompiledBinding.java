@@ -25,18 +25,5 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
  */
 @SuppressWarnings("rawtypes")
 public interface CompiledBinding<R> {
-	@SuppressWarnings("Convert2Lambda")
-	CompiledBinding<?> MISSING_OPTIONAL_BINDING = new CompiledBinding<Object>() {
-		@Override
-		public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-			return null;
-		}
-	};
-
 	R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope);
-
-	@SuppressWarnings("unchecked")
-	static <R> CompiledBinding<R> missingOptionalBinding() {
-		return (CompiledBinding<R>) MISSING_OPTIONAL_BINDING;
-	}
 }

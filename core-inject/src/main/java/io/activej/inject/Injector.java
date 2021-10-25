@@ -43,7 +43,6 @@ import static io.activej.inject.binding.BindingType.EAGER;
 import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static io.activej.inject.binding.Multibinders.combinedMultibinder;
 import static io.activej.inject.binding.Multibinders.errorOnDuplicate;
-import static io.activej.inject.impl.CompiledBinding.missingOptionalBinding;
 import static io.activej.inject.util.Utils.getScopeDisplayString;
 import static io.activej.inject.util.Utils.next;
 import static io.activej.types.Types.parameterizedType;
@@ -314,7 +313,8 @@ public final class Injector implements ResourceLocator {
 
 		Binding<?> binding = bindings.get(key);
 		if (binding == null) {
-			CompiledBinding<?> compiled = compiledBindingsOfParent.getOrDefault(key, missingOptionalBinding());
+			CompiledBinding<?> compiled = compiledBindingsOfParent.get(key);
+			if (compiled == null) throw new AssertionError();
 			compiledBindings.put(key, compiled);
 			return compiled;
 		}
