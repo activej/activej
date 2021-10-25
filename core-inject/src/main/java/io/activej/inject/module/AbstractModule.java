@@ -16,7 +16,6 @@
 
 package io.activej.inject.module;
 
-import io.activej.inject.InstanceInjector;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
@@ -32,7 +31,6 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static io.activej.inject.util.Utils.checkState;
-import static io.activej.types.Types.parameterizedType;
 
 /**
  * This class is an abstract module wrapper around {@link ModuleBuilder}.
@@ -123,7 +121,17 @@ public abstract class AbstractModule implements Module {
 
 	protected final <T> void bindInstanceInjector(@NotNull Key<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
-		builder.bindInstanceInjector(Key.ofType(parameterizedType(InstanceInjector.class, key.getType()), key.getQualifier()));
+		builder.bindInstanceInjector(key);
+	}
+
+	protected final <T> void bindOptionalDependency(@NotNull Class<T> key) {
+		checkState(builder != null, "Cannot add bindings before or after configure() call");
+		builder.bindOptionalDependency(key);
+	}
+
+	protected final <T> void bindOptionalDependency(@NotNull Key<T> key) {
+		checkState(builder != null, "Cannot add bindings before or after configure() call");
+		builder.bindOptionalDependency(key);
 	}
 
 	/**

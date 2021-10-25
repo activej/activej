@@ -14,16 +14,14 @@ import static org.junit.Assert.*;
 public class OptionalDependencyTest {
 	@Test
 	public void optionalDependency() {
-		Key<OptionalDependency<String>> key = new Key<OptionalDependency<String>>() {};
-
 		String expected = "string";
 		Injector injector = Injector.of(
 				ModuleBuilder.create()
 						.bind(String.class).to(() -> expected)
-						.bind(key)
+						.bindOptionalDependency(String.class)
 						.build());
 
-		OptionalDependency<String> optional = injector.getInstance(key);
+		OptionalDependency<String> optional = injector.getInstance(new Key<OptionalDependency<String>>() {});
 
 		assertTrue(optional.isPresent());
 
@@ -34,30 +32,26 @@ public class OptionalDependencyTest {
 
 	@Test
 	public void optionalDependencyEmpty() {
-		Key<OptionalDependency<String>> key = new Key<OptionalDependency<String>>() {};
-
 		Injector injector = Injector.of(
 				ModuleBuilder.create()
-						.bind(key)
+						.bindOptionalDependency(String.class)
 						.build());
 
-		OptionalDependency<String> optional = injector.getInstance(key);
+		OptionalDependency<String> optional = injector.getInstance(new Key<OptionalDependency<String>>() {});
 
 		assertFalse(optional.isPresent());
 	}
 
 	@Test
 	public void optionalDependencyTransitive() {
-		Key<OptionalDependency<String>> key = new Key<OptionalDependency<String>>() {};
-
 		Injector injector = Injector.of(
 				ModuleBuilder.create()
 						.bind(Integer.class).to(() -> 123)
 						.bind(String.class).to(Object::toString, Integer.class)
-						.bind(key)
+						.bindOptionalDependency(String.class)
 						.build());
 
-		OptionalDependency<String> optional = injector.getInstance(key);
+		OptionalDependency<String> optional = injector.getInstance(new Key<OptionalDependency<String>>() {});
 
 		assertTrue(optional.isPresent());
 		assertEquals("123", optional.get());
@@ -65,11 +59,9 @@ public class OptionalDependencyTest {
 
 	@Test
 	public void optionalDependencyTransitiveMissing() {
-		Key<OptionalDependency<String>> key = new Key<OptionalDependency<String>>() {};
-
 		Module module = ModuleBuilder.create()
 				.bind(String.class).to(Object::toString, Integer.class)
-				.bind(key)
+				.bindOptionalDependency(String.class)
 				.build();
 		try {
 			Injector.of(module);
@@ -84,15 +76,13 @@ public class OptionalDependencyTest {
 	public void optionalDependencyInstanceProvider() {
 		AtomicInteger mut = new AtomicInteger();
 
-		Key<OptionalDependency<InstanceProvider<String>>> key = new Key<OptionalDependency<InstanceProvider<String>>>() {};
-
 		Injector injector = Injector.of(
 				ModuleBuilder.create()
 						.bind(String.class).to(() -> "str_" + mut.incrementAndGet())
-						.bind(key)
+						.bindOptionalDependency(new Key<InstanceProvider<String>>() {})
 						.build());
 
-		OptionalDependency<InstanceProvider<String>> optional = injector.getInstance(key);
+		OptionalDependency<InstanceProvider<String>> optional = injector.getInstance(new Key<OptionalDependency<InstanceProvider<String>>>() {});
 
 		assertTrue(optional.isPresent());
 

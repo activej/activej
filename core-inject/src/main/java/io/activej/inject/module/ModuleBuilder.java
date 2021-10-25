@@ -126,6 +126,14 @@ public interface ModuleBuilder {
 		return bind(Key.ofType(parameterizedType(InstanceInjector.class, key.getType()), key.getQualifier()));
 	}
 
+	default <T> ModuleBuilder bindOptionalDependency(Class<T> type) {
+		return bindOptionalDependency(Key.of(type));
+	}
+
+	default <T> ModuleBuilder bindOptionalDependency(Key<T> key) {
+		return bind(Key.ofType(parameterizedType(OptionalDependency.class, key.getType()), key.getQualifier()));
+	}
+
 	/**
 	 * This is a helper method that provides a functionality similar to {@link ProvidesIntoSet}.
 	 * It binds given binding as a singleton set to a set key made from given key
