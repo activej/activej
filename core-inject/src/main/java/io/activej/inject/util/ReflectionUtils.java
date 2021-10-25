@@ -291,7 +291,7 @@ public final class ReflectionUtils {
 				Stream.of(dependencies).collect(toSet()),
 				compiledBindings -> {
 					CompiledBinding[] argBindings = Stream.of(dependencies)
-							.map((Function<Key, CompiledBinding>) compiledBindings::get)
+							.map(compiledBindings::get)
 							.toArray(CompiledBinding[]::new);
 					//noinspection Convert2Lambda
 					return new CompiledBindingInitializer<T>() {

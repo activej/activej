@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.function.Function;
 
 @SuppressWarnings({"unchecked", "rawtypes", "Convert2Lambda", "ArraysAsListWithZeroOrOneArgument"})
 class Bindings {
@@ -57,7 +56,7 @@ class Bindings {
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 			final ConstructorN<R> constructor = this.constructor;
 			final CompiledBinding<?>[] bindings = Arrays.stream(dependencies)
-					.map((Function<Key, CompiledBinding>) compiledBindings::get)
+					.map(compiledBindings::get)
 					.toArray(CompiledBinding[]::new);
 			return slot != null ? threadsafe ? scope == 0 ?
 					new AbstractRootCompiledBinding<R>(slot) {
