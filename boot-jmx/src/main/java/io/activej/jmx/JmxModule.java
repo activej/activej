@@ -24,9 +24,9 @@ import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 import io.activej.jmx.stats.JmxHistogram;
@@ -196,9 +196,9 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 	}
 
 	@ProvidesIntoSet
-	LauncherService service(Injector injector, JmxRegistry jmxRegistry, DynamicMBeanFactory mbeanFactory, @Optional Set<Initializer<JmxModule>> initializers) {
-		if (initializers != null) {
-			for (Initializer<JmxModule> initializer : initializers) {
+	LauncherService service(Injector injector, JmxRegistry jmxRegistry, DynamicMBeanFactory mbeanFactory, OptionalDependency<Set<Initializer<JmxModule>>> maybeInitializers) {
+		if (maybeInitializers.isPresent()) {
+			for (Initializer<JmxModule> initializer : maybeInitializers.get()) {
 				initializer.accept(this);
 			}
 		}

@@ -42,6 +42,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.QualifierAnnotation;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.Dependency;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import org.jetbrains.annotations.Nullable;
@@ -141,10 +142,8 @@ public final class JsonModule extends AbstractModule {
 			}
 			return Binding.to(args -> {
 						Injector injector = (Injector) args[0];
-						SubtypeNameFactory names = (SubtypeNameFactory) args[1];
-						if (names == null) {
-							names = $ -> null;
-						}
+						OptionalDependency<SubtypeNameFactory> maybeNames = (OptionalDependency<SubtypeNameFactory>) args[1];
+						SubtypeNameFactory names = maybeNames.isPresent() ? maybeNames.get() : $ -> null;
 
 						Set<Class<?>> subtypes = new HashSet<>();
 
@@ -175,7 +174,7 @@ public final class JsonModule extends AbstractModule {
 						return combined;
 					}, new Dependency[]{
 							Dependency.toKey(Key.of(Injector.class)),
-							Dependency.toOptionalKey(Key.of(SubtypeNameFactory.class))}
+							Dependency.toKey(new Key<OptionalDependency<SubtypeNameFactory>>() {})}
 			);
 		});
 	}

@@ -18,8 +18,8 @@ package io.activej.launchers.crdt.rpc;
 
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
@@ -31,7 +31,7 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 
-import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Checks.checkState;
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
@@ -62,7 +62,7 @@ public class CrdtRpcClientModule extends AbstractModule {
 	}
 
 	@Provides
-	RpcStrategy strategy(Config config, @Optional ShardingFunction<?> shardingFn) {
+	RpcStrategy strategy(Config config, OptionalDependency<ShardingFunction<?>> maybeShardingFn) {
 		List<InetSocketAddress> addresses = config.get(ofList(ofInetSocketAddress()), "addresses", Collections.emptyList());
 
 		if (addresses.isEmpty()) {
@@ -70,6 +70,7 @@ public class CrdtRpcClientModule extends AbstractModule {
 			return RpcStrategies.server(address);
 		}
 
-		return RpcStrategies.sharding(checkNotNull(shardingFn), RpcStrategyList.ofAddresses(addresses));
+		checkState(maybeShardingFn.isPresent());
+		return RpcStrategies.sharding(maybeShardingFn.get(), RpcStrategyList.ofAddresses(addresses));
 	}
 }

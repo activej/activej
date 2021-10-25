@@ -24,8 +24,8 @@ import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.inject.annotation.Inject;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
@@ -52,10 +52,14 @@ public abstract class HttpServerLauncher extends Launcher {
 	AsyncHttpServer httpServer;
 
 	@Provides
-	Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
+	Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> maybeThrottlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(eventloop -> {
+					if (maybeThrottlingController.isPresent()) {
+						eventloop.withInspector(maybeThrottlingController.get());
+					}
+				});
 	}
 
 	@Provides
@@ -102,12 +106,12 @@ public abstract class HttpServerLauncher extends Launcher {
 			@Override
 			protected Module getBusinessLogicModule() {
 				return new AbstractModule() {
-							@Provides
-							public AsyncServlet servlet(Config config) {
-								String message = config.get("message", "Hello, world!");
-								return request -> HttpResponse.ok200().withPlainText(message);
-							}
-						};
+					@Provides
+					public AsyncServlet servlet(Config config) {
+						String message = config.get("message", "Hello, world!");
+						return request -> HttpResponse.ok200().withPlainText(message);
+					}
+				};
 			}
 		};
 

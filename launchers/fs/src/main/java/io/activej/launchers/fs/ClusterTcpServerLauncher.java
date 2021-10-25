@@ -29,14 +29,13 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.http.AsyncServlet;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
 
 import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.nonNullElse;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
 import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
@@ -77,10 +76,10 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	}
 
 	@Provides
-	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, @Optional ServerSelector serverSelector) {
+	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, OptionalDependency<ServerSelector> maybeServerSelector) {
 
 		return FsPartitions.create(eventloop, discoveryService)
-				.withServerSelector(nonNullElse(serverSelector, RENDEZVOUS_HASH_SHARDER));
+				.withServerSelector(maybeServerSelector.isPresent() ? maybeServerSelector.get() : RENDEZVOUS_HASH_SHARDER);
 	}
 	//[END EXAMPLE]
 

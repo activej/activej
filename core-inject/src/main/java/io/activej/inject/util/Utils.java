@@ -211,18 +211,13 @@ public final class Utils {
 								.append(dep)
 								.append(" [label=\"")
 								.append(depKey.getDisplayString().replace("\"", "\\\""))
-								.append("\" style=dashed, color=")
-								.append(dependency.isRequired() ? "red" : "orange")
-								.append("];\n");
+								.append("\" style=dashed, color=red];\n");
 					}
 					sb.append('\t').append(key).append(" -> ").append(dep);
 				} else {
 					sb.append('\t').append(key).append(" -> \"").append(getScopeId(depScope)).append(depKey.toString().replace("\"", "\\\"")).append('"');
 				}
 				sb.append(" [");
-				if (!dependency.isRequired()) {
-					sb.append("style=dashed,");
-				}
 				if (dependency.getKey().getRawType() == InstanceProvider.class) {
 					sb.append("color=gray");
 				}

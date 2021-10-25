@@ -1,9 +1,9 @@
 package io.activej.inject;
 
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.*;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.DIException;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.impl.Preprocessor;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
@@ -13,7 +13,6 @@ import io.activej.inject.util.Constructors.Constructor0;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -377,8 +376,7 @@ public final class TestDI {
 		class ClassWithCustomDeps {
 
 			@Inject
-			@Optional
-			@Nullable String string;
+			OptionalDependency<String> maybeString;
 
 			@Inject
 			Integer integer;
@@ -392,13 +390,14 @@ public final class TestDI {
 		Injector injector = Injector.of(module);
 
 		ClassWithCustomDeps instance = injector.getInstance(ClassWithCustomDeps.class);
-		assertNull(instance.string);
+		assertFalse(instance.maybeString.isPresent());
 		assertEquals(42, instance.integer.intValue());
 
 		Injector injector2 = Injector.of(module, ModuleBuilder.create().bind(String.class).to(i -> "str: " + i, Integer.class).build());
 
 		ClassWithCustomDeps instance2 = injector2.getInstance(ClassWithCustomDeps.class);
-		assertEquals("str: 42", instance2.string);
+		assertTrue(instance2.maybeString.isPresent());
+		assertEquals("str: 42", instance2.maybeString.get());
 		assertEquals(42, instance2.integer.intValue());
 
 		Module module2 = ModuleBuilder.create()
@@ -514,8 +513,8 @@ public final class TestDI {
 		Module module = ModuleBuilder.create()
 				.scan(new Object() {
 					@Provides
-					String string(Integer integer, @io.activej.inject.annotation.Optional Float f) {
-						return "str: " + integer + ", " + f;
+					String string(Integer integer, OptionalDependency<Float> maybeFloat) {
+						return "str: " + integer + ", " + (maybeFloat.isPresent() ? maybeFloat.get() : null);
 					}
 
 					@Provides
@@ -671,9 +670,9 @@ public final class TestDI {
 			final Integer integer;
 
 			@Inject
-			Injectable(String string, @Optional @Nullable Integer integer) {
+			Injectable(String string, OptionalDependency<Integer> maybeInteger) {
 				this.string = string;
-				this.integer = integer;
+				this.integer = maybeInteger.isPresent() ? maybeInteger.get() : null;
 			}
 		}
 

@@ -60,7 +60,7 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 		surroundings.addAll(getTestClass().getAnnotatedMethods(After.class));
 
 		staticDependencies = surroundings.stream()
-				.flatMap(m -> Arrays.stream(ReflectionUtils.toDependencies(cls, m.getMethod().getParameters())))
+				.flatMap(m -> Arrays.stream(ReflectionUtils.toDependencies(cls, m.getMethod())))
 				.collect(toSet());
 	}
 
@@ -85,7 +85,7 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 			currentModule = Modules.combine(modules);
 
 			currentDependencies =
-					Arrays.stream(ReflectionUtils.toDependencies(cls, method.getMethod().getParameters()))
+					Arrays.stream(ReflectionUtils.toDependencies(cls, method.getMethod()))
 							.collect(toSet());
 
 		} catch (ExceptionInInitializerError e) {
@@ -173,10 +173,8 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 	}
 
 	protected Object[] getArgs(FrameworkMethod method) {
-		return Arrays.stream(ReflectionUtils.toDependencies(getTestClass().getJavaClass(), method.getMethod().getParameters()))
-				.map(dependency -> dependency.isRequired() ?
-						currentInjector.getInstance(dependency.getKey()) :
-						currentInjector.getInstanceOrNull(dependency.getKey()))
+		return Arrays.stream(ReflectionUtils.toDependencies(getTestClass().getJavaClass(), method.getMethod()))
+				.map(dependency -> currentInjector.getInstance(dependency.getKey()))
 				.toArray(Object[]::new);
 	}
 

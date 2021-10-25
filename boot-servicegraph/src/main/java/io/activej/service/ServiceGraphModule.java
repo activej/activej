@@ -25,7 +25,6 @@ import io.activej.eventloop.net.BlockingSocketServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.Binding;
@@ -288,9 +287,9 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	@ProvidesIntoSet
-	LauncherService service(Injector injector, ServiceGraph serviceGraph, @Optional Set<Initializer<ServiceGraphModuleSettings>> initializers) {
-		if (initializers != null) {
-			for (Initializer<ServiceGraphModuleSettings> initializer : initializers) {
+	LauncherService service(ServiceGraph serviceGraph, OptionalDependency<Set<Initializer<ServiceGraphModuleSettings>>> maybeInitializers) {
+		if (maybeInitializers.isPresent()) {
+			for (Initializer<ServiceGraphModuleSettings> initializer : maybeInitializers.get()) {
 				initializer.accept(this);
 			}
 		}
@@ -355,14 +354,6 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 					instanceDependencies.put(serviceKey,
 							scopeDependencies.get(key)
 									.stream()
-									.filter(scopedDependency -> {
-										if (scopedDependency.get().isRequired()) {
-											return true;
-										}
-										Injector container = scopedDependency.isScoped() ? pool.getScopeInjectors()[0] : injector;
-										Key<?> k = scopedDependency.get().getKey();
-										return container.hasInstance(k);
-									})
 									.map(scopedDependency -> scopedDependency.isScoped() ?
 											new ServiceKey(scopedDependency.get().getKey(), pool) :
 											new ServiceKey(scopedDependency.get().getKey()))
@@ -384,7 +375,6 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			instances.put(serviceKey, singletonList(instance));
 			instanceDependencies.put(serviceKey,
 					binding.getDependencies().stream()
-							.filter(dependency -> dependency.isRequired() || injector.hasInstance(dependency.getKey()))
 							.map(dependency -> {
 								Class<?> dependencyRawType = dependency.getKey().getRawType();
 								boolean rawTypeMatches = dependencyRawType == WorkerPool.class || dependencyRawType == WorkerPools.class;

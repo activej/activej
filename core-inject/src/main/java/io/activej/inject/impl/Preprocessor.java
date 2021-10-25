@@ -219,7 +219,7 @@ public final class Preprocessor {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return null;
-		return new Binding<InstanceProvider<?>>(singleton(Dependency.toKey(instanceKey, true))) {
+		return new Binding<InstanceProvider<?>>(singleton(Dependency.toKey(instanceKey))) {
 			@Override
 			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
@@ -304,7 +304,7 @@ public final class Preprocessor {
 
 		Map<? extends Key<?>, Set<Entry<Key<?>, Binding<?>>>> unsatisfied = bindings.get().entrySet().stream()
 				.flatMap(e -> e.getValue().getDependencies().stream()
-						.filter(dependency -> dependency.isRequired() && !known.contains(dependency.getKey()))
+						.filter(dependency -> !known.contains(dependency.getKey()))
 						.map(dependency -> new DependencyToBinding(dependency.getKey(), e)))
 
 				.collect(toMultimap(dtb -> dtb.dependency, dtb -> dtb.keybinding));

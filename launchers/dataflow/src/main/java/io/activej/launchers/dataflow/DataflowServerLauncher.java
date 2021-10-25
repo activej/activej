@@ -31,8 +31,8 @@ import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Inject;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
@@ -53,10 +53,14 @@ public abstract class DataflowServerLauncher extends Launcher {
 	DataflowServer dataflowServer;
 
 	@Provides
-	Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
+	Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> maybeThrottlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(eventloop -> {
+					if (maybeThrottlingController.isPresent()) {
+						eventloop.withInspector(maybeThrottlingController.get());
+					}
+				});
 	}
 
 	@Provides

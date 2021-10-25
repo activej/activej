@@ -28,31 +28,17 @@ import java.util.Objects;
  */
 public final class Dependency {
 	private final Key<?> key;
-	private final boolean required;
 
-	public Dependency(Key<?> key, boolean required) {
+	public Dependency(Key<?> key) {
 		this.key = key;
-		this.required = required;
 	}
 
 	public static Dependency toKey(Key<?> key) {
-		return new Dependency(key, true);
-	}
-
-	public static Dependency toKey(Key<?> key, boolean required) {
-		return new Dependency(key, required);
-	}
-
-	public static Dependency toOptionalKey(Key<?> key) {
-		return new Dependency(key, false);
+		return new Dependency(key);
 	}
 
 	public Key<?> getKey() {
 		return key;
-	}
-
-	public boolean isRequired() {
-		return required;
 	}
 
 	@Override
@@ -66,20 +52,20 @@ public final class Dependency {
 
 		Dependency that = (Dependency) o;
 
-		return required == that.required && Objects.equals(key, that.key);
+		return Objects.equals(key, that.key);
 	}
 
 	@Override
 	public int hashCode() {
-		return 31 * (key != null ? key.hashCode() : 0) + (required ? 1 : 0);
+		return 31 * (key != null ? key.hashCode() : 0);
 	}
 
 	public String getDisplayString() {
-		return (required ? "" : "optional ") + key.getDisplayString();
+		return key.getDisplayString();
 	}
 
 	@Override
 	public String toString() {
-		return (required ? "" : "optional ") + key;
+		return key.toString();
 	}
 }

@@ -23,8 +23,8 @@ import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.*;
 import io.activej.http.loader.StaticLoader;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import io.activej.types.TypeT;
@@ -55,7 +55,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	AsyncServlet servlet(
 			CrdtDescriptor<K, S> descriptor,
 			CrdtStorageMap<K, S> client,
-			@Optional BackupService<K, S> backupService
+			OptionalDependency<BackupService<K, S>> maybeBackupService
 	) {
 		RoutingServlet servlet = RoutingServlet.create()
 				.map(POST, "/", request -> request.loadBody()
@@ -95,9 +95,10 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								throw HttpError.ofCode(400, e);
 							}
 						}));
-		if (backupService == null) {
+		if (!maybeBackupService.isPresent()) {
 			return servlet;
 		}
+		BackupService<K, S> backupService = maybeBackupService.get();
 		return servlet
 				.map(POST, "/backup", request -> {
 					if (backupService.backupInProgress()) {

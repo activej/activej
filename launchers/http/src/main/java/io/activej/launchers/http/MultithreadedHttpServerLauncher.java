@@ -24,8 +24,8 @@ import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.inject.annotation.Inject;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
@@ -66,10 +66,14 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 
 	@Provides
 	@Worker
-	Eventloop workerEventloop(Config config, @Optional ThrottlingController throttlingController) {
+	Eventloop workerEventloop(Config config, OptionalDependency<ThrottlingController> maybeThrottlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop.worker")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(eventloop -> {
+					if (maybeThrottlingController.isPresent()) {
+						eventloop.withInspector(maybeThrottlingController.get());
+					}
+				});
 	}
 
 	@Provides
@@ -117,8 +121,8 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Override
 	protected void run() throws Exception {
 		logger.info("HTTP Server is listening on {}", Stream.concat(
-				primaryServer.getListenAddresses().stream().map(address -> "http://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"),
-				primaryServer.getSslListenAddresses().stream().map(address -> "https://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"))
+						primaryServer.getListenAddresses().stream().map(address -> "http://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"),
+						primaryServer.getSslListenAddresses().stream().map(address -> "https://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"))
 				.collect(joining(" ")));
 		awaitShutdown();
 	}
@@ -129,12 +133,12 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 			@Override
 			protected Module getBusinessLogicModule() {
 				return new AbstractModule() {
-							@Provides
-							@Worker
-							AsyncServlet servlet(@WorkerId int workerId) {
-								return request -> HttpResponse.ok200().withPlainText("Hello, world! #" + workerId);
-							}
-						};
+					@Provides
+					@Worker
+					AsyncServlet servlet(@WorkerId int workerId) {
+						return request -> HttpResponse.ok200().withPlainText("Hello, world! #" + workerId);
+					}
+				};
 			}
 		};
 

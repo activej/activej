@@ -20,9 +20,9 @@ import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.LauncherService;
 import io.activej.trigger.util.KeyWithWorkerData;
@@ -127,9 +127,9 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 	}
 
 	@ProvidesIntoSet
-	LauncherService service(Injector injector, Triggers triggers, @Optional Set<Initializer<TriggersModuleSettings>> initializers) {
-		if (initializers != null) {
-			for (Initializer<TriggersModuleSettings> initializer : initializers) {
+	LauncherService service(Injector injector, Triggers triggers, OptionalDependency<Set<Initializer<TriggersModuleSettings>>> maybeInitializers) {
+		if (maybeInitializers.isPresent()) {
+			for (Initializer<TriggersModuleSettings> initializer : maybeInitializers.get()) {
 				initializer.accept(this);
 			}
 		}

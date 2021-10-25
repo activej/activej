@@ -231,9 +231,7 @@ public final class Modules {
 							exportsMapping.apply(importKeyPath, oldImportKey) :
 							importsMapping.apply(path, oldImportKey);
 					changed |= !oldImportKey.equals(newImportKey);
-					Dependency newDependency = new Dependency(
-							newImportKey,
-							oldDependency.isRequired());
+					Dependency newDependency = new Dependency(newImportKey);
 					newDependencies.add(newDependency);
 				}
 				Binding<?> newBinding = changed ?

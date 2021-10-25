@@ -19,7 +19,6 @@ package io.activej.inject.util;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.*;
 import io.activej.inject.binding.*;
 import io.activej.inject.impl.BindingInitializer;
@@ -250,7 +249,7 @@ public final class ReflectionUtils {
 		Class<T> rawType = container.getRawType();
 		List<BindingInitializer<T>> initializers = Stream.concat(
 						getAnnotatedElements(rawType, Inject.class, Class::getDeclaredFields, false).stream()
-								.map(field -> fieldInjector(container, field, !field.isAnnotationPresent(Optional.class))),
+								.map(field -> fieldInjector(container, field)),
 						getAnnotatedElements(rawType, Inject.class, Class::getDeclaredMethods, true).stream()
 								.filter(method -> !Modifier.isStatic(method.getModifiers())) // we allow them and just filter out to allow static factory methods
 								.map(method -> methodInjector(container, method)))
@@ -258,11 +257,11 @@ public final class ReflectionUtils {
 		return BindingInitializer.combine(initializers);
 	}
 
-	public static <T> BindingInitializer<T> fieldInjector(Key<T> container, Field field, boolean required) {
+	public static <T> BindingInitializer<T> fieldInjector(Key<T> container, Field field) {
 		field.setAccessible(true);
 		Key<Object> key = keyOf(container.getType(), field.getGenericType(), field);
 		return BindingInitializer.of(
-				singleton(Dependency.toKey(key, required)),
+				singleton(Dependency.toKey(key)),
 				compiledBindings -> {
 					CompiledBinding<Object> binding = compiledBindings.get(key);
 					//noinspection Convert2Lambda
@@ -287,7 +286,7 @@ public final class ReflectionUtils {
 	@SuppressWarnings("rawtypes")
 	public static <T> BindingInitializer<T> methodInjector(Key<T> container, Method method) {
 		method.setAccessible(true);
-		Dependency[] dependencies = toDependencies(container.getType(), method.getParameters());
+		Dependency[] dependencies = toDependencies(container.getType(), method);
 		return BindingInitializer.of(
 				Stream.of(dependencies).collect(toSet()),
 				compiledBindings -> {
@@ -314,17 +313,25 @@ public final class ReflectionUtils {
 				});
 	}
 
-	public static Dependency[] toDependencies(@Nullable Type container, Parameter[] parameters) {
+	public static Dependency[] toDependencies(@Nullable Type container, Executable executable) {
+		Parameter[] parameters = executable.getParameters();
 		Dependency[] dependencies = new Dependency[parameters.length];
 		if (parameters.length == 0) {
 			return dependencies;
 		}
+
+		Type type = parameters[0].getParameterizedType();
+		Parameter parameter = parameters[0];
+		dependencies[0] = Dependency.toKey(keyOf(container, type, parameter));
+
+		Type[] genericParameterTypes = executable.getGenericParameterTypes();
+		boolean hasImplicitDependency = genericParameterTypes.length != parameters.length;
 		// an actual JDK bug (fixed in Java 9)
 		boolean workaround = parameters[0].getDeclaringExecutable().getParameterAnnotations().length != parameters.length;
-		for (int i = 0; i < dependencies.length; i++) {
-			Type type = parameters[i].getParameterizedType();
-			Parameter parameter = parameters[workaround && i != 0 ? i - 1 : i];
-			dependencies[i] = Dependency.toKey(keyOf(container, type, parameter), !parameter.isAnnotationPresent(Optional.class));
+		for (int i = 1; i < dependencies.length; i++) {
+			type = genericParameterTypes[hasImplicitDependency ? i - 1 : i];
+			parameter = parameters[workaround ? i - 1 : i];
+			dependencies[i] = Dependency.toKey(keyOf(container, type, parameter));
 		}
 		return dependencies;
 	}
@@ -337,7 +344,8 @@ public final class ReflectionUtils {
 				args -> {
 					try {
 						T result = (T) method.invoke(module, args);
-						if (result == null) throw new NullPointerException("@Provides method must return non-null result, method " + method);
+						if (result == null)
+							throw new NullPointerException("@Provides method must return non-null result, method " + method);
 						return result;
 					} catch (IllegalAccessException e) {
 						throw new DIException("Not allowed to call method " + method, e);
@@ -345,7 +353,7 @@ public final class ReflectionUtils {
 						throw new DIException("Failed to call method " + method, e.getCause());
 					}
 				},
-				toDependencies(module != null ? module.getClass() : method.getDeclaringClass(), method.getParameters()));
+				toDependencies(module != null ? module.getClass() : method.getDeclaringClass(), method));
 
 		return module != null ? binding.at(LocationInfo.from(module, method)) : binding;
 	}
@@ -353,7 +361,7 @@ public final class ReflectionUtils {
 	public static <T> Binding<T> bindingFromConstructor(Key<T> key, Constructor<T> constructor) {
 		constructor.setAccessible(true);
 
-		Dependency[] dependencies = toDependencies(key.getType(), constructor.getParameters());
+		Dependency[] dependencies = toDependencies(key.getType(), constructor);
 
 		return Binding.to(
 				args -> {
@@ -503,7 +511,7 @@ public final class ReflectionUtils {
 					.map(parameter -> {
 						Type type = Types.bind(parameter.getParameterizedType(), mapping);
 						Object q = qualifierOf(parameter);
-						return Dependency.toKey(Key.ofType(type, q), !parameter.isAnnotationPresent(Optional.class));
+						return Dependency.toKey(Key.ofType(type, q));
 					})
 					.toArray(Dependency[]::new);
 
@@ -511,7 +519,8 @@ public final class ReflectionUtils {
 					args -> {
 						try {
 							Object result = method.invoke(module, args);
-							if (result == null) throw new NullPointerException("@Provides method must return non-null result, method " + method);
+							if (result == null)
+								throw new NullPointerException("@Provides method must return non-null result, method " + method);
 							return result;
 						} catch (IllegalAccessException e) {
 							throw new DIException("Not allowed to call generic method " + method + " to provide requested key " + key, e);

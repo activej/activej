@@ -27,8 +27,8 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.inject.annotation.Eager;
-import io.activej.inject.annotation.Optional;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
@@ -52,10 +52,14 @@ public class SimpleTcpServerLauncher extends Launcher {
 	public static final String DEFAULT_GUI_SERVER_LISTEN_ADDRESS = "*:8080";
 
 	@Provides
-	public Eventloop eventloop(Config config, @Optional ThrottlingController throttlingController) {
+	public Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> maybeThrottlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController));
+				.withInitializer(eventloop -> {
+					if (maybeThrottlingController.isPresent()) {
+						eventloop.withInspector(maybeThrottlingController.get());
+					}
+				});
 	}
 
 	@Eager
