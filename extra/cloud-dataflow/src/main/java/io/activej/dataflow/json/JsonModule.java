@@ -141,8 +141,7 @@ public final class JsonModule extends AbstractModule {
 			}
 			return Binding.to(args -> {
 						Injector injector = (Injector) args[0];
-						OptionalDependency<SubtypeNameFactory> maybeNames = (OptionalDependency<SubtypeNameFactory>) args[1];
-						SubtypeNameFactory names = maybeNames.orElse($ -> null);
+						SubtypeNameFactory names = ((OptionalDependency<SubtypeNameFactory>) args[1]).orElse($ -> null);
 
 						Set<Class<?>> subtypes = new HashSet<>();
 
@@ -489,7 +488,6 @@ public final class JsonModule extends AbstractModule {
 				});
 	}
 
-
 	@Provides
 	JsonCodec<AccumulatorToOutput> accumulatorToOutput(@Subtypes JsonCodec<ReducerToResult> reducerToResultCodec) {
 		return JsonCodec.of(
@@ -506,7 +504,6 @@ public final class JsonModule extends AbstractModule {
 				});
 	}
 
-
 	@Provides
 	JsonCodec<DeduplicateReducer> mergeDistinctReducer() {
 		return ofObject(DeduplicateReducer::new);
@@ -516,7 +513,6 @@ public final class JsonModule extends AbstractModule {
 	JsonCodec<MergeReducer> mergeSortReducer() {
 		return ofObject(MergeReducer::new);
 	}
-
 
 	private static final String PREDICATE = "predicate";
 

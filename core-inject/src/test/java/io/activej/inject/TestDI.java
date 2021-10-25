@@ -376,7 +376,7 @@ public final class TestDI {
 		class ClassWithCustomDeps {
 
 			@Inject
-			OptionalDependency<String> maybeString;
+			OptionalDependency<String> stringOpt;
 
 			@Inject
 			Integer integer;
@@ -390,14 +390,14 @@ public final class TestDI {
 		Injector injector = Injector.of(module);
 
 		ClassWithCustomDeps instance = injector.getInstance(ClassWithCustomDeps.class);
-		assertFalse(instance.maybeString.isPresent());
+		assertFalse(instance.stringOpt.isPresent());
 		assertEquals(42, instance.integer.intValue());
 
 		Injector injector2 = Injector.of(module, ModuleBuilder.create().bind(String.class).to(i -> "str: " + i, Integer.class).build());
 
 		ClassWithCustomDeps instance2 = injector2.getInstance(ClassWithCustomDeps.class);
-		assertTrue(instance2.maybeString.isPresent());
-		assertEquals("str: 42", instance2.maybeString.get());
+		assertTrue(instance2.stringOpt.isPresent());
+		assertEquals("str: 42", instance2.stringOpt.get());
 		assertEquals(42, instance2.integer.intValue());
 
 		Module module2 = ModuleBuilder.create()
@@ -513,8 +513,8 @@ public final class TestDI {
 		Module module = ModuleBuilder.create()
 				.scan(new Object() {
 					@Provides
-					String string(Integer integer, OptionalDependency<Float> maybeFloat) {
-						return "str: " + integer + ", " + maybeFloat.orElse(null);
+					String string(Integer integer, OptionalDependency<Float> floatOpt) {
+						return "str: " + integer + ", " + floatOpt.orElse(null);
 					}
 
 					@Provides
@@ -670,9 +670,9 @@ public final class TestDI {
 			final Integer integer;
 
 			@Inject
-			Injectable(String string, OptionalDependency<Integer> maybeInteger) {
+			Injectable(String string, OptionalDependency<Integer> integerOpt) {
 				this.string = string;
-				this.integer = maybeInteger.orElse(null);
+				this.integer = integerOpt.orElse(null);
 			}
 		}
 

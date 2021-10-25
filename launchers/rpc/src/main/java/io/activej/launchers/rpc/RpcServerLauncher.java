@@ -47,10 +47,10 @@ public abstract class RpcServerLauncher extends Launcher {
 
 	@Provides
 	public Eventloop eventloop(Config config,
-			OptionalDependency<ThrottlingController> maybeThrottlingController) {
+			OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(maybeThrottlingController.orElse(null)));
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Provides

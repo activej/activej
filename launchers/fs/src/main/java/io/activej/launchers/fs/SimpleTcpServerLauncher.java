@@ -52,10 +52,10 @@ public class SimpleTcpServerLauncher extends Launcher {
 	public static final String DEFAULT_GUI_SERVER_LISTEN_ADDRESS = "*:8080";
 
 	@Provides
-	public Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> maybeThrottlingController) {
+	public Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(maybeThrottlingController.orElse(null)));
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Eager

@@ -53,10 +53,10 @@ public abstract class DataflowServerLauncher extends Launcher {
 	DataflowServer dataflowServer;
 
 	@Provides
-	Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> maybeThrottlingController) {
+	Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(maybeThrottlingController.orElse(null)));
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Provides

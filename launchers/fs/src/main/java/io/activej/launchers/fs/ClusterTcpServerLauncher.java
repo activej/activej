@@ -76,10 +76,9 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	}
 
 	@Provides
-	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, OptionalDependency<ServerSelector> maybeServerSelector) {
-
+	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
 		return FsPartitions.create(eventloop, discoveryService)
-				.withServerSelector(maybeServerSelector.orElse(RENDEZVOUS_HASH_SHARDER));
+				.withServerSelector(serverSelector.orElse(RENDEZVOUS_HASH_SHARDER));
 	}
 	//[END EXAMPLE]
 

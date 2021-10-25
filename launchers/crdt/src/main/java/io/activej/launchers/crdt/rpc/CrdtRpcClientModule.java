@@ -31,7 +31,6 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 
-import static io.activej.common.Checks.checkState;
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
@@ -62,7 +61,7 @@ public class CrdtRpcClientModule extends AbstractModule {
 	}
 
 	@Provides
-	RpcStrategy strategy(Config config, OptionalDependency<ShardingFunction<?>> maybeShardingFn) {
+	RpcStrategy strategy(Config config, OptionalDependency<ShardingFunction<?>> shardingFn) {
 		List<InetSocketAddress> addresses = config.get(ofList(ofInetSocketAddress()), "addresses", Collections.emptyList());
 
 		if (addresses.isEmpty()) {
@@ -70,7 +69,6 @@ public class CrdtRpcClientModule extends AbstractModule {
 			return RpcStrategies.server(address);
 		}
 
-		checkState(maybeShardingFn.isPresent());
-		return RpcStrategies.sharding(maybeShardingFn.get(), RpcStrategyList.ofAddresses(addresses));
+		return RpcStrategies.sharding(shardingFn.get(), RpcStrategyList.ofAddresses(addresses));
 	}
 }

@@ -55,7 +55,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	AsyncServlet servlet(
 			CrdtDescriptor<K, S> descriptor,
 			CrdtStorageMap<K, S> client,
-			OptionalDependency<BackupService<K, S>> maybeBackupService
+			OptionalDependency<BackupService<K, S>> backupServiceOpt
 	) {
 		RoutingServlet servlet = RoutingServlet.create()
 				.map(POST, "/", request -> request.loadBody()
@@ -95,10 +95,10 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								throw HttpError.ofCode(400, e);
 							}
 						}));
-		if (!maybeBackupService.isPresent()) {
+		if (!backupServiceOpt.isPresent()) {
 			return servlet;
 		}
-		BackupService<K, S> backupService = maybeBackupService.get();
+		BackupService<K, S> backupService = backupServiceOpt.get();
 		return servlet
 				.map(POST, "/backup", request -> {
 					if (backupService.backupInProgress()) {
